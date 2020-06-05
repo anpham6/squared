@@ -387,13 +387,15 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 return 0;
             });
         }
-        let autoWidth = false, autoHeight = false;
+        let autoWidth = false,
+            autoHeight = false;
         if (!node.has('gridTemplateAreas') && node.every(item => item.css('gridRowStart') === 'auto' && item.css('gridColumnStart') === 'auto')) {
             const [directionA, directionB, indexA, indexB, indexC] =
                 horizontal
                     ? ['top', 'bottom', 2, 1, 3]
                     : ['left', 'right', 3, 0, 2];
-            let rowIndex = 0, columnIndex = 0;
+            let rowIndex = 0,
+                columnIndex = 0;
             let columnMax = 0;
             let previous: Undef<T>;
             if (horizontal) {
@@ -509,7 +511,8 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             node.each((item, index) => {
                 const positions = item.cssAsTuple('gridRowStart', 'gridColumnStart', 'gridRowEnd', 'gridColumnEnd');
                 const placement = [0, 0, 0, 0];
-                let rowSpan = -1, columnSpan = -1;
+                let rowSpan = -1,
+                    columnSpan = -1;
                 if (Object.keys(templateAreas).length) {
                     for (let i = 0; i < 4; ++i) {
                         const name = positions[i];

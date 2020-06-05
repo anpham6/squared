@@ -69,7 +69,8 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
             result.dashGap = result.dashWidth;
             break;
         case 'dashed': {
-            let dashWidth: number, dashGap: number;
+            let dashWidth: number,
+                dashGap: number;
             switch (width) {
                 case 1:
                 case 2:
@@ -909,7 +910,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 const size = backgroundSize[i];
                 let repeat = backgroundRepeat[i];
                 let dimension = imageDimensions[i];
-                let dimenWidth = NaN, dimenHeight = NaN;
+                let dimenWidth = NaN,
+                    dimenHeight = NaN;
                 if (dimension) {
                     if (!dimension.width || !dimension.height) {
                         dimension = undefined;
@@ -919,14 +921,24 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         dimenHeight = dimension.height;
                     }
                 }
-                let top = 0, right = 0, bottom = 0, left = 0;
-                let posTop = NaN, posRight = NaN, posBottom = NaN, posLeft = NaN;
-                let offsetX = false, offsetY = false;
-                let width = 0, height = 0;
-                let tileModeX = '', tileModeY = '';
-                let gravityX = '', gravityY = '';
-                let gravityAlign = '';
-                let negativeOffset = 0;
+                let top = 0,
+                    right = 0,
+                    bottom = 0,
+                    left = 0,
+                    width = 0,
+                    height = 0,
+                    negativeOffset = 0,
+                    posTop = NaN,
+                    posRight = NaN,
+                    posBottom = NaN,
+                    posLeft = NaN;
+                let tileModeX = '',
+                    tileModeY = '',
+                    gravityX = '',
+                    gravityY = '',
+                    gravityAlign = '';
+                let offsetX = false,
+                    offsetY = false;
                 if (repeat.includes(' ')) {
                     const [x, y] = repeat.split(' ');
                     if (x === 'no-repeat') {
@@ -1084,11 +1096,14 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
                 let bitmap = svg[i] !== true;
                 let autoFit = node.is(CONTAINER_NODE.IMAGE) || typeof value !== 'string';
-                let resizedWidth = false, resizedHeight = false;
-                let unsizedWidth = false, unsizedHeight = false;
-                let recalibrate = true;
+                let resizedWidth = false,
+                    resizedHeight = false,
+                    unsizedWidth = false,
+                    unsizedHeight = false,
+                    recalibrate = true;
                 if (dimension) {
-                    let fittedWidth = boundsWidth, fittedHeight = boundsHeight;
+                    let fittedWidth = boundsWidth,
+                        fittedHeight = boundsHeight;
                     if (size !== 'contain') {
                         if (!node.hasWidth) {
                             const innerWidth = window.innerWidth;

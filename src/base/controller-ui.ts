@@ -349,8 +349,9 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public visibleElement(element: Element, pseudoElt?: string) {
-        let style: CSSStyleDeclaration;
-        let width: number, height: number;
+        let style: CSSStyleDeclaration,
+            width: number,
+            height: number;
         if (pseudoElt) {
             const parentElement = element.parentElement;
             style = parentElement ? getStyle(parentElement, pseudoElt) : getStyle(element);

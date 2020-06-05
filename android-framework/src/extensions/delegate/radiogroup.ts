@@ -42,7 +42,8 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
         const inputName = getInputName(node.element as HTMLInputElement);
         const radiogroup: T[] = [];
         const removeable: T[] = [];
-        let first = -1, last = -1;
+        let first = -1,
+            last = -1;
         parent.each((item: T, index) => {
             const renderAs = item.renderAs as T;
             let remove: Undef<T>;

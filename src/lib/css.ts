@@ -49,7 +49,8 @@ function calculatePosition(element: CSSElement, value: string, boundingBox?: Dim
             return calculateVarAsString(element, alignment.join(' '), { dimension: ['width', 'height'], boundingBox, parent: false });
         case 3:
         case 4: {
-            let horizontal = 0, vertical = 0;
+            let horizontal = 0,
+                vertical = 0;
             for (let i = 0; i < length; ++i) {
                 const position = alignment[i];
                 switch (position) {
@@ -2700,7 +2701,12 @@ export function parseVar(element: CSSElement, value: string) {
 }
 
 export function calculateVarAsString(element: CSSElement, value: string, options?: CalculateVarAsStringOptions) {
-    let orderedSize: Undef<number[]>, dimension: Undef<DimensionAttr[]>,  separator: Undef<string>,  unitType: Undef<number>, checkUnit: Undef<boolean>, errorString: Undef<RegExp>;
+    let orderedSize: Undef<number[]>,
+        dimension: Undef<DimensionAttr[]>,
+        separator: Undef<string>,
+        unitType: Undef<number>,
+        checkUnit: Undef<boolean>,
+        errorString: Undef<RegExp>;
     const optionsVar = {} as CalculateVarOptions;
     if (options) {
         Object.assign(optionsVar, options);
@@ -2887,7 +2893,8 @@ export function calculateVar(element: CSSElement, value: string, options: Calcul
 }
 
 export function getContentBoxDimension(element: Null<CSSElement>) {
-    let width = 0, height = 0;
+    let width = 0,
+        height = 0;
     if (element) {
         const style = getStyle(element);
         ({ width, height } = element.getBoundingClientRect());
@@ -2900,17 +2907,14 @@ export function getContentBoxDimension(element: Null<CSSElement>) {
 export function getBackgroundPosition(value: string, dimension: Dimension, options?: BackgroundPositionOptions) {
     value = value.trim();
     if (value !== '') {
-        const orientation = value.split(CHAR_SPACE);
-        if (orientation.length === 1) {
-            orientation.push('center');
-        }
-        const length = Math.min(orientation.length, 4);
-        let fontSize: Undef<number>, imageDimension: Undef<Dimension>, imageSize: Undef<string>, screenDimension: Undef<Dimension>;
+        let fontSize: Undef<number>,
+            imageDimension: Undef<Dimension>,
+            imageSize: Undef<string>,
+            screenDimension: Undef<Dimension>;
         if (options) {
             ({ fontSize, imageDimension, imageSize, screenDimension } = options);
         }
         const { width, height } = dimension;
-        const result = newBoxRectPosition(orientation);
         const setImageOffset = (position: string, horizontal: boolean, direction: string, directionAsPercent: string) => {
             if (imageDimension && !isLength(position)) {
                 let offset = result[directionAsPercent];
@@ -2979,6 +2983,12 @@ export function getBackgroundPosition(value: string, dimension: Dimension, optio
                 result[direction] -= offset;
             }
         };
+        const orientation = value.split(CHAR_SPACE);
+        if (orientation.length === 1) {
+            orientation.push('center');
+        }
+        const result = newBoxRectPosition(orientation);
+        const length = Math.min(orientation.length, 4);
         if (length === 2) {
             orientation.sort((a, b) => {
                 switch (a) {
@@ -3054,7 +3064,8 @@ export function getBackgroundPosition(value: string, dimension: Dimension, optio
             }
         }
         else {
-            let horizontal = 0, vertical = 0;
+            let horizontal = 0,
+                vertical = 0;
             const checkPosition = (position: string, nextPosition?: string) => {
                 switch (position) {
                     case 'left':
@@ -3416,12 +3427,17 @@ export function calculate(value: string, options?: CalculateOptions) {
                     }
                 }
                 if (valid) {
-                    let boundingSize: Undef<number>, min: Undef<number>, max: Undef<number>, unitType: Undef<number>, fontSize: Undef<number>;
+                    let boundingSize: Undef<number>,
+                        min: Undef<number>,
+                        max: Undef<number>,
+                        unitType: Undef<number>,
+                        fontSize: Undef<number>;
                     if (options) {
                         ({ boundingSize, min, max, unitType, fontSize } = options);
                     }
-                    let operand: Undef<string>, operator: Undef<string>;
                     let found = false;
+                    let operand: Undef<string>,
+                        operator: Undef<string>;
                     const seg: number[] = [];
                     const evaluate: string[] = [];
                     const operation = value.substring(j + 1, closing[i]).split(/\s+([+-]\s+|\s*[*/])\s*/);
@@ -3660,7 +3676,9 @@ export function parseUnit(value: string, fontSize?: number, screenDimension?: Di
 }
 
 export function parseTransform(value: string, options?: TransformOptions) {
-    let accumulate: Undef<boolean>, fontSize: Undef<number>, boundingBox: Undef<Dimension>;
+    let accumulate: Undef<boolean>,
+        fontSize: Undef<number>,
+        boundingBox: Undef<Dimension>;
     if (options) {
         ({ accumulate, fontSize, boundingBox } = options);
     }
@@ -3675,7 +3693,9 @@ export function parseTransform(value: string, options?: TransformOptions) {
                 const tX = translate[2];
                 const tY = translate[3];
                 if (accumulate) {
-                    let x = 0, y = 0, z = 0;
+                    let x = 0,
+                        y = 0,
+                        z = 0;
                     switch (method) {
                         case 'translate':
                             if (isPercent(tX)) {
@@ -3746,7 +3766,9 @@ export function parseTransform(value: string, options?: TransformOptions) {
                 const angle = convertAngle(rotate[2], rotate[3]);
                 if (!isNaN(angle)) {
                     if (accumulate) {
-                        let x = 0, y = 0, z = 0;
+                        let x = 0,
+                            y = 0,
+                            z = 0;
                         switch (method) {
                             case 'rotate':
                                 x = angle;
@@ -3782,7 +3804,9 @@ export function parseTransform(value: string, options?: TransformOptions) {
             const scale = TRANSFORM.SCALE.exec(match[0]);
             if (scale) {
                 if (accumulate) {
-                    let x = 1, y = 1, z = 1;
+                    let x = 1,
+                        y = 1,
+                        z = 1;
                     switch (method) {
                         case 'scale':
                             x = parseFloat(scale[2]);
@@ -3823,7 +3847,8 @@ export function parseTransform(value: string, options?: TransformOptions) {
                 let angle = convertAngle(skew[2], skew[3]);
                 if (!isNaN(angle)) {
                     if (accumulate) {
-                        let x = 0, y = 0;
+                        let x = 0,
+                            y = 0;
                         switch (method) {
                             case 'skew':
                                 x = angle;

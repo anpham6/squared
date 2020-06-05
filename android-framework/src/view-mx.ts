@@ -514,7 +514,10 @@ function setCustomization(node: T, obj: Undef<ObjectMap<StringMap>>, overwrite: 
 }
 
 function setBoxModel(node: T, attrs: string[], boxReset: BoxModel, boxAdjustment: BoxModel, margin: boolean) {
-    let top = 0, right = 0, bottom = 0, left = 0;
+    let top = 0,
+        right = 0,
+        bottom = 0,
+        left = 0;
     for (let i = 0; i < 4; ++i) {
         const attr = attrs[i];
         let value: number = boxReset[attr] === 0 ? node[attr] : 0;
@@ -720,7 +723,8 @@ function setBoxModel(node: T, attrs: string[], boxReset: BoxModel, boxAdjustment
         left += node.borderLeftWidth;
     }
     if (top !== 0 || left !== 0 || bottom !== 0 || right !== 0) {
-        let horizontal = 0, vertical = 0;
+        let horizontal = 0,
+            vertical = 0;
         if ((!margin || !(node.renderParent as T).layoutGrid) && node.api >= BUILD_ANDROID.OREO) {
             if (top === right && right === bottom && bottom === left) {
                 node.android(margin ? STRING_ANDROID.MARGIN : STRING_ANDROID.PADDING, formatPX(top));
@@ -1479,7 +1483,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public clone(id: number, options?: AndroidCloneOptions): T {
-            let attributes: Undef<boolean>, position: Undef<boolean>;
+            let attributes: Undef<boolean>,
+                position: Undef<boolean>;
             if (options) {
                 ({ attributes, position } = options);
             }
@@ -1696,7 +1701,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const node = this.anchorTarget;
             const renderParent = node.renderParent as T;
             if (renderParent?.layoutConstraint) {
-                let oppose: Undef<boolean>, accumulate: Undef<boolean>, contain: Undef<boolean>;
+                let oppose: Undef<boolean>,
+                    accumulate: Undef<boolean>,
+                    contain: Undef<boolean>;
                 if (options) {
                     ({ oppose, accumulate, contain } = options);
                 }
@@ -1732,7 +1739,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const node = this.anchorTarget;
             const renderParent = node.renderParent as T;
             if (renderParent?.layoutConstraint) {
-                let oppose: Undef<boolean>, accumulate: Undef<boolean>, contain: Undef<boolean>;
+                let oppose: Undef<boolean>,
+                    accumulate: Undef<boolean>,
+                    contain: Undef<boolean>;
                 if (options) {
                     ({ oppose, accumulate, contain } = options);
                 }
@@ -1971,7 +1980,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const node = this.anchorTarget;
             const renderParent = node.renderParent as T;
             if (renderParent && (renderParent.layoutConstraint || renderParent.layoutRelative)) {
-                let anchorA: string, anchorB: string;
+                let anchorA: string,
+                    anchorB: string;
                 switch (direction) {
                     case 'top':
                         anchorA = 'topBottom';
@@ -2231,8 +2241,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             const direction = getGravityValues(this, attr, this.localizeString(alignment));
             if (direction) {
-                let result = '';
-                let x = '', y = '', z = '';
+                let x = '',
+                    y = '',
+                    z = '',
+                    result = '';
                 let i = 0;
                 while (i < direction.length) {
                     const value = direction[i++];

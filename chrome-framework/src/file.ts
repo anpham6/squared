@@ -159,10 +159,11 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         if (match) {
             const host = match[2], port = match[3], path = match[4] || '';
             const extension = getFileExt(uri);
-            let pathname = '', filename = '';
             let rootDir: Undef<string>;
             let moveTo: Undef<string>;
-            let prefix!: string;
+            let pathname = '',
+                filename = '',
+                prefix = '';
             const getDirectory = (start: number) => path.substring(start, path.lastIndexOf('/'));
             if (!local) {
                 if (options.saveTo && relocate) {

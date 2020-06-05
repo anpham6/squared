@@ -1142,7 +1142,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public cssAscend(attr: string, options?: CssAscendOptions) {
-        let startSelf: Undef<boolean>, initial: Undef<boolean>;
+        let startSelf: Undef<boolean>,
+            initial: Undef<boolean>;
         if (options) {
             ({ startSelf, initial } = options);
         }
@@ -1352,7 +1353,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             if (value === 'initial' || value === CSS_PROPERTIES[attr]?.value) {
                 return false;
             }
-            let not: Undef<string | string[]>, type: Undef<number>;
+            let not: Undef<string | string[]>,
+                type: Undef<number>;
             if (options) {
                 ({ not, type } = options);
             }
@@ -1383,7 +1385,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public hasPX(attr: string, options?: HasPXOptions) {
-        let initial: Undef<boolean>, percent: Undef<boolean>;
+        let initial: Undef<boolean>,
+            percent: Undef<boolean>;
         if (options) {
             ({ initial, percent } = options);
         }
@@ -2454,7 +2457,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     const children = this.naturalChildren;
                     const length = children.length;
                     if (length) {
-                        let top = Infinity, right = -Infinity, bottom = -Infinity, left = Infinity;
+                        let top = Infinity,
+                            right = -Infinity,
+                            bottom = -Infinity,
+                            left = Infinity;
                         let numberOfLines = 0;
                         let i = 0;
                         while (i < length) {
@@ -2610,7 +2616,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 const borderWidth = this.borderTopWidth > 0 || this.borderRightWidth > 0 || this.borderBottomWidth > 0 || this.borderLeftWidth > 0;
                 const backgroundColor = this.backgroundColor !== '';
                 const backgroundImage = this.backgroundImage !== '';
-                let backgroundRepeatX = false, backgroundRepeatY = false;
+                let backgroundRepeatX = false,
+                    backgroundRepeatY = false;
                 if (backgroundImage) {
                     for (const repeat of this.css('backgroundRepeat').split(',')) {
                         const [repeatX, repeatY] = repeat.trim().split(' ');

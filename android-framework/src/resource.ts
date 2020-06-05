@@ -73,7 +73,8 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
     public static addTheme(theme: StyleAttribute) {
         const themes = STORED.themes;
         const { items, output } = theme;
-        let path = 'res/values', file = 'themes.xml';
+        let path = 'res/values',
+            file = 'themes.xml';
         if (output) {
             if (isString(output.path)) {
                 path = trimString(output.path.trim().replace(/\\/g, '/'), '/');

@@ -80,7 +80,10 @@ function parseExclusions(attr: string, enumeration: {}, dataset: DOMStringMap, p
 }
 
 function traverseElementSibling(element: Null<Element>, direction: "previousSibling" | "nextSibling", sessionId: string, options?: SiblingOptions) {
-    let floating: Undef<boolean>, pageFlow: Undef<boolean>, lineBreak: Undef<boolean>, excluded: Undef<boolean>;
+    let floating: Undef<boolean>,
+        pageFlow: Undef<boolean>,
+        lineBreak: Undef<boolean>,
+        excluded: Undef<boolean>;
     if (options) {
         ({ floating, pageFlow, lineBreak, excluded } = options);
     }
@@ -214,10 +217,16 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public static outerRegion(node: T): BoxRectDimension {
-        let top = Infinity, right = -Infinity, bottom = -Infinity, left = Infinity;
-        let actualTop: number, actualRight: number, actualBottom: number, actualLeft: number;
-        let negativeRight = -Infinity;
-        let negativeBottom = -Infinity;
+        let top = Infinity,
+            right = -Infinity,
+            bottom = -Infinity,
+            left = Infinity,
+            negativeRight = -Infinity,
+            negativeBottom = -Infinity,
+            actualTop: number,
+            actualRight: number,
+            actualBottom: number,
+            actualLeft: number;
         node.each((item: T) => {
             if (item.companion) {
                 actualTop = item.actualRect('top');
@@ -330,7 +339,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public static linearData<T extends NodeUI>(list: T[], cleared?: Map<T, string>): LinearData<T> {
         const floated = new Set<string>();
-        let linearX = false, linearY = false;
+        let linearX = false,
+            linearY = false;
         const length = list.length;
         if (length > 1) {
             const nodes: T[] = new Array(length);
@@ -350,7 +360,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             if (n) {
                 nodes.length = n;
                 const siblings = [nodes[0]];
-                let x = 1, y = 1;
+                let x = 1,
+                    y = 1;
                 i = 1;
                 while (i < n) {
                     const node = nodes[i++];
@@ -368,8 +379,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 linearX = x === n;
                 linearY = y === n;
                 if (linearX && floated.size) {
-                    let boxLeft = Infinity, boxRight = -Infinity;
-                    let floatLeft = -Infinity, floatRight = Infinity;
+                    let boxLeft = Infinity,
+                        boxRight = -Infinity;
+                    let floatLeft = -Infinity,
+                        floatRight = Infinity;
                     i = 0;
                     while (i < n) {
                         const node = nodes[i++];

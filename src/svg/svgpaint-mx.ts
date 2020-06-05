@@ -77,8 +77,10 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                             const height = bottom - top;
                             switch (name) {
                                 case 'inset': {
-                                    let x1 = 0, y1 = this.convertLength(match[1], height);
-                                    let x2 = 0, y2 = 0;
+                                    let x1 = 0,
+                                        y1 = this.convertLength(match[1], height),
+                                        x2 = 0,
+                                        y2 = 0;
                                     if (match[4]) {
                                         x1 = left + this.convertLength(match[4], width);
                                         x2 = right - this.convertLength(match[2], width);
@@ -108,7 +110,8 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                 }
                                 case 'polygon': {
                                     const points = plainMap(match[1].split(','), values => {
-                                        let x = left, y = top;
+                                        let x = left,
+                                            y = top;
                                         values.trim().split(' ').forEach((value, index) => {
                                             if (index === 0) {
                                                 x += this.convertLength(value, width);
@@ -127,8 +130,8 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                     if (name === 'circle' || name === 'ellipse') {
                                         const parent = this.parent;
                                         const dimension = width < height ? width : height;
-                                        let rx: number;
-                                        let ry: number;
+                                        let rx: number,
+                                            ry: number;
                                         if (name === 'circle') {
                                             rx = this.convertLength(match[1], dimension);
                                             ry = rx;
@@ -137,8 +140,8 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                             rx = this.convertLength(match[1], width);
                                             ry = this.convertLength(match[2], height);
                                         }
-                                        let cx = left;
-                                        let cy = top;
+                                        let cx = left,
+                                            cy = top;
                                         const length = match.length;
                                         if (length >= 4) {
                                             cx += this.convertLength(match[length - 2], dimension);

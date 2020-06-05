@@ -1201,11 +1201,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const clearMap = this.session.clearMap;
         const inlineAbove: T[] = [];
         const leftAbove: T[] = [], rightAbove: T[] = [];
-        let inlineBelow: Undef<T[]>;
-        let leftBelow: Undef<T[]>, rightBelow: Undef<T[]>;
-        let leftSub: Undef<T[] | T[][]>, rightSub: Undef<T[] | T[][]>;
-        let clearedFloat = false;
-        let clearing = false;
+        let leftBelow: Undef<T[]>,
+            rightBelow: Undef<T[]>,
+            leftSub: Undef<T[] | T[][]>,
+            rightSub: Undef<T[] | T[][]>,
+            inlineBelow: Undef<T[]>,
+            clearing = false,
+            clearedFloat = false;
         layout.each((node, index) => {
             const float = node.float;
             if (clearing && float === 'left') {

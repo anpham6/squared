@@ -197,8 +197,8 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
             });
             element.querySelectorAll('svg use').forEach((use: SVGUseElement) => {
-                const href = use.href.baseVal;
-                if (href.indexOf('#') > 0) {
+                const href = use.href.baseVal || use.getAttributeNS('xlink', 'href');
+                if (href && href.indexOf('#') > 0) {
                     const src = resolvePath(href.split('#')[0]);
                     if (isSvg(src)) {
                         addImageSrc(src);
@@ -565,7 +565,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             case CSSRule.FONT_FACE_RULE: {
                 const attr = /\s*@font-face\s*{([^}]+)}\s*/.exec(cssText)?.[1];
                 if (attr) {
-                    const fontFamily = (/\s*font-family:[^\w]*([^'";]+)/.exec(attr)?.[1] || '').trim();
+                    const fontFamily = (/\s*font-family:[^\w]*([^;]+)/.exec(attr)?.[1] || '').trim();
                     if (fontFamily === '') {
                         break;
                     }

@@ -276,7 +276,8 @@ function getViewport(element: SVGGraphicsElement) {
 }
 
 function getParentOffset(element: SVGGraphicsElement, rootElement: SVGGraphicsElement) {
-    let x = 0, y = 0;
+    let x = 0,
+        y = 0;
     for (const parent of getViewport(element)) {
         if ((SVG.svg(parent) || SVG.use(parent)) && parent !== rootElement) {
             x += parent.x.baseVal.value;
@@ -1741,8 +1742,8 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                         }
                         break;
                     case 'fillPattern': {
-                        const definition = this._svgInstance.definitions.gradient.get(value);
-                        if (definition) {
+                        const pattern = this._svgInstance.findFillPattern(value);
+                        if (pattern) {
                             switch (path.element.tagName) {
                                 case 'path':
                                     if (!/[zZ]\s*$/.test(path.value)) {
@@ -1753,7 +1754,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                 case 'polyline':
                                 case 'circle':
                                 case 'ellipse': {
-                                    const gradient = createFillGradient(definition, path, this.options.floatPrecisionValue);
+                                    const gradient = createFillGradient(pattern, path, this.options.floatPrecisionValue);
                                     if (gradient) {
                                         result['aapt:attr'] = {
                                             name: 'android:fillColor',

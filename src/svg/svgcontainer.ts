@@ -1,7 +1,7 @@
 import SvgBuild from './svgbuild';
 
 import { INSTANCE_TYPE } from './lib/constant';
-import { SVG, getAttribute, getDOMRect, getParentAttribute, getTargetElement } from './lib/util';
+import { SVG, getAttribute, getDOMRect, getTargetElement } from './lib/util';
 
 type Svg = squared.svg.Svg;
 type SvgGroup = squared.svg.SvgGroup;
@@ -9,39 +9,11 @@ type SvgUseSymbol = squared.svg.SvgUseSymbol;
 type SvgView = squared.svg.SvgView;
 
 const { STRING } = squared.lib.regex;
-const { extractURL } = squared.lib.css;
 const { cloneObject, iterateArray } = squared.lib.util;
 
 const REGEXP_LENGTHPERCENTAGE = new RegExp(STRING.LENGTH_PERCENTAGE);
 
-function getNearestViewBox(instance: Undef<SvgContainer>) {
-    while (instance) {
-        if (instance.hasViewBox()) {
-            return instance;
-        }
-        instance = instance.parent;
-    }
-    return undefined;
-}
-
-function getFillPattern(element: SVGGraphicsElement, viewport?: Svg): Undef<SVGPatternElement> {
-    const value = extractURL(getParentAttribute(element, 'fill'));
-    if (value !== '') {
-        if (viewport) {
-            const pattern = viewport.definitions.pattern.get(value);
-            if (pattern) {
-                return pattern;
-            }
-        }
-        const target = document.getElementById(value.substring(1));
-        if (target instanceof SVGPatternElement) {
-            return target;
-        }
-    }
-    return undefined;
-}
-
-function setAspectRatio(parent: Svg | SvgUseSymbol | undefined, group: SvgGroup, viewBox?: DOMRect, element?: SVGSVGElement | SVGSymbolElement) {
+function setAspectRatio(parent: Undef<Svg | SvgUseSymbol>, group: SvgGroup, viewBox?: DOMRect, element?: SVGSVGElement | SVGSymbolElement) {
     if (parent) {
         const aspectRatio = group.aspectRatio;
         const parentAspectRatio = parent.aspectRatio;
@@ -50,9 +22,9 @@ function setAspectRatio(parent: Svg | SvgUseSymbol | undefined, group: SvgGroup,
             const { width, height } = aspectRatio;
             if (width > 0 && height > 0) {
                 const ratio = width / height;
-                let parentWidth = parentAspectRatio.width || parent.viewBox.width;
-                let parentHeight = parentAspectRatio.height || parent.viewBox.height;
                 let parentUnknown = false;
+                let parentWidth = parentAspectRatio.width || parent.viewBox.width,
+                    parentHeight = parentAspectRatio.height || parent.viewBox.height;
                 if (parentWidth === 0 && parentHeight === 0) {
                     ({ width: parentWidth, height: parentHeight } = getDOMRect(parent.element));
                     parentAspectRatio.width = parentWidth;
@@ -64,8 +36,8 @@ function setAspectRatio(parent: Svg | SvgUseSymbol | undefined, group: SvgGroup,
                 const ratioHeight = parentHeight / height;
                 const w = getAttribute(element, 'width');
                 const h = getAttribute(element, 'height');
-                let boxWidth: number;
-                let boxHeight: number;
+                let boxWidth: number,
+                    boxHeight: number;
                 if (parentUnknown) {
                     boxWidth = parentWidth;
                     boxHeight = parentHeight;
@@ -182,7 +154,28 @@ function setAspectRatio(parent: Svg | SvgUseSymbol | undefined, group: SvgGroup,
     }
 }
 
-const getViewport = (container: SvgContainer): Undef<Svg> => container.viewport || SvgBuild.asSvg(container) && container || undefined;
+function getViewport(container: SvgContainer): Undef<Svg> {
+    do {
+        if (SvgBuild.asSvg(container) && container.documentRoot) {
+            return container;
+        }
+        container = container.parent as SvgContainer;
+    }
+    while (container);
+    return undefined;
+}
+
+function getNearestViewBox(container: SvgContainer): Undef<Svg | SvgUseSymbol> {
+    do {
+        if (container.hasViewBox()) {
+            return container;
+        }
+        container = container.parent as SvgContainer;
+    }
+    while (container);
+    return undefined;
+}
+
 const hasLength = (value: string) => REGEXP_LENGTHPERCENTAGE.test(value);
 
 export default class SvgContainer extends squared.lib.base.Container<SvgView> implements squared.svg.SvgContainer {
@@ -215,17 +208,29 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
     }
 
     public build(options?: SvgBuildOptions) {
-        let element: SVGSVGElement | SVGGElement | SVGGraphicsElement | SVGSymbolElement | SVGPatternElement, precision: Undef<number>;
+        let initialize = true,
+            element: SVGSVGElement | SVGGElement | SVGGeometryElement | SVGSymbolElement | SVGPatternElement,
+            precision: Undef<number>;
         if (options) {
             element = options.targetElement || this.element;
             precision = options.precision;
             options = { ...options, targetElement: undefined };
+            if (options.initialize === false) {
+                initialize = false;
+            }
         }
         else {
             element = this.element;
         }
-        const initialize = options?.initialize !== false;
         const viewport = getViewport(this);
+        let rootElement: Undef<SVGSVGElement>,
+            contentMap: Undef<StringMap>;
+        if (viewport) {
+            ({ element: rootElement, contentMap } = viewport);
+            if (precision === undefined) {
+                precision = viewport.precision;
+            }
+        }
         const container = getNearestViewBox(this);
         const aspectRatio = this.aspectRatio;
         let requireClip = false;
@@ -242,18 +247,22 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
                 setAspectRatio(container, svg as SvgGroup);
             }
             else if (SVG.use(item)) {
-                const target = getTargetElement(item);
+                const target = getTargetElement(item, rootElement, contentMap);
                 if (target) {
                     if (SVG.symbol(target)) {
                         svg = new squared.svg.SvgUseSymbol(target, item);
                         setAspectRatio(container, svg as SvgGroup, target.viewBox.baseVal, target);
                         requireClip = true;
                     }
+                    else if (SVG.g(target)) {
+                        svg = new squared.svg.SvgUseG(target, item);
+                        setAspectRatio(container, svg as SvgGroup);
+                    }
                     else if (SVG.image(target)) {
                         svg = new squared.svg.SvgImage(item, target);
                     }
                     else if (SVG.shape(target)) {
-                        const pattern = getFillPattern(item, viewport);
+                        const pattern = viewport?.findFill(item);
                         if (pattern) {
                             svg = new squared.svg.SvgUseShapePattern(target, item, pattern);
                             setAspectRatio(container, svg as SvgGroup);
@@ -262,17 +271,13 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
                             svg = new squared.svg.SvgUseShape(target, item, initialize);
                         }
                     }
-                    else if (SVG.g(target)) {
-                        svg = new squared.svg.SvgUseG(target, item);
-                        setAspectRatio(container, svg as SvgGroup);
-                    }
                 }
             }
             else if (SVG.image(item)) {
                 svg = new squared.svg.SvgImage(item);
             }
             else if (SVG.shape(item)) {
-                const target = getFillPattern(item, viewport);
+                const target = viewport?.findFill(item);
                 if (target) {
                     svg = new squared.svg.SvgShapePattern(item, target);
                     setAspectRatio(container, svg as SvgGroup);
@@ -362,14 +367,16 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
             const { align, alignX, alignY, parent } = this.aspectRatio;
             const { width, height } = this;
             const [left, top, right, bottom] = SvgBuild.minMaxPoints(values, true);
-            let x1 = 0, y1 = 0;
+            let x1 = 0,
+                y1 = 0;
             if (alignX) {
                 x1 = parent.x * -1;
             }
             if (alignY) {
                 y1 = parent.y * -1;
             }
-            let x = x1, y = y1;
+            let x = x1,
+                y = y1;
             const xMid = () => (width / 2) - ((right + left) / 2);
             const xMax = () => (width - left) - right + x1;
             const yMid = () => (height / 2) - ((top + bottom) / 2);

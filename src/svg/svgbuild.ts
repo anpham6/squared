@@ -15,7 +15,6 @@ type SvgPattern = squared.svg.SvgPattern;
 type SvgShape = squared.svg.SvgShape;
 type SvgShapePattern = squared.svg.SvgShapePattern;
 type SvgUse = squared.svg.SvgUse;
-type SvgUseSvg = squared.svg.SvgUseSvg;
 type SvgUseG = squared.svg.SvgUseG;
 type SvgUseShape = squared.svg.SvgUseShape;
 type SvgUseShapePattern = squared.svg.SvgUseShapePattern;
@@ -43,7 +42,6 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     public static asPattern = (object: SvgElement): object is SvgPattern => object.instanceType === INSTANCE_TYPE.SVG_PATTERN;
     public static asShapePattern = (object: SvgElement): object is SvgShapePattern => object.instanceType === INSTANCE_TYPE.SVG_SHAPE_PATTERN;
     public static asImage = (object: SvgElement): object is SvgImage => object.instanceType === INSTANCE_TYPE.SVG_IMAGE;
-    public static asUseSvg = (object: SvgElement): object is SvgUseSvg => object.instanceType === INSTANCE_TYPE.SVG_USE_SVG;
     public static asUseG = (object: SvgElement): object is SvgUseG => object.instanceType === INSTANCE_TYPE.SVG_USE_G;
     public static asUseSymbol = (object: SvgElement): object is SvgUseSymbol => object.instanceType === INSTANCE_TYPE.SVG_USE_SYMBOL;
     public static asUseShape = (object: SvgElement): object is SvgUseShape => object.instanceType === INSTANCE_TYPE.SVG_USE_SHAPE;
@@ -190,8 +188,10 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             value = SvgBuild.drawEllipse(pt.x, pt.y, pt.rx, pt.ry, precision);
         }
         else if (SVG.rect(element)) {
-            let x = element.x.baseVal.value, y = element.y.baseVal.value;
-            let width = element.width.baseVal.value, height = element.height.baseVal.value;
+            let x = element.x.baseVal.value,
+                y = element.y.baseVal.value,
+                width = element.width.baseVal.value,
+                height = element.height.baseVal.value;
             if (parent?.requireRefit) {
                 x = parent.refitX(x);
                 y = parent.refitY(y);
@@ -433,7 +433,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 const itemCount = item.length;
                 const points: SvgPoint[] = new Array(itemCount / 2);
                 for (let i = 0, j = 0; i < itemCount; i += 2) {
-                    let x = item[i], y = item[i + 1];
+                    let x = item[i],
+                        y = item[i + 1];
                     if (relative && previousPoint) {
                         x += previousPoint.x;
                         y += previousPoint.y;
@@ -465,7 +466,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static getPathPoints(values: SvgPathCommand[]) {
         const result: SvgPoint[] = [];
-        let x = 0, y = 0;
+        let x = 0,
+            y = 0;
         const length = values.length;
         let i = 0, j: number;
         while (i < length) {
@@ -636,8 +638,10 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         const result = SvgBuild.clonePoints(values);
         for (const item of transforms.slice(0).reverse()) {
             const m = item.matrix;
-            let x1 = 0, y1 = 0;
-            let x2 = 0, y2 = 0;
+            let x1 = 0,
+                y1 = 0,
+                x2 = 0,
+                y2 = 0;
             if (origin) {
                 const { x, y } = origin;
                 const method = item.method;
@@ -730,7 +734,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static minMaxPoints(values: SvgPoint[], radius = false): [number, number, number, number] {
         let { x: minX, y: minY } = values[0];
-        let maxX = minX, maxY = minY;
+        let maxX = minX,
+            maxY = minY;
         const length = values.length;
         for (let i = 1; i < length; ++i) {
             const { x, y } = values[i];
@@ -738,7 +743,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 const { rx, ry } = values[i];
                 if (rx !== undefined && ry !== undefined) {
                     const { x: x1, y: y1 } = values[i - 1];
-                    let x2 = (x + x1) / 2, y2 = (y + y1) / 2;
+                    let x2 = (x + x1) / 2,
+                        y2 = (y + y1) / 2;
                     if (x > x1) {
                         y2 -= ry;
                     }

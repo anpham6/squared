@@ -13,7 +13,6 @@ declare module "svg" {
         static asImage(object: SvgElement): object is SvgImage;
         static asPattern(object: SvgElement): object is SvgPattern;
         static asShapePattern(object: SvgElement): object is SvgShapePattern;
-        static asUseSvg(object: SvgElement): object is SvgUseSvg
         static asUseG(object: SvgElement): object is SvgUseG;
         static asUseShape(object: SvgElement): object is SvgUseShape;
         static asUseShapePattern(object: SvgElement): object is SvgUseShapePattern;
@@ -172,6 +171,8 @@ declare module "svg" {
         readonly element: SVGSVGElement;
         readonly documentRoot: boolean;
         readonly definitions: SvgDefinitions;
+        findFill(value: string | SVGGraphicsElement): Undef<SVGPatternElement>;
+        findFillPattern(value: string | SVGGraphicsElement): Undef<SvgGradient>;
         setRect(): void;
         setBaseValue(attr: string, value?: any): boolean;
         getBaseValue(attr: string, fallback?: any): any;
@@ -203,34 +204,6 @@ declare module "svg" {
         get visible(): boolean;
         get opacity(): string;
         constructor(element: SVGSVGElement, documentRoot?: boolean);
-    }
-
-    class SvgUseSvg extends Svg implements SvgUse {
-        color: string;
-        fill: string;
-        fillPattern: string;
-        fillOpacity: string;
-        fillRule: string;
-        stroke: string;
-        strokeWidth: string;
-        strokePattern: string;
-        strokeOpacity: string;
-        strokeLinecap: string;
-        strokeLinejoin: string;
-        strokeMiterlimit: string;
-        strokeDasharray: string;
-        strokeDashoffset: string;
-        clipPath: string;
-        clipRule: string;
-        useParent?: SvgUse;
-        patternParent?: SvgShapePattern;
-        readonly useElement: SVGUseElement;
-        setPaint(d?: string[], precision?: number): void;
-        setAttribute(attr: string, computed?: boolean, inherited?: boolean): void;
-        getAttribute(attr: string, computed?: boolean, inherited?: boolean): string;
-        resetPaint(): void;
-        convertLength(value: string, dimension?: string | number): number;
-        constructor(element: SVGSVGElement, useElement: SVGUseElement);
     }
 
     class SvgG extends SvgContainer implements SvgView, SvgPaint {
@@ -806,7 +779,7 @@ declare module "svg" {
             function getAttribute(element: SVGElement, attr: string, computed?: boolean): string;
             function getParentAttribute(element: SVGElement, attr: string, computed?: boolean): string;
             function getDOMRect(element: SVGElement): DOMRect;
-            function getTargetElement(element: SVGElement, rootElement?: Null<CSSElement>): Null<SVGElement>;
+            function getTargetElement(element: SVGElement, rootElement?: Null<SVGSVGElement>, contentMap?: StringMap): Null<SVGElement>;
             function getNearestViewBox(element: SVGElement): Undef<DOMRect>;
             function getPathLength(value: string): string;
         }

@@ -25,8 +25,8 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
     public condition(node: T) {
         const { documentBody, lastStaticChild } = node;
         let contentBox = node.contentBoxWidth > 0 || node.contentBoxHeight > 0 || node.marginTop !== 0 || node.marginRight !== 0 || node.marginBottom !== 0 || node.marginLeft !== 0;
-        let aboveInvalid = false;
-        let belowInvalid = false;
+        let aboveInvalid = false,
+            belowInvalid = false;
         if (node.firstStaticChild?.lineBreak) {
             aboveInvalid = true;
             contentBox = true;
@@ -45,7 +45,8 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
         const paddingRight = node.paddingRight + (documentBody ? node.marginRight : 0);
         const paddingBottom = node.paddingBottom + (documentBody ? node.marginBottom : 0);
         const paddingLeft = node.paddingLeft + (documentBody ? node.marginLeft : 0);
-        let right = false, bottom = false;
+        let right = false,
+            bottom = false;
         node.each((item: View) => {
             const fixed = rootElement && item.css('position') === 'fixed';
             if (item.pageFlow || !contentBox && !fixed) {

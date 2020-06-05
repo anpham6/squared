@@ -5,9 +5,10 @@ import SvgViewRect$MX from './svgviewrect-mx';
 import SvgContainer from './svgcontainer';
 
 import { INSTANCE_TYPE } from './lib/constant';
-import { SVG, getDOMRect, getTargetElement } from './lib/util';
+import { SVG, getDOMRect, getParentAttribute, getTargetElement } from './lib/util';
 
 const { parseColor } = squared.lib.color;
+const { extractURL } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { cloneObject } = squared.lib.util;
 
@@ -39,6 +40,26 @@ function getBaseValue(element: SVGElement, ...attrs: string[]) {
     return result;
 }
 
+function createLinearGradient(element: SVGLinearGradientElement): SvgGradient {
+    return {
+        type: 'linear',
+        element,
+        spreadMethod: element.spreadMethod.baseVal,
+        colorStops: getColorStop(element),
+        ...getBaseValue(element, 'x1', 'x2', 'y1', 'y2')
+    };
+}
+
+function createRadialGradient(element: SVGRadialGradientElement): SvgGradient {
+    return {
+        type: 'radial',
+        element,
+        spreadMethod: element.spreadMethod.baseVal,
+        colorStops: getColorStop(element),
+        ...getBaseValue(element, 'cx', 'cy', 'r', 'fx', 'fy', 'fr')
+    };
+}
+
 export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer)))) implements squared.svg.Svg {
     public precision?: number;
     public readonly definitions: SvgDefinitions = {
@@ -52,6 +73,9 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
         public readonly documentRoot = true)
     {
         super(element);
+        if (documentRoot) {
+            this.viewport = this;
+        }
         this.init();
     }
 
@@ -66,6 +90,48 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
             this.animateSequentially(this.getAnimateViewRect(), this.getAnimateTransform(options), undefined, options);
         }
         super.synchronize(options);
+    }
+
+    public findFill(value: string | SVGGraphicsElement): Undef<SVGPatternElement> {
+        if (typeof value !== 'string') {
+            value = extractURL(getParentAttribute(value, 'fill'));
+        }
+        if (value !== '') {
+            const result = this.definitions.pattern.get(value);
+            if (result) {
+                return result;
+            }
+            const element = document.getElementById(value.substring(1));
+            if (element instanceof SVGPatternElement) {
+                return element;
+            }
+        }
+        return undefined;
+    }
+
+    public findFillPattern(value: string | SVGGraphicsElement): Undef<SvgGradient> {
+        if (typeof value !== 'string') {
+            value = extractURL(getParentAttribute(value, 'fillPattern'));
+        }
+        let result: Undef<SvgGradient>;
+        if (value !== '') {
+            result = this.definitions.gradient.get(value);
+            if (!result) {
+                const element = document.getElementById(value.substring(1));
+                if (element) {
+                    if (SVG.linearGradient(element)) {
+                        result = createLinearGradient(element);
+                    }
+                    else if (SVG.radialGradient(element)) {
+                        result = createRadialGradient(element);
+                    }
+                    if (result) {
+                        this.definitions.gradient.set(value, result);
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     protected init() {
@@ -91,28 +157,24 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
             if (id !== '') {
                 id = '#' + id;
                 if (SVG.clipPath(element)) {
-                    definitions.clipPath.set(id, element);
+                    if (!definitions.clipPath.has(id)) {
+                        definitions.clipPath.set(id, element);
+                    }
                 }
                 else if (SVG.pattern(element)) {
-                    definitions.pattern.set(id, element);
+                    if (!definitions.pattern.has(id)) {
+                        definitions.pattern.set(id, element);
+                    }
                 }
                 else if (SVG.linearGradient(element)) {
-                    definitions.gradient.set(id, {
-                        type: 'linear',
-                        element,
-                        spreadMethod: element.spreadMethod.baseVal,
-                        colorStops: getColorStop(element),
-                        ...getBaseValue(element, 'x1', 'x2', 'y1', 'y2')
-                    });
+                    if (!definitions.gradient.has(id)) {
+                        definitions.gradient.set(id, createLinearGradient(element));
+                    }
                 }
                 else if (SVG.radialGradient(element)) {
-                    definitions.gradient.set(id, {
-                        type: 'radial',
-                        element,
-                        spreadMethod: element.spreadMethod.baseVal,
-                        colorStops: getColorStop(element),
-                        ...getBaseValue(element, 'cx', 'cy', 'r', 'fx', 'fy', 'fr')
-                    });
+                    if (!definitions.gradient.has(id)) {
+                        definitions.gradient.set(id, createRadialGradient(element));
+                    }
                 }
             }
         });

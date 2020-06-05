@@ -417,7 +417,8 @@ function getBoxWidth(this: Controller<View>, node: View, children: View[]) {
                 const container = node.ascend({ condition: (item: View) => item.of(containerType, alignmentType), including: parent, attr: 'renderParent' });
                 if (container.length) {
                     const box = node.box;
-                    let offsetLeft = 0, offsetRight = 0;
+                    let offsetLeft = 0,
+                        offsetRight = 0;
                     const naturalChildren = parent.naturalChildren;
                     const length = naturalChildren.length;
                     let i = 0;
@@ -1246,7 +1247,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         const length = layout.length;
         if (length > 1) {
             const clearMap = this.application.clearMap;
-            let A = true, B = true;
+            let A = true,
+                B = true;
             for (const node of layout) {
                 if (!clearMap.has(node)) {
                     const inputElement = node.inputElement || node.controlElement;
@@ -3147,7 +3149,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if (node.constraint[axis]) {
             return;
         }
-        let orientation: Undef<string>, percent: Undef<boolean>, opposing: Undef<boolean>;
+        let orientation: Undef<string>,
+            percent: Undef<boolean>,
+            opposing: Undef<boolean>;
         if (options) {
             ({ orientation, percent, opposing } = options);
         }
@@ -3159,9 +3163,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             documentParent = parent;
         }
         const horizontal = axis === 'horizontal';
-        const linear = node.linear;
-        const box = documentParent.box;
-        let LT: string, RB: string;
+        let LT: string,
+            RB: string;
         if (horizontal) {
             if (!opposing) {
                 LT = 'left';
@@ -3180,6 +3183,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             LT = 'bottom';
             RB = 'top';
         }
+        const linear = node.linear;
+        const box = documentParent.box;
         if (!percent && !opposing) {
             if (withinRange(linear[LT], box[LT])) {
                 node.anchor(LT, 'parent', true);
@@ -3265,7 +3270,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                 }
                 const TL = horizontal ? 'top' : 'left';
-                let nearest: Undef<T>, adjacent: Undef<T>;
+                let nearest: Undef<T>,
+                    adjacent: Undef<T>;
                 i = 0;
                 while (i < length) {
                     const item = renderChildren[i++] as T;

@@ -100,7 +100,10 @@ export default class Grid <T extends View> extends squared.base.extensions.Grid<
         if (node.css('borderCollapse') !== 'collapse') {
             const columnCount: number = node.data(this.name, 'columnCount');
             if (columnCount) {
-                let paddingTop = 0, paddingRight = 0, paddingBottom = 0, paddingLeft = 0;
+                let paddingTop = 0,
+                    paddingRight = 0,
+                    paddingBottom = 0,
+                    paddingLeft = 0;
                 node.renderEach(item => {
                     const cellData: GridCellData<T> = item.data(this.name, 'cellData');
                     if (cellData) {

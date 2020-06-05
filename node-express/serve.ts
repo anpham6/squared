@@ -829,8 +829,9 @@ let Image: serve.IImage;
             return false;
         }
         parseResizeMode(value: string) {
-            let width = 0, height = 0;
-            let mode = '';
+            let width = 0,
+                height = 0,
+                mode = '';
             const match = /\(\s*(\d+)\s*x\s*(\d+)(?:\s*#\s*(contain|cover|scale))?\s*\)/.exec(value);
             if (match) {
                 width = parseInt(match[1]);

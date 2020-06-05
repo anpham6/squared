@@ -102,7 +102,8 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     }
 
     public iterate(predicate: IteratorPredicate<T, void | boolean>, options?: ContainerRangeOptions) {
-        let start: Undef<number>, end: Undef<number>;
+        let start: Undef<number>,
+            end: Undef<number>;
         if (options) {
             ({ start, end } = options);
         }
@@ -133,7 +134,8 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     }
 
     public extract(predicate: IteratorPredicate<T, boolean>, options?: ContainerCascadeOptions<T>): T[] {
-        let also: Undef<BindGeneric<T, void>>, error: Undef<IteratorPredicate<T, boolean>>;
+        let also: Undef<BindGeneric<T, void>>,
+            error: Undef<IteratorPredicate<T, boolean>>;
         if (options) {
             ({ also, error } = options);
         }
@@ -154,7 +156,8 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     }
 
     public findIndex(predicate: IteratorPredicate<T, boolean>, options?: ContainerCascadeOptions<T>) {
-        let also: Undef<BindGeneric<T, void>>, error: Undef<IteratorPredicate<T, boolean>>;
+        let also: Undef<BindGeneric<T, void>>,
+            error: Undef<IteratorPredicate<T, boolean>>;
         if (options) {
             ({ also, error } = options);
         }
@@ -174,7 +177,11 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     }
 
     public find(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>) {
-        let error: Undef<IteratorPredicate<T, boolean>>, also: Undef<BindGeneric<T, void>>, cascade: Undef<boolean>, start: Undef<number>, end: Undef<number>;
+        let also: Undef<BindGeneric<T, void>>,
+            error: Undef<IteratorPredicate<T, boolean>>,
+            cascade: Undef<boolean>,
+            start: Undef<number>,
+            end: Undef<number>;
         if (options) {
             ({ also, error, cascade } = options);
             if (!cascade) {
@@ -222,7 +229,8 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     }
 
     public cascade(predicate?: (item: T) => void | boolean, options?: ContainerCascadeOptions<T>) {
-        let error: Undef<IteratorPredicate<T, boolean>>, also: Undef<BindGeneric<T, void>>;
+        let also: Undef<BindGeneric<T, void>>,
+            error: Undef<IteratorPredicate<T, boolean>>;
         if (options) {
             ({ also, error } = options);
         }

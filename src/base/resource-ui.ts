@@ -417,7 +417,8 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                     }
                                     break;
                             }
-                            let x = truncateFraction(offsetAngleX(angle, width)), y = truncateFraction(offsetAngleY(angle, height));
+                            let x = truncateFraction(offsetAngleX(angle, width)),
+                                y = truncateFraction(offsetAngleY(angle, height));
                             if (x !== width && y !== height && !equal(Math.abs(x), Math.abs(y))) {
                                 let opposite: number;
                                 if (angle <= 90) {

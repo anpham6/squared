@@ -3,7 +3,7 @@ const { getNamedItem } = squared.lib.dom;
 const { clamp, convertRadian, hypotenuse } = squared.lib.math;
 const { TRANSFORM: REGEXP_TRANSFORM } = squared.lib.regex;
 const { getStyleValue } = squared.lib.session;
-const { convertCamelCase, convertFloat, isString } = squared.lib.util;
+const { convertCamelCase, convertFloat, isString, resolvePath } = squared.lib.util;
 
 function setOriginPosition(element: Element, point: Point, attr: string, position: string, dimension: number) {
     if (isLength(position)) {
@@ -505,22 +505,25 @@ export function getParentAttribute(element: SVGElement, attr: string, computed =
     return value;
 }
 
-export function getTargetElement(element: SVGElement, rootElement?: SVGElement) {
+export function getTargetElement(element: Element, rootElement?: Null<Element>, contentMap?: StringMap) {
     const value = getNamedItem(element, 'href') || getNamedItem(element, 'xlink:href');
     if (value.charAt(0) === '#') {
         const id = value.substring(1);
-        let parent: Null<SVGElement | HTMLElement>;
-        if (rootElement) {
-            parent = rootElement;
-        }
-        else {
-            parent = element.parentElement;
-            while (parent && parent.parentElement instanceof SVGGraphicsElement) {
-                parent = parent.parentElement;
+        if (!rootElement) {
+            let parent = element.parentElement;
+            rootElement = parent;
+            while (parent) {
+                if (parent.parentElement instanceof HTMLElement) {
+                    break;
+                }
+                else if (parent.parentElement) {
+                    rootElement = parent;
+                    parent = parent.parentElement;
+                }
             }
         }
-        if (parent) {
-            const elements = parent.querySelectorAll('*');
+        if (rootElement) {
+            const elements = rootElement.querySelectorAll('*');
             const length = elements.length;
             let i = 0;
             while (i < length) {
@@ -533,6 +536,21 @@ export function getTargetElement(element: SVGElement, rootElement?: SVGElement) 
         const target = document.getElementById(id);
         if (target instanceof SVGElement) {
             return target;
+        }
+    }
+    else if (contentMap && value.indexOf('#') > 0) {
+        const [href, id] = value.split('#').map((item, index) => index === 0 ? resolvePath(item) : item);
+        const content = contentMap[href];
+        if (content) {
+            document.body.insertAdjacentHTML('beforeend', content);
+            element = document.body.lastElementChild as Element;
+            if (element instanceof SVGGraphicsElement) {
+                element.style.display = 'none';
+                return element.querySelector('#' + id);
+            }
+            else if (element) {
+                document.body.removeChild(element);
+            }
         }
     }
     return null;
