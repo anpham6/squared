@@ -369,21 +369,19 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     public saveDocument(filename: string, content: string, pathname?: string, index?: number) {
-        if (isString(content)) {
-            const layout: LayoutAsset = {
-                pathname: pathname
-                    ? trimString(pathname.replace(/\\/g, '/'), '/')
-                    : appendSeparator(this.userSettings.outputDirectory, this._controllerSettings.layout.pathName),
-                filename,
-                content,
-                index
-            };
-            if (index === undefined || !(index >= 0 && index < this._layouts.length)) {
-                this._layouts.push(layout);
-            }
-            else {
-                this._layouts.splice(index, 0, layout);
-            }
+        const layout: LayoutAsset = {
+            pathname: pathname
+                ? trimString(pathname.replace(/\\/g, '/'), '/')
+                : appendSeparator(this.userSettings.outputDirectory, this._controllerSettings.layout.pathName),
+            filename,
+            content,
+            index
+        };
+        if (index === undefined || !(index >= 0 && index < this._layouts.length)) {
+            this._layouts.push(layout);
+        }
+        else {
+            this._layouts.splice(index, 0, layout);
         }
     }
 
@@ -531,7 +529,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 for (let i = 0; i < pseudoElements.length; ++i) {
                     const item = pseudoElements[i];
                     const parentElement = item.actualParent!.element as HTMLElement;
-                    let id = parentElement.id,
+                    let id = parentElement.id.trim(),
                         styleElement: Undef<HTMLStyleElement>;
                     if (item.pageFlow) {
                         if (id === '') {
@@ -1558,7 +1556,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (styleMap) {
             let value = styleMap.content;
             if (value) {
-                const textContent = trimBoth(value);
+                const textContent = trimBoth(value, '"');
                 let absolute = false;
                 switch (styleMap.position) {
                     case 'absolute':
@@ -1615,7 +1613,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 const style = getStyle(element);
                 for (let i = 0; i < TEXT_STYLE.length; ++i) {
                     const attr = TEXT_STYLE[i];
-                    if (!isString(styleMap[attr])) {
+                    if (!styleMap[attr]) {
                         styleMap[attr] = style[attr];
                     }
                 }
@@ -1771,7 +1769,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         break;
                     }
                 }
-                if (!isString(styleMap.display)) {
+                if (!styleMap.display) {
                     styleMap.display = 'inline';
                 }
                 if (content || value === '""') {
@@ -1791,10 +1789,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         (pseudoElement as HTMLImageElement).src = content;
                         const image = this.resourceHandler.getImage(content);
                         if (image) {
-                            if (!isString(styleMap.width) && image.width > 0) {
+                            if (!styleMap.width && image.width > 0) {
                                 styleMap.width = formatPX(image.width);
                             }
-                            if (!isString(styleMap.height) && image.height > 0) {
+                            if (!styleMap.height && image.height > 0) {
                                 styleMap.height = formatPX(image.height);
                             }
                         }

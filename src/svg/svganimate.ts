@@ -6,20 +6,7 @@ import { INSTANCE_TYPE, KEYSPLINE_NAME } from './lib/constant';
 const { getHexCode, parseColor } = squared.lib.color;
 const { getFontSize, isLength, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
-const { isNumber, isString, replaceMap, sortNumber, trimEnd } = squared.lib.util;
-
-function flatString<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[] {
-    const length = list.length;
-    const result: U[] = [];
-    let i = 0;
-    while (i < length) {
-        const item = predicate(list[i], i++, list);
-        if (isString(item)) {
-            result.push(item);
-        }
-    }
-    return result;
-}
+const { isNumber, replaceMap, sortNumber, trimEnd } = squared.lib.util;
 
 const invertControlPoint = (value: number) => parseFloat((1 - value).toPrecision(5));
 
@@ -294,7 +281,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                     this._keySplines = undefined;
                     break;
                 case 'spline':
-                    this.keySplines = flatString(getNamedItem(animationElement, 'keySplines').split(';'), value => value.trim());
+                    this.keySplines = replaceMap(getNamedItem(animationElement, 'keySplines').split(';'), (value: string) => value.trim()).filter(value => value !== '');
                 case 'linear':
                     if (keyTimesBase[0] !== 0 && keyTimesBase[keyTimesBase.length - 1] !== 1) {
                         const length = this.values.length;

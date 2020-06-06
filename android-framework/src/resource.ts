@@ -78,10 +78,10 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
             name = theme.name,
             appTheme = '';
         if (output) {
-            if (isString(output.path)) {
+            if (output.path) {
                 path = trimString(output.path.trim().replace(/\\/g, '/'), '/');
             }
-            if (isString(output.file)) {
+            if (output.file) {
                 file = trimString(output.file.trim().replace(/\\/g, '/'), '/');
             }
         }

@@ -7,7 +7,7 @@ import { SVG, getAttribute, getPathLength, getTargetElement } from './lib/util';
 const { isPercent, parseAngle } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { truncateFraction } = squared.lib.math;
-const { isEqual, isNumber, isString, iterateArray, plainMap } = squared.lib.util;
+const { isEqual, isNumber, iterateArray, plainMap } = squared.lib.util;
 
 const equalPoint = (item: Undef<SvgOffsetPath>, time: number, point: DOMPoint, rotate: number) => !!item && item.key === time && item.rotate === rotate && isEqual(item.value, point);
 
@@ -132,7 +132,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     }
 
     protected setOffsetPath() {
-        if (this._offsetPath === undefined && isString(this.path)) {
+        if (this._offsetPath === undefined && this.path) {
             let offsetPath = SvgBuild.getOffsetPath(this.path, this.rotate),
                 distance = offsetPath.length;
             if (distance > 0) {
@@ -359,7 +359,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     }
 
     set keyTimes(value) {
-        if (!isString(this.path)) {
+        if (!this.path) {
             super.keyTimes = value;
         }
     }
@@ -374,7 +374,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     }
 
     set values(value) {
-        if (!isString(this.path)) {
+        if (!this.path) {
             super.values = value;
         }
     }
@@ -474,7 +474,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     }
 
     get playable() {
-        return !this.paused && this.duration !== -1 && isString(this.path);
+        return !this.paused && this.duration !== -1 && !!this.path;
     }
 
     get rotateValues() {

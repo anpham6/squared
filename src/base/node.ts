@@ -5,7 +5,7 @@ const { CSS_PROPERTIES, CSS_TRAITS, CSS_UNIT, checkStyleValue, checkWritingMode,
 const { ELEMENT_BLOCK, assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { CSS, FILE } = squared.lib.regex;
 const { actualClientRect, actualTextRangeRect, deleteElementCache, getElementAsNode, getElementCache, getPseudoElt, setElementCache } = squared.lib.session;
-const { aboveRange, belowRange, convertCamelCase, convertFloat, convertInt, hasBit, hasValue, isNumber, isObject, isString, iterateArray, spliceString, splitEnclosing } = squared.lib.util;
+const { aboveRange, belowRange, convertCamelCase, convertFloat, convertInt, hasBit, hasValue, isNumber, isObject, iterateArray, spliceString, splitEnclosing } = squared.lib.util;
 
 const { SELECTOR_ATTR, SELECTOR_G, SELECTOR_LABEL, SELECTOR_PSEUDO_CLASS } = CSS;
 
@@ -445,11 +445,8 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
                     if (location.hash === '') {
                         return false;
                     }
-                    else {
-                        const element = child.element as HTMLAnchorElement;
-                        if (!(location.hash === `#${element.id}` || tagName === 'A' && location.hash === `#${element.name}`)) {
-                            return false;
-                        }
+                    else if (!(location.hash === `#${child.elementId}` || tagName === 'A' && location.hash === `#${child.toElementString('name')}`)) {
+                        return false;
                     }
                     break;
                 case ':scope':
@@ -1017,7 +1014,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public ascend(options: AscendOptions<T>) {
         let attr = options.attr;
-        if (!isString(attr)) {
+        if (!attr) {
             attr = 'actualParent';
         }
         else if (!/[pP]arent$/.test(attr)) {
@@ -1715,7 +1712,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get elementId() {
-        return this._element?.id || '';
+        return this._element?.id.trim() || '';
     }
 
     get htmlElement() {
@@ -2273,7 +2270,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 this._inlineText = false;
                 break;
             case 'BUTTON':
-                this._inlineText = isString(this.textContent);
+                this._inlineText = this.textContent.trim() !== '';
                 break;
             default:
                 this._inlineText = value;

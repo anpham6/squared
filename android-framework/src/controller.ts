@@ -240,10 +240,10 @@ function setInputMinDimension(node: View, element: HTMLInputElement) {
 }
 
 function setInputMinMax(node: View, element: HTMLInputElement) {
-    if (isString(element.min)) {
+    if (element.min) {
         node.android('min', element.min);
     }
-    if (isString(element.max)) {
+    if (element.max) {
         node.android('max', element.max);
     }
 }
@@ -419,9 +419,9 @@ function getBoxWidth(this: Controller<View>, node: View, children: View[]) {
                 const container = node.ascend({ condition: (item: View) => item.of(containerType, alignmentType), including: parent, attr: 'renderParent' });
                 if (container.length) {
                     const box = node.box;
+                    const naturalChildren = parent.naturalChildren;
                     let offsetLeft = 0,
                         offsetRight = 0;
-                    const naturalChildren = parent.naturalChildren;
                     const length = naturalChildren.length;
                     let i = 0;
                     while (i < length) {
@@ -930,7 +930,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         else {
             const children = layout.children;
-            const clearMap = this.application.clearMap;
+            const clearMap = layout.parent.floatContainer ? this.application.clearMap : undefined;
             if (layout.some((item, index) => item.alignedVertically(index > 0 ? children.slice(0, index) : undefined, clearMap) > 0)) {
                 layout.setContainerType(getVerticalLayout(layout), NODE_ALIGNMENT.VERTICAL | NODE_ALIGNMENT.UNKNOWN);
             }
@@ -1138,11 +1138,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         else if (parent.layoutConstraint) {
             if (templates.some(item => item.node.zIndex !== 0 || !item.node.pageFlow)) {
-                let result: NodeXmlTemplate<T>[] = [];
                 const originalParent = parent.innerMostWrapped as T;
                 const actualParent: T[] = [];
                 const nested: NodeXmlTemplate<T>[] = [];
-                let length = templates.length;
+                let result: NodeXmlTemplate<T>[] = [],
+                    length = templates.length;
                 let i = 0;
                 while (i < length) {
                     const item = templates[i++];
@@ -1685,7 +1685,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             case 'VIDEO': {
                 const videoMimeType = this.localSettings.mimeType.video;
                 const element = node.element as HTMLVideoElement;
-                let src = element.src,
+                let src = element.src.trim(),
                     mimeType: Undef<string>;
                 if (hasMimeType(videoMimeType, src)) {
                     mimeType = parseMimeType(src);
@@ -1695,7 +1695,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     iterateArray(element.children, (source: HTMLSourceElement) => {
                         if (source.tagName === 'SOURCE') {
                             if (hasMimeType(videoMimeType, source.src)) {
-                                src = source.src;
+                                src = source.src.trim();
                                 mimeType = parseMimeType(src);
                                 return true;
                             }
@@ -1719,18 +1719,18 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (node.inline) {
                     setInlineBlock(node);
                 }
-                if (isString(src)) {
+                if (src !== '') {
                     this.application.resourceHandler.addVideo(src, mimeType);
                     node.inlineText = false;
                     node.exclude({ resource: NODE_RESOURCE.FONT_STYLE });
                     if (isString(element.poster)) {
-                        Resource.addImage({ mdpi: element.poster });
+                        Resource.addImage({ mdpi: element.poster.trim() });
                     }
                 }
                 else if (isString(element.poster)) {
                     node.setCacheValue('tagName', 'IMG');
                     src = element.src;
-                    element.src = element.poster;
+                    element.src = element.poster.trim();
                     layout.containerType = CONTAINER_NODE.IMAGE;
                     const template = this.renderNode(layout);
                     element.src = src;
@@ -1771,7 +1771,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             node.android('shadowColor', `@color/${color}`);
                             node.android('shadowDx', truncate(node.parseWidth(match[2]) * 2, precision));
                             node.android('shadowDy', truncate(node.parseHeight(match[3]) * 2, precision));
-                            node.android('shadowRadius', truncate(isString(match[4]) ? Math.max(node.parseWidth(match[4]), 0) : 0.01, precision));
+                            node.android('shadowRadius', truncate(match[4] ? Math.max(node.parseWidth(match[4]), 0) : 0.01, precision));
                         }
                     }
                 }
@@ -1799,10 +1799,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (!node.companion && node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
                     [node.previousSibling, node.nextSibling].some((sibling: T) => {
                         if (sibling?.visible && sibling.pageFlow) {
-                            const element = node.element as HTMLInputElement;
+                            const id = node.elementId;
                             const labelElement = sibling.element as HTMLLabelElement;
                             const labelParent = sibling.documentParent.tagName === 'LABEL' && sibling.documentParent as T;
-                            if (element.id && element.id === labelElement.htmlFor) {
+                            if (id !== '' && id === labelElement.htmlFor?.trim()) {
                                 sibling.android('labelFor', node.documentId);
                                 return true;
                             }
@@ -1845,7 +1845,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public renderNodeStatic(attrs: RenderNodeStaticAttribute, options?: ViewAttribute) {
         let controlName = attrs.controlName;
-        if (!isString(controlName)) {
+        if (!controlName) {
             if (attrs.controlType) {
                 controlName = View.getControlName(attrs.controlType, this.userSettings.targetAPI);
             }
@@ -1993,8 +1993,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 current.anchor('bottom', 'parent');
                             }
                             else {
-                                const barrier = current.constraint.barrier;
-                                const documentId = !barrier || !isString(barrier.bottom) ? this.addBarrier([current], 'bottom') : barrier.bottom;
+                                const documentId = current.constraint.barrier?.bottom || this.addBarrier([current], 'bottom');
                                 if (documentId) {
                                     current.anchor('bottomTop', documentId);
                                 }
@@ -3117,9 +3116,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             opposing: Undef<boolean>;
         if (options) {
             ({ orientation, percent, opposing } = options);
-        }
-        if (orientation && axis !== orientation) {
-            return;
+            if (orientation && axis !== orientation) {
+                return;
+            }
         }
         let documentParent = node.documentParent as T;
         if (parent.nodeGroup && !documentParent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
@@ -3154,13 +3153,19 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 return;
             }
             if (node.autoPosition) {
-                const length = node.siblingsLeading.length;
+                const siblings = node.siblingsLeading;
+                const length = siblings.length;
                 if (length && !node.alignedVertically()) {
-                    const previousSibling = node.siblingsLeading[length - 1] as T;
-                    if (previousSibling.pageFlow && previousSibling.renderParent === node.renderParent) {
-                        node.anchor(horizontal ? 'leftRight' : 'top', previousSibling.documentId, true);
-                        node.constraint[axis] = true;
-                        return;
+                    for (let i = length - 1; i >= 0; --i) {
+                        const previous = siblings[i] as T;
+                        if (previous.pageFlow) {
+                            if (previous.renderParent === node.renderParent) {
+                                node.anchor(horizontal ? 'leftRight' : 'top', previous.documentId, true);
+                                node.constraint[axis] = true;
+                                return;
+                            }
+                            break;
+                        }
                     }
                 }
             }

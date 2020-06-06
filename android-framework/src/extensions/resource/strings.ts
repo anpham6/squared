@@ -7,7 +7,7 @@ type View = android.base.View;
 const { isPercent, parseAngle } = squared.lib.css;
 const { measureTextWidth } = squared.lib.dom;
 const { clamp } = squared.lib.math;
-const { capitalizeString, delimitString, lowerCaseString, isString } = squared.lib.util;
+const { capitalizeString, delimitString, lowerCaseString } = squared.lib.util;
 const { STRING_SPACE, replaceCharacterData } = squared.lib.xml;
 
 const { NODE_RESOURCE } = squared.base.lib.enumeration;
@@ -61,7 +61,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                         }
                     }
                     const hintString: string = node.data(Resource.KEY_NAME, 'hintString');
-                    if (isString(hintString)) {
+                    if (hintString) {
                         setTextValue(
                             node,
                             'hint',

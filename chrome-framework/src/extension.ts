@@ -7,6 +7,7 @@ export default abstract class Extension<T extends chrome.base.View> extends squa
     }
 
     public static getConvertOptions(name: string, options: ConvertOptions) {
+        const opacity = options.opacity || 1;
         let result = '';
         if (options.replaceWith) {
             result += '@';
@@ -15,7 +16,7 @@ export default abstract class Extension<T extends chrome.base.View> extends squa
             result += '%';
         }
         result += getSizeRange(options);
-        return name + (result !== '(0,*)' ? result : '') + (options.opacity < 1 ? `|${options.opacity}|` : '') + ':';
+        return name + (result !== '(0,*)' ? result : '') + (opacity > 0 && opacity < 1 ? `|${opacity}|` : '') + ':';
     }
 
     public application!: chrome.base.Application<T>;

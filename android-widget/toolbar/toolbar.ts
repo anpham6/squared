@@ -9,7 +9,7 @@ interface ToolbarThemeData {
 
 const { formatPX } = squared.lib.css;
 const { getElementAsNode } = squared.lib.session;
-const { assignEmptyValue, capitalize, includes, isString, iterateArray, safeNestedMap } = squared.lib.util;
+const { assignEmptyValue, capitalize, includes, iterateArray, safeNestedMap } = squared.lib.util;
 const { createStyleAttribute, createViewAttribute, getDocumentId } = android.lib.util;
 
 const { NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
@@ -60,7 +60,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
         const resource = this.resource as android.base.Resource<T>;
         const settings = application.userSettings as AndroidUserSettingsUI;
         const element = node.element as HTMLElement;
-        const options: StandardMap = { ...this.options[element.id] };
+        const options: StandardMap = { ...this.options[element.id.trim()] };
         const toolbarOptions = createViewAttribute(options.self);
         const appBarOptions = createViewAttribute(options.appBar);
         const collapsingToolbarOptions = createViewAttribute(options.collapsingToolbar);
@@ -154,7 +154,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
             appBarNode = this.createPlaceholder(node, appBarChildren, node.target);
             appBarNode.parent = parent;
             let id = android.id;
-            if (isString(id)) {
+            if (id) {
                 appBarNode.controlId = getDocumentId(id);
                 delete android.id;
             }

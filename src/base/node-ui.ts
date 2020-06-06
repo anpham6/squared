@@ -7,7 +7,7 @@ type T = NodeUI;
 const { CSS_PROPERTIES } = squared.lib.css;
 const { equal } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
-const { capitalize, cloneObject, convertWord, hasBit, hasKeys, isArray, isString, iterateArray, safeNestedMap, searchObject, withinRange } = squared.lib.util;
+const { capitalize, cloneObject, convertWord, hasBit, hasKeys, isArray, iterateArray, safeNestedMap, searchObject, withinRange } = squared.lib.util;
 
 const CSS_SPACING = new Map<number, string>();
 
@@ -361,13 +361,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             }
             if (n) {
                 nodes.length = n;
+                const floating = floated.size > 0;
                 const siblings = [nodes[0]];
                 let x = 1,
                     y = 1;
                 i = 1;
                 while (i < n) {
                     const node = nodes[i++];
-                    if (node.alignedVertically(siblings, cleared) > 0) {
+                    if (node.alignedVertically(siblings, floating ? cleared : undefined) > 0) {
                         ++y;
                     }
                     else {
@@ -935,10 +936,23 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (this.lineBreak) {
             return NODE_TRAVERSE.LINEBREAK;
         }
-        else if (this.autoPosition && isArray(siblings)) {
-            return siblings[siblings.length - 1].blockStatic ? NODE_TRAVERSE.VERTICAL : NODE_TRAVERSE.HORIZONTAL;
+        else if (!this.pageFlow) {
+            if (this.autoPosition) {
+                if (siblings === undefined) {
+                    siblings = this.siblingsLeading;
+                }
+                const length = siblings.length;
+                for (let i = length - 1; i >= 0; --i) {
+                    const previous = siblings[i];
+                    if (previous.pageFlow) {
+                        return previous.blockStatic || cleared?.has(previous) ? NODE_TRAVERSE.VERTICAL : NODE_TRAVERSE.HORIZONTAL;
+                    }
+                }
+                return NODE_TRAVERSE.HORIZONTAL;
+            }
+            return NODE_TRAVERSE.VERTICAL;
         }
-        else if (this.pageFlow) {
+        else {
             const floating = this.floating;
             if (isArray(siblings)) {
                 const previous = siblings[siblings.length - 1];
@@ -987,12 +1001,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                     return NODE_TRAVERSE.FLOAT_INTERSECT;
                                 }
                                 else if (siblings[0].floating) {
-                                    if (siblings.length > 1) {
+                                    const length = siblings.length;
+                                    if (length > 1) {
                                         const float = siblings[0].float;
                                         let maxBottom = -Infinity,
                                             contentWidth = 0;
                                         let i = 0;
-                                        while (i < siblings.length) {
+                                        while (i < length) {
                                             const item = siblings[i++];
                                             if (item.floating) {
                                                 if (item.float === float) {
@@ -1047,9 +1062,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             if (blockStatic && (length === 0 || this.containerIndex === 0)) {
                 return NODE_TRAVERSE.VERTICAL;
             }
-            let i = 0;
-            while (i < length) {
-                const previous = this.siblingsLeading[i++];
+            for (let i = length - 1; i >= 0; --i) {
+                const previous = this.siblingsLeading[i];
                 if (previous.excluded && cleared?.has(previous)) {
                     return NODE_TRAVERSE.FLOAT_CLEAR;
                 }
@@ -1076,11 +1090,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     return NODE_TRAVERSE.INLINE_WRAP;
                 }
             }
+            return NODE_TRAVERSE.HORIZONTAL;
         }
-        else {
-            return NODE_TRAVERSE.VERTICAL;
-        }
-        return NODE_TRAVERSE.HORIZONTAL;
     }
 
     public previousSiblings(options?: SiblingOptions) {
@@ -1870,7 +1881,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get textEmpty() {
         if (this.styleElement && !this.imageElement && !this.svgElement && !this.inputElement) {
             const value = this.textContent;
-            return value === '' || !this.preserveWhiteSpace && !isString(value);
+            return value === '' || !this.preserveWhiteSpace && value.trim() === '';
         }
         return false;
     }

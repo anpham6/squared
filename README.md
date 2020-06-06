@@ -479,7 +479,7 @@ Image conversion can be achieved using the mimeType property in a RequestAsset o
 * gif
 * tiff
 
-node-express offers only read support for GIF and TIFF.
+node-express has only read support for GIF and TIFF. Opacity can be applied only to PNG and GIF.
 
 ```xml
 format[@%]?(minSize(0),maxSize(*))?(width(n)xheight(n)#?cover|contain|scale)?{...rotate(n)}?|opacity|?:image/{format}

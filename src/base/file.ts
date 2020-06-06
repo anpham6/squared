@@ -3,7 +3,7 @@ type FileArchivingOptions = squared.base.FileArchivingOptions;
 type FileCopyingOptions = squared.base.FileCopyingOptions;
 
 const { frameworkNotInstalled } = squared.lib.session;
-const { fromLastIndexOf, isString, trimEnd } = squared.lib.util;
+const { fromLastIndexOf, trimEnd } = squared.lib.util;
 
 export default abstract class File<T extends squared.base.Node> implements squared.base.File<T> {
     public static downloadFile(data: Blob, filename: string, mimeType?: string) {
@@ -83,7 +83,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
     public copying(options: FileCopyingOptions) {
         if (this.hasHttpProtocol()) {
             const body = this.createRequestBody(options.assets, options);
-            if (body && isString(options.directory)) {
+            if (body && options.directory) {
                 return fetch(
                     this.hostname +
                     '/api/assets/copy' +
@@ -95,13 +95,13 @@ export default abstract class File<T extends squared.base.Node> implements squar
                         body: JSON.stringify(body)
                     }
                 )
-                .then((response: Response) => response.json())
+                .then(async (response: Response) => await response.json())
                 .then((result: ResultOfFileAction) => {
                     if (result) {
                         if (typeof options.callback === 'function') {
                             options.callback(result);
                         }
-                        else if (result.system) {
+                        if (result.system) {
                             (this.userSettings.showErrorMessages ? alert : console.log)(result.application + '\n\n' + result.system);
                         }
                     }
@@ -118,7 +118,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
     public archiving(options: FileArchivingOptions) {
         if (this.hasHttpProtocol()) {
             const body = this.createRequestBody(options.assets, options);
-            if (body && isString(options.filename)) {
+            if (body && options.filename) {
                 return fetch(
                     this.hostname +
                     '/api/assets/archive' +
@@ -132,14 +132,14 @@ export default abstract class File<T extends squared.base.Node> implements squar
                         body: JSON.stringify(body)
                     }
                 )
-                .then((response: Response) => response.json())
+                .then(async (response: Response) => await response.json())
                 .then((result: ResultOfFileAction) => {
                     if (result) {
                         if (typeof options.callback === 'function') {
                             options.callback(result);
                         }
                         const zipname = result.zipname;
-                        if (isString(zipname)) {
+                        if (zipname) {
                             fetch('/api/browser/download?filepath=' + encodeURIComponent(zipname))
                                 .then(async (download: Response) => File.downloadFile(await download.blob(), fromLastIndexOf(zipname, '/', '\\')));
                         }

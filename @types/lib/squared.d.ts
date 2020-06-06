@@ -269,10 +269,10 @@ declare module "lib" {
         function cloneArray(data: any[], result?: any[], object?: boolean): any[];
         function cloneObject(data: {}, result?: {}, array?: boolean): {};
         function resolvePath(value: string, href?: string): string;
-        function trimBoth(value: string, char?: string): string;
-        function trimString(value: string, char: string): string;
-        function trimStart(value: string, char: string): string;
-        function trimEnd(value: string, char: string): string;
+        function trimBoth(value: string, pattern: string): string;
+        function trimString(value: string, pattern: string): string;
+        function trimStart(value: string, pattern: string): string;
+        function trimEnd(value: string, pattern: string): string;
         function appendSeparator(preceding: string, value: string, separator?: string): string;
         function fromLastIndexOf(value: string, ...char: string[]): string;
         function partitionLastIndexOf(value: string, ...char: string[]): [string, string];

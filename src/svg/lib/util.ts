@@ -5,16 +5,16 @@ const { TRANSFORM: REGEXP_TRANSFORM } = squared.lib.regex;
 const { getStyleValue } = squared.lib.session;
 const { convertCamelCase, convertFloat, resolvePath } = squared.lib.util;
 
-function setOriginPosition(element: Element, point: Point, attr: string, position: string, dimension: number) {
-    if (isLength(position)) {
-        point[attr] = parseUnit(position, getFontSize(element));
+function setOriginPosition(element: Element, point: Point, attr: string, value: string, dimension: number) {
+    if (isLength(value)) {
+        point[attr] = parseUnit(value, getFontSize(element));
     }
-    else if (isPercent(position)) {
-        point[attr] = parseFloat(position) / 100 * dimension;
+    else if (isPercent(value)) {
+        point[attr] = parseFloat(value) / 100 * dimension;
     }
 }
 
-function getDataSetValue(element: SVGElement, attr: string) {
+function getDataSetValue(element: SVGElement, attr: string): string {
     const data = element.dataset.baseValue;
     if (data) {
         try {
@@ -246,13 +246,17 @@ export const TRANSFORM = {
                     }
                 }
             }
-            result.forEach(item => item.fromStyle = true);
-            return result;
+            if (result.length) {
+                for (const item of result) {
+                    item.fromStyle = true;
+                }
+                return result;
+            }
         }
         return undefined;
     },
     matrix(element: SVGElement, value?: string): Undef<SvgMatrix> {
-        const match = REGEXP_TRANSFORM.MATRIX.exec(value || getComputedStyle(element).transform);
+        const match = REGEXP_TRANSFORM.MATRIX.exec(value || getAttribute(element, 'transform'));
         if (match) {
             switch (match[1]) {
                 case 'matrix':
@@ -282,7 +286,7 @@ export const TRANSFORM = {
             value = getAttribute(element, 'transform-origin');
         }
         const result: Point = { x: 0, y: 0 };
-        if (value !== '') {
+        if (value) {
             const viewBox = getNearestViewBox(element);
             let width: Undef<number>,
                 height: Undef<number>;
@@ -400,7 +404,7 @@ export function getDOMRect(element: SVGElement) {
     return result as DOMRect;
 }
 
-export function calculateStyle(element: SVGElement, attr: string, value: string) {
+export function calculateStyle(element: SVGGraphicsElement, attr: string, value: string) {
     attr = convertCamelCase(attr);
     switch (attr) {
         case 'clipPath':
@@ -430,7 +434,7 @@ export function calculateStyle(element: SVGElement, attr: string, value: string)
             return !isNaN(result) ? result.toString() : '';
         }
     }
-    const viewBox = getNearestViewBox(element) || element.getBoundingClientRect();
+    const viewBox = getNearestViewBox(element) || (element.viewportElement || element.parentElement || element).getBoundingClientRect();
     switch (attr) {
         case 'cx':
         case 'x':
@@ -480,21 +484,14 @@ export function calculateStyle(element: SVGElement, attr: string, value: string)
     return '';
 }
 
-export function getAttribute(element: SVGElement, attr: string, computed = false) {
-    let value: string;
-    if (computed) {
-        value = getNamedItem(element, attr) || getStyleValue(element, attr);
-    }
-    else {
-        value = getStyleValue(element, attr) || getDataSetValue(element, attr) || getNamedItem(element, attr);
-    }
-    if (value === '' && (computed || Array.from(element.style).includes(attr))) {
-        value = getComputedStyle(element).getPropertyValue(attr);
-    }
-    return value || '';
+export function getAttribute(element: SVGElement, attr: string, computed?: boolean) {
+    const value = getStyleValue(element, convertCamelCase(attr)) || getDataSetValue(element, attr) || getNamedItem(element, attr);
+    return value === ''
+        ? (computed || Array.from(element.style).includes(attr)) && getComputedStyle(element).getPropertyValue(attr) || ''
+        : value
 }
 
-export function getParentAttribute(element: SVGElement, attr: string, computed = true) {
+export function getParentAttribute(element: SVGElement, attr: string, computed?: boolean) {
     let current: Null<CSSElement> = element,
         value: string;
     do {
@@ -531,7 +528,7 @@ export function getTargetElement(element: Element, rootElement?: Null<Element>, 
             let i = 0;
             while (i < length) {
                 const target = elements.item(i++);
-                if (target.id === id && target instanceof SVGElement) {
+                if (target.id.trim() === id && target instanceof SVGElement) {
                     return target;
                 }
             }

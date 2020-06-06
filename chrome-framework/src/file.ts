@@ -7,6 +7,8 @@ type BundleIndex = ObjectMap<ChromeAsset[]>;
 const { FILE } = squared.lib.regex;
 const { appendSeparator, convertWord, fromLastIndexOf, isString, iterateReverseArray, parseMimeType, partitionLastIndexOf, randomUUID, resolvePath, safeNestedArray, trimEnd } = squared.lib.util;
 
+const STRING_SERVERROOT = '__serverroot__';
+
 function parseFileAs(attr: string, value: Undef<string>): [string, Undef<string>, boolean] | undefined {
     if (value) {
         const match = new RegExp(`${attr}:\\s*((?:[^"]|\\\\")+)`).exec(value.replace(/\\/g, '/'));
@@ -22,10 +24,10 @@ function getFilePath(value: string, saveTo = false): [Undef<string>, string, str
     value = value.replace(/\\/g, '/');
     let moveTo: Undef<string>;
     if (value.charAt(0) === '/') {
-        moveTo = '__serverroot__';
+        moveTo = STRING_SERVERROOT;
     }
     else if (value.startsWith('../')) {
-        moveTo = '__serverroot__';
+        moveTo = STRING_SERVERROOT;
         const pathname = location.pathname.split('/');
         pathname.pop();
         for (let i = 0; i < value.length && pathname.length > 0; i += 3) {
@@ -132,10 +134,16 @@ function createBundleAsset(bundles: ChromeAsset[], element: HTMLElement, saveTo:
 }
 
 const getFileExt = (value: string) => value.includes('.') ? fromLastIndexOf(value, '.').toLowerCase() : '';
+const getDirectory = (path: string, start: number) => path.substring(start, path.lastIndexOf('/'));
 
 export default class File<T extends chrome.base.View> extends squared.base.File<T> implements chrome.base.File<T> {
     public static parseUri(uri: string, options: UriOptions = {}): Undef<ChromeAsset> {
-        let { saveAs, format, preserve } = options;
+        let saveAs: Undef<string>,
+            format: Undef<string>,
+            preserve: Undef<boolean>;
+        if (options) {
+            ({ saveAs, format, preserve } = options);
+        }
         let value = trimEnd(uri, '/'),
             relocate: Undef<string>;
         const local = value.startsWith(trimEnd(location.origin, '/'));
@@ -166,7 +174,6 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 prefix = '',
                 rootDir: Undef<string>,
                 moveTo: Undef<string>;
-            const getDirectory = (start: number) => path.substring(start, path.lastIndexOf('/'));
             if (!local) {
                 if (options.saveTo && relocate) {
                     [moveTo, pathname, filename] = getFilePath(relocate + '/' + randomUUID() + (extension ? '.' + extension : ''));
@@ -200,16 +207,16 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                     filename = fromLastIndexOf(path, '/', '\\');
                     if (local) {
                         if (path.startsWith(prefix)) {
-                            pathname = getDirectory(prefix.length);
+                            pathname = getDirectory(path, prefix.length);
                         }
                         else {
-                            moveTo = '__serverroot__';
+                            moveTo = STRING_SERVERROOT;
                             rootDir = '';
-                            pathname = getDirectory(0);
+                            pathname = getDirectory(path, 0);
                         }
                     }
                     else {
-                        pathname += getDirectory(1);
+                        pathname += getDirectory(path, 1);
                     }
                 }
                 else {
@@ -265,10 +272,16 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     }
 
     public getHtmlPage(options?: FileActionAttribute) {
+        let preserveCrossOrigin: Undef<boolean>,
+            saveAs: Undef<SaveAsOptions>,
+            name: Undef<string>;
+        if (options) {
+            ({ name, preserveCrossOrigin } = options);
+            saveAs = options.saveAs?.html;
+        }
         const result: ChromeAsset[] = [];
         const element = document.querySelector('html');
         const href = location.href;
-        const saveAs = options?.saveAs?.html;
         let file: Undef<string>,
             format: Undef<string>;
         if (element) {
@@ -278,9 +291,8 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             file = fromLastIndexOf(saveAs.filename, '/', '\\');
             format = saveAs.format;
         }
-        const data = File.parseUri(href, { preserveCrossOrigin: options?.preserveCrossOrigin, saveAs: file, format });
+        const data = File.parseUri(href, { preserveCrossOrigin, saveAs: file, format });
         if (data) {
-            const name = options?.name;
             if (name) {
                 data.filename = name;
             }
@@ -366,18 +378,13 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             let file = element.dataset.chromeFile;
             if (file !== 'exclude') {
                 let data: Undef<ChromeAsset>,
+                    href: Undef<string>,
                     mimeType: Undef<string>,
                     format: Undef<string>,
                     preserve: Undef<boolean>,
                     outerHTML: Undef<string>;
-                if (!isString(file) && saveAs?.filename && (mimeType === 'text/css' || element instanceof HTMLStyleElement)) {
-                    file = appendSeparator(saveAs.pathname || '', saveAs.filename);
-                    format = saveAs.format;
-                    preserve = saveAs.preserve;
-                    outerHTML = element.outerHTML;
-                }
                 if (element instanceof HTMLLinkElement) {
-                    const href = element.href.trim();
+                    href = element.href.trim();
                     if (href !== '') {
                         switch (element.rel.trim()) {
                             case 'stylesheet':
@@ -390,8 +397,16 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                                 mimeType = element.type.trim() || parseMimeType(href);
                                 break;
                         }
-                        data = File.parseUri(resolvePath(href), { preserveCrossOrigin, saveAs: file, format, preserve });
                     }
+                }
+                if (!isString(file) && saveAs?.filename && (mimeType === 'text/css' || element instanceof HTMLStyleElement)) {
+                    file = appendSeparator(saveAs.pathname || '', saveAs.filename);
+                    format = saveAs.format;
+                    preserve = saveAs.preserve;
+                    outerHTML = element.outerHTML;
+                }
+                if (href) {
+                    data = File.parseUri(resolvePath(href), { preserveCrossOrigin, saveAs: file, format, preserve });
                 }
                 else if (isString(file)) {
                     if (!outerHTML) {

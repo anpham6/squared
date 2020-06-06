@@ -9,7 +9,7 @@ export default class Png<T extends View> extends Extension<T> {
         smallerThan: Infinity,
         whenSmaller: false,
         replaceWith: true,
-        opacity: 0.5
+        opacity: 1
     };
 
     public processFile(data: ChromeAsset, override = false) {

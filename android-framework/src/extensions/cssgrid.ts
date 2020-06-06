@@ -9,7 +9,7 @@ type View = android.base.View;
 
 const { formatPercent, formatPX, isLength, isPercent, isPx } = squared.lib.css;
 const { maxArray, truncate } = squared.lib.math;
-const { conditionArray, flatArray, isArray, isString } = squared.lib.util;
+const { conditionArray, flatArray, isArray } = squared.lib.util;
 
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.enumeration;
 
@@ -454,7 +454,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                         minUnitSize += horizontal ? parent.parseUnit(min) : parent.parseUnit(min, { dimension: 'height' });
                     }
                     let value = unit[k];
-                    if (!isString(value)) {
+                    if (!value) {
                         const auto = data.auto;
                         if (auto[j]) {
                             value = auto[j];

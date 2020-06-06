@@ -542,7 +542,7 @@ export function formatString(value: string, ...params: string[]) {
 export function delimitString(options: DelimitStringOptions, ...appending: string[]) {
     const length = appending.length;
     const value = options.value;
-    if (length === 1 && !isString(value)) {
+    if (length === 1 && !value) {
         return appending[0];
     }
     const delimiter = options.delimiter || ', ';
@@ -574,7 +574,7 @@ export function splitEnclosing(value: string, prefix?: string, separator = '', o
     if (separator.length > 1) {
         return [];
     }
-    if (!isString(prefix)) {
+    if (!prefix) {
         prefix = opening;
     }
     const prefixed = prefix !== opening;
@@ -801,21 +801,21 @@ export function resolvePath(value: string, href?: string) {
     return value;
 }
 
-export function trimBoth(value: string, char = '"') {
-    const match = new RegExp(`^(${char})(.*?)\\1$`).exec(value);
+export function trimBoth(value: string, pattern: string) {
+    const match = new RegExp(`^(${pattern})+(.*?)\\1$`).exec(value);
     return match ? match[2] : value;
 }
 
-export function trimString(value: string, char: string) {
-    return trimStart(trimEnd(value, char), char);
+export function trimString(value: string, pattern: string) {
+    return trimStart(trimEnd(value, pattern), pattern);
 }
 
-export function trimStart(value: string, char: string) {
-    return value.replace(new RegExp(`^${char}+`), '');
+export function trimStart(value: string, pattern: string) {
+    return value.replace(new RegExp(`^(${pattern})+`), '');
 }
 
-export function trimEnd(value: string, char: string) {
-    return value.replace(new RegExp(`${char}+$`), '');
+export function trimEnd(value: string, pattern: string) {
+    return value.replace(new RegExp(`(${pattern})+$`), '');
 }
 
 export function appendSeparator(preceding: string, value: string, separator = '/') {
@@ -916,7 +916,7 @@ export function assignEmptyValue(dest: {}, ...attrs: string[]) {
                 }
                 break;
             }
-            else if (isString(name)) {
+            else if (name) {
                 if (value === undefined || value === null) {
                     current = {};
                     current[name] = current;

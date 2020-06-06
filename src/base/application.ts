@@ -28,7 +28,7 @@ function addImageSrc(uri: string, width = 0, height = 0) {
 }
 
 function parseSrcSet(value: string) {
-    if (isString(value)) {
+    if (value) {
         for (const uri of value.split(',')) {
             addImageSrc(resolvePath(uri.trim().split(' ')[0]));
         }

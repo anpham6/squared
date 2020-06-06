@@ -25,7 +25,7 @@ const { isAngle, parseAngle } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { absoluteAngle, offsetAngleY, relativeAngle, truncate, truncateFraction, truncateString } = squared.lib.math;
 const { STRING } = squared.lib.regex;
-const { convertWord, hasBit, isArray, isString, plainMap } = squared.lib.util;
+const { convertWord, hasBit, isArray, plainMap } = squared.lib.util;
 
 const REGEXP_DECIMAL = new RegExp(STRING.DECIMAL, 'g');
 const NAME_GRAPHICS = new Map<string, number>();
@@ -832,8 +832,9 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         if (element) {
             let value: Undef<string>,
                 tagName: Undef<string>;
-            if (isString(element.id)) {
-                const id = convertWord(element.id, true);
+            let id = element.id.trim();
+            if (id !== '') {
+                id = convertWord(id, true);
                 if (!NAME_GRAPHICS.has(id)) {
                     value = id;
                 }
