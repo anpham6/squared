@@ -3233,7 +3233,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
     }
     const length = result.length;
     if (length === 0) {
-        result.push({ src: element.src, pixelRatio: 1, width: 0 });
+        return undefined;
     }
     else if (length > 1) {
         result.sort((a, b) => {

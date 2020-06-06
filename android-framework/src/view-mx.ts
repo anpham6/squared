@@ -1264,20 +1264,22 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     width = -1;
                 if (isLength(maxWidth, true)) {
                     if (maxWidth === '100%') {
-                        if (this.svgElement) {
-                            width = this.bounds.width;
-                        }
-                        else if (this.imageElement) {
-                            width = this.toElementInt('naturalWidth');
-                            if (width > this.documentParent.actualWidth) {
-                                this.setLayoutWidth(getMatchConstraint(this, renderParent));
-                                this.setLayoutHeight('wrap_content');
-                                width = -1;
-                                maxHeight = '';
+                        if (!this.hasPX('width', { initial: true })) {
+                            if (this.svgElement) {
+                                width = this.bounds.width;
                             }
-                        }
-                        else if (containsWidth) {
-                            this.setLayoutWidth(getMatchConstraint(this, renderParent));
+                            else if (this.imageElement) {
+                                width = this.toElementInt('naturalWidth');
+                                if (width > this.documentParent.actualWidth) {
+                                    this.setLayoutWidth(getMatchConstraint(this, renderParent));
+                                    this.setLayoutHeight('wrap_content');
+                                    width = -1;
+                                    maxHeight = '';
+                                }
+                            }
+                            else if (containsWidth) {
+                                this.setLayoutWidth(getMatchConstraint(this, renderParent));
+                            }
                         }
                     }
                     else {
@@ -1293,11 +1295,13 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 if (isLength(maxHeight, true)) {
                     let height = -1;
                     if (maxHeight === '100%' && !this.svgElement) {
-                        if (containsHeight) {
-                            this.setLayoutHeight('match_parent');
-                        }
-                        else {
-                            height = this.imageElement ? this.toElementInt('naturalHeight') : this.parseHeight(maxHeight);
+                        if (!this.hasPX('height', { initial: true })) {
+                            if (containsHeight) {
+                                this.setLayoutHeight('match_parent');
+                            }
+                            else {
+                                height = this.imageElement ? this.toElementInt('naturalHeight') : this.parseHeight(maxHeight);
+                            }
                         }
                     }
                     else {

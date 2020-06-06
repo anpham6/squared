@@ -222,13 +222,12 @@ function setReadOnly(node: View) {
     }
 }
 
-function setImageDimension(node: View, width: number, height: number, image: Undef<ImageAsset>) {
+function setImageDimension(node: View, width: number, image: Undef<ImageAsset>) {
     node.css('width', formatPX(width), true);
     if (image && image.width > 0 && image.height > 0) {
-        height = image.height * (width / image.width);
+        const height = image.height * (width / image.width);
         node.css('height', formatPX(height), true);
     }
-    return [width, height];
 }
 
 function setInputMinDimension(node: View, element: HTMLInputElement) {
@@ -1441,59 +1440,26 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const application = this.application;
                 const element = node.element as HTMLImageElement;
                 const absoluteParent = node.absoluteParent || node.documentParent;
-                let width = node.toFloat('width', 0),
-                    height = node.toFloat('height', 0),
-                    percentWidth = node.percentWidth > 0 ? width : -1,
-                    scaleType = 'fitXY',
-                    imageSet: Undef<ImageSrcSet[]>;
-                const percentHeight = node.percentHeight > 0 ? height : -1;
-                if (isString(element.srcset) || node.actualParent!.tagName === 'PICTURE') {
+                let imageSet: Undef<ImageSrcSet[]>;
+                if (node.actualParent!.tagName === 'PICTURE') {
                     const mimeType = this.localSettings.mimeType.image;
                     imageSet = getSrcSet(element, mimeType === '*' ? undefined : mimeType);
-                    if (imageSet.length) {
+                    if (imageSet) {
                         const image = imageSet[0];
                         const actualWidth = image.actualWidth;
                         if (actualWidth) {
-                            if (percentWidth === -1) {
-                                [width, height] = setImageDimension(node, actualWidth, height, application.resourceHandler.getImage(element.src));
-                            }
-                            else {
-                                width = node.bounds.width;
-                                percentWidth = -1;
-                            }
+                            setImageDimension(node, actualWidth, application.resourceHandler.getImage(element.src));
                         }
                         else {
                             const stored = application.resourceHandler.getImage(image.src);
                             if (stored) {
-                                if (percentWidth === -1) {
-                                    [width, height] = setImageDimension(node, stored.width, height, stored);
-                                }
-                                else {
-                                    width = node.bounds.width;
-                                    percentWidth = -1;
-                                }
+                                setImageDimension(node, stored.width, stored);
                             }
-                        }
-                    }
-                    else {
-                        imageSet = undefined;
-                    }
-                }
-                if (percentWidth !== -1 || percentHeight !== -1) {
-                    if (percentWidth >= 0) {
-                        width *= absoluteParent.box.width / 100;
-                        if (percentWidth < 100 && !parent.layoutConstraint) {
-                            node.css('width', formatPX(width));
-                        }
-                    }
-                    if (percentHeight >= 0) {
-                        height *= absoluteParent.box.height / 100;
-                        if (percentHeight < 100 && !(parent.layoutConstraint && absoluteParent.hasHeight)) {
-                            node.css('height', formatPX(height));
                         }
                     }
                 }
                 else {
+                    let scaleType = 'fitXY';
                     switch (node.css('objectFit')) {
                         case 'contain':
                             scaleType = 'centerInside';
@@ -1508,22 +1474,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             scaleType = 'center';
                             break;
                     }
-                }
-                node.android('scaleType', scaleType);
-                if (width > 0 && parent.hasPX('maxWidth', { percent: false }) && (percentWidth === -1 || percentWidth === 100)) {
-                    const parentWidth = parent.parseWidth(parent.css('maxWidth'));
-                    if (parentWidth <= width) {
-                        width = parentWidth;
-                        node.css('width', formatPX(width));
-                    }
-                }
-                else if (height > 0 && parent.hasPX('maxHeight', { percent: false }) && (percentHeight === -1 || percentHeight === 100)) {
-                    const parentHeight = parent.parseHeight(parent.css('maxHeight'));
-                    if (parentHeight <= height) {
-                        height = parentHeight;
-                        node.css('maxHeight', formatPX(height));
-                        node.setLayoutHeight('wrap_content');
-                    }
+                    node.android('scaleType', scaleType);
                 }
                 if (node.baseline) {
                     node.android('baselineAlignBottom', 'true');
@@ -1544,14 +1495,22 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     container.cssCopy(node, 'position', 'zIndex');
                     container.exclude({ resource: NODE_RESOURCE.ALL, procedure: NODE_PROCEDURE.ALL });
                     container.autoPosition = false;
-                    if (width > 0) {
-                        container.setLayoutWidth(width < absoluteParent.box.width ? formatPX(width) : 'match_parent');
+                    if (node.percentWidth > 0 && parent.layoutConstraint && (parent.blockStatic || parent.hasWidth)) {
+                        container.app('layout_constraintWidth_percent', truncate(node.percentWidth, node.localSettings.floatPrecision));
+                        container.setLayoutHeight('0px');
+                    }
+                    else if (node.hasPX('width')) {
+                        container.setLayoutWidth(formatPX(node.actualWidth));
                     }
                     else {
                         container.setLayoutWidth('wrap_content');
                     }
-                    if (height > 0) {
-                        container.setLayoutHeight(height < absoluteParent.box.height ? formatPX(height) : 'match_parent');
+                    if (node.percentHeight > 0 && parent.layoutConstraint) {
+                        container.app('layout_constraintHeight_percent', truncate(node.percentHeight, node.localSettings.floatPrecision));
+                        container.setLayoutHeight('0px');
+                    }
+                    else if (node.hasPX('height')) {
+                        container.setLayoutHeight(formatPX(node.actualHeight));
                     }
                     else {
                         container.setLayoutHeight('wrap_content');

@@ -122,7 +122,7 @@ declare module "lib" {
         function parseVar(element: CSSElement, value: string): string;
         function getContentBoxDimension(element: Null<HTMLElement>): Dimension;
         function getBackgroundPosition(value: string, dimension: Dimension, options?: BackgroundPositionOptions): BoxRectPosition;
-        function getSrcSet(element: HTMLImageElement, mimeType?: string[]): ImageSrcSet[];
+        function getSrcSet(element: HTMLImageElement, mimeType?: string[]): Undef<ImageSrcSet[]>;
         function convertListStyle(name: string, value: number, valueAsDefault?: boolean): string;
         function extractURL(value: string): string;
         function resolveURL(value: string): string;
