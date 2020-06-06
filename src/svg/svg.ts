@@ -94,7 +94,7 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
 
     public findFill(value: string | SVGGraphicsElement): Undef<SVGPatternElement> {
         if (typeof value !== 'string') {
-            value = extractURL(getParentAttribute(value, 'fill'));
+            value = extractURL(getParentAttribute(value, 'fill')) || '';
         }
         if (value !== '') {
             const result = this.definitions.pattern.get(value);
@@ -111,7 +111,7 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
 
     public findFillPattern(value: string | SVGGraphicsElement): Undef<SvgGradient> {
         if (typeof value !== 'string') {
-            value = extractURL(getParentAttribute(value, 'fillPattern'));
+            value = extractURL(getParentAttribute(value, 'fillPattern')) || '';
         }
         let result: Undef<SvgGradient>;
         if (value !== '') {

@@ -1643,7 +1643,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         break;
                     default: {
                         const url = resolveURL(value);
-                        if (url !== '') {
+                        if (url) {
                             content = url;
                             if (hasMimeType(this._controllerSettings.mimeType.image, url)) {
                                 tagName = 'img';

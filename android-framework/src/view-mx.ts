@@ -850,8 +850,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         public static availablePercent(nodes: T[], dimension: DimensionAttr, boxSize: number) {
             const horizontal = dimension === 'width';
-            let percent = 1;
-            let valid = false;
+            let percent = 1,
+                valid = false;
             const length = nodes.length;
             let i = 0;
             while (i < length) {
@@ -1558,8 +1558,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
             }
             const indent = '\n' + '\t'.repeat(depth);
-            let output = '';
             const items = this.combine();
+            let output = '';
             const length = items.length;
             let i = 0;
             while (i < length) {

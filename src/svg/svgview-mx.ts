@@ -17,7 +17,7 @@ interface AttributeData extends NumberValue {
 const { getFontSize, getKeyframesRules, isAngle, isCustomProperty, hasCalc, parseAngle, parseVar } = squared.lib.css;
 const { isWinEdge } = squared.lib.client;
 const { getNamedItem } = squared.lib.dom;
-const { isString, iterateArray, replaceMap, safeNestedArray, sortNumber } = squared.lib.util;
+const { iterateArray, replaceMap, safeNestedArray, sortNumber } = squared.lib.util;
 
 const ANIMATION_DEFAULT = {
     'animation-delay': '0s',
@@ -375,7 +375,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                     if ((animation.pop() as NumberValue).key !== 1) {
                                         animateMotion.addKeyPoint({ key: 1, value: animateMotion.distance });
                                     }
-                                    if (isString(timingFunction)) {
+                                    if (timingFunction) {
                                         animateMotion.timingFunction = timingFunction;
                                     }
                                 }

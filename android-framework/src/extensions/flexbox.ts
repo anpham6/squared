@@ -133,7 +133,7 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
             }
         }
         if (growShrinkType) {
-            const q = groupBasis.length;
+            let q = groupBasis.length;
             if (q > 1) {
                 i = 0;
                 while (i < q) {
@@ -147,9 +147,10 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
                     }
                 }
             }
-            let j = 0;
-            while (j < percentage.length) {
-                setBoxPercentage(parent, percentage[j++], attr);
+            q = percentage.length;
+            i = 0;
+            while (i < q) {
+                setBoxPercentage(parent, percentage[i++], attr);
             }
         }
     }
@@ -711,8 +712,9 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         }
                     }
                     else if (growAvailable > 0) {
+                        const r = layoutWeight.length;
                         let j = 0;
-                        while (j < layoutWeight.length) {
+                        while (j < r) {
                             const item = layoutWeight[j++];
                             const autoMargin = item.innerMostWrapped.autoMargin;
                             let ratio = 1;

@@ -164,7 +164,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
                             baseValue = getAttribute(element, value);
                             break;
                     }
-                    if (!isString(baseValue)) {
+                    if (baseValue === '') {
                         const animationElement = this.animationElement;
                         if (animationElement && getComputedStyle(element).animationPlayState === 'paused') {
                             const parentElement = animationElement.parentElement;

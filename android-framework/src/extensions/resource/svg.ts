@@ -728,7 +728,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
 
     public createSvgElement(node: T, src: string): [Undef<HTMLElement>, Undef<SVGSVGElement>] | [] {
         const value = extractURL(src);
-        if (value !== '') {
+        if (value) {
             src = value;
         }
         if (FILE.SVG.test(src) || src.startsWith('data:image/svg+xml')) {

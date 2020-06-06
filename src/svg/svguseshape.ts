@@ -8,8 +8,6 @@ import SvgShape from './svgshape';
 import { INSTANCE_TYPE } from './lib/constant';
 
 export default class SvgUseShape extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgShape))) implements squared.svg.SvgUseShape {
-    protected _retainStyle = false;
-
     constructor(
         public readonly element: SVGGeometryElement,
         public readonly useElement: SVGUseElement,

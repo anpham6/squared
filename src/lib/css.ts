@@ -3361,12 +3361,12 @@ export function convertListStyle(name: string, value: number, valueAsDefault?: b
 
 export function extractURL(value: string) {
     const match = CSS.URL.exec(value);
-    return match ? match[1] || match[2] : '';
+    return match ? match[1] || match[2] : undefined;
 }
 
 export function resolveURL(value: string) {
-    value = extractURL(value);
-    return value !== '' ? resolvePath(value) : '';
+    const url = extractURL(value);
+    return url ? resolvePath(url) : undefined;
 }
 
 export function insertStyleSheetRule(value: string, index = 0) {

@@ -3,7 +3,7 @@ const { getNamedItem } = squared.lib.dom;
 const { clamp, convertRadian, hypotenuse } = squared.lib.math;
 const { TRANSFORM: REGEXP_TRANSFORM } = squared.lib.regex;
 const { getStyleValue } = squared.lib.session;
-const { convertCamelCase, convertFloat, isString, resolvePath } = squared.lib.util;
+const { convertCamelCase, convertFloat, resolvePath } = squared.lib.util;
 
 function setOriginPosition(element: Element, point: Point, attr: string, position: string, dimension: number) {
     if (isLength(position)) {
@@ -488,7 +488,7 @@ export function getAttribute(element: SVGElement, attr: string, computed = false
     else {
         value = getStyleValue(element, attr) || getDataSetValue(element, attr) || getNamedItem(element, attr);
     }
-    if (!isString(value) && (computed || Array.from(element.style).includes(attr))) {
+    if (value === '' && (computed || Array.from(element.style).includes(attr))) {
         value = getComputedStyle(element).getPropertyValue(attr);
     }
     return value || '';

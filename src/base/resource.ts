@@ -126,10 +126,11 @@ export default abstract class Resource<T extends squared.base.Node> implements s
 
     public getRawData(uri: string) {
         if (uri.startsWith('url(')) {
-            uri = extractURL(uri);
-            if (uri === '') {
+            const url = extractURL(uri);
+            if (!url) {
                 return undefined;
             }
+            uri = url;
         }
         return Resource.ASSETS.rawData.get(uri);
     }

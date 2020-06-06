@@ -908,17 +908,19 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             else {
                 rowMain = mainData.rowData;
                 let j: number;
-                for (let i = 0; i < rowData.length; ++i) {
+                for (let i = 0; i < columnCount; ++i) {
                     const data = rowData[i];
+                    const length = data.length;
                     j = 0;
-                    while (j < data.length) {
+                    while (j < length) {
                         safeNestedArray(rowMain, j)[i] = data[j++];
                     }
                 }
             }
             const unitTotal = horizontal ? row.unitTotal : column.unitTotal;
             const children = mainData.children;
-            for (let i = 0; i < rowMain.length; ++i) {
+            const length = rowMain.length;
+            for (let i = 0; i < length; ++i) {
                 const data = rowMain[i];
                 const q = data.length;
                 let j = 0;
@@ -1056,10 +1058,10 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 [column, row].forEach((data, index) => {
                     const iteration = index === 0 ? columnCount : rowCount;
                     let unit = data.unit;
-                    const length = unit.length;
-                    if (length < iteration) {
+                    const q = unit.length;
+                    if (q < iteration) {
                         if (data.autoFill || data.autoFit) {
-                            if (length === 0) {
+                            if (q === 0) {
                                 unit.push('auto');
                                 data.unitMin.push('');
                                 data.repeat.push(true);
@@ -1070,11 +1072,11 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         }
                         else {
                             const auto = data.auto;
-                            const q = auto.length;
-                            if (q) {
+                            const r = auto.length;
+                            if (r) {
                                 let i = 0;
                                 while (unit.length < iteration) {
-                                    if (i === q) {
+                                    if (i === r) {
                                         i = 0;
                                     }
                                     unit.push(auto[i++]);
@@ -1103,8 +1105,8 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     data.flexible = percent < 1 || fr > 0;
                     if (percent < 1) {
                         if (fr > 0) {
-                            const q = unit.length;
-                            for (let i = 0; i < q; ++i) {
+                            const r = unit.length;
+                            for (let i = 0; i < r; ++i) {
                                 const value = unit[i];
                                 if (CssGrid.isFr(value)) {
                                     unit[i] = percent * (parseFloat(value) / fr) + 'fr';

@@ -283,8 +283,9 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                     for (const attr in dataB) {
                                         const compare = dataB[attr];
                                         if (compare.length) {
+                                            const q = ids.length;
                                             let k = 0;
-                                            while (k < ids.length) {
+                                            while (k < q) {
                                                 const id = ids[k++];
                                                 if (compare.includes(id)) {
                                                     safeNestedArray(found, attr).push(id);
@@ -451,8 +452,9 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         else {
                             if (items) {
                                 const styleItems = styleData.items as StringValue[];
+                                const r = styleItems.length;
                                 let j = 0;
-                                while (j < styleItems.length) {
+                                while (j < r) {
                                     const item = styleItems[j++];
                                     const key = item.key;
                                     const index = items.findIndex(previous => previous.key === key);

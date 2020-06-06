@@ -5,8 +5,6 @@ import SvgG from './svgg';
 import { INSTANCE_TYPE } from './lib/constant';
 
 export default class SvgUseG extends SvgViewRect$MX(SvgBaseVal$MX(SvgG)) implements squared.svg.SvgUseG {
-    protected _retainStyle = false;
-
     constructor(
         public readonly element: SVGGElement,
         public useElement: SVGUseElement)

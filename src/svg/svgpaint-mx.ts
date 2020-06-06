@@ -10,7 +10,7 @@ const { parseColor } = squared.lib.color;
 const { extractURL, getFontSize, hasCalc, isCustomProperty, isLength, isPercent, parseUnit, parseVar } = squared.lib.css;
 const { truncate } = squared.lib.math;
 const { STRING } = squared.lib.regex;
-const { convertCamelCase, isString, isNumber, joinArray, plainMap } = squared.lib.util;
+const { convertCamelCase, isNumber, joinArray, plainMap } = squared.lib.util;
 
 const REGEXP_CACHE: ObjectMap<RegExp> = {
     polygon: /polygon\(([^)]+)\)/,
@@ -39,8 +39,6 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
         public patternParent?: SvgShapePattern;
         public useParent?: SvgUse;
 
-        protected _retainStyle = true;
-
         private _strokeWidth!: string;
 
         public setStroke() {
@@ -65,7 +63,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
             const clipPath = this.getAttribute('clip-path');
             if (clipPath !== '' && clipPath !== 'none') {
                 const url = extractURL(clipPath);
-                if (url !== '') {
+                if (url) {
                     this.clipPath = url;
                 }
                 else if (d?.length) {
@@ -168,7 +166,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
             const element = this.element;
             let value = this.getAttribute(attr);
             attr = convertCamelCase(attr);
-            if (isString(value)) {
+            if (value !== '') {
                 if (hasCalc(value)) {
                     value = calculateStyle(element, attr, value) || getComputedStyle(element)[attr];
                 }
@@ -186,7 +184,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                     case 'fill':
                     case 'stroke': {
                         const url = extractURL(value);
-                        if (url !== '') {
+                        if (url) {
                             this[attr + 'Pattern'] = url;
                         }
                         else {
@@ -214,14 +212,11 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                 }
                 this[attr] = value;
             }
-            else if (!this._retainStyle) {
-                this[attr] = '';
-            }
         }
 
         public getAttribute(attr: string) {
             let value = getAttribute(this.element, attr);
-            if (!isString(value)) {
+            if (value === '') {
                 if (this.patternParent) {
                     switch (attr) {
                         case 'fill-opacity':
@@ -234,7 +229,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                 let current = this.useParent || this.parent;
                 while (current) {
                     value = getAttribute(SvgBuild.isUse(current) ? current.useElement : current.element, attr);
-                    if (isString(value)) {
+                    if (value !== '') {
                         break;
                     }
                     current = current.parent;
@@ -280,7 +275,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
         }
         get strokeWidth() {
             const stroke = this.stroke;
-            if (isString(stroke) && stroke !== 'none') {
+            if (stroke !== '' && stroke !== 'none') {
                 const result = this._strokeWidth;
                 if (result !== '') {
                     const parent = this.parent;

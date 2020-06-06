@@ -175,8 +175,9 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 const maxColumn = columns.reduce((a, b) => Math.max(a, b.length), 0);
                 for (let l = 0; l < maxColumn; ++l) {
+                    const r = columns.length;
                     let m = 0;
-                    while (m < columns.length) {
+                    while (m < r) {
                         const row = columns[m++];
                         if (!row[l]) {
                             row[l] = { spacer: 1 } as any;

@@ -948,8 +948,9 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                         while (i < length) {
                             const delay = timeData[i++];
                             const group = groupData.get(delay) as SvgAnimate[];
+                            const q = group.length;
                             j = 0;
-                            while (j < group.length) {
+                            while (j < q) {
                                 repeatingDuration = Math.max(repeatingDuration, group[j++].getTotalDuration(true));
                             }
                             groupDelay.set(delay, group.reverse());

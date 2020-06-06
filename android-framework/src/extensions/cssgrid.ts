@@ -954,10 +954,10 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                         const section = unitData.slice(k, k + l);
                         let width = '',
                             height = '',
-                            layout_columnWeight = '',
-                            layout_rowWeight = '',
                             rowSpan = 1,
                             columnSpan = 1,
+                            layout_columnWeight: string,
+                            layout_rowWeight: string,
                             layout_row: string,
                             layout_column: string;
                         if (horizontal) {

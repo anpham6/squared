@@ -15,10 +15,11 @@ export function isPlainText(value: string) {
     let i = 0;
     while (i < length) {
         switch (value.charCodeAt(i++)) {
+            case 32:
             case 9:
             case 10:
+            case 11:
             case 13:
-            case 32:
                 continue;
             default:
                 return true;

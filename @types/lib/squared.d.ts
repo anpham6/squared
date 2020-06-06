@@ -124,8 +124,8 @@ declare module "lib" {
         function getBackgroundPosition(value: string, dimension: Dimension, options?: BackgroundPositionOptions): BoxRectPosition;
         function getSrcSet(element: HTMLImageElement, mimeType?: string[]): Undef<ImageSrcSet[]>;
         function convertListStyle(name: string, value: number, valueAsDefault?: boolean): string;
-        function extractURL(value: string): string;
-        function resolveURL(value: string): string;
+        function extractURL(value: string): Undef<string>;
+        function resolveURL(value: string): Undef<string>;
         function insertStyleSheetRule(value: string, index?: number): HTMLStyleElement;
         function parseUnit(value: string, fontSize?: number, screenDimension?: Dimension): number;
         function parseTransform(value: string, options?: TransformOptions): TransformData[];

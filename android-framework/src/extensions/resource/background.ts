@@ -287,9 +287,9 @@ function checkBackgroundPosition(value: string, adjacent: string, fallback: stri
 
 function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LATEST, borderRadius?: string[], precision?: number) {
     const { colorStops, type } = gradient;
-    const length = colorStops.length;
     let positioning = api >= BUILD_ANDROID.LOLLIPOP;
     const result = { type, positioning } as GradientTemplate;
+    const length = colorStops.length;
     switch (type) {
         case 'conic': {
             const center = (gradient as ConicGradient).center;
@@ -800,7 +800,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             }
                             if (!valid) {
                                 const uri = extractURL(value);
-                                if (uri !== '') {
+                                if (uri) {
                                     if (uri.startsWith('data:image/')) {
                                         const rawData = resource.getRawData(uri);
                                         if (rawData) {
