@@ -380,15 +380,11 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     }
     get values() {
         this.setOffsetPath();
-        const path = this._offsetPath;
-        if (path) {
-            return plainMap(path, item => `${item.value.x} ${item.value.y}`);
-        }
-        return super.values;
+        return this._offsetPath ? plainMap(this._offsetPath, item => `${item.value.x} ${item.value.y}`) : super.values;
     }
 
     set reverse(value) {
-        if (value !== super.reverse) {
+        if (value !== this._reverse) {
             const { keyTimes, keyPoints } = this.reverseKeyPoints();
             if (keyTimes && keyPoints) {
                 this.length = 0;
@@ -399,12 +395,12 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
         }
     }
     get reverse() {
-        return super.reverse;
+        return this._reverse;
     }
 
     set alternate(value) {
         const iterationCount = this.iterationCount;
-        if (value !== super.alternate && (iterationCount === -1 || iterationCount > 1)) {
+        if (value !== this._alternate && (iterationCount === -1 || iterationCount > 1)) {
             const { keyTimes, keyPoints } = this.reverseKeyPoints();
             if (keyTimes && keyPoints) {
                 let keyTimesBase = super.keyTimes,
@@ -447,26 +443,24 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                 }
                 this._keyTimes = keyTimesBase;
                 this._keyPoints = keyPointsBase;
-                super.alternate = value;
+                this._alternate = value;
             }
         }
     }
     get alternate() {
-        return super.alternate;
+        return this._alternate;
     }
 
     set parent(value) {
-        super.parent = value;
-        const parentContainer = this.parentContainer;
-        if (parentContainer?.requireRefit) {
-            const path = this.path;
-            if (path) {
-                this.path = SvgBuild.transformRefit(path, undefined, undefined, parentContainer);
+        this._parent = value;
+        if (this.parentContainer?.requireRefit) {
+            if (this.path) {
+                this.path = SvgBuild.transformRefit(this.path, { container: this.parentContainer });
             }
        }
     }
     get parent() {
-        return super.parent;
+        return this._parent;
     }
 
     get offsetPath() {
@@ -479,8 +473,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
 
     get rotateValues() {
         this.setOffsetPath();
-        const path = this._offsetPath;
-        return path && plainMap(path, item => item.rotate);
+        return this._offsetPath && plainMap(this._offsetPath, item => item.rotate);
     }
 
     get keyPoints() {
@@ -490,9 +483,8 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     get offsetLength() {
         let result = this._offsetLength;
         if (result === 0) {
-            const path = this.path;
-            if (path) {
-                result = getPathLength(path);
+            if (this.path) {
+                result = getPathLength(this.path);
             }
         }
         return result;

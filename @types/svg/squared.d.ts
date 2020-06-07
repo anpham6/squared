@@ -21,7 +21,6 @@ declare module "svg" {
         static asAnimate(object: SvgAnimation): object is SvgAnimate;
         static asAnimateTransform(object: SvgAnimation): object is SvgAnimateTransform;
         static asAnimateMotion(object: SvgAnimation): object is SvgAnimateMotion;
-        static setName(element?: SVGElement): string;
         static drawLine(x1: number, y1: number, x2?: number, y2?: number, precision?: number): string;
         static drawRect(width: number, height: number, x?: number, y?: number, precision?: number): string;
         static drawCircle(cx: number, cy: number, r: number, precision?: number): string;
@@ -30,7 +29,7 @@ declare module "svg" {
         static drawPolyline(values: Point[] | DOMPoint[], precision?: number): string;
         static drawPath(values: SvgPathCommand[], precision?: number): string;
         static drawRefit(element: SVGGraphicsElement, parent?: SvgContainer, precision?: number): string;
-        static transformRefit(value: string, transforms?: SvgTransform[], parent?: SvgView, container?: SvgContainer, precision?: number): string;
+        static transformRefit(value: string, options?: SvgTransformRefitOptions): string;
         static getOffsetPath(value: string, rotation?: string): SvgOffsetPath[];
         static getPathCommands(value: string): SvgPathCommand[];
         static filterTransforms(transforms: SvgTransform[], exclude?: number[]): SvgTransform[];
@@ -39,12 +38,14 @@ declare module "svg" {
         static getPathPoints(values: SvgPathCommand[]): SvgPoint[];
         static syncPathPoints(values: SvgPathCommand[], points: SvgPoint[], transformed?: boolean): SvgPathCommand[];
         static clonePoints(values: SvgPoint[] | SVGPointList): SvgPoint[];
-        static minMaxPoints(values: SvgPoint[]): [number, number, number, number];
+        static minMaxPoints(values: SvgPoint[]): BoxRect;
         static centerPoints(...values: Point[]): Point[];
         static convertPoints(values: number[]): Point[];
         static parsePoints(value: string): Point[];
         static parseCoordinates(value: string): number[];
         static getBoxRect(value: string): BoxRect;
+        static setName(element: SVGElement): string;
+        static resetNameCache(): void;
     }
 
     interface SvgBaseVal extends SvgElement {
@@ -68,7 +69,7 @@ declare module "svg" {
     }
 
     interface SvgViewRect extends SvgBaseVal, SvgRect {
-        rectElement?: SVGSVGElement | SVGUseElement | SVGImageElement;
+        rectElement?: SvgRectElement;
         setRect(): void;
     }
 
@@ -130,7 +131,7 @@ declare module "svg" {
         aspectRatio: SvgAspectRatio;
         parent?: SvgContainer;
         viewport?: Svg;
-        readonly element: SVGSVGElement | SVGGElement | SVGUseElement;
+        readonly element: SvgContainerElement;
         add(item: SvgView, viewport?: Svg): this;
         refitX(value: number): number;
         refitY(value: number): number;
@@ -145,7 +146,7 @@ declare module "svg" {
         get clipRegion(): string;
         get requireRefit(): boolean;
         get instanceType(): number;
-        constructor(element: SVGSVGElement | SVGGElement | SVGUseElement);
+        constructor(element: SvgContainerElement);
     }
 
     class SvgUse extends SvgElement implements SvgViewRect, SvgBaseVal {
@@ -365,7 +366,7 @@ declare module "svg" {
 
     class SvgPath implements SvgBaseVal, SvgPaint, SvgTransformable {
         static transform(value: string, transforms: SvgTransform[], element?: SVGGeometryElement, precision?: number): string;
-        static extrapolate(attr: string, value: string, values: string[], transforms?: SvgTransform[], companion?: SvgShape, precision?: number): Undef<string[]>;
+        static extrapolate(attr: string, value: string, values: string[], transforms?: SvgTransform[], parent?: SvgShape, precision?: number): Undef<string[]>;
         name: string;
         value: string;
         baseValue: string;
@@ -553,12 +554,12 @@ declare module "svg" {
 
     class SvgAnimation {
         static convertClockTime(value: string): number;
-        baseValue: string;
         fillMode: number;
         paused: boolean;
         synchronizeState: number;
         replaceValue?: string;
         id?: number;
+        baseValue?: string;
         companion?: NumberValue<SvgAnimation>;
         readonly element: Null<SVGGraphicsElement>;
         readonly animationElement: Null<SVGAnimationElement>;

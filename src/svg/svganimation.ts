@@ -26,57 +26,56 @@ function setFillMode(this: SvgAnimation, mode: boolean, value: number) {
 export default class SvgAnimation implements squared.svg.SvgAnimation {
     public static convertClockTime(value: string) {
         value = value.trim();
-        if (value !== '') {
-            let match = /^(-)?(\d+(?:\.\d+)?)(ms|s|min|h)?$/.exec(value);
-            if (match) {
-                let time = parseFloat(match[2]) * (match[1] ? -1 : 1);
-                switch (match[3]) {
-                    case 'ms':
-                        break;
-                    case 'h':
-                        time *= 60;
-                    case 'min':
-                        time *= 60;
-                    default:
-                        time *= 1000;
-                        break;
-                }
-                return Math.round(time);
+        let match = /^(-)?(\d+(?:\.\d+)?)(ms|s|min|h)?$/.exec(value);
+        if (match) {
+            let time = parseFloat(match[2]) * (match[1] ? -1 : 1);
+            switch (match[3]) {
+                case 'ms':
+                    break;
+                case 'h':
+                    time *= 60;
+                case 'min':
+                    time *= 60;
+                default:
+                    time *= 1000;
+                    break;
             }
-            else {
-                match = /^(-)?(?:(\d+):)?(?:([0-5][0-9]):)?([0-5][0-9])(?:\.(\d{1,3}))?$/.exec(value);
-                if (match) {
-                    const ms = match[5];
-                    let time = parseInt(match[4]) * (match[1] ? -1 : 1);
-                    if (match[1]) {
-                        time += parseInt(match[2]) * 60 * 60;
-                    }
-                    if (match[2]) {
-                        time += parseInt(match[3]) * 60;
-                    }
-                    return time * 1000 + (ms ? parseInt(ms) * (ms.length < 3 ? Math.pow(10, 3 - ms.length) : 1) : 0);
+            return Math.round(time);
+        }
+        else {
+            match = /^(-)?(?:(\d+):)?(?:([0-5][0-9]):)?([0-5][0-9])(?:\.(\d{1,3}))?$/.exec(value);
+            if (match) {
+                const ms = match[5];
+                let time = parseInt(match[4]) * (match[1] ? -1 : 1);
+                if (match[1]) {
+                    time += parseInt(match[2]) * 60 * 60;
                 }
+                if (match[2]) {
+                    time += parseInt(match[3]) * 60;
+                }
+                return time * 1000 + (ms ? parseInt(ms) * (ms.length < 3 ? Math.pow(10, 3 - ms.length) : 1) : 0);
             }
         }
         return NaN;
     }
 
     public element: Null<SVGGraphicsElement> = null;
-    public baseValue = '';
     public fillMode = 0;
     public synchronizeState = 0;
     public paused = false;
     public replaceValue?: string;
     public id?: number;
+    public baseValue?: string;
     public companion?: NumberValue<SvgAnimation>;
     public readonly animationElement: Null<SVGAnimationElement> = null;
 
+    protected _to = '';
+    protected _duration = -1;
+    protected _delay = 0;
+    protected _parent?: SvgView | SvgPath;
+
     private _attributeName = '';
-    private _duration = -1;
-    private _delay = 0;
-    private _to = '';
     private _dataset: ObjectMap<ObjectMap<any>> = {};
-    private _parent?: SvgView | SvgPath;
     private _group?: SvgAnimationGroup;
 
     constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimationElement) {
@@ -146,7 +145,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     }
 
     set attributeName(value) {
-        if (value !== 'transform' && !isString(this.baseValue)) {
+        if (value !== 'transform' && !this.baseValue) {
             let baseValue: Undef<string> = this._dataset.baseValue?.[value]?.toString().trim();
             if (baseValue) {
                 this.baseValue = baseValue;

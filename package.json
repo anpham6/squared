@@ -120,7 +120,7 @@
     "prettier": "^2.0.5",
     "puppeteer": "^3.3.0",
     "readdirp": "^3.4.0",
-    "rollup": "^2.13.1",
+    "rollup": "^2.14.0",
     "rollup-plugin-prettier": "^2.1.0",
     "rollup-plugin-terser": "^6.1.0",
     "terser": "^4.7.0",

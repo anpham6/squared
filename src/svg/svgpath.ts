@@ -119,9 +119,9 @@ function getDashArray(map: SvgAnimationIntervalMap, valueArray: number[], time: 
 const getFromToValue = (item?: SvgStrokeDash) => item ? item.start + ' ' + item.end : '1 1';
 
 export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) implements squared.svg.SvgPath {
-    public static extrapolate(attr: string, pathData: string, values: string[], transforms?: SvgTransform[], companion?: SvgShape, precision?: number) {
-        const parent = companion?.parent;
-        const transformRefit = !!(transforms || parent?.requireRefit);
+    public static extrapolate(attr: string, pathData: string, values: string[], transforms?: SvgTransform[], parent?: SvgShape, precision?: number) {
+        const container = parent?.parent;
+        const transformRefit = !!transforms || !!container?.requireRefit;
         const result: string[] = [];
         let commands: Undef<SvgPathCommand[]>;
         const length = values.length;
@@ -132,7 +132,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             else if (attr === 'points') {
                 const points = SvgBuild.convertPoints(SvgBuild.parseCoordinates(values[i]));
                 if (points.length) {
-                    result[i] = companion && SVG.polygon(companion.element) ? SvgBuild.drawPolygon(points, precision) : SvgBuild.drawPolyline(points, precision);
+                    result[i] = parent && SVG.polygon(parent.element) ? SvgBuild.drawPolygon(points, precision) : SvgBuild.drawPolyline(points, precision);
                 }
             }
             else if (pathData) {
@@ -207,7 +207,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             }
             if (result[i]) {
                 if (transformRefit) {
-                    result[i] = SvgBuild.transformRefit(result[i], transforms, companion, parent, precision);
+                    result[i] = SvgBuild.transformRefit(result[i], { transforms, parent, container, precision });
                 }
             }
             else {
@@ -644,9 +644,9 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
 
     public extractStrokeDash(animations?: SvgAnimation[], precision?: number): [Undef<SvgAnimation[]>, Undef<SvgStrokeDash[]>, string, string] {
         const strokeWidth = convertInt(this.strokeWidth);
-        let result: Undef<SvgStrokeDash[]>,
-            path = '',
-            clipPath = '';
+        let path = '',
+            clipPath = '',
+            result: Undef<SvgStrokeDash[]>;
         if (strokeWidth > 0) {
             let valueArray = SvgBuild.parseCoordinates(this.strokeDasharray);
             if (valueArray.length) {
@@ -1038,12 +1038,10 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
     }
 
     get transforms() {
-        let result = this._transforms;
-        if (result === undefined) {
-            result = SvgBuild.filterTransforms(TRANSFORM.parse(this.element) || SvgBuild.convertTransforms(this.element.transform.baseVal));
-            this._transforms = result;
-        }
-        return result;
+        return this._transforms ?? (() => {
+            this._transforms = SvgBuild.filterTransforms(TRANSFORM.parse(this.element) || SvgBuild.convertTransforms(this.element.transform.baseVal));
+            return this._transforms;
+        })();
     }
 
     get pathLength() {

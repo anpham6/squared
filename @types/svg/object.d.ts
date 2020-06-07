@@ -131,7 +131,7 @@ interface SvgBuildOptions {
     residualHandler?: SvgTransformResidualHandler;
     precision?: number;
     initialize?: boolean;
-    targetElement?: SVGSymbolElement | SVGPatternElement | SVGGElement;
+    targetElement?: SvgUseElement;
     contentMap?: StringMap;
 }
 
@@ -140,6 +140,13 @@ interface SvgSynchronizeOptions {
     framesPerSecond?: number;
     precision?: number;
     element?: SVGGraphicsElement;
+}
+
+interface SvgTransformRefitOptions {
+    transforms?: SvgTransform[];
+    parent?: squared.svg.SvgView;
+    container?: squared.svg.SvgContainer;
+    precision?: number;
 }
 
 interface SvgPathExtendData {
@@ -170,5 +177,10 @@ interface SvgAnimationIntervalValue<T> {
     valueFrom?: string;
     animation?: T;
 }
+
+type SvgContainerElement = SVGSVGElement | SVGGElement | SVGUseElement;
+type SvgUseElement = SVGSymbolElement | SVGGElement | SVGGeometryElement | SVGPatternElement;
+type SvgViewBoxElement = SVGSVGElement | SVGSymbolElement;
+type SvgRectElement = SVGSVGElement | SVGUseElement | SVGImageElement;
 
 type SvgTransformResidualHandler = (e: SVGGraphicsElement, t: SvgTransform[], rx?: number, ry?: number) => [SvgTransform[][], SvgTransform[]];

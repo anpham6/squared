@@ -199,34 +199,22 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
 
     get offsetX() {
         const baseVal = this.patternElement.x.baseVal;
-        if (this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX) {
-            return this.patternWidth * getPercent(baseVal.valueAsString);
-        }
-        return baseVal.value;
+        return this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX ? this.patternWidth * getPercent(baseVal.valueAsString) : baseVal.value;
     }
 
     get offsetY() {
         const baseVal = this.patternElement.y.baseVal;
-        if (this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX) {
-            return this.patternHeight * getPercent(baseVal.valueAsString);
-        }
-        return baseVal.value;
+        return this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX ? this.patternHeight * getPercent(baseVal.valueAsString) : baseVal.value;
     }
 
     get tileWidth() {
         const baseVal = this.patternElement.width.baseVal;
-        if (this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX) {
-            return this.patternWidth * getPercent(baseVal.valueAsString);
-        }
-        return baseVal.value;
+        return this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX ? this.patternWidth * getPercent(baseVal.valueAsString) : baseVal.value;
     }
 
     get tileHeight() {
         const baseVal = this.patternElement.height.baseVal;
-        if (this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX) {
-            return this.patternHeight * getPercent(baseVal.valueAsString);
-        }
-        return baseVal.value;
+        return this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX ? this.patternHeight * getPercent(baseVal.valueAsString) : baseVal.value;
     }
 
     get instanceType() {

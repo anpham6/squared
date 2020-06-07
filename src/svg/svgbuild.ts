@@ -31,10 +31,10 @@ const REGEXP_DECIMAL = new RegExp(STRING.DECIMAL, 'g');
 const NAME_GRAPHICS = new Map<string, number>();
 
 export default class SvgBuild implements squared.svg.SvgBuild {
+    public static isUse = (object: SvgElement): object is SvgUse => hasBit(object.instanceType, INSTANCE_TYPE.SVG_USE);
     public static isContainer = (object: SvgElement): object is SvgGroup => hasBit(object.instanceType, INSTANCE_TYPE.SVG_CONTAINER);
     public static isElement = (object: SvgElement): object is SvgElement => hasBit(object.instanceType, INSTANCE_TYPE.SVG_ELEMENT);
     public static isShape = (object: SvgElement): object is SvgShape => hasBit(object.instanceType, INSTANCE_TYPE.SVG_SHAPE);
-    public static isUse = (object: SvgElement): object is SvgUse => hasBit(object.instanceType, INSTANCE_TYPE.SVG_USE);
     public static isAnimate = (object: SvgAnimation): object is SvgAnimate => hasBit(object.instanceType, INSTANCE_TYPE.SVG_ANIMATE);
     public static isAnimateTransform = (object: SvgAnimation): object is SvgAnimateTransform => hasBit(object.instanceType, INSTANCE_TYPE.SVG_ANIMATE_TRANSFORM);
     public static asSvg = (object: SvgElement): object is Svg => object.instanceType === INSTANCE_TYPE.SVG;
@@ -213,7 +213,14 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return value;
     }
 
-    public static transformRefit(value: string, transforms?: SvgTransform[], parent?: SvgView, container?: SvgContainer, precision?: number) {
+    public static transformRefit(value: string, options?: SvgTransformRefitOptions) {
+        let transforms: Undef<SvgTransform[]>,
+            parent: Undef<SvgView>,
+            container: Undef<SvgContainer>,
+            precision: Undef<number>;
+        if (options) {
+            ({ transforms, parent, container, precision } = options);
+        }
         const commands = SvgBuild.getPathCommands(value);
         if (commands.length) {
             let points = SvgBuild.getPathPoints(commands);
@@ -732,7 +739,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         }
     }
 
-    public static minMaxPoints(values: SvgPoint[], radius = false): [number, number, number, number] {
+    public static minMaxPoints(values: SvgPoint[], radius = false): BoxRect {
         let { x: minX, y: minY } = values[0];
         let maxX = minX,
             maxY = minY;
@@ -776,12 +783,12 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 maxY = y;
             }
         }
-        return [minX, minY, maxX, maxY];
+        return { top: minY, right: maxX, bottom: maxY, left: minX };
     }
 
     public static centerPoints(...values: SvgPoint[]): SvgPoint {
         const result = this.minMaxPoints(values);
-        return { x: (result[0] + result[2]) / 2, y: (result[1] + result[3]) / 2 };
+        return { x: (result.left + result.right) / 2, y: (result.top + result.bottom) / 2 };
     }
 
     public static convertPoints(values: number[]) {
@@ -817,45 +824,42 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
-    public static getBoxRect(values: string[]): BoxRect {
+    public static getBoxRect(values: string[]) {
         let points: SvgPoint[] = [];
         const length = values.length;
         let i = 0;
         while (i < length) {
             points = points.concat(SvgBuild.getPathPoints(SvgBuild.getPathCommands(values[i++])));
         }
-        const [left, top, right, bottom] = this.minMaxPoints(points, true);
-        return { top, right, bottom, left };
+        return this.minMaxPoints(points, true);
     }
 
-    public static setName(element?: SVGElement) {
-        if (element) {
-            let value: Undef<string>,
-                tagName: Undef<string>;
-            let id = element.id.trim();
-            if (id !== '') {
-                id = convertWord(id, true);
-                if (!NAME_GRAPHICS.has(id)) {
-                    value = id;
-                }
-                tagName = id;
+    public static setName(element: SVGElement) {
+        let value: Undef<string>,
+            tagName: Undef<string>;
+        let id = element.id.trim();
+        if (id !== '') {
+            id = convertWord(id, true);
+            if (!NAME_GRAPHICS.has(id)) {
+                value = id;
             }
-            else {
-                tagName = element.tagName;
-            }
-            let index = NAME_GRAPHICS.get(tagName) || 0;
-            if (value) {
-                NAME_GRAPHICS.set(value, index);
-                return value;
-            }
-            else {
-                NAME_GRAPHICS.set(tagName, ++index);
-                return tagName + '_' + index;
-            }
+            tagName = id;
         }
         else {
-            NAME_GRAPHICS.clear();
-            return '';
+            tagName = element.tagName;
         }
+        let index = NAME_GRAPHICS.get(tagName) || 0;
+        if (value) {
+            NAME_GRAPHICS.set(value, index);
+            return value;
+        }
+        else {
+            NAME_GRAPHICS.set(tagName, ++index);
+            return tagName + '_' + index;
+        }
+    }
+
+    public static resetNameCache() {
+        NAME_GRAPHICS.clear();
     }
 }
