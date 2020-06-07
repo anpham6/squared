@@ -11,7 +11,7 @@ const { isNumber, replaceMap, sortNumber, trimEnd } = squared.lib.util;
 const invertControlPoint = (value: number) => parseFloat((1 - value).toPrecision(5));
 
 export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgAnimate {
-    public static PATTERN_CUBICBEZIER = 'cubic-bezier\\(([\\d.]+), ([\\d.]+), ([\\d.]+), ([\\d.]+)\\)';
+    public static PATTERN_CUBICBEZIER = 'cubic-bezier\\(([01](?:\\.\\d+)?),\\s+(-?\\d+(?:\\.\\d+)?),\\s+([01](?:\\.\\d+)?),\\s+(-?\\d+(?:\\.\\d+)?)\\)';
 
     public static getSplitValue = (value: number, next: number, percent: number) => value + (next - value) * percent;
 
@@ -20,8 +20,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         if (keySpline) {
             return keySpline;
         }
-        else if (/\s*[\d.]+\s+[\d.]+\s+[\d.]+\s+[\d.]+\s*$/.test(value)) {
-            return value;
+        else if (/\s*[\d.]+\s+[\d.]+\s+[\d.]+\s+[\d.]+\s*/.test(value)) {
+            return value.trim();
         }
         else if (value.startsWith('step')) {
             return KEYSPLINE_NAME.linear;
@@ -84,7 +84,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                         timingFunction = 'steps(1, end)';
                         break;
                 }
-                const match = /steps\((\d+)(?:, (start|end))?\)/.exec(timingFunction);
+                const match = /steps\((\d+)(?:,\s+(start|end))?\)/.exec(timingFunction);
                 if (match) {
                     const keyTimeTotal = keyTimes[index + 1] - keyTimes[index];
                     const stepSize = parseInt(match[1]);
@@ -446,7 +446,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
 
     set keyTimes(value) {
         const values = this._values;
-        if ((values === undefined || values.length === value.length) && value.every(fraction => fraction >= 0 && fraction <= 1)) {
+        if ((!values || values.length === value.length) && value.every(fraction => fraction >= 0 && fraction <= 1)) {
             this._keyTimes = value;
         }
     }

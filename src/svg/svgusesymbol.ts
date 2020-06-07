@@ -6,7 +6,6 @@ import SvgViewRect$MX from './svgviewrect-mx';
 import SvgContainer from './svgcontainer';
 
 import { INSTANCE_TYPE } from './lib/constant';
-import { getDOMRect } from './lib/util';
 
 export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer))))) implements squared.svg.SvgUseSymbol {
     constructor(
@@ -32,7 +31,7 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewR
     }
 
     get viewBox() {
-        return this.symbolElement.viewBox.baseVal || getDOMRect(this.symbolElement);
+        return this.symbolElement.viewBox.baseVal || { x: 0, y: 0, width: 0, height: 0 };
     }
 
     get instanceType() {

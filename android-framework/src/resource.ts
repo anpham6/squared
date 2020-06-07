@@ -242,7 +242,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
             }
         }
         else {
-            if (imageSet === undefined && isString(element.srcset)) {
+            if (!imageSet && isString(element.srcset)) {
                 imageSet = getSrcSet(element, this._imageFormat);
             }
             if (imageSet) {

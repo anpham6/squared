@@ -13,6 +13,8 @@ import jimp = require('jimp');
 import tinify = require('tinify');
 import chalk = require('chalk');
 
+const STRING_SERVERROOT = '__serverroot__';
+
 function promisify<T = unknown>(fn: FunctionType<any>): FunctionType<Promise<T>> {
     return (...args: any[]) => {
         return new Promise((resolve, reject) => {
@@ -64,7 +66,7 @@ let Node: serve.INode,
             jpeg_quality,
             tinypng_api_key,
             env,
-            port,
+            port
         } = settings;
 
         ({ cors: CORS, external: EXTERNAL, routing: ROUTING } = settings);
@@ -355,10 +357,10 @@ let Node: serve.INode,
             value = value.replace(/\\/g, '/');
             let moveTo = '';
             if (value.charAt(0) === '/') {
-                moveTo = '__serverroot__';
+                moveTo = STRING_SERVERROOT;
             }
             else if (value.startsWith('../')) {
-                moveTo = '__serverroot__';
+                moveTo = STRING_SERVERROOT;
                 value = this.resolvePath(value, href, false) || ('/' + value.replace(/\.\.\//g, ''));
             }
             else if (value.startsWith('./')) {
@@ -462,7 +464,7 @@ let Node: serve.INode,
             const [largerThan, smallerThan] = Compress.getSizeRange(value);
             if (largerThan > 0 || smallerThan < Infinity) {
                 const fileSize = Compress.getFileSize(filepath);
-                if (fileSize < largerThan || fileSize > smallerThan) {
+                if (fileSize === 0 || fileSize < largerThan || fileSize > smallerThan) {
                     return false;
                 }
             }
@@ -766,28 +768,28 @@ let Node: serve.INode,
             return undefined;
         }
         removeCss(source: string, styles: string[]) {
-            let result: Undef<string>,
+            let found = false,
+                output: Undef<string>,
                 pattern: Undef<RegExp>,
                 match: Null<RegExpExecArray>;
             for (let value of styles) {
                 value = value.replace(/\./g, '\\.');
-                let found = false;
                 pattern = new RegExp(`^\\s*${value}[\\s\\n]*\\{[\\s\\S]*?\\}\\n*`, 'gm');
                 while (match = pattern.exec(source)) {
-                    if (result === undefined) {
-                        result = source;
+                    if (output === undefined) {
+                        output = source;
                     }
-                    result = result.replace(match[0], '');
+                    output = output.replace(match[0], '');
                     found = true;
                 }
                 if (found) {
-                    source = result!;
+                    source = output!;
                     found = false;
                 }
                 pattern = new RegExp(`^[^,]*(,?[\\s\\n]*${value}[\\s\\n]*[,{](\\s*)).*?\\{?`, 'gm');
                 while (match = pattern.exec(source)) {
-                    if (result === undefined) {
-                        result = source;
+                    if (output === undefined) {
+                        output = source;
                     }
                     const segment = match[1];
                     let replaceWith = '';
@@ -797,14 +799,15 @@ let Node: serve.INode,
                     else if (segment.startsWith(',')) {
                         replaceWith = ', ';
                     }
-                    result = result.replace(match[0], match[0].replace(segment, replaceWith));
+                    output = output.replace(match[0], match[0].replace(segment, replaceWith));
                     found = true;
                 }
                 if (found) {
-                    source = result!;
+                    source = output!;
+                    found = false;
                 }
             }
-            return result;
+            return output;
         }
     }
     (EXTERNAL);
@@ -879,6 +882,7 @@ let Node: serve.INode,
         }
         rotate(self: jimp, filepath: string, values: number[], manager: FileManager) {
             let length = values.length;
+            const deg = values[0];
             if (length > 1) {
                 const rotations = values.slice(1);
                 const master = filepath + path.extname(filepath);
@@ -912,8 +916,15 @@ let Node: serve.INode,
                             Node.writeFail(master, err);
                         });
                 }
+                try {
+                    fs.unlinkSync(master);
+                }
+                catch {
+                }
             }
-            self.rotate(values[0]);
+            if (deg) {
+                self.rotate(deg);
+            }
             return self;
         }
         opacity(self: jimp, value: Undef<number>) {
@@ -1026,18 +1037,17 @@ class FileManager implements serve.IFileManager {
         if (asset?.uri) {
             const requestMain = this.requestMain;
             if (requestMain) {
-                origin = Express.resolvePath(path.join(file.moveTo === '__serverroot__' ? '' : (file.rootDir || ''), file.pathname, file.filename), requestMain.uri!);
+                origin = Express.resolvePath(path.join(file.moveTo !== STRING_SERVERROOT && file.rootDir || '', file.pathname, file.filename), requestMain.uri!);
             }
             if (origin) {
                 const pattern = Express.PATTERN_URL;
-                const uri = asset.uri;
-                const uriMatch = pattern.exec(uri);
+                const uriMatch = pattern.exec(asset.uri);
                 const originMatch = pattern.exec(origin);
                 if (uriMatch && originMatch && uriMatch[1] === originMatch[1]) {
-                    const rootDir = file.rootDir || '';
-                    const baseDir = rootDir + file.pathname;
-                    if (asset.moveTo === '__serverroot__') {
-                        if (file.moveTo === '__serverroot__') {
+                    const rootDir = asset.rootDir;
+                    const baseDir = (file.rootDir || '') + file.pathname;
+                    if (asset.moveTo === STRING_SERVERROOT) {
+                        if (file.moveTo === STRING_SERVERROOT) {
                             return path.join(asset.pathname, asset.filename).replace(/\\/g, '/');
                         }
                         else if (requestMain) {
@@ -1048,11 +1058,11 @@ class FileManager implements serve.IFileManager {
                             }
                         }
                     }
-                    else if (asset.rootDir) {
-                        if (baseDir === asset.rootDir + asset.pathname) {
+                    else if (rootDir) {
+                        if (baseDir === rootDir + asset.pathname) {
                             return asset.filename;
                         }
-                        else if (baseDir === asset.rootDir) {
+                        else if (baseDir === rootDir) {
                             return path.join(asset.pathname, asset.filename).replace(/\\/g, '/');
                         }
                     }
@@ -1096,11 +1106,13 @@ class FileManager implements serve.IFileManager {
             const { mimeType, format } = file;
             if (mimeType) {
                 if (mimeType.endsWith('text/css')) {
-                    const unusedStyles = this.dataMap?.unusedStyles;
-                    if (unusedStyles && !file.preserve) {
-                        const result = Chrome.removeCss(content, unusedStyles);
-                        if (result) {
-                            content = result;
+                    if (!file.preserve) {
+                        const unusedStyles = this.dataMap?.unusedStyles;
+                        if (unusedStyles) {
+                            const result = Chrome.removeCss(content, unusedStyles);
+                            if (result) {
+                                content = result;
+                            }
                         }
                     }
                     if (mimeType.charAt(0) === '@') {
@@ -1116,7 +1128,6 @@ class FileManager implements serve.IFileManager {
                         content = result;
                     }
                 }
-                file.mimeType = '&' + mimeType.replace('@', '');
             }
             const trailing = this.getTrailingContent(file);
             if (trailing) {
@@ -1236,13 +1247,22 @@ class FileManager implements serve.IFileManager {
                 const baseUri = file.uri!;
                 let html = fs.readFileSync(filepath).toString('utf8'),
                     source = html,
-                    pattern = /(\s*)<(script|link|style)[\s\S]*?([\s\n]+data-chrome-file="\s*(save|export)As:\s*((?:[^"]|\\")+)")[\s\S]*?\/?>(?:[\s\S]*?<\/\2>\n*)?/ig,
+                    pattern = /(\s*)<(script|link|style)[^>]*([\s\n]+data-chrome-file="\s*(save|export)As:\s*((?:[^"]|\\")+)")[^>]*>(?:[\s\S]*?<\/\2>\n*)?/ig,
                     match: Null<RegExpExecArray>;
                 while (match = pattern.exec(html)) {
                     const segment = match[0];
                     const script = match[2].toLowerCase() === 'script';
                     const location = Express.getAbsoluteUrl(match[5].split('::')[0].trim(), baseUri);
-                    if (saved.has(location)) {
+                    let appending = false;
+                    if (match[4] === 'export') {
+                        if (script) {
+                            appending = new RegExp(`<script[^>]+(?:src=(["'])${location}\\1|data-chrome-file="saveAs:${location}[:"])[^>]*>`, 'i').test(html);
+                        }
+                        else {
+                            appending = new RegExp(`<link[^>]+(?:href=(["'])${location}\\1|data-chrome-file="saveAs:${location}[:"])[^>]*>`, 'i').test(html);
+                        }
+                    }
+                    if (saved.has(location) || appending) {
                         source = source.replace(segment, '');
                     }
                     else if (match[4] === 'save') {
@@ -1261,7 +1281,7 @@ class FileManager implements serve.IFileManager {
                 if (saved.size) {
                     html = source;
                 }
-                pattern = /(\s*)<(script|style)[\s\S]*?>([\s\S]*?)<\/\2>\n*/ig;
+                pattern = /(\s*)<(script|style)[^>]*>([\s\S]*?)<\/\2>\n*/ig;
                 for (const item of assets) {
                     if (item.excluded) {
                         continue;
@@ -1338,8 +1358,8 @@ class FileManager implements serve.IFileManager {
                     html = source;
                 }
                 source = source
-                    .replace(/\s*<(script|link|style)[\s\S]*?data-chrome-file="exclude"[\s\S]*?>[\s\S]*?<\/\1>\n*/ig, '')
-                    .replace(/\s*<(script|link)[\s\S]*?data-chrome-file="exclude"[\s\S]*?\/?>\n*/ig, '')
+                    .replace(/\s*<(script|link|style)[^>]+data-chrome-file="exclude"[^>]*>[\s\S]*?<\/\1>\n*/ig, '')
+                    .replace(/\s*<(script|link)[^>]+data-chrome-file="exclude"[^>]*>\n*/ig, '')
                     .replace(/\s+data-(?:use|chrome-[\w-]+)="([^"]|\\")+?"/g, '');
                 fs.writeFileSync(filepath, format && Chrome.minifyHtml(format, source) || source);
                 break;
@@ -1356,11 +1376,10 @@ class FileManager implements serve.IFileManager {
             }
             case 'text/css':
             case '@text/css': {
-                const unusedStyles = this.dataMap?.unusedStyles;
-                const removeStyles = !!unusedStyles && file.preserve !== true;
+                const unusedStyles = file.preserve !== true && this.dataMap?.unusedStyles;
                 const transforming = mimeType.charAt(0) === '@';
                 const trailing = this.getTrailingContent(file);
-                if (!removeStyles && !transforming && !format) {
+                if (!unusedStyles && !transforming && !format) {
                     if (trailing) {
                         try {
                             fs.appendFileSync(filepath, trailing);
@@ -1373,8 +1392,8 @@ class FileManager implements serve.IFileManager {
                 }
                 const content = fs.readFileSync(filepath).toString('utf8');
                 let source: Undef<string>;
-                if (removeStyles) {
-                    const result = Chrome.removeCss(content, unusedStyles!);
+                if (unusedStyles) {
+                    const result = Chrome.removeCss(content, unusedStyles);
                     if (result) {
                         source = result;
                     }
@@ -1637,7 +1656,7 @@ class FileManager implements serve.IFileManager {
             for (const item of trailingContent) {
                 let value = item.value;
                 if (mimeType?.endsWith('text/css')) {
-                    if (unusedStyles && !item.preserve) {
+                    if (!item.preserve && unusedStyles) {
                         const result = Chrome.removeCss(value, unusedStyles);
                         if (result) {
                             value = result;
@@ -1749,7 +1768,7 @@ class FileManager implements serve.IFileManager {
         const checkQueue = (file: ExpressAsset, filepath: string, content = false) => {
             const bundleIndex = file.bundleIndex;
             if (bundleIndex !== undefined) {
-                if (appending[filepath] === undefined) {
+                if (!appending[filepath]) {
                     appending[filepath] = [];
                 }
                 if (bundleIndex === 0) {
@@ -2050,15 +2069,15 @@ class FileManager implements serve.IFileManager {
             const originalPath = file.filepath!;
             let minFile = originalPath,
                 minSize = Compress.getFileSize(minFile);
-            for (const filepath of output) {
-                const size = Compress.getFileSize(filepath);
-                if (size < minSize) {
-                    minFile = filepath;
-                    minSize = size;
+            for (const transformed of output) {
+                const size = Compress.getFileSize(transformed);
+                if (size > 0 && size < minSize) {
                     filesToRemove.add(minFile);
+                    minFile = transformed;
+                    minSize = size;
                 }
                 else {
-                    filesToRemove.add(filepath);
+                    filesToRemove.add(transformed);
                 }
             }
             if (minFile !== originalPath) {

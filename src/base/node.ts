@@ -1494,7 +1494,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                     notList: Undef<string[]>,
                                     subMatch: Null<RegExpExecArray>;
                                 while (subMatch = SELECTOR_ATTR.exec(segment)) {
-                                    if (attrList === undefined) {
+                                    if (!attrList) {
                                         attrList = [];
                                     }
                                     let key = subMatch[1].replace('\\:', ':'),
@@ -1534,14 +1534,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                     const pseudoClass = subMatch[0];
                                     if (pseudoClass.startsWith(':not(')) {
                                         if (subMatch[1]) {
-                                            if (notList === undefined) {
+                                            if (!notList) {
                                                 notList = [];
                                             }
                                             notList.push(subMatch[1]);
                                         }
                                     }
                                     else {
-                                        if (pseudoList === undefined) {
+                                        if (!pseudoList) {
                                             pseudoList = [];
                                         }
                                         pseudoList.push(pseudoClass);
@@ -1555,7 +1555,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                             id = label.substring(1);
                                             break;
                                         case '.':
-                                            if (classList === undefined) {
+                                            if (!classList) {
                                                 classList = [];
                                             }
                                             classList.push(label.substring(1));
@@ -1712,7 +1712,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get elementId() {
-        return this._element?.id.trim() || '';
+        return (this._element?.id || '').trim();
     }
 
     get htmlElement() {

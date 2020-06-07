@@ -1517,10 +1517,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                     container.render(parent);
                     container.saveAsInitial();
-                    if (!parent.layoutConstraint) {
-                        node.modifyBox(BOX_STANDARD.MARGIN_TOP, node.top);
-                        node.modifyBox(BOX_STANDARD.MARGIN_LEFT, node.left);
-                    }
+                    node.modifyBox(BOX_STANDARD.MARGIN_TOP, node.top);
+                    node.modifyBox(BOX_STANDARD.MARGIN_LEFT, node.left);
                     application.addLayoutTemplate(
                         parent,
                         container,

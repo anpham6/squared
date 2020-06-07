@@ -5,7 +5,7 @@ import SvgViewRect$MX from './svgviewrect-mx';
 import SvgContainer from './svgcontainer';
 
 import { INSTANCE_TYPE } from './lib/constant';
-import { SVG, getDOMRect, getParentAttribute, getTargetElement } from './lib/util';
+import { SVG, getParentAttribute, getTargetElement } from './lib/util';
 
 const { parseColor } = squared.lib.color;
 const { extractURL } = squared.lib.css;
@@ -188,7 +188,7 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
     }
 
     get viewBox() {
-        return (this.element as SVGSVGElement).viewBox.baseVal || getDOMRect(this.element);
+        return (this.element as SVGSVGElement).viewBox.baseVal || { x: 0, y: 0, width: 0, height: 0 };
     }
 
     get instanceType() {

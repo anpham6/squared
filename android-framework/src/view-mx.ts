@@ -1325,13 +1325,13 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             let textAlign = checkTextAlign(this.cssInitial('textAlign', { modified: true }), false),
                 textAlignParent = checkTextAlign(this.cssAscend('textAlign'), true);
             if (this.nodeGroup && textAlign === '' && !this.hasAlign(NODE_ALIGNMENT.FLOAT)) {
-                const parent = this.actualParent;
-                if (parent) {
-                    textAlign = checkTextAlign(parent.cssInitial('textAlign', { modified: true }), false);
+                const actualParent = this.actualParent;
+                if (actualParent) {
+                    textAlign = checkTextAlign(actualParent.cssInitial('textAlign', { modified: true }), false);
                 }
             }
             if (this.pageFlow) {
-                let floating = '';
+                let floatAlign = '';
                 if (this.inlineVertical && (outerRenderParent.layoutFrame || outerRenderParent.layoutGrid) || this.display === 'table-cell') {
                     const gravity = this.display === 'table-cell' ? 'gravity' : 'layout_gravity';
                     switch (this.cssInitial('verticalAlign', { modified: true })) {
@@ -1356,14 +1356,14 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                     }
                     if (this.rightAligned) {
-                        floating = 'right';
+                        floatAlign = 'right';
                     }
                     else if (this.nodeGroup) {
                         if (this.renderChildren.every(item => item.rightAligned)) {
-                            floating = 'right';
+                            floatAlign = 'right';
                         }
                         else if (this.hasAlign(NODE_ALIGNMENT.FLOAT) && !this.renderChildren.some(item => item.rightAligned)) {
-                            floating = 'left';
+                            floatAlign = 'left';
                         }
                     }
                 }
@@ -1378,11 +1378,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     if (!setAutoMargin(this, autoMargin)) {
                         if (!this.innerWrapped) {
                             if (this.floating) {
-                                floating = this.float;
+                                floatAlign = this.float;
                             }
-                            if (floating !== '' && !renderParent.naturalElement && (renderParent.inlineWidth || !renderParent.documentRoot && this.onlyChild)) {
-                                renderParent.mergeGravity('layout_gravity', floating);
-                                floating = '';
+                            if (floatAlign !== '' && !renderParent.naturalElement && (renderParent.inlineWidth || !renderParent.documentRoot && this.onlyChild)) {
+                                renderParent.mergeGravity('layout_gravity', floatAlign);
+                                floatAlign = '';
                             }
                         }
                         if (this.centerAligned) {
@@ -1392,9 +1392,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             this.mergeGravity('layout_gravity', 'right');
                         }
                     }
-                    if (this.onlyChild && renderParent.display === 'table-cell') {
+                    if (this.onlyChild && node.documentParent.display === 'table-cell') {
                         let gravity: string;
-                        switch (renderParent.css('verticalAlign')) {
+                        switch (node.documentParent.css('verticalAlign')) {
                             case 'top':
                                 gravity = 'top';
                                 break;
@@ -1408,14 +1408,14 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         this.mergeGravity('layout_gravity', gravity);
                     }
                 }
-                if (floating !== '') {
+                if (floatAlign !== '') {
                     if (this.blockWidth) {
-                        if (textAlign === '' || floating === 'right') {
-                            textAlign = floating;
+                        if (textAlign === '' || floatAlign === 'right') {
+                            textAlign = floatAlign;
                         }
                     }
                     else {
-                        (node.blockWidth && this !== node ? this : node).mergeGravity('layout_gravity', floating);
+                        (node.blockWidth && this !== node ? this : node).mergeGravity('layout_gravity', floatAlign);
                     }
                 }
                 else if (setAutoMargin(node.inlineWidth ? node : this, autoMargin) && textAlign !== '') {
@@ -1463,7 +1463,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
             }
             if (autoMargin.vertical && (renderParent.layoutFrame || renderParent.layoutVertical && renderParent.layoutLinear)) {
-                node.mergeGravity('layout_gravity', autoMargin.topBottom ? 'center_vertical' : (autoMargin.top ? 'bottom' : 'top'));
+                node.mergeGravity('layout_gravity', autoMargin.topBottom
+                    ? 'center_vertical'
+                    : autoMargin.top
+                        ? 'bottom'
+                        : 'top'
+                );
             }
         }
 

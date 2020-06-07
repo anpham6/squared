@@ -313,7 +313,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
     }
 
     public hasViewBox(): this is Svg | SvgUseSymbol {
-        return SvgBuild.asSvg(this) && !!this.element.viewBox.baseVal || SvgBuild.asUseSymbol(this) && !!this.symbolElement.viewBox.baseVal;
+        return SvgBuild.asSvg(this) && (!!this.element.viewBox.baseVal || this.documentRoot) || SvgBuild.asUseSymbol(this) && !!this.symbolElement.viewBox.baseVal;
     }
 
     public clipViewBox(x: number, y: number, width: number, height: number, precision?: number, documentRoot = false) {

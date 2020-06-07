@@ -485,10 +485,13 @@ export function calculateStyle(element: SVGGraphicsElement, attr: string, value:
 }
 
 export function getAttribute(element: SVGElement, attr: string, computed?: boolean) {
-    const value = getStyleValue(element, convertCamelCase(attr)) || getDataSetValue(element, attr) || getNamedItem(element, attr);
-    return value === ''
-        ? (computed || Array.from(element.style).includes(attr)) && getComputedStyle(element).getPropertyValue(attr) || ''
-        : value
+    return (
+        getStyleValue(element, convertCamelCase(attr)) ||
+        getDataSetValue(element, attr) ||
+        getNamedItem(element, attr) ||
+        (computed || Array.from(element.style).includes(attr)) && getComputedStyle(element).getPropertyValue(attr) ||
+        ''
+    );
 }
 
 export function getParentAttribute(element: SVGElement, attr: string, computed?: boolean) {

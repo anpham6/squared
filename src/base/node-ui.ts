@@ -938,7 +938,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         }
         else if (!this.pageFlow) {
             if (this.autoPosition) {
-                if (siblings === undefined) {
+                if (!siblings) {
                     siblings = this.siblingsLeading;
                 }
                 const length = siblings.length;
@@ -1253,7 +1253,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (!value) {
             value = this.box.width;
         }
-        if (this.pageFlow && !this.documentRoot) {
+        if (this.pageFlow) {
             let offsetLeft = 0,
                 offsetRight = 0,
                 current = this.actualParent;
@@ -1265,12 +1265,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     offsetLeft += Math.max(current.marginLeft, 0) + current.borderLeftWidth + current.paddingLeft;
                     offsetRight += current.paddingRight + current.borderRightWidth + current.marginRight;
                 }
-                if (current.documentRoot) {
-                    break;
-                }
-                else {
-                    current = current.actualParent;
-                }
+                current = current.actualParent;
             }
             const screenWidth = this.localSettings.screenDimension.width - offsetLeft - offsetRight;
             if (screenWidth > 0) {
@@ -1879,11 +1874,18 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get textEmpty() {
-        if (this.styleElement && !this.imageElement && !this.svgElement && !this.inputElement) {
-            const value = this.textContent;
-            return value === '' || !this.preserveWhiteSpace && value.trim() === '';
+        let result = this._cached.textEmpty;
+        if (result === undefined) {
+            if (this.styleElement && !this.imageElement && !this.svgElement && !this.inputElement) {
+                const value = this.textContent;
+                result = value === '' || !this.preserveWhiteSpace && value.trim() === '';
+            }
+            else {
+                result = false;
+            }
+            this._cached.textEmpty = result;
         }
-        return false;
+        return result;
     }
 
     set childIndex(value) {

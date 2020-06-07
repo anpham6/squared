@@ -29,7 +29,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 if (floating || blockAlternate) {
                     if (item.floating) {
-                        if (floated === undefined) {
+                        if (!floated) {
                             floated = new Set<string>();
                         }
                         floated.add(item.float);

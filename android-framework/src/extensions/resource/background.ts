@@ -912,17 +912,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 let repeat = backgroundRepeat[i],
                     dimension = imageDimensions[i],
                     dimenWidth = NaN,
-                    dimenHeight = NaN;
-                if (dimension) {
-                    if (!dimension.width || !dimension.height) {
-                        dimension = undefined;
-                    }
-                    else {
-                        dimenWidth = dimension.width;
-                        dimenHeight = dimension.height;
-                    }
-                }
-                let top = 0,
+                    dimenHeight = NaN,
+                    bitmap = svg[i] !== true,
+                    autoFit = node.is(CONTAINER_NODE.IMAGE) || typeof value !== 'string',
+                    top = 0,
                     right = 0,
                     bottom = 0,
                     left = 0,
@@ -940,6 +933,15 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     gravityAlign = '',
                     offsetX = false,
                     offsetY = false;
+                if (dimension) {
+                    if (!dimension.width || !dimension.height) {
+                        dimension = undefined;
+                    }
+                    else {
+                        dimenWidth = dimension.width;
+                        dimenHeight = dimension.height;
+                    }
+                }
                 if (repeat.includes(' ')) {
                     const [x, y] = repeat.split(' ');
                     if (x === 'no-repeat') {
@@ -1083,11 +1085,11 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 }
                                 else if (dimen !== 'auto') {
                                     if (index === 0) {
-                                        if (tileModeX !== 'repeat') {
+                                        if (tileModeX !== 'repeat' || !bitmap) {
                                             width = node.parseWidth(dimen, false);
                                         }
                                     }
-                                    else if (tileModeY !== 'repeat') {
+                                    else if (tileModeY !== 'repeat' || !bitmap) {
                                         height = node.parseHeight(dimen, false);
                                     }
                                 }
@@ -1095,9 +1097,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                         break;
                 }
-                let bitmap = svg[i] !== true,
-                    autoFit = node.is(CONTAINER_NODE.IMAGE) || typeof value !== 'string',
-                    resizedWidth = false,
+                let resizedWidth = false,
                     resizedHeight = false,
                     unsizedWidth = false,
                     unsizedHeight = false,

@@ -1033,7 +1033,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 };
                 let length = Math.max(rowData.length, 1);
                 for (let i = 0; i < length; ++i) {
-                    if (emptyRows[i] === undefined) {
+                    if (!emptyRows[i]) {
                         const data = rowData[i];
                         for (let j = 0; j < unitSpan; ++j) {
                             if (data[j]) {

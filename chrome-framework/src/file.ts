@@ -52,12 +52,9 @@ function getFilePath(value: string, saveTo = false): [Undef<string>, string, str
 }
 
 function resolveAssetSource(element: HTMLVideoElement | HTMLAudioElement | HTMLObjectElement | HTMLEmbedElement | HTMLSourceElement | HTMLTrackElement, data: Map<HTMLElement, string>) {
-    const src = element instanceof HTMLObjectElement ? element.data : element.src;
-    if (isString(src)) {
-        const value = resolvePath(src);
-        if (value !== '') {
-            data.set(element, value);
-        }
+    const value = resolvePath(element instanceof HTMLObjectElement ? element.data : element.src);
+    if (value !== '') {
+        data.set(element, value);
     }
 }
 
@@ -591,7 +588,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
 
     protected validFile(data: Undef<ChromeAsset>): data is ChromeAsset {
         if (data) {
-            const fullpath = data.pathname + '/' + data.filename;
+            const fullpath = appendSeparator(data.pathname, data.filename);
             return !this.outputFileExclusions.some(pattern => pattern.test(fullpath));
         }
         return false;
