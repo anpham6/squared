@@ -1,4 +1,4 @@
-/* android.widget.menu 1.9.0
+/* android.widget.menu 1.10.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -6,7 +6,7 @@ this.android.widget = this.android.widget || {};
 this.android.widget.menu = (function () {
     'use strict';
 
-    const { appendSeparator, capitalize, isNumber, sameArray, safeNestedMap } = squared.lib.util;
+    const { appendSeparator, capitalize, sameArray, safeNestedMap } = squared.lib.util;
     const { createViewAttribute } = android.lib.util;
     const { NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
     const { EXT_ANDROID } = android.lib.constant;
@@ -144,8 +144,7 @@ this.android.widget.menu = (function () {
             const options = createViewAttribute();
             const android = options.android;
             const element = node.element;
-            let controlName;
-            let title;
+            let controlName, title;
             if (node.tagName === 'NAV') {
                 controlName = NAVIGATION.MENU;
                 title = getTitle(node, element);
@@ -197,12 +196,14 @@ this.android.widget.menu = (function () {
                     break;
             }
             if (title !== '') {
-                const numberResourceValue = this.application.extensionManager.optionValueAsBoolean(
-                    EXT_ANDROID.RESOURCE_STRINGS,
-                    'numberResourceValue'
+                android.title = Resource.addString(
+                    title,
+                    '',
+                    this.application.extensionManager.optionValueAsBoolean(
+                        EXT_ANDROID.RESOURCE_STRINGS,
+                        'numberResourceValue'
+                    )
                 );
-                const name = Resource.addString(title, '', numberResourceValue);
-                android.title = numberResourceValue || !isNumber(name) ? `@string/${name}` : title;
             }
             node.setControlType(controlName, CONTAINER_NODE.INLINE);
             node.exclude({ resource: NODE_RESOURCE.ALL, procedure: NODE_PROCEDURE.ALL });

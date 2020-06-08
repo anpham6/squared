@@ -1,4 +1,4 @@
-/* android.widget.toolbar 1.9.0
+/* android.widget.toolbar 1.10.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -8,7 +8,7 @@ this.android.widget.toolbar = (function () {
 
     const { formatPX } = squared.lib.css;
     const { getElementAsNode } = squared.lib.session;
-    const { assignEmptyValue, capitalize, includes, isString, iterateArray, safeNestedMap } = squared.lib.util;
+    const { assignEmptyValue, capitalize, includes, iterateArray, safeNestedMap } = squared.lib.util;
     const { createStyleAttribute, createViewAttribute, getDocumentId } = android.lib.util;
     const { NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
     const { CONTAINER_ANDROID, EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = android.lib.constant;
@@ -54,7 +54,7 @@ this.android.widget.toolbar = (function () {
             const resource = this.resource;
             const settings = application.userSettings;
             const element = node.element;
-            const options = Object.assign({}, this.options[element.id]);
+            const options = Object.assign({}, this.options[element.id.trim()]);
             const toolbarOptions = createViewAttribute(options.self);
             const appBarOptions = createViewAttribute(options.appBar);
             const collapsingToolbarOptions = createViewAttribute(options.collapsingToolbar);
@@ -103,8 +103,11 @@ this.android.widget.toolbar = (function () {
                     : [SUPPORT_ANDROID_X.TOOLBAR, SUPPORT_ANDROID_X.APPBAR, SUPPORT_ANDROID_X.COLLAPSING_TOOLBAR];
             const hasCollapsingToolbar = 'collapsingToolbar' in options || collapsingToolbarChildren.length > 0;
             const hasAppBar = 'appBar' in options || appBarChildren.length > 0 || hasCollapsingToolbar;
-            let appBarOverlay = '';
-            let popupOverlay = '';
+            let appBarOverlay = '',
+                popupOverlay = '',
+                appBarNode,
+                collapsingToolbarNode,
+                outputAs;
             if (hasCollapsingToolbar) {
                 assignEmptyValue(app, 'layout_collapseMode', 'pin');
             } else {
@@ -133,8 +136,6 @@ this.android.widget.toolbar = (function () {
             );
             node.setControlType(controlName, CONTAINER_NODE.BLOCK);
             node.exclude({ resource: NODE_RESOURCE.FONT_STYLE });
-            let appBarNode;
-            let collapsingToolbarNode;
             if (hasAppBar) {
                 let android = appBarOptions.android;
                 assignEmptyValue(appBarOptions, 'android', 'id', `@+id/${node.controlId}_appbar`);
@@ -157,7 +158,7 @@ this.android.widget.toolbar = (function () {
                 appBarNode = this.createPlaceholder(node, appBarChildren, node.target);
                 appBarNode.parent = parent;
                 let id = android.id;
-                if (isString(id)) {
+                if (id) {
                     appBarNode.controlId = getDocumentId(id);
                     delete android.id;
                 }
@@ -189,7 +190,6 @@ this.android.widget.toolbar = (function () {
                     }
                 }
             }
-            let outputAs;
             if (appBarNode) {
                 appBarNode.setLayoutWidth('match_parent');
                 appBarNode.setLayoutHeight('wrap_content');

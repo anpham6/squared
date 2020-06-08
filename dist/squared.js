@@ -1,4 +1,4 @@
-/* squared 1.9.1
+/* squared 1.10.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -489,8 +489,8 @@
         if (cacheData) {
             return cacheData;
         }
-        let result = value[0].toLowerCase();
-        let lower = true;
+        let result = value[0].toLowerCase(),
+            lower = true;
         const length = value.length;
         let i = 1;
         while (i < length) {
@@ -515,8 +515,8 @@
         if (cacheData) {
             return cacheData;
         }
-        let result = value.substring(0, i);
-        let previous = '';
+        let result = value.substring(0, i),
+            previous = '';
         const length = value.length;
         while (i < length) {
             const ch = value.charAt(i++);
@@ -614,7 +614,7 @@
     function delimitString(options, ...appending) {
         const length = appending.length;
         const value = options.value;
-        if (length === 1 && !isString(value)) {
+        if (length === 1 && !value) {
             return appending[0];
         }
         const delimiter = options.delimiter || ', ';
@@ -644,7 +644,7 @@
         if (separator.length > 1) {
             return [];
         }
-        if (!isString(prefix)) {
+        if (!prefix) {
             prefix = opening;
         }
         const prefixed = prefix !== opening;
@@ -658,8 +658,8 @@
                 }
             }
         };
-        let position = 0;
-        let index = -1;
+        let position = 0,
+            index = -1;
         const length = value.length;
         while ((index = value.indexOf(combined, position)) !== -1) {
             let preceding = '';
@@ -818,17 +818,16 @@
     }
     function resolvePath(value, href) {
         value = value.trim();
-        if (!FILE.PROTOCOL.test(value)) {
-            const origin = location.origin;
+        if (value !== '' && !FILE.PROTOCOL.test(value)) {
             const pathname = (
-                (href === null || href === void 0 ? void 0 : href.replace(origin, '')) || location.pathname
+                (href === null || href === void 0 ? void 0 : href.replace(location.origin, '')) || location.pathname
             )
                 .replace(/\\/g, '/')
                 .split('/');
             pathname.pop();
             value = value.replace(/\\/g, '/');
             if (value.charAt(0) === '/') {
-                return origin + value;
+                return location.origin + value;
             } else if (value.startsWith('../')) {
                 const trailing = [];
                 for (const dir of value.split('/')) {
@@ -843,23 +842,25 @@
                     }
                 }
                 value = trailing.join('/');
+            } else if (value.startsWith('./')) {
+                value = value.substring(2);
             }
-            return origin + pathname.join('/') + '/' + value;
+            return location.origin + pathname.join('/') + '/' + value;
         }
         return value;
     }
-    function trimBoth(value, char = '"') {
-        const match = new RegExp(`^(${char})(.*?)\\1$`).exec(value);
+    function trimBoth(value, pattern) {
+        const match = new RegExp(`^(${pattern})+(.*?)\\1$`).exec(value);
         return match ? match[2] : value;
     }
-    function trimString(value, char) {
-        return trimStart(trimEnd(value, char), char);
+    function trimString(value, pattern) {
+        return trimStart(trimEnd(value, pattern), pattern);
     }
-    function trimStart(value, char) {
-        return value.replace(new RegExp(`^${char}+`), '');
+    function trimStart(value, pattern) {
+        return value.replace(new RegExp(`^(${pattern})+`), '');
     }
-    function trimEnd(value, char) {
-        return value.replace(new RegExp(`${char}+$`), '');
+    function trimEnd(value, pattern) {
+        return value.replace(new RegExp(`(${pattern})+$`), '');
     }
     function appendSeparator(preceding, value, separator = '/') {
         preceding = preceding.trim();
@@ -958,7 +959,7 @@
                         current[name] = attrs[i + 1];
                     }
                     break;
-                } else if (isString(name)) {
+                } else if (name) {
                     if (value === undefined || value === null) {
                         current = {};
                         current[name] = current;
@@ -1004,11 +1005,11 @@
     function sortArray(list, ascending, ...attrs) {
         return list.sort((a, b) => {
             for (let i = 0; i < attrs.length; ++i) {
-                let valueA = a;
-                let valueB = b;
+                let valueA = a,
+                    valueB = b;
                 for (const name of attrs[i].split('.')) {
-                    const vA = valueA[name],
-                        vB = valueB[name];
+                    const vA = valueA[name];
+                    const vB = valueB[name];
                     if (vA !== undefined && vB !== undefined) {
                         valueA = vA;
                         valueB = vB;
@@ -1353,8 +1354,8 @@
         } else {
             pattern.lastIndex = 0;
         }
-        let output = value;
-        let match;
+        let output = value,
+            match;
         while ((match = pattern.exec(value))) {
             let trailing = match[1];
             if (parseInt(match[2]) >= 5) {
@@ -2435,8 +2436,8 @@
                 return result[0];
             } else if (q > 1) {
                 const total = hsl.l + hsl.s;
-                let nearest = Infinity;
-                let index = -1;
+                let nearest = Infinity,
+                    index = -1;
                 for (i = 0; i < q; ++i) {
                     const { l, s } = result[i].hsl;
                     const offset = Math.abs(total - (l + s));
@@ -2458,8 +2459,8 @@
             if (colorData) {
                 return colorData;
             }
-            let key = '';
-            let rgba;
+            let key = '',
+                rgba;
             if (value.startsWith('#')) {
                 rgba = parseRGBA(value);
             } else {
@@ -2503,9 +2504,9 @@
                 }
             }
             if (rgba) {
-                const { r, g, b, a } = rgba;
+                const a = rgba.a;
                 if (a > 0 || transparency) {
-                    const hexAsString = getHexCode(r, g, b);
+                    const hexAsString = getHexCode(rgba.r, rgba.g, rgba.b);
                     const alphaAsString = getHexCode(a);
                     const valueAsRGBA = `#${hexAsString + alphaAsString}`;
                     if (CACHE_COLORDATA[valueAsRGBA]) {
@@ -2648,9 +2649,7 @@
         h /= 360;
         s /= 100;
         l /= 100;
-        let r;
-        let g;
-        let b;
+        let r, g, b;
         if (s === 0) {
             r = l;
             g = l;
@@ -2698,7 +2697,7 @@
         formatHSLA: formatHSLA,
     });
 
-    const STRING_SIZES = `(\\(\\s*(?:orientation:\\s*(?:portrait|landscape)|(?:max|min)-width:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\))`;
+    const PATTERN_SIZES = `(\\(\\s*(?:orientation:\\s*(?:portrait|landscape)|(?:max|min)-width:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\))`;
     const REGEXP_LENGTH = new RegExp(`^${STRING.LENGTH}$`);
     const REGEXP_PERCENT = new RegExp(`^${STRING.PERCENT}$`);
     const REGEXP_LENGTHPERCENTAGE = new RegExp(`^${STRING.LENGTH_PERCENTAGE}$`);
@@ -2707,7 +2706,7 @@
     const REGEXP_CALC = new RegExp(`^${STRING.CSS_CALC}$`);
     const REGEXP_CALCWITHIN = new RegExp(STRING.CSS_CALC);
     const REGEXP_SOURCESIZES = new RegExp(
-        `\\s*(?:(\\(\\s*)?${STRING_SIZES}|(\\(\\s*))?\\s*(and|or|not)?\\s*(?:${STRING_SIZES}(\\s*\\))?)?\\s*(.+)`
+        `\\s*(?:(\\(\\s*)?${PATTERN_SIZES}|(\\(\\s*))?\\s*(and|or|not)?\\s*(?:${PATTERN_SIZES}(\\s*\\))?)?\\s*(.+)`
     );
     const CHAR_SPACE = /\s+/;
     const CHAR_SEPARATOR = /\s*,\s*/;
@@ -3084,7 +3083,7 @@
         },
         backgroundColor: {
             trait: 2 /* CALC */,
-            value: 'transparent',
+            value: 'rgba(0, 0, 0, 0)',
         },
         backgroundImage: {
             trait: 2 /* CALC */,
@@ -3112,7 +3111,7 @@
         },
         backgroundSize: {
             trait: 2 /* CALC */,
-            value: 'auto auto',
+            value: 'auto',
         },
         border: {
             trait: 2 /* CALC */ | 4 /* SHORTHAND */ | 8 /* LAYOUT */,
@@ -3288,6 +3287,10 @@
         clip: {
             trait: 2 /* CALC */ | 64 /* DEPRECATED */,
             value: 'clip',
+        },
+        clipPath: {
+            trait: 2 /* CALC */,
+            value: 'none',
         },
         color: {
             trait: 2 /* CALC */ | 32 /* COLOR */,
@@ -3572,7 +3575,7 @@
         },
         listStyleImage: {
             trait: 8 /* LAYOUT */,
-            value: 'normal',
+            value: 'none',
         },
         listStylePosition: {
             trait: 8 /* LAYOUT */,
@@ -3804,7 +3807,7 @@
         },
         textAlign: {
             trait: 0,
-            value: 'left',
+            value: 'start',
         },
         textAlignLast: {
             trait: 0,
@@ -3919,6 +3922,100 @@
             value: 'auto',
         },
     };
+    const SVG_PROPERTIES = {
+        clipRule: {
+            trait: 0,
+            value: 'nonzero',
+        },
+        cx: {
+            trait: 2 /* CALC */,
+            value: '0',
+        },
+        cy: {
+            trait: 2 /* CALC */,
+            value: '0',
+        },
+        fill: {
+            trait: 2 /* CALC */ | 32 /* COLOR */,
+            value: 'black',
+        },
+        fillOpacity: {
+            trait: 2 /* CALC */,
+            value: '1',
+        },
+        fillRule: {
+            trait: 0,
+            value: 'nonzero',
+        },
+        stroke: {
+            trait: 2 /* CALC */ | 32 /* COLOR */,
+            value: 'none',
+        },
+        strokeDasharray: {
+            trait: 2 /* CALC */,
+            value: 'none',
+        },
+        strokeDashoffset: {
+            trait: 2 /* CALC */,
+            value: '0',
+        },
+        strokeLinecap: {
+            trait: 0,
+            value: 'butt',
+        },
+        strokeLinejoin: {
+            trait: 0,
+            value: 'miter',
+        },
+        strokeMiterlimit: {
+            trait: 2 /* CALC */,
+            value: '4',
+        },
+        strokeOpacity: {
+            trait: 2 /* CALC */,
+            value: '1',
+        },
+        strokeWidth: {
+            trait: 2 /* CALC */,
+            value: '1',
+        },
+        r: {
+            trait: 2 /* CALC */,
+            value: '0',
+        },
+        rx: {
+            trait: 2 /* CALC */,
+            value: '0',
+        },
+        ry: {
+            trait: 2 /* CALC */,
+            value: '0',
+        },
+        x: {
+            trait: 2 /* CALC */,
+            value: '0',
+        },
+        x1: {
+            trait: 2 /* CALC */,
+            value: '0',
+        },
+        x2: {
+            trait: 2 /* CALC */,
+            value: '0',
+        },
+        y: {
+            trait: 2 /* CALC */,
+            value: '0',
+        },
+        y1: {
+            trait: 2 /* CALC */,
+            value: '0',
+        },
+        y2: {
+            trait: 2 /* CALC */,
+            value: '0',
+        },
+    };
     function newBoxModel() {
         return {
             marginTop: 0,
@@ -3948,7 +4045,7 @@
     }
     function getFontSize(element) {
         if (element.nodeName.charAt(0) === '#') {
-            element = element.parentElement || document.body;
+            element = element.parentElement || document.documentElement;
         }
         return parseFloat(getStyle(element).getPropertyValue('font-size'));
     }
@@ -3958,9 +4055,9 @@
     function parseSelectorText(value, document) {
         value = document ? value.trim() : trimSelector(value.trim());
         if (value.includes(',')) {
-            let normalized = value;
-            let found = false;
-            let match;
+            let normalized = value,
+                found = false,
+                match;
             while ((match = CSS.SELECTOR_ATTR.exec(normalized))) {
                 const index = match.index;
                 const length = match[0].length;
@@ -3994,8 +4091,8 @@
     }
     function getSpecificity(value) {
         CSS.SELECTOR_G.lastIndex = 0;
-        let result = 0;
-        let match;
+        let result = 0,
+            match;
         while ((match = CSS.SELECTOR_G.exec(value))) {
             let segment = match[1];
             if (segment.length === 1) {
@@ -4325,7 +4422,7 @@
             case 'fontSize':
                 return formatVar(
                     calculateVar(element, value, {
-                        boundingSize: getFontSize(element.parentElement || document.body),
+                        boundingSize: getFontSize(element.parentElement || document.documentElement),
                         min: 0,
                     })
                 );
@@ -4732,20 +4829,17 @@
                 const length = path.length;
                 if (length === 2) {
                     const prefix = path[0].trim();
+                    let shape = trimEnclosing(path[1].trim());
                     switch (prefix) {
                         case 'url':
                         case 'path':
                             return !hasCalc(path[1]) ? value : '';
                         case 'linear-gradient':
-                        case 'repeating-linear-gradient':
                         case 'radial-gradient':
-                        case 'repeating-radial-gradient':
                         case 'conic-gradient':
+                        case 'repeating-linear-gradient':
+                        case 'repeating-radial-gradient':
                             return calculateStyle(element, 'backgroundImage', value, boundingBox);
-                    }
-                    let shape = path[1].trim();
-                    shape = trimEnclosing(shape);
-                    switch (prefix) {
                         case 'circle':
                         case 'ellipse': {
                             const result = [];
@@ -4819,6 +4913,8 @@
                             shape = result.join(', ');
                             break;
                         }
+                        default:
+                            return value;
                     }
                     if (shape !== '') {
                         return `${prefix}(${shape})`;
@@ -4896,8 +4992,7 @@
                         slice = calculateStyle(element, 'borderImageSlice', slice, boundingBox);
                     }
                     if (slice !== '') {
-                        let width;
-                        let outset;
+                        let width, outset;
                         if (match[3]) {
                             [width, outset] = match[3].trim().split(CHAR_DIVIDER);
                             if (hasCalc(width)) {
@@ -4978,28 +5073,30 @@
             const length = styleSheets.length;
             let i = 0;
             while (i < length) {
-                const cssRules = styleSheets[i++].cssRules;
-                if (cssRules) {
-                    const q = cssRules.length;
-                    for (let j = 0; j < q; ++j) {
-                        try {
-                            const item = cssRules[j];
-                            if (item.type === CSSRule.KEYFRAMES_RULE) {
-                                const value = parseKeyframes(item.cssRules);
-                                if (hasKeys(value)) {
-                                    const name = item.name;
-                                    if (result[name]) {
-                                        Object.assign(result[name], value);
-                                    } else {
-                                        result[name] = value;
+                try {
+                    const cssRules = styleSheets[i++].cssRules;
+                    if (cssRules) {
+                        const q = cssRules.length;
+                        for (let j = 0; j < q; ++j) {
+                            try {
+                                const item = cssRules[j];
+                                if (item.type === CSSRule.KEYFRAMES_RULE) {
+                                    const value = parseKeyframes(item.cssRules);
+                                    if (hasKeys(value)) {
+                                        const name = item.name;
+                                        if (result[name]) {
+                                            Object.assign(result[name], value);
+                                        } else {
+                                            result[name] = value;
+                                        }
                                     }
                                 }
+                            } catch (_a) {
+                                break violation;
                             }
-                        } catch (_a) {
-                            break violation;
                         }
                     }
-                }
+                } catch (_b) {}
             }
         }
         return result;
@@ -5055,8 +5152,8 @@
                 while ((match = pattern.exec(value))) {
                     const patternCondition = /\(([a-z-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?:\s+and\s+)?/g;
                     const negate = match[1] === 'not';
-                    let valid = false;
-                    let condition;
+                    let valid = false,
+                        condition;
                     while ((condition = patternCondition.exec(match[2]))) {
                         const attr = condition[1];
                         let operation = condition[2];
@@ -5159,8 +5256,8 @@
         return !!parentElement && styles.includes(getStyle(parentElement)[attr]);
     }
     function getInheritedStyle(element, attr, exclude, ...tagNames) {
-        let value = '';
-        let current = element.parentElement;
+        let value = '',
+            current = element.parentElement;
         while (current && !tagNames.includes(current.tagName)) {
             value = getStyle(current)[attr];
             if (value === 'inherit' || (exclude === null || exclude === void 0 ? void 0 : exclude.test(value))) {
@@ -5306,9 +5403,8 @@
     function calculateVar(element, value, options = {}) {
         const output = parseVar(element, value);
         if (output) {
-            const { precision, unitType } = options;
             if (value.includes('%')) {
-                if (options.supportPercent === false || unitType === 32 /* INTEGER */) {
+                if (options.supportPercent === false || options.unitType === 32 /* INTEGER */) {
                     return NaN;
                 } else if (options.boundingSize === undefined) {
                     const { dimension, boundingBox } = options;
@@ -5316,8 +5412,8 @@
                         if (boundingBox) {
                             options.boundingSize = boundingBox[dimension];
                         } else {
-                            let offsetPadding = 0;
-                            let boundingElement;
+                            let offsetPadding = 0,
+                                boundingElement;
                             if (options.parent === false) {
                                 boundingElement = element;
                             } else {
@@ -5369,15 +5465,15 @@
                 return NaN;
             }
             if (
-                (!unitType || unitType === 2) /* LENGTH */ &&
+                (!options.unitType || options.unitType === 2) /* LENGTH */ &&
                 /\d(em|ch)/.test(value) &&
                 options.fontSize === undefined
             ) {
                 options.fontSize = getFontSize(element);
             }
             let result = calculate(output, options);
-            if (precision !== undefined) {
-                result = precision === 0 ? Math.floor(result) : parseFloat(truncate(result, precision));
+            if (options.precision !== undefined) {
+                result = options.precision === 0 ? Math.floor(result) : parseFloat(truncate(result, options.precision));
             } else if (options.roundValue) {
                 result = Math.round(result);
             }
@@ -5399,17 +5495,11 @@
     function getBackgroundPosition(value, dimension, options) {
         value = value.trim();
         if (value !== '') {
-            const orientation = value.split(CHAR_SPACE);
-            if (orientation.length === 1) {
-                orientation.push('center');
-            }
-            const length = Math.min(orientation.length, 4);
             let fontSize, imageDimension, imageSize, screenDimension;
             if (options) {
                 ({ fontSize, imageDimension, imageSize, screenDimension } = options);
             }
             const { width, height } = dimension;
-            const result = newBoxRectPosition(orientation);
             const setImageOffset = (position, horizontal, direction, directionAsPercent) => {
                 if (imageDimension && !isLength(position)) {
                     let offset = result[directionAsPercent];
@@ -5470,6 +5560,12 @@
                     result[direction] -= offset;
                 }
             };
+            const orientation = value.split(CHAR_SPACE);
+            if (orientation.length === 1) {
+                orientation.push('center');
+            }
+            const result = newBoxRectPosition(orientation);
+            const length = Math.min(orientation.length, 4);
             if (length === 2) {
                 orientation.sort((a, b) => {
                     switch (a) {
@@ -5681,14 +5777,12 @@
         if ((parentElement === null || parentElement === void 0 ? void 0 : parentElement.tagName) === 'PICTURE') {
             iterateArray(parentElement.children, item => {
                 if (item.tagName === 'SOURCE') {
-                    const { media, type, srcset: srcsetA } = item;
                     if (
-                        isString(srcsetA) &&
-                        !(isString(media) && !checkMediaRule(media)) &&
-                        (!isString(type) || !mimeType || mimeType.includes(type.trim().toLowerCase()))
+                        isString(item.srcset) &&
+                        !(isString(item.media) && !checkMediaRule(item.media)) &&
+                        (!isString(item.type) || !mimeType || mimeType.includes(item.type.trim().toLowerCase()))
                     ) {
-                        srcset = srcsetA;
-                        sizes = item.sizes;
+                        ({ srcset, sizes } = item);
                         return true;
                     }
                 }
@@ -5699,8 +5793,8 @@
             for (const value of srcset.trim().split(CHAR_SEPARATOR)) {
                 const match = /^(.*?)(?:\s+([\d.]+)([xw]))?$/.exec(value);
                 if (match) {
-                    let width = 0;
-                    let pixelRatio = 0;
+                    let width = 0,
+                        pixelRatio = 0;
                     switch (match[3]) {
                         case 'w':
                             width = convertFloat(match[2]);
@@ -5718,18 +5812,18 @@
         }
         const length = result.length;
         if (length === 0) {
-            result.push({ src: element.src, pixelRatio: 1, width: 0 });
+            return undefined;
         } else if (length > 1) {
             result.sort((a, b) => {
-                const pxA = a.pixelRatio,
-                    pxB = b.pixelRatio;
+                const pxA = a.pixelRatio;
+                const pxB = b.pixelRatio;
                 if (pxA > 0 && pxB > 0) {
                     if (pxA !== pxB) {
                         return pxA < pxB ? -1 : 1;
                     }
                 } else {
-                    const widthA = a.width,
-                        widthB = b.width;
+                    const widthA = a.width;
+                    const widthB = b.width;
                     if (widthA !== widthB && widthA > 0 && widthB > 0) {
                         return widthA < widthB ? -1 : 1;
                     }
@@ -5848,11 +5942,11 @@
     }
     function extractURL(value) {
         const match = CSS.URL.exec(value);
-        return match ? match[1] || match[2] : '';
+        return match ? match[1] || match[2] : undefined;
     }
     function resolveURL(value) {
-        value = extractURL(value);
-        return value !== '' ? resolvePath(value) : '';
+        const url = extractURL(value);
+        return url ? resolvePath(url) : undefined;
     }
     function insertStyleSheetRule(value, index = 0) {
         const style = document.createElement('style');
@@ -5899,8 +5993,8 @@
             let index = 0;
             while (true) {
                 for (let i = 0; i < closing.length; ++i) {
-                    let j = closing[i] - 1;
-                    let valid = false;
+                    let valid = false,
+                        j = closing[i] - 1;
                     for (; j >= 0; j--) {
                         if (opening[j]) {
                             valid = true;
@@ -5915,8 +6009,9 @@
                         if (options) {
                             ({ boundingSize, min, max, unitType, fontSize } = options);
                         }
-                        let operand, operator;
-                        let found = false;
+                        let found = false,
+                            operand,
+                            operator;
                         const seg = [];
                         const evaluate = [];
                         const operation = value.substring(j + 1, closing[i]).split(/\s+([+-]\s+|\s*[*/])\s*/);
@@ -6122,10 +6217,10 @@
                 case 'ch':
                     return (
                         result *
-                        (fontSize !== null && fontSize !== void 0 ? fontSize : getFontSize(document.body) || 16)
+                        (fontSize !== null && fontSize !== void 0 ? fontSize : getFontSize(document.documentElement))
                     );
                 case 'rem':
-                    return result * (getFontSize(document.querySelector('html') || document.body) || 16);
+                    return result * getFontSize(document.documentElement);
                 case 'pc':
                     result *= 12;
                 case 'pt':
@@ -6150,8 +6245,12 @@
         }
         return 0;
     }
-    function parseTransform(value, accumulate, fontSize) {
+    function parseTransform(value, options) {
         var _a, _b, _c, _d;
+        let accumulate, fontSize, boundingBox;
+        if (options) {
+            ({ accumulate, fontSize, boundingBox } = options);
+        }
         const result = [];
         const pattern = /(\w+)\([^)]+\)/g;
         let match;
@@ -6160,25 +6259,51 @@
             if (method.startsWith('translate')) {
                 const translate = TRANSFORM.TRANSLATE.exec(match[0]);
                 if (translate) {
+                    const tX = translate[2];
+                    const tY = translate[3];
                     if (accumulate) {
                         let x = 0,
                             y = 0,
                             z = 0;
                         switch (method) {
                             case 'translate':
-                                x = parseUnit(translate[2], fontSize);
-                                if (translate[3]) {
-                                    y = parseUnit(translate[3], fontSize);
+                                if (isPercent(tX)) {
+                                    if (boundingBox) {
+                                        x = (parseFloat(tX) / 100) * boundingBox.width;
+                                    }
+                                } else {
+                                    x = parseUnit(tX, fontSize);
+                                }
+                                if (tY) {
+                                    if (isPercent(tY)) {
+                                        if (boundingBox) {
+                                            y = (parseFloat(tY) / 100) * boundingBox.height;
+                                        }
+                                    } else {
+                                        y = parseUnit(tY, fontSize);
+                                    }
                                 }
                                 break;
                             case 'translateX':
-                                x = parseUnit(translate[2], fontSize);
+                                if (isPercent(tX)) {
+                                    if (boundingBox) {
+                                        x = (parseFloat(tX) / 100) * boundingBox.width;
+                                    }
+                                } else {
+                                    x = parseUnit(tX, fontSize);
+                                }
                                 break;
                             case 'translateY':
-                                y = parseUnit(translate[2], fontSize);
+                                if (isPercent(tY)) {
+                                    if (boundingBox) {
+                                        y = (parseFloat(tY) / 100) * boundingBox.height;
+                                    }
+                                } else {
+                                    y = parseUnit(tY, fontSize);
+                                }
                                 break;
                             case 'translateZ':
-                                z = parseUnit(translate[2], fontSize);
+                                z = parseUnit(tX, fontSize);
                                 break;
                         }
                         const values =
@@ -6193,9 +6318,9 @@
                             result.push({ method: 'translate', values: [x, y, z] });
                         }
                     } else {
-                        const values = [parseUnit(translate[2], fontSize)];
-                        if (method === 'translate' && translate[3]) {
-                            values.push(parseUnit(translate[3], fontSize));
+                        const values = [parseUnit(tX, fontSize)];
+                        if (method === 'translate' && tY) {
+                            values.push(parseUnit(tY, fontSize));
                         }
                         result.push({ method, values });
                     }
@@ -6250,9 +6375,7 @@
                         switch (method) {
                             case 'scale':
                                 x = parseFloat(scale[2]);
-                                if (scale[3]) {
-                                    y = parseFloat(scale[3]);
-                                }
+                                y = parseFloat(scale[3]) || x;
                                 break;
                             case 'scaleX':
                                 x = parseFloat(scale[2]);
@@ -6420,6 +6543,7 @@
     var css = /*#__PURE__*/ Object.freeze({
         __proto__: null,
         CSS_PROPERTIES: CSS_PROPERTIES,
+        SVG_PROPERTIES: SVG_PROPERTIES,
         newBoxModel: newBoxModel,
         getStyle: getStyle,
         getFontSize: getFontSize,
@@ -6528,14 +6652,13 @@
             height: rect.height,
         };
         if (scrollPosition) {
-            const { scrollX, scrollY } = window;
-            if (scrollY !== 0) {
-                result.top += scrollY;
-                result.bottom += scrollY;
+            if (window.scrollY !== 0) {
+                result.top += window.scrollY;
+                result.bottom += window.scrollY;
             }
-            if (scrollX !== 0) {
-                result.left += scrollX;
-                result.right += scrollX;
+            if (window.scrollX !== 0) {
+                result.left += window.scrollX;
+                result.right += window.scrollX;
             }
         }
         return result;
@@ -6556,9 +6679,9 @@
         let bounds;
         length = domRect.length;
         if (length) {
+            let numberOfLines = 1,
+                overflow = false;
             bounds = assignRect(domRect[0]);
-            let numberOfLines = 1;
-            let overflow = false;
             i = 0;
             while (++i < length) {
                 const { left, right, top, bottom, width } = domRect[i];
@@ -6601,8 +6724,8 @@
         if (!elementStart || elementStart.parentElement === elementEnd.parentElement) {
             const parent = elementEnd.parentElement;
             if (parent) {
-                let startIndex = elementStart ? -1 : 0;
-                let endIndex = -1;
+                let startIndex = elementStart ? -1 : 0,
+                    endIndex = -1;
                 iterateArray(parent.childNodes, (element, index) => {
                     if (element === elementEnd) {
                         endIndex = index;
@@ -6781,10 +6904,11 @@
         let i = 0;
         while (i < length) {
             switch (value.charCodeAt(i++)) {
+                case 32:
                 case 9:
                 case 10:
+                case 11:
                 case 13:
-                case 32:
                     continue;
                 default:
                     return true;
@@ -6846,15 +6970,15 @@
     function applyTemplate(tagName, template, children, depth) {
         const tag = template[tagName];
         const nested = tag['>>'] === true;
-        let output = '';
-        let indent = '';
+        let output = '',
+            indent = '',
+            length = children.length;
         if (depth === undefined) {
             output += STRING_XMLENCODING;
             depth = 0;
         } else {
             indent += '\t'.repeat(depth);
         }
-        let length = children.length;
         for (let i = 0; i < length; ++i) {
             const item = children[i];
             const include = tag['#'] && item[tag['#']];
@@ -6927,7 +7051,10 @@
     function formatTemplate(value, closeEmpty = false, startIndent = -1, char = '\t') {
         const lines = [];
         const pattern = /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g;
-        let match;
+        let output = '',
+            indent = startIndent,
+            ignoreIndent = false,
+            match;
         while ((match = pattern.exec(value))) {
             lines.push({
                 tag: match[1],
@@ -6936,9 +7063,6 @@
                 value: match[4],
             });
         }
-        let output = '';
-        let indent = startIndent;
-        let ignoreIndent = false;
         const length = lines.length;
         for (let i = 0; i < length; ++i) {
             const line = lines[i];
@@ -7026,8 +7150,8 @@
             const parts = value.split('');
             let j = 0;
             while (j < char.length) {
-                const { i, text } = char[j++];
-                parts[i] = text;
+                const item = char[j++];
+                parts[item.i] = item.text;
             }
             return parts.join('');
         }
@@ -7272,7 +7396,7 @@
             return -1;
         }
         find(predicate, options) {
-            let error, also, cascade, start, end;
+            let also, error, cascade, start, end;
             if (options) {
                 ({ also, error, cascade } = options);
                 if (!cascade) {
@@ -7317,7 +7441,7 @@
             return this.find(predicate, options) !== undefined;
         }
         cascade(predicate, options) {
-            let error, also;
+            let also, error;
             if (options) {
                 ({ also, error } = options);
             }
@@ -7544,6 +7668,32 @@
         }
         return result;
     }
+    function get(...elements) {
+        const result = new Map();
+        const length = elements.length;
+        if (main) {
+            for (const sessionId of main.session.active) {
+                let i = 0;
+                while (i < length) {
+                    let element = elements[i++];
+                    if (typeof element === 'string') {
+                        element = document.getElementById(element);
+                    }
+                    if (element instanceof Element) {
+                        const node = getElementAsNode(element, sessionId);
+                        if (node) {
+                            if (result.has(element)) {
+                                result.get(element).push(node);
+                            } else {
+                                result.set(element, [node]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return length <= 1 ? (result.size === 1 ? result.values().next().value : []) : result;
+    }
     function reset() {
         main === null || main === void 0 ? void 0 : main.reset();
     }
@@ -7627,6 +7777,7 @@
     exports.copyToDisk = copyToDisk;
     exports.createFrom = createFrom;
     exports.exclude = exclude;
+    exports.get = get;
     exports.include = include;
     exports.lib = lib;
     exports.parseDocument = parseDocument;

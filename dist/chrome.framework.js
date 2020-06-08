@@ -1,4 +1,4 @@
-/* chrome-framework 1.9.0
+/* chrome-framework 1.10.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -26,8 +26,8 @@
             super(...arguments);
             this.builtInExtensions = {};
             this.extensions = [];
-            this.systemName = 'chrome';
             this.queryState = 0;
+            this.systemName = 'chrome';
         }
         finalize() {}
         createNode(options) {
@@ -128,6 +128,7 @@
         safeNestedArray,
         trimEnd,
     } = squared.lib.util;
+    const STRING_SERVERROOT = '__serverroot__';
     function parseFileAs(attr, value) {
         if (value) {
             const match = new RegExp(`${attr}:\\s*((?:[^"]|\\\\")+)`).exec(value.replace(/\\/g, '/'));
@@ -142,9 +143,9 @@
         value = value.replace(/\\/g, '/');
         let moveTo;
         if (value.charAt(0) === '/') {
-            moveTo = '__serverroot__';
+            moveTo = STRING_SERVERROOT;
         } else if (value.startsWith('../')) {
-            moveTo = '__serverroot__';
+            moveTo = STRING_SERVERROOT;
             const pathname = location.pathname.split('/');
             pathname.pop();
             for (let i = 0; i < value.length && pathname.length > 0; i += 3) {
@@ -166,12 +167,9 @@
         return [moveTo, result[0], result[1]];
     }
     function resolveAssetSource(element, data) {
-        const src = element instanceof HTMLObjectElement ? element.data : element.src;
-        if (isString(src)) {
-            const value = resolvePath(src);
-            if (value !== '') {
-                data.set(element, value);
-            }
+        const value = resolvePath(element instanceof HTMLObjectElement ? element.data : element.src);
+        if (value !== '') {
+            data.set(element, value);
         }
     }
     function convertFileMatch(value) {
@@ -250,12 +248,15 @@
         return undefined;
     }
     const getFileExt = value => (value.includes('.') ? fromLastIndexOf(value, '.').toLowerCase() : '');
+    const getDirectory = (path, start) => path.substring(start, path.lastIndexOf('/'));
     class File extends squared.base.File {
         static parseUri(uri, options = {}) {
-            const { preserveCrossOrigin, saveTo } = options;
-            let { saveAs, format, preserve } = options;
-            let value = trimEnd(uri, '/');
-            let relocate;
+            let saveAs, format, preserve;
+            if (options) {
+                ({ saveAs, format, preserve } = options);
+            }
+            let value = trimEnd(uri, '/'),
+                relocate;
             const local = value.startsWith(trimEnd(location.origin, '/'));
             if (saveAs) {
                 saveAs = trimEnd(saveAs.replace(/\\/g, '/'), '/');
@@ -269,23 +270,22 @@
                     value = resolvePath(relocate, location.href);
                 }
             }
-            if (preserveCrossOrigin && !local && !relocate) {
+            if (options.preserveCrossOrigin && !local && !relocate) {
                 return undefined;
             }
             const match = FILE.PROTOCOL.exec(value);
             if (match) {
-                const host = match[2],
-                    port = match[3],
-                    path = match[4] || '';
+                const host = match[2];
+                const port = match[3];
+                const path = match[4] || '';
                 const extension = getFileExt(uri);
                 let pathname = '',
-                    filename = '';
-                let rootDir;
-                let moveTo;
-                let prefix;
-                const getDirectory = start => path.substring(start, path.lastIndexOf('/'));
+                    filename = '',
+                    prefix = '',
+                    rootDir,
+                    moveTo;
                 if (!local) {
-                    if (saveTo && relocate) {
+                    if (options.saveTo && relocate) {
                         [moveTo, pathname, filename] = getFilePath(
                             relocate + '/' + randomUUID() + (extension ? '.' + extension : '')
                         );
@@ -310,19 +310,19 @@
                 }
                 if (filename === '') {
                     if (local && relocate) {
-                        [moveTo, pathname, filename] = getFilePath(relocate, saveTo);
+                        [moveTo, pathname, filename] = getFilePath(relocate, options.saveTo);
                     } else if (path && path !== '/') {
                         filename = fromLastIndexOf(path, '/', '\\');
                         if (local) {
                             if (path.startsWith(prefix)) {
-                                pathname = getDirectory(prefix.length);
+                                pathname = getDirectory(path, prefix.length);
                             } else {
-                                moveTo = '__serverroot__';
+                                moveTo = STRING_SERVERROOT;
                                 rootDir = '';
-                                pathname = getDirectory(0);
+                                pathname = getDirectory(path, 0);
                             }
                         } else {
-                            pathname += getDirectory(1);
+                            pathname += getDirectory(path, 1);
                         }
                     } else {
                         filename = 'index.html';
@@ -377,29 +377,24 @@
         }
         getHtmlPage(options) {
             var _a;
+            let preserveCrossOrigin, saveAs, name;
+            if (options) {
+                ({ name, preserveCrossOrigin } = options);
+                saveAs = (_a = options.saveAs) === null || _a === void 0 ? void 0 : _a.html;
+            }
             const result = [];
-            const href = location.href;
             const element = document.querySelector('html');
-            const saveAs =
-                (_a = options === null || options === void 0 ? void 0 : options.saveAs) === null || _a === void 0
-                    ? void 0
-                    : _a.html;
-            let file;
-            let format;
+            const href = location.href;
+            let file, format;
             if (element) {
                 file = element.dataset.chromeFile;
             }
             if (!isString(file) && (saveAs === null || saveAs === void 0 ? void 0 : saveAs.filename)) {
-                file = fromLastIndexOf(saveAs.filename);
+                file = fromLastIndexOf(saveAs.filename, '/', '\\');
                 format = saveAs.format;
             }
-            const data = File.parseUri(href, {
-                preserveCrossOrigin: options === null || options === void 0 ? void 0 : options.preserveCrossOrigin,
-                saveAs: file,
-                format,
-            });
+            const data = File.parseUri(href, { preserveCrossOrigin, saveAs: file, format });
             if (data) {
-                const name = options === null || options === void 0 ? void 0 : options.name;
                 if (name) {
                     data.filename = name;
                 } else {
@@ -420,8 +415,7 @@
         }
         getScriptAssets(options) {
             var _a;
-            let preserveCrossOrigin;
-            let saveAs;
+            let preserveCrossOrigin, saveAs;
             if (options) {
                 preserveCrossOrigin = options.preserveCrossOrigin;
                 saveAs = (_a = options.saveAs) === null || _a === void 0 ? void 0 : _a.script;
@@ -432,18 +426,12 @@
                 const src = element.src.trim();
                 let file = element.dataset.chromeFile;
                 if (file !== 'exclude') {
-                    let format;
-                    let outerHTML;
-                    let preserve;
-                    if (!isString(file) && saveAs) {
-                        const { pathname, filename } = saveAs;
-                        if (filename) {
-                            file = appendSeparator(pathname || '', filename);
-                            format = saveAs.format;
-                            outerHTML = element.outerHTML;
-                        }
+                    let format, outerHTML, preserve, data;
+                    if (!isString(file) && (saveAs === null || saveAs === void 0 ? void 0 : saveAs.filename)) {
+                        file = appendSeparator(saveAs.pathname || '', saveAs.filename);
+                        format = saveAs.format;
+                        outerHTML = element.outerHTML;
                     }
-                    let data;
                     if (src !== '') {
                         data = File.parseUri(resolvePath(src), { preserveCrossOrigin, saveAs: file, format });
                     } else if (isString(file)) {
@@ -474,9 +462,7 @@
         }
         getLinkAssets(options) {
             var _a;
-            let preserveCrossOrigin;
-            let saveAs;
-            let rel;
+            let preserveCrossOrigin, saveAs, rel;
             if (options) {
                 ({ rel, preserveCrossOrigin } = options);
                 saveAs = (_a = options.saveAs) === null || _a === void 0 ? void 0 : _a.link;
@@ -486,22 +472,9 @@
             document.querySelectorAll((rel ? `link[rel="${rel}"]` : 'link') + ', style').forEach(element => {
                 let file = element.dataset.chromeFile;
                 if (file !== 'exclude') {
-                    let data;
-                    let mimeType;
-                    let format;
-                    let preserve;
-                    let outerHTML;
-                    if (!isString(file) && saveAs && (mimeType === 'text/css' || element instanceof HTMLStyleElement)) {
-                        const { pathname, filename } = saveAs;
-                        if (filename) {
-                            file = appendSeparator(pathname || '', filename);
-                            format = saveAs.format;
-                            preserve = saveAs.preserve;
-                            outerHTML = element.outerHTML;
-                        }
-                    }
+                    let data, href, mimeType, format, preserve, outerHTML;
                     if (element instanceof HTMLLinkElement) {
-                        const href = element.href.trim();
+                        href = element.href.trim();
                         if (href !== '') {
                             switch (element.rel.trim()) {
                                 case 'stylesheet':
@@ -514,13 +487,25 @@
                                     mimeType = element.type.trim() || parseMimeType(href);
                                     break;
                             }
-                            data = File.parseUri(resolvePath(href), {
-                                preserveCrossOrigin,
-                                saveAs: file,
-                                format,
-                                preserve,
-                            });
                         }
+                    }
+                    if (
+                        !isString(file) &&
+                        (saveAs === null || saveAs === void 0 ? void 0 : saveAs.filename) &&
+                        (mimeType === 'text/css' || element instanceof HTMLStyleElement)
+                    ) {
+                        file = appendSeparator(saveAs.pathname || '', saveAs.filename);
+                        format = saveAs.format;
+                        preserve = saveAs.preserve;
+                        outerHTML = element.outerHTML;
+                    }
+                    if (href) {
+                        data = File.parseUri(resolvePath(href), {
+                            preserveCrossOrigin,
+                            saveAs: file,
+                            format,
+                            preserve,
+                        });
                     } else if (isString(file)) {
                         if (!outerHTML) {
                             const command = parseFileAs('exportAs', file);
@@ -562,8 +547,7 @@
         }
         getImageAssets(options) {
             var _a;
-            let preserveCrossOrigin;
-            let saveAs;
+            let preserveCrossOrigin, saveAs;
             if (options) {
                 preserveCrossOrigin = options.preserveCrossOrigin;
                 saveAs = (_a = options.saveAs) === null || _a === void 0 ? void 0 : _a.base64;
@@ -617,9 +601,9 @@
                 if (rawData.pathname) {
                     continue;
                 } else {
-                    const { base64, content, filename } = rawData;
-                    let mimeType = rawData.mimeType;
-                    let data;
+                    const { base64, filename } = rawData;
+                    let mimeType = rawData.mimeType,
+                        data;
                     if (base64) {
                         if (saveAs) {
                             const format = saveAs.format;
@@ -652,8 +636,12 @@
                             }
                         }
                         data = { pathname: '__generated__/base64', filename, mimeType, base64 };
-                    } else if (content && mimeType) {
-                        data = { pathname: `__generated__/${mimeType.split('/').pop()}`, filename, content };
+                    } else if (mimeType && rawData.content) {
+                        data = {
+                            pathname: `__generated__/${mimeType.split('/').pop()}`,
+                            filename,
+                            content: rawData.content,
+                        };
                     } else {
                         continue;
                     }
@@ -703,7 +691,7 @@
         }
         validFile(data) {
             if (data) {
-                const fullpath = data.pathname + '/' + data.filename;
+                const fullpath = appendSeparator(data.pathname, data.filename);
                 return !this.outputFileExclusions.some(pattern => pattern.test(fullpath));
             }
             return false;
@@ -795,6 +783,7 @@
             return result !== '(0,*)' ? result : undefined;
         }
         static getConvertOptions(name, options) {
+            const opacity = options.opacity || 1;
             let result = '';
             if (options.replaceWith) {
                 result += '@';
@@ -802,9 +791,7 @@
                 result += '%';
             }
             result += getSizeRange(options);
-            return (
-                name + (result !== '(0,*)' ? result : '') + (options.opacity < 1 ? `|${options.opacity}|` : '') + ':'
-            );
+            return name + (result !== '(0,*)' ? result : '') + (opacity > 0 && opacity < 1 ? `|${opacity}|` : '') + ':';
         }
         processFile(data, override = false) {
             return false;
@@ -971,7 +958,6 @@
                 smallerThan: Infinity,
                 whenSmaller: false,
                 replaceWith: true,
-                opacity: 1,
             };
         }
         processFile(data, override = false) {
@@ -996,7 +982,6 @@
                 smallerThan: Infinity,
                 whenSmaller: false,
                 replaceWith: true,
-                opacity: 1,
             };
         }
         processFile(data, override = false) {
@@ -1021,7 +1006,7 @@
                 smallerThan: Infinity,
                 whenSmaller: false,
                 replaceWith: true,
-                opacity: 0.5,
+                opacity: 1,
             };
         }
         processFile(data, override = false) {
@@ -1071,7 +1056,6 @@
                 smallerThan: Infinity,
                 whenSmaller: false,
                 replaceWith: true,
-                opacity: 1,
             };
         }
         processFile(data, override = false) {

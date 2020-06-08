@@ -1,4 +1,4 @@
-/* android.widget.floatingactionbutton 1.9.0
+/* android.widget.floatingactionbutton 1.10.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -27,7 +27,7 @@ this.android.widget.floatingactionbutton = (function () {
             const resource = this.resource;
             const element = node.element;
             const target = node.target;
-            const options = createViewAttribute(this.options[element.id]);
+            const options = createViewAttribute(this.options[element.id.trim()]);
             const colorName = Resource.addColor(parseColor(node.css('backgroundColor'), node.toFloat('opacity', 1)));
             assignEmptyValue(
                 options,
@@ -69,9 +69,8 @@ this.android.widget.floatingactionbutton = (function () {
                 )
             );
             if (!node.pageFlow) {
-                const { leftRight, topBottom } = node.autoMargin;
                 const offsetParent = this.application.resolveTarget(target) || parent;
-                if (leftRight) {
+                if (node.autoMargin.leftRight) {
                     node.mergeGravity('layout_gravity', 'center_horizontal');
                 } else if (node.hasPX('left')) {
                     node.mergeGravity('layout_gravity', node.localizeString('left'));
@@ -86,7 +85,7 @@ this.android.widget.floatingactionbutton = (function () {
                         adjustAbsolutePaddingOffset(offsetParent, 64 /* PADDING_RIGHT */, node.right)
                     );
                 }
-                if (topBottom) {
+                if (node.autoMargin.topBottom) {
                     node.mergeGravity('layout_gravity', 'center_vertical');
                 } else if (node.hasPX('top')) {
                     node.app('layout_dodgeInsetEdges', 'top');
