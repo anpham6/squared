@@ -1246,8 +1246,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public checkConstraintFloat(layout: LayoutUI<T>) {
-        const length = layout.length;
-        if (length > 1) {
+        if (layout.length > 1) {
             const clearMap = this.application.clearMap;
             let A = true,
                 B = true;

@@ -38,8 +38,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
     }
 
     public condition(node: T) {
-        const length = node.length;
-        if (length > 1 && !node.layoutElement && node.tagName !== 'TABLE' && !node.has('listStyle')) {
+        if (node.length > 1 && !node.layoutElement && node.tagName !== 'TABLE' && !node.has('listStyle')) {
             if (node.display === 'table') {
                 return node.every(item => item.display === 'table-row' && item.every(child => child.display === 'table-cell')) || node.every(item => item.display === 'table-cell');
             }

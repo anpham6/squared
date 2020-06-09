@@ -79,7 +79,6 @@ declare module "lib" {
         }
         function isPlatform(value: string | number): boolean;
         function isUserAgent(value: string | number): boolean;
-        function isWinEdge(): boolean;
         function getDeviceDPI(): number;
     }
 

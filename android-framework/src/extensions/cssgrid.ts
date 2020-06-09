@@ -254,8 +254,7 @@ function checkRowSpan(node: View, rowSpan: number, rowStart: number, mainData: C
 
 function checkAutoDimension(data: CssGridDirectionData, horizontal: boolean) {
     const unit = data.unit;
-    const length = unit.length;
-    if (length && unit.every(value => value === 'auto')) {
+    if (unit.length && unit.every(value => value === 'auto')) {
         data.unit = new Array(length).fill(horizontal ? '1fr' : '');
     }
 }
@@ -383,9 +382,8 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                     while (i < rowCount) {
                         const nodes: T[] = [];
                         const data = rowData[i];
-                        const length = data.length;
                         j = 0;
-                        while (j < length) {
+                        while (j < data.length) {
                             const cell = data[j++];
                             if (cell?.length === 1) {
                                 nodes.push(cell[0]);

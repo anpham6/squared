@@ -285,7 +285,7 @@ function checkBackgroundPosition(value: string, adjacent: string, fallback: stri
     return value;
 }
 
-function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LATEST, borderRadius?: string[], precision?: number) {
+function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LATEST, imageCount: number, borderRadius?: string[], precision?: number) {
     const { colorStops, type } = gradient;
     let positioning = api >= BUILD_ANDROID.LOLLIPOP;
     const result = { type, positioning } as GradientTemplate;
@@ -319,7 +319,7 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LATEST
             break;
         }
         case 'linear': {
-            if (!positioning || borderRadius && colorStops[length - 1].offset === 1 && (length === 2 || length === 3 && colorStops[1].offset === 0.5)) {
+            if (!positioning || borderRadius && imageCount === 1 && colorStops[length - 1].offset === 1 && (length === 2 || length === 3 && colorStops[1].offset === 0.5)) {
                 result.angle = ((gradient as LinearGradient).angle + 90).toString();
                 result.positioning = false;
                 positioning = false;
@@ -827,7 +827,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                     }
                     else if (value.colorStops.length > 1) {
-                        const gradient = createBackgroundGradient(value, node.api, data.borderRadius);
+                        const gradient = createBackgroundGradient(value, node.api, q, data.borderRadius);
                         if (gradient) {
                             images[length] = gradient;
                             imageDimensions[length] = value.dimension;

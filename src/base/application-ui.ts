@@ -178,6 +178,17 @@ function getCounterValue(value: Undef<string>, counterName: string, fallback = 1
     return undefined;
 }
 
+function setColumnMaxWidth(nodes: NodeUI[], offset: number) {
+    const length = nodes.length;
+    let i = 0;
+    while (i < length) {
+        const child = nodes[i++];
+        if (!child.hasPX('width') && !child.hasPX('maxWidth') && !child.imageElement && !child.svgElement) {
+            child.css('maxWidth', formatPX(offset));
+        }
+    }
+}
+
 const getCounterIncrementValue = (parent: HTMLElement, counterName: string, pseudoElt: string, sessionId: string, fallback?: number) => getCounterValue((getElementCache(parent, `styleMap${pseudoElt}`, sessionId) as Undef<CSSStyleDeclaration>)?.counterIncrement, counterName, fallback);
 const extractQuote = (value: string) => /^"(.+)"$/.exec(value)?.[1] || value;
 const isHorizontalAligned = (node: NodeUI) => !node.blockStatic && node.autoMargin.horizontal !== true && !(node.blockDimension && node.css('width') === '100%') && (!(node.plainText && node.multiline) || node.floating);
@@ -1672,12 +1683,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         ascending = false,
                                         lastResetElement: Undef<Element>;
                                     const incrementCounter = (increment: number, pseudo: boolean) => {
-                                        const length = subcounter.length;
-                                        if (length === 0) {
+                                        if (subcounter.length === 0) {
                                             counter += increment;
                                         }
                                         else if (ascending || pseudo) {
-                                            subcounter[length - 1] += increment;
+                                            subcounter[subcounter.length - 1] += increment;
                                         }
                                     };
                                     const cascadeCounterSibling = (sibling: Element) => {
@@ -1888,6 +1898,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 : 0
                             )
                         );
+                        setColumnMaxWidth(leftAbove, offset);
                     }
                 }
             }
@@ -1928,6 +1939,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 : 0
                             )
                         );
+                        setColumnMaxWidth(rightAbove, offset);
                     }
                 }
             }

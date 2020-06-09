@@ -103,6 +103,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                 let i = 0, j = 0;
                                 while (i < length) {
                                     switch (textContent.charCodeAt(i++)) {
+                                        case 9:
                                         case 10:
                                         case 32:
                                             ++j;

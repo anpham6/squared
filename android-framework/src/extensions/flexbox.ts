@@ -327,10 +327,9 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             else {
                                 item.setLayoutHeight('match_parent');
                                 if (previous) {
-                                    const length = previous.length;
                                     let largest = previous[0];
                                     let j = 1;
-                                    while (j < length) {
+                                    while (j < previous.length) {
                                         const sibling = previous[j++];
                                         if (sibling.linear.right > largest.linear.right) {
                                             largest = sibling;

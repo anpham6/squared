@@ -484,8 +484,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
         const actionable = options.directory || options.filename;
         const result = {};
         const assets: FileAsset[] = [];
-        const length = layouts.length;
-        for (let i = 0; i < length; ++i) {
+        for (let i = 0; i < layouts.length; ++i) {
             const { content, filename, pathname } = layouts[i];
             result[filename] = [content];
             if (actionable) {

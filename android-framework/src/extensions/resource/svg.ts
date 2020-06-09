@@ -593,8 +593,9 @@ function insertTargetAnimation(data: AnimatedVectorTemplate[], name: string, tar
                 set: [],
                 objectAnimator: []
             };
-            for (let i = 0; i < templateSet.length; ++i) {
-                const item = templateSet[i];
+            let i = 0;
+            while (i < length) {
+                const item = templateSet[i++];
                 setData.set = setData.set.concat(item.set as SetData[]);
                 setData.objectAnimator = setData.objectAnimator.concat(item.objectAnimator);
             }

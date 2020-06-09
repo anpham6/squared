@@ -3,7 +3,7 @@ import NodeUI from './node-ui';
 
 import { NODE_TEMPLATE } from './lib/enumeration';
 
-const { USER_AGENT, isUserAgent, isWinEdge } = squared.lib.client;
+const { USER_AGENT, isUserAgent } = squared.lib.client;
 const { CSS_PROPERTIES, formatPX, getStyle, isLength, isPercent } = squared.lib.css;
 const { withinViewport } = squared.lib.dom;
 const { capitalize, convertFloat, flatArray, iterateArray, safeNestedArray } = squared.lib.util;
@@ -144,46 +144,6 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         }
                         break;
                     case 'FIELDSET':
-                        if (!styleMap.display) {
-                            styleMap.display = 'block';
-                        }
-                        break;
-                }
-            }
-            else if (isWinEdge()) {
-                switch (tagName) {
-                    case 'BODY':
-                        if (styleMap.backgroundColor === 'transparent') {
-                            styleMap.backgroundColor = 'rgb(255, 255, 255)';
-                        }
-                        break;
-                    case 'INPUT':
-                        switch ((element as HTMLInputElement).type) {
-                            case 'text':
-                            case 'password':
-                            case 'time':
-                            case 'date':
-                            case 'datetime-local':
-                            case 'week':
-                            case 'month':
-                            case 'url':
-                            case 'email':
-                            case 'search':
-                            case 'number':
-                            case 'tel':
-                                if (!styleMap.fontSize) {
-                                    styleMap.fontSize = '13.3333px';
-                                }
-                                break;
-                        }
-                        break;
-                    case 'CODE':
-                        if (!styleMap.fontFamily) {
-                            styleMap.fontFamily = 'monospace';
-                        }
-                        break;
-                    case 'LEGEND':
-                    case 'RT':
                         if (!styleMap.display) {
                             styleMap.display = 'block';
                         }
