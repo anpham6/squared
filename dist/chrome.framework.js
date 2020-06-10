@@ -1,4 +1,4 @@
-/* chrome-framework 1.10.0
+/* chrome-framework 1.10.1
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -247,6 +247,14 @@
         }
         return undefined;
     }
+    function sortBundle(a, b) {
+        if (a.bundleIndex === 0) {
+            return 1;
+        } else if (b.bundleIndex === 0) {
+            return -1;
+        }
+        return 0;
+    }
     const getFileExt = value => (value.includes('.') ? fromLastIndexOf(value, '.').toLowerCase() : '');
     const getDirectory = (path, start) => path.substring(start, path.lastIndexOf('/'));
     class File extends squared.base.File {
@@ -458,7 +466,7 @@
                 }
             });
             setBundleIndex(bundleIndex);
-            return result;
+            return result.sort(sortBundle);
         }
         getLinkAssets(options) {
             var _a;
@@ -543,7 +551,7 @@
                 }
             }
             setBundleIndex(bundleIndex);
-            return result;
+            return result.sort(sortBundle);
         }
         getImageAssets(options) {
             var _a;

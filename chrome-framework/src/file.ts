@@ -130,6 +130,16 @@ function createBundleAsset(bundles: ChromeAsset[], element: HTMLElement, saveTo:
     return undefined;
 }
 
+function sortBundle(a: ChromeAsset, b: ChromeAsset) {
+    if (a.bundleIndex === 0) {
+        return 1;
+    }
+    else if (b.bundleIndex === 0) {
+        return -1;
+    }
+    return 0;
+}
+
 const getFileExt = (value: string) => value.includes('.') ? fromLastIndexOf(value, '.').toLowerCase() : '';
 const getDirectory = (path: string, start: number) => path.substring(start, path.lastIndexOf('/'));
 
@@ -358,7 +368,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             }
         });
         setBundleIndex(bundleIndex);
-        return result;
+        return result.sort(sortBundle);
     }
 
     public getLinkAssets(options?: FileActionAttribute) {
@@ -439,7 +449,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             }
         }
         setBundleIndex(bundleIndex);
-        return result;
+        return result.sort(sortBundle);
     }
 
     public getImageAssets(options?: FileActionAttribute) {

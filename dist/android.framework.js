@@ -1,4 +1,4 @@
-/* android-framework 1.10.0
+/* android-framework 1.10.1
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -5529,8 +5529,7 @@ var android = (function () {
             return false;
         }
         checkConstraintFloat(layout) {
-            const length = layout.length;
-            if (length > 1) {
+            if (layout.length > 1) {
                 const clearMap = this.application.clearMap;
                 let A = true,
                     B = true;
@@ -8446,8 +8445,7 @@ var android = (function () {
             const actionable = options.directory || options.filename;
             const result = {};
             const assets = [];
-            const length = layouts.length;
-            for (let i = 0; i < length; ++i) {
+            for (let i = 0; i < layouts.length; ++i) {
                 const { content, filename, pathname } = layouts[i];
                 result[filename] = [content];
                 if (actionable) {
@@ -9187,8 +9185,7 @@ var android = (function () {
     }
     function checkAutoDimension(data, horizontal) {
         const unit = data.unit;
-        const length = unit.length;
-        if (length && unit.every(value => value === 'auto')) {
+        if (unit.length && unit.every(value => value === 'auto')) {
             data.unit = new Array(length).fill(horizontal ? '1fr' : '');
         }
     }
@@ -9307,9 +9304,8 @@ var android = (function () {
                         while (i < rowCount) {
                             const nodes = [];
                             const data = rowData[i];
-                            const length = data.length;
                             j = 0;
-                            while (j < length) {
+                            while (j < data.length) {
                                 const cell = data[j++];
                                 if ((cell === null || cell === void 0 ? void 0 : cell.length) === 1) {
                                     nodes.push(cell[0]);
@@ -10413,10 +10409,9 @@ var android = (function () {
                                 } else {
                                     item.setLayoutHeight('match_parent');
                                     if (previous) {
-                                        const length = previous.length;
                                         let largest = previous[0];
                                         let j = 1;
-                                        while (j < length) {
+                                        while (j < previous.length) {
                                             const sibling = previous[j++];
                                             if (sibling.linear.right > largest.linear.right) {
                                                 largest = sibling;
@@ -10956,9 +10951,8 @@ var android = (function () {
                         )
                     );
                     node = layout.node;
-                    const length = siblings.length;
                     let i = 0;
-                    while (i < length) {
+                    while (i < siblings.length) {
                         const item = siblings[i++];
                         const source = item.data(this.name, 'cellData');
                         if (source) {
@@ -13536,7 +13530,7 @@ var android = (function () {
         }
         return value;
     }
-    function createBackgroundGradient(gradient, api = 29 /* LATEST */, borderRadius, precision) {
+    function createBackgroundGradient(gradient, api = 29 /* LATEST */, imageCount, borderRadius, precision) {
         const { colorStops, type } = gradient;
         let positioning = api >= 21; /* LOLLIPOP */
         const result = { type, positioning };
@@ -13571,6 +13565,7 @@ var android = (function () {
                 if (
                     !positioning ||
                     (borderRadius &&
+                        imageCount === 1 &&
                         colorStops[length - 1].offset === 1 &&
                         (length === 2 || (length === 3 && colorStops[1].offset === 0.5)))
                 ) {
@@ -14112,7 +14107,7 @@ var android = (function () {
                                 }
                             }
                         } else if (value.colorStops.length > 1) {
-                            const gradient = createBackgroundGradient(value, node.api, data.borderRadius);
+                            const gradient = createBackgroundGradient(value, node.api, q, data.borderRadius);
                             if (gradient) {
                                 images[length] = gradient;
                                 imageDimensions[length] = value.dimension;
@@ -15098,9 +15093,8 @@ var android = (function () {
             if (this.controller.hasAppendProcessing()) {
                 const dimens = Resource.STORED.dimens;
                 const layouts = this.application.layouts;
-                const length = layouts.length;
                 let i = 0;
-                while (i < length) {
+                while (i < layouts.length) {
                     const layout = layouts[i++];
                     const pattern = /:(\w+)="(-?[\d.]+px)"/g;
                     let content = layout.content,
@@ -15510,8 +15504,7 @@ var android = (function () {
                     }
                     return c <= d ? 1 : -1;
                 });
-                const length = styleData.length;
-                for (let i = 0; i < length; ++i) {
+                for (let i = 0; i < styleData.length; ++i) {
                     styleData[i].name = capitalize$4(tag) + (i > 0 ? '_' + i : '');
                 }
                 resourceMap[tag] = styleData;
@@ -15798,6 +15791,7 @@ var android = (function () {
                                         j = 0;
                                     while (i < length) {
                                         switch (textContent.charCodeAt(i++)) {
+                                            case 9:
                                             case 10:
                                             case 32:
                                                 ++j;
@@ -16684,8 +16678,9 @@ var android = (function () {
                     set: [],
                     objectAnimator: [],
                 };
-                for (let i = 0; i < templateSet.length; ++i) {
-                    const item = templateSet[i];
+                let i = 0;
+                while (i < length) {
+                    const item = templateSet[i++];
                     setData.set = setData.set.concat(item.set);
                     setData.objectAnimator = setData.objectAnimator.concat(item.objectAnimator);
                 }

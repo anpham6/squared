@@ -79,6 +79,7 @@ interface IFileManager {
     getFileOutput(file: ExpressAsset): { pathname: string; filepath: string };
     getRelativeUrl(file: ExpressAsset, url: string): Undef<string>;
     replacePath(source: string, segment: string, value: string, base64?: boolean): Undef<string>;
+    replaceExtension(value: string, ext: string): string;
     getTrailingContent(file: ExpressAsset): Undef<string>;
     appendContent(file: ExpressAsset, content: string, outputOnly?: boolean): Undef<string>;
     transformBuffer(assets: ExpressAsset[], file: ExpressAsset, filepath: string): void;

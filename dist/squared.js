@@ -1,4 +1,4 @@
-/* squared 1.10.0
+/* squared 1.10.1
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -1233,9 +1233,6 @@
         plainMap: plainMap,
     });
 
-    function isWinEdge() {
-        return isUserAgent(16 /* EDGE */) && isPlatform(2 /* WINDOWS */);
-    }
     function isPlatform(value) {
         const platform = navigator.platform.toLowerCase();
         if (typeof value === 'string') {
@@ -1248,15 +1245,13 @@
     }
     function isUserAgent(value) {
         const userAgent = navigator.userAgent;
-        let client;
-        if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) {
+        let client = 2; /* CHROME */
+        if (userAgent.includes('Safari/') && !userAgent.includes('Chrome/')) {
             client = 4 /* SAFARI */;
-        } else if (userAgent.includes('Firefox')) {
+        } else if (userAgent.includes('Firefox/')) {
             client = 8 /* FIREFOX */;
-        } else if (userAgent.includes('Edge')) {
+        } else if (userAgent.includes('Edg/')) {
             client = 16 /* EDGE */;
-        } else {
-            client = 2 /* CHROME */;
         }
         if (typeof value === 'string') {
             const name = value.toUpperCase();
@@ -1282,7 +1277,6 @@
 
     var client = /*#__PURE__*/ Object.freeze({
         __proto__: null,
-        isWinEdge: isWinEdge,
         isPlatform: isPlatform,
         isUserAgent: isUserAgent,
         getDeviceDPI: getDeviceDPI,

@@ -1,4 +1,4 @@
-/* squared.base 1.10.0
+/* squared.base 1.10.1
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -6397,6 +6397,16 @@
         }
         return undefined;
     }
+    function setColumnMaxWidth(nodes, offset) {
+        const length = nodes.length;
+        let i = 0;
+        while (i < length) {
+            const child = nodes[i++];
+            if (!child.hasPX('width') && !child.hasPX('maxWidth') && !child.imageElement && !child.svgElement) {
+                child.css('maxWidth', formatPX$1(offset));
+            }
+        }
+    }
     const getCounterIncrementValue = (parent, counterName, pseudoElt, sessionId, fallback) => {
         var _a;
         return getCounterValue(
@@ -7940,11 +7950,10 @@
                                             ascending = false,
                                             lastResetElement;
                                         const incrementCounter = (increment, pseudo) => {
-                                            const length = subcounter.length;
-                                            if (length === 0) {
+                                            if (subcounter.length === 0) {
                                                 counter += increment;
                                             } else if (ascending || pseudo) {
-                                                subcounter[length - 1] += increment;
+                                                subcounter[subcounter.length - 1] += increment;
                                             }
                                         };
                                         const cascadeCounterSibling = sibling => {
@@ -8175,6 +8184,7 @@
                                           )
                                         : 0)
                             );
+                            setColumnMaxWidth(leftAbove, offset);
                         }
                     }
                 }
@@ -8222,6 +8232,7 @@
                                           )
                                         : 0)
                             );
+                            setColumnMaxWidth(rightAbove, offset);
                         }
                     }
                 }
@@ -8261,7 +8272,7 @@
         }
     }
 
-    const { USER_AGENT: USER_AGENT$1, isUserAgent: isUserAgent$1, isWinEdge } = squared.lib.client;
+    const { USER_AGENT: USER_AGENT$1, isUserAgent: isUserAgent$1 } = squared.lib.client;
     const {
         CSS_PROPERTIES: CSS_PROPERTIES$3,
         formatPX: formatPX$2,
@@ -8398,45 +8409,6 @@
                             }
                             break;
                         case 'FIELDSET':
-                            if (!styleMap.display) {
-                                styleMap.display = 'block';
-                            }
-                            break;
-                    }
-                } else if (isWinEdge()) {
-                    switch (tagName) {
-                        case 'BODY':
-                            if (styleMap.backgroundColor === 'transparent') {
-                                styleMap.backgroundColor = 'rgb(255, 255, 255)';
-                            }
-                            break;
-                        case 'INPUT':
-                            switch (element.type) {
-                                case 'text':
-                                case 'password':
-                                case 'time':
-                                case 'date':
-                                case 'datetime-local':
-                                case 'week':
-                                case 'month':
-                                case 'url':
-                                case 'email':
-                                case 'search':
-                                case 'number':
-                                case 'tel':
-                                    if (!styleMap.fontSize) {
-                                        styleMap.fontSize = '13.3333px';
-                                    }
-                                    break;
-                            }
-                            break;
-                        case 'CODE':
-                            if (!styleMap.fontFamily) {
-                                styleMap.fontFamily = 'monospace';
-                            }
-                            break;
-                        case 'LEGEND':
-                        case 'RT':
                             if (!styleMap.display) {
                                 styleMap.display = 'block';
                             }
@@ -11969,8 +11941,7 @@
             };
         }
         condition(node) {
-            const length = node.length;
-            if (length > 1 && !node.layoutElement && node.tagName !== 'TABLE' && !node.has('listStyle')) {
+            if (node.length > 1 && !node.layoutElement && node.tagName !== 'TABLE' && !node.has('listStyle')) {
                 if (node.display === 'table') {
                     return (
                         node.every(

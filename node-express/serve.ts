@@ -248,7 +248,7 @@ let Node: serve.INode,
         app.use(cors({ origin: argv.cors }));
         app.options('*', cors());
     }
-    else if (CORS && CORS.origin) {
+    else if (CORS?.origin) {
         app.use(cors(CORS));
         app.options('*', cors());
         argv.cors = typeof CORS.origin === 'string' ? CORS.origin : 'true';
@@ -1100,6 +1100,10 @@ class FileManager implements serve.IFileManager {
         }
         return result;
     }
+    replaceExtension(value: string, ext: string) {
+        const index = value.lastIndexOf('.');
+        return value.substring(0, index !== -1 ? index : value.length) + '.' + ext;
+    }
     appendContent(file: ExpressAsset, content: string, outputOnly = false) {
         const filepath = file.filepath || this.getFileOutput(file).filepath;
         if (filepath && file.bundleIndex !== undefined) {
@@ -1470,10 +1474,6 @@ class FileManager implements serve.IFileManager {
             }
             default:
                 if (mimeType.includes('image/')) {
-                    const replaceExtension = (value: string, ext: string) => {
-                        const index = value.lastIndexOf('.');
-                        return value.substring(0, index !== -1 ? index : value.length) + '.' + ext;
-                    };
                     const afterConvert = (transformed: string, condition: string) => {
                         if (filepath !== transformed) {
                             if (condition.includes('@')) {
@@ -1517,7 +1517,7 @@ class FileManager implements serve.IFileManager {
                                     case jimp.MIME_GIF:
                                     case jimp.MIME_TIFF:
                                         try {
-                                            const renameTo = replaceExtension(filepath, mime.split('/')[1]);
+                                            const renameTo = this.replaceExtension(filepath, mime.split('/')[1]);
                                             fs.renameSync(filepath, renameTo);
                                             afterConvert(renameTo, '@');
                                             this.finalize(renameTo);
@@ -1528,7 +1528,7 @@ class FileManager implements serve.IFileManager {
                                         }
                                         break;
                                     default: {
-                                        const png = replaceExtension(filepath, 'png');
+                                        const png = this.replaceExtension(filepath, 'png');
                                         img.write(png, err => {
                                             if (err) {
                                                 this.finalize('');
@@ -1561,12 +1561,12 @@ class FileManager implements serve.IFileManager {
                             const setImagePath = (extension: string, saveAs?: string) => {
                                 if (mimeType.endsWith('/' + extension)) {
                                     if (!value.includes('@')) {
-                                        image = replaceExtension(filepath, '__copy__.' + (saveAs || extension));
+                                        image = this.replaceExtension(filepath, '__copy__.' + (saveAs || extension));
                                         fs.copyFileSync(filepath, image);
                                     }
                                 }
                                 else {
-                                    image = replaceExtension(filepath, saveAs || extension);
+                                    image = this.replaceExtension(filepath, saveAs || extension);
                                 }
                             };
                             if (value.startsWith('png')) {
@@ -1655,25 +1655,27 @@ class FileManager implements serve.IFileManager {
             const mimeType = file.mimeType;
             for (const item of trailingContent) {
                 let value = item.value;
-                if (mimeType?.endsWith('text/css')) {
-                    if (!item.preserve && unusedStyles) {
-                        const result = Chrome.removeCss(value, unusedStyles);
-                        if (result) {
-                            value = result;
+                if (mimeType) {
+                    if (mimeType.endsWith('text/css')) {
+                        if (!item.preserve && unusedStyles) {
+                            const result = Chrome.removeCss(value, unusedStyles);
+                            if (result) {
+                                value = result;
+                            }
+                        }
+                        if (mimeType.charAt(0) === '@') {
+                            const result = this.transformCss(file, value);
+                            if (result) {
+                                value = result;
+                            }
                         }
                     }
-                    if (mimeType.charAt(0) === '@') {
-                        const result = this.transformCss(file, value);
+                    if (item.format) {
+                        const result = Chrome.formatContent(value, mimeType, item.format);
                         if (result) {
-                            value = result;
+                            output += '\n' + result;
+                            continue;
                         }
-                    }
-                }
-                if (mimeType && item.format) {
-                    const result = Chrome.formatContent(value, mimeType, item.format);
-                    if (result) {
-                        output += '\n' + result;
-                        continue;
                     }
                 }
                 output += '\n' + value;
