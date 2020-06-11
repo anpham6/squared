@@ -830,27 +830,18 @@ let Node: serve.INode,
             return false;
         }
         parseResizeMode(value: string) {
-            let width = 0,
-                height = 0,
-                mode = '';
             const match = /\(\s*(\d+)\s*x\s*(\d+)(?:\s*#\s*(contain|cover|scale))?\s*\)/.exec(value);
-            if (match) {
-                width = parseInt(match[1]);
-                height = parseInt(match[2]);
-                mode = match[3];
-            }
-            return { width, height, mode };
+            return match ? { width: parseInt(match[1]), height: parseInt(match[2]), mode: match[3] } : undefined;
         }
         parseOpacity(value: string) {
-            let result: Undef<number>;
             const match = /|\s*([\d.]+)\s*|/.exec(value);
             if (match) {
                 const opacity = parseFloat(match[1]);
                 if (!isNaN(opacity)) {
-                    result = Math.min(Math.max(opacity, 0), 1);
+                    return Math.min(Math.max(opacity, 0), 1);
                 }
             }
-            return result;
+            return undefined;
         }
         parseRotation(value: string) {
             const result = new Set<number>();
@@ -863,22 +854,19 @@ let Node: serve.INode,
                     }
                 }
             }
-            return Array.from(result);
+            return result.size ? Array.from(result) : undefined;
         }
-        resize(self: jimp, width: Undef<number>, height: Undef<number>, mode?: string) {
-            if (width && height) {
-                switch (mode) {
-                    case 'contain':
-                        return self.contain(width, height);
-                    case 'cover':
-                        return self.cover(width, height);
-                    case 'scale':
-                        return self.scaleToFit(width, height);
-                    default:
-                        return self.resize(width, height);
-                }
+        resize(self: jimp, width: number, height: number, mode?: string) {
+            switch (mode) {
+                case 'contain':
+                    return self.contain(width, height);
+                case 'cover':
+                    return self.cover(width, height);
+                case 'scale':
+                    return self.scaleToFit(width, height);
+                default:
+                    return self.resize(width, height);
             }
-            return self;
         }
         rotate(self: jimp, filepath: string, values: number[], manager: FileManager) {
             let length = values.length;
@@ -922,10 +910,7 @@ let Node: serve.INode,
                 catch {
                 }
             }
-            if (deg) {
-                self.rotate(deg);
-            }
-            return self;
+            return deg ? self.rotate(deg) : self;
         }
         opacity(self: jimp, value: Undef<number>) {
             return value !== undefined && value >= 0 && value <= 1 ? self.opacity(value) : self;
@@ -1084,12 +1069,9 @@ class FileManager implements serve.IFileManager {
             if (result === undefined) {
                 result = source;
             }
-            if (match[1]) {
-                result = result.replace(match[0], match[1].toLowerCase() + `="${value}"`);
-            }
-            else {
-                result = result.replace(match[0], match[2] + match[3] + value + match[4] + match[2]);
-            }
+            result = match[1]
+                ? result.replace(match[0], match[1].toLowerCase() + `="${value}"`)
+                : result.replace(match[0], match[2] + match[3] + value + match[4] + match[2]);
         }
         pattern = new RegExp(`[uU][rR][lL]\\(\\s*(["'])?\\s*${segment}\\s*\\1?\\s*\\)`, 'g');
         while (match = pattern.exec(source)) {
@@ -1200,10 +1182,7 @@ class FileManager implements serve.IFileManager {
         };
         if (jpeg && Compress.withinSizeRange(filepath, jpeg.condition)) {
             ++this.delayed;
-            let jpg = filepath;
-            if (jpeg.condition?.includes('%')) {
-                jpg = `${filepath}.jpg`;
-            }
+            const jpg = filepath + (jpeg.condition?.includes('%') ? '.jpg' : '');
             jimp.read(filepath)
                 .then(image => {
                     image.quality(jpeg.level || Compress.jpeg_quality).write(jpg, err => {
@@ -1554,7 +1533,7 @@ class FileManager implements serve.IFileManager {
                             if (!Compress.withinSizeRange(filepath, value)) {
                                 continue;
                             }
-                            const { width, height, mode } = Image.parseResizeMode(value);
+                            const resizeMode = Image.parseResizeMode(value);
                             const opacity = Image.parseOpacity(value);
                             const rotation = Image.parseRotation(value);
                             let image = filepath;
@@ -1574,7 +1553,16 @@ class FileManager implements serve.IFileManager {
                                 jimp.read(filepath)
                                     .then(img => {
                                         setImagePath('png');
-                                        Image.rotate(Image.opacity(Image.resize(img, width, height, mode), opacity), image, rotation, this).write(image, err => {
+                                        if (resizeMode) {
+                                            Image.resize(img, resizeMode.width, resizeMode.height, resizeMode.mode);
+                                        }
+                                        if (opacity) {
+                                            Image.opacity(img, opacity);
+                                        }
+                                        if (rotation) {
+                                            Image.rotate(img, image, rotation, this);
+                                        }
+                                        img.write(image, err => {
                                             if (err) {
                                                 this.finalize('');
                                                 Node.writeFail(image, err);
@@ -1600,7 +1588,13 @@ class FileManager implements serve.IFileManager {
                                     .then(img => {
                                         setImagePath('jpeg', 'jpg');
                                         img.quality(Compress.jpeg_quality);
-                                        Image.rotate(Image.resize(img, width, height, mode), image, rotation, this).write(image, err => {
+                                        if (resizeMode) {
+                                            Image.resize(img, resizeMode.width, resizeMode.height, resizeMode.mode);
+                                        }
+                                        if (rotation) {
+                                            Image.rotate(img, image, rotation, this);
+                                        }
+                                        img.write(image, err => {
                                             if (err) {
                                                 this.finalize('');
                                                 Node.writeFail(image, err);
@@ -1625,7 +1619,16 @@ class FileManager implements serve.IFileManager {
                                 jimp.read(filepath)
                                     .then(img => {
                                         setImagePath('bmp');
-                                        Image.rotate(Image.opacity(Image.resize(img, width, height, mode), opacity), image, rotation, this).write(image, err => {
+                                        if (resizeMode) {
+                                            Image.resize(img, resizeMode.width, resizeMode.height, resizeMode.mode);
+                                        }
+                                        if (opacity) {
+                                            Image.opacity(img, opacity);
+                                        }
+                                        if (rotation) {
+                                            Image.rotate(img, image, rotation, this);
+                                        }
+                                        img.write(image, err => {
                                             if (err) {
                                                 this.finalize('');
                                                 Node.writeFail(image, err);

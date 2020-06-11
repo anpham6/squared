@@ -44,10 +44,10 @@ interface IImage {
     readonly tinify_api_key: boolean;
     findCompress(compress: Undef<CompressFormat[]>): Undef<CompressFormat>;
     isJpeg(file: ExpressAsset, filepath?: string): boolean;
-    parseResizeMode(value: string): ResizeMode;
+    parseResizeMode(value: string): Undef<ResizeMode>;
     parseOpacity(value: string): Undef<number>;
-    parseRotation(value: string): number[];
-    resize(self: jimp, width: Undef<number>, height: Undef<number>, mode?: string): jimp;
+    parseRotation(value: string): Undef<number[]>;
+    resize(self: jimp, width: number, height: number, mode?: string): jimp;
     rotate(self: jimp, filepath: string, values: number[], manager: IFileManager): jimp;
     opacity(self: jimp, value: Undef<number>): jimp;
 }

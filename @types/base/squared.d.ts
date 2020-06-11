@@ -547,7 +547,7 @@ declare module "base" {
         companion?: NodeUI;
         labelFor?: NodeUI;
         horizontalRows?: NodeUI[][];
-        readonly renderChildren: NodeUI[];
+        renderChildren: NodeUI[];
         setControlType(controlName: string, containerType?: number): void;
         setExclusions(systemName?: string): void;
         setLayout(): void;

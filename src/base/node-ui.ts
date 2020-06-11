@@ -510,7 +510,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public abstract companion?: T;
     public abstract labelFor?: T;
     public abstract horizontalRows?: T[][];
-    public abstract readonly renderChildren: T[];
+    public abstract renderChildren: T[];
 
     protected _boxRegister: ObjectIndex<T> = {};
     protected _preferInitial = true;

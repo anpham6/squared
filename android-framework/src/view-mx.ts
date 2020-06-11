@@ -895,7 +895,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public innerBefore?: T;
         public innerAfter?: T;
         public queryMap?: T[][];
-        public readonly renderChildren: T[] = [];
+        public renderChildren: T[] = [];
         public readonly constraint: Constraint = {
             horizontal: false,
             vertical: false,
@@ -2113,53 +2113,51 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             for (const name of this._namespaces) {
                 if (all || objs.includes(name)) {
                     const obj: StringMap = this['__' + name];
-                    if (obj) {
-                        let prefix = name + ':';
-                        switch (name) {
-                            case 'android':
-                                if (this.api < BUILD_ANDROID.LATEST) {
-                                    for (let attr in obj) {
-                                        if (attr === 'id') {
-                                            id = obj[attr];
+                    let prefix = name + ':';
+                    switch (name) {
+                        case 'android':
+                            if (this.api < BUILD_ANDROID.LATEST) {
+                                for (let attr in obj) {
+                                    if (attr === 'id') {
+                                        id = obj[attr];
+                                    }
+                                    else {
+                                        const data: ObjectMap<string | boolean> = {};
+                                        let value = obj[attr];
+                                        if (!this.supported(attr, data)) {
+                                            continue;
                                         }
-                                        else {
-                                            const data: ObjectMap<string | boolean> = {};
-                                            let value = obj[attr];
-                                            if (!this.supported(attr, data)) {
-                                                continue;
+                                        if (hasKeys(data)) {
+                                            if (isString(data.attr)) {
+                                                attr = data.attr;
                                             }
-                                            if (hasKeys(data)) {
-                                                if (isString(data.attr)) {
-                                                    attr = data.attr;
-                                                }
-                                                if (isString(data.value)) {
-                                                    value = data.value;
-                                                }
+                                            if (isString(data.value)) {
+                                                value = data.value;
                                             }
-                                            result.push(prefix + `${attr}="${value}"`);
                                         }
+                                        result.push(prefix + `${attr}="${value}"`);
                                     }
                                 }
-                                else {
-                                    for (const attr in obj) {
-                                        if (attr === 'id') {
-                                            id = obj[attr];
-                                        }
-                                        else {
-                                            result.push(prefix + `${attr}="${obj[attr]}"`);
-                                        }
-                                    }
-                                }
-                                requireId = true;
-                                break;
-                            case '_':
-                                prefix = '';
-                            default:
+                            }
+                            else {
                                 for (const attr in obj) {
-                                    result.push(prefix + `${attr}="${obj[attr]}"`);
+                                    if (attr === 'id') {
+                                        id = obj[attr];
+                                    }
+                                    else {
+                                        result.push(prefix + `${attr}="${obj[attr]}"`);
+                                    }
                                 }
-                                break;
-                        }
+                            }
+                            requireId = true;
+                            break;
+                        case '_':
+                            prefix = '';
+                        default:
+                            for (const attr in obj) {
+                                result.push(prefix + `${attr}="${obj[attr]}"`);
+                            }
+                            break;
                     }
                 }
             }
@@ -2437,6 +2435,43 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         if (top !== 0) {
                             this.android('transformPivotY', formatPX(top));
                         }
+                    }
+                }
+                if (this.onlyChild && renderChildren.length && this.controlName ===  renderParent.controlName && !this.visibleStyle.borderWidth && this.elementId === '') {
+                    let valid = true;
+                    for (const name of this._namespaces) {
+                        const parentObj = renderParent.unsafe('_' + name);
+                        if (parentObj) {
+                            const obj: StringMap = this['__' + name];
+                            for (const attr in obj) {
+                                if (attr !== 'id' && obj[attr] !== parentObj[attr]) {
+                                    valid = false;
+                                    break;
+                                }
+                            }
+                        }
+                        else {
+                            valid = false;
+                            break;
+                        }
+                    }
+                    if (valid) {
+                        const renderTemplates = this.renderTemplates as NodeXmlTemplate<View>[];
+                        const length = renderTemplates.length;
+                        let i = 0;
+                        while (i < length) {
+                            const template = renderTemplates[i++];
+                            template.parent = renderParent as View;
+                            template.node.renderParent = renderParent as View;
+                        }
+                        renderParent.renderTemplates = renderTemplates;
+                        renderParent.renderChildren = renderChildren;
+                        const boxReset = this._boxReset;
+                        const boxAdjustment = this._boxAdjustment;
+                        renderParent.modifyBox(BOX_STANDARD.PADDING_TOP, (boxReset.marginTop === 0 ? this.marginTop : 0) + (boxReset.paddingTop === 0 ? this.paddingTop : 0) + boxAdjustment.marginTop + boxAdjustment.paddingTop);
+                        renderParent.modifyBox(BOX_STANDARD.PADDING_RIGHT, (boxReset.marginRight === 0 ? this.marginRight : 0) + (boxReset.paddingRight === 0 ? this.paddingRight : 0) + boxAdjustment.marginRight + boxAdjustment.paddingRight);
+                        renderParent.modifyBox(BOX_STANDARD.PADDING_BOTTOM, (boxReset.marginBottom === 0 ? this.marginBottom : 0) + (boxReset.paddingBottom === 0 ? this.paddingBottom : 0) + boxAdjustment.marginBottom + boxAdjustment.paddingBottom);
+                        renderParent.modifyBox(BOX_STANDARD.PADDING_LEFT, (boxReset.marginLeft === 0 ? this.marginLeft : 0) + (boxReset.paddingLeft === 0 ? this.paddingLeft : 0) + boxAdjustment.marginLeft + boxAdjustment.paddingLeft);
                     }
                 }
             }
