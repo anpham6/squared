@@ -21,6 +21,7 @@ interface ImageAsset extends Asset {
 }
 
 interface RequestAsset extends FileAsset {
+    data?: any;
     base64?: string;
     dataMap?: StandardMap;
 }

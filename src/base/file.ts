@@ -63,15 +63,15 @@ export default abstract class File<T extends squared.base.Node> implements squar
         });
     }
 
-    public addAsset(data: Partial<RawAsset>) {
-        if (data.content || data.uri || data.base64) {
-            const { pathname, filename } = data;
-            const asset = this.assets.find(item => item.pathname === pathname && item.filename === filename);
-            if (asset) {
-                Object.assign(asset, data);
+    public addAsset(asset: Partial<RawAsset>) {
+        if (asset.content || asset.data || asset.base64 || asset.uri) {
+            const { pathname, filename } = asset;
+            const append = this.assets.find(item => item.pathname === pathname && item.filename === filename);
+            if (append) {
+                Object.assign(append, asset);
             }
             else {
-                this.assets.push(data as RawAsset);
+                this.assets.push(asset as RawAsset);
             }
         }
     }

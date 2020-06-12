@@ -90,7 +90,7 @@
   },
   "devDependencies": {
     "@types/archiver": "^3.1.0",
-    "@types/clean-css": "^4.2.1",
+    "@types/clean-css": "^4.2.2",
     "@types/cors": "^2.8.6",
     "@types/csv-parse": "^1.2.2",
     "@types/decompress": "^4.2.3",
@@ -122,7 +122,7 @@
     "prettier": "^2.0.5",
     "puppeteer": "^3.3.0",
     "readdirp": "^3.4.0",
-    "rollup": "^2.15.0",
+    "rollup": "^2.16.0",
     "rollup-plugin-prettier": "^2.1.0",
     "rollup-plugin-terser": "^6.1.0",
     "terser": "^4.7.0",

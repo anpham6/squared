@@ -41,8 +41,8 @@ export default abstract class Resource<T extends squared.base.Node> implements s
             if (uri.startsWith('data:image/')) {
                 const match = REGEXP_DATAURI.exec(uri);
                 if (match) {
-                    const mimeType = match[1].split(';');
-                    this.addRawData(uri, mimeType[0].trim(), mimeType[1]?.trim() || 'base64', match[2], element.naturalWidth, element.naturalHeight);
+                    const mimeType = match[1].trim().split(/\s*;\s*/);
+                    this.addRawData(uri, mimeType[0], match[2], { encoding: mimeType[1] || 'base64', width: element.naturalWidth, height: element.naturalHeight });
                 }
             }
             if (uri !== '') {
@@ -72,29 +72,45 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         }
     }
 
-    public addRawData(uri: string, mimeType: string, encoding: string, content: string, width = 0, height = 0) {
-        mimeType = mimeType.toLowerCase();
-        encoding = encoding.toLowerCase();
-        let base64: Undef<string>;
-        if (encoding === 'base64') {
-            base64 = content;
-            if (mimeType === 'image/svg+xml') {
-                content = window.atob(content);
+    public addRawData(uri: string, mimeType: string, content: Undef<string>, options?: RawDataOptions) {
+        let filename: Undef<string>, encoding: Undef<string>, data: Undef<any>, width: Undef<number>, height: Undef<number>;
+        if (options) {
+            ({ filename, encoding, data, width, height } = options);
+            if (encoding) {
+                encoding = encoding.toLowerCase();
             }
         }
-        else {
-            content = content.replace(/\\(["'])/g, (match, ...capture) => capture[0]);
+        let base64: Undef<string>;
+        mimeType = mimeType.toLowerCase();
+        if (content) {
+            if (encoding === 'base64') {
+                if (mimeType === 'image/svg+xml') {
+                    content = window.atob(content);
+                }
+                else {
+                    base64 = content;
+                }
+            }
+            else {
+                content = content.replace(/\\(["'])/g, (match, ...capture) => capture[0]);
+            }
+        }
+        else if (!data) {
+            return '';
         }
         const imageMimeType = this.mimeTypeMap.image;
         if (imageMimeType === '*' || imageMimeType.includes(mimeType)) {
-            const ext = '.' + fromMimeType(mimeType);
-            const filename = uri.endsWith(ext) ? fromLastIndexOf(uri, '/', '\\') : this.randomUUID + ext;
+            if (!filename) {
+                const ext = '.' + fromMimeType(mimeType);
+                filename = uri.endsWith(ext) ? fromLastIndexOf(uri, '/', '\\') : this.randomUUID + ext;
+            }
             Resource.ASSETS.rawData.set(uri, {
                 pathname: uri.startsWith(location.origin) ? uri.substring(location.origin.length + 1, uri.lastIndexOf('/')) : '',
                 filename,
                 content,
                 base64,
                 mimeType,
+                data,
                 width,
                 height
             });

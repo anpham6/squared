@@ -14,3 +14,11 @@ interface ResourceStoredMap {
     colors: Map<string, string>;
     images: Map<string, StringMap>;
 }
+
+interface RawDataOptions {
+    data?: any;
+    width?: number;
+    height?: number;
+    encoding?: string;
+    filename?: string;
+}

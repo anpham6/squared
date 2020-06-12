@@ -1,0 +1,23 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Hello Canvas!</title>
+  <script src="/common/system.js"></script>
+  <script src="/common/transform.js"></script>
+  <script src="/common/babel-transform.js"></script>
+  <script src="/dist/squared.js"></script>
+  <script src="/dist/squared.base.js"></script>
+  <script src="/dist/android.framework.js"></script>
+  <script src="/common/loader.js"></script>
+</head>
+<body>
+    <canvas id="canvas" width="70" height="90"/>
+    <script>
+        var canvas = document.getElementById("canvas");
+        var c = canvas.getContext("2d");
+        c.fillStyle = 'blue';
+        c.fillRect(10, 10, 60, 80);
+    </script>
+</body>
+</html>

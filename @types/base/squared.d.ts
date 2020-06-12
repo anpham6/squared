@@ -220,7 +220,7 @@ declare module "base" {
         getVideo(uri: string): Undef<Asset>;
         addAudio(uri: string, mimeType?: string): void;
         getAudio(uri: string): Undef<Asset>;
-        addRawData(uri: string, mimeType: string, encoding: string, content: string): string;
+        addRawData(uri: string, mimeType: string, content: Undef<string>, options?: RawDataOptions): string;
         getRawData(uri: string): Undef<RawAsset>;
         set fileHandler(value: Undef<File<T>>);
         get fileHandler(): Undef<File<T>>;
@@ -241,7 +241,7 @@ declare module "base" {
         static hasLineBreak<T extends NodeUI>(node: T, lineBreak?: boolean, trim?: boolean): boolean;
         static checkPreIndent(node: NodeUI): Undef<[string, NodeUI]>;
         finalize(layouts: FileAsset[]): void;
-        writeRawImage(filename: string, base64: string): Undef<Partial<RawAsset>>;
+        writeRawImage(mimeType: Undef<string>, options: RawDataOptions): Undef<Partial<RawAsset>>;
         setBoxStyle(node: T): void;
         setFontStyle(node: T): void;
         setValueString(node: T): void;
@@ -312,7 +312,7 @@ declare module "base" {
         static downloadFile(data: Blob, filename: string, mimeType?: string): void;
         resource: Resource<T>;
         readonly assets: FileAsset[];
-        addAsset(data: Partial<RawAsset>): void;
+        addAsset(asset: Partial<RawAsset>): void;
         reset(): void;
         copying(options: FileCopyingOptions): Promise<ResultOfFileAction | void>;
         archiving(options: FileArchivingOptions): Promise<ResultOfFileAction | void>;

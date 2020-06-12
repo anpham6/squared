@@ -43,8 +43,8 @@ function parseImageUrl(resourceHandler: Resource<Node>, baseMap: StringMap, attr
             match: Null<RegExpExecArray>;
         while (match = REGEXP_DATAURI.exec(value)) {
             if (match[2]) {
-                const mimeType = match[2].split(';');
-                resourceHandler.addRawData(match[1], mimeType[0].trim(), mimeType[1]?.trim() || 'utf8', match[3]);
+                const mimeType = match[2].trim().split(/\s*;\s*/);
+                resourceHandler.addRawData(match[1], mimeType[0], match[3], { encoding: mimeType[1] || 'utf8' });
             }
             else {
                 const uri = resolvePath(match[3], styleSheetHref);
@@ -313,7 +313,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     if (typeof value === 'string') {
                         const uri = imageElements[i];
                         if (typeof uri === 'string') {
-                            resource.addRawData(uri, 'image/svg+xml', 'utf8', value);
+                            resource.addRawData(uri, 'image/svg+xml', value, { encoding: 'utf8' });
                         }
                     }
                     else {
@@ -624,7 +624,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         case CSSRule.IMPORT_RULE: {
                             const uri = resolvePath((rule as CSSImportRule).href, rule.parentStyleSheet?.href || location.href);
                             if (uri !== '') {
-                                this.resourceHandler.addRawData(uri, 'text/css', 'utf8', '');
+                                this.resourceHandler.addRawData(uri, 'text/css', undefined, { encoding: 'utf8' });
                             }
                             this.applyStyleSheet((rule as CSSImportRule).styleSheet);
                             break;

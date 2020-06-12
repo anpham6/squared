@@ -22,7 +22,7 @@ const { CSS_UNIT, formatPX, getSrcSet, hasComputedStyle, isLength, isPercent } =
 const { getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;
 const { getElementAsNode, getPseudoElt } = squared.lib.session;
-const { assignEmptyValue, convertFloat, hasBit, hasMimeType, isString, iterateArray, parseMimeType, partitionArray, safeNestedArray, withinRange } = squared.lib.util;
+const { assignEmptyValue, convertFloat, convertWord, hasBit, hasMimeType, isString, iterateArray, parseMimeType, partitionArray, safeNestedArray, withinRange } = squared.lib.util;
 const { STRING_XMLENCODING, replaceTab } = squared.lib.xml;
 
 const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
@@ -1435,7 +1435,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         const node = layout.node;
         let controlName = View.getControlName(containerType, node.api);
         switch (node.tagName) {
-            case 'IMG': {
+            case 'IMG':
+            case 'CANVAS': {
                 const application = this.application;
                 const element = node.element as HTMLImageElement;
                 const absoluteParent = node.absoluteParent || node.documentParent;
@@ -1458,8 +1459,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                 }
                 else {
-                    let scaleType = 'fitXY';
+                    let scaleType: Undef<string>;
                     switch (node.css('objectFit')) {
+                        case 'fill':
+                            scaleType = 'fitXY';
+                            break;
                         case 'contain':
                             scaleType = 'centerInside';
                             break;
@@ -1473,7 +1477,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             scaleType = 'center';
                             break;
                     }
-                    node.android('scaleType', scaleType);
+                    if (scaleType) {
+                        node.android('scaleType', scaleType);
+                    }
                 }
                 if (node.baseline) {
                     node.android('baselineAlignBottom', 'true');
@@ -1482,8 +1488,24 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                 }
                 if (node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
-                    const src = application.resourceHandler.addImageSrc(element, '', imageSet);
-                    if (src !== '') {
+                    let src: Undef<string>;
+                    if (node.tagName === 'CANVAS') {
+                        const imageData = ((element as unknown) as HTMLCanvasElement).getContext('2d')?.getImageData(0, 0, element.clientWidth, element.clientHeight);
+                        if (imageData) {
+                            node.setControlType(controlName, containerType);
+                            src = 'canvas_' + convertWord(node.controlId, true);
+                            this.application.resourceHandler.writeRawImage('image/png', {
+                                filename: src + '.png',
+                                data: Array.from(imageData.data as Uint8ClampedArray),
+                                width: imageData.width,
+                                height: imageData.height
+                            });
+                        }
+                    }
+                    else {
+                        src = application.resourceHandler.addImageSrc(element, '', imageSet);
+                    }
+                    if (src) {
                         node.android('src', `@drawable/${src}`);
                     }
                 }

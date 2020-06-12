@@ -2521,6 +2521,15 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return false;
         }
 
+        get imageElement() {
+            switch (this.tagName) {
+                case 'IMG':
+                case 'CANVAS':
+                    return true;
+            }
+            return false;
+        }
+
         set containerType(value) {
             this._containerType = value;
         }

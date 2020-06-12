@@ -54,7 +54,7 @@ interface IImage {
 
 interface IChrome {
     readonly external: Undef<ExternalModules>;
-    findExternalPlugin(data: ObjectMap<StandardMap>, format: string): [string, StandardMap];
+    findExternalPlugin(data: ObjectMap<StandardMap>, name: string): [string, StandardMap];
     getPrettierParser(name: string): NodeModule[];
     minifyHtml(format: string, value: string): Undef<string>;
     minifyCss(format: string, value: string): Undef<string>;

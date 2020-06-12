@@ -803,12 +803,16 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 if (uri) {
                                     if (uri.startsWith('data:image/')) {
                                         const rawData = resource.getRawData(uri);
-                                        if (rawData) {
-                                            const { base64, filename } = rawData;
-                                            if (base64) {
+                                        if (rawData?.base64) {
+                                            const filename = rawData.filename;
+                                            if (filename) {
                                                 images[length] = filename.substring(0, filename.lastIndexOf('.'));
                                                 imageDimensions[length] = rawData.width && rawData.height ? rawData as Dimension : undefined;
-                                                resource.writeRawImage(filename, base64);
+                                                resource.writeRawImage(rawData.mimeType, {
+                                                    filename,
+                                                    data: rawData.base64,
+                                                    encoding: 'base64'
+                                                });
                                                 valid = true;
                                             }
                                         }

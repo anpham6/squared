@@ -1,4 +1,4 @@
-interface ExpressAsset extends ChromeAsset {
+interface ExpressAsset extends ChromeAsset, RawAsset {
     filepath?: string;
     excluded?: boolean;
     originalName?: string;

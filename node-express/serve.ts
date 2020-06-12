@@ -326,7 +326,7 @@ let Node: serve.INode,
             return /^\\\\([\w.-]+)\\([\w-]+\$|[\w-]+\$\\.+|[\w-]+\\.*)$/.test(value);
         }
         writeFail(description: string, message: any) {
-            return console.log(`${chalk.bgRed.bold.white('FAIL')}: ${description} (${message})`);
+            console.log(`${chalk.bgRed.bold.white('FAIL')}: ${description} (${message})`);
         }
     }
     (DISK_READ, DISK_WRITE, UNC_READ, UNC_WRITE);
@@ -476,16 +476,16 @@ let Node: serve.INode,
     Chrome = new class implements serve.IChrome {
         constructor(public external: Undef<ExternalModules>) {}
 
-        findExternalPlugin(data: ObjectMap<StandardMap>, format: string): [string, StandardMap] {
-            for (const name in data) {
-                const plugin = data[name];
+        findExternalPlugin(data: ObjectMap<StandardMap>, name: string): [string, StandardMap] {
+            for (const module in data) {
+                const plugin = data[module];
                 for (const custom in plugin) {
-                    if (custom === format) {
-                        let options = plugin[custom];
+                    if (custom === name) {
+                        let options: StandardMap = plugin[custom];
                         if (!options || typeof options !== 'object') {
                             options = {};
                         }
-                        return [name, options];
+                        return [module, options];
                     }
                 }
             }
@@ -1069,9 +1069,7 @@ class FileManager implements serve.IFileManager {
             if (result === undefined) {
                 result = source;
             }
-            result = match[1]
-                ? result.replace(match[0], match[1].toLowerCase() + `="${value}"`)
-                : result.replace(match[0], match[2] + match[3] + value + match[4] + match[2]);
+            result = result.replace(match[0], match[1]?.toLowerCase() + `="${value}"` || match[2] + match[3] + value + match[4] + match[2]);
         }
         pattern = new RegExp(`[uU][rR][lL]\\(\\s*(["'])?\\s*${segment}\\s*\\1?\\s*\\)`, 'g');
         while (match = pattern.exec(source)) {
@@ -1137,7 +1135,7 @@ class FileManager implements serve.IFileManager {
             const brotli = Compress.findFormat(compress, 'br');
             if (gzip && Compress.withinSizeRange(filepath, gzip.condition)) {
                 ++this.delayed;
-                const gz = `${filepath}.gz`;
+                let gz = `${filepath}.gz`;
                 Compress.createGzipWriteStream(filepath, gz, gzip.level)
                     .on('finish', () => {
                         if (gzip.condition?.includes('%') && Compress.getFileSize(gz) >= Compress.getFileSize(filepath)) {
@@ -1146,11 +1144,9 @@ class FileManager implements serve.IFileManager {
                             }
                             catch {
                             }
-                            this.finalize('');
+                            gz = '';
                         }
-                        else {
-                            this.finalize(gz);
-                        }
+                        this.finalize(gz);
                     })
                     .on('error', err => {
                         Node.writeFail(gz, err);
@@ -1159,7 +1155,7 @@ class FileManager implements serve.IFileManager {
             }
             if (brotli && Node.checkVersion(11, 7) && Compress.withinSizeRange(filepath, brotli.condition)) {
                 ++this.delayed;
-                const br = `${filepath}.br`;
+                let br = `${filepath}.br`;
                 Compress.createBrotliWriteStream(filepath, br, brotli.level, file.mimeType)
                     .on('finish', () => {
                         if (brotli.condition?.includes('%') && Compress.getFileSize(br) >= Compress.getFileSize(filepath)) {
@@ -1168,11 +1164,9 @@ class FileManager implements serve.IFileManager {
                             }
                             catch {
                             }
-                            this.finalize('');
+                            br = '';
                         }
-                        else {
-                            this.finalize(br);
-                        }
+                        this.finalize(br);
                     })
                     .on('error', err => {
                         Node.writeFail(br, err);
@@ -1185,7 +1179,7 @@ class FileManager implements serve.IFileManager {
             const jpg = filepath + (jpeg.condition?.includes('%') ? '.jpg' : '');
             jimp.read(filepath)
                 .then(image => {
-                    image.quality(jpeg.level || Compress.jpeg_quality).write(jpg, err => {
+                    image.quality(jpeg.level ?? Compress.jpeg_quality).write(jpg, err => {
                         if (err) {
                             Node.writeFail(filepath, err);
                         }
@@ -1230,7 +1224,7 @@ class FileManager implements serve.IFileManager {
                 const baseUri = file.uri!;
                 let html = fs.readFileSync(filepath).toString('utf8'),
                     source = html,
-                    pattern = /(\s*)<(script|link|style)[^>]*([\s\n]+data-chrome-file="\s*(save|export)As:\s*((?:[^"]|\\")+)")[^>]*>(?:[\s\S]*?<\/\2>\n*)?/ig,
+                    pattern = /(\s*)<(script|link|style)[^>]*?([\s\n]+data-chrome-file="\s*(save|export)As:\s*((?:[^"]|\\")+)")[^>]*>(?:[\s\S]*?<\/\2>\n*)?/ig,
                     match: Null<RegExpExecArray>;
                 while (match = pattern.exec(html)) {
                     const segment = match[0];
@@ -1238,19 +1232,14 @@ class FileManager implements serve.IFileManager {
                     const location = Express.getAbsoluteUrl(match[5].split('::')[0].trim(), baseUri);
                     let appending = false;
                     if (match[4] === 'export') {
-                        if (script) {
-                            appending = new RegExp(`<script[^>]+(?:src=(["'])${location}\\1|data-chrome-file="saveAs:${location}[:"])[^>]*>`, 'i').test(html);
-                        }
-                        else {
-                            appending = new RegExp(`<link[^>]+(?:href=(["'])${location}\\1|data-chrome-file="saveAs:${location}[:"])[^>]*>`, 'i').test(html);
-                        }
+                        appending = new RegExp(`<${script ? 'script' : 'link'}[^>]+?(?:${script ? 'src' : 'href'}=(["'])${location}\\1|data-chrome-file="saveAs:${location}[:"])[^>]*>`, 'i').test(html);
                     }
                     if (saved.has(location) || appending) {
                         source = source.replace(segment, '');
                     }
                     else if (match[4] === 'save') {
                         const content = segment.replace(match[3], '');
-                        const src = new RegExp(`\\s+${script ? 'src' : 'href'}=(["']).+\\1`, 'i').exec(content);
+                        const src = new RegExp(`\\s+${script ? 'src' : 'href'}="(?:[^"]|\\\\")+"`, 'i').exec(content) || new RegExp(`\\s+${script ? 'src' : 'href'}='(?:[^']|\\\\')+'`, 'i').exec(content);
                         if (src) {
                             source = source.replace(segment, content.replace(src[0], `${script ? ' src' : ' href'}="${location}"`));
                             saved.add(location);
@@ -1273,7 +1262,7 @@ class FileManager implements serve.IFileManager {
                     if (bundleIndex !== undefined) {
                         const outerHTML = item.outerHTML;
                         if (outerHTML) {
-                            const length = source.length;
+                            const original = source;
                             let replaceWith = '';
                             if (bundleIndex === 0 || bundleIndex === Infinity) {
                                 replaceWith = getOuterHTML(item.mimeType === 'text/javascript', Express.getFullUri(item));
@@ -1282,7 +1271,7 @@ class FileManager implements serve.IFileManager {
                             else {
                                 source = source.replace(new RegExp(`\\s*${outerHTML}\\n*`), '');
                             }
-                            if (source.length === length) {
+                            if (original === source) {
                                 pattern.lastIndex = 0;
                                 const content = minifySpace(item.content || '');
                                 const outerContent = minifySpace(outerHTML);
@@ -1322,7 +1311,7 @@ class FileManager implements serve.IFileManager {
                         }
                         continue;
                     }
-                    else if (item === file || item.content || !item.uri) {
+                    else if (item === file || item.content || item.data || !item.uri) {
                         continue;
                     }
                     const value = Express.getFullUri(item);
@@ -1341,8 +1330,8 @@ class FileManager implements serve.IFileManager {
                     html = source;
                 }
                 source = source
-                    .replace(/\s*<(script|link|style)[^>]+data-chrome-file="exclude"[^>]*>[\s\S]*?<\/\1>\n*/ig, '')
-                    .replace(/\s*<(script|link)[^>]+data-chrome-file="exclude"[^>]*>\n*/ig, '')
+                    .replace(/\s*<(script|link|style)[^>]+?data-chrome-file="exclude"[^>]*>[\s\S]*?<\/\1>\n*/ig, '')
+                    .replace(/\s*<(script|link)[^>]+?data-chrome-file="exclude"[^>]*>\n*/ig, '')
                     .replace(/\s+data-(?:use|chrome-[\w-]+)="([^"]|\\")+?"/g, '');
                 fs.writeFileSync(filepath, format && Chrome.minifyHtml(format, source) || source);
                 break;
@@ -1350,9 +1339,9 @@ class FileManager implements serve.IFileManager {
             case 'text/html':
             case 'application/xhtml+xml': {
                 if (format) {
-                    const output = Chrome.minifyHtml(format, fs.readFileSync(filepath).toString('utf8'));
-                    if (output) {
-                        fs.writeFileSync(filepath, output);
+                    const result = Chrome.minifyHtml(format, fs.readFileSync(filepath).toString('utf8'));
+                    if (result) {
+                        fs.writeFileSync(filepath, result);
                     }
                 }
                 break;
@@ -1688,6 +1677,7 @@ class FileManager implements serve.IFileManager {
     }
     transformCss(file: ExpressAsset, content: string) {
         const baseUrl = file.uri!;
+        let result: Undef<string>;
         if (this.requestMain && Express.fromSameOrigin(this.requestMain.uri!, baseUrl)) {
             const assets = this.assets;
             for (const item of assets) {
@@ -1701,27 +1691,30 @@ class FileManager implements serve.IFileManager {
                     }
                 }
             }
-            let source: Undef<string>;
-            const pattern = /[uU][rR][lL]\(\s*(["'])?\s*((?:[^"')]|\\"|\\')+)\s*\1?\s*\)/g;
+            const pattern = /[uU][rR][lL]\(([^)]+)\)/g;
             let match: Null<RegExpExecArray>;
             while (match = pattern.exec(content)) {
-                if (source === undefined) {
-                    source = content;
+                if (result === undefined) {
+                    result = content;
                 }
-                const url = match[2];
+                const url = match[1]
+                    .trim()
+                    .replace(/^["']/, '')
+                    .replace(/["']$/, '')
+                    .trim();
                 if (!Node.isFileURI(url) || Express.fromSameOrigin(baseUrl, url)) {
                     let location = this.getRelativeUrl(file, url);
                     if (location) {
-                        source = source.replace(match[0], `url(${location})`);
+                        result = result.replace(match[0], `url(${location})`);
                     }
                     else {
-                        location = Express.resolvePath(match[2], this.requestMain.uri!);
+                        location = Express.resolvePath(match[1], this.requestMain.uri!);
                         if (location) {
                             const asset = assets.find(item => item.uri === location && !item.excluded);
                             if (asset) {
                                 location = this.getRelativeUrl(file, location);
                                 if (location) {
-                                    source = source.replace(match[0], `url(${location})`);
+                                    result = result.replace(match[0], `url(${location})`);
                                 }
                             }
                         }
@@ -1731,13 +1724,12 @@ class FileManager implements serve.IFileManager {
                     const asset = assets.find(item => item.uri === url && !item.excluded);
                     if (asset) {
                         const count = file.pathname.split(/[\\/]/).length;
-                        source = source.replace(match[0], `url(${(count > 0 ? '../'.repeat(count) : '') + Express.getFullUri(asset)})`);
+                        result = result.replace(match[0], `url(${(count > 0 ? '../'.repeat(count) : '') + Express.getFullUri(asset)})`);
                     }
                 }
             }
-            return source || content;
         }
-        return undefined;
+        return result;
     }
     writeBuffer(assets: ExpressAsset[], file: ExpressAsset, filepath: string) {
         const png = Image.findCompress(file.compress);
@@ -1936,6 +1928,17 @@ class FileManager implements serve.IFileManager {
                 continue;
             }
             const { pathname, filepath } = this.getFileOutput(file);
+            const fileReceived = (err: NodeJS.ErrnoException) => {
+                if (err) {
+                    file.excluded = true;
+                }
+                if (!err || appending[filepath]?.length) {
+                    processQueue(file, filepath);
+                }
+                else {
+                    this.finalize('');
+                }
+            };
             if (!emptyDir.has(pathname)) {
                 if (empty) {
                     try {
@@ -1965,17 +1968,7 @@ class FileManager implements serve.IFileManager {
                     filepath,
                     file.content,
                     'utf8',
-                    err => {
-                        if (err) {
-                            file.excluded = true;
-                        }
-                        if (!err || appending[filepath]?.length) {
-                            processQueue(file, filepath);
-                        }
-                        else {
-                            this.finalize('');
-                        }
-                    }
+                    err => fileReceived(err)
                 );
             }
             else if (file.base64) {
@@ -1995,6 +1988,30 @@ class FileManager implements serve.IFileManager {
                         }
                     }
                 );
+            }
+            else if (file.data) {
+                if (file.width && file.height && file.mimeType?.includes('image/')) {
+                    ++this.delayed;
+                    file.data = Uint8Array.from(file.data);
+                    new jimp(file, (err: any, img: jimp) => {
+                        if (!err) {
+                            img.write(filepath, error => {
+                                if (error) {
+                                    this.finalize('');
+                                    Node.writeFail(filepath, error);
+                                }
+                                else {
+                                    this.writeBuffer(assets, file, filepath);
+                                    this.finalize(filepath);
+                                }
+                            });
+                        }
+                        else {
+                            file.excluded = true;
+                            this.finalize('');
+                        }
+                    });
+                }
             }
             else {
                 const uri = file.uri;
@@ -2024,42 +2041,30 @@ class FileManager implements serve.IFileManager {
                             .on('error', err => errorRequest(file, filepath, err, stream))
                             .pipe(stream);
                     }
+                    else if (Node.unc_read && Node.isFileUNC(uri)) {
+                        if (checkQueue(file, filepath)) {
+                            continue;
+                        }
+                        ++this.delayed;
+                        fs.copyFile(
+                            uri,
+                            filepath,
+                            err => fileReceived(err)
+                        );
+                    }
+                    else if (Node.disk_read && path.isAbsolute(uri)) {
+                        if (checkQueue(file, filepath)) {
+                            continue;
+                        }
+                        ++this.delayed;
+                        fs.copyFile(
+                            uri,
+                            filepath,
+                            err => fileReceived(err)
+                        );
+                    }
                     else {
-                        const copyUri = (from: string, to: string) => {
-                            ++this.delayed;
-                            fs.copyFile(
-                                from,
-                                to,
-                                err => {
-                                    if (err) {
-                                        file.excluded = true;
-                                    }
-                                    if (!err || appending[filepath]?.length) {
-                                        processQueue(file, filepath);
-                                    }
-                                    else {
-                                        this.finalize('');
-                                    }
-                                }
-                            );
-                        };
-                        if (Node.isFileUNC(uri)) {
-                            if (Node.unc_read) {
-                                if (checkQueue(file, filepath)) {
-                                    continue;
-                                }
-                                copyUri(uri, filepath);
-                            }
-                        }
-                        else if (Node.disk_read && path.isAbsolute(uri)) {
-                            if (checkQueue(file, filepath)) {
-                                continue;
-                            }
-                            copyUri(uri, filepath);
-                        }
-                        else {
-                            file.excluded = true;
-                        }
+                        file.excluded = true;
                     }
                 }
                 catch (err) {
@@ -2151,9 +2156,8 @@ class FileManager implements serve.IFileManager {
 }
 
 app.post('/api/assets/copy', (req, res) => {
-    let dirname = req.query.to as string;
+    const dirname = path.normalize(req.query.to as string);
     if (dirname) {
-        dirname = path.normalize(dirname);
         if (!Node.checkPermissions(res, dirname)) {
             return;
         }
@@ -2188,10 +2192,7 @@ app.post('/api/assets/copy', (req, res) => {
 });
 
 app.post('/api/assets/archive', (req, res) => {
-    let copy_to = req.query.to as string;
-    if (copy_to) {
-        copy_to = path.normalize(copy_to);
-    }
+    const copy_to = req.query.to ? path.normalize(req.query.to as string) : '';
     const dirname = path.join(__dirname, 'temp' + path.sep + uuid.v4());
     let dirname_zip: string;
     try {

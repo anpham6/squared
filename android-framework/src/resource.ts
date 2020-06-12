@@ -278,16 +278,19 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
             }
         }
         if (mdpi) {
-            const resource = this.application.resourceHandler;
             result.mdpi = mdpi;
-            const rawData = resource.getRawData(mdpi);
+            const rawData = this.application.resourceHandler.getRawData(mdpi);
             if (rawData) {
                 if (rawData.base64) {
                     const filename = rawData.filename;
                     if (FILE.SVG.test(filename)) {
                         return '';
                     }
-                    resource.writeRawImage(prefix + filename, rawData.base64);
+                    this.application.resourceHandler.writeRawImage(rawData.mimeType, {
+                        filename: prefix + filename,
+                        data: rawData.base64,
+                        encoding: 'base64'
+                    });
                     return filename.substring(0, filename.lastIndexOf('.'));
                 }
             }
@@ -299,9 +302,9 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         return Resource.addImage(images, prefix, this._imageFormat);
     }
 
-    public writeRawImage(filename: string, base64: string) {
-        const asset = super.writeRawImage(filename, base64);
-        if (asset && this.userSettings.compressImages && Resource.canCompressImage(filename)) {
+    public writeRawImage(mimeType: Undef<string>, options: RawDataOptions) {
+        const asset = super.writeRawImage(mimeType, options);
+        if (asset && this.userSettings.compressImages && Resource.canCompressImage(options.filename || '', mimeType)) {
             safeNestedArray(asset as StandardMap, 'compress').unshift({ format: 'png' });
         }
         return asset;

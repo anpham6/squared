@@ -646,12 +646,27 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         }
     }
 
-    public writeRawImage(filename: string, base64: string) {
+    public writeRawImage(mimeType: Undef<string>, options: RawDataOptions) {
         const fileHandler = this.fileHandler;
         if (fileHandler) {
-            const asset = { pathname: appendSeparator(this.userSettings.outputDirectory, this.controllerSettings.directory.image), filename, base64 } as Partial<RawAsset>;
-            fileHandler.addAsset(asset);
-            return asset;
+            const { filename, data, encoding, width, height } = options;
+            if (filename && data) {
+                const asset = {
+                    pathname: appendSeparator(this.userSettings.outputDirectory, this.controllerSettings.directory.image),
+                    filename,
+                    mimeType,
+                    width,
+                    height
+                } as Partial<RawAsset>;
+                if (encoding === 'base64') {
+                    asset.base64 = data;
+                }
+                else {
+                    asset.data = data;
+                }
+                fileHandler.addAsset(asset);
+                return asset;
+            }
         }
         return undefined;
     }
