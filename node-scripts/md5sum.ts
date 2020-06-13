@@ -1,7 +1,7 @@
 import fs = require('fs-extra');
 import path = require('path');
 import parse  = require('csv-parse');
-import puppeteer = require('puppeteer');
+import playwright = require('playwright');
 import readdirp = require('readdirp');
 import md5 = require('md5');
 import diff = require('diff');
@@ -17,7 +17,7 @@ interface PageRequest {
 
 let host: String;
 let data: String;
-let build: String;
+let browserName: "chromium" | "firefox" | "webkit" | undefined;
 let master: String;
 let snapshot: String;
 let executablePath: String;
@@ -32,8 +32,8 @@ let extension = 'md5';
     const ARGV = process.argv;
     let i = 2;
     while (i < ARGV.length) {
-        const value = ARGV[i++];
-        switch (value) {
+        const option = ARGV[i++];
+        switch (option) {
             case '-h':
             case '--host':
                 host = ARGV[i++].replace(/\/+$/, '');
@@ -43,9 +43,17 @@ let extension = 'md5';
                 data = ARGV[i++];
                 break;
             case '-b':
-            case '--build':
-                build = ARGV[i++];
+            case '--browser': {
+                const value = ARGV[i++];
+                switch (value) {
+                    case 'chromium':
+                    case 'firefox':
+                    case 'webkit':
+                        browserName = value;
+                        break;
+                }
                 break;
+            }
             case '-f':
             case '--flags': {
                 const f = parseInt(ARGV[i++]);
@@ -66,7 +74,7 @@ let extension = 'md5';
                 if (!isNaN(w) && !isNaN(h)) {
                     width = w;
                     height = h;
-                    if (value.startsWith('-s')) {
+                    if (option.startsWith('-s')) {
                         screenshot = true;
                     }
                 }
@@ -230,7 +238,7 @@ if (master) {
         }
     }
 }
-else if (host && data && build && snapshot) {
+else if (host && data && browserName && snapshot) {
     try {
         const timeStart = Date.now();
         parse(fs.readFileSync(path.resolve(__dirname, data)), (error, csv: string[][]) => {
@@ -242,12 +250,9 @@ else if (host && data && build && snapshot) {
                 const failed: PageRequest[] = [];
                 (async () => {
                     try {
-                        const browser = await puppeteer.launch({
-                            executablePath,
-                            defaultViewport: { width, height }
-                        });
-                        console.log(chalk.blue('VERSION') + ': ' + chalk.bold(await browser.version()) + '\n');
-                        const tempDir = path.resolve(__dirname, 'temp', build!);
+                        const browser = await playwright[browserName!].launch({ executablePath });
+                        const context = await browser.newContext({ viewport: { width, height } });
+                        const tempDir = path.resolve(__dirname, snapshot!);
                         try {
                             fs.emptyDirSync(tempDir);
                         }
@@ -259,19 +264,15 @@ else if (host && data && build && snapshot) {
                             const id = parseInt(flag);
                             if (id > 0 && (flags & id) === id) {
                                 const name = filename.substring(0, filename.lastIndexOf('.'));
-                                const filepath = path.resolve(__dirname, 'temp', build!, name);
+                                const filepath = path.resolve(__dirname, snapshot!, name);
                                 const href = host + url;
                                 try {
-                                    const page = await browser.newPage();
-                                    page.on('error', err => {
-                                        failMessage(href, err);
-                                        page.close();
-                                    });
+                                    const page = await context.newPage();
                                     await page.goto(href + '?copyTo=' + encodeURIComponent(filepath));
                                     if (screenshot) {
                                         await page.screenshot({ path: filepath + '.png' });
                                     }
-                                    await page.waitFor('#md5_complete', { timeout });
+                                    await page.waitForSelector('#md5_complete', { state: 'attached', timeout });
                                     const files = (await page.$eval('#md5_complete', element => element.innerHTML)).split('\n').sort();
                                     items.push({ name, filepath, files });
                                     console.log(chalk.yellow('OK') + ': ' + href);
@@ -325,8 +326,8 @@ else {
     if (!data) {
         requiredMessage('CSV data', '-d ./path/data.csv');
     }
-    if (!build) {
-        requiredMessage('Build name', '-b snapshot');
+    if (!browserName) {
+        requiredMessage('Browser', '-b chromium');
     }
     if (!snapshot) {
         requiredMessage('Output directory', '-o ./temp/snapshot');
