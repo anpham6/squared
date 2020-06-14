@@ -559,8 +559,9 @@ function setBoxModel(node: T, attrs: string[], boxReset: BoxModel, boxAdjustment
                             let maxBottom = -Infinity;
                             const children = node.naturalChildren;
                             const length = children.length;
-                            for (let j = 0; j < length; ++j) {
-                                const item = children[j];
+                            let j = 0;
+                            while (j < length) {
+                                const item = children[j++];
                                 if (item.floating) {
                                     maxBottom = Math.max(item.bounds.bottom, maxBottom);
                                 }

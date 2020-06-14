@@ -124,15 +124,16 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                             if (columnLast) {
                                 let minLeft = Infinity,
                                     maxRight = -Infinity;
-                                for (let k = 0; k < columnLast.length; ++k) {
-                                    const linear = columnLast[k].linear;
+                                let k = 0;
+                                while (k < columnLast.length) {
+                                    const linear = columnLast[k++].linear;
                                     minLeft = Math.min(linear.left, minLeft);
                                     maxRight = Math.max(linear.right, maxRight);
                                 }
                                 if (Math.floor(left) > Math.ceil(minLeft) && Math.floor(right) > Math.ceil(maxRight)) {
                                     const index = getRowIndex(columns, nextX);
                                     if (index !== -1) {
-                                        let k = columns.length - 1;
+                                        k = columns.length - 1;
                                         while (k >= 0) {
                                             const row = columns[k--];
                                             if (row) {

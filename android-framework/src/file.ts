@@ -103,7 +103,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
     public copyToDisk(directory: string, options?: FileCopyingOptions) {
         return this.copying({
             ...options,
-            assets: this.getAssetsAll(options?.assets),
+            assets: this.combineAssets(options?.assets),
             directory
         });
     }
@@ -112,7 +112,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
         return this.archiving({
             filename: this.userSettings.outputArchiveName,
             ...options,
-            assets: this.getAssetsAll(options?.assets),
+            assets: this.combineAssets(options?.assets),
             appendTo: pathname
         });
     }
@@ -120,7 +120,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
     public saveToArchive(filename: string, options?: FileArchivingOptions) {
         return this.archiving({
             ...options,
-            assets: this.getAssetsAll(options?.assets),
+            assets: this.combineAssets(options?.assets),
             filename
         });
     }
@@ -503,7 +503,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
         return result;
     }
 
-    protected getAssetsAll(assets?: FileAsset[]) {
+    protected combineAssets(assets?: FileAsset[]) {
         const userSettings = this.userSettings;
         let result: FileAsset[] = [];
         if (assets) {

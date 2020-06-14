@@ -225,8 +225,9 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
     if (pseudoList) {
         const parent = child.actualParent as T;
         tagName = child.tagName;
-        for (let i = 0; i < pseudoList.length; ++i) {
-            const pseudo = pseudoList[i];
+        let i = 0;
+        while (i < pseudoList.length) {
+            const pseudo = pseudoList[i++];
             switch (pseudo) {
                 case ':first-child':
                 case ':nth-child(1)':
@@ -248,8 +249,9 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
                 case ':only-of-type': {
                     const children = parent.naturalElements;
                     const length = children.length;
-                    for (let j = 0, k = 0; j < length; ++j) {
-                        if (children[j].tagName === tagName && ++k > 1) {
+                    let j = 0, k = 0;
+                    while (j < length) {
+                        if (children[j++].tagName === tagName && ++k > 1) {
                             return false;
                         }
                     }
@@ -258,8 +260,9 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
                 case ':first-of-type': {
                     const children = parent.naturalElements;
                     const length = children.length;
-                    for (let j = 0; j < length; ++j) {
-                        const item = children[j];
+                    let j = 0;
+                    while (j < length) {
+                        const item = children[j++];
                         if (item.tagName === tagName) {
                             if (item !== child) {
                                 return false;
@@ -565,8 +568,9 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
         }
     }
     if (notList) {
-        for (let i = 0; i < notList.length; ++i) {
-            const not = notList[i];
+        let i = 0;
+        while (i < notList.length) {
+            const not = notList[i++];
             const notData: QueryData = {};
             switch (not.charAt(0)) {
                 case '.':
@@ -615,16 +619,18 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
     }
     if (classList) {
         const elementList = (child.element as HTMLElement).classList;
-        for (let i = 0; i < classList.length; ++i) {
-            if (!elementList.contains(classList[i])) {
+        let i = 0;
+        while (i < classList.length) {
+            if (!elementList.contains(classList[i++])) {
                 return false;
             }
         }
     }
     if (attrList) {
         const attributes = child.attributes;
-        for (let i = 0; i < attrList.length; ++i) {
-            const attr = attrList[i];
+        let i = 0;
+        while (i < attrList.length) {
+            const attr = attrList[i++];
             let value: Undef<string>;
             if (attr.endsWith) {
                 const pattern = new RegExp(`^(.+:)?${attr.key}$`);
@@ -908,8 +914,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         const length = attrs.length;
         if (length) {
             const cached = this._cached;
-            for (let i = 0; i < attrs.length; ++i) {
-                const attr = attrs[i];
+            let i = 0;
+            while (i < length) {
+                const attr = attrs[i++];
                 switch (attr) {
                     case 'position':
                         if (!this._preferInitial) {
@@ -1250,8 +1257,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     success.push(attr);
                 }
                 else {
-                    for (let i = 0; i < success.length; ++i) {
-                        this.cssFinally(success[i]);
+                    let i = 0;
+                    while (i < success.length) {
+                        this.cssFinally(success[i++]);
                     }
                     return undefined;
                 }
@@ -1263,16 +1271,18 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public cssCopy(node: T, ...attrs: string[]) {
         const styleMap = this._styleMap;
-        for (let i = 0; i < attrs.length; ++i) {
-            const attr = attrs[i];
+        let i = 0;
+        while (i < attrs.length) {
+            const attr = attrs[i++];
             styleMap[attr] = node.css(attr);
         }
     }
 
     public cssCopyIfEmpty(node: T, ...attrs: string[]) {
         const styleMap = this._styleMap;
-        for (let i = 0; i < attrs.length; ++i) {
-            const attr = attrs[i];
+        let i = 0;
+        while (i < attrs.length) {
+            const attr = attrs[i++];
             if (!hasValue(styleMap[attr])) {
                 styleMap[attr] = node.css(attr);
             }
@@ -1291,8 +1301,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public cssAsObject(...attrs: string[]) {
         const result: StringMap = {};
-        for (let i = 0; i < attrs.length; ++i) {
-            const attr = attrs[i];
+        let i = 0;
+        while (i < attrs.length) {
+            const attr = attrs[i++];
             result[attr] = this.css(attr);
         }
         return result;

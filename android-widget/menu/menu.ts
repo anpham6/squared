@@ -77,8 +77,9 @@ function getTitle(node: View, element: HTMLElement) {
     else {
         const children = node.naturalChildren;
         const length = children.length;
-        for (let i = 0; i <length; ++i) {
-            const child = children[i];
+        let i = 0;
+        while (i < length) {
+            const child = children[i++];
             if (child.textElement) {
                 return child.textContent.trim();
             }

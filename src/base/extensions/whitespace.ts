@@ -137,8 +137,9 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
                         if (!direction && target.floating) {
                             const children = target.actualParent!.naturalChildren;
                             const length = children.length;
-                            for (let i = 0; i < length; ++i) {
-                                const item = children[i];
+                            let i = 0;
+                            while (i < length) {
+                                const item = children[i++];
                                 if (item.floating && item !== target && item.intersectY(target.bounds, 'bounds')) {
                                     resetBox(item as NodeUI, region);
                                 }
@@ -721,11 +722,13 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                         valid = true;
                     }
                     if (valid) {
-                        for (let i = 0; i < previousSiblings.length; ++i) {
-                            processed.add(previousSiblings[i].id);
+                        let i = 0;
+                        while (i < previousSiblings.length) {
+                            processed.add(previousSiblings[i++].id);
                         }
-                        for (let i = 0; i < nextSiblings.length; ++i) {
-                            processed.add(nextSiblings[i].id);
+                        i = 0;
+                        while (i < nextSiblings.length) {
+                            processed.add(nextSiblings[i++].id);
                         }
                     }
                 }
@@ -868,8 +871,9 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                 const floating: T[] = [];
                 const children = node.naturalChildren as T[];
                 const length = children.length;
-                for (let i = 0; i < length; ++i) {
-                    const item = children[i];
+                let i = 0;
+                while (i < length) {
+                    const item = children[i++];
                     if (!item.pageFlow) {
                         continue;
                     }

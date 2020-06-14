@@ -494,8 +494,9 @@ export default abstract class Application<T extends Node> implements squared.bas
                     const cssStyle = item.style;
                     const items = Array.from(cssStyle);
                     const length = items.length;
-                    for (let i = 0; i < length; ++i) {
-                        const attr = items[i];
+                    let i = 0;
+                    while (i < length) {
+                        const attr = items[i++];
                         baseMap[convertCamelCase(attr)] = cssStyle[attr];
                     }
                 }

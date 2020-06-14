@@ -229,8 +229,10 @@ function createPathInterpolator(value: string) {
 
 function createTransformData(transform: SvgTransform[]) {
     const result: TransformData = {};
-    for (let i = 0; i < transform.length; ++i) {
-        const { matrix, origin, angle, type } = transform[i];
+    const length = transform.length;
+    let i = 0;
+    while (i < length) {
+        const { matrix, origin, angle, type } = transform[i++];
         switch (type) {
             case SVGTransform.SVG_TRANSFORM_SCALE:
                 result.scaleX = matrix.a.toString();
@@ -1471,8 +1473,9 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
             if (vectorName) {
                 item.push({ drawable: getDrawableSrc(vectorName) });
             }
-            for (let i = 0; i < imageData.length; ++i) {
-                const image = imageData[i];
+            let i = 0;
+            while (i < imageLength) {
+                const image = imageData[i++];
                 const { x, y } = getRootOffset(image.element, svg.element);
                 const box = svg.viewBox;
                 const scaleX = svg.width / box.width;
@@ -1670,8 +1673,9 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
             renderData.push(baseData);
         }
         path.transformResidual?.forEach(item => renderData.push(createTransformData(item)));
-        for (let i = 0; i < PATH_ATTRIBUTES.length; ++i) {
-            let attr = PATH_ATTRIBUTES[i],
+        let i = 0;
+        while (i < PATH_ATTRIBUTES.length) {
+            let attr = PATH_ATTRIBUTES[i++],
                 value: string = path[attr] || useTarget && target[attr];
             if (value) {
                 switch (attr) {
@@ -1789,9 +1793,9 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         const pathData = path.value;
         const animations = target.animations;
         let previousPathData = pathData,
-            index = 0,
-            length = animations.length;
-        let i = 0;
+            index = 0;
+        let length = animations.length;
+        i = 0;
         while (i < length) {
             const item = animations[i++];
             if (SvgBuild.asAnimateTransform(item) && !item.additiveSum && item.transformFrom) {

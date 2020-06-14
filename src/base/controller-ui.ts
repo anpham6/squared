@@ -524,8 +524,9 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         case 'both':
                             notFound: {
                                 let clearing: Undef<string>;
-                                for (let n = l - 1; n >= 0; --n) {
-                                    const sibling = documentChildren[n];
+                                let n = l - 1;
+                                while (n >= 0) {
+                                    const sibling = documentChildren[n--];
                                     if (sibling.floating) {
                                         const float = sibling.float;
                                         if (clear === 'both' || float === clear) {
@@ -568,21 +569,24 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 parent.each((item: T, index) => item.containerIndex = index);
                 parent.floatContainer = true;
                 const length = documentChildren.length;
-                for (let i = 0; i < appending.length; ++i) {
-                    const item = appending[i];
+                let i = 0, j: number;
+                while (i < appending.length) {
+                    const item = appending[i++];
                     const index = documentChildren.findIndex(child => child === item);
                     if (index !== -1) {
                         const siblingsLeading: T[] = [];
                         const siblingsTrailing: T[] = [];
-                        for (let j = index - 1; j >= 0; --j) {
-                            const sibling = documentChildren[j] as T;
+                        j = index - 1;
+                        while (j >= 0) {
+                            const sibling = documentChildren[j--] as T;
                             siblingsLeading.push(sibling);
                             if (!sibling.excluded) {
                                 break;
                             }
                         }
-                        for (let j = index + 1; j < length; ++j) {
-                            const sibling = documentChildren[j] as T;
+                        j = index + 1;
+                        while (j < length) {
+                            const sibling = documentChildren[j++] as T;
                             siblingsTrailing.push(sibling);
                             if (!sibling.excluded) {
                                 break;

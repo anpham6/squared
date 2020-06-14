@@ -14,12 +14,12 @@ let output: String;
     const ARGV = process.argv;
     let i = 2;
     while (i < ARGV.length) {
-        const type = ARGV[i++];
-        const command = ARGV[i++];
-        switch (type) {
+        const option = ARGV[i++];
+        const value = ARGV[i++];
+        switch (option) {
             case '-f':
             case '--framework': {
-                const name = command.toLowerCase();
+                const name = value.toLowerCase();
                 switch (name) {
                     case 'android':
                     case 'chrome':
@@ -31,8 +31,8 @@ let output: String;
             }
             case '-m':
             case '--modules':
-                for (const value of command.split(',')) {
-                    const module = value.toLowerCase();
+                for (const item of value.split(',')) {
+                    const module = item.toLowerCase();
                     switch (module) {
                         case 'svg':
                             files.push(`squared.${module}`);
@@ -42,17 +42,17 @@ let output: String;
                 break;
             case '-e':
             case '--extensions':
-                for (const value of command.split(',')) {
+                for (const item of value.split(',')) {
                     const include: string[] = [];
-                    if (value.includes('*')) {
-                        for (const filepath of glob.sync(path.resolve(`dist/extensions/${value}`))) {
+                    if (item.includes('*')) {
+                        for (const filepath of glob.sync(path.resolve(`dist/extensions/${item}`))) {
                             if (filepath.endsWith('.min.js')) {
                                 include.push(filepath);
                             }
                         }
                     }
                     else {
-                        include.push(path.resolve(`dist/extensions/${value}.min.js`));
+                        include.push(path.resolve(`dist/extensions/${item}.min.js`));
                     }
                     for (const filepath of include) {
                         if (isFile(filepath)) {
@@ -63,7 +63,7 @@ let output: String;
                 break;
             case '-o':
             case '--output':
-                output = path.resolve(command);
+                output = path.resolve(value);
                 break;
         }
     }

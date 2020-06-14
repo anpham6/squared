@@ -58,11 +58,10 @@ const setBoundsWidth = (node: NodeUI) => node.css('width', formatPX(node.bounds.
 export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
     public processNode(node: T) {
         const mainData = createDataAttribute(node);
-        const tbody: T[] = [];
         let table: T[] = [],
             tfoot: Undef<T>,
             thead: Undef<T>;
-        const inheritStyles = (parent: Undef<T>) => {
+        const inheritStyles = (parent: Undef<T>, append: boolean) => {
             if (parent) {
                 parent.cascade((item: T) => {
                     switch (item.tagName) {
@@ -73,8 +72,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             break;
                     }
                 });
-                table = table.concat(parent.children as T[]);
-                hideCell(parent);
+                table = append ? table.concat(parent.children as T[]) : (parent.children as T[]).concat(table);
             }
         };
         node.each((item: T) => {
@@ -83,30 +81,22 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     if (!thead) {
                         thead = item;
                     }
-                    else {
-                        hideCell(item);
-                    }
+                    hideCell(item);
                     break;
                 case 'TBODY':
-                    tbody.push(item);
+                    table = table.concat(item.children as T[]);
+                    hideCell(item);
                     break;
                 case 'TFOOT':
                     if (!tfoot) {
                         tfoot = item;
                     }
-                    else {
-                        hideCell(item);
-                    }
+                    hideCell(item);
                     break;
             }
         });
-        inheritStyles(thead);
-        for (let i = 0; i < tbody.length; ++i) {
-            const section = tbody[i];
-            table = table.concat(section.children as T[]);
-            hideCell(section);
-        }
-        inheritStyles(tfoot);
+        inheritStyles(thead, false);
+        inheritStyles(tfoot, true);
         const hasWidth = node.hasWidth;
         const borderCollapse = mainData.borderCollapse;
         const [horizontal, vertical] =

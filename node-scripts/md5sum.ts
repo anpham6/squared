@@ -330,7 +330,7 @@ else {
         requiredMessage('Browser', '-b chromium');
     }
     if (!snapshot) {
-        requiredMessage('Output directory', '-o ./temp/snapshot');
+        requiredMessage('Output directory', '-o ./temp/chromium');
     }
     console.log('');
 }

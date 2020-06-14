@@ -144,9 +144,10 @@ const getFileExt = (value: string) => value.includes('.') ? fromLastIndexOf(valu
 const getDirectory = (path: string, start: number) => path.substring(start, path.lastIndexOf('/'));
 
 export default class File<T extends chrome.base.View> extends squared.base.File<T> implements chrome.base.File<T> {
-    public static parseUri(uri: string, options: UriOptions = {}): Undef<ChromeAsset> {
+    public static parseUri(uri: string, options?: UriOptions): Undef<ChromeAsset> {
         let saveAs: Undef<string>,
             format: Undef<string>,
+            saveTo: Undef<boolean>,
             preserve: Undef<boolean>;
         if (options) {
             ({ saveAs, format, preserve } = options);
@@ -167,7 +168,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 value = resolvePath(relocate, location.href);
             }
         }
-        if (options.preserveCrossOrigin && !local && !relocate) {
+        if (!local && !relocate && options?.preserveCrossOrigin) {
             return undefined;
         }
         const match = FILE.PROTOCOL.exec(value);
@@ -182,7 +183,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 rootDir: Undef<string>,
                 moveTo: Undef<string>;
             if (!local) {
-                if (options.saveTo && relocate) {
+                if (saveTo && relocate) {
                     [moveTo, pathname, filename] = getFilePath(relocate + '/' + randomUUID() + (extension ? '.' + extension : ''));
                 }
                 else {
@@ -208,7 +209,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             }
             if (filename === '') {
                 if (local && relocate) {
-                    [moveTo, pathname, filename] = getFilePath(relocate, options.saveTo);
+                    [moveTo, pathname, filename] = getFilePath(relocate, saveTo);
                 }
                 else if (path && path !== '/') {
                     filename = fromLastIndexOf(path, '/', '\\');
@@ -256,7 +257,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     public copyToDisk(directory: string, options?: ChromeFileCopyingOptions) {
         return this.copying({
             ...options,
-            assets: this.getAssetsAll().concat(options?.assets || []) as FileAsset[],
+            assets: this.combineAssets().concat(options?.assets || []) as FileAsset[],
             directory
         });
     }
@@ -265,7 +266,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         return this.archiving({
             filename: this.userSettings.outputArchiveName,
             ...options,
-            assets: this.getAssetsAll(options).concat(options?.assets || []) as FileAsset[],
+            assets: this.combineAssets(options).concat(options?.assets || []) as FileAsset[],
             appendTo: pathname
         });
     }
@@ -273,15 +274,15 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     public saveToArchive(filename: string, options?: ChromeFileArchivingOptions) {
         return this.archiving({
             ...options,
-            assets: this.getAssetsAll(options).concat(options?.assets || []) as FileAsset[],
+            assets: this.combineAssets(options).concat(options?.assets || []) as FileAsset[],
             filename
         });
     }
 
     public getHtmlPage(options?: FileActionAttribute) {
-        let preserveCrossOrigin: Undef<boolean>,
+        let name: Undef<string>,
             saveAs: Undef<SaveAsOptions>,
-            name: Undef<string>;
+            preserveCrossOrigin: Undef<boolean>;
         if (options) {
             ({ name, preserveCrossOrigin } = options);
             saveAs = options.saveAs?.html;
@@ -321,8 +322,8 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     }
 
     public getScriptAssets(options?: FileActionAttribute) {
-        let preserveCrossOrigin: Undef<boolean>,
-            saveAs: Undef<SaveAsOptions>;
+        let saveAs: Undef<SaveAsOptions>,
+            preserveCrossOrigin: Undef<boolean>;
         if (options) {
             preserveCrossOrigin = options.preserveCrossOrigin;
             saveAs = options.saveAs?.script;
@@ -372,9 +373,9 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     }
 
     public getLinkAssets(options?: FileActionAttribute) {
-        let preserveCrossOrigin: Undef<boolean>,
+        let rel: Undef<string>,
             saveAs: Undef<SaveAsOptions>,
-            rel: Undef<string>;
+            preserveCrossOrigin: Undef<boolean>;
         if (options) {
             ({ rel, preserveCrossOrigin } = options);
             saveAs = options.saveAs?.link;
@@ -453,8 +454,8 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     }
 
     public getImageAssets(options?: FileActionAttribute) {
-        let preserveCrossOrigin: Undef<boolean>,
-            saveAs: Undef<SaveAsOptions>;
+        let saveAs: Undef<SaveAsOptions>,
+            preserveCrossOrigin: Undef<boolean>;
         if (options) {
             preserveCrossOrigin = options.preserveCrossOrigin;
             saveAs = options.saveAs?.base64;
@@ -567,8 +568,9 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         const preserveCrossOrigin = options?.preserveCrossOrigin;
         const result: ChromeAsset[] = [];
         for (const fonts of Resource.ASSETS.fonts.values()) {
-            for (let i = 0; i < fonts.length; ++i) {
-                const url = fonts[i].srcUrl;
+            let i = 0;
+            while (i < fonts.length) {
+                const url = fonts[i++].srcUrl;
                 if (url) {
                     const data = File.parseUri(url, { preserveCrossOrigin });
                     if (this.validFile(data)) {
@@ -628,11 +630,12 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         return result;
     }
 
-    protected getAssetsAll(options: ChromeFileArchivingOptions = {}) {
+    protected combineAssets(options?: ChromeFileArchivingOptions) {
         const result = this.getHtmlPage(options).concat(this.getLinkAssets(options));
-        if (options.saveAsWebPage) {
-            for (let i = 0; i < result.length; ++i) {
-                const item = result[i];
+        if (options?.saveAsWebPage) {
+            let i = 0;
+            while (i < result.length) {
+                const item = result[i++];
                 const mimeType = item.mimeType;
                 switch (mimeType) {
                     case 'text/html':

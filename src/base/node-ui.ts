@@ -612,8 +612,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public delete(name: string, ...attrs: string[]) {
         const obj = this['__' + name];
         if (obj) {
-            for (let i = 0; i < attrs.length; ++i) {
-                const attr = attrs[i];
+            let i = 0;
+            while (i < attrs.length) {
+                const attr = attrs[i++];
                 if (attr.includes('*')) {
                     for (const [key] of searchObject(obj, attr)) {
                         delete obj[key];
@@ -681,8 +682,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public inherit(node: T, ...modules: string[]) {
         let result: Undef<StandardMap>;
-        for (let i = 0; i < modules.length; ++i) {
-            switch (modules[i]) {
+        let i = 0;
+        while (i < modules.length) {
+            switch (modules[i++]) {
                 case 'base': {
                     this._documentParent = node.documentParent;
                     this._bounds =  node.bounds;
@@ -942,8 +944,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     siblings = this.siblingsLeading;
                 }
                 const length = siblings.length;
-                for (let i = length - 1; i >= 0; --i) {
-                    const previous = siblings[i];
+                let i = length - 1;
+                while (i >= 0) {
+                    const previous = siblings[i--];
                     if (previous.pageFlow) {
                         return previous.blockStatic || cleared?.has(previous) ? NODE_TRAVERSE.VERTICAL : NODE_TRAVERSE.HORIZONTAL;
                     }
@@ -1301,10 +1304,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public unsetCache(...attrs: string[]) {
-        if (attrs.length) {
+        const length = attrs.length;
+        if (length) {
             const cached = this._cached;
-            for (let i = 0; i < attrs.length; ++i) {
-                switch (attrs[i]) {
+            let i = 0;
+            while (i < length) {
+                switch (attrs[i++]) {
                     case 'top':
                     case 'right':
                     case 'bottom':

@@ -104,7 +104,7 @@ function adjustBaseline(baseline: View, nodes: View[], singleRow: boolean, boxTo
     let imageHeight = 0,
         imageBaseline: Undef<View>;
     const length = nodes.length;
-    let i = 0;
+    let i = 0, j: number;
     while (i < length) {
         const node = nodes[i++];
         if (node.baselineAltered) {
@@ -119,8 +119,9 @@ function adjustBaseline(baseline: View, nodes: View[], singleRow: boolean, boxTo
             else {
                 const imageElements = node.renderChildren.filter((item: View) => isBaselineImage(item));
                 if (node.imageOrSvgElement || imageElements.length) {
-                    for (let j = 0; j < imageElements.length; ++j) {
-                        height = Math.max(imageElements[j].baselineHeight, height);
+                    j = 0;
+                    while (j < imageElements.length) {
+                        height = Math.max(imageElements[j++].baselineHeight, height);
                     }
                     if (height > baselineHeight) {
                         if (!imageBaseline || height >= imageHeight) {
@@ -3024,15 +3025,16 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                         if (floating) {
                             let checkBottom = false;
-                            for (let k = 0; k < previousSiblings.length; ++k) {
-                                if (chain.bounds.top < Math.floor(previousSiblings[k].bounds.bottom)) {
+                            let k = 0;
+                            while (k < previousSiblings.length) {
+                                if (chain.bounds.top < Math.floor(previousSiblings[k++].bounds.bottom)) {
                                     checkBottom = true;
                                     break;
                                 }
                             }
                             if (checkBottom) {
                                 aboveRowEnd = previousRow[previousRow.length - 1];
-                                let k = previousSiblings.length - 2;
+                                k = previousSiblings.length - 2;
                                 while (k >= 0) {
                                     const aboveBefore = previousSiblings[k--];
                                     if (aboveBefore.linear.bottom > aboveRowEnd.linear.bottom) {
@@ -3175,8 +3177,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const siblings = node.siblingsLeading;
                 const length = siblings.length;
                 if (length && !node.alignedVertically()) {
-                    for (let i = length - 1; i >= 0; --i) {
-                        const previous = siblings[i] as T;
+                    let i = length - 1;
+                    while (i >= 0) {
+                        const previous = siblings[i--] as T;
                         if (previous.pageFlow) {
                             if (previous.renderParent === node.renderParent) {
                                 node.anchor(horizontal ? 'leftRight' : 'top', previous.documentId, true);

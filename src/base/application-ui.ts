@@ -25,8 +25,10 @@ function prioritizeExtensions<T extends NodeUI>(value: string, extensions: Exten
     const included = value.trim().split(/\s*,\s*/);
     const result: ExtensionUI<T>[] = [];
     const untagged: ExtensionUI<T>[] = [];
-    for (let i = 0; i < extensions.length; ++i) {
-        const ext = extensions[i];
+    const length = extensions.length;
+    let i = 0;
+    while (i < length) {
+        const ext = extensions[i++];
         const index = included.indexOf(ext.name);
         if (index !== -1) {
             result[index] = ext;
@@ -35,10 +37,7 @@ function prioritizeExtensions<T extends NodeUI>(value: string, extensions: Exten
             untagged.push(ext);
         }
     }
-    if (result.length) {
-        return flatArray<ExtensionUI<T>>(result).concat(untagged);
-    }
-    return extensions;
+    return result.length ? flatArray<ExtensionUI<T>>(result).concat(untagged) : extensions;
 }
 
 function getFloatAlignmentType(nodes: NodeUI[]) {
@@ -535,10 +534,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     pseudoElements.push(item);
                 }
             });
-            if (pseudoElements.length) {
+            const length = pseudoElements.length;
+            if (length) {
                 const pseudoMap: { item: T; id: string; parentElement: Element; styleElement?: HTMLStyleElement }[] = [];
-                for (let i = 0; i < pseudoElements.length; ++i) {
-                    const item = pseudoElements[i];
+                let i = 0;
+                while (i < length) {
+                    const item = pseudoElements[i++];
                     const parentElement = item.actualParent!.element as HTMLElement;
                     let id = parentElement.id.trim(),
                         styleElement: Undef<HTMLStyleElement>;
@@ -553,9 +554,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         pseudoMap.push({ item, id, parentElement, styleElement });
                     }
                 }
-                pseudoMap.forEach(data => data.item.setBounds(false));
-                for (let i = 0; i < pseudoMap.length; ++i) {
-                    const data = pseudoMap[i];
+                const q = pseudoMap.length;
+                i = 0;
+                while (i < q) {
+                    pseudoMap[i++].item.setBounds(false);
+                }
+                i = 0;
+                while (i < q) {
+                    const data = pseudoMap[i++];
                     const styleElement = data.styleElement;
                     if (data.id.startsWith('__squared_')) {
                         data.parentElement.id = '';
@@ -1340,15 +1346,17 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         layout.type = controllerHandler.containerTypeVerticalMargin;
         layout.itemCount = layerIndex.length;
         layout.addAlign(NODE_ALIGNMENT.BLOCK);
-        for (let i = 0; i < layout.itemCount; ++i) {
-            const item = layerIndex[i];
+        let i = 0, j: number;
+        while (i < layout.itemCount) {
+            const item = layerIndex[i++];
             let segments: T[][],
+                itemCount: number,
                 floatgroup: Undef<T>;
             if (Array.isArray(item[0])) {
                 segments = item as T[][];
-                const itemCount = segments.length;
+                itemCount = segments.length;
                 let grouping: T[] = segments[0];
-                let j = 1;
+                j = 1;
                 while (j < itemCount) {
                     grouping = grouping.concat(segments[j++]);
                 }
@@ -1370,9 +1378,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             else {
                 segments = [item as T[]];
+                itemCount = 1;
             }
-            for (let j = 0; j < segments.length; ++j) {
-                const seg = segments[j];
+            j = 0;
+            while (j < itemCount) {
+                const seg = segments[j++];
                 const node = floatgroup || layout.node;
                 const target = controllerHandler.createNodeGroup(seg[0], seg, node, { delegate: true, cascade: true });
                 const group = new LayoutUI(node, target, 0, NODE_ALIGNMENT.SEGMENTED);
@@ -1531,8 +1541,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         containerTypeParent,
                         alignmentTypeParent | alignmentFloat
                     ));
-                    for (let j = 0; j < children.length; ++j) {
-                        const item = children[j];
+                    let j = 0;
+                    while (j < children.length) {
+                        const item = children[j++];
                         this.addLayout(new LayoutUI(
                             parent,
                             item,
@@ -1622,14 +1633,15 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     while (current);
                 }
                 const style = getStyle(element);
-                for (let i = 0; i < TEXT_STYLE.length; ++i) {
-                    const attr = TEXT_STYLE[i];
+                let tagName = '',
+                    content = '';
+                let i = 0;
+                while (i < TEXT_STYLE.length) {
+                    const attr = TEXT_STYLE[i++];
                     if (!styleMap[attr]) {
                         styleMap[attr] = style[attr];
                     }
                 }
-                let tagName = '',
-                    content = '';
                 switch (value) {
                     case 'normal':
                     case 'none':
@@ -1757,8 +1769,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         if (!counterType && subcounter.length > 1) {
                                             subcounter.reverse().splice(1, 1);
                                             const textValue = match[7];
-                                            for (let i = 0; i < subcounter.length; ++i) {
-                                                content += convertListStyle(styleName, subcounter[i], true) + textValue;
+                                            i = 0;
+                                            while (i < subcounter.length) {
+                                                content += convertListStyle(styleName, subcounter[i++], true) + textValue;
                                             }
                                         }
                                     }
@@ -1847,8 +1860,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     protected setFloatPadding(parent: T, target: T, inlineAbove: T[], leftAbove: T[] = [], rightAbove: T[] = []) {
         let paddingNodes: T[] = [];
-        for (let i = 0; i < inlineAbove.length; ++i) {
-            const child = inlineAbove[i];
+        let i = 0;
+        while (i < inlineAbove.length) {
+            const child = inlineAbove[i++];
             if (requirePadding(child) || child.centerAligned) {
                 paddingNodes.push(child);
             }
@@ -1866,7 +1880,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (q) {
             let floatPosition = -Infinity,
                 spacing = false;
-            let i = 0;
+            i = 0;
             while (i < q) {
                 const child = leftAbove[i++];
                 if (child.bounds.top < bottom) {
@@ -1907,7 +1921,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (q) {
             let floatPosition = Infinity,
                 spacing = false;
-            let i = 0;
+            i = 0;
             while (i < q) {
                 const child = rightAbove[i++];
                 if (child.bounds.top < bottom) {

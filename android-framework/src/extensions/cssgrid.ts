@@ -292,8 +292,9 @@ function requireDirectionSpacer(data: CssGridDirectionData, dimension: number) {
     const unit = data.unit;
     let size = 0,
         percent = 0;
-    for (let i = 0; i < unit.length; ++i) {
-        const value = unit[i];
+    let i = 0;
+    while (i < unit.length) {
+        const value = unit[i++];
         if (isPx(value)) {
             size += parseFloat(value);
         }
@@ -1093,8 +1094,9 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
             if (node.blockStatic && !node.hasPX('minWidth', { percent: false }) && node.actualParent?.layoutElement === false) {
                 const { gap, length, unit } = mainData.column;
                 let minWidth = gap * (length - 1);
-                for (let i = 0; i < unit.length; ++i) {
-                    const value = unit[i];
+                let i = 0;
+                while (i < unit.length) {
+                    const value = unit[i++];
                     if (isPx(value)) {
                         minWidth += parseFloat(value);
                     }
