@@ -17,7 +17,7 @@ interface AndroidCloneOptions {
     attributes?: boolean;
 }
 
-interface CreateNodeWrapperOptions<T> extends ExcludeOptions {
+interface CreateNodeWrapperUIOptions<T> extends ExcludeOptions {
     children?: T[];
     containerType?: number;
     alignmentType?: number;

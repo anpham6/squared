@@ -44,7 +44,7 @@ function deleteProperties(data: {}) {
 const checkWritable = (app: Undef<Main>): app is Main => app?.initializing === false && app.length > 0;
 
 export function setHostname(value: string) {
-    const fileHandler = main?.resourceHandler.fileHandler;
+    const fileHandler = main?.resourceHandler?.fileHandler;
     if (fileHandler) {
         const match = regex.FILE.PROTOCOL.exec(value);
         if (match && match[1].startsWith('http')) {

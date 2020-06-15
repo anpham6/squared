@@ -22,9 +22,4 @@ export default class ViewGroup<T extends View> extends View$MX(squared.base.Node
     get containerType() {
         return this._containerType;
     }
-
-    set renderExclude(value) {}
-    get renderExclude() {
-        return false;
-    }
 }

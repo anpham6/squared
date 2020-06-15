@@ -25,7 +25,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
     public readonly abstract cache: squared.base.NodeList<T>;
     public readonly abstract fileSeparator: string;
 
-    public abstract get userSettings(): UserSettings;
+    public abstract get userSettings(): UserResourceSettings;
 
     public reset() {
         const ASSETS = Resource.ASSETS;

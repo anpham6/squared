@@ -35,7 +35,7 @@ function parseSrcSet(value: string) {
     }
 }
 
-function parseImageUrl(resourceHandler: Resource<Node>, baseMap: StringMap, attr: string, styleSheetHref?: string) {
+function parseImageUrl(resourceHandler: Undef<Resource<Node>>, baseMap: StringMap, attr: string, styleSheetHref?: string) {
     const value = baseMap[attr];
     if (value && value !== 'initial') {
         REGEXP_DATAURI.lastIndex = 0;
@@ -44,12 +44,12 @@ function parseImageUrl(resourceHandler: Resource<Node>, baseMap: StringMap, attr
         while (match = REGEXP_DATAURI.exec(value)) {
             if (match[2]) {
                 const mimeType = match[2].trim().split(/\s*;\s*/);
-                resourceHandler.addRawData(match[1], mimeType[0], match[3], { encoding: mimeType[1] || 'utf8' });
+                resourceHandler?.addRawData(match[1], mimeType[0], match[3], { encoding: mimeType[1] || 'utf8' });
             }
             else {
                 const uri = resolvePath(match[3], styleSheetHref);
                 if (uri !== '') {
-                    if (!resourceHandler.getImage(uri)) {
+                    if (resourceHandler && !resourceHandler.getImage(uri)) {
                         addImageSrc(uri);
                     }
                     result = result.replace(match[0], `url("${uri}")`);
@@ -89,51 +89,63 @@ export default abstract class Application<T extends Node> implements squared.bas
     protected _afterInsertNode: BindGeneric<Node, void>;
 
     private readonly _controllerHandler: Controller<T>;
-    private readonly _resourceHandler: Resource<T>;
     private readonly _extensionManager: ExtensionManager<T>;
+    private readonly _resourceHandler?: Resource<T>;
 
     protected constructor(
         public readonly framework: number,
         nodeConstructor: Constructor<T>,
         ControllerConstructor: Constructor<T>,
-        ResourceConstructor: Constructor<T>,
+        ResourceConstructor?: Constructor<T>,
         ExtensionManagerConstructor?: Constructor<T>)
     {
         const cache = this.processing.cache;
         this._cache = cache;
         this._controllerHandler = (new ControllerConstructor(this, cache) as unknown) as Controller<T>;
-        this._resourceHandler = (new ResourceConstructor(this, cache) as unknown) as Resource<T>;
+        if (ResourceConstructor) {
+            this._resourceHandler = (new ResourceConstructor(this, cache) as unknown) as Resource<T>;
+        }
         this._extensionManager = (new (ExtensionManagerConstructor || ExtensionManager)(this, cache) as unknown) as ExtensionManager<T>;
         this._afterInsertNode = this._controllerHandler.afterInsertNode;
         this.Node = nodeConstructor;
     }
 
-    public abstract createNode(options: {}): T;
-    public abstract insertNode(element: Element): Undef<T>;
     public abstract afterCreateCache(node: T): void;
-    public abstract finalize(): void;
 
     public abstract set viewModel(data: Undef<AppVieModel>);
     public abstract get viewModel(): Undef<AppVieModel>;
 
+    public insertNode(element: Element) {
+        return this.createNode({ element });
+    }
+
+    public createNode(options: CreateNodeOptions) {
+        return new this.Node(this.nextId, this.processing.sessionId, options.element);
+    }
+
     public copyToDisk(directory: string, options?: FileActionOptions) {
-        return this.resourceHandler.fileHandler?.copyToDisk(directory, options) || frameworkNotInstalled();
+        return this._resourceHandler?.fileHandler?.copyToDisk(directory, options) || frameworkNotInstalled();
     }
 
     public appendToArchive(pathname: string, options?: FileActionOptions) {
-        return this.resourceHandler.fileHandler?.appendToArchive(pathname, options) || frameworkNotInstalled();
+        return this._resourceHandler?.fileHandler?.appendToArchive(pathname, options) || frameworkNotInstalled();
     }
 
     public saveToArchive(filename?: string, options?: FileActionOptions) {
-        return this.resourceHandler.fileHandler?.saveToArchive(filename || this.userSettings.outputArchiveName, options) || frameworkNotInstalled();
+        const resourceHandler = this._resourceHandler;
+        return resourceHandler && resourceHandler.fileHandler?.saveToArchive(filename || resourceHandler.userSettings.outputArchiveName, options) || frameworkNotInstalled();
     }
 
     public createFrom(format: string, options: FileActionOptions) {
-        return this.resourceHandler.fileHandler?.createFrom(format, options) || frameworkNotInstalled();
+        return this._resourceHandler?.fileHandler?.createFrom(format, options) || frameworkNotInstalled();
     }
 
     public appendFromArchive(filename: string, options: FileActionOptions) {
-        return this.resourceHandler.fileHandler?.appendFromArchive(filename, options) || frameworkNotInstalled();
+        return this._resourceHandler?.fileHandler?.appendFromArchive(filename, options) || frameworkNotInstalled();
+    }
+
+    public finalize() {
+        return this.closed;
     }
 
     public reset() {
@@ -144,7 +156,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         processing.unusedStyles.clear();
         this.session.active.length = 0;
         this.controllerHandler.reset();
-        this.resourceHandler.reset();
+        this.resourceHandler?.reset();
         this.extensions.forEach(ext => ext.subscribers.clear());
         this.closed = false;
     }
@@ -159,7 +171,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         controller.sessionId = sessionId;
         controller.init();
         this.setStyleMap();
-        const preloadImages = this.userSettings.preloadImages;
+        const preloadImages = !!resource && resource.userSettings.preloadImages;
         const preloaded: HTMLImageElement[] = [];
         const imageElements: PreloadImage[] = [];
         const styleElement = insertStyleSheetRule('html > body { overflow: hidden !important; }');
@@ -271,24 +283,26 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
             }
         }
-        for (const element of this.rootElements) {
-            element.querySelectorAll('img').forEach((image: HTMLImageElement) => {
-                parseSrcSet(image.srcset);
-                if (!preloadImages) {
-                    resource.addImage(image);
-                }
-                else if (isSvg(image.src)) {
-                    imageElements.push(image.src);
-                }
-                else {
-                    if (image.complete) {
+        if (resource) {
+            for (const element of this.rootElements) {
+                element.querySelectorAll('img').forEach((image: HTMLImageElement) => {
+                    parseSrcSet(image.srcset);
+                    if (!preloadImages) {
                         resource.addImage(image);
                     }
                     else {
-                        imageElements.push(image);
+                        if (isSvg(image.src)) {
+                            imageElements.push(image.src);
+                        }
+                        else if (image.complete) {
+                            resource.addImage(image);
+                        }
+                        else {
+                            imageElements.push(image);
+                        }
                     }
-                }
-            });
+                });
+            }
         }
         if (imageElements.length) {
             this.initializing = true;
@@ -313,11 +327,11 @@ export default abstract class Application<T extends Node> implements squared.bas
                     if (typeof value === 'string') {
                         const uri = imageElements[i];
                         if (typeof uri === 'string') {
-                            resource.addRawData(uri, 'image/svg+xml', value, { encoding: 'utf8' });
+                            resource!.addRawData(uri, 'image/svg+xml', value, { encoding: 'utf8' });
                         }
                     }
                     else {
-                        resource.addImage(value);
+                        resource!.addImage(value);
                     }
                 }
                 return resumeThread();
@@ -564,33 +578,35 @@ export default abstract class Application<T extends Node> implements squared.bas
                 break;
             }
             case CSSRule.FONT_FACE_RULE: {
-                const attr = /\s*@font-face\s*{([^}]+)}\s*/.exec(cssText)?.[1];
-                if (attr) {
-                    const fontFamily = trimBoth((/\s*font-family:([^;]+);/.exec(attr)?.[1] || '').trim(), '"');
-                    if (fontFamily !== '') {
-                        const match = (/\s*src:\s*([^;]+);/.exec(attr)?.[1] || '').split(',');
-                        const length = match.length;
-                        if (length) {
-                            const fontStyle = /\s*font-style:\s*(\w+)\s*;/.exec(attr)?.[1].toLowerCase() || 'normal';
-                            const fontWeight = parseInt(/\s*font-weight:\s*(\d+)\s*;/.exec(attr)?.[1] || '400');
-                            let i = 0;
-                            while (i < length) {
-                                const urlMatch = /\s*(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*format\("?([\w-]+)"?\))?\s*/.exec(match[i++]);
-                                if (urlMatch) {
-                                    const data: FontFaceData = {
-                                        fontFamily,
-                                        fontWeight,
-                                        fontStyle,
-                                        srcFormat: urlMatch[4]?.toLowerCase().trim() || 'truetype'
-                                    };
-                                    const url = (urlMatch[2] || urlMatch[3]).trim();
-                                    if (urlMatch[1] === 'url') {
-                                        data.srcUrl = resolvePath(url, styleSheetHref);
+                if (resourceHandler) {
+                    const attr = /\s*@font-face\s*{([^}]+)}\s*/.exec(cssText)?.[1];
+                    if (attr) {
+                        const fontFamily = trimBoth((/\s*font-family:([^;]+);/.exec(attr)?.[1] || '').trim(), '"');
+                        if (fontFamily !== '') {
+                            const match = (/\s*src:\s*([^;]+);/.exec(attr)?.[1] || '').split(',');
+                            const length = match.length;
+                            if (length) {
+                                const fontStyle = /\s*font-style:\s*(\w+)\s*;/.exec(attr)?.[1].toLowerCase() || 'normal';
+                                const fontWeight = parseInt(/\s*font-weight:\s*(\d+)\s*;/.exec(attr)?.[1] || '400');
+                                let i = 0;
+                                while (i < length) {
+                                    const urlMatch = /\s*(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*format\("?([\w-]+)"?\))?\s*/.exec(match[i++]);
+                                    if (urlMatch) {
+                                        const data: FontFaceData = {
+                                            fontFamily,
+                                            fontWeight,
+                                            fontStyle,
+                                            srcFormat: urlMatch[4]?.toLowerCase().trim() || 'truetype'
+                                        };
+                                        const url = (urlMatch[2] || urlMatch[3]).trim();
+                                        if (urlMatch[1] === 'url') {
+                                            data.srcUrl = resolvePath(url, styleSheetHref);
+                                        }
+                                        else {
+                                            data.srcLocal = url;
+                                        }
+                                        resourceHandler.addFont(data);
                                     }
-                                    else {
-                                        data.srcLocal = url;
-                                    }
-                                    resourceHandler.addFont(data);
                                 }
                             }
                         }
@@ -625,7 +641,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         case CSSRule.IMPORT_RULE: {
                             const uri = resolvePath((rule as CSSImportRule).href, rule.parentStyleSheet?.href || location.href);
                             if (uri !== '') {
-                                this.resourceHandler.addRawData(uri, 'text/css', undefined, { encoding: 'utf8' });
+                                this.resourceHandler?.addRawData(uri, 'text/css', undefined, { encoding: 'utf8' });
                             }
                             this.applyStyleSheet((rule as CSSImportRule).styleSheet);
                             break;

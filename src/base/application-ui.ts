@@ -230,8 +230,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     public finalize() {
-        if (this.closed) {
-            return;
+        if (super.finalize()) {
+            return false;
         }
         const { controllerHandler, session } = this;
         const cache = session.cache;
@@ -289,8 +289,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         const baseTemplate = this._controllerSettings.layout.baseTemplate;
         const systemName = capitalize(this.systemName);
-        for (i = 0; i < documentRoot.length; ++i) {
-            const { node, layoutName } = documentRoot[i];
+        i = 0;
+        while (i < documentRoot.length) {
+            const { node, layoutName } = documentRoot[i++];
             const renderTemplates = node.renderParent!.renderTemplates;
             if (renderTemplates) {
                 this.saveDocument(
@@ -309,6 +310,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         removeElementsByClassName('__squared.pseudo');
         this.closed = true;
+        return true;
     }
 
     public copyToDisk(directory: string, options?: FileActionOptions) {
@@ -442,7 +444,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return false;
     }
 
-    public createNode(options: CreateNodeOptions<T>) {
+    public createNode(options: CreateNodeUIOptions<T>) {
         const { element, parent, children } = options;
         const node = new this.Node(this.nextId, this.processing.sessionId, element);
         this.controllerHandler.afterInsertNode(node);
@@ -738,9 +740,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected cacheNodeChildren(node: T, children: T[]) {
-        const cache = this._cache;
         const length = children.length;
         if (length > 1) {
+            const cache = this._cache;
             let siblingsLeading: T[] = [],
                 siblingsTrailing: T[] = [],
                 trailing = children[0],
@@ -796,7 +798,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 child.$parent = node;
                 child.containerIndex = 0;
                 node.add(child);
-                cache.add(child);
+                this._cache.add(child);
                 node.floatContainer = child.floating;
             }
             child.actualParent = node;

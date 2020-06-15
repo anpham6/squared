@@ -14,7 +14,6 @@ declare namespace base {
         readonly userSettings: AndroidUserSettingsUI;
         readonly controllerHandler: Controller<T>;
         readonly resourceHandler: Resource<T>;
-        readonly fileHandler: File<T>;
         set viewModel(value);
         get viewModel(): Undef<AppViewModel>;
         resolveTarget(target: Null<HTMLElement | string>): Undef<T>;
@@ -33,7 +32,7 @@ declare namespace base {
         addGuideline(node: T, parent: T, options?: GuidelineOptions): void;
         addBarrier(nodes: T[], barrierDirection: string): string;
         evaluateAnchors(nodes: T[]): void;
-        createNodeWrapper(node: T, parent: T, options?: CreateNodeWrapperOptions<T>): T;
+        createNodeWrapper(node: T, parent: T, options?: CreateNodeWrapperUIOptions<T>): T;
         get userSettings(): AndroidUserSettingsUI;
         get screenDimension(): Dimension;
     }

@@ -9,12 +9,6 @@ export default class Application<T extends chrome.base.View> extends squared.bas
     public userSettings!: ChromeUserSettings;
     public readonly systemName = 'chrome';
 
-    public finalize() {}
-
-    public createNode(options: NodeOptions) {
-        return new this.Node(this.nextId, this.processing.sessionId, options.element);
-    }
-
     public insertNode(element: Element) {
         if (element.nodeName === '#text') {
             if (this.userSettings.excludePlainText) {
@@ -22,7 +16,7 @@ export default class Application<T extends chrome.base.View> extends squared.bas
             }
             this.controllerHandler.applyDefaultStyles(element);
         }
-        return this.createNode({ element });
+        return super.createNode({ element });
     }
 
     public afterCreateCache(node: T) {

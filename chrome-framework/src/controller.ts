@@ -22,11 +22,8 @@ export default class Controller<T extends View> extends squared.base.Controller<
         super();
     }
 
+    public init() {}
     public sortInitialCache() {}
-
-    public init() {
-        this.application.processing.unusedStyles.clear();
-    }
 
     public reset() {
         this._elementMap.clear();

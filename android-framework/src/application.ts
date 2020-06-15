@@ -8,7 +8,6 @@ export default class Application<T extends View> extends squared.base.Applicatio
     public userSettings!: AndroidUserSettingsUI;
     public readonly controllerHandler!: android.base.Controller<T>;
     public readonly resourceHandler!: android.base.Resource<T>;
-    public readonly fileHandler!: android.base.File<T>;
     public readonly systemName = 'android';
 
     private _viewModel?: AppViewModel;

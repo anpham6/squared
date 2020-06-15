@@ -75,7 +75,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     public abstract processTraverseHorizontal(layout: squared.base.LayoutUI<T>, siblings: T[]): Undef<squared.base.LayoutUI<T>>;
     public abstract processTraverseVertical(layout: squared.base.LayoutUI<T>, siblings: T[]): Undef<squared.base.LayoutUI<T>>;
     public abstract processLayoutHorizontal(layout: squared.base.LayoutUI<T>): squared.base.LayoutUI<T>;
-    public abstract createNodeGroup(node: T, children: T[], parent?: T, options?: CreateNodeGroupOptions<T>): T;
+    public abstract createNodeGroup(node: T, children: T[], parent?: T, options?: CreateNodeGroupUIOptions<T>): T;
     public abstract renderNode(layout: squared.base.LayoutUI<T>): Undef<NodeTemplate<T>>;
     public abstract renderNodeGroup(layout: squared.base.LayoutUI<T>): Undef<NodeTemplate<T>>;
     public abstract sortRenderPosition(parent: T, templates: NodeTemplate<T>[]): NodeTemplate<T>[];
@@ -765,12 +765,12 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 }
             }
             else {
-                const value = styleMap[opposing];
-                if (value && isLength(value)) {
-                    const attrMax = `max${capitalize(attr)}`;
-                    if (!styleMap[attrMax] || !isPercent(attrMax)) {
-                        const image = this.application.resourceHandler.getImage((element as HTMLImageElement).src);
-                        if (image && image.width > 0 && image.height > 0) {
+                const image = this.application.resourceHandler?.getImage((element as HTMLImageElement).src);
+                if (image && image.width > 0 && image.height > 0) {
+                    const value = styleMap[opposing];
+                    if (value && isLength(value)) {
+                        const attrMax = `max${capitalize(attr)}`;
+                        if (!styleMap[attrMax] || !isPercent(attrMax)) {
                             styleMap[attr] = formatPX(image[attr] * parseFloat(value) / image[opposing]);
                         }
                     }

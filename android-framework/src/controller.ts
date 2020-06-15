@@ -182,7 +182,7 @@ function adjustFloatingNegativeMargin(node: View, previous: View) {
     return false;
 }
 
-function getTextBottom(nodes: View[]): View[] {
+function getTextBottom<T extends View>(nodes: T[]): T[] {
     return nodes.filter(node => (node.baseline || isLength(node.verticalAlign, true)) && (node.tagName === 'TEXTAREA' || node.tagName === 'SELECT' && node.toElementInt('size') > 1) || node.verticalAlign === 'text-bottom' && node.containerName !== 'INPUT_IMAGE').sort((a, b) => {
         if (a.baselineHeight === b.baselineHeight) {
             return a.tagName === 'SELECT' ? 1 : 0;
@@ -419,10 +419,10 @@ function getBoxWidth(this: Controller<View>, node: View, children: View[]) {
                 const { containerType, alignmentType } = this.containerTypeVerticalMargin;
                 const container = node.ascend({ condition: (item: View) => item.of(containerType, alignmentType), including: parent, attr: 'renderParent' });
                 if (container.length) {
-                    const box = node.box;
-                    const naturalChildren = parent.naturalChildren;
+                    const { left, right, width } = node.box;
                     let offsetLeft = 0,
                         offsetRight = 0;
+                    const naturalChildren = parent.naturalChildren;
                     const length = naturalChildren.length;
                     let i = 0;
                     while (i < length) {
@@ -431,17 +431,17 @@ function getBoxWidth(this: Controller<View>, node: View, children: View[]) {
                             const linear = item.linear;
                             if (!children.includes(item) && node.intersectY(linear)) {
                                 if (item.float === 'left') {
-                                    if (Math.floor(linear.right) > box.left) {
-                                        offsetLeft = Math.max(offsetLeft, linear.right - box.left);
+                                    if (Math.floor(linear.right) > left) {
+                                        offsetLeft = Math.max(offsetLeft, linear.right - left);
                                     }
                                 }
-                                else if (box.right > Math.ceil(linear.left)) {
-                                    offsetRight = Math.max(offsetRight, box.right - linear.left);
+                                else if (right > Math.ceil(linear.left)) {
+                                    offsetRight = Math.max(offsetRight, right - linear.left);
                                 }
                             }
                         }
                     }
-                    return box.width - offsetLeft - offsetRight;
+                    return width - (offsetLeft + offsetRight);
                 }
             }
         }
@@ -833,8 +833,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     public finalize(layouts: FileAsset[]) {
         const insertSpaces = this.userSettings.insertSpaces;
         for (const layout of layouts) {
-            const content = layout.content!;
-            layout.content = replaceTab(content.replace('{#0}', getRootNs(content)), insertSpaces);
+            layout.content = replaceTab(
+                layout.content!.replace('{#0}', getRootNs(layout.content!)),
+                insertSpaces
+            );
         }
     }
 
@@ -2055,7 +2057,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
     }
 
-    public createNodeGroup(node: T, children: T[], parent?: T, options?: CreateNodeGroupOptions<T>) {
+    public createNodeGroup(node: T, children: T[], parent?: T, options?: CreateNodeGroupUIOptions<T>) {
         const group = new ViewGroup(this.cache.nextId, node, children) as T;
         this.afterInsertNode(group);
         if (parent) {
@@ -2068,7 +2070,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         return group;
     }
 
-    public createNodeWrapper(node: T, parent: T, options: CreateNodeWrapperOptions<T> = {}) {
+    public createNodeWrapper(node: T, parent: T, options: CreateNodeWrapperUIOptions<T> = {}) {
         const { children, containerType, alignmentType } = options;
         const container = this.application.createNode({
             parent,
@@ -2575,7 +2577,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                     }
                     else if (r > 0 && r < q) {
-                        textBottom = getTextBottom(items)[0] as T;
+                        textBottom = getTextBottom(items)[0];
                         if (textBottom) {
                             let k = 0;
                             while (k < r) {
@@ -2707,7 +2709,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         let valid = true,
             bias = 0,
             baselineCount = 0,
-            textBaseline: Null<T> = null,
+            textBaseline: UndefNull<T>,
+            textBottom: UndefNull<T>,
             tallest: Undef<T>,
             bottom: Undef<T>,
             previous: Undef<T>;
@@ -2757,7 +2760,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             node.setLayoutWidth('match_parent');
         }
         const baseline = NodeUI.baseline(children);
-        const textBottom = getTextBottom(children)[0];
         const documentId = baseline?.documentId;
         let percentWidth = View.availablePercent(children, 'width', node.box.width);
         const length = children.length;
@@ -2804,7 +2806,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                         switch (item.css('verticalAlign')) {
                             case 'text-top':
-                                if (!textBaseline) {
+                                if (textBaseline === undefined) {
                                     textBaseline = NodeUI.baseline(children, true);
                                 }
                                 if (textBaseline && item !== textBaseline) {
@@ -2815,6 +2817,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 }
                                 break;
                             case 'middle':
+                                if (textBottom === undefined) {
+                                    textBottom = getTextBottom(children)[0] || null;
+                                }
                                 if (textBottom || baseline?.textElement === false) {
                                     valid = constraintAlignTop(node, item);
                                 }
@@ -2823,10 +2828,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 }
                                 break;
                             case 'text-bottom':
-                                if (!textBaseline) {
+                                if (textBaseline === undefined) {
                                     textBaseline = NodeUI.baseline(children, true);
                                 }
                                 if (textBaseline && item !== textBaseline) {
+                                    if (textBottom === undefined) {
+                                        textBottom = getTextBottom(children)[0] || null;
+                                    }
                                     if (item !== textBottom) {
                                         item.anchor('bottom', textBaseline.documentId);
                                     }
@@ -2924,9 +2932,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         const floating = node.hasAlign(NODE_ALIGNMENT.FLOAT);
         const parent = children[0].actualParent || node;
         const horizontal = NodeUI.partitionRows(children, clearMap);
-        if (!node.hasWidth && children.some(item => item.percentWidth > 0)) {
-            node.setLayoutWidth('match_parent', false);
-        }
         let previousSiblings: T[] = [],
             previousRow: Undef<T[]>,
             previousAlignParent = false;
@@ -3126,6 +3131,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
         }
         node.horizontalRows = horizontal;
+        if (!node.hasWidth && children.some(item => item.percentWidth > 0)) {
+            node.setLayoutWidth('match_parent', false);
+        }
     }
 
     protected applyGuideline(node: T, parent: T, axis: string, options?: GuidelineOptions) {

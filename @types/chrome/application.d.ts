@@ -1,4 +1,4 @@
-interface ChromeUserSettings extends UserSettings {
+interface ChromeUserSettings extends UserResourceSettings {
     excludePlainText: boolean;
     outputFileExclusions: string[];
 }
@@ -14,7 +14,3 @@ interface ChromeFileActionOptions extends squared.base.FileActionOptions, FileAc
 interface ChromeFileCopyingOptions extends squared.base.FileCopyingOptions, ChromeFileActionOptions {}
 
 interface ChromeFileArchivingOptions extends squared.base.FileArchivingOptions, ChromeFileActionOptions {}
-
-interface NodeOptions {
-    element: Element;
-}

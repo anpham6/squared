@@ -102,7 +102,7 @@ declare module "base" {
         afterCreateCache(node: T): void;
         getDatasetName(attr: string, element: HTMLElement): Undef<string>;
         setDatasetName(attr: string, element: HTMLElement, value: string): void;
-        finalize(): void;
+        finalize(): boolean;
         toString(): string;
         copyToDisk(directory: string, options?: FileCopyingOptions): Promise<ResultOfFileAction | void>;
         appendToArchive(pathname: string, options?: FileCopyingOptions): Promise<ResultOfFileAction | void>;
@@ -112,7 +112,7 @@ declare module "base" {
         set viewModel(data: Undef<AppViewModel>);
         get viewModel(): Undef<AppViewModel>;
         get controllerHandler(): Controller<T>;
-        get resourceHandler(): Resource<T>;
+        get resourceHandler(): Undef<Resource<T>>;
         get extensionManager(): ExtensionManager<T>;
         get extensionsCascade(): Extension<T>[];
         get nextId(): number;
@@ -121,7 +121,7 @@ declare module "base" {
             framework: number,
             nodeConstructor: Constructor<T>,
             ControllerConstructor: Constructor<Controller<T>>,
-            ResourceConstructor: Constructor<Resource<T>>,
+            ResourceConstructor?: Constructor<Resource<T>>,
             ExtensionManagerConstructor?: Constructor<ExtensionManager<T>>
         );
     }
@@ -135,7 +135,7 @@ declare module "base" {
         conditionElement(element: HTMLElement, pseudoElt?: string): boolean;
         useElement(element: HTMLElement): boolean;
         insertNode(element: Element, pseudoElt?: string): Undef<T>;
-        createNode(options: CreateNodeOptions<T>): T;
+        createNode(options: CreateNodeUIOptions<T>): T;
         renderNode(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
         addLayout(layout: LayoutUI<T>): void;
         addLayoutTemplate(parent: T, node: T, template: Undef<NodeTemplate<T>>, index?: number): void;
@@ -149,7 +149,7 @@ declare module "base" {
             framework: number,
             nodeConstructor: Constructor<T>,
             ControllerConstructor: Constructor<ControllerUI<T>>,
-            ResourceConstructor: Constructor<ResourceUI<T>>,
+            ResourceConstructor?: Constructor<ResourceUI<T>>,
             ExtensionManagerConstructor?: Constructor<ExtensionManager<T>>
         );
     }
@@ -183,7 +183,7 @@ declare module "base" {
         setConstraints(): void;
         renderNode(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
         renderNodeGroup(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
-        createNodeGroup(node: T, children: T[], parent?: T, options?: CreateNodeGroupOptions<T>): T;
+        createNodeGroup(node: T, children: T[], parent?: T, options?: CreateNodeGroupUIOptions<T>): T;
         sortRenderPosition(parent: T, templates: NodeTemplate<T>[]): NodeTemplate<T>[];
         addBeforeOutsideTemplate(id: number, value: string, format?: boolean, index?: number): void;
         addBeforeInsideTemplate(id: number, value: string, format?: boolean, index?: number): void;
@@ -225,7 +225,7 @@ declare module "base" {
         set fileHandler(value: Undef<File<T>>);
         get fileHandler(): Undef<File<T>>;
         get controllerSettings(): ControllerSettings;
-        get userSettings(): UserSettings;
+        get userSettings(): UserResourceSettings;
         get mimeTypeMap(): ObjectMap<MIMEOrAll>;
         get randomUUID(): string;
     }
@@ -324,7 +324,7 @@ declare module "base" {
         getDataMap(options: FileActionOptions): Undef<StandardMap>;
         getCopyQueryParameters(options: FileCopyingOptions): string;
         getArchiveQueryParameters(options: FileArchivingOptions): string;
-        get userSettings(): UserSettings;
+        get userSettings(): UserResourceSettings;
         set hostname(value);
         get hostname(): string;
     }

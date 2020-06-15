@@ -32,7 +32,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
     public abstract appendToArchive(pathname: string, options?: FileArchivingOptions): Promise<ResultOfFileAction | void>;
     public abstract saveToArchive(filename: string, options?: FileArchivingOptions): Promise<ResultOfFileAction | void>;
 
-    public abstract get userSettings(): UserSettings;
+    public abstract get userSettings(): UserResourceSettings;
 
     public getDataMap(options: FileActionOptions) {
         return undefined;

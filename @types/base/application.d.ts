@@ -1,14 +1,17 @@
 interface UserSettings {
     builtInExtensions: string[];
-    preloadImages: boolean;
     showErrorMessages: boolean;
     createQuerySelectorMap: boolean;
+}
+
+interface UserResourceSettings extends UserSettings {
+    preloadImages: boolean;
     outputEmptyCopyDirectory: boolean;
     outputArchiveFormat: string;
     outputArchiveName: string;
 }
 
-interface UserSettingsUI extends UserSettings {
+interface UserSettingsUI extends UserResourceSettings {
     framesPerSecond: number;
     supportNegativeLeftTop: boolean;
     showAttributes: boolean;
@@ -117,7 +120,11 @@ interface LayoutOptions<T> extends Partial<LayoutType> {
     columnCount?: number;
 }
 
-interface CreateNodeOptions<T> {
+interface CreateNodeOptions {
+    element: Element;
+}
+
+interface CreateNodeUIOptions<T> {
     parent?: T;
     element?: Null<Element>;
     children?: T[];
@@ -127,7 +134,7 @@ interface CreateNodeOptions<T> {
     cascade?: boolean;
 }
 
-interface CreateNodeGroupOptions<T> {
+interface CreateNodeGroupUIOptions<T> {
     delegate?: boolean;
     cascade?: boolean;
 }

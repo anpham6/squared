@@ -21,7 +21,7 @@ declare namespace base {
         queryState: number;
         readonly builtInExtensions: ObjectMap<Extension<T>>;
         readonly extensions: Extension<T>[];
-        createNode(options: NodeOptions): T;
+        createNode(options: CreateNodeOptions): T;
     }
 
     class Controller<T extends View> extends squared.base.Controller<T> {
@@ -58,8 +58,6 @@ declare namespace base {
         application: Application<T>;
         processFile(data: ChromeAsset, override?: boolean): boolean;
     }
-
-    class ExtensionManager<T extends View> extends squared.base.ExtensionManager<T> {}
 
     class View extends squared.base.Node {
         constructor(id: number, sessionId: string, element: Element);
