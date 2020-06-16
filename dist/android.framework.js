@@ -1,4 +1,4 @@
-/* android-framework 1.11.0
+/* android-framework 1.11.1
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -583,14 +583,10 @@ var android = (function () {
                 }
             }
             if (mdpi) {
-                result.mdpi = mdpi;
                 const rawData = this.application.resourceHandler.getRawData(mdpi);
                 if (rawData) {
                     if (rawData.base64) {
                         const filename = rawData.filename;
-                        if (FILE.SVG.test(filename)) {
-                            return '';
-                        }
                         this.application.resourceHandler.writeRawImage(rawData.mimeType, {
                             filename: prefix + filename,
                             data: rawData.base64,
@@ -598,7 +594,9 @@ var android = (function () {
                         });
                         return filename.substring(0, filename.lastIndexOf('.'));
                     }
+                    return '';
                 }
+                result.mdpi = mdpi;
             }
             return this.addImageSet(result, prefix);
         }
@@ -5821,7 +5819,7 @@ var android = (function () {
             return undefined;
         }
         renderNode(layout) {
-            var _a, _b;
+            var _a;
             let { parent, containerType } = layout;
             const node = layout.node;
             let controlName = View.getControlName(containerType, node.api);
@@ -5879,18 +5877,14 @@ var android = (function () {
                     if (node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
                         let src;
                         if (node.tagName === 'CANVAS') {
-                            const imageData =
-                                (_a = element.getContext('2d')) === null || _a === void 0
-                                    ? void 0
-                                    : _a.getImageData(0, 0, element.clientWidth, element.clientHeight);
-                            if (imageData) {
+                            const data = element.toDataURL();
+                            if (data) {
                                 node.setControlType(controlName, containerType);
                                 src = 'canvas_' + convertWord$1(node.controlId, true);
                                 this.application.resourceHandler.writeRawImage('image/png', {
                                     filename: src + '.png',
-                                    data: Array.from(imageData.data),
-                                    width: imageData.width,
-                                    height: imageData.height,
+                                    data,
+                                    encoding: 'base64',
                                 });
                             }
                         } else {
@@ -5906,7 +5900,7 @@ var android = (function () {
                         ((node.left < 0 && parent.css('overflowX') === 'hidden') ||
                             (node.top < 0 && parent.css('overflowY') === 'hidden'))
                     ) {
-                        const container = application.createNode({ parent, innerWrap: node });
+                        const container = application.createNode(node.sessionId, { parent, innerWrap: node });
                         container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                         container.inherit(node, 'base');
                         container.cssCopy(node, 'position', 'zIndex');
@@ -6246,7 +6240,7 @@ var android = (function () {
                             return false;
                         });
                     }
-                    if ((_b = node.element.list) === null || _b === void 0 ? void 0 : _b.children.length) {
+                    if ((_a = node.element.list) === null || _a === void 0 ? void 0 : _a.children.length) {
                         controlName = CONTAINER_ANDROID.EDIT_LIST;
                     } else if (node.api >= 26 /* OREO */) {
                         node.android('importantForAutofill', 'no');
@@ -6491,7 +6485,7 @@ var android = (function () {
         createNodeWrapper(node, parent, options = {}) {
             var _a, _b, _c;
             const { children, containerType, alignmentType } = options;
-            const container = this.application.createNode({
+            const container = this.application.createNode(node.sessionId, {
                 parent,
                 children,
                 append: true,
@@ -8774,7 +8768,7 @@ var android = (function () {
                 const dividerWidth = node.parseUnit(borderLeftWidth);
                 const displayBorder = borderLeftStyle !== 'none' && dividerWidth > 0;
                 const createColumnRule = () => {
-                    const divider = application.createNode({ parent: node, append: true });
+                    const divider = application.createNode(node.sessionId, { parent: node, append: true });
                     divider.inherit(node, 'base');
                     divider.containerName = node.containerName + '_COLUMNRULE';
                     divider.setControlType(CONTAINER_ANDROID.LINE, CONTAINER_NODE.LINE);
@@ -9689,7 +9683,7 @@ var android = (function () {
                     /start|center|end|baseline|right|left/.test(justifySelf) ||
                     layoutConstraint
                 ) {
-                    renderAs = this.application.createNode({ parent, innerWrap: node });
+                    renderAs = this.application.createNode(node.sessionId, { parent, innerWrap: node });
                     renderAs.containerName = node.containerName;
                     renderAs.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                     renderAs.inherit(node, 'base', 'initial');
@@ -11320,7 +11314,7 @@ var android = (function () {
                         image = resource.addImageSrc(mainData.imageSrc);
                     }
                     const options = createViewAttribute();
-                    ordinal = application.createNode({ parent });
+                    ordinal = application.createNode(node.sessionId, { parent });
                     ordinal.childIndex = node.childIndex;
                     ordinal.containerName = node.containerName + '_ORDINAL';
                     ordinal.inherit(node, 'textStyle');
@@ -11517,7 +11511,7 @@ var android = (function () {
             if (mainData) {
                 const drawable = this.resource.addImageSrc(node.backgroundImage);
                 if (drawable !== '') {
-                    const container = this.application.createNode({ parent, innerWrap: node });
+                    const container = this.application.createNode(node.sessionId, { parent, innerWrap: node });
                     container.inherit(node, 'base', 'initial', 'styleMap');
                     container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                     container.exclude({
@@ -13194,7 +13188,7 @@ var android = (function () {
             const length = overflow.length;
             if (length) {
                 for (let i = 0; i < length; ++i) {
-                    const container = this.application.createNode({ parent });
+                    const container = this.application.createNode(node.sessionId, { parent });
                     if (i === 0) {
                         container.inherit(node, 'base', 'initial', 'styleMap');
                         if (!parent.replaceTry({ child: node, replaceWith: container })) {

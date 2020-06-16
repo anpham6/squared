@@ -1,4 +1,4 @@
-/* android.widget.drawer 1.11.0
+/* android.widget.drawer 1.11.1
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -6,8 +6,8 @@ this.android.widget = this.android.widget || {};
 this.android.widget.drawer = (function () {
     'use strict';
 
-    const { assignEmptyValue, capitalize, cloneObject, safeNestedMap, includes, iterateArray } = squared.lib.util;
     const { getElementAsNode } = squared.lib.session;
+    const { assignEmptyValue, capitalize, cloneObject, safeNestedMap, includes, iterateArray } = squared.lib.util;
     const { createStyleAttribute, createViewAttribute } = android.lib.util;
     const { NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
     const { EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = android.lib.constant;

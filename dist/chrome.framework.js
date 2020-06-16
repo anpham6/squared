@@ -1,4 +1,4 @@
-/* chrome-framework 1.11.0
+/* chrome-framework 1.11.1
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -29,14 +29,14 @@
             this.queryState = 0;
             this.systemName = 'chrome';
         }
-        insertNode(element) {
+        insertNode(element, sessionId) {
             if (element.nodeName === '#text') {
                 if (this.userSettings.excludePlainText) {
                     return undefined;
                 }
-                this.controllerHandler.applyDefaultStyles(element);
+                this.controllerHandler.applyDefaultStyles(element, sessionId);
             }
-            return super.createNode({ element });
+            return super.createNode(sessionId, { element });
         }
         afterCreateCache(node) {
             switch (this.queryState) {
@@ -64,22 +64,14 @@
             super();
             this.application = application;
             this.cache = cache;
-            this.localSettings = {
-                mimeType: {
-                    font: '*',
-                    image: '*',
-                    audio: '*',
-                    video: '*',
-                },
-            };
             this._elementMap = new Map();
         }
         reset() {
             this._elementMap.clear();
         }
-        applyDefaultStyles(element) {
+        applyDefaultStyles(element, sessionId) {
             if (element.nodeName === '#text') {
-                setElementCache(element, 'styleMap', this.sessionId, {
+                setElementCache(element, 'styleMap', sessionId, {
                     position: 'static',
                     display: 'inline',
                     verticalAlign: 'baseline',

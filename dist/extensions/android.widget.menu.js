@@ -1,4 +1,4 @@
-/* android.widget.menu 1.11.0
+/* android.widget.menu 1.11.1
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -111,7 +111,7 @@ this.android.widget.menu = (function () {
             return this.included(node.element);
         }
         processNode(node, parent) {
-            const outerParent = this.application.createNode({ parent, append: false });
+            const outerParent = this.application.createNode(node.sessionId, { parent, append: false });
             outerParent.childIndex = node.childIndex;
             outerParent.actualParent = parent.actualParent;
             node.documentRoot = true;

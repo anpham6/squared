@@ -1,4 +1,4 @@
-/* squared 1.11.0
+/* squared 1.11.1
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -34,7 +34,7 @@
         SVG: /\.svg$/i,
     };
     const CSS = {
-        URL: /^\s*url\((?:"?((?:[^")]|\\")+)"?)\)\s*$/,
+        URL: /^\s*url\((.+)\)\s*$/,
         HEX: /[A-Za-z\d]{3,8}/,
         RGBA: /rgba?\((\d+),\s+(\d+),\s+(\d+)(?:,\s+([\d.]+%?))?\)/,
         HSLA: /hsla?\((\d+),\s+(\d+)%,\s+(\d+)%(?:,\s+([\d.]+%?))?\)/,
@@ -5927,7 +5927,7 @@
     }
     function extractURL(value) {
         const match = CSS.URL.exec(value);
-        return match ? match[1] || match[2] : undefined;
+        return match ? trimBoth(match[1].trim(), '"').trim() : undefined;
     }
     function resolveURL(value) {
         const url = extractURL(value);

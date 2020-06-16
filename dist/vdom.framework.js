@@ -1,4 +1,4 @@
-/* vdom-framework 1.11.0
+/* vdom-framework 1.11.1
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -17,6 +17,9 @@
             this.extensions = [];
             this.systemName = 'vdom';
         }
+        insertNode(element, sessionId) {
+            return element.nodeName !== '#text' ? super.createNode(sessionId, { element }) : undefined;
+        }
     }
 
     class Controller extends squared.base.Controller {
@@ -24,14 +27,6 @@
             super();
             this.application = application;
             this.cache = cache;
-            this.localSettings = {
-                mimeType: {
-                    font: '*',
-                    image: '*',
-                    audio: '*',
-                    video: '*',
-                },
-            };
         }
     }
 

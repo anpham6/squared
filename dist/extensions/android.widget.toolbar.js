@@ -1,4 +1,4 @@
-/* android.widget.toolbar 1.11.0
+/* android.widget.toolbar 1.11.1
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -345,7 +345,12 @@ this.android.widget.toolbar = (function () {
         }
         createPlaceholder(node, children, target) {
             const delegate = children.length > 0;
-            const container = this.application.createNode({ parent: node, children, delegate, cascade: true });
+            const container = this.application.createNode(node.sessionId, {
+                parent: node,
+                children,
+                delegate,
+                cascade: true,
+            });
             container.inherit(node, 'base');
             if (delegate) {
                 let containerIndex = Infinity;

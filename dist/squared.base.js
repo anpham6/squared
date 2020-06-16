@@ -1,4 +1,4 @@
-/* squared.base 1.11.0
+/* squared.base 1.11.1
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -130,8 +130,8 @@
         }
     }
 
-    const { STRING } = squared.lib.regex;
     const { extractURL } = squared.lib.css;
+    const { STRING } = squared.lib.regex;
     const { fromLastIndexOf, fromMimeType, hasMimeType, randomUUID } = squared.lib.util;
     const REGEXP_DATAURI = new RegExp(`^${STRING.DATAURI}$`);
     class Resource {
@@ -189,18 +189,24 @@
             }
             let base64;
             mimeType = mimeType.toLowerCase();
-            if (content) {
-                if (encoding === 'base64') {
+            if (encoding === 'base64') {
+                if (content) {
                     if (mimeType === 'image/svg+xml') {
                         content = window.atob(content);
                     } else {
                         base64 = content;
                     }
+                } else if (data) {
+                    base64 = data;
                 } else {
-                    content = content.replace(/\\(["'])/g, (match, ...capture) => capture[0]);
+                    return '';
                 }
-            } else if (!data) {
-                return '';
+            } else {
+                if (content) {
+                    content = content.replace(/\\(["'])/g, (match, ...capture) => capture[0]);
+                } else if (!Array.isArray(data)) {
+                    return '';
+                }
             }
             const imageMimeType = this.mimeTypeMap.image;
             if (imageMimeType === '*' || imageMimeType.includes(mimeType)) {
@@ -216,7 +222,7 @@
                     content,
                     base64,
                     mimeType,
-                    data,
+                    bytes: data,
                     width,
                     height,
                 });
@@ -300,6 +306,8 @@
         insertStyleSheetRule,
         parseSelectorText,
     } = squared.lib.css;
+    const { FILE, STRING: STRING$1 } = squared.lib.regex;
+    const { frameworkNotInstalled, getElementCache, setElementCache } = squared.lib.session;
     const {
         capitalize,
         convertCamelCase,
@@ -310,8 +318,6 @@
         resolvePath,
         trimBoth,
     } = squared.lib.util;
-    const { FILE, STRING: STRING$1 } = squared.lib.regex;
-    const { frameworkNotInstalled, getElementCache, setElementCache } = squared.lib.session;
     const { image: ASSET_IMAGE, rawData: ASSET_RAWDATA } = Resource.ASSETS;
     const REGEXP_DATAURI$1 = new RegExp(`url\\("?(${STRING$1.DATAURI})"?\\),?\\s*`, 'g');
     function addImageSrc(uri, width = 0, height = 0) {
@@ -337,12 +343,10 @@
                 match;
             while ((match = REGEXP_DATAURI$1.exec(value))) {
                 if (match[2]) {
-                    const mimeType = match[2].trim().split(/\s*;\s*/);
+                    const [mimeType, encoding] = match[2].trim().split(/\s*;\s*/);
                     resourceHandler === null || resourceHandler === void 0
                         ? void 0
-                        : resourceHandler.addRawData(match[1], mimeType[0], match[3], {
-                              encoding: mimeType[1] || 'utf8',
-                          });
+                        : resourceHandler.addRawData(match[1], mimeType, match[3], { encoding });
                 } else {
                     const uri = resolvePath(match[3], styleSheetHref);
                     if (uri !== '') {
@@ -383,7 +387,6 @@
                 cache: new NodeList(),
                 excluded: new NodeList(),
                 unusedStyles: new Set(),
-                sessionId: '',
             };
             this._cascadeAll = false;
             const cache = this.processing.cache;
@@ -397,11 +400,11 @@
             this.Node = nodeConstructor;
         }
         afterCreateCache(node) {}
-        insertNode(element) {
-            return this.createNode({ element });
+        insertNode(element, sessionId) {
+            return this.createNode(sessionId, { element });
         }
-        createNode(options) {
-            return new this.Node(this.nextId, this.processing.sessionId, options.element);
+        createNode(sessionId, options) {
+            return new this.Node(this.nextId, sessionId, options.element);
         }
         copyToDisk(directory, options) {
             var _a, _b;
@@ -458,7 +461,6 @@
             const processing = this.processing;
             processing.cache.reset();
             processing.excluded.clear();
-            processing.sessionId = '';
             processing.unusedStyles.clear();
             this.session.active.length = 0;
             this.controllerHandler.reset();
@@ -471,11 +473,9 @@
             this.initializing = false;
             this.rootElements.clear();
             const sessionId = controller.generateSessionId;
-            this.processing.sessionId = sessionId;
             this.session.active.push(sessionId);
-            controller.sessionId = sessionId;
             controller.init();
-            this.setStyleMap();
+            this.setStyleMap(sessionId);
             const preloadImages = !!resource && resource.userSettings.preloadImages;
             const preloaded = [];
             const imageElements = [];
@@ -538,7 +538,7 @@
                 this.extensions.forEach(ext => ext.beforeParseDocument());
                 const success = [];
                 for (const element of this.rootElements) {
-                    const node = this.createCache(element);
+                    const node = this.createCache(element, sessionId);
                     if (node) {
                         this.afterCreateCache(node);
                         success.push(node);
@@ -657,14 +657,14 @@
                 return promisify(resumeThread)();
             }
         }
-        createCache(documentRoot) {
-            const node = this.createRootNode(documentRoot);
+        createCache(documentRoot, sessionId) {
+            const node = this.createRootNode(documentRoot, sessionId);
             if (node) {
                 this.controllerHandler.sortInitialCache();
             }
             return node;
         }
-        setStyleMap() {
+        setStyleMap(sessionId) {
             const styleSheets = document.styleSheets;
             const length = styleSheets.length;
             let i = 0;
@@ -675,7 +675,7 @@
                     mediaText = styleSheet.media.mediaText;
                 } catch (_a) {}
                 if (!isString(mediaText) || checkMediaRule(mediaText)) {
-                    this.applyStyleSheet(styleSheet);
+                    this.applyStyleSheet(styleSheet, sessionId);
                 }
             }
         }
@@ -688,7 +688,7 @@
         toString() {
             return this.systemName;
         }
-        createRootNode(element) {
+        createRootNode(element, sessionId) {
             const processing = this.processing;
             const cache = processing.cache;
             cache.clear();
@@ -697,14 +697,10 @@
             this._cascadeAll = false;
             const extensions = this.extensionsCascade;
             const node = extensions.length
-                ? this.cascadeParentNode(element, 0, extensions)
-                : this.cascadeParentNode(element, 0);
+                ? this.cascadeParentNode(element, sessionId, 0, extensions)
+                : this.cascadeParentNode(element, sessionId, 0);
             if (node) {
-                const parent = new this.Node(
-                    0,
-                    processing.sessionId,
-                    element.parentElement || document.documentElement
-                );
+                const parent = new this.Node(0, sessionId, element.parentElement || document.documentElement);
                 this._afterInsertNode(parent);
                 node.parent = parent;
                 node.actualParent = parent;
@@ -718,8 +714,8 @@
             cache.afterAdd = undefined;
             return node;
         }
-        cascadeParentNode(parentElement, depth, extensions) {
-            const node = this.insertNode(parentElement);
+        cascadeParentNode(parentElement, sessionId, depth, extensions) {
+            const node = this.insertNode(parentElement, sessionId);
             if (node) {
                 const { controllerHandler: controller, processing } = this;
                 const cache = processing.cache;
@@ -743,20 +739,20 @@
                     let child;
                     if (element.nodeName.charAt(0) === '#') {
                         if (element.nodeName === '#text') {
-                            child = this.insertNode(element);
+                            child = this.insertNode(element, sessionId);
                             if (child) {
                                 child.cssApply(node.textStyle);
                             }
                         }
                     } else if (controller.includeElement(element)) {
-                        child = this.cascadeParentNode(element, depth + 1, extensions);
+                        child = this.cascadeParentNode(element, sessionId, depth + 1, extensions);
                         if (child) {
                             elements[k++] = child;
                             cache.add(child);
                             inlineText = false;
                         }
                     } else {
-                        child = this.insertNode(element);
+                        child = this.insertNode(element, sessionId);
                         if (child) {
                             processing.excluded.add(child);
                             inlineText = false;
@@ -799,16 +795,15 @@
             }
             return result;
         }
-        applyStyleRule(item) {
+        applyStyleRule(item, sessionId) {
             var _a, _b, _c, _d, _e, _f, _g, _h;
             const resourceHandler = this.resourceHandler;
-            const sessionId = this.processing.sessionId;
             const styleSheetHref =
                 ((_a = item.parentStyleSheet) === null || _a === void 0 ? void 0 : _a.href) || location.href;
             const cssText = item.cssText;
             switch (item.type) {
                 case CSSRule.SUPPORTS_RULE:
-                    this.applyCSSRuleList(item.cssRules);
+                    this.applyCSSRuleList(item.cssRules, sessionId);
                     break;
                 case CSSRule.STYLE_RULE: {
                     const baseMap = {};
@@ -947,7 +942,7 @@
                 }
             }
         }
-        applyStyleSheet(item) {
+        applyStyleSheet(item, sessionId) {
             var _a, _b;
             try {
                 const cssRules = item.cssRules;
@@ -959,7 +954,7 @@
                         switch (rule.type) {
                             case CSSRule.STYLE_RULE:
                             case CSSRule.FONT_FACE_RULE:
-                                this.applyStyleRule(rule);
+                                this.applyStyleRule(rule, sessionId);
                                 break;
                             case CSSRule.IMPORT_RULE: {
                                 const uri = resolvePath(
@@ -972,12 +967,12 @@
                                         ? void 0
                                         : _b.addRawData(uri, 'text/css', undefined, { encoding: 'utf8' });
                                 }
-                                this.applyStyleSheet(rule.styleSheet);
+                                this.applyStyleSheet(rule.styleSheet, sessionId);
                                 break;
                             }
                             case CSSRule.MEDIA_RULE:
                                 if (checkMediaRule(rule.conditionText || parseConditionText('media', rule.cssText))) {
-                                    this.applyCSSRuleList(rule.cssRules);
+                                    this.applyCSSRuleList(rule.cssRules, sessionId);
                                 }
                                 break;
                             case CSSRule.SUPPORTS_RULE:
@@ -985,7 +980,7 @@
                                     CSS.supports &&
                                     CSS.supports(rule.conditionText || parseConditionText('supports', rule.cssText))
                                 ) {
-                                    this.applyCSSRuleList(rule.cssRules);
+                                    this.applyCSSRuleList(rule.cssRules, sessionId);
                                 }
                                 break;
                         }
@@ -997,11 +992,11 @@
                     : console.log)('CSS cannot be parsed inside <link> tags when loading files directly from your hard drive or from external websites. ' + 'Either use a local web server, embed your CSS into a <style> tag, or you can also try using a different browser. ' + 'See the README for more detailed instructions.\n\n' + item.href + '\n\n' + error);
             }
         }
-        applyCSSRuleList(rules) {
+        applyCSSRuleList(rules, sessionId) {
             const length = rules.length;
             let i = 0;
             while (i < length) {
-                this.applyStyleRule(rules[i++]);
+                this.applyStyleRule(rules[i++], sessionId);
             }
         }
         get controllerHandler() {
@@ -1026,9 +1021,19 @@
     Application.KEY_NAME = 'squared.application';
 
     class Controller {
+        constructor() {
+            this.localSettings = {
+                mimeType: {
+                    font: '*',
+                    image: '*',
+                    audio: '*',
+                    video: '*',
+                },
+            };
+        }
         init() {}
         sortInitialCache() {}
-        applyDefaultStyles(element) {}
+        applyDefaultStyles(element, sessionId) {}
         reset() {}
         includeElement(element) {
             return true;
@@ -1120,7 +1125,7 @@
             );
         }
         addAsset(asset) {
-            if (asset.content || asset.data || asset.base64 || asset.uri) {
+            if (asset.content || asset.bytes || asset.base64 || asset.uri) {
                 const { pathname, filename } = asset;
                 const append = this.assets.find(item => item.pathname === pathname && item.filename === filename);
                 if (append) {
@@ -6293,6 +6298,11 @@
     const { getNamedItem: getNamedItem$1, removeElementsByClassName } = squared.lib.dom;
     const { maxArray } = squared.lib.math;
     const {
+        getElementCache: getElementCache$2,
+        getPseudoElt: getPseudoElt$1,
+        setElementCache: setElementCache$2,
+    } = squared.lib.session;
+    const {
         appendSeparator,
         capitalize: capitalize$2,
         convertWord: convertWord$1,
@@ -6307,11 +6317,6 @@
         trimBoth: trimBoth$1,
         trimString,
     } = squared.lib.util;
-    const {
-        getElementCache: getElementCache$2,
-        getPseudoElt: getPseudoElt$1,
-        setElementCache: setElementCache$2,
-    } = squared.lib.session;
     const { isPlainText } = squared.lib.xml;
     const TEXT_STYLE = NodeUI.TEXT_STYLE.concat(['fontSize']);
     function prioritizeExtensions(value, extensions) {
@@ -6630,9 +6635,9 @@
             session.extensionMap.clear();
             this._layouts.length = 0;
         }
-        conditionElement(element, pseudoElt) {
+        conditionElement(element, sessionId, pseudoElt) {
             if (!this._excluded.has(element.tagName)) {
-                if (this.controllerHandler.visibleElement(element, pseudoElt) || this._cascadeAll) {
+                if (this.controllerHandler.visibleElement(element, sessionId, pseudoElt) || this._cascadeAll) {
                     return true;
                 } else if (!pseudoElt) {
                     if (hasCoords(getStyle$2(element).position)) {
@@ -6646,7 +6651,10 @@
                         current = current.parentElement;
                     }
                     const controllerHandler = this.controllerHandler;
-                    if (iterateArray$2(element.children, item => controllerHandler.visibleElement(item)) === Infinity) {
+                    if (
+                        iterateArray$2(element.children, item => controllerHandler.visibleElement(item, sessionId)) ===
+                        Infinity
+                    ) {
                         return true;
                     }
                     return this.useElement(element);
@@ -6654,13 +6662,12 @@
             }
             return false;
         }
-        insertNode(element, pseudoElt) {
-            if (element.nodeName === '#text' || this.conditionElement(element, pseudoElt)) {
-                this.controllerHandler.applyDefaultStyles(element);
-                const node = this.createNode({ element, append: false });
-                return node;
+        insertNode(element, sessionId, pseudoElt) {
+            if (element.nodeName === '#text' || this.conditionElement(element, sessionId, pseudoElt)) {
+                this.controllerHandler.applyDefaultStyles(element, sessionId);
+                return this.createNode(sessionId, { element, append: false });
             } else {
-                const node = this.createNode({ element, append: false });
+                const node = this.createNode(sessionId, { element, append: false });
                 node.visible = false;
                 node.excluded = true;
                 return node;
@@ -6729,9 +6736,9 @@
             }
             return false;
         }
-        createNode(options) {
+        createNode(sessionId, options) {
             const { element, parent, children } = options;
-            const node = new this.Node(this.nextId, this.processing.sessionId, element);
+            const node = new this.Node(this.nextId, sessionId, element);
             this.controllerHandler.afterInsertNode(node);
             if (parent) {
                 node.depth = parent.depth + 1;
@@ -6756,8 +6763,8 @@
             }
             return node;
         }
-        createCache(documentRoot) {
-            const node = this.createRootNode(documentRoot);
+        createCache(documentRoot, sessionId) {
+            const node = this.createRootNode(documentRoot, sessionId);
             if (node) {
                 const cache = this._cache;
                 {
@@ -6919,9 +6926,9 @@
             var _a;
             return ((_a = this.layouts[0]) === null || _a === void 0 ? void 0 : _a.content) || '';
         }
-        cascadeParentNode(parentElement, depth, extensions) {
+        cascadeParentNode(parentElement, sessionId, depth, extensions) {
             var _a;
-            const node = this.insertNode(parentElement);
+            const node = this.insertNode(parentElement, sessionId);
             if (node.display !== 'none' || depth === 0 || hasOuterParentExtension(node)) {
                 if (depth === 0) {
                     node.depth = depth;
@@ -6941,7 +6948,6 @@
                 if ((node.excluded && !hasOuterParentExtension(node)) || controllerHandler.preventNodeCascade(node)) {
                     return node;
                 }
-                const sessionId = this.processing.sessionId;
                 const beforeElement = this.createPseduoElement(parentElement, '::before', sessionId);
                 const afterElement = this.createPseduoElement(parentElement, '::after', sessionId);
                 const childNodes = parentElement.childNodes;
@@ -6957,14 +6963,14 @@
                     const element = childNodes[i++];
                     let child;
                     if (element === beforeElement) {
-                        child = this.insertNode(beforeElement, '::before');
+                        child = this.insertNode(beforeElement, sessionId, '::before');
                         node.innerBefore = child;
                         if (!child.textEmpty) {
                             child.inlineText = true;
                         }
                         inlineText = false;
                     } else if (element === afterElement) {
-                        child = this.insertNode(afterElement, '::after');
+                        child = this.insertNode(afterElement, sessionId, '::after');
                         node.innerAfter = child;
                         if (!child.textEmpty) {
                             child.inlineText = true;
@@ -6977,7 +6983,7 @@
                                 (node.preserveWhiteSpace &&
                                     (parentElement.tagName !== 'PRE' || parentElement.childElementCount === 0)))
                         ) {
-                            child = this.insertNode(element);
+                            child = this.insertNode(element, sessionId);
                             child.cssApply(node.textStyle);
                         } else {
                             continue;
@@ -6990,12 +6996,12 @@
                             }
                         }
                         if (!this.rootElements.has(element)) {
-                            child = this.cascadeParentNode(element, childDepth, extensions);
+                            child = this.cascadeParentNode(element, sessionId, childDepth, extensions);
                             if ((child === null || child === void 0 ? void 0 : child.excluded) === false) {
                                 inlineText = false;
                             }
                         } else {
-                            child = this.insertNode(element);
+                            child = this.insertNode(element, sessionId);
                             child.documentRoot = true;
                             child.visible = false;
                             child.excluded = true;
@@ -8354,17 +8360,17 @@
     } = squared.lib.css;
     const { withinViewport } = squared.lib.dom;
     const {
+        actualClientRect: actualClientRect$1,
+        getElementCache: getElementCache$3,
+        setElementCache: setElementCache$3,
+    } = squared.lib.session;
+    const {
         capitalize: capitalize$3,
         convertFloat: convertFloat$1,
         flatArray: flatArray$1,
         iterateArray: iterateArray$3,
         safeNestedArray: safeNestedArray$1,
     } = squared.lib.util;
-    const {
-        actualClientRect: actualClientRect$1,
-        getElementCache: getElementCache$3,
-        setElementCache: setElementCache$3,
-    } = squared.lib.session;
     const { pushIndent, pushIndentArray } = squared.lib.xml;
     const BORDER_TOP$1 = CSS_PROPERTIES$3.borderTop.value;
     const BORDER_RIGHT$1 = CSS_PROPERTIES$3.borderRight.value;
@@ -8443,8 +8449,7 @@
             this._afterInside = {};
             this._afterOutside = {};
         }
-        applyDefaultStyles(element) {
-            const sessionId = this.sessionId;
+        applyDefaultStyles(element, sessionId) {
             let styleMap;
             if (element.nodeName === '#text') {
                 styleMap = {
@@ -8630,7 +8635,7 @@
                       id in this._afterInside ||
                       id in this._afterOutside;
         }
-        visibleElement(element, pseudoElt) {
+        visibleElement(element, sessionId, pseudoElt) {
             let style, width, height;
             if (pseudoElt) {
                 const parentElement = element.parentElement;
@@ -8640,7 +8645,7 @@
             } else {
                 style = getStyle$3(element);
                 if (style.getPropertyValue('display') !== 'none') {
-                    const rect = actualClientRect$1(element, this.sessionId);
+                    const rect = actualClientRect$1(element, sessionId);
                     if (!withinViewport(rect)) {
                         return false;
                     }
@@ -8657,7 +8662,7 @@
             } else if (
                 !pseudoElt &&
                 ((element.tagName === 'IMG' && style.getPropertyValue('display') !== 'none') ||
-                    iterateArray$3(element.children, item => this.visibleElement(item)) === Infinity)
+                    iterateArray$3(element.children, item => this.visibleElement(item, sessionId)) === Infinity)
             ) {
                 return true;
             }
@@ -10179,9 +10184,11 @@
                         height,
                     };
                     if (encoding === 'base64') {
-                        asset.base64 = data;
+                        asset.base64 = data.startsWith('data:image/') ? data.substring(data.indexOf(',') + 1) : data;
+                    } else if (Array.isArray(data)) {
+                        asset.bytes = data;
                     } else {
-                        asset.data = data;
+                        return undefined;
                     }
                     fileHandler.addAsset(asset);
                     return asset;
