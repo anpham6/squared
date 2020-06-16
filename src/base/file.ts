@@ -64,7 +64,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
     }
 
     public addAsset(asset: Partial<RawAsset>) {
-        if (asset.content || asset.data || asset.base64 || asset.uri) {
+        if (asset.content || asset.bytes || asset.base64 || asset.uri) {
             const { pathname, filename } = asset;
             const append = this.assets.find(item => item.pathname === pathname && item.filename === filename);
             if (append) {

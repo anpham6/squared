@@ -661,8 +661,11 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 if (encoding === 'base64') {
                     asset.base64 = data;
                 }
+                else if (Array.isArray(data)) {
+                    asset.bytes = data;
+                }
                 else {
-                    asset.data = data;
+                    return undefined;
                 }
                 fileHandler.addAsset(asset);
                 return asset;

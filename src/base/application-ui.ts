@@ -15,8 +15,8 @@ type LayoutMap = Map<number, Set<NodeUI>>;
 const { convertListStyle, formatPX, getStyle, hasComputedStyle, hasCoords, insertStyleSheetRule, resolveURL } = squared.lib.css;
 const { getNamedItem, removeElementsByClassName } = squared.lib.dom;
 const { maxArray } = squared.lib.math;
-const { appendSeparator, capitalize, convertWord, flatArray, hasBit, hasMimeType, isString, iterateArray, partitionArray, safeNestedArray, safeNestedMap, trimBoth, trimString } = squared.lib.util;
 const { getElementCache, getPseudoElt, setElementCache } = squared.lib.session;
+const { appendSeparator, capitalize, convertWord, flatArray, hasBit, hasMimeType, isString, iterateArray, partitionArray, safeNestedArray, safeNestedMap, trimBoth, trimString } = squared.lib.util;
 const { isPlainText } = squared.lib.xml;
 
 const TEXT_STYLE = NodeUI.TEXT_STYLE.concat(['fontSize']);

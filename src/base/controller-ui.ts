@@ -6,8 +6,8 @@ import { NODE_TEMPLATE } from './lib/enumeration';
 const { USER_AGENT, isUserAgent } = squared.lib.client;
 const { CSS_PROPERTIES, formatPX, getStyle, hasCoords, isLength, isPercent } = squared.lib.css;
 const { withinViewport } = squared.lib.dom;
-const { capitalize, convertFloat, flatArray, iterateArray, safeNestedArray } = squared.lib.util;
 const { actualClientRect, getElementCache, setElementCache } = squared.lib.session;
+const { capitalize, convertFloat, flatArray, iterateArray, safeNestedArray } = squared.lib.util;
 const { pushIndent, pushIndentArray } = squared.lib.xml;
 
 const BORDER_TOP = CSS_PROPERTIES.borderTop.value as string[];

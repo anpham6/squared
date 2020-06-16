@@ -10,9 +10,9 @@ type FileActionOptions = squared.base.FileActionOptions;
 type PreloadImage = HTMLImageElement | string;
 
 const { CSS_PROPERTIES, checkMediaRule, getSpecificity, getStyle, hasComputedStyle, insertStyleSheetRule, parseSelectorText } = squared.lib.css;
-const { capitalize, convertCamelCase, isString, parseMimeType, plainMap, promisify, resolvePath, trimBoth } = squared.lib.util;
 const { FILE, STRING } = squared.lib.regex;
 const { frameworkNotInstalled, getElementCache, setElementCache } = squared.lib.session;
+const { capitalize, convertCamelCase, isString, parseMimeType, plainMap, promisify, resolvePath, trimBoth } = squared.lib.util;
 
 const { image: ASSET_IMAGE, rawData: ASSET_RAWDATA } = Resource.ASSETS;
 

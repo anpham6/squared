@@ -2,8 +2,8 @@ import { WIDGET_NAME } from '../lib/constant';
 
 type View = android.base.View;
 
-const { assignEmptyValue, capitalize, cloneObject, safeNestedMap, includes, iterateArray } = squared.lib.util;
 const { getElementAsNode } = squared.lib.session;
+const { assignEmptyValue, capitalize, cloneObject, safeNestedMap, includes, iterateArray } = squared.lib.util;
 const { createStyleAttribute, createViewAttribute } = android.lib.util;
 
 const { NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;

@@ -1311,7 +1311,7 @@ class FileManager implements serve.IFileManager {
                         }
                         continue;
                     }
-                    else if (item === file || item.content || item.data || !item.uri) {
+                    else if (item === file || item.content || item.bytes || !item.uri) {
                         continue;
                     }
                     const value = Express.getFullUri(item);
@@ -1708,7 +1708,7 @@ class FileManager implements serve.IFileManager {
                         result = result.replace(match[0], `url(${location})`);
                     }
                     else {
-                        location = Express.resolvePath(match[1], this.requestMain.uri!);
+                        location = Express.resolvePath(url, this.requestMain.uri!);
                         if (location) {
                             const asset = assets.find(item => item.uri === location && !item.excluded);
                             if (asset) {
@@ -1989,11 +1989,11 @@ class FileManager implements serve.IFileManager {
                     }
                 );
             }
-            else if (file.data) {
-                if (file.width && file.height && file.mimeType?.includes('image/')) {
+            else if (file.bytes) {
+                const { width, height } = file;
+                if (width && height) {
                     ++this.delayed;
-                    file.data = Uint8Array.from(file.data);
-                    new jimp(file, (err: any, img: jimp) => {
+                    new jimp({ width, height, data: Uint8Array.from(file.bytes) }, (err: any, img: jimp) => {
                         if (!err) {
                             img.write(filepath, error => {
                                 if (error) {

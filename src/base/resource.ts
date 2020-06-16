@@ -1,5 +1,5 @@
-const { STRING } = squared.lib.regex;
 const { extractURL } = squared.lib.css;
+const { STRING } = squared.lib.regex;
 const { fromLastIndexOf, fromMimeType, hasMimeType, randomUUID } = squared.lib.util;
 
 const REGEXP_DATAURI = new RegExp(`^${STRING.DATAURI}$`);
@@ -73,7 +73,11 @@ export default abstract class Resource<T extends squared.base.Node> implements s
     }
 
     public addRawData(uri: string, mimeType: string, content: Undef<string>, options?: RawDataOptions) {
-        let filename: Undef<string>, encoding: Undef<string>, data: Undef<any>, width: Undef<number>, height: Undef<number>;
+        let filename: Undef<string>,
+            encoding: Undef<string>,
+            data: Undef<any>,
+            width: Undef<number>,
+            height: Undef<number>;
         if (options) {
             ({ filename, encoding, data, width, height } = options);
             if (encoding) {
@@ -82,8 +86,8 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         }
         let base64: Undef<string>;
         mimeType = mimeType.toLowerCase();
-        if (content) {
-            if (encoding === 'base64') {
+        if (encoding === 'base64') {
+            if (content) {
                 if (mimeType === 'image/svg+xml') {
                     content = window.atob(content);
                 }
@@ -91,12 +95,20 @@ export default abstract class Resource<T extends squared.base.Node> implements s
                     base64 = content;
                 }
             }
+            else if (data) {
+                base64 = data;
+            }
             else {
-                content = content.replace(/\\(["'])/g, (match, ...capture) => capture[0]);
+                return '';
             }
         }
-        else if (!data) {
-            return '';
+        else {
+            if (content) {
+                content = content.replace(/\\(["'])/g, (match, ...capture) => capture[0]);
+            }
+            else if (!Array.isArray(data)) {
+                return '';
+            }
         }
         const imageMimeType = this.mimeTypeMap.image;
         if (imageMimeType === '*' || imageMimeType.includes(mimeType)) {
@@ -110,7 +122,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
                 content,
                 base64,
                 mimeType,
-                data,
+                bytes: data,
                 width,
                 height
             });
