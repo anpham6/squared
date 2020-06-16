@@ -94,7 +94,7 @@ declare module "base" {
         readonly rootElements: Set<HTMLElement>;
         readonly Node: Constructor<T>;
         reset(): void;
-        parseDocument(...elements: (string | HTMLElement)[]): Promise<T[]>;
+        parseDocument(...elements: (string | HTMLElement)[]): Promise<T | T[]>;
         createCache(documentRoot: HTMLElement): Undef<T>;
         setStyleMap(cacheAssets: boolean): void;
         createNode(options: {}): T;
@@ -675,6 +675,10 @@ declare module "base" {
         constructor(id: number, sessionId?: string, element?: Element);
     }
 
+    class NodeElement extends squared.base.Node {
+        constructor(id: number, sessionId: string, element: Element);
+    }
+
     class NodeGroupUI extends NodeUI {}
 
     class NodeList<T extends Node> extends squared.lib.base.Container<T> {
@@ -714,6 +718,7 @@ declare module "base" {
         namespace enumeration {
             const enum APP_FRAMEWORK {
                 UNIVERSAL = 0,
+                VDOM = 1,
                 ANDROID = 2,
                 CHROME = 4
             }

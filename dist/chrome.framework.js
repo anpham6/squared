@@ -1,4 +1,4 @@
-/* chrome-framework 1.10.1
+/* chrome-framework 1.11.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -29,10 +29,6 @@
             this.queryState = 0;
             this.systemName = 'chrome';
         }
-        finalize() {}
-        createNode(options) {
-            return new this.Node(this.nextId, this.processing.sessionId, options.element);
-        }
         insertNode(element) {
             if (element.nodeName === '#text') {
                 if (this.userSettings.excludePlainText) {
@@ -40,7 +36,7 @@
                 }
                 this.controllerHandler.applyDefaultStyles(element);
             }
-            return this.createNode({ element });
+            return super.createNode({ element });
         }
         afterCreateCache(node) {
             switch (this.queryState) {
@@ -78,10 +74,6 @@
             };
             this._elementMap = new Map();
         }
-        sortInitialCache() {}
-        init() {
-            this.application.processing.unusedStyles.clear();
-        }
         reset() {
             this._elementMap.clear();
         }
@@ -95,9 +87,6 @@
                     clear: 'none',
                 });
             }
-        }
-        includeElement() {
-            return true;
         }
         cacheElement(node) {
             this._elementMap.set(node.element, node);
@@ -258,8 +247,8 @@
     const getFileExt = value => (value.includes('.') ? fromLastIndexOf(value, '.').toLowerCase() : '');
     const getDirectory = (path, start) => path.substring(start, path.lastIndexOf('/'));
     class File extends squared.base.File {
-        static parseUri(uri, options = {}) {
-            let saveAs, format, preserve;
+        static parseUri(uri, options) {
+            let saveAs, format, saveTo, preserve;
             if (options) {
                 ({ saveAs, format, preserve } = options);
             }
@@ -278,7 +267,11 @@
                     value = resolvePath(relocate, location.href);
                 }
             }
-            if (options.preserveCrossOrigin && !local && !relocate) {
+            if (
+                !local &&
+                !relocate &&
+                (options === null || options === void 0 ? void 0 : options.preserveCrossOrigin)
+            ) {
                 return undefined;
             }
             const match = FILE.PROTOCOL.exec(value);
@@ -293,7 +286,7 @@
                     rootDir,
                     moveTo;
                 if (!local) {
-                    if (options.saveTo && relocate) {
+                    if (saveTo && relocate) {
                         [moveTo, pathname, filename] = getFilePath(
                             relocate + '/' + randomUUID() + (extension ? '.' + extension : '')
                         );
@@ -318,7 +311,7 @@
                 }
                 if (filename === '') {
                     if (local && relocate) {
-                        [moveTo, pathname, filename] = getFilePath(relocate, options.saveTo);
+                        [moveTo, pathname, filename] = getFilePath(relocate, saveTo);
                     } else if (path && path !== '/') {
                         filename = fromLastIndexOf(path, '/', '\\');
                         if (local) {
@@ -356,7 +349,7 @@
         copyToDisk(directory, options) {
             return this.copying(
                 Object.assign(Object.assign({}, options), {
-                    assets: this.getAssetsAll().concat(
+                    assets: this.combineAssets().concat(
                         (options === null || options === void 0 ? void 0 : options.assets) || []
                     ),
                     directory,
@@ -366,7 +359,7 @@
         appendToArchive(pathname, options) {
             return this.archiving(
                 Object.assign(Object.assign({ filename: this.userSettings.outputArchiveName }, options), {
-                    assets: this.getAssetsAll(options).concat(
+                    assets: this.combineAssets(options).concat(
                         (options === null || options === void 0 ? void 0 : options.assets) || []
                     ),
                     appendTo: pathname,
@@ -376,7 +369,7 @@
         saveToArchive(filename, options) {
             return this.archiving(
                 Object.assign(Object.assign({}, options), {
-                    assets: this.getAssetsAll(options).concat(
+                    assets: this.combineAssets(options).concat(
                         (options === null || options === void 0 ? void 0 : options.assets) || []
                     ),
                     filename,
@@ -385,7 +378,7 @@
         }
         getHtmlPage(options) {
             var _a;
-            let preserveCrossOrigin, saveAs, name;
+            let name, saveAs, preserveCrossOrigin;
             if (options) {
                 ({ name, preserveCrossOrigin } = options);
                 saveAs = (_a = options.saveAs) === null || _a === void 0 ? void 0 : _a.html;
@@ -423,7 +416,7 @@
         }
         getScriptAssets(options) {
             var _a;
-            let preserveCrossOrigin, saveAs;
+            let saveAs, preserveCrossOrigin;
             if (options) {
                 preserveCrossOrigin = options.preserveCrossOrigin;
                 saveAs = (_a = options.saveAs) === null || _a === void 0 ? void 0 : _a.script;
@@ -470,7 +463,7 @@
         }
         getLinkAssets(options) {
             var _a;
-            let preserveCrossOrigin, saveAs, rel;
+            let rel, saveAs, preserveCrossOrigin;
             if (options) {
                 ({ rel, preserveCrossOrigin } = options);
                 saveAs = (_a = options.saveAs) === null || _a === void 0 ? void 0 : _a.link;
@@ -555,7 +548,7 @@
         }
         getImageAssets(options) {
             var _a;
-            let preserveCrossOrigin, saveAs;
+            let saveAs, preserveCrossOrigin;
             if (options) {
                 preserveCrossOrigin = options.preserveCrossOrigin;
                 saveAs = (_a = options.saveAs) === null || _a === void 0 ? void 0 : _a.base64;
@@ -672,8 +665,9 @@
             const preserveCrossOrigin = options === null || options === void 0 ? void 0 : options.preserveCrossOrigin;
             const result = [];
             for (const fonts of Resource.ASSETS.fonts.values()) {
-                for (let i = 0; i < fonts.length; ++i) {
-                    const url = fonts[i].srcUrl;
+                let i = 0;
+                while (i < fonts.length) {
+                    const url = fonts[i++].srcUrl;
                     if (url) {
                         const data = File.parseUri(url, { preserveCrossOrigin });
                         if (this.validFile(data)) {
@@ -731,11 +725,12 @@
             });
             return result;
         }
-        getAssetsAll(options = {}) {
+        combineAssets(options) {
             const result = this.getHtmlPage(options).concat(this.getLinkAssets(options));
-            if (options.saveAsWebPage) {
-                for (let i = 0; i < result.length; ++i) {
-                    const item = result[i];
+            if (options === null || options === void 0 ? void 0 : options.saveAsWebPage) {
+                let i = 0;
+                while (i < result.length) {
+                    const item = result[i++];
                     const mimeType = item.mimeType;
                     switch (mimeType) {
                         case 'text/html':
@@ -768,14 +763,6 @@
         }
         get application() {
             return this.resource.application;
-        }
-    }
-
-    class View extends squared.base.Node {
-        constructor(id, sessionId, element) {
-            super(id, sessionId, element);
-            this._cached = {};
-            this.init();
         }
     }
 
@@ -1185,7 +1172,6 @@
             Controller,
             File,
             Resource,
-            View,
         },
         lib: {
             constant,
@@ -1238,10 +1224,7 @@
                 return [];
             },
             getElement(element, cache = false) {
-                if (application) {
-                    return findElement(element, cache);
-                }
-                return null;
+                return application ? findElement(element, cache) : null;
             },
             getElementMap() {
                 return (controller === null || controller === void 0 ? void 0 : controller.elementMap) || new Map();
@@ -1383,7 +1366,7 @@
         },
         create() {
             const EC = EXT_CHROME;
-            application = new Application(framework, View, Controller, Resource);
+            application = new Application(framework, squared.base.NodeElement, Controller, Resource);
             controller = application.controllerHandler;
             file = new File();
             application.resourceHandler.fileHandler = file;

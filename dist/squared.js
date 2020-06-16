@@ -1,4 +1,4 @@
-/* squared 1.10.1
+/* squared 1.11.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -2922,15 +2922,6 @@
                 : 0)
         );
     }
-    function isAbsolutePosition(value) {
-        switch (value) {
-            case 'absolute':
-            case 'fixed':
-                return true;
-            default:
-                return false;
-        }
-    }
     function newBoxRectPosition(orientation = ['left', 'top']) {
         return {
             static: true,
@@ -4812,7 +4803,7 @@
                 return value;
             }
             case 'clip':
-                return isAbsolutePosition(getStyle(element).position)
+                return hasCoords(getStyle(element).position)
                     ? calculateVarAsString(element, value, { supportPercent: false })
                     : '';
             case 'clipPath':
@@ -5414,7 +5405,7 @@
                                 boundingElement = element.parentElement;
                                 if (boundingElement instanceof HTMLElement) {
                                     let style;
-                                    if (isAbsolutePosition(getStyle(element).position)) {
+                                    if (hasCoords(getStyle(element).position)) {
                                         do {
                                             style = getStyle(boundingElement);
                                             if (boundingElement === document.body) {
@@ -6533,6 +6524,9 @@
     function hasCalc(value) {
         return REGEXP_CALCWITHIN.test(value);
     }
+    function hasCoords(value) {
+        return value === 'absolute' || value === 'fixed';
+    }
 
     var css = /*#__PURE__*/ Object.freeze({
         __proto__: null,
@@ -6578,6 +6572,7 @@
         isTime: isTime,
         isPercent: isPercent,
         hasCalc: hasCalc,
+        hasCoords: hasCoords,
     });
 
     const ELEMENT_BLOCK = [
@@ -7521,7 +7516,11 @@
     const checkWritable = app =>
         (app === null || app === void 0 ? void 0 : app.initializing) === false && app.length > 0;
     function setHostname(value) {
-        const fileHandler = main === null || main === void 0 ? void 0 : main.resourceHandler.fileHandler;
+        var _a;
+        const fileHandler =
+            (_a = main === null || main === void 0 ? void 0 : main.resourceHandler) === null || _a === void 0
+                ? void 0
+                : _a.fileHandler;
         if (fileHandler) {
             const match = FILE.PROTOCOL.exec(value);
             if (match && match[1].startsWith('http')) {

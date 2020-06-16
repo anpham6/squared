@@ -8,6 +8,6 @@
       "../@types/index.d.ts",
       "../@types/chrome/index.d.ts",
       "../src/**/*.ts",
-      "../chrome-framework/**/*.ts"
+      "../framework/chrome/**/*.ts"
     ]
   }

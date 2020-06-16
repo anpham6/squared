@@ -1,5 +1,6 @@
 export const enum APP_FRAMEWORK {
     UNIVERSAL = 0,
+    VDOM = 1,
     ANDROID = 2,
     CHROME = 4
 }

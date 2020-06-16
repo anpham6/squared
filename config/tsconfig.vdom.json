@@ -1,0 +1,13 @@
+{
+    "extends": "../tsconfig.json",
+    "compilerOptions": {
+      "inlineSourceMap": true
+    },
+    "include": [
+      "../@types/**/object.d.ts",
+      "../@types/index.d.ts",
+      "../@types/vdom/index.d.ts",
+      "../src/**/*.ts",
+      "../framework/vdom/**/*.ts"
+    ]
+  }

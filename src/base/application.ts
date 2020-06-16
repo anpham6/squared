@@ -110,10 +110,10 @@ export default abstract class Application<T extends Node> implements squared.bas
         this.Node = nodeConstructor;
     }
 
-    public abstract afterCreateCache(node: T): void;
-
     public abstract set viewModel(data: Undef<AppVieModel>);
     public abstract get viewModel(): Undef<AppVieModel>;
+
+    public afterCreateCache(node: T) {}
 
     public insertNode(element: Element) {
         return this.createNode({ element });
@@ -244,7 +244,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
             catch {
             }
-            return success;
+            return elements.length > 1 ? success : success[0];
         };
         if (preloadImages) {
             for (const image of ASSET_IMAGE.values()) {
@@ -385,7 +385,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     public toString() {
-        return '';
+        return this.systemName;
     }
 
     protected createRootNode(element: HTMLElement) {
@@ -617,14 +617,6 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
     }
 
-    protected applyCSSRuleList(rules: CSSRuleList) {
-        const length = rules.length;
-        let i = 0;
-        while (i < length) {
-            this.applyStyleRule(rules[i++] as CSSStyleRule);
-        }
-    }
-
     protected applyStyleSheet(item: CSSStyleSheet) {
         try {
             const cssRules = item.cssRules;
@@ -666,6 +658,14 @@ export default abstract class Application<T extends Node> implements squared.bas
                 'Either use a local web server, embed your CSS into a <style> tag, or you can also try using a different browser. ' +
                 'See the README for more detailed instructions.\n\n' +
                 item.href + '\n\n' + error);
+        }
+    }
+
+    protected applyCSSRuleList(rules: CSSRuleList) {
+        const length = rules.length;
+        let i = 0;
+        while (i < length) {
+            this.applyStyleRule(rules[i++] as CSSStyleRule);
         }
     }
 

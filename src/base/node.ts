@@ -802,13 +802,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     protected _linear?: BoxRectDimension;
     protected _fontSize?: number;
     protected _initial?: InitialData<T>;
+    protected _naturalChildren?: T[];
+    protected _naturalElements?: T[];
 
     protected readonly _element: Null<Element> = null;
 
     protected abstract _cached: CachedValue<T>;
-    protected abstract _naturalChildren?: T[];
-    protected abstract _naturalElements?: T[];
-
     private _data = {};
     private _inlineText = false;
     private _parent: Null<T> = null;
@@ -2061,8 +2060,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         let result = this._cached.positionStatic;
         if (result === undefined) {
             switch (this.css('position')) {
-                case 'fixed':
                 case 'absolute':
+                case 'fixed':
                     result = false;
                     break;
                 case 'relative':

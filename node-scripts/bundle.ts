@@ -23,6 +23,7 @@ let output: String;
                 switch (name) {
                     case 'android':
                     case 'chrome':
+                    case 'vdom':
                         files[1] = 'squared.base';
                         framework = `${name}.framework`;
                         break;

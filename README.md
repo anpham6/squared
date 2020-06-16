@@ -2,7 +2,7 @@
 
 ## Installation (global js variable: squared)
 
-Option #1 (easier):
+Option #1 (chrome / html+css):
 
 * Install Node.js: http://www.nodejs.org
 
@@ -22,7 +22,7 @@ NPM
 
 * http://localhost:3000
 
-Option #2 (more features):
+Option #2 (android / kotlin+java):
 
 * Install Ktor: https://ktor.io
 
@@ -32,6 +32,14 @@ Option #2 (more features):
 &nbsp;&nbsp;&nbsp;&gt; gradlew run
 
 * http://localhost:8080
+
+Option #3 (vdom / browser only):
+
+* Download (squared@version): https://unpkg.com
+
+&nbsp;&nbsp;&nbsp;&gt; https://unpkg.com/squared/dist/squared.min.js  
+&nbsp;&nbsp;&nbsp;&gt; https://unpkg.com/squared/dist/squared.base.min.js  
+&nbsp;&nbsp;&nbsp;&gt; https://unpkg.com/squared/dist/vdom.framework.min.js
 
 ```javascript
 <script src="/dist/squared.min.js"></script>
@@ -70,7 +78,7 @@ Library files are in the /dist folder. A minimum of *three* files are required t
 1. squared
 2. squared-base
 3. squared-svg - *optional*
-4. framework (e.g. android | chrome)
+4. framework (e.g. android | chrome | vdom)
 5. extensions (e.g. android.widget) - *optional*
 
 Usable combinations: 1-2-4 + 1-2-4-5 + 1-2-3-4-5 + 1-3

@@ -12,7 +12,7 @@ import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURC
 type FileActionOptions = squared.base.FileActionOptions;
 type LayoutMap = Map<number, Set<NodeUI>>;
 
-const { convertListStyle, formatPX, getStyle, insertStyleSheetRule, resolveURL } = squared.lib.css;
+const { convertListStyle, formatPX, getStyle, hasComputedStyle, hasCoords, insertStyleSheetRule, resolveURL } = squared.lib.css;
 const { getNamedItem, removeElementsByClassName } = squared.lib.dom;
 const { maxArray } = squared.lib.math;
 const { appendSeparator, capitalize, convertWord, flatArray, hasBit, hasMimeType, isString, iterateArray, partitionArray, safeNestedArray, safeNestedMap, trimBoth, trimString } = squared.lib.util;
@@ -161,7 +161,6 @@ function setMapDepth(map: LayoutMap, depth: number, node: NodeUI) {
         map.set(depth, new Set([node]));
     }
 }
-
 
 function getCounterValue(value: Undef<string>, counterName: string, fallback = 1) {
     if (value && value !== 'none') {
@@ -344,10 +343,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 return true;
             }
             else if (!pseudoElt) {
-                switch (getStyle(element).position) {
-                    case 'absolute':
-                    case 'fixed':
-                        return this.useElement(element);
+                if (hasCoords(getStyle(element).position)) {
+                    return this.useElement(element);
                 }
                 let current = element.parentElement;
                 while (current) {
@@ -1581,14 +1578,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             let value = styleMap.content;
             if (value) {
                 const textContent = trimBoth(value, '"');
-                let absolute = false;
-                switch (styleMap.position) {
-                    case 'absolute':
-                    case 'fixed':
-                        absolute = true;
-                        break;
-                }
                 if (!isString(textContent)) {
+                    const absolute = hasCoords(styleMap.position);
                     if (pseudoElt === '::after') {
                         if ((absolute || textContent === '' || !checkPseudoAfter(element)) && !checkPseudoDimension(styleMap, true, absolute)) {
                             return undefined;
@@ -1605,14 +1596,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     break;
                                 }
                             }
-                            else if (child instanceof HTMLElement) {
+                            else if (hasComputedStyle(child)) {
                                 const style = getStyle(child);
-                                switch (style.getPropertyValue('position')) {
-                                    case 'fixed':
-                                    case 'absolute':
-                                        continue;
+                                if (hasCoords(styleMap.position)) {
+                                    continue;
                                 }
-                                if (style.getPropertyValue('float') !== 'none') {
+                                else if (style.getPropertyValue('float') !== 'none') {
                                     return undefined;
                                 }
                                 break;

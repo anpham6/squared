@@ -141,6 +141,7 @@ declare module "lib" {
         function isTime(value: string): boolean;
         function isAngle(value: string): boolean;
         function hasCalc(value: string): boolean;
+        function hasCoords(value: string): boolean;
     }
 
     namespace dom {

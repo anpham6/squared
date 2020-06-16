@@ -1,4 +1,4 @@
-/* android-framework 1.10.1
+/* android-framework 1.11.0
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -147,6 +147,7 @@ var android = (function () {
         HR: CONTAINER_NODE.LINE,
         SVG: CONTAINER_NODE.SVG,
         IMG: CONTAINER_NODE.IMAGE,
+        CANVAS: CONTAINER_NODE.IMAGE,
         BUTTON: CONTAINER_NODE.BUTTON,
         SELECT: CONTAINER_NODE.SELECT,
         TEXTAREA: CONTAINER_NODE.EDIT,
@@ -582,16 +583,19 @@ var android = (function () {
                 }
             }
             if (mdpi) {
-                const resource = this.application.resourceHandler;
                 result.mdpi = mdpi;
-                const rawData = resource.getRawData(mdpi);
+                const rawData = this.application.resourceHandler.getRawData(mdpi);
                 if (rawData) {
                     if (rawData.base64) {
                         const filename = rawData.filename;
                         if (FILE.SVG.test(filename)) {
                             return '';
                         }
-                        resource.writeRawImage(prefix + filename, rawData.base64);
+                        this.application.resourceHandler.writeRawImage(rawData.mimeType, {
+                            filename: prefix + filename,
+                            data: rawData.base64,
+                            encoding: 'base64',
+                        });
                         return filename.substring(0, filename.lastIndexOf('.'));
                     }
                 }
@@ -601,9 +605,13 @@ var android = (function () {
         addImageSet(images, prefix) {
             return Resource.addImage(images, prefix, this._imageFormat);
         }
-        writeRawImage(filename, base64) {
-            const asset = super.writeRawImage(filename, base64);
-            if (asset && this.userSettings.compressImages && Resource.canCompressImage(filename)) {
+        writeRawImage(mimeType, options) {
+            const asset = super.writeRawImage(mimeType, options);
+            if (
+                asset &&
+                this.userSettings.compressImages &&
+                Resource.canCompressImage(options.filename || '', mimeType)
+            ) {
                 safeNestedArray(asset, 'compress').unshift({ format: 'png' });
             }
             return asset;
@@ -1972,8 +1980,9 @@ var android = (function () {
                                 let maxBottom = -Infinity;
                                 const children = node.naturalChildren;
                                 const length = children.length;
-                                for (let j = 0; j < length; ++j) {
-                                    const item = children[j];
+                                let j = 0;
+                                while (j < length) {
+                                    const item = children[j++];
                                     if (item.floating) {
                                         maxBottom = Math.max(item.bounds.bottom, maxBottom);
                                     }
@@ -3584,50 +3593,48 @@ var android = (function () {
                     for (const name of this._namespaces) {
                         if (all || objs.includes(name)) {
                             const obj = this['__' + name];
-                            if (obj) {
-                                let prefix = name + ':';
-                                switch (name) {
-                                    case 'android':
-                                        if (this.api < 29 /* LATEST */) {
-                                            for (let attr in obj) {
-                                                if (attr === 'id') {
-                                                    id = obj[attr];
-                                                } else {
-                                                    const data = {};
-                                                    let value = obj[attr];
-                                                    if (!this.supported(attr, data)) {
-                                                        continue;
-                                                    }
-                                                    if (hasKeys(data)) {
-                                                        if (isString$1(data.attr)) {
-                                                            attr = data.attr;
-                                                        }
-                                                        if (isString$1(data.value)) {
-                                                            value = data.value;
-                                                        }
-                                                    }
-                                                    result.push(prefix + `${attr}="${value}"`);
+                            let prefix = name + ':';
+                            switch (name) {
+                                case 'android':
+                                    if (this.api < 29 /* LATEST */) {
+                                        for (let attr in obj) {
+                                            if (attr === 'id') {
+                                                id = obj[attr];
+                                            } else {
+                                                const data = {};
+                                                let value = obj[attr];
+                                                if (!this.supported(attr, data)) {
+                                                    continue;
                                                 }
-                                            }
-                                        } else {
-                                            for (const attr in obj) {
-                                                if (attr === 'id') {
-                                                    id = obj[attr];
-                                                } else {
-                                                    result.push(prefix + `${attr}="${obj[attr]}"`);
+                                                if (hasKeys(data)) {
+                                                    if (isString$1(data.attr)) {
+                                                        attr = data.attr;
+                                                    }
+                                                    if (isString$1(data.value)) {
+                                                        value = data.value;
+                                                    }
                                                 }
+                                                result.push(prefix + `${attr}="${value}"`);
                                             }
                                         }
-                                        requireId = true;
-                                        break;
-                                    case '_':
-                                        prefix = '';
-                                    default:
+                                    } else {
                                         for (const attr in obj) {
-                                            result.push(prefix + `${attr}="${obj[attr]}"`);
+                                            if (attr === 'id') {
+                                                id = obj[attr];
+                                            } else {
+                                                result.push(prefix + `${attr}="${obj[attr]}"`);
+                                            }
                                         }
-                                        break;
-                                }
+                                    }
+                                    requireId = true;
+                                    break;
+                                case '_':
+                                    prefix = '';
+                                default:
+                                    for (const attr in obj) {
+                                        result.push(prefix + `${attr}="${obj[attr]}"`);
+                                    }
+                                    break;
                             }
                         }
                     }
@@ -3949,6 +3956,72 @@ var android = (function () {
                                 }
                             }
                         }
+                        if (
+                            this.onlyChild &&
+                            renderChildren.length &&
+                            this.controlName === renderParent.controlName &&
+                            !this.visibleStyle.borderWidth &&
+                            this.elementId === ''
+                        ) {
+                            let valid = true;
+                            for (const name of this._namespaces) {
+                                const parentObj = renderParent.unsafe('_' + name);
+                                if (parentObj) {
+                                    const obj = this['__' + name];
+                                    for (const attr in obj) {
+                                        if (attr !== 'id' && obj[attr] !== parentObj[attr]) {
+                                            valid = false;
+                                            break;
+                                        }
+                                    }
+                                } else {
+                                    valid = false;
+                                    break;
+                                }
+                            }
+                            if (valid) {
+                                const renderTemplates = this.renderTemplates;
+                                const length = renderTemplates.length;
+                                let i = 0;
+                                while (i < length) {
+                                    const template = renderTemplates[i++];
+                                    template.parent = renderParent;
+                                    template.node.renderParent = renderParent;
+                                }
+                                renderParent.renderTemplates = renderTemplates;
+                                renderParent.renderChildren = renderChildren;
+                                const boxReset = this._boxReset;
+                                const boxAdjustment = this._boxAdjustment;
+                                renderParent.modifyBox(
+                                    32 /* PADDING_TOP */,
+                                    (boxReset.marginTop === 0 ? this.marginTop : 0) +
+                                        (boxReset.paddingTop === 0 ? this.paddingTop : 0) +
+                                        boxAdjustment.marginTop +
+                                        boxAdjustment.paddingTop
+                                );
+                                renderParent.modifyBox(
+                                    64 /* PADDING_RIGHT */,
+                                    (boxReset.marginRight === 0 ? this.marginRight : 0) +
+                                        (boxReset.paddingRight === 0 ? this.paddingRight : 0) +
+                                        boxAdjustment.marginRight +
+                                        boxAdjustment.paddingRight
+                                );
+                                renderParent.modifyBox(
+                                    128 /* PADDING_BOTTOM */,
+                                    (boxReset.marginBottom === 0 ? this.marginBottom : 0) +
+                                        (boxReset.paddingBottom === 0 ? this.paddingBottom : 0) +
+                                        boxAdjustment.marginBottom +
+                                        boxAdjustment.paddingBottom
+                                );
+                                renderParent.modifyBox(
+                                    256 /* PADDING_LEFT */,
+                                    (boxReset.marginLeft === 0 ? this.marginLeft : 0) +
+                                        (boxReset.paddingLeft === 0 ? this.paddingLeft : 0) +
+                                        boxAdjustment.marginLeft +
+                                        boxAdjustment.paddingLeft
+                                );
+                            }
+                        }
                     }
                 }
                 applyCustomizations(overwrite = true) {
@@ -3991,6 +4064,14 @@ var android = (function () {
                             return true;
                         case 'INPUT':
                             return this.toElementString('type') === 'range';
+                    }
+                    return false;
+                }
+                get imageElement() {
+                    switch (this.tagName) {
+                        case 'IMG':
+                        case 'CANVAS':
+                            return true;
                     }
                     return false;
                 }
@@ -4269,10 +4350,6 @@ var android = (function () {
         get containerType() {
             return this._containerType;
         }
-        set renderExclude(value) {}
-        get renderExclude() {
-            return false;
-        }
     }
 
     const { PLATFORM, isPlatform } = squared.lib.client;
@@ -4291,6 +4368,7 @@ var android = (function () {
     const {
         assignEmptyValue,
         convertFloat: convertFloat$1,
+        convertWord: convertWord$1,
         hasBit,
         hasMimeType: hasMimeType$1,
         isString: isString$2,
@@ -4373,7 +4451,8 @@ var android = (function () {
         let imageHeight = 0,
             imageBaseline;
         const length = nodes.length;
-        let i = 0;
+        let i = 0,
+            j;
         while (i < length) {
             const node = nodes[i++];
             if (node.baselineAltered) {
@@ -4387,8 +4466,9 @@ var android = (function () {
                 } else {
                     const imageElements = node.renderChildren.filter(item => isBaselineImage(item));
                     if (node.imageOrSvgElement || imageElements.length) {
-                        for (let j = 0; j < imageElements.length; ++j) {
-                            height = Math.max(imageElements[j].baselineHeight, height);
+                        j = 0;
+                        while (j < imageElements.length) {
+                            height = Math.max(imageElements[j++].baselineHeight, height);
                         }
                         if (height > baselineHeight) {
                             if (!imageBaseline || height >= imageHeight) {
@@ -4706,10 +4786,10 @@ var android = (function () {
                         attr: 'renderParent',
                     });
                     if (container.length) {
-                        const box = node.box;
-                        const naturalChildren = parent.naturalChildren;
+                        const { left, right, width } = node.box;
                         let offsetLeft = 0,
                             offsetRight = 0;
+                        const naturalChildren = parent.naturalChildren;
                         const length = naturalChildren.length;
                         let i = 0;
                         while (i < length) {
@@ -4718,16 +4798,16 @@ var android = (function () {
                                 const linear = item.linear;
                                 if (!children.includes(item) && node.intersectY(linear)) {
                                     if (item.float === 'left') {
-                                        if (Math.floor(linear.right) > box.left) {
-                                            offsetLeft = Math.max(offsetLeft, linear.right - box.left);
+                                        if (Math.floor(linear.right) > left) {
+                                            offsetLeft = Math.max(offsetLeft, linear.right - left);
                                         }
-                                    } else if (box.right > Math.ceil(linear.left)) {
-                                        offsetRight = Math.max(offsetRight, box.right - linear.left);
+                                    } else if (right > Math.ceil(linear.left)) {
+                                        offsetRight = Math.max(offsetRight, right - linear.left);
                                     }
                                 }
                             }
                         }
-                        return box.width - offsetLeft - offsetRight;
+                        return width - (offsetLeft + offsetRight);
                     }
                 }
             }
@@ -5129,8 +5209,7 @@ var android = (function () {
         finalize(layouts) {
             const insertSpaces = this.userSettings.insertSpaces;
             for (const layout of layouts) {
-                const content = layout.content;
-                layout.content = replaceTab(content.replace('{#0}', getRootNs(content)), insertSpaces);
+                layout.content = replaceTab(layout.content.replace('{#0}', getRootNs(layout.content)), insertSpaces);
             }
         }
         processUnknownParent(layout) {
@@ -5742,12 +5821,13 @@ var android = (function () {
             return undefined;
         }
         renderNode(layout) {
-            var _a;
+            var _a, _b;
             let { parent, containerType } = layout;
             const node = layout.node;
             let controlName = View.getControlName(containerType, node.api);
             switch (node.tagName) {
-                case 'IMG': {
+                case 'IMG':
+                case 'CANVAS': {
                     const application = this.application;
                     const element = node.element;
                     const absoluteParent = node.absoluteParent || node.documentParent;
@@ -5768,8 +5848,11 @@ var android = (function () {
                             }
                         }
                     } else {
-                        let scaleType = 'fitXY';
+                        let scaleType;
                         switch (node.css('objectFit')) {
+                            case 'fill':
+                                scaleType = 'fitXY';
+                                break;
                             case 'contain':
                                 scaleType = 'centerInside';
                                 break;
@@ -5783,7 +5866,9 @@ var android = (function () {
                                 scaleType = 'center';
                                 break;
                         }
-                        node.android('scaleType', scaleType);
+                        if (scaleType) {
+                            node.android('scaleType', scaleType);
+                        }
                     }
                     if (node.baseline) {
                         node.android('baselineAlignBottom', 'true');
@@ -5792,8 +5877,26 @@ var android = (function () {
                         }
                     }
                     if (node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
-                        const src = application.resourceHandler.addImageSrc(element, '', imageSet);
-                        if (src !== '') {
+                        let src;
+                        if (node.tagName === 'CANVAS') {
+                            const imageData =
+                                (_a = element.getContext('2d')) === null || _a === void 0
+                                    ? void 0
+                                    : _a.getImageData(0, 0, element.clientWidth, element.clientHeight);
+                            if (imageData) {
+                                node.setControlType(controlName, containerType);
+                                src = 'canvas_' + convertWord$1(node.controlId, true);
+                                this.application.resourceHandler.writeRawImage('image/png', {
+                                    filename: src + '.png',
+                                    data: Array.from(imageData.data),
+                                    width: imageData.width,
+                                    height: imageData.height,
+                                });
+                            }
+                        } else {
+                            src = application.resourceHandler.addImageSrc(element, '', imageSet);
+                        }
+                        if (src) {
                             node.android('src', `@drawable/${src}`);
                         }
                     }
@@ -6143,7 +6246,7 @@ var android = (function () {
                             return false;
                         });
                     }
-                    if ((_a = node.element.list) === null || _a === void 0 ? void 0 : _a.children.length) {
+                    if ((_b = node.element.list) === null || _b === void 0 ? void 0 : _b.children.length) {
                         controlName = CONTAINER_ANDROID.EDIT_LIST;
                     } else if (node.api >= 26 /* OREO */) {
                         node.android('importantForAutofill', 'no');
@@ -7098,7 +7201,8 @@ var android = (function () {
             let valid = true,
                 bias = 0,
                 baselineCount = 0,
-                textBaseline = null,
+                textBaseline,
+                textBottom,
                 tallest,
                 bottom,
                 previous;
@@ -7151,7 +7255,6 @@ var android = (function () {
                 node.setLayoutWidth('match_parent');
             }
             const baseline = NodeUI.baseline(children);
-            const textBottom = getTextBottom(children)[0];
             const documentId = baseline === null || baseline === void 0 ? void 0 : baseline.documentId;
             let percentWidth = View.availablePercent(children, 'width', node.box.width);
             const length = children.length;
@@ -7193,7 +7296,7 @@ var android = (function () {
                             }
                             switch (item.css('verticalAlign')) {
                                 case 'text-top':
-                                    if (!textBaseline) {
+                                    if (textBaseline === undefined) {
                                         textBaseline = NodeUI.baseline(children, true);
                                     }
                                     if (textBaseline && item !== textBaseline) {
@@ -7203,6 +7306,9 @@ var android = (function () {
                                     }
                                     break;
                                 case 'middle':
+                                    if (textBottom === undefined) {
+                                        textBottom = getTextBottom(children)[0] || null;
+                                    }
                                     if (
                                         textBottom ||
                                         (baseline === null || baseline === void 0 ? void 0 : baseline.textElement) ===
@@ -7214,10 +7320,13 @@ var android = (function () {
                                     }
                                     break;
                                 case 'text-bottom':
-                                    if (!textBaseline) {
+                                    if (textBaseline === undefined) {
                                         textBaseline = NodeUI.baseline(children, true);
                                     }
                                     if (textBaseline && item !== textBaseline) {
+                                        if (textBottom === undefined) {
+                                            textBottom = getTextBottom(children)[0] || null;
+                                        }
                                         if (item !== textBottom) {
                                             item.anchor('bottom', textBaseline.documentId);
                                         } else if (textBottom) {
@@ -7321,9 +7430,6 @@ var android = (function () {
             const floating = node.hasAlign(512 /* FLOAT */);
             const parent = children[0].actualParent || node;
             const horizontal = NodeUI.partitionRows(children, clearMap);
-            if (!node.hasWidth && children.some(item => item.percentWidth > 0)) {
-                node.setLayoutWidth('match_parent', false);
-            }
             let previousSiblings = [],
                 previousRow,
                 previousAlignParent = false;
@@ -7430,15 +7536,16 @@ var android = (function () {
                             }
                             if (floating) {
                                 let checkBottom = false;
-                                for (let k = 0; k < previousSiblings.length; ++k) {
-                                    if (chain.bounds.top < Math.floor(previousSiblings[k].bounds.bottom)) {
+                                let k = 0;
+                                while (k < previousSiblings.length) {
+                                    if (chain.bounds.top < Math.floor(previousSiblings[k++].bounds.bottom)) {
                                         checkBottom = true;
                                         break;
                                     }
                                 }
                                 if (checkBottom) {
                                     aboveRowEnd = previousRow[previousRow.length - 1];
-                                    let k = previousSiblings.length - 2;
+                                    k = previousSiblings.length - 2;
                                     while (k >= 0) {
                                         const aboveBefore = previousSiblings[k--];
                                         if (aboveBefore.linear.bottom > aboveRowEnd.linear.bottom) {
@@ -7540,6 +7647,9 @@ var android = (function () {
                 }
             }
             node.horizontalRows = horizontal;
+            if (!node.hasWidth && children.some(item => item.percentWidth > 0)) {
+                node.setLayoutWidth('match_parent', false);
+            }
         }
         applyGuideline(node, parent, axis, options) {
             var _a, _b;
@@ -7585,8 +7695,9 @@ var android = (function () {
                     const siblings = node.siblingsLeading;
                     const length = siblings.length;
                     if (length && !node.alignedVertically()) {
-                        for (let i = length - 1; i >= 0; --i) {
-                            const previous = siblings[i];
+                        let i = length - 1;
+                        while (i >= 0) {
+                            const previous = siblings[i--];
                             if (previous.pageFlow) {
                                 if (previous.renderParent === node.renderParent) {
                                     node.anchor(horizontal ? 'leftRight' : 'top', previous.documentId, true);
@@ -8045,7 +8156,7 @@ var android = (function () {
         copyToDisk(directory, options) {
             return this.copying(
                 Object.assign(Object.assign({}, options), {
-                    assets: this.getAssetsAll(options === null || options === void 0 ? void 0 : options.assets),
+                    assets: this.combineAssets(options === null || options === void 0 ? void 0 : options.assets),
                     directory,
                 })
             );
@@ -8053,7 +8164,7 @@ var android = (function () {
         appendToArchive(pathname, options) {
             return this.archiving(
                 Object.assign(Object.assign({ filename: this.userSettings.outputArchiveName }, options), {
-                    assets: this.getAssetsAll(options === null || options === void 0 ? void 0 : options.assets),
+                    assets: this.combineAssets(options === null || options === void 0 ? void 0 : options.assets),
                     appendTo: pathname,
                 })
             );
@@ -8061,7 +8172,7 @@ var android = (function () {
         saveToArchive(filename, options) {
             return this.archiving(
                 Object.assign(Object.assign({}, options), {
-                    assets: this.getAssetsAll(options === null || options === void 0 ? void 0 : options.assets),
+                    assets: this.combineAssets(options === null || options === void 0 ? void 0 : options.assets),
                     filename,
                 })
             );
@@ -8467,7 +8578,7 @@ var android = (function () {
             }
             return result;
         }
-        getAssetsAll(assets) {
+        combineAssets(assets) {
             const userSettings = this.userSettings;
             let result = [];
             if (assets) {
@@ -8788,7 +8899,8 @@ var android = (function () {
                         }
                         const r = columns.length;
                         const above = new Array(r);
-                        for (let j = 0; j < r; ++j) {
+                        let j;
+                        for (j = 0; j < r; ++j) {
                             const data = columns[j];
                             for (let k = 0; k < data.length; ++k) {
                                 const item = data[k];
@@ -8804,7 +8916,7 @@ var android = (function () {
                             }
                             above[j] = data[0];
                         }
-                        for (let j = 0; j < r; ++j) {
+                        for (j = 0; j < r; ++j) {
                             const item = columns[j];
                             if (j < r - 1 && item.length > 1) {
                                 const columnEnd = item[item.length - 1];
@@ -8817,7 +8929,7 @@ var android = (function () {
                             }
                         }
                         const columnHeight = new Array(r);
-                        for (let j = 0; j < r; ++j) {
+                        for (j = 0; j < r; ++j) {
                             const seg = columns[j];
                             const elements = [];
                             let height = 0;
@@ -8863,7 +8975,7 @@ var android = (function () {
                         let anchorTop,
                             anchorBottom,
                             maxHeight = 0;
-                        for (let j = 0; j < r; ++j) {
+                        for (j = 0; j < r; ++j) {
                             const value = columnHeight[j];
                             if (value >= maxHeight) {
                                 const column = columns[j];
@@ -8872,7 +8984,7 @@ var android = (function () {
                                 maxHeight = value;
                             }
                         }
-                        for (let j = 0; j < r; ++j) {
+                        for (j = 0; j < r; ++j) {
                             const item = above[j];
                             if (j === 0) {
                                 item.anchor('left', 'parent');
@@ -8889,7 +9001,7 @@ var android = (function () {
                             }
                         }
                         const dividers = [];
-                        for (let j = 0; j < r; ++j) {
+                        for (j = 0; j < r; ++j) {
                             const seg = columns[j];
                             const s = seg.length;
                             for (let k = 0; k < s; ++k) {
@@ -8928,8 +9040,9 @@ var android = (function () {
                             }
                         }
                         const documentId = i < length - 1 ? anchorBottom.documentId : 'parent';
-                        for (let j = 0; j < dividers.length; ++j) {
-                            dividers[j].anchor('bottom', documentId);
+                        j = 0;
+                        while (j < dividers.length) {
+                            dividers[j++].anchor('bottom', documentId);
                         }
                         previousRow = anchorBottom;
                     }
@@ -9219,8 +9332,9 @@ var android = (function () {
         const unit = data.unit;
         let size = 0,
             percent = 0;
-        for (let i = 0; i < unit.length; ++i) {
-            const value = unit[i];
+        let i = 0;
+        while (i < unit.length) {
+            const value = unit[i++];
             if (isPx(value)) {
                 size += parseFloat(value);
             } else if (isPercent$2(value)) {
@@ -10065,8 +10179,9 @@ var android = (function () {
                 ) {
                     const { gap, length, unit } = mainData.column;
                     let minWidth = gap * (length - 1);
-                    for (let i = 0; i < unit.length; ++i) {
-                        const value = unit[i];
+                    let i = 0;
+                    while (i < unit.length) {
+                        const value = unit[i++];
                         if (isPx(value)) {
                             minWidth += parseFloat(value);
                         } else {
@@ -14084,13 +14199,17 @@ var android = (function () {
                                     if (uri) {
                                         if (uri.startsWith('data:image/')) {
                                             const rawData = resource.getRawData(uri);
-                                            if (rawData) {
-                                                const { base64, filename } = rawData;
-                                                if (base64) {
+                                            if (rawData === null || rawData === void 0 ? void 0 : rawData.base64) {
+                                                const filename = rawData.filename;
+                                                if (filename) {
                                                     images[length] = filename.substring(0, filename.lastIndexOf('.'));
                                                     imageDimensions[length] =
                                                         rawData.width && rawData.height ? rawData : undefined;
-                                                    resource.writeRawImage(filename, base64);
+                                                    resource.writeRawImage(rawData.mimeType, {
+                                                        filename,
+                                                        data: rawData.base64,
+                                                        encoding: 'base64',
+                                                    });
                                                     valid = true;
                                                 }
                                             }
@@ -15116,7 +15235,7 @@ var android = (function () {
     const {
         capitalize: capitalize$4,
         convertInt: convertInt$3,
-        convertWord: convertWord$1,
+        convertWord: convertWord$2,
         hasKeys: hasKeys$1,
         plainMap: plainMap$2,
         safeNestedArray: safeNestedArray$4,
@@ -15286,7 +15405,7 @@ var android = (function () {
                                     }
                                 }
                                 if (createFont) {
-                                    fontName = convertWord$1(fontName);
+                                    fontName = convertWord$2(fontName);
                                     const font = fonts.get(fontName) || {};
                                     font[value + '|' + fontStyle + '|' + fontWeight] =
                                         FONTWEIGHT_ANDROID[fontWeight] || fontWeight;
@@ -16232,7 +16351,7 @@ var android = (function () {
     const {
         convertCamelCase: convertCamelCase$1,
         convertInt: convertInt$4,
-        convertWord: convertWord$2,
+        convertWord: convertWord$3,
         formatString,
         hasKeys: hasKeys$2,
         isArray: isArray$1,
@@ -16316,7 +16435,7 @@ var android = (function () {
             return interpolator;
         }
         const STORED = Resource.STORED;
-        const name = `path_interpolator_${convertWord$2(value)}`;
+        const name = `path_interpolator_${convertWord$3(value)}`;
         if (!STORED.animators.has(name)) {
             STORED.animators.set(name, formatString(INTERPOLATOR_XML, ...value.split(/\s+/)));
         }
@@ -16324,8 +16443,10 @@ var android = (function () {
     }
     function createTransformData(transform) {
         const result = {};
-        for (let i = 0; i < transform.length; ++i) {
-            const { matrix, origin, angle, type } = transform[i];
+        const length = transform.length;
+        let i = 0;
+        while (i < length) {
+            const { matrix, origin, angle, type } = transform[i++];
             switch (type) {
                 case SVGTransform.SVG_TRANSFORM_SCALE:
                     result.scaleX = matrix.a.toString();
@@ -16958,7 +17079,7 @@ var android = (function () {
             imageData.length = 0;
             this._namespaceAapt = false;
             this._synchronizeMode = keyTimeMode;
-            const templateName = (node.tagName + '_' + convertWord$2(node.controlId, true) + '_viewbox').toLowerCase();
+            const templateName = (node.tagName + '_' + convertWord$3(node.controlId, true) + '_viewbox').toLowerCase();
             svg.build({
                 contentMap,
                 exclude,
@@ -17787,8 +17908,9 @@ var android = (function () {
                 if (vectorName) {
                     item.push({ drawable: getDrawableSrc(vectorName) });
                 }
-                for (let i = 0; i < imageData.length; ++i) {
-                    const image = imageData[i];
+                let i = 0;
+                while (i < imageLength) {
+                    const image = imageData[i++];
                     const { x, y } = getRootOffset(image.element, svg.element);
                     const box = svg.viewBox;
                     const scaleX = svg.width / box.width;
@@ -18004,8 +18126,9 @@ var android = (function () {
             (_a = path.transformResidual) === null || _a === void 0
                 ? void 0
                 : _a.forEach(item => renderData.push(createTransformData(item)));
-            for (let i = 0; i < PATH_ATTRIBUTES.length; ++i) {
-                let attr = PATH_ATTRIBUTES[i],
+            let i = 0;
+            while (i < PATH_ATTRIBUTES.length) {
+                let attr = PATH_ATTRIBUTES[i++],
                     value = path[attr] || (useTarget && target[attr]);
                 if (value) {
                     switch (attr) {
@@ -18123,9 +18246,9 @@ var android = (function () {
             const pathData = path.value;
             const animations = target.animations;
             let previousPathData = pathData,
-                index = 0,
-                length = animations.length;
-            let i = 0;
+                index = 0;
+            let length = animations.length;
+            i = 0;
             while (i < length) {
                 const item = animations[i++];
                 if (SvgBuild.asAnimateTransform(item) && !item.additiveSum && item.transformFrom) {

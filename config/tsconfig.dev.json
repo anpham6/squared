@@ -7,9 +7,7 @@
     "include": [
       "../@types/**/object.d.ts",
       "../@types/**/index.d.ts",
-      "../android-framework/**/*.ts",
-      "../android-widget/**/*.ts",
-      "../chrome-framework/**/*.ts",
+      "../framework/**/*.ts",
       "../src/**/*.ts"
     ]
   }

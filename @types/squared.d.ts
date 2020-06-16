@@ -10,7 +10,7 @@ export function include(value: ExtensionRequest, options?: {}): boolean;
 export function exclude(value: ExtensionRequest | string): boolean;
 export function configure(value: ExtensionRequest | string, options: {}): boolean;
 export function retrieve(value: string): Null<{}>;
-export function parseDocument(...elements: (string | HTMLElement)[]): Promise<Node[] | void>;
+export function parseDocument(...elements: (string | HTMLElement)[]): Promise<Node | Node[] | void>;
 export function copyToDisk(value: string, options?: {}): Promise<{} | void>;
 export function appendToArchive(value: string, options?: {}): Promise<{} | void>;
 export function saveToArchive(value?: string, options?: {}): Promise<{} | void>;

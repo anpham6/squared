@@ -4,13 +4,14 @@ export default abstract class Controller<T extends squared.base.Node> implements
     public abstract cache: squared.base.NodeList<T>;
     public abstract readonly localSettings: ControllerSettings;
 
-    public abstract init(): void;
-    public abstract reset(): void;
-    public abstract applyDefaultStyles(element: Element): void;
-    public abstract includeElement(element: Element): boolean;
-    public abstract sortInitialCache(cache?: squared.base.NodeList<T>): void;
+    public init() {}
+    public sortInitialCache() {}
+    public applyDefaultStyles(element: Element) {}
+    public reset() {}
 
-    public abstract get userSettings(): UserSettings;
+    public includeElement(element: Element) {
+        return true;
+    }
 
     public preventNodeCascade(node: T) {
         return false;
@@ -22,5 +23,9 @@ export default abstract class Controller<T extends squared.base.Node> implements
 
     get afterInsertNode(): BindGeneric<T, void> {
         return (node: T) => {};
+    }
+
+    get userSettings() {
+        return this.application.userSettings;
     }
 }

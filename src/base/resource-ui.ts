@@ -6,7 +6,7 @@ import { NODE_ALIGNMENT, NODE_RESOURCE } from './lib/enumeration';
 
 const { USER_AGENT, isUserAgent } = squared.lib.client;
 const { parseColor } = squared.lib.color;
-const { CSS_PROPERTIES, calculate, convertAngle, formatPX, getBackgroundPosition, getInheritedStyle, isCalc, isLength, isParentStyle, isPercent, parseAngle } = squared.lib.css;
+const { CSS_PROPERTIES, calculate, convertAngle, formatPX, getBackgroundPosition, getInheritedStyle, hasComputedStyle, hasCoords, isCalc, isLength, isParentStyle, isPercent, parseAngle } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = squared.lib.math;
 const { STRING } = squared.lib.regex;
@@ -1044,9 +1044,8 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         }
                     }
                 }
-                else if (item instanceof HTMLElement) {
-                    const position = getComputedStyle(item).getPropertyValue('position');
-                    value = value.replace(item.outerHTML, position !== 'absolute' && position !== 'fixed' && isString(item.textContent!) ? STRING_SPACE : '');
+                else if (hasComputedStyle(item)) {
+                    value = value.replace(item.outerHTML, !hasCoords(getComputedStyle(item).getPropertyValue('position')) && isString(item.textContent!) ? STRING_SPACE : '');
                 }
                 if (!preserveWhiteSpace) {
                     if (index === 0) {

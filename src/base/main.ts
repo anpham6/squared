@@ -12,6 +12,7 @@ import ExtensionUI from './extension-ui';
 import FileUI from './file-ui';
 import LayoutUI from './layout-ui';
 import NodeUI from './node-ui';
+import NodeElement from './node-element';
 import NodeGroupUI from './nodegroup-ui';
 import ResourceUI from './resource-ui';
 
@@ -62,6 +63,7 @@ export {
     LayoutUI,
     Node,
     NodeUI,
+    NodeElement,
     NodeGroupUI,
     NodeList,
     Resource,

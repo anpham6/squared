@@ -6,13 +6,12 @@
     <title>https://github.com/anpham6/squared</title>
     <script src="/dist/squared.js"></script>
     <script src="/dist/squared.base.js"></script>
-    <script src="/dist/squared.svg.js"></script>
-    <script src="/dist/chrome.framework.js"></script>
+    <script src="/dist/vdom.framework.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            squared.setFramework(chrome);
-            const result = squared.system.getElement(document.body).querySelectorAll('ul * a, * * * li');
-            console.log(result);
+        document.addEventListener('DOMContentLoaded', async function() {
+            squared.setFramework(vdom);
+            const result = await squared.parseDocument(document.body);
+            console.log(result.querySelectorAll('ul * a, * * * li'));
             console.log(document.body.querySelectorAll('ul * a, * * * li'));
         });
     </script>

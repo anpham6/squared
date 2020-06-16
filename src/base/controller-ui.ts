@@ -4,7 +4,7 @@ import NodeUI from './node-ui';
 import { NODE_TEMPLATE } from './lib/enumeration';
 
 const { USER_AGENT, isUserAgent } = squared.lib.client;
-const { CSS_PROPERTIES, formatPX, getStyle, isLength, isPercent } = squared.lib.css;
+const { CSS_PROPERTIES, formatPX, getStyle, hasCoords, isLength, isPercent } = squared.lib.css;
 const { withinViewport } = squared.lib.dom;
 const { capitalize, convertFloat, flatArray, iterateArray, safeNestedArray } = squared.lib.util;
 const { actualClientRect, getElementCache, setElementCache } = squared.lib.session;
@@ -16,15 +16,6 @@ const BORDER_BOTTOM = CSS_PROPERTIES.borderBottom.value as string[];
 const BORDER_LEFT = CSS_PROPERTIES.borderLeft.value as string[];
 
 const BOX_BORDER = [BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM, BORDER_LEFT];
-
-function positionAbsolute(style: CSSStyleDeclaration) {
-    switch (style.getPropertyValue('position')) {
-        case 'absolute':
-        case 'fixed':
-            return true;
-    }
-    return false;
-}
 
 function setBorderStyle(styleMap: StringMap, defaultColor: string) {
     if (!styleMap.border && !(BORDER_TOP[0] in styleMap || BORDER_RIGHT[0] in styleMap || BORDER_BOTTOM[0] in styleMap || BORDER_LEFT[0] in styleMap)) {
@@ -332,12 +323,12 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             }
         }
         if (width > 0 && height > 0) {
-            return style.getPropertyValue('visibility') === 'visible' || !positionAbsolute(style);
+            return style.getPropertyValue('visibility') === 'visible' || !hasCoords(style.getPropertyValue('position'));
         }
-        else if (!pseudoElt && (iterateArray(element.children, (item: HTMLElement) => this.visibleElement(item)) === Infinity || element.tagName === 'IMG' && style.getPropertyValue('display') !== 'none')) {
+        else if (!pseudoElt && (element.tagName === 'IMG' && style.getPropertyValue('display') !== 'none' || iterateArray(element.children, (item: HTMLElement) => this.visibleElement(item)) === Infinity)) {
             return true;
         }
-        return !positionAbsolute(style) && (
+        return !hasCoords(style.getPropertyValue('position')) && (
             width > 0 && style.getPropertyValue('float') !== 'none' ||
             pseudoElt && style.getPropertyValue('clear') !== 'none' ||
             style.getPropertyValue('display') === 'block' && (parseInt(style.getPropertyValue('margin-top')) !== 0 || parseInt(style.getPropertyValue('margin-bottom')) !== 0)

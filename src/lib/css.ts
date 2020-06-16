@@ -224,16 +224,6 @@ function getContentBoxHeight(style: CSSStyleDeclaration) {
     );
 }
 
-function isAbsolutePosition(value: string) {
-    switch (value) {
-        case 'absolute':
-        case 'fixed':
-            return true;
-        default:
-            return false;
-    }
-}
-
 function newBoxRectPosition(orientation: string[] = ['left', 'top']) {
     return {
         static: true,
@@ -2224,7 +2214,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
             return value;
         }
         case 'clip':
-            return isAbsolutePosition(getStyle(element).position) ? calculateVarAsString(element, value, { supportPercent: false }) : '';
+            return hasCoords(getStyle(element).position) ? calculateVarAsString(element, value, { supportPercent: false }) : '';
         case 'clipPath':
         case 'offsetPath':
         case 'shapeOutside': {
@@ -2834,7 +2824,7 @@ export function calculateVar(element: CSSElement, value: string, options: Calcul
                             boundingElement = element.parentElement;
                             if (boundingElement instanceof HTMLElement) {
                                 let style: CSSStyleDeclaration | undefined;
-                                if (isAbsolutePosition(getStyle(element).position)) {
+                                if (hasCoords(getStyle(element).position)) {
                                     do {
                                         style = getStyle(boundingElement);
                                         if (boundingElement === document.body) {
@@ -3981,4 +3971,8 @@ export function isPercent(value: string) {
 
 export function hasCalc(value: string) {
     return REGEXP_CALCWITHIN.test(value);
+}
+
+export function hasCoords(value: string) {
+    return value === 'absolute' || value === 'fixed';
 }
