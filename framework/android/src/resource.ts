@@ -278,14 +278,10 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
             }
         }
         if (mdpi) {
-            result.mdpi = mdpi;
             const rawData = this.application.resourceHandler.getRawData(mdpi);
             if (rawData) {
                 if (rawData.base64) {
                     const filename = rawData.filename;
-                    if (FILE.SVG.test(filename)) {
-                        return '';
-                    }
                     this.application.resourceHandler.writeRawImage(rawData.mimeType, {
                         filename: prefix + filename,
                         data: rawData.base64,
@@ -293,7 +289,9 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                     });
                     return filename.substring(0, filename.lastIndexOf('.'));
                 }
+                return '';
             }
+            result.mdpi = mdpi;
         }
         return this.addImageSet(result, prefix);
     }

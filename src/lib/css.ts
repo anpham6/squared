@@ -2,7 +2,7 @@ import { parseColor } from './color';
 import { USER_AGENT, getDeviceDPI, isUserAgent } from './client';
 import { clamp, truncate, truncateFraction } from './math';
 import { CSS, STRING, TRANSFORM } from './regex';
-import { convertAlpha, convertFloat, convertRoman, hasKeys, isNumber, isString, iterateArray, replaceMap, resolvePath, spliceString, splitEnclosing } from './util';
+import { convertAlpha, convertFloat, convertRoman, hasKeys, isNumber, isString, iterateArray, replaceMap, resolvePath, spliceString, splitEnclosing, trimBoth } from './util';
 
 const PATTERN_SIZES = `(\\(\\s*(?:orientation:\\s*(?:portrait|landscape)|(?:max|min)-width:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\))`;
 const REGEXP_LENGTH = new RegExp(`^${STRING.LENGTH}$`);
@@ -3351,7 +3351,7 @@ export function convertListStyle(name: string, value: number, valueAsDefault?: b
 
 export function extractURL(value: string) {
     const match = CSS.URL.exec(value);
-    return match ? match[1] || match[2] : undefined;
+    return match ? trimBoth(match[1].trim(), '"').trim() : undefined;
 }
 
 export function resolveURL(value: string) {

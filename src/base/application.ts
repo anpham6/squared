@@ -43,8 +43,8 @@ function parseImageUrl(resourceHandler: Undef<Resource<Node>>, baseMap: StringMa
             match: Null<RegExpExecArray>;
         while (match = REGEXP_DATAURI.exec(value)) {
             if (match[2]) {
-                const mimeType = match[2].trim().split(/\s*;\s*/);
-                resourceHandler?.addRawData(match[1], mimeType[0], match[3], { encoding: mimeType[1] || 'utf8' });
+                const [mimeType, encoding] = match[2].trim().split(/\s*;\s*/);
+                resourceHandler?.addRawData(match[1], mimeType, match[3], { encoding });
             }
             else {
                 const uri = resolvePath(match[3], styleSheetHref);

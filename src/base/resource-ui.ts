@@ -659,7 +659,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     height
                 } as Partial<RawAsset>;
                 if (encoding === 'base64') {
-                    asset.base64 = data;
+                    asset.base64 = data.startsWith('data:image/') ? data.substring(data.indexOf(',') + 1) : data;
                 }
                 else if (Array.isArray(data)) {
                     asset.bytes = data;

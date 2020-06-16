@@ -24,7 +24,7 @@ export const FILE = {
 };
 
 export const CSS = {
-    URL: /^\s*url\((?:"?((?:[^")]|\\")+)"?)\)\s*$/,
+    URL: /^\s*url\((.+)\)\s*$/,
     HEX: /[A-Za-z\d]{3,8}/,
     RGBA: /rgba?\((\d+),\s+(\d+),\s+(\d+)(?:,\s+([\d.]+%?))?\)/,
     HSLA: /hsla?\((\d+),\s+(\d+)%,\s+(\d+)%(?:,\s+([\d.]+%?))?\)/,

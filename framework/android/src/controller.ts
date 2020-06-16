@@ -1493,16 +1493,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
                     let src: Undef<string>;
                     if (node.tagName === 'CANVAS') {
-                        const imageData = ((element as unknown) as HTMLCanvasElement).getContext('2d')?.getImageData(0, 0, element.clientWidth, element.clientHeight);
-                        if (imageData) {
+                        const data = ((element as unknown) as HTMLCanvasElement).toDataURL();
+                        if (data) {
                             node.setControlType(controlName, containerType);
                             src = 'canvas_' + convertWord(node.controlId, true);
-                            this.application.resourceHandler.writeRawImage('image/png', {
-                                filename: src + '.png',
-                                data: Array.from(imageData.data as Uint8ClampedArray),
-                                width: imageData.width,
-                                height: imageData.height
-                            });
+                            this.application.resourceHandler.writeRawImage('image/png', { filename: src + '.png', data, encoding: 'base64' });
                         }
                     }
                     else {
