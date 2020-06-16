@@ -1513,7 +1513,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                 }
                 if (!node.pageFlow && parent === absoluteParent && (node.left < 0 && parent.css('overflowX') === 'hidden' || node.top < 0 && parent.css('overflowY') === 'hidden')) {
-                    const container = application.createNode({ parent, innerWrap: node });
+                    const container = application.createNode(node.sessionId, { parent, innerWrap: node });
                     container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                     container.inherit(node, 'base');
                     container.cssCopy(node, 'position', 'zIndex');
@@ -2072,7 +2072,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public createNodeWrapper(node: T, parent: T, options: CreateNodeWrapperUIOptions<T> = {}) {
         const { children, containerType, alignmentType } = options;
-        const container = this.application.createNode({
+        const container = this.application.createNode(node.sessionId, {
             parent,
             children,
             append: true,

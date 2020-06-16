@@ -104,8 +104,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         this._afterOutside = {};
     }
 
-    public applyDefaultStyles(element: Element) {
-        const sessionId = this.sessionId;
+    public applyDefaultStyles(element: Element, sessionId: string) {
         let styleMap: StringMap;
         if (element.nodeName === '#text') {
             styleMap = {
@@ -299,7 +298,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             : id in this._beforeOutside || id in this._beforeInside || id in this._afterInside || id in this._afterOutside;
     }
 
-    public visibleElement(element: Element, pseudoElt?: string) {
+    public visibleElement(element: Element, sessionId: string, pseudoElt?: string) {
         let style: CSSStyleDeclaration,
             width: number,
             height: number;
@@ -312,7 +311,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         else {
             style = getStyle(element);
             if (style.getPropertyValue('display') !== 'none') {
-                const rect = actualClientRect(element, this.sessionId);
+                const rect = actualClientRect(element, sessionId);
                 if (!withinViewport(rect)) {
                     return false;
                 }
@@ -325,7 +324,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         if (width > 0 && height > 0) {
             return style.getPropertyValue('visibility') === 'visible' || !hasCoords(style.getPropertyValue('position'));
         }
-        else if (!pseudoElt && (element.tagName === 'IMG' && style.getPropertyValue('display') !== 'none' || iterateArray(element.children, (item: HTMLElement) => this.visibleElement(item)) === Infinity)) {
+        else if (!pseudoElt && (element.tagName === 'IMG' && style.getPropertyValue('display') !== 'none' || iterateArray(element.children, (item: HTMLElement) => this.visibleElement(item, sessionId)) === Infinity)) {
             return true;
         }
         return !hasCoords(style.getPropertyValue('position')) && (

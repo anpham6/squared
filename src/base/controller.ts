@@ -1,12 +1,19 @@
 export default abstract class Controller<T extends squared.base.Node> implements squared.base.Controller<T> {
-    public sessionId!: string;
     public abstract application: squared.base.Application<T>;
     public abstract cache: squared.base.NodeList<T>;
-    public abstract readonly localSettings: ControllerSettings;
+
+    public readonly localSettings: ControllerSettings = {
+        mimeType: {
+            font: '*',
+            image: '*',
+            audio: '*',
+            video: '*'
+        }
+    };
 
     public init() {}
     public sortInitialCache() {}
-    public applyDefaultStyles(element: Element) {}
+    public applyDefaultStyles(element: Element, sessionId: string) {}
     public reset() {}
 
     public includeElement(element: Element) {

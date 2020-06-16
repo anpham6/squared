@@ -63,7 +63,7 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
         const length = overflow.length;
         if (length) {
             for (let i = 0; i < length; ++i) {
-                const container = this.application.createNode({ parent });
+                const container = this.application.createNode(node.sessionId, { parent });
                 if (i === 0) {
                     container.inherit(node, 'base', 'initial', 'styleMap');
                     if (!parent.replaceTry({ child: node, replaceWith: container })) {

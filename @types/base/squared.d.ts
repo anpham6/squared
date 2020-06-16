@@ -53,7 +53,6 @@ declare module "base" {
         cache: NodeList<T>;
         excluded: NodeList<T>;
         unusedStyles: Set<string>;
-        sessionId: string;
         node?: T;
         documentElement?: T;
     }
@@ -95,10 +94,10 @@ declare module "base" {
         readonly Node: Constructor<T>;
         reset(): void;
         parseDocument(...elements: (string | HTMLElement)[]): Promise<T | T[]>;
-        createCache(documentRoot: HTMLElement): Undef<T>;
-        setStyleMap(cacheAssets: boolean): void;
-        createNode(options: {}): T;
-        insertNode(element: Element): Undef<T>;
+        createCache(documentRoot: HTMLElement, sessionId: string): Undef<T>;
+        setStyleMap(sessionId: string): void;
+        createNode(sessionId: string, options: {}): T;
+        insertNode(element: Element, sessionId: string): Undef<T>;
         afterCreateCache(node: T): void;
         getDatasetName(attr: string, element: HTMLElement): Undef<string>;
         setDatasetName(attr: string, element: HTMLElement, value: string): void;
@@ -134,8 +133,8 @@ declare module "base" {
         readonly extensions: ExtensionUI<T>[];
         conditionElement(element: HTMLElement, pseudoElt?: string): boolean;
         useElement(element: HTMLElement): boolean;
-        insertNode(element: Element, pseudoElt?: string): Undef<T>;
-        createNode(options: CreateNodeUIOptions<T>): T;
+        insertNode(element: Element, sessionId: string, pseudoElt?: string): Undef<T>;
+        createNode(sessionId: string, options: CreateNodeUIOptions<T>): T;
         renderNode(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
         addLayout(layout: LayoutUI<T>): void;
         addLayoutTemplate(parent: T, node: T, template: Undef<NodeTemplate<T>>, index?: number): void;
@@ -155,7 +154,6 @@ declare module "base" {
     }
 
     class Controller<T extends Node> implements AppHandler<T> {
-        sessionId: string;
         readonly application: Application<T>;
         readonly cache: NodeList<T>;
         readonly localSettings: ControllerSettings;
@@ -163,7 +161,7 @@ declare module "base" {
         reset(): void;
         includeElement(element: Element): boolean;
         preventNodeCascade(node: T): boolean;
-        applyDefaultStyles(element: Element): void;
+        applyDefaultStyles(element: Element, sessionId: string): void;
         get afterInsertNode(): BindGeneric<T, void>;
         get userSettings(): UserSettings;
         get generateSessionId(): string;
@@ -174,7 +172,7 @@ declare module "base" {
         optimize(nodes: T[]): void;
         finalize(layouts: FileAsset[]): void;
         evaluateNonStatic(documentRoot: T, cache: NodeList<T>): void;
-        visibleElement(element: Element, pseudoElt?: string): boolean;
+        visibleElement(element: Element, sessionId: string, pseudoElt?: string): boolean;
         processUnknownParent(layout: LayoutUI<T>): LayoutResult<T>;
         processUnknownChild(layout: LayoutUI<T>): LayoutResult<T>;
         processTraverseHorizontal(layout: LayoutUI<T>, siblings: T[]): Undef<LayoutUI<T>>;

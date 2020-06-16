@@ -141,7 +141,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     image = resource.addImageSrc(mainData.imageSrc);
                 }
                 const options = createViewAttribute();
-                ordinal = application.createNode({ parent });
+                ordinal = application.createNode(node.sessionId, { parent });
                 ordinal.childIndex = node.childIndex;
                 ordinal.containerName = node.containerName + '_ORDINAL';
                 ordinal.inherit(node, 'textStyle');

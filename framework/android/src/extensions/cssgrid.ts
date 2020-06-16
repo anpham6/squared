@@ -656,7 +656,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 return [cellStart, cellSpan];
             };
             if (hasAlignment(alignSelf) || /start|center|end|baseline|right|left/.test(justifySelf) || layoutConstraint) {
-                renderAs = this.application.createNode({ parent, innerWrap: node });
+                renderAs = this.application.createNode(node.sessionId, { parent, innerWrap: node });
                 renderAs.containerName = node.containerName;
                 renderAs.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                 renderAs.inherit(node, 'base', 'initial');

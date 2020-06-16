@@ -105,13 +105,13 @@
             squared = result;
             System.import('/build/src/base/main.js').then(result => {
                 squared.base = result;
-                System.import('/build/chrome-framework/src/main.js').then(async result => {
+                System.import('/build/framework/chrome/src/main.js').then(async result => {
                     chrome = result.default;
                     console.log(document.getElementById('squared_ui').querySelectorAll('form[name=entry].form2#form1:nth-child(2):nth-child(1n+1):nth-child(even):nth-child(n+1):nth-child(-n+5):nth-child(0n+2):nth-of-type(1n+1) > ul:last-child:not(:first-child) li div label > input[type=Radio i][title="c2,birth"], label + input[type=checkbox]'));
                     squared.setFramework(chrome);
                     const input = await chrome.getElementById('squared_ui');
                     searchQuery(input);
-                    System.import('/build/vdom-framework/src/main.js').then(async result => {
+                    System.import('/build/framework/vdom/src/main.js').then(async result => {
                         vdom = result.default;
                         squared.setFramework(vdom);
                         const body = await squared.parseDocument('squared_ui');

@@ -9,14 +9,14 @@ export default class Application<T extends squared.base.NodeElement> extends squ
     public userSettings!: ChromeUserSettings;
     public readonly systemName = 'chrome';
 
-    public insertNode(element: Element) {
+    public insertNode(element: Element, sessionId: string) {
         if (element.nodeName === '#text') {
             if (this.userSettings.excludePlainText) {
                 return undefined;
             }
-            this.controllerHandler.applyDefaultStyles(element);
+            this.controllerHandler.applyDefaultStyles(element, sessionId);
         }
-        return super.createNode({ element });
+        return super.createNode(sessionId, { element });
     }
 
     public afterCreateCache(node: T) {

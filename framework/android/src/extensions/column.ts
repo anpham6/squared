@@ -30,7 +30,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
             const dividerWidth = node.parseUnit(borderLeftWidth);
             const displayBorder = borderLeftStyle !== 'none' && dividerWidth > 0;
             const createColumnRule = () => {
-                const divider = application.createNode({ parent: node, append: true });
+                const divider = application.createNode(node.sessionId, { parent: node, append: true });
                 divider.inherit(node, 'base');
                 divider.containerName = node.containerName + '_COLUMNRULE';
                 divider.setControlType(CONTAINER_ANDROID.LINE, CONTAINER_NODE.LINE);

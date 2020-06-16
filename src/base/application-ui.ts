@@ -337,9 +337,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         this._layouts.length = 0;
     }
 
-    public conditionElement(element: HTMLElement, pseudoElt?: string) {
+    public conditionElement(element: HTMLElement, sessionId: string, pseudoElt?: string) {
         if (!this._excluded.has(element.tagName)) {
-            if (this.controllerHandler.visibleElement(element, pseudoElt) || this._cascadeAll) {
+            if (this.controllerHandler.visibleElement(element, sessionId, pseudoElt) || this._cascadeAll) {
                 return true;
             }
             else if (!pseudoElt) {
@@ -354,7 +354,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     current = current.parentElement;
                 }
                 const controllerHandler = this.controllerHandler;
-                if (iterateArray(element.children, (item: HTMLElement) => controllerHandler.visibleElement(item)) === Infinity) {
+                if (iterateArray(element.children, (item: HTMLElement) => controllerHandler.visibleElement(item, sessionId)) === Infinity) {
                     return true;
                 }
                 return this.useElement(element);
@@ -363,14 +363,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return false;
     }
 
-    public insertNode(element: Element, pseudoElt?: string) {
-        if (element.nodeName === '#text' || this.conditionElement(element as HTMLElement, pseudoElt)) {
-            this.controllerHandler.applyDefaultStyles(element);
-            const node = this.createNode({ element, append: false });
-            return node;
+    public insertNode(element: Element, sessionId: string, pseudoElt?: string) {
+        if (element.nodeName === '#text' || this.conditionElement(element as HTMLElement, sessionId, pseudoElt)) {
+            this.controllerHandler.applyDefaultStyles(element, sessionId);
+            return this.createNode(sessionId, { element, append: false });
         }
         else {
-            const node = this.createNode({ element, append: false });
+            const node = this.createNode(sessionId, { element, append: false });
             node.visible = false;
             node.excluded = true;
             return node;
@@ -441,9 +440,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return false;
     }
 
-    public createNode(options: CreateNodeUIOptions<T>) {
+    public createNode(sessionId: string, options: CreateNodeUIOptions<T>) {
         const { element, parent, children } = options;
-        const node = new this.Node(this.nextId, this.processing.sessionId, element);
+        const node = new this.Node(this.nextId, sessionId, element);
         this.controllerHandler.afterInsertNode(node);
         if (parent) {
             node.depth = parent.depth + 1;
@@ -469,8 +468,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return node;
     }
 
-    public createCache(documentRoot: HTMLElement) {
-        const node = this.createRootNode(documentRoot);
+    public createCache(documentRoot: HTMLElement, sessionId: string) {
+        const node = this.createRootNode(documentRoot, sessionId);
         if (node) {
             const cache = this._cache as NodeList<T>;
             {
@@ -630,8 +629,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return this.layouts[0]?.content || '';
     }
 
-    protected cascadeParentNode(parentElement: HTMLElement, depth: number, extensions?: ExtensionUI<T>[]) {
-        const node = this.insertNode(parentElement);
+    protected cascadeParentNode(parentElement: HTMLElement, sessionId: string, depth: number, extensions?: ExtensionUI<T>[]) {
+        const node = this.insertNode(parentElement, sessionId);
         if (node.display !== 'none' || depth === 0 || hasOuterParentExtension(node)) {
             if (depth === 0) {
                 node.depth = depth;
@@ -647,7 +646,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (node.excluded && !hasOuterParentExtension(node) || controllerHandler.preventNodeCascade(node)) {
                 return node;
             }
-            const sessionId = this.processing.sessionId;
             const beforeElement = this.createPseduoElement(parentElement, '::before', sessionId);
             const afterElement = this.createPseduoElement(parentElement, '::after', sessionId);
             const childNodes = parentElement.childNodes;
@@ -661,7 +659,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 const element = childNodes[i++] as HTMLElement;
                 let child: T;
                 if (element === beforeElement) {
-                    child = this.insertNode(beforeElement, '::before');
+                    child = this.insertNode(beforeElement, sessionId, '::before');
                     node.innerBefore = child;
                     if (!child.textEmpty) {
                         child.inlineText = true;
@@ -669,7 +667,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     inlineText = false;
                 }
                 else if (element === afterElement) {
-                    child = this.insertNode(afterElement, '::after');
+                    child = this.insertNode(afterElement, sessionId, '::after');
                     node.innerAfter = child;
                     if (!child.textEmpty) {
                         child.inlineText = true;
@@ -678,7 +676,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
                 else if (element.nodeName.charAt(0) === '#') {
                     if (element.nodeName === '#text' && (isPlainText(element.textContent!) || node.preserveWhiteSpace && (parentElement.tagName !== 'PRE' || parentElement.childElementCount === 0))) {
-                        child = this.insertNode(element);
+                        child = this.insertNode(element, sessionId);
                         child.cssApply(node.textStyle);
                     }
                     else {
@@ -693,13 +691,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                     }
                     if (!this.rootElements.has(element)) {
-                        child = this.cascadeParentNode(element, childDepth, extensions);
+                        child = this.cascadeParentNode(element, sessionId, childDepth, extensions);
                         if (child?.excluded === false) {
                             inlineText = false;
                         }
                     }
                     else {
-                        child = this.insertNode(element);
+                        child = this.insertNode(element, sessionId);
                         child.documentRoot = true;
                         child.visible = false;
                         child.excluded = true;

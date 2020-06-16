@@ -21,7 +21,7 @@ declare namespace base {
         queryState: number;
         readonly builtInExtensions: ObjectMap<Extension<T>>;
         readonly extensions: Extension<T>[];
-        createNode(options: CreateNodeOptions): T;
+        createNode(sessionId: string, options: CreateNodeOptions): T;
     }
 
     class Controller<T extends NodeElement> extends squared.base.Controller<T> {

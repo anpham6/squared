@@ -332,7 +332,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
 
     public createPlaceholder(node: T, children: T[], target?: Null<HTMLElement>) {
         const delegate = children.length > 0;
-        const container = this.application.createNode({ parent: node, children, delegate, cascade: true });
+        const container = this.application.createNode(node.sessionId, { parent: node, children, delegate, cascade: true });
         container.inherit(node, 'base');
         if (delegate) {
             let containerIndex = Infinity;

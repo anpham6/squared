@@ -128,7 +128,7 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
     }
 
     public processNode(node: T, parent: T) {
-        const outerParent = this.application.createNode({ parent, append: false });
+        const outerParent = this.application.createNode(node.sessionId, { parent, append: false });
         outerParent.childIndex = node.childIndex;
         outerParent.actualParent = parent.actualParent;
         node.documentRoot = true;

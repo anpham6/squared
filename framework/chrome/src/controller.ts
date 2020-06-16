@@ -2,15 +2,6 @@
 const { setElementCache } = squared.lib.session;
 
 export default class Controller<T extends squared.base.NodeElement> extends squared.base.Controller<T> implements chrome.base.Controller<T> {
-    public readonly localSettings: ControllerSettings = {
-        mimeType: {
-            font: '*',
-            image: '*',
-            audio: '*',
-            video: '*'
-        }
-    };
-
     private _elementMap = new Map<Element, T>();
 
     constructor(
@@ -24,9 +15,9 @@ export default class Controller<T extends squared.base.NodeElement> extends squa
         this._elementMap.clear();
     }
 
-    public applyDefaultStyles(element: Element) {
+    public applyDefaultStyles(element: Element, sessionId: string) {
         if (element.nodeName === '#text') {
-            setElementCache(element, 'styleMap', this.sessionId, {
+            setElementCache(element, 'styleMap', sessionId, {
                 position: 'static',
                 display: 'inline',
                 verticalAlign: 'baseline',

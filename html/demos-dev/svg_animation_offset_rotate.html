@@ -59,7 +59,7 @@
                 squared.base = result;
                 System.import('/build/src/svg/main.js').then(result => {
                     squared.svg = result;
-                    System.import('/build/android-framework/src/main.js').then(result => {
+                    System.import('/build/framework/android/src/main.js').then(result => {
                         android = result.default;
 
                         squared.setFramework(android);
