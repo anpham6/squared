@@ -16,13 +16,12 @@ declare namespace base {
         readonly resourceHandler: Resource<T>;
         set viewModel(value);
         get viewModel(): Undef<AppViewModel>;
-        resolveTarget(target: Null<HTMLElement | string>): Undef<T>;
+        resolveTarget(sessionId: string, target: Null<HTMLElement | string>): Undef<T>;
     }
 
     class Controller<T extends View> extends squared.base.ControllerUI<T> {
         static anchorPosition<T extends View>(node: T, parent: T, horizontal: boolean, modifyAnchor?: boolean): Partial<BoxRect>;
         readonly application: Application<T>;
-        readonly cache: squared.base.NodeList<T>;
         renderNodeStatic(attrs: RenderNodeStaticAttribute, options?: ViewAttribute): string;
         renderSpace(options: RenderSpaceAttribute): string;
         checkFrameHorizontal(data: LayoutUI<T>): boolean;
@@ -46,7 +45,6 @@ declare namespace base {
         static addImage(images: StringMap, prefix?: string, imageFormat?: MIMEOrAll): string;
         static addColor(value: Undef<ColorData | string>, transparency?: boolean): string;
         readonly application: Application<T>;
-        readonly cache: squared.base.NodeList<T>;
         get userSettings(): AndroidUserSettingsUI;
         addImageSrc(element: HTMLImageElement | string, prefix?: string, imageSet?: ImageSrcSet[]): string;
         addImageSet(images: StringMap, prefix?: string): string;

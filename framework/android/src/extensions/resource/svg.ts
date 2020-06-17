@@ -743,7 +743,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         }
     }
 
-    public afterResources() {
+    public afterResources(sessionId: string) {
         if (SvgBuild) {
             const contentMap: StringMap = {};
             for (const [uri, data] of Resource.ASSETS.rawData.entries()) {
@@ -753,7 +753,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
             }
             let parentElement: Undef<HTMLElement>,
                 element: Undef<SVGSVGElement>;
-            this.cacheProcessing.each(node => {
+            this.application.getProcessingCache(sessionId).each(node => {
                 if (node.imageElement) {
                     [parentElement, element] = this.createSvgElement(node, node.toElementString('src'));
                 }

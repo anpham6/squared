@@ -12,9 +12,9 @@ export default class Application<T extends View> extends squared.base.Applicatio
 
     private _viewModel?: AppViewModel;
 
-    public resolveTarget(target: Null<HTMLElement | string>) {
+    public resolveTarget(sessionId: string, target: Null<HTMLElement | string>) {
         if (target) {
-            for (const node of this.processing.cache) {
+            for (const node of this.getProcessingCache(sessionId)) {
                 if (isTargeted(node, target)) {
                     return node;
                 }

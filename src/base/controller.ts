@@ -1,6 +1,5 @@
 export default abstract class Controller<T extends squared.base.Node> implements squared.base.Controller<T> {
     public abstract application: squared.base.Application<T>;
-    public abstract cache: squared.base.NodeList<T>;
 
     public readonly localSettings: ControllerSettings = {
         mimeType: {
@@ -12,7 +11,7 @@ export default abstract class Controller<T extends squared.base.Node> implements
     };
 
     public init() {}
-    public sortInitialCache() {}
+    public sortInitialCache(cache: squared.base.NodeList<T>) {}
     public applyDefaultStyles(element: Element, sessionId: string) {}
     public reset() {}
 
@@ -25,7 +24,7 @@ export default abstract class Controller<T extends squared.base.Node> implements
     }
 
     get generateSessionId() {
-        return Date.now().toString() + '-' + this.application.session.active.length;
+        return Date.now().toString() + '-' + this.application.session.active.size;
     }
 
     get afterInsertNode(): BindGeneric<T, void> {

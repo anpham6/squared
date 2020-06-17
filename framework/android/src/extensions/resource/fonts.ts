@@ -111,7 +111,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
     };
     public readonly eventOnly = true;
 
-    public afterParseDocument() {
+    public afterParseDocument(sessionId: string) {
         const resource = this.resource as android.base.Resource<T>;
         const userSettings = resource.userSettings;
         const disableFontAlias = this.options.disableFontAlias;
@@ -122,7 +122,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         const nameMap: ObjectMap<T[]> = {};
         const groupMap: ObjectMap<StyleList[]> = {};
         let cache: T[] = [];
-        this.cache.each(node => {
+        this.application.getProcessingCache(sessionId).each(node => {
             if (node.data(Resource.KEY_NAME, 'fontStyle') && node.hasResource(NODE_RESOURCE.FONT_STYLE)) {
                 safeNestedArray(nameMap, node.containerName).push(node);
             }

@@ -771,10 +771,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     private _defaultViewSettings!: AndroidLocalSettingsUI;
     private _targetAPI!: number;
 
-    constructor(
-        public readonly application: android.base.Application<T>,
-        public readonly cache: squared.base.NodeList<T>)
-    {
+    constructor(public readonly application: android.base.Application<T>) {
         super();
     }
 
@@ -793,11 +790,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         super.init();
     }
 
-    public optimize(nodes: T[]) {
-        const length = nodes.length;
+    public optimize(rendered: T[]) {
+        const length = rendered.length;
         let i = 0;
         while (i < length) {
-            const node = nodes[i++];
+            const node = rendered[i++];
             node.applyOptimizations();
             if (node.hasProcedure(NODE_PROCEDURE.CUSTOMIZATION)) {
                 node.applyCustomizations(this.userSettings.customizationsOverwritePrivilege);
@@ -808,7 +805,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (node !== outerWrapper && target === outerWrapper.target) {
                     continue;
                 }
-                const parent = this.application.resolveTarget(target);
+                const parent = this.application.resolveTarget(node.sessionId, target);
                 if (parent) {
                     const template = node.removeTry({ alignSiblings: true }) as NodeTemplate<T>;
                     if (template) {
@@ -1312,8 +1309,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         return false;
     }
 
-    public setConstraints() {
-        this.cache.each(node => {
+    public setConstraints(cache: squared.base.NodeList<T>) {
+        cache.each(node => {
             const renderChildren = node.renderChildren as T[];
             if (renderChildren.length && node.hasProcedure(NODE_PROCEDURE.CONSTRAINT)) {
                 if (node.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
@@ -2053,7 +2050,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public createNodeGroup(node: T, children: T[], parent?: T, options?: CreateNodeGroupUIOptions<T>) {
-        const group = new ViewGroup(this.cache.nextId, node, children) as T;
+        const cache = this.application.getProcessingCache(node.sessionId);
+        const group = new ViewGroup(cache.nextId, node, children) as T;
         this.afterInsertNode(group);
         if (parent) {
             parent.replaceTry({ child: node, replaceWith: group, notFoundAppend: true });
@@ -2061,7 +2059,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         else {
             group.containerIndex = node.containerIndex;
         }
-        this.cache.add(group, options?.delegate === true, options?.cascade === true);
+        cache.add(group, options?.delegate === true, options?.cascade === true);
         return group;
     }
 

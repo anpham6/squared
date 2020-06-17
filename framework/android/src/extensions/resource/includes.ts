@@ -15,8 +15,11 @@ const { NODE_TEMPLATE } = squared.base.lib.enumeration;
 export default class ResourceIncludes<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
 
-    public beforeCascade() {
-        this.cache.each((node: T) => {
+    public beforeCascade(rendered: T[]) {
+        const length = rendered.length;
+        let i = 0;
+        while (i < length) {
+            const node = rendered[i++];
             const renderTemplates = node.renderTemplates;
             if (renderTemplates) {
                 let open: RenderIndex,
@@ -52,21 +55,21 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                 if (open && close) {
                     const application = this.application;
                     const controller = this.controller as android.base.Controller<T>;
-                    const length = Math.min(open.length, close.length);
-                    const excess = close.length - length;
+                    const q = Math.min(open.length, close.length);
+                    const excess = close.length - q;
                     if (excess > 0) {
                         close.splice(0, excess);
                     }
-                    let i = length - 1;
-                    while (i >= 0) {
-                        const { index, include, item, name } = open[i--];
-                        for (let j = 0; j < close.length; ++j) {
-                            const q = close[j].index;
-                            if (q >= index) {
+                    let j = q - 1;
+                    while (j >= 0) {
+                        const { index, include, item, name } = open[j--];
+                        for (let k = 0; k < close.length; ++k) {
+                            const r = close[k].index;
+                            if (r >= index) {
                                 const templates: NodeTemplate<T>[] = [];
-                                let k = index;
-                                while (k <= q) {
-                                    templates.push(renderTemplates[k++] as NodeTemplate<T>);
+                                let l = index;
+                                while (l <= r) {
+                                    templates.push(renderTemplates[l++] as NodeTemplate<T>);
                                 }
                                 const merge = !include || templates.length > 1;
                                 const depth = merge ? 1 : 0;
@@ -84,13 +87,13 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                                     item.documentRoot = true;
                                 }
                                 application.saveDocument(name as string, content, '', Infinity);
-                                close.splice(j, 1);
+                                close.splice(k, 1);
                                 break;
                             }
                         }
                     }
                 }
             }
-        });
+        }
     }
 }

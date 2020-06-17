@@ -20,8 +20,8 @@ export default abstract class Extension<T extends squared.base.Node> implements 
         this.dependencies.push({ name, preload });
     }
 
-    public beforeParseDocument() {}
-    public afterParseDocument() {}
+    public beforeParseDocument(sessionId: string) {}
+    public afterParseDocument(sessionId: string) {}
 
     set application(value) {
         this._application = value;

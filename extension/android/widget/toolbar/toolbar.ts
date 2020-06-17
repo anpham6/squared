@@ -31,7 +31,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
         this.require(WIDGET_NAME.MENU);
     }
 
-    public init(element: HTMLElement) {
+    public init(element: HTMLElement, sessionId: string) {
         if (this.included(element)) {
             const application = this.application;
             iterateArray(element.children, (item: HTMLElement) => {
@@ -48,7 +48,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
             if (target) {
                 const targetElement = document.getElementById(target);
                 if (targetElement && !includes(application.getDatasetName('use', targetElement), WIDGET_NAME.COORDINATOR)) {
-                    application.rootElements.add(element);
+                    application.getProcessing(sessionId)?.rootElements.add(element);
                 }
             }
         }

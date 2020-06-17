@@ -70,7 +70,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     public abstract renderNode(layout: squared.base.LayoutUI<T>): Undef<NodeTemplate<T>>;
     public abstract renderNodeGroup(layout: squared.base.LayoutUI<T>): Undef<NodeTemplate<T>>;
     public abstract sortRenderPosition(parent: T, templates: NodeTemplate<T>[]): NodeTemplate<T>[];
-    public abstract setConstraints(): void;
+    public abstract setConstraints(cache: squared.base.NodeList<T>): void;
     public abstract optimize(nodes: T[]): void;
     public abstract finalize(layouts: FileAsset[]): void;
 
@@ -654,8 +654,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         }
     }
 
-    public sortInitialCache(cache?: squared.base.NodeList<T>) {
-        (cache || this.cache).sort((a, b) => {
+    public sortInitialCache(cache: squared.base.NodeList<T>) {
+        cache.sort((a, b) => {
             if (a.depth !== b.depth) {
                 return a.depth < b.depth ? -1 : 1;
             }

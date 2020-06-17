@@ -12,12 +12,13 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
         displayLabel: false
     };
 
-    public beforeBaseLayout() {
-        this.cacheProcessing.each(node => {
+    public beforeBaseLayout(sessionId: string) {
+        const cache = this.application.getProcessingCache(sessionId);
+        cache.each(node => {
             if (node.inputElement && node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
                 const describedby = node.attributes['aria-describedby'];
                 if (describedby) {
-                    const sibling = this.cacheProcessing.find(item => item.elementId === describedby);
+                    const sibling = cache.find(item => item.elementId === describedby);
                     if (sibling) {
                         const value = sibling.textContent.trim();
                         if (value !== '') {

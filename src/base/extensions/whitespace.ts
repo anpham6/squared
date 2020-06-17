@@ -317,11 +317,11 @@ const validBelowChild = (node: NodeUI, children: boolean) => !node.hasHeight && 
 const validSibling = (node: NodeUI) => node.pageFlow && node.blockDimension && !node.floating && !node.excluded;
 
 export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
-    public afterBaseLayout() {
-        const application = this.application;
+    public afterBaseLayout(sessionId: string) {
+        const { cache, excluded } = this.application.getProcessing(sessionId)!;
+        const clearMap = this.application.session.clearMap;
         const processed = new Set<number>();
-        const clearMap = application.session.clearMap;
-        this.cacheProcessing.each(node => {
+        cache.each(node => {
             if (node.naturalElement && !node.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
                 const children = node.naturalChildren;
                 const length = children.length;
@@ -617,7 +617,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                 }
             }
         });
-        application.processing.excluded.each(node => {
+        excluded.each(node => {
             if (node.lineBreak && !node.lineBreakTrailing && !clearMap.has(node) && !processed.has(node.id)) {
                 let valid = false;
                 const previousSiblings = node.previousSiblings({ floating: false });
@@ -736,8 +736,8 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
         });
     }
 
-    public afterConstraints() {
-        this.cacheProcessing.each(node => {
+    public afterConstraints(sessionId: string) {
+        this.application.getProcessingCache(sessionId).each(node => {
             if (node.naturalChild && node.styleElement && node.inlineVertical && node.pageFlow && !node.positioned && !node.actualParent!.layoutElement) {
                 const outerWrapper = node.outerMostWrapper;
                 const renderParent = outerWrapper.renderParent;

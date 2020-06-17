@@ -278,7 +278,6 @@ declare module "lib" {
         function partitionLastIndexOf(value: string, ...char: string[]): [string, string];
         function searchObject(obj: StringMap, value: string | StringMap): any[][];
         function hasValue<T>(value: any): value is T;
-        function compareRange(operation: string, range: number, value: number): boolean;
         function withinRange(a: number, b: number, offset?: number): boolean;
         function aboveRange(a: number, b: number, offset?: number): boolean;
         function belowRange(a: number, b: number, offset?: number): boolean;

@@ -22,7 +22,6 @@ export default abstract class Resource<T extends squared.base.Node> implements s
     private _fileHandler: Undef<squared.base.File<T>>;
 
     public readonly abstract application: squared.base.Application<T>;
-    public readonly abstract cache: squared.base.NodeList<T>;
     public readonly abstract fileSeparator: string;
 
     public abstract get userSettings(): UserResourceSettings;

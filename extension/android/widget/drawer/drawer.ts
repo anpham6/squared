@@ -27,7 +27,7 @@ export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> 
         this.require(WIDGET_NAME.COORDINATOR);
     }
 
-    public init(element: HTMLElement) {
+    public init(element: HTMLElement, sessionId: string) {
         if (this.included(element)) {
             const application = this.application;
             const result = iterateArray(element.children, (item: HTMLElement) => {
@@ -38,8 +38,7 @@ export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> 
                     }
                 }
             });
-            if (result) {
-                application.rootElements.add(element);
+            if (result && application.getProcessing(sessionId)?.rootElements.add(element)) {
                 return true;
             }
         }

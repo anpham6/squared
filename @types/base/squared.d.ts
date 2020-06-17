@@ -32,7 +32,6 @@ declare module "base" {
 
     interface AppHandler<T extends Node> {
         application: Application<T>;
-        cache: NodeList<T>;
         readonly userSettings: UserSettings;
     }
 
@@ -45,26 +44,28 @@ declare module "base" {
         cached(): AppBase<T>;
     }
 
-    interface AppSession {
-        active: string[];
+    interface AppSession<T extends Node> {
+        active: Map<string, AppProcessing<T>>,
+        unusedStyles: Set<string>;
     }
 
     interface AppProcessing<T extends Node> {
         cache: NodeList<T>;
         excluded: NodeList<T>;
-        unusedStyles: Set<string>;
+        rootElements: Set<HTMLElement>;
+        initializing: boolean;
         node?: T;
         documentElement?: T;
     }
 
-    interface AppSessionUI<T extends NodeUI> extends AppSession {
+    interface AppSessionUI<T extends NodeUI> extends AppSession<T> {
         cache: NodeList<T>;
         excluded: NodeList<T>;
         extensionMap: Map<number, ExtensionUI<T>[]>;
         clearMap: Map<T, string>;
     }
 
-    interface AppProcessingUI<T extends Node> extends AppProcessing<T> {}
+    interface AppProcessingUI<T extends NodeUI> extends AppProcessing<T> {}
 
     interface AppViewModel extends StandardMap {}
 
@@ -82,15 +83,13 @@ declare module "base" {
     class Application<T extends Node> implements FileActionAsync {
         static readonly KEY_NAME: string;
         userSettings: UserSettings;
-        initializing: boolean;
         closed: boolean;
         readonly systemName: string;
         readonly framework: number;
-        readonly session: AppSession;
-        readonly processing: AppProcessing<T>;
+        readonly session: AppSession<T>;
         readonly builtInExtensions: ObjectMap<Extension<T>>;
         readonly extensions: Extension<T>[];
-        readonly rootElements: Set<HTMLElement>;
+        readonly initializing: boolean;
         readonly Node: Constructor<T>;
         reset(): void;
         parseDocument(...elements: (string | HTMLElement)[]): Promise<T | T[]>;
@@ -99,6 +98,8 @@ declare module "base" {
         createNode(sessionId: string, options: {}): T;
         insertNode(element: Element, sessionId: string): Undef<T>;
         afterCreateCache(node: T): void;
+        getProcessing(sessionId: string): Undef<AppProcessing<T>>;
+        getProcessingCache(sessionId: string): NodeList<T>;
         getDatasetName(attr: string, element: HTMLElement): Undef<string>;
         setDatasetName(attr: string, element: HTMLElement, value: string): void;
         finalize(): boolean;
@@ -114,7 +115,6 @@ declare module "base" {
         get resourceHandler(): Undef<Resource<T>>;
         get extensionManager(): ExtensionManager<T>;
         get extensionsCascade(): Extension<T>[];
-        get nextId(): number;
         get length(): number;
         constructor(
             framework: number,
@@ -128,12 +128,11 @@ declare module "base" {
     class ApplicationUI<T extends NodeUI> extends Application<T> {
         userSettings: UserSettingsUI;
         readonly session: AppSessionUI<T>;
-        readonly processing: AppProcessingUI<T>;
         readonly builtInExtensions: ObjectMap<ExtensionUI<T>>;
         readonly extensions: ExtensionUI<T>[];
-        conditionElement(element: HTMLElement, pseudoElt?: string): boolean;
+        conditionElement(element: HTMLElement, sessionId: string, cacadeAll?: boolean, pseudoElt?: string): boolean;
         useElement(element: HTMLElement): boolean;
-        insertNode(element: Element, sessionId: string, pseudoElt?: string): Undef<T>;
+        insertNode(element: Element, sessionId: string, cacadeAll?: boolean, pseudoElt?: string): Undef<T>;
         createNode(sessionId: string, options: CreateNodeUIOptions<T>): T;
         renderNode(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
         addLayout(layout: LayoutUI<T>): void;
@@ -155,7 +154,6 @@ declare module "base" {
 
     class Controller<T extends Node> implements AppHandler<T> {
         readonly application: Application<T>;
-        readonly cache: NodeList<T>;
         readonly localSettings: ControllerSettings;
         init(): void;
         reset(): void;
@@ -169,7 +167,7 @@ declare module "base" {
 
     class ControllerUI<T extends NodeUI> extends Controller<T> {
         readonly localSettings: ControllerSettingsUI;
-        optimize(nodes: T[]): void;
+        optimize(rendered: T[]): void;
         finalize(layouts: FileAsset[]): void;
         evaluateNonStatic(documentRoot: T, cache: NodeList<T>): void;
         visibleElement(element: Element, sessionId: string, pseudoElt?: string): boolean;
@@ -178,7 +176,7 @@ declare module "base" {
         processTraverseHorizontal(layout: LayoutUI<T>, siblings: T[]): Undef<LayoutUI<T>>;
         processTraverseVertical(layout: LayoutUI<T>, siblings: T[]): Undef<LayoutUI<T>>;
         processLayoutHorizontal(layout: LayoutUI<T>): LayoutUI<T>;
-        setConstraints(): void;
+        setConstraints(cache: NodeList<T>): void;
         renderNode(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
         renderNodeGroup(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
         createNodeGroup(node: T, children: T[], parent?: T, options?: CreateNodeGroupUIOptions<T>): T;
@@ -202,13 +200,12 @@ declare module "base" {
         get containerTypePercent(): LayoutType;
     }
 
-    class Resource<T extends Node> implements Resource<T> {
+    class Resource<T extends Node> implements Resource<T>, AppHandler<T> {
         static readonly KEY_NAME: string;
         static readonly ASSETS: ResourceAssetMap;
         static canCompressImage(filename: string, mimeType?: string): boolean;
         static getExtension(value: string): string;
         readonly application: Application<T>;
-        readonly cache: NodeList<T>;
         reset(): void;
         addImage(element: HTMLImageElement): void;
         getImage(uri: string): Undef<ImageAsset>;
@@ -254,8 +251,8 @@ declare module "base" {
         readonly dependencies: ExtensionDependency[];
         readonly subscribers: Set<T>;
         require(name: string, preload?: boolean): void;
-        beforeParseDocument(): void;
-        afterParseDocument(): void;
+        beforeParseDocument(sessionId: string): void;
+        afterParseDocument(sessionId: string): void;
         set application(value);
         get application(): Application<T>;
         get controller(): Controller<T>;
@@ -268,7 +265,7 @@ declare module "base" {
         readonly documentBase: boolean;
         readonly eventOnly: boolean;
         readonly cascadeAll: boolean;
-        init?(element: HTMLElement): boolean;
+        init?(element: HTMLElement, sessionId: string): boolean;
         included(element: HTMLElement): boolean;
         is(node: T): boolean;
         condition(node: T, parent?: T): boolean;
@@ -278,18 +275,16 @@ declare module "base" {
         postBaseLayout(node: T): void;
         postConstraints(node: T): void;
         postOptimize(node: T): void;
-        afterBaseLayout(): void;
-        afterConstraints(): void;
-        afterResources(): void;
-        beforeBaseLayout(): void;
-        beforeCascade(documentRoot: LayoutRoot<T>[]): void;
+        afterBaseLayout(sessionId: string): void;
+        afterConstraints(sessionId: string): void;
+        afterResources(sessionId: string): void;
+        beforeBaseLayout(sessionId: string): void;
+        beforeCascade(rendered: T[], documentRoot: LayoutRoot<T>[]): void;
         afterFinalize(): void;
         set application(value);
         get application(): ApplicationUI<T>;
         get controller(): ControllerUI<T>;
         get resource(): ResourceUI<T>;
-        get cache(): NodeList<T>;
-        get cacheProcessing(): NodeList<T>;
         constructor(name: string, framework: number, options?: StandardMap, tagNames?: string[]);
     }
 

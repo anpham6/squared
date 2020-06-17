@@ -199,7 +199,7 @@ export function get(...elements: (Element | string)[]) {
     const result = new Map<Element, Node[]>();
     const length = elements.length;
     if (main) {
-        for (const sessionId of main.session.active) {
+        for (const sessionId of main.session.active.keys()) {
             let i = 0;
             while (i < length) {
                 let element = elements[i++];

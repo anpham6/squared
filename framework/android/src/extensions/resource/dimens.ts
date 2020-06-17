@@ -31,17 +31,20 @@ function createNamespaceData(namespace: string, node: View, group: ObjectMap<Vie
 export default class ResourceDimens<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
 
-    public beforeCascade() {
+    public beforeCascade(rendered: T[]) {
         const dimens = (Resource.STORED as AndroidResourceStoredMap).dimens;
         const groups: ObjectMapNested<T[]> = {};
-        this.cache.each(node => {
+        const length = rendered.length;
+        let i = 0;
+        while (i < length) {
+            const node = rendered[i++];
             if (node.visible) {
                 const containerName = node.containerName.toLowerCase();
                 const group = safeNestedMap(groups, containerName);
                 createNamespaceData('android', node, group);
                 createNamespaceData('app', node, group);
             }
-        });
+        }
         for (const containerName in groups) {
             const group = groups[containerName] as ObjectMap<T[]>;
             for (const name in group) {

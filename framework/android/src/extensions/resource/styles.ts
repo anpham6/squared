@@ -9,26 +9,29 @@ const { capitalize } = squared.lib.util;
 export default class ResourceStyles<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
 
-    public beforeCascade() {
+    public beforeCascade(rendered: T[]) {
         const STORED = Resource.STORED as AndroidResourceStoredMap;
-        this.cache.each(node => {
+        const length = rendered.length;
+        let i = 0;
+        while (i < length) {
+            const node = rendered[i++];
             if (node.controlId && node.visible) {
                 const renderChildren = node.renderChildren;
-                const length = renderChildren.length;
-                if (length > 1) {
+                const q = renderChildren.length;
+                if (q > 1) {
                     const attrMap: ObjectMap<number> = {};
                     let style = '';
-                    let i = 0, j: number;
-                    while (i < length) {
-                        const item = renderChildren[i++] as T;
+                    let j = 0, k: number;
+                    while (j < q) {
+                        const item = renderChildren[j++] as T;
                         const combined = item.combine('_', 'android');
                         let found = false;
-                        const q = combined.length;
-                        j = 0;
-                        while (j < q) {
-                            const value = combined[j++];
+                        const r = combined.length;
+                        k = 0;
+                        while (k < r) {
+                            const value = combined[k++];
                             if (!found && value.startsWith('style=')) {
-                                if (i === 0) {
+                                if (j === 0) {
                                     style = value;
                                 }
                                 else if (style === '' || value !== style) {
@@ -46,20 +49,20 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                     }
                     const keys: string[] = [];
                     for (const attr in attrMap) {
-                        if (attrMap[attr] === length) {
+                        if (attrMap[attr] === q) {
                             keys.push(attr);
                         }
                     }
-                    const q = keys.length;
-                    if (q > 1) {
+                    const r = keys.length;
+                    if (r > 1) {
                         if (style !== '') {
                             style = style.substring(style.indexOf('/') + 1, style.length - 1);
                         }
                         const items: StringValue[] = [];
                         const attrs: string[] = [];
-                        i = 0;
-                        while (i < q) {
-                            const match = /(\w+:(\w+))="([^"]+)"/.exec(keys[i++]);
+                        j = 0;
+                        while (j < r) {
+                            const match = /(\w+:(\w+))="([^"]+)"/.exec(keys[j++]);
                             if (match) {
                                 items.push({ key: match[1], value: match[3] });
                                 attrs.push(match[2]);
@@ -70,15 +73,15 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                             items.sort((a, b) => a.key < b.key ? -1 : 1);
                             STORED.styles.set(name, Object.assign(createStyleAttribute(), { name, items }));
                         }
-                        i = 0;
-                        while (i < length) {
-                            const item = renderChildren[i++];
+                        j = 0;
+                        while (j < q) {
+                            const item = renderChildren[j++];
                             item.attr('_', 'style', `@style/${name}`);
                             item.delete('android', ...attrs);
                         }
                     }
                 }
             }
-        });
+        }
     }
 }

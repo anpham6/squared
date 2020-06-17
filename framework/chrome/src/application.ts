@@ -25,7 +25,7 @@ export default class Application<T extends squared.base.NodeElement> extends squ
                 (this.controllerHandler as chrome.base.Controller<T>).cacheElement(node);
                 break;
             default:
-                (this.controllerHandler as chrome.base.Controller<T>).cacheElementList(this.processing.cache);
+                (this.controllerHandler as chrome.base.Controller<T>).cacheElementList(this.getProcessingCache(node.sessionId));
                 break;
         }
     }

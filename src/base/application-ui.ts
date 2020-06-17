@@ -200,7 +200,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         excluded: new NodeList<T>(),
         extensionMap: new Map<number, ExtensionUI<T>[]>(),
         clearMap: new Map<T, string>(),
-        active: []
+        active: new Map<string, squared.base.AppProcessing<T>>(),
+        unusedStyles: new Set<string>()
     };
     public readonly builtInExtensions: ObjectMap<ExtensionUI<T>> = {};
     public readonly extensions: ExtensionUI<T>[] = [];
@@ -284,7 +285,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         i = 0;
         while (i < length) {
-            extensions[i++].beforeCascade(documentRoot);
+            extensions[i++].beforeCascade(rendered, documentRoot);
         }
         const baseTemplate = this._controllerSettings.layout.baseTemplate;
         const systemName = capitalize(this.systemName);
@@ -325,21 +326,23 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     public reset() {
-        super.reset();
-        const iterationName = 'iteration' + capitalize(this.systemName);
-        for (const element of this.rootElements) {
-            delete element.dataset[iterationName];
-        }
         const session = this.session;
+        const iterationName = 'iteration' + capitalize(this.systemName);
+        for (const item of session.active.values()) {
+            for (const element of item.rootElements) {
+                delete element.dataset[iterationName];
+            }
+        }
+        super.reset();
         session.cache.reset();
         session.excluded.reset();
         session.extensionMap.clear();
         this._layouts.length = 0;
     }
 
-    public conditionElement(element: HTMLElement, sessionId: string, pseudoElt?: string) {
+    public conditionElement(element: HTMLElement, sessionId: string, cascadeAll?: boolean, pseudoElt?: string) {
         if (!this._excluded.has(element.tagName)) {
-            if (this.controllerHandler.visibleElement(element, sessionId, pseudoElt) || this._cascadeAll) {
+            if (this.controllerHandler.visibleElement(element, sessionId, pseudoElt) || cascadeAll) {
                 return true;
             }
             else if (!pseudoElt) {
@@ -363,8 +366,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return false;
     }
 
-    public insertNode(element: Element, sessionId: string, pseudoElt?: string) {
-        if (element.nodeName === '#text' || this.conditionElement(element as HTMLElement, sessionId, pseudoElt)) {
+    public insertNode(element: Element, sessionId: string, cascadeAll?: boolean, pseudoElt?: string) {
+        if (element.nodeName === '#text' || this.conditionElement(element as HTMLElement, sessionId, cascadeAll, pseudoElt)) {
             this.controllerHandler.applyDefaultStyles(element, sessionId);
             return this.createNode(sessionId, { element, append: false });
         }
@@ -442,7 +445,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public createNode(sessionId: string, options: CreateNodeUIOptions<T>) {
         const { element, parent, children } = options;
-        const node = new this.Node(this.nextId, sessionId, element);
+        const cache = this.getProcessingCache(sessionId);
+        const node = new this.Node(cache.nextId, sessionId, element);
         this.controllerHandler.afterInsertNode(node);
         if (parent) {
             node.depth = parent.depth + 1;
@@ -463,7 +467,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
         }
         if (options.append !== false) {
-            this.processing.cache.add(node, options.delegate === true, options.cascade === true);
+            cache.add(node, options.delegate === true, options.cascade === true);
         }
         return node;
     }
@@ -471,7 +475,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public createCache(documentRoot: HTMLElement, sessionId: string) {
         const node = this.createRootNode(documentRoot, sessionId);
         if (node) {
-            const cache = this._cache as NodeList<T>;
+            const { cache, excluded } = this.getProcessing(sessionId)!;
             {
                 const parent = node.parent as T;
                 parent.visible = false;
@@ -519,7 +523,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
             });
-            this.processing.excluded.each(item => {
+            excluded.each(item => {
                 if (!item.pageFlow) {
                     item.cssTry('display', 'none');
                 }
@@ -574,7 +578,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     data.item.cssFinally('display');
                 }
             }
-            this.processing.excluded.each(item => {
+            excluded.each(item => {
                 if (!item.lineBreak) {
                     item.setBounds(!resetBounds);
                     item.saveAsInitial();
@@ -599,7 +603,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 item.saveAsInitial();
             });
             this.controllerHandler.evaluateNonStatic(node, cache);
-            this.controllerHandler.sortInitialCache();
+            this.controllerHandler.sortInitialCache(cache);
         }
         return node;
     }
@@ -615,9 +619,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         dataset['iteration' + systemName] = suffix.toString();
         dataset['layoutName' + systemName] = layoutName;
         node.data(Application.KEY_NAME, 'layoutName', layoutName);
-        this.setBaseLayout();
-        this.setConstraints();
-        this.setResources();
+        const sessionId = node.sessionId;
+        this.setBaseLayout(sessionId);
+        this.setConstraints(sessionId);
+        this.setResources(sessionId);
     }
 
     public useElement(element: HTMLElement) {
@@ -629,15 +634,15 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return this.layouts[0]?.content || '';
     }
 
-    protected cascadeParentNode(parentElement: HTMLElement, sessionId: string, depth: number, extensions?: ExtensionUI<T>[]) {
+    protected cascadeParentNode(cache: squared.base.NodeList<T>, excluded: squared.base.NodeList<T>, rootElements: Set<HTMLElement>, parentElement: HTMLElement, sessionId: string, depth: number, extensions?: ExtensionUI<T>[], cascadeAll?: boolean) {
         const node = this.insertNode(parentElement, sessionId);
         if (node.display !== 'none' || depth === 0 || hasOuterParentExtension(node)) {
             if (depth === 0) {
                 node.depth = depth;
-                this._cache.add(node);
+                cache.add(node);
                 for (const name of node.extensions) {
                     if ((this.extensionManager.retrieve(name) as ExtensionUI<T>)?.cascadeAll) {
-                        this._cascadeAll = true;
+                        cascadeAll = true;
                         break;
                     }
                 }
@@ -659,7 +664,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 const element = childNodes[i++] as HTMLElement;
                 let child: T;
                 if (element === beforeElement) {
-                    child = this.insertNode(beforeElement, sessionId, '::before');
+                    child = this.insertNode(beforeElement, sessionId, cascadeAll, '::before');
                     node.innerBefore = child;
                     if (!child.textEmpty) {
                         child.inlineText = true;
@@ -667,7 +672,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     inlineText = false;
                 }
                 else if (element === afterElement) {
-                    child = this.insertNode(afterElement, sessionId, '::after');
+                    child = this.insertNode(afterElement, sessionId, cascadeAll, '::after');
                     node.innerAfter = child;
                     if (!child.textEmpty) {
                         child.inlineText = true;
@@ -687,11 +692,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (extensions) {
                         const use = this.getDatasetName('use', element);
                         if (use) {
-                            prioritizeExtensions(use, extensions).some(item => (item.init as BindGeneric<HTMLElement, boolean>)(element));
+                            prioritizeExtensions(use, extensions).some(item => item.init!(element, sessionId));
                         }
                     }
-                    if (!this.rootElements.has(element)) {
-                        child = this.cascadeParentNode(element, sessionId, childDepth, extensions);
+                    if (!rootElements.has(element)) {
+                        child = this.cascadeParentNode(cache, excluded, rootElements, element, sessionId, childDepth, extensions);
                         if (child?.excluded === false) {
                             inlineText = false;
                         }
@@ -720,7 +725,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             node.inlineText = inlineText;
             if (!inlineText) {
                 if (j > 0) {
-                    this.cacheNodeChildren(node, children);
+                    this.cacheNodeChildren(cache, excluded, node, children);
                 }
                 node.inlineText = inlineText;
             }
@@ -734,15 +739,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return node;
     }
 
-    protected cacheNodeChildren(node: T, children: T[]) {
+    protected cacheNodeChildren(cache: squared.base.NodeList<T>, excluded: squared.base.NodeList<T>, node: T, children: T[]) {
         const length = children.length;
         if (length > 1) {
-            const cache = this._cache;
             let siblingsLeading: T[] = [],
                 siblingsTrailing: T[] = [],
                 trailing = children[0],
                 floating = false,
-                excluded: Undef<boolean>;
+                hasExcluded: Undef<boolean>;
             for (let i = 0, j = 0; i < length; ++i) {
                 const child = children[i];
                 if (child.pageFlow) {
@@ -770,8 +774,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
                 if (child.excluded) {
-                    excluded = true;
-                    this.processing.excluded.add(child);
+                    hasExcluded = true;
+                    excluded.add(child);
                 }
                 else {
                     child.$parent = node;
@@ -782,33 +786,32 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             trailing.siblingsTrailing = siblingsTrailing;
             node.floatContainer = floating;
-            node.retainAs(excluded ? children.filter(item => !item.excluded) : children.slice(0));
+            node.retainAs(hasExcluded ? children.filter(item => !item.excluded) : children.slice(0));
         }
         else {
             const child = children[0];
             if (child.excluded) {
-                this.processing.excluded.add(child);
+                excluded.add(child);
             }
             else {
                 child.$parent = node;
                 child.containerIndex = 0;
                 node.add(child);
-                this._cache.add(child);
+                cache.add(child);
                 node.floatContainer = child.floating;
             }
             child.actualParent = node;
         }
     }
 
-    protected setBaseLayout() {
-        const { controllerHandler, processing, session } = this;
+    protected setBaseLayout(sessionId: string) {
+        const { controllerHandler, session } = this;
         const { extensionMap, clearMap } = session;
-        const cache = processing.cache;
-        const documentRoot = processing.node as T;
+        const { cache, excluded, node: rootNode } = this.getProcessing(sessionId)!;
         const mapY = new Map<number, Set<T>>();
         {
             let maxDepth = 0;
-            setMapDepth(mapY, -1, documentRoot.parent as T);
+            setMapDepth(mapY, -1, rootNode!.parent as T);
             cache.each(node => {
                 if (node.length) {
                     const depth = node.depth;
@@ -871,7 +874,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const length = extensions.length;
         let i = 0;
         while (i < length) {
-            extensions[i++].beforeBaseLayout();
+            extensions[i++].beforeBaseLayout(sessionId);
         }
         let extensionsTraverse = this.extensionsTraverse;
         for (const depth of mapY.values()) {
@@ -1172,15 +1175,15 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     ext.postBaseLayout(node);
                 }
             }
-            ext.afterBaseLayout();
+            ext.afterBaseLayout(sessionId);
         }
         session.cache.joinWith(cache);
-        session.excluded.joinWith(processing.excluded);
+        session.excluded.joinWith(excluded);
     }
 
-    protected setConstraints() {
-        const cache = this._cache;
-        this.controllerHandler.setConstraints();
+    protected setConstraints(sessionId: string) {
+        const cache = this.getProcessingCache(sessionId);
+        this.controllerHandler.setConstraints(cache);
         const extensions = this.extensions;
         const length = extensions.length;
         let i = 0;
@@ -1191,20 +1194,25 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     ext.postConstraints(node);
                 }
             }
-            ext.afterConstraints();
+            ext.afterConstraints(sessionId);
         }
     }
 
-    protected setResources() {
+    protected setResources(sessionId: string) {
         const resourceHandler = this.resourceHandler;
-        this._cache.each(node => {
+        this.getProcessingCache(sessionId).each(node => {
             resourceHandler.setBoxStyle(node);
             if (node.hasResource(NODE_RESOURCE.VALUE_STRING) && node.visible && !node.imageElement && !node.svgElement) {
                 resourceHandler.setFontStyle(node);
                 resourceHandler.setValueString(node);
             }
         });
-        this.extensions.forEach(ext => ext.afterResources());
+        const extensions = this.extensions;
+        const length = extensions.length;
+        let i = 0;
+        while (i < length) {
+            extensions[i++].afterResources(sessionId);
+        }
     }
 
     protected processFloatHorizontal(layout: LayoutUI<T>) {

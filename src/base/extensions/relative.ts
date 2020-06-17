@@ -67,17 +67,17 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
         else {
             let target = node;
             if ((top !== 0 || bottom !== 0 || verticalAlign !== 0) && renderParent.layoutHorizontal && renderParent.support.positionRelative && node.renderChildren.length === 0) {
-                const application = this.application;
-                target = node.clone(application.nextId) as T;
+                const cache = this.application.getProcessingCache(node.sessionId);
+                target = node.clone(cache.nextId) as T;
                 target.baselineAltered = true;
                 node.hide({ hidden: true });
-                this.cache.add(target, false);
+                cache.add(target, false);
                 const layout = new LayoutUI(renderParent, target, target.containerType, target.alignmentType);
                 const index = renderParent.renderChildren.findIndex(item => item === node);
                 if (index !== -1) {
                     layout.renderIndex = index + 1;
                 }
-                application.addLayout(layout);
+                this.application.addLayout(layout);
                 if (node.parseUnit(node.css('textIndent')) < 0) {
                     const documentId = node.documentId;
                     renderParent.renderEach(item => {

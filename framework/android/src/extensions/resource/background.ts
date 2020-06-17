@@ -521,7 +521,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         this._resourceSvgInstance = this.controller.localSettings.svg.enabled ? this.application.builtInExtensions[EXT_ANDROID.RESOURCE_SVG] as ResourceSvg<T> : undefined;
     }
 
-    public afterResources() {
+    public afterResources(sessionId: string) {
         const settings = (this.application as android.base.Application<T>).userSettings;
         const drawOutline = this.options.drawOutlineAsInsetBorder;
         let themeBackground = false;
@@ -557,7 +557,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 node.android('background', drawable, false);
             }
         };
-        this.cacheProcessing.each(node => {
+        this.application.getProcessingCache(sessionId).each(node => {
             const stored: BoxStyle = node.data(Resource.KEY_NAME, 'boxStyle');
             if (stored) {
                 if (node.inputElement) {

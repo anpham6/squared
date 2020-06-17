@@ -21,7 +21,7 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
         return null;
     }
 
-    public init?: (element: HTMLElement) => boolean;
+    public init?: (element: HTMLElement, sessionId: string) => boolean;
 
     public tagNames: string[];
     public readonly eventOnly = false;
@@ -32,8 +32,6 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
     protected _application!: squared.base.ApplicationUI<T>;
     protected _controller!: squared.base.ControllerUI<T>;
     protected _resource!: squared.base.ResourceUI<T>;
-    protected _cache!: squared.base.NodeList<T>;
-    protected _cacheProcessing!: squared.base.NodeList<T>;
 
     private readonly _isAll: boolean;
 
@@ -86,20 +84,19 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
     public postConstraints(node: T) {}
     public postOptimize(node: T) {}
 
-    public afterBaseLayout() {}
-    public afterConstraints() {}
-    public afterResources() {}
+    public afterBaseLayout(sessionId: string) {}
+    public afterConstraints(sessionId: string) {}
+    public afterResources(sessionId: string) {}
 
-    public beforeBaseLayout() {}
-    public beforeCascade(documentRoot: squared.base.LayoutRoot<T>[]) {}
+    public beforeBaseLayout(sessionId: string) {}
+
+    public beforeCascade(rendered: T[], documentRoot: squared.base.LayoutRoot<T>[]) {}
     public afterFinalize() {}
 
     set application(value) {
         this._application = value;
         this._controller = value.controllerHandler;
         this._resource = value.resourceHandler;
-        this._cache = value.session.cache;
-        this._cacheProcessing = value.processing.cache;
     }
     get application() {
         return this._application;
@@ -111,13 +108,5 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
 
     get resource() {
         return this._resource;
-    }
-
-    get cache() {
-        return this._cache;
-    }
-
-    get cacheProcessing() {
-        return this._cacheProcessing;
     }
 }
