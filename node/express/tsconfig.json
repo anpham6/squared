@@ -1,15 +1,15 @@
 {
-  "extends": "../tsconfig.json",
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "target": "es2016",
     "module": "CommonJS",
-    "outDir": "../build",
+    "outDir": "../../build",
     "lib": ["dom", "es2016"]
   },
   "include": [
-    "../@types/**/file.d.ts",
-    "../@types/type.d.ts",
-    "../@types/object.d.ts",
+    "../../@types/**/file.d.ts",
+    "../../@types/type.d.ts",
+    "../../@types/object.d.ts",
     "@types/index.d.ts",
     "*.ts"
   ],

@@ -8,9 +8,7 @@ extension/
 framework/
 html/*
 md5/
-node_modules/
-node-express/
-node-scripts/
+node/
 src/
 temp/
 .eslint*

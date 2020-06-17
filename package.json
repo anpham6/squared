@@ -36,10 +36,10 @@
     "dev-android": "tsc -p ./config/tsconfig.android.json && rollup -c ./config/rollup.config.dev-base.js && cd ./framework/android && rollup -c rollup.config.dev.js",
     "dev-chrome": "tsc -p ./config/tsconfig.chrome.json && rollup -c ./config/rollup.config.dev-base.js && cd ./framework/chrome && rollup -c rollup.config.dev.js",
     "dev-vdom": "tsc -p ./config/tsconfig.vdom.json && rollup -c ./config/rollup.config.dev-base.js && cd ./framework/vdom && rollup -c rollup.config.dev.js",
-    "dev-express": "cd ./node-express && eslint **/*.ts && tsc -outDir ../",
-    "dev-scripts": "cd ./node-scripts && eslint **/*.ts && tsc -outDir ../",
+    "dev-express": "cd ./node/express && eslint **/*.ts && tsc -outDir ../../",
+    "dev-scripts": "cd ./node/scripts && eslint **/*.ts && tsc -outDir ../../",
     "dev": "tsc -p ./config/tsconfig.dev.json && rollup -c ./config/rollup.config.dev.js && cd ./framework/android && rollup -c rollup.config.dev.js && cd ../chrome && rollup -c rollup.config.dev.js && cd ../vdom && rollup -c rollup.config.dev.js",
-    "prod": "npm run clean && eslint **/*.ts && tsc -p ./config/tsconfig.prod.json && rollup -c ./config/rollup.config.js && cd ./node-express && eslint **/*.ts && tsc && rollup -c rollup.config.js && cd ../framework/android && rollup -c rollup.config.js && cd ../chrome && rollup -c rollup.config.js && cd ../vdom && rollup -c rollup.config.js && cd ../../extension/android/widget && rollup -c rollup.config.js",
+    "prod": "npm run clean && eslint **/*.ts && tsc -p ./config/tsconfig.prod.json && rollup -c ./config/rollup.config.js && cd ./node/express && eslint **/*.ts && tsc && rollup -c rollup.config.js && cd ../../framework/android && rollup -c rollup.config.js && cd ../chrome && rollup -c rollup.config.js && cd ../vdom && rollup -c rollup.config.js && cd ../../extension/android/widget && rollup -c rollup.config.js",
     "clean": "rimraf build/* && rimraf dist/* && rimraf temp/*"
   },
   "repository": {
