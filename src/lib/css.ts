@@ -1541,7 +1541,6 @@ export function parseSelectorText(value: string, document?: boolean) {
 }
 
 export function getSpecificity(value: string) {
-    CSS.SELECTOR_G.lastIndex = 0;
     let result = 0,
         match: Null<RegExpExecArray>;
     while (match = CSS.SELECTOR_G.exec(value)) {
@@ -1557,14 +1556,16 @@ export function getSpecificity(value: string) {
         }
         else if (segment.startsWith('*|*')) {
             if (segment.length > 3) {
-                return 0;
+                result = 0;
+                break;
             }
         }
         else if (segment.startsWith('*|')) {
             segment = segment.substring(2);
         }
         else if (segment.startsWith('::')) {
-            return 0;
+            result = 0;
+            break;
         }
         let subMatch: Null<RegExpExecArray>;
         while (subMatch = CSS.SELECTOR_ATTR.exec(segment)) {
@@ -1617,6 +1618,7 @@ export function getSpecificity(value: string) {
             segment = spliceString(segment, subMatch.index, command.length);
         }
     }
+    CSS.SELECTOR_G.lastIndex = 0;
     return result;
 }
 

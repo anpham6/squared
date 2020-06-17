@@ -11,7 +11,7 @@ export default abstract class Sprite<T extends squared.base.NodeUI> extends Exte
         const backgroundImage = node.backgroundImage;
         if (backgroundImage !== '' && (!node.use || this.included(node.element as HTMLElement))) {
             const url = resolveURL(backgroundImage);
-            const image = (this.resource.getRawData(backgroundImage) || url && this.resource.getImage(url)) as ImageAsset;
+            const image = (this.resource!.getRawData(backgroundImage) || url && this.resource!.getImage(url)) as ImageAsset;
             if (image) {
                 const dimension = node.actualDimension;
                 const [backgroundPositionX, backgroundPositionY] = node.cssAsTuple('backgroundPositionX', 'backgroundPositionY');

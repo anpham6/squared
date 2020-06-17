@@ -583,7 +583,6 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
                     notData.pseudoList = [not];
                     break;
                 case '[': {
-                    SELECTOR_ATTR.lastIndex = 0;
                     const match = SELECTOR_ATTR.exec(not);
                     if (match) {
                         const caseInsensitive = match[6] === 'i';
@@ -597,6 +596,7 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
                             value,
                             caseInsensitive
                         }];
+                        SELECTOR_ATTR.lastIndex = 0;
                     }
                     else {
                         continue;
@@ -1448,13 +1448,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 const query = queries[i++];
                 const selectors: QueryData[] = [];
                 let offset = -1;
-                invalid: {
-                    if (query === '*') {
-                        selectors.push({ all: true });
-                        ++offset;
-                    }
-                    else {
-                        SELECTOR_G.lastIndex = 0;
+                if (query === '*') {
+                    selectors.push({ all: true });
+                    ++offset;
+                }
+                else {
+                    invalid: {
                         let adjacent: Undef<string>,
                             match: Null<RegExpExecArray>;
                         while (match = SELECTOR_G.exec(query)) {
@@ -1590,6 +1589,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                             adjacent = undefined;
                         }
                     }
+                    SELECTOR_G.lastIndex = 0;
                 }
                 length = queryMap.length;
                 if (selectors.length && offset !== -1 && offset < length) {

@@ -446,7 +446,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public createNode(sessionId: string, options: CreateNodeUIOptions<T>) {
         const { element, parent, children } = options;
         const cache = this.getProcessingCache(sessionId);
-        const node = new this.Node(cache.nextId, sessionId, element);
+        const node = new this.Node(this.nextId, sessionId, element);
         this.controllerHandler.afterInsertNode(node);
         if (parent) {
             node.depth = parent.depth + 1;

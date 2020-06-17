@@ -15,7 +15,7 @@ export default abstract class Controller<T extends squared.base.Node> implements
     public applyDefaultStyles(element: Element, sessionId: string) {}
     public reset() {}
 
-    public includeElement(element: Element) {
+    public includeElement(element: HTMLElement) {
         return true;
     }
 

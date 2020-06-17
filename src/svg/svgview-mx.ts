@@ -34,12 +34,12 @@ const REGEXP_TIMINGFUNCTION = new RegExp(`(ease|ease-in|ease-out|ease-in-out|lin
 function parseAttribute(element: SVGElement, attr: string) {
     const value = getAttribute(element, attr);
     if (attr === 'animation-timing-function') {
-        REGEXP_TIMINGFUNCTION.lastIndex = 0;
         const result: string[] = [];
         let match: Null<RegExpMatchArray>;
         while (match = REGEXP_TIMINGFUNCTION.exec(value)) {
             result.push(match[1]);
         }
+        REGEXP_TIMINGFUNCTION.lastIndex = 0;
         return result;
     }
     return value.split(/\s*,\s*/);

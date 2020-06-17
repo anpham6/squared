@@ -262,7 +262,6 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
         for (let index = 0; index < 4; ++index) {
             const value = gridTemplates[index];
             if (value !== '' && value !== 'none' && value !== 'auto') {
-                REGEXP_NAMED.lastIndex = 0;
                 const data = index === 0 ? row : column;
                 const { name, repeat, unit, unitMin } = data;
                 let i = 1,
@@ -291,7 +290,6 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                         break;
                                 }
                                 if (iterations > 0) {
-                                    REGEXP_REPEAT.lastIndex = 0;
                                     const repeating: RepeatItem[] = [];
                                     let subMatch: Null<RegExpMatchArray>;
                                     while (subMatch = REGEXP_REPEAT.exec(match[3])) {
@@ -330,6 +328,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                             }
                                         }
                                     }
+                                    REGEXP_REPEAT.lastIndex = 0;
                                 }
                             }
                             else if (command.startsWith('minmax')) {
@@ -361,6 +360,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                             break;
                     }
                 }
+                REGEXP_NAMED.lastIndex = 0;
             }
         }
         if (horizontal) {

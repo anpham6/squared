@@ -3,10 +3,12 @@ import Resource from './resource';
 import { APP_QUERYSTATE } from './lib/enumeration';
 
 export default class Application<T extends squared.base.NodeElement> extends squared.base.Application<T> implements chrome.base.Application<T> {
+    public queryState = 0;
     public builtInExtensions: ObjectMap<chrome.base.Extension<T>> = {};
     public extensions: chrome.base.Extension<T>[] = [];
-    public queryState = 0;
     public userSettings!: ChromeUserSettings;
+    public readonly controllerHandler!: chrome.base.Controller<T>;
+    public readonly resourceHandler!: chrome.base.Resource<T>;
     public readonly systemName = 'chrome';
 
     public insertNode(element: Element, sessionId: string) {

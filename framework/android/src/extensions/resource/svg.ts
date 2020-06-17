@@ -812,7 +812,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
             src = value;
         }
         if (FILE.SVG.test(src) || src.startsWith('data:image/svg+xml')) {
-            const fileAsset = this.resource.getRawData(src);
+            const fileAsset = this.resource!.getRawData(src);
             if (fileAsset) {
                 const parentElement = (node.actualParent || node.documentParent).element as HTMLElement;
                 parentElement.insertAdjacentHTML('beforeend', fileAsset.content!);

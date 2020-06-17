@@ -367,7 +367,6 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
 
     public static parseBackgroundImage(node: NodeUI, backgroundImage: string, screenDimension?: Dimension) {
         if (backgroundImage !== '') {
-            REGEXP_BACKGROUNDIMAGE.lastIndex = 0;
             const images: (string | Gradient)[] = [];
             let i = 0,
                 match: Null<RegExpExecArray>;
@@ -554,6 +553,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 }
                 ++i;
             }
+            REGEXP_BACKGROUNDIMAGE.lastIndex = 0;
             if (images.length) {
                 return images;
             }

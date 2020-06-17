@@ -115,6 +115,7 @@ declare module "base" {
         get resourceHandler(): Undef<Resource<T>>;
         get extensionManager(): ExtensionManager<T>;
         get extensionsCascade(): Extension<T>[];
+        get nextId(): number;
         get length(): number;
         constructor(
             framework: number,
@@ -139,7 +140,7 @@ declare module "base" {
         addLayoutTemplate(parent: T, node: T, template: Undef<NodeTemplate<T>>, index?: number): void;
         saveDocument(filename: string, content: string, pathname?: string, index?: number): void;
         get controllerHandler(): ControllerUI<T>;
-        get resourceHandler(): ResourceUI<T>;
+        get resourceHandler(): Undef<ResourceUI<T>>;
         get layouts(): FileAsset[];
         get clearMap(): Map<T, string>;
         get extensionsTraverse(): ExtensionUI<T>[];
@@ -157,9 +158,9 @@ declare module "base" {
         readonly localSettings: ControllerSettings;
         init(): void;
         reset(): void;
-        includeElement(element: Element): boolean;
-        preventNodeCascade(node: T): boolean;
+        includeElement(element: HTMLElement): boolean;
         applyDefaultStyles(element: Element, sessionId: string): void;
+        preventNodeCascade(node: T): boolean;
         get afterInsertNode(): BindGeneric<T, void>;
         get userSettings(): UserSettings;
         get generateSessionId(): string;
@@ -170,7 +171,7 @@ declare module "base" {
         optimize(rendered: T[]): void;
         finalize(layouts: FileAsset[]): void;
         evaluateNonStatic(documentRoot: T, cache: NodeList<T>): void;
-        visibleElement(element: Element, sessionId: string, pseudoElt?: string): boolean;
+        visibleElement(element: HTMLElement, sessionId: string, pseudoElt?: string): boolean;
         processUnknownParent(layout: LayoutUI<T>): LayoutResult<T>;
         processUnknownChild(layout: LayoutUI<T>): LayoutResult<T>;
         processTraverseHorizontal(layout: LayoutUI<T>, siblings: T[]): Undef<LayoutUI<T>>;
@@ -284,7 +285,7 @@ declare module "base" {
         set application(value);
         get application(): ApplicationUI<T>;
         get controller(): ControllerUI<T>;
-        get resource(): ResourceUI<T>;
+        get resource(): Undef<ResourceUI<T>>;
         constructor(name: string, framework: number, options?: StandardMap, tagNames?: string[]);
     }
 
@@ -678,7 +679,6 @@ declare module "base" {
         afterAdd?: (node: T, cascade?: boolean) => void;
         add(node: T, delegate?: boolean, cascade?: boolean): this;
         reset(): void;
-        get nextId(): number;
         constructor(children?: T[]);
     }
 

@@ -1272,7 +1272,6 @@ class FileManager implements serve.IFileManager {
                                 source = source.replace(new RegExp(`\\s*${outerHTML}\\n*`), '');
                             }
                             if (original === source) {
-                                pattern.lastIndex = 0;
                                 const content = minifySpace(item.content || '');
                                 const outerContent = minifySpace(outerHTML);
                                 while (match = pattern.exec(html)) {
@@ -1281,11 +1280,11 @@ class FileManager implements serve.IFileManager {
                                         break;
                                     }
                                 }
+                                pattern.lastIndex = 0;
                             }
                         }
                     }
                     if (trailingContent) {
-                        pattern.lastIndex = 0;
                         const content = [];
                         for (const trailing of trailingContent) {
                             content.push(minifySpace(trailing.value));
@@ -1296,6 +1295,7 @@ class FileManager implements serve.IFileManager {
                                 source = source.replace(match[0], '');
                             }
                         }
+                        pattern.lastIndex = 0;
                     }
                     html = source;
                 }

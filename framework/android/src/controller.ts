@@ -1389,45 +1389,38 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public renderNodeGroup(layout: LayoutUI<T>) {
         const { node, containerType } = layout;
-        const options = createViewAttribute();
-        let valid = false;
         switch (containerType) {
-            case CONTAINER_NODE.LINEAR:
-                options.android.orientation = hasBit(layout.alignmentType, NODE_ALIGNMENT.VERTICAL) ? 'vertical' : 'horizontal';
-                valid = true;
+            case CONTAINER_NODE.FRAME:
+            case CONTAINER_NODE.RELATIVE:
+            case CONTAINER_NODE.CONSTRAINT:
                 break;
+            case CONTAINER_NODE.LINEAR: {
+                const options = createViewAttribute();
+                options.android.orientation = hasBit(layout.alignmentType, NODE_ALIGNMENT.VERTICAL) ? 'vertical' : 'horizontal';
+                node.apply(options);
+                break;
+            }
             case CONTAINER_NODE.GRID: {
+                const options = createViewAttribute();
                 const android = options.android;
                 if (layout.rowCount > 0) {
                     android.rowCount = layout.rowCount.toString();
                 }
                 android.columnCount = layout.columnCount > 0 ? layout.columnCount.toString() : '1';
-                valid = true;
+                node.apply(options);
                 break;
             }
-            case CONTAINER_NODE.FRAME:
-            case CONTAINER_NODE.RELATIVE:
-            case CONTAINER_NODE.CONSTRAINT:
-                valid = true;
-                break;
             default:
-                if (layout.isEmpty) {
-                    return this.renderNode(layout);
-                }
-                break;
+                return layout.isEmpty ? this.renderNode(layout) : undefined;
         }
-        if (valid) {
-            node.setControlType(View.getControlName(containerType, node.api), containerType);
-            node.addAlign(layout.alignmentType);
-            node.render(layout.parent);
-            node.apply(options);
-            return {
-                type: NODE_TEMPLATE.XML,
-                node,
-                controlName: node.controlName
-            } as NodeXmlTemplate<T>;
-        }
-        return undefined;
+        node.setControlType(View.getControlName(containerType, node.api), containerType);
+        node.addAlign(layout.alignmentType);
+        node.render(layout.parent);
+        return {
+            type: NODE_TEMPLATE.XML,
+            node,
+            controlName: node.controlName
+        } as NodeXmlTemplate<T>;
     }
 
     public renderNode(layout: LayoutUI<T>): NodeXmlTemplate<T> {
@@ -1437,7 +1430,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         switch (node.tagName) {
             case 'IMG':
             case 'CANVAS': {
-                const application = this.application;
                 const element = node.element as HTMLImageElement;
                 const absoluteParent = node.absoluteParent || node.documentParent;
                 let imageSet: Undef<ImageSrcSet[]>;
@@ -1448,10 +1440,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         const image = imageSet[0];
                         const actualWidth = image.actualWidth;
                         if (actualWidth) {
-                            setImageDimension(node, actualWidth, application.resourceHandler.getImage(element.src));
+                            setImageDimension(node, actualWidth, this.application.resourceHandler.getImage(element.src));
                         }
                         else {
-                            const stored = application.resourceHandler.getImage(image.src);
+                            const stored = this.application.resourceHandler.getImage(image.src);
                             if (stored) {
                                 setImageDimension(node, stored.width, stored);
                             }
@@ -1498,14 +1490,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                     }
                     else {
-                        src = application.resourceHandler.addImageSrc(element, '', imageSet);
+                        src = this.application.resourceHandler.addImageSrc(element, '', imageSet);
                     }
                     if (src) {
                         node.android('src', `@drawable/${src}`);
                     }
                 }
                 if (!node.pageFlow && parent === absoluteParent && (node.left < 0 && parent.css('overflowX') === 'hidden' || node.top < 0 && parent.css('overflowY') === 'hidden')) {
-                    const container = application.createNode(node.sessionId, { parent, innerWrap: node });
+                    const container = this.application.createNode(node.sessionId, { parent, innerWrap: node });
                     container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                     container.inherit(node, 'base');
                     container.cssCopy(node, 'position', 'zIndex');
@@ -1535,7 +1527,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     container.saveAsInitial();
                     node.modifyBox(BOX_STANDARD.MARGIN_TOP, node.top);
                     node.modifyBox(BOX_STANDARD.MARGIN_LEFT, node.left);
-                    application.addLayoutTemplate(
+                    this.application.addLayoutTemplate(
                         parent,
                         container,
                         {
@@ -2050,8 +2042,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public createNodeGroup(node: T, children: T[], parent?: T, options?: CreateNodeGroupUIOptions<T>) {
-        const cache = this.application.getProcessingCache(node.sessionId);
-        const group = new ViewGroup(cache.nextId, node, children) as T;
+        const group = new ViewGroup(this.application.nextId, node, children) as T;
         this.afterInsertNode(group);
         if (parent) {
             parent.replaceTry({ child: node, replaceWith: group, notFoundAppend: true });
@@ -2059,7 +2050,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         else {
             group.containerIndex = node.containerIndex;
         }
-        cache.add(group, options?.delegate === true, options?.cascade === true);
+        this.application.getProcessingCache(node.sessionId).add(group, options?.delegate === true, options?.cascade === true);
         return group;
     }
 

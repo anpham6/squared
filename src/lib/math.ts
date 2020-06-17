@@ -75,9 +75,6 @@ export function truncateString(value: string, precision = 3) {
         pattern = new RegExp(`(-?\\d+\\.\\d{${precision}})(\\d)\\d*`, 'g');
         REGEXP_TRUNCATECACHE[precision] = pattern;
     }
-    else {
-        pattern.lastIndex = 0;
-    }
     let output = value,
         match: Null<RegExpExecArray>;
     while (match = pattern.exec(value)) {
@@ -87,6 +84,7 @@ export function truncateString(value: string, precision = 3) {
         }
         output = output.replace(match[0], truncateTrailingZero(trailing));
     }
+    pattern.lastIndex = 0;
     return output;
 }
 

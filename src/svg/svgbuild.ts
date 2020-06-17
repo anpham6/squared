@@ -145,7 +145,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     }
 
     public static drawRefit(element: SVGGraphicsElement, parent?: SvgContainer, precision?: number) {
-        let value: string;
+        let value: Undef<string>;
         if (SVG.path(element)) {
             value = getNamedItem(element, 'd');
             if (parent?.requireRefit) {
@@ -207,10 +207,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             }
             value = SVG.polygon(element) ? SvgBuild.drawPolygon(points, precision) : SvgBuild.drawPolyline(points, precision);
         }
-        else {
-            value = '';
-        }
-        return value;
+        return value || '';
     }
 
     public static transformRefit(value: string, options?: SvgTransformRefitOptions) {
@@ -812,7 +809,6 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     }
 
     public static parseCoordinates(value: string) {
-        REGEXP_DECIMAL.lastIndex = 0;
         const result: number[] = [];
         let match: Null<RegExpExecArray>;
         while (match = REGEXP_DECIMAL.exec(value)) {
@@ -821,6 +817,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 result.push(coord);
             }
         }
+        REGEXP_DECIMAL.lastIndex = 0;
         return result;
     }
 

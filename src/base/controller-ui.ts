@@ -91,7 +91,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         return this._unsupportedCascade.has(node.tagName);
     }
 
-    public includeElement(element: Element) {
+    public includeElement(element: HTMLElement) {
         const tagName = element.tagName;
         return !(this._unsupportedTagName.has(tagName) || tagName === 'INPUT' && this._unsupportedTagName.has(tagName + ':' + (element as HTMLInputElement).type)) || (element as HTMLElement).contentEditable === 'true';
     }
@@ -298,7 +298,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             : id in this._beforeOutside || id in this._beforeInside || id in this._afterInside || id in this._afterOutside;
     }
 
-    public visibleElement(element: Element, sessionId: string, pseudoElt?: string) {
+    public visibleElement(element: HTMLElement, sessionId: string, pseudoElt?: string) {
         let style: CSSStyleDeclaration,
             width: number,
             height: number;

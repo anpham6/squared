@@ -38,8 +38,7 @@ function parseSrcSet(value: string) {
 function parseImageUrl(resourceHandler: Undef<Resource<Node>>, baseMap: StringMap, attr: string, styleSheetHref?: string) {
     const value = baseMap[attr];
     if (value && value !== 'initial') {
-        REGEXP_DATAURI.lastIndex = 0;
-        let result = value,
+        let result: Undef<string>,
             match: Null<RegExpExecArray>;
         while (match = REGEXP_DATAURI.exec(value)) {
             if (match[2]) {
@@ -52,11 +51,14 @@ function parseImageUrl(resourceHandler: Undef<Resource<Node>>, baseMap: StringMa
                     if (resourceHandler && !resourceHandler.getImage(uri)) {
                         addImageSrc(uri);
                     }
-                    result = result.replace(match[0], `url("${uri}")`);
+                    result = (result || value).replace(match[0], `url("${uri}")`);
                 }
             }
         }
-        baseMap[attr] = result;
+        if (result) {
+            baseMap[attr] = result;
+        }
+        REGEXP_DATAURI.lastIndex = 0;
     }
 }
 
@@ -79,6 +81,7 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     protected _afterInsertNode: BindGeneric<Node, void>;
 
+    private _nextId = 0;
     private readonly _controllerHandler: Controller<T>;
     private readonly _extensionManager: ExtensionManager<T>;
     private readonly _resourceHandler?: Resource<T>;
@@ -109,7 +112,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     public createNode(sessionId: string, options: CreateNodeOptions) {
-        return new this.Node(this.getProcessingCache(sessionId).nextId, sessionId, options.element);
+        return new this.Node(this.nextId, sessionId, options.element);
     }
 
     public copyToDisk(directory: string, options?: FileActionOptions) {
@@ -138,6 +141,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     public reset() {
+        this._nextId = 0;
         this.session.active.clear();
         this.session.unusedStyles.clear();
         this.controllerHandler.reset();
@@ -689,6 +693,10 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     get extensionsCascade(): Extension<T>[] {
         return [];
+    }
+
+    get nextId() {
+        return this._nextId++;
     }
 
     get length() {
