@@ -779,15 +779,17 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public init() {
-        const { resolutionDPI, resolutionScreenWidth, resolutionScreenHeight, supportRTL, targetAPI } = this.userSettings;
-        const dpiRatio = 160 / resolutionDPI;
-        const screenDimension = { width: resolutionScreenWidth * dpiRatio, height: resolutionScreenHeight * dpiRatio };
-        this._targetAPI = targetAPI || BUILD_ANDROID.LATEST;
-        this._screenDimension = screenDimension;
+        const userSettings = this.userSettings;
+        const dpiRatio = 160 / userSettings.resolutionDPI;
+        this._targetAPI = userSettings.targetAPI || BUILD_ANDROID.LATEST;
+        this._screenDimension = {
+            width: userSettings.resolutionScreenWidth * dpiRatio,
+            height: userSettings.resolutionScreenHeight * dpiRatio
+        };
         this._defaultViewSettings = {
             systemName: this.application.systemName,
-            screenDimension,
-            supportRTL,
+            screenDimension: this._screenDimension,
+            supportRTL: userSettings.supportRTL,
             floatPrecision: this.localSettings.precision.standardFloat
         };
         super.init();
@@ -3445,9 +3447,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             node.localSettings = this._defaultViewSettings;
             node.api = this._targetAPI;
             node.setExclusions();
-            if (!node.hasProcedure(NODE_PROCEDURE.LOCALIZATION)) {
-                node.localSettings.supportRTL = false;
-            }
         };
     }
 

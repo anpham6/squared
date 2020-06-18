@@ -12,7 +12,7 @@ const { actualTextRangeRect } = squared.lib.session;
 const { capitalize, convertFloat, convertInt, convertWord, fromLastIndexOf, hasKeys, isNumber, isPlainObject, isString, replaceMap } = squared.lib.util;
 
 const { EXT_NAME } = squared.base.lib.constant;
-const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
+const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE } = squared.base.lib.enumeration;
 
 const ResourceUI = squared.base.ResourceUI;
 
@@ -154,7 +154,13 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top:
                 }
             }
             else if (node.inputElement) {
-                const element = createElement(document.body, 'div', { ...node.textStyle, visibility: 'hidden' });
+                const element = createElement('div', {
+                    parent: document.body,
+                    style: {
+                        ...node.textStyle,
+                        visibility: 'hidden'
+                    }
+                });
                 element.innerText = 'AgjpyZ';
                 const rowHeight = actualTextRangeRect(element).height;
                 document.body.removeChild(element);
@@ -932,6 +938,13 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             else if (this._containerType === 0) {
                 this._containerType = CONTAINER_NODE.UNKNOWN;
+            }
+        }
+
+        public setExclusions() {
+            super.setExclusions();
+            if (!this.hasProcedure(NODE_PROCEDURE.LOCALIZATION)) {
+                this.localSettings.supportRTL = false;
             }
         }
 

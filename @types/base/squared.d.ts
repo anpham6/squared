@@ -542,7 +542,7 @@ declare module "base" {
         horizontalRows?: NodeUI[][];
         renderChildren: NodeUI[];
         setControlType(controlName: string, containerType?: number): void;
-        setExclusions(systemName?: string): void;
+        setExclusions(): void;
         setLayout(): void;
         setAlignment(): void;
         setBoxSpacing(): void;

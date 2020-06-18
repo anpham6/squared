@@ -499,7 +499,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public baselineAltered = false;
     public visible = true;
     public documentChildren?: T[];
-    public abstract localSettings: LocalSettingsUI;
     public abstract renderParent?: T;
     public abstract renderExtension?: squared.base.ExtensionUI<T>[];
     public abstract renderTemplates?: NodeTemplate<T>[];
@@ -552,11 +551,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public abstract get controlId(): string;
     public abstract get documentId(): string;
     public abstract get baselineHeight(): number;
-    public abstract get support(): SupportUI;
     public abstract set renderExclude(value: boolean);
     public abstract get renderExclude(): boolean;
     public abstract set positioned(value);
     public abstract get positioned(): boolean;
+    public abstract set localSettings(value);
+    public abstract get localSettings(): LocalSettingsUI;
+    public abstract get support(): SupportUI;
 
     public is(containerType: number) {
         return this.containerType === containerType;
@@ -840,19 +841,19 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         }
     }
 
-    public setExclusions(systemName?: string) {
+    public setExclusions() {
         if (this.naturalElement) {
             const element = this._element as HTMLElement;
             const dataset = element.dataset;
             const parentDataset = element.parentElement?.dataset || {};
             if (hasKeys(dataset) || hasKeys(parentDataset)) {
-                systemName = capitalize(systemName || this.localSettings.systemName);
+                const systemName = capitalize(this.localSettings.systemName);
                 this.exclude({
                     resource: parseExclusions('excludeResource', NODE_RESOURCE, dataset, parentDataset, systemName),
                     procedure: parseExclusions('excludeProcedure', NODE_PROCEDURE, dataset, parentDataset, systemName),
                     section: parseExclusions('excludeSection', APP_SECTION, dataset, parentDataset, systemName)
                 });
-            }
+             }
         }
     }
 

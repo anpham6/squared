@@ -154,7 +154,7 @@ declare module "lib" {
         function removeElementsByClassName(className: string): void;
         function getElementsBetweenSiblings(elementStart: Null<Element>, elementEnd: Element): Undef<Element[]>;
         function getNamedItem(element: Element, attr: string): string;
-        function createElement(parent: HTMLElement, tagName: string, attrs: StringMap): HTMLElement;
+        function createElement(tagName: string, options?: CreateElementOptions): HTMLElement;
         function measureTextWidth(value: string, fontFamily: string, fontSize: number): number;
     }
 

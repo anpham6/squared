@@ -206,9 +206,12 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                         }
                         s = elements.length;
                         if (s) {
-                            const container = createElement(document.body, 'div', {
-                                width: formatPX(columnWidth || node.box.width / columnMin),
-                                visibility: 'hidden'
+                            const container = createElement('div', {
+                                parent: document.body,
+                                style: {
+                                    width: formatPX(columnWidth || node.box.width / columnMin),
+                                    visibility: 'hidden'
+                                }
                             });
                             k = 0;
                             while (k < s) {

@@ -24,7 +24,7 @@ let executablePath: String;
 let width = 1280;
 let height = 960;
 let flags = 1;
-let timeout = 60 * 1000;
+let timeout = 10 * 1000;
 let screenshot = false;
 let rebase = false;
 let extension = 'md5';
@@ -105,7 +105,7 @@ let extension = 'md5';
             case '--timeout': {
                 const t = parseFloat(ARGV[i++]);
                 if (!isNaN(t) && t > 0) {
-                    timeout = t * 60 * 1000;
+                    timeout = t * 1000;
                 }
                 break;
             }

@@ -67,6 +67,12 @@ interface CalculateVarOptions extends Omit<CalculateVarAsStringOptions, "ordered
     dimension?: DimensionAttr;
 }
 
+interface CreateElementOptions {
+    parent?: HTMLElement;
+    attrs?: ObjectMap<any>;
+    style?: StringMap;
+}
+
 interface TransformOptions {
     boundingBox?: Dimension;
     accumulate?: boolean;

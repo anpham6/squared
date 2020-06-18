@@ -65,17 +65,26 @@ System.import('/build/src/main.js').then(result => {
 
 document.addEventListener('DOMContentLoaded', () => {
     squared.setFramework(android);
+    const copyTo = new URLSearchParams(location.search).get('copyTo');
+    if (copyTo) {
+        squared.settings.showErrorMessages = false;
+    }
     const time = Date.now();
     squared.parseDocument()
         .then(() => {
-            const copyTo = new URLSearchParams(location.search).get('copyTo');
             if (copyTo) {
                 squared.copyToDisk(copyTo).then(response => {
-                    const element = squared.lib.dom.createElement(document.body, 'div', { whiteSpace: 'pre', display: 'none' });
-                    if (response.success) {
-                        element.innerHTML = response.files.join('\n');
-                    }
-                    element.id = 'md5_complete';
+                    squared.lib.dom.createElement('div', {
+                        parent: document.body,
+                        attrs: {
+                            id: 'md5_complete',
+                            innerHTML: response.files.join('\n')
+                        },
+                        style: {
+                            whiteSpace: 'pre',
+                            display: 'none'
+                        }
+                    });
                 });
             }
             else {
