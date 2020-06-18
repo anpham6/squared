@@ -140,13 +140,8 @@ export function adjustAbsolutePaddingOffset(parent: View, direction: number, val
     return 0;
 }
 
-export function createViewAttribute(data?: StandardMap, options?: ViewAttribute): ViewAttribute {
-    if (!options) {
-        options = { android: {} };
-    }
-    else if (!options.android) {
-        options.android = {};
-    }
+export function createViewAttribute(data?: StandardMap) {
+    const options: ViewAttribute = { android: {} };
     if (data) {
         if (data.android) {
             Object.assign(options.android, data.android);

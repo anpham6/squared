@@ -59,8 +59,6 @@ declare module "base" {
     }
 
     interface AppSessionUI<T extends NodeUI> extends AppSession<T> {
-        cache: NodeList<T>;
-        excluded: NodeList<T>;
         extensionMap: Map<number, ExtensionUI<T>[]>;
         clearMap: Map<T, string>;
     }
@@ -115,6 +113,7 @@ declare module "base" {
         get resourceHandler(): Undef<Resource<T>>;
         get extensionManager(): ExtensionManager<T>;
         get extensionsCascade(): Extension<T>[];
+        get childrenAll(): Node[];
         get nextId(): number;
         get length(): number;
         constructor(
@@ -262,10 +261,10 @@ declare module "base" {
 
     class ExtensionUI<T extends NodeUI> extends Extension<T> {
         static findNestedElement<T extends NodeUI>(node: T, name: string): Null<HTMLElement>;
-        tagNames: string[];
-        readonly documentBase: boolean;
-        readonly eventOnly: boolean;
-        readonly cascadeAll: boolean;
+        readonly tagNames: string[];
+        readonly documentBase?: boolean;
+        readonly eventOnly?: boolean;
+        readonly cascadeAll?: boolean;
         init?(element: HTMLElement, sessionId: string): boolean;
         included(element: HTMLElement): boolean;
         is(node: T): boolean;

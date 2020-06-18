@@ -280,8 +280,9 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
 
     public joinWith(...other: Container<T>[]) {
         let children = this._children;
-        for (let i = 0; i < other.length; ++i) {
-            children = children.concat(other[i].children);
+        let i = 0;
+        while (i < other.length) {
+            children = children.concat(other[i++].children);
         }
         this._children = children;
         return this;

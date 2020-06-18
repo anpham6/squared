@@ -421,7 +421,7 @@ declare namespace lib {
         function adjustAbsolutePaddingOffset(parent: View, direction: number, value: number): number;
         function isGridJustified(node: View): boolean;
         function isGridAligned(node: View): boolean;
-        function createViewAttribute(data?: StandardMap, options?: ViewAttribute): ViewAttribute;
+        function createViewAttribute(data?: StandardMap): ViewAttribute;
         function createStyleAttribute(data?: StandardMap): Required<StyleAttribute>;
         function getDataSet(dataset: StringMap | DOMStringMap, prefix: string): Undef<StringMap>;
         function localizeString(value: string, rtl: boolean, api: number): string;

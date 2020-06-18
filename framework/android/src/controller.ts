@@ -100,11 +100,10 @@ function getSortOrderInvalid(above: View, below: View): number {
 }
 
 function adjustBaseline(baseline: View, nodes: View[], singleRow: boolean, boxTop: number) {
-    const baselineHeight = baseline.baselineHeight;
     let imageHeight = 0,
         imageBaseline: Undef<View>;
     const length = nodes.length;
-    let i = 0, j: number;
+    let i = 0;
     while (i < length) {
         const node = nodes[i++];
         if (node.baselineAltered) {
@@ -114,16 +113,23 @@ function adjustBaseline(baseline: View, nodes: View[], singleRow: boolean, boxTo
         if (height > 0 || node.textElement) {
             if (node.blockVertical && baseline.blockVertical) {
                 node.anchor('bottom', baseline.documentId);
-                continue;
+            }
+            else if (singleRow && node.is(CONTAINER_NODE.BUTTON)) {
+                node.anchor('centerVertical', 'true');
             }
             else {
-                const imageElements = node.renderChildren.filter((item: View) => isBaselineImage(item));
-                if (node.imageOrSvgElement || imageElements.length) {
-                    j = 0;
-                    while (j < imageElements.length) {
-                        height = Math.max(imageElements[j++].baselineHeight, height);
-                    }
-                    if (height > baselineHeight) {
+                const isEmpty = node.isEmpty;
+                let imageElement = node.imageOrSvgElement;
+                if (!imageElement && !isEmpty) {
+                    node.renderEach((item: View) => {
+                        if (isBaselineImage(item)) {
+                            height = Math.max(item.baselineHeight, height);
+                            imageElement = true;
+                        }
+                    });
+                }
+                if (imageElement) {
+                    if (height > baseline.baselineHeight) {
                         if (!imageBaseline || height >= imageHeight) {
                             imageBaseline?.anchor(getBaselineAnchor(node), node.documentId);
                             imageHeight = height;
@@ -139,15 +145,12 @@ function adjustBaseline(baseline: View, nodes: View[], singleRow: boolean, boxTo
                         continue;
                     }
                 }
-            }
-            if (singleRow && node.is(CONTAINER_NODE.BUTTON)) {
-                node.anchor('centerVertical', 'true');
-            }
-            else if (node.naturalChild && node.isEmpty) {
-                node.anchor('baseline', baseline.documentId);
-            }
-            else if (node.baselineElement) {
-                node.anchor(node.naturalElements.find((item: View) => isBaselineImage(item)) ? 'bottom' : 'baseline', baseline.documentId);
+                if (isEmpty && node.naturalChild) {
+                    node.anchor('baseline', baseline.documentId);
+                }
+                else if (node.baselineElement) {
+                    node.anchor(imageElement ? 'bottom' : 'baseline', baseline.documentId);
+                }
             }
         }
         else if (isBaselineImage(node)) {
@@ -1271,15 +1274,33 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public checkConstraintHorizontal(layout: LayoutUI<T>) {
         if (layout.length > 1 && layout.singleRowAligned) {
-            const floatedSize = layout.floated.size;
-            if (floatedSize && (
-                    floatedSize === 2 ||
-                    hasCleared(layout, this.application.clearMap) ||
-                    layout.some(item => item.float === 'left') && layout.some(item => item.autoMargin.left === true) ||
-                    layout.some(item => item.float === 'right') && layout.some(item => item.autoMargin.right === true)
-                ))
-            {
-                return false;
+            switch (layout.floated.size) {
+                case 1:
+                    if (hasCleared(layout, this.application.clearMap)) {
+                        return false;
+                    }
+                    else {
+                        let left = false,
+                            right = false;
+                        for (const node of layout) {
+                            const { float, autoMargin } = node;
+                            if (float === 'left' || autoMargin.right) {
+                                left = true;
+                                if (right) {
+                                    return false;
+                                }
+                            }
+                            if (float === 'right' || autoMargin.left) {
+                                right = true;
+                                if (left) {
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                    break;
+                case 2:
+                    return false;
             }
             return layout.some(node => node.blockVertical || node.percentWidth > 0 && node.percentWidth < 1 && !node.inputElement && !node.controlElement || node.marginTop < 0 || node.verticalAlign === 'bottom' && !layout.parent.hasHeight);
         }
@@ -1312,7 +1333,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     public setConstraints(cache: squared.base.NodeList<T>) {
         cache.each(node => {
             const renderChildren = node.renderChildren as T[];
-            if (renderChildren.length && node.hasProcedure(NODE_PROCEDURE.CONSTRAINT)) {
+            const length = renderChildren.length;
+            if (length && node.hasProcedure(NODE_PROCEDURE.CONSTRAINT)) {
                 if (node.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
                     if (node.layoutConstraint && !node.layoutElement) {
                         this.evaluateAnchors(renderChildren);
@@ -1322,7 +1344,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     this.processRelativeHorizontal(node, renderChildren);
                 }
                 else if (node.layoutConstraint) {
-                    const length = renderChildren.length;
                     const pageFlow: T[] = new Array(length);
                     let i = 0, j = 0;
                     while (i < length) {
@@ -1932,13 +1953,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         length = unbound.length;
         if (length) {
-            const options = createViewAttribute(undefined, {
+            const options: ViewAttribute = {
                 android: {},
                 app: {
                     barrierDirection,
                     constraint_referenced_ids: unbound.map(item => getDocumentId(item.anchorTarget.documentId)).join(',')
                 }
-            });
+            };
             const { api, anchorTarget } = unbound[length - 1];
             const content = this.renderNodeStatic({ controlName: api < BUILD_ANDROID.Q ? CONTAINER_ANDROID.BARRIER : CONTAINER_ANDROID_X.BARRIER }, options);
             switch (barrierDirection) {
@@ -3366,14 +3387,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                 }
             }
-            const templateOptions = createViewAttribute(undefined, {
+            const templateOptions: ViewAttribute = {
                 android: {
                     orientation: horizontal ? 'vertical' : 'horizontal'
                 },
                 app: {
                     [attr]: percent ? location.toString() : '@dimen/' + Resource.insertStoredAsset('dimens', `constraint_guideline_${!opposing ? LT : RB}`, formatPX(location))
                 }
-            });
+            };
             this.addAfterOutsideTemplate(node.id, this.renderNodeStatic({ controlName: node.api < BUILD_ANDROID.Q ? CONTAINER_ANDROID.GUIDELINE : CONTAINER_ANDROID_X.GUIDELINE }, templateOptions), false);
             const documentId = templateOptions.documentId;
             if (documentId) {

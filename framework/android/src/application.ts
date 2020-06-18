@@ -19,9 +19,13 @@ export default class Application<T extends View> extends squared.base.Applicatio
                     return node;
                 }
             }
-            for (const node of this.session.cache) {
-                if (isTargeted(node, target)) {
-                    return node;
+            for (const [id, item] of this.session.active.entries()) {
+                if (id !== sessionId) {
+                    for (const node of item.cache) {
+                        if (isTargeted(node, target)) {
+                            return node;
+                        }
+                    }
                 }
             }
         }

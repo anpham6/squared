@@ -695,11 +695,19 @@ export default abstract class Application<T extends Node> implements squared.bas
         return [];
     }
 
+    get childrenAll() {
+        let result: T[] = [];
+        for (const item of this.session.active.values()) {
+            result = result.concat(item.cache.children);
+        }
+        return result;
+    }
+
     get nextId() {
-        return this._nextId++;
+        return ++this._nextId;
     }
 
     get length() {
-        return 0;
+        return this.session.active.size;
     }
 }

@@ -58,8 +58,8 @@
                         android = result.default;
                         squared.setFramework(android);
                         Promise.all([
-                            System.import('/build/android-widget/menu/main.js'),
-                            System.import('/build/android-widget/bottomnavigation/main.js')
+                            System.import('/build/extension/android/widget/menu/main.js'),
+                            System.import('/build/extension/android/widget/bottomnavigation/main.js')
                         ]).then(() => {
                             squared.configure('android.widget.bottomnavigation', {
                                 bottomnavigation_demo: {

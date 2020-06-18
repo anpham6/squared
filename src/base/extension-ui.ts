@@ -23,11 +23,10 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
 
     public init?: (element: HTMLElement, sessionId: string) => boolean;
 
-    public tagNames: string[];
-    public readonly eventOnly = false;
-    public readonly documentBase = false;
-    public readonly cascadeAll = false;
-    public readonly removeIs = false;
+    public readonly tagNames: string[];
+    public readonly eventOnly?: boolean;
+    public readonly documentBase?: boolean;
+    public readonly cascadeAll?: boolean;
 
     protected _application!: squared.base.ApplicationUI<T>;
     protected _controller!: squared.base.ControllerUI<T>;

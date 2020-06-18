@@ -1,5 +1,4 @@
 import Application from './application';
-import NodeList from './nodelist';
 import ControllerUI from './controller-ui';
 import ExtensionUI from './extension-ui';
 import FileUI from './file-ui';
@@ -191,13 +190,10 @@ const getCounterIncrementValue = (parent: HTMLElement, counterName: string, pseu
 const extractQuote = (value: string) => /^"(.+)"$/.exec(value)?.[1] || value;
 const isHorizontalAligned = (node: NodeUI) => !node.blockStatic && node.autoMargin.horizontal !== true && !(node.blockDimension && node.css('width') === '100%') && (!(node.plainText && node.multiline) || node.floating);
 const requirePadding = (node: NodeUI, depth?: number): boolean => node.textElement && (node.blockStatic || node.multiline || depth === 1);
-const hasOuterParentExtension = (node: NodeUI) => node.ascend({ condition: (item: NodeUI) => isString(item.use) }).length > 0;
 const getMapIndex = (value: number) => (value * -1) - 2;
 
 export default abstract class ApplicationUI<T extends NodeUI> extends Application<T> implements squared.base.ApplicationUI<T> {
     public readonly session: squared.base.AppSessionUI<T> = {
-        cache: new NodeList<T>(),
-        excluded: new NodeList<T>(),
         extensionMap: new Map<number, ExtensionUI<T>[]>(),
         clearMap: new Map<T, string>(),
         active: new Map<string, squared.base.AppProcessing<T>>(),
@@ -233,11 +229,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (super.finalize()) {
             return false;
         }
-        const { controllerHandler, session } = this;
-        const cache = session.cache;
-        const extensions = this.extensions;
+        const controllerHandler = this.controllerHandler;
         const layouts = this._layouts;
-        const children = cache.children;
+        const children = this.childrenAll;
         let length = children.length;
         const rendered: T[] = new Array(length);
         let i = 0, j = 0;
@@ -255,6 +249,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         rendered.length = j;
         controllerHandler.optimize(rendered);
+        const extensions = this.extensions;
         length = extensions.length;
         i = 0;
         while (i < length) {
@@ -271,11 +266,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 node.setBoxSpacing();
             }
             if (node.documentRoot) {
-                if (node.renderChildren.length === 0 && !node.inlineText) {
-                    const naturalElement = node.naturalElements;
-                    if (naturalElement.length && naturalElement.every(item => item.documentRoot)) {
-                        continue;
-                    }
+                if (node.renderChildren.length === 0 && !node.inlineText && node.naturalElements.length && node.naturalElements.every(item => item.documentRoot)) {
+                    continue;
                 }
                 const layoutName = node.innerMostWrapped.data(Application.KEY_NAME, 'layoutName');
                 if (layoutName) {
@@ -334,9 +326,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
         }
         super.reset();
-        session.cache.reset();
-        session.excluded.reset();
         session.extensionMap.clear();
+        session.clearMap.clear();
         this._layouts.length = 0;
     }
 
@@ -476,15 +467,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const node = this.createRootNode(documentRoot, sessionId);
         if (node) {
             const { cache, excluded } = this.getProcessing(sessionId)!;
-            {
-                const parent = node.parent as T;
-                parent.visible = false;
-                node.documentParent = parent;
-                if (parent.tagName === 'HTML') {
-                    parent.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
-                    parent.exclude({ resource: NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING, procedure: NODE_PROCEDURE.ALL });
-                    cache.add(parent);
-                }
+            const parent = node.parent as T;
+            parent.visible = false;
+            node.documentParent = parent;
+            if (parent.tagName === 'HTML') {
+                parent.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
+                parent.exclude({ resource: NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING, procedure: NODE_PROCEDURE.ALL });
+                cache.add(parent);
             }
             node.rootElement = true;
             const preAlignment: ObjectIndex<StringMap> = {};
@@ -635,20 +624,20 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected cascadeParentNode(cache: squared.base.NodeList<T>, excluded: squared.base.NodeList<T>, rootElements: Set<HTMLElement>, parentElement: HTMLElement, sessionId: string, depth: number, extensions?: ExtensionUI<T>[], cascadeAll?: boolean) {
-        const node = this.insertNode(parentElement, sessionId);
-        if (node.display !== 'none' || depth === 0 || hasOuterParentExtension(node)) {
-            if (depth === 0) {
-                node.depth = depth;
-                cache.add(node);
-                for (const name of node.extensions) {
-                    if ((this.extensionManager.retrieve(name) as ExtensionUI<T>)?.cascadeAll) {
-                        cascadeAll = true;
-                        break;
-                    }
+        const node = this.insertNode(parentElement, sessionId, cascadeAll);
+        if (depth === 0) {
+            node.depth = depth;
+            cache.add(node);
+            for (const name of node.extensions) {
+                if ((this.extensionManager.retrieve(name) as ExtensionUI<T>)?.cascadeAll) {
+                    cascadeAll = true;
+                    break;
                 }
             }
+        }
+        if (node.display !== 'none' || depth === 0 || cascadeAll) {
             const controllerHandler = this.controllerHandler;
-            if (node.excluded && !hasOuterParentExtension(node) || controllerHandler.preventNodeCascade(node)) {
+            if (node.excluded || controllerHandler.preventNodeCascade(node)) {
                 return node;
             }
             const beforeElement = this.createPseduoElement(parentElement, '::before', sessionId);
@@ -696,8 +685,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                     }
                     if (!rootElements.has(element)) {
-                        child = this.cascadeParentNode(cache, excluded, rootElements, element, sessionId, childDepth, extensions);
-                        if (child?.excluded === false) {
+                        child = this.cascadeParentNode(cache, excluded, rootElements, element, sessionId, childDepth, extensions, cascadeAll);
+                        if (!child.excluded) {
                             inlineText = false;
                         }
                     }
@@ -807,7 +796,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     protected setBaseLayout(sessionId: string) {
         const { controllerHandler, session } = this;
         const { extensionMap, clearMap } = session;
-        const { cache, excluded, node: rootNode } = this.getProcessing(sessionId)!;
+        const { cache, node: rootNode } = this.getProcessing(sessionId)!;
         const mapY = new Map<number, Set<T>>();
         {
             let maxDepth = 0;
@@ -1177,8 +1166,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             ext.afterBaseLayout(sessionId);
         }
-        session.cache.joinWith(cache);
-        session.excluded.joinWith(excluded);
     }
 
     protected setConstraints(sessionId: string) {
@@ -1986,9 +1973,5 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     get clearMap() {
         return this.session.clearMap;
-    }
-
-    get length() {
-        return this.session.cache.length;
     }
 }

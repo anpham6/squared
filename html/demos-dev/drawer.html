@@ -88,10 +88,10 @@
                     android = result.default;
                     squared.setFramework(android);
                     Promise.all([
-                        System.import('/build/android-widget/coordinator/main.js'),
-                        System.import('/build/android-widget/floatingactionbutton/main.js'),
-                        System.import('/build/android-widget/menu/main.js'),
-                        System.import('/build/android-widget/drawer/main.js')
+                        System.import('/build/extension/android/widget/coordinator/main.js'),
+                        System.import('/build/extension/android/widget/floatingactionbutton/main.js'),
+                        System.import('/build/extension/android/widget/menu/main.js'),
+                        System.import('/build/extension/android/widget/drawer/main.js')
                     ]).then(() => {
                         squared.parseDocument('squared_ui').then(function() {
                             squared.close();

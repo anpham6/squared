@@ -980,7 +980,7 @@ export function parseColor(value: string, opacity = 1, transparency = false) {
         }
         let key = '',
             rgba: Undef<RGBA>;
-        if (value.startsWith('#')) {
+        if (value.charAt(0) === '#') {
             rgba = parseRGBA(value);
         }
         else {
@@ -1105,8 +1105,8 @@ export function convertHex(value: RGBA) {
 }
 
 export function parseRGBA(value: string) {
-    value = value.replace(/#/g, '').trim();
     if (CSS.HEX.test(value)) {
+        value = value.substring(1);
         let a = 255;
         switch (value.length) {
             case 4:
