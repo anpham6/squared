@@ -25,8 +25,8 @@ function setAspectRatio(parent: Undef<Svg | SvgUseSymbol>, group: SvgGroup, view
                 let parentWidth = parentAspectRatio.width || parent.viewBox.width,
                     parentHeight = parentAspectRatio.height || parent.viewBox.height,
                     parentUnknown = false,
-                    boxWidth: number,
-                    boxHeight: number;
+                    boxWidth = NaN,
+                    boxHeight = NaN;
                 if (parentWidth === 0 && parentHeight === 0) {
                     ({ width: parentWidth, height: parentHeight } = getDOMRect(parent.element));
                     parentAspectRatio.width = parentWidth;
@@ -42,13 +42,19 @@ function setAspectRatio(parent: Undef<Svg | SvgUseSymbol>, group: SvgGroup, view
                     boxWidth = parentWidth;
                     boxHeight = parentHeight;
                 }
-                else if (SVG.svg(element)) {
-                    boxWidth = element.width.baseVal.value;
-                    boxHeight = element.height.baseVal.value;
-                }
                 else {
-                    boxWidth = parseFloat(w);
-                    boxHeight = parseFloat(h);
+                    if (SVG.svg(element)) {
+                        try {
+                            boxWidth = element.width.baseVal.value;
+                            boxHeight = element.height.baseVal.value;
+                        }
+                        catch {
+                        }
+                    }
+                    if (!boxWidth && !boxHeight) {
+                        boxWidth = parseFloat(w);
+                        boxHeight = parseFloat(h);
+                    }
                 }
                 const hasWidth = hasLength(w);
                 const hasHeight = hasLength(h);
@@ -63,7 +69,7 @@ function setAspectRatio(parent: Undef<Svg | SvgUseSymbol>, group: SvgGroup, view
                     aspectRatio.unit = Math.min(ratioWidth, ratioHeight);
                 }
                 if (hasWidth || hasHeight) {
-                    if (!isNaN(boxWidth) && !isNaN(boxHeight)) {
+                    if (boxWidth && boxHeight) {
                         const { align, meetOrSlice } = element.preserveAspectRatio.baseVal;
                         if (boxRatioWidth === boxRatioHeight) {
                             if (resizeUnit) {
