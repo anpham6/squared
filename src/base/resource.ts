@@ -8,7 +8,6 @@ export default abstract class Resource<T extends squared.base.Node> implements s
     public static readonly KEY_NAME = 'squared.resource';
 
     public static readonly ASSETS: ResourceAssetMap = {
-        ids: new Map(),
         fonts: new Map(),
         image: new Map(),
         video: new Map(),

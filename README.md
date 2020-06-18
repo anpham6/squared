@@ -323,10 +323,6 @@ The system methods querySelector and querySelectorAll can also be called from ev
 ```javascript
 // Synchronous
 
-squared.system.getElementById(value: string, cache?: boolean) // cache: default "true"
-squared.system.querySelector(value: string, cache?: boolean)
-squared.system.querySelectorAll(value: string, cache?: boolean)
-squared.system.getElement(element: HTMLElement, cache?: boolean) // cache: default "false"
 squared.system.getElementMap()
 squared.system.clearElementMap()
 

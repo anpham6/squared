@@ -267,6 +267,7 @@ function getGradientPosition(value: string) {
 
 export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> implements squared.base.ResourceUI<T> {
     public static readonly STORED: ResourceStoredMap = {
+        ids: new Map(),
         strings: new Map(),
         arrays: new Map(),
         fonts: new Map(),
@@ -284,7 +285,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         if (start === 1) {
             name += '_' + i;
         }
-        const ids = this.ASSETS.ids;
+        const ids = this.STORED.ids;
         const previous = ids.get(section) || [];
         do {
             if (!previous.includes(name)) {

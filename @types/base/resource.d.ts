@@ -1,5 +1,4 @@
 interface ResourceAssetMap {
-    ids: Map<string, string[]>;
     fonts: Map<string, FontFaceData[]>;
     image: Map<string, ImageAsset>;
     video: Map<string, Asset>;
@@ -8,6 +7,7 @@ interface ResourceAssetMap {
 }
 
 interface ResourceStoredMap {
+    ids: Map<string, string[]>;
     strings: Map<string, string>;
     arrays: Map<string, string[]>;
     fonts: Map<string, ObjectMap<string>>;

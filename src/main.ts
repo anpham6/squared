@@ -26,7 +26,7 @@ const settings = {} as UserSettings;
 const system = {} as FunctionMap<any>;
 
 let main: Undef<Main>;
-let framework: Framework;
+let framework: Undef<Framework>;
 
 function includeExtension(extensions: Extension[], ext: Extension) {
     if (main && !extensions.includes(ext)) {
@@ -53,11 +53,11 @@ export function setHostname(value: string) {
     }
 }
 
-export function setFramework(value: Framework, options?: ObjectMap<any>, cached = false) {
+export function setFramework(value: Framework, options?: ObjectMap<any>, cached?: boolean) {
     const reloading = framework !== undefined;
     if (framework !== value) {
         const appBase = cached ? value.cached() : value.create();
-        if (framework === undefined) {
+        if (!framework) {
             Object.assign(appBase.userSettings, settings);
         }
         if (util.isPlainObject(options)) {

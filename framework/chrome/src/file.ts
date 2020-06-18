@@ -20,7 +20,7 @@ function parseFileAs(attr: string, value: Undef<string>): [string, Undef<string>
     return undefined;
 }
 
-function getFilePath(value: string, saveTo = false): [Undef<string>, string, string] {
+function getFilePath(value: string, saveTo?: boolean): [Undef<string>, string, string] {
     value = value.replace(/\\/g, '/');
     let moveTo: Undef<string>;
     if (value.charAt(0) === '/') {
@@ -150,19 +150,24 @@ export default class File<T extends squared.base.NodeElement> extends squared.ba
             saveTo: Undef<boolean>,
             preserve: Undef<boolean>;
         if (options) {
-            ({ saveAs, format, preserve } = options);
+            ({ saveAs, format, saveTo, preserve } = options);
         }
         let value = trimEnd(uri, '/'),
             relocate: Undef<string>;
         const local = value.startsWith(trimEnd(location.origin, '/'));
         if (saveAs) {
             saveAs = trimEnd(saveAs.replace(/\\/g, '/'), '/');
-            const data = parseFileAs('saveAs', saveAs);
-            if (data) {
-                [relocate, format, preserve] = data;
+            if (saveTo) {
+                relocate = saveAs;
             }
             else {
-                relocate = saveAs;
+                const data = parseFileAs('saveAs', saveAs);
+                if (data) {
+                    [relocate, format, preserve] = data;
+                }
+                else {
+                    relocate = saveAs;
+                }
             }
             if (local && relocate) {
                 value = resolvePath(relocate, location.href);
@@ -464,14 +469,16 @@ export default class File<T extends squared.base.NodeElement> extends squared.ba
         const processUri = (element: Null<HTMLElement>, uri: string, mimeType?: string) => {
             uri = uri.trim();
             if (uri !== '') {
-                let file: Undef<string>;
+                let file: Undef<string>,
+                    saveTo = false;
                 if (element) {
-                    const saveTo = parseFileAs('saveTo', element.dataset.chromeFile);
-                    if (saveTo) {
-                        [file, mimeType] = saveTo;
+                    const fileAs = parseFileAs('saveTo', element.dataset.chromeFile);
+                    if (fileAs) {
+                        [file, mimeType] = fileAs;
+                        saveTo = true;
                     }
                 }
-                const data = File.parseUri(uri, { preserveCrossOrigin, saveAs: file, saveTo: true });
+                const data = File.parseUri(uri, { preserveCrossOrigin, saveAs: file, saveTo });
                 if (this.validFile(data) && !result.find(item => item.uri === uri)) {
                     if (mimeType) {
                         data.mimeType = file ? mimeType + ':' + data.mimeType : mimeType;
@@ -620,7 +627,7 @@ export default class File<T extends squared.base.NodeElement> extends squared.ba
             }
             for (const [item, uri] of items.entries()) {
                 const saveAs = parseFileAs('saveTo', item.dataset.chromeFile)?.[0];
-                const data = File.parseUri(uri, { preserveCrossOrigin, saveAs, saveTo: true });
+                const data = File.parseUri(uri, { preserveCrossOrigin, saveAs, saveTo: !!saveAs });
                 if (this.validFile(data)) {
                     processExtensions.call(this, data, getExtensions(item));
                     result.push(data);

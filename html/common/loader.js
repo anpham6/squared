@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (copyTo) {
         squared.settings.showErrorMessages = false;
     }
-    const time = Date.now();
+    const time = performance.now();
     squared.parseDocument()
         .then(() => {
             if (copyTo) {
@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
             else {
-                console.log('SQ: ' + (Date.now() - time));
+                console.log('SQ: ' + (performance.now() - time));
                 squared.settings.outputEmptyCopyDirectory = true;
                 squared.copyToDisk('C:/Users/An/git/flexbox', {
                     assets: [
@@ -105,10 +105,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     ]
                 })
                 .then(response => {
-                    console.log('CP: ' + (Date.now() - time))
+                    console.log('CP: ' + (performance.now() - time))
                     console.log(response);
                 });
-                console.log('NE: ' + (Date.now() - time));
+                console.log('NE: ' + (performance.now() - time));
             }
         })
         .catch(err => console.log(err));

@@ -97,9 +97,9 @@
     <script src="/common/dev.js"></script>
     <script>
         async function searchQuery(node) {
-            const time = new Date().getTime();
+            const time = performance.now();
             console.log(node.querySelectorAll('form[name=entry].form2#form1:nth-child(2):nth-child(1n+1):nth-child(even):nth-child(n+1):nth-child(-n+5):nth-child(0n+2):nth-of-type(1n+1) > ul:last-child:not(:first-child) li div label > input[type=Radio i][title="c2,birth"], label + input[type=checkbox]'));
-            console.log(new Date().getTime() - time);
+            console.log(performance.now() - time);
         }
         System.import('/build/src/main.js').then(result => {
             squared = result;
