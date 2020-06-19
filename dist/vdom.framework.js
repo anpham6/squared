@@ -1,4 +1,4 @@
-/* vdom-framework 1.11.1
+/* vdom-framework 1.12.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -13,21 +13,12 @@
     class Application extends squared.base.Application {
         constructor() {
             super(...arguments);
-            this.builtInExtensions = {};
-            this.extensions = [];
             this.systemName = 'vdom';
         }
         insertNode(element, sessionId) {
-            return element.nodeName !== '#text' ? super.createNode(sessionId, { element }) : undefined;
+            return element.nodeName !== '#text' ? new this.Node(this.nextId, sessionId, element) : undefined;
         }
-    }
-
-    class Controller extends squared.base.Controller {
-        constructor(application, cache) {
-            super();
-            this.application = application;
-            this.cache = cache;
-        }
+        afterCreateCache() {}
     }
 
     const settings = {
@@ -42,13 +33,12 @@
     const appBase = {
         base: {
             Application,
-            Controller,
         },
         lib: {},
         extensions: {},
         system: {},
         create() {
-            application = new Application(framework, squared.base.NodeElement, Controller);
+            application = new Application(framework, squared.base.NodeElement, squared.base.Controller);
             initialized = true;
             return {
                 application,

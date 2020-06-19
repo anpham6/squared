@@ -2,6 +2,7 @@ const settings: ChromeUserSettings = {
     builtInExtensions: [],
     preloadImages: false,
     excludePlainText: true,
+    createElementMap: true,
     createQuerySelectorMap: true,
     showErrorMessages: false,
     outputFileExclusions: [],

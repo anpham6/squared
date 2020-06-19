@@ -1,5 +1,4 @@
 import Application from './application';
-import Controller from './controller';
 
 import SETTINGS from './settings';
 
@@ -12,14 +11,13 @@ let application: Application<NodeElement>;
 
 const appBase: squared.base.AppFramework<NodeElement> = {
     base: {
-        Application,
-        Controller
+        Application
     },
     lib: {},
     extensions: {},
     system: {},
     create() {
-        application = new Application<NodeElement>(framework, squared.base.NodeElement, Controller);
+        application = new Application<NodeElement>(framework, squared.base.NodeElement, squared.base.Controller);
         initialized = true;
         return {
             application,

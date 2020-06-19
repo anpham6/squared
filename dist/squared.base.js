@@ -1,4 +1,4 @@
-/* squared.base 1.11.1
+/* squared.base 1.12.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -110,7 +110,6 @@
     class NodeList extends squared.lib.base.Container {
         constructor(children) {
             super(children);
-            this._currentId = 0;
         }
         add(node, delegate = false, cascade = false) {
             var _a;
@@ -121,12 +120,8 @@
             return this;
         }
         reset() {
-            this._currentId = 0;
             this.clear();
             return this;
-        }
-        get nextId() {
-            return ++this._currentId;
         }
     }
 
@@ -283,7 +278,6 @@
     }
     Resource.KEY_NAME = 'squared.resource';
     Resource.ASSETS = {
-        ids: new Map(),
         fonts: new Map(),
         image: new Map(),
         video: new Map(),
@@ -338,9 +332,7 @@
     function parseImageUrl(resourceHandler, baseMap, attr, styleSheetHref) {
         const value = baseMap[attr];
         if (value && value !== 'initial') {
-            REGEXP_DATAURI$1.lastIndex = 0;
-            let result = value,
-                match;
+            let result, match;
             while ((match = REGEXP_DATAURI$1.exec(value))) {
                 if (match[2]) {
                     const [mimeType, encoding] = match[2].trim().split(/\s*;\s*/);
@@ -353,11 +345,14 @@
                         if (resourceHandler && !resourceHandler.getImage(uri)) {
                             addImageSrc(uri);
                         }
-                        result = result.replace(match[0], `url("${uri}")`);
+                        result = (result || value).replace(match[0], `url("${uri}")`);
                     }
                 }
             }
-            baseMap[attr] = result;
+            if (result) {
+                baseMap[attr] = result;
+            }
+            REGEXP_DATAURI$1.lastIndex = 0;
         }
     }
     const isSvg = value => FILE.SVG.test(value);
@@ -377,31 +372,21 @@
             ExtensionManagerConstructor
         ) {
             this.framework = framework;
-            this.initializing = false;
+            this.builtInExtensions = {};
+            this.extensions = [];
             this.closed = false;
-            this.rootElements = new Set();
             this.session = {
-                active: [],
-            };
-            this.processing = {
-                cache: new NodeList(),
-                excluded: new NodeList(),
+                active: new Map(),
                 unusedStyles: new Set(),
             };
-            this._cascadeAll = false;
-            const cache = this.processing.cache;
-            this._cache = cache;
-            this._controllerHandler = new ControllerConstructor(this, cache);
+            this._nextId = 0;
+            this._controllerHandler = new ControllerConstructor(this);
             if (ResourceConstructor) {
-                this._resourceHandler = new ResourceConstructor(this, cache);
+                this._resourceHandler = new ResourceConstructor(this);
             }
-            this._extensionManager = new (ExtensionManagerConstructor || ExtensionManager)(this, cache);
+            this._extensionManager = new (ExtensionManagerConstructor || ExtensionManager)(this);
             this._afterInsertNode = this._controllerHandler.afterInsertNode;
             this.Node = nodeConstructor;
-        }
-        afterCreateCache(node) {}
-        insertNode(element, sessionId) {
-            return this.createNode(sessionId, { element });
         }
         createNode(sessionId, options) {
             return new this.Node(this.nextId, sessionId, options.element);
@@ -458,11 +443,9 @@
         }
         reset() {
             var _a;
-            const processing = this.processing;
-            processing.cache.reset();
-            processing.excluded.clear();
-            processing.unusedStyles.clear();
-            this.session.active.length = 0;
+            this._nextId = 0;
+            this.session.active.clear();
+            this.session.unusedStyles.clear();
             this.controllerHandler.reset();
             (_a = this.resourceHandler) === null || _a === void 0 ? void 0 : _a.reset();
             this.extensions.forEach(ext => ext.subscribers.clear());
@@ -470,20 +453,25 @@
         }
         parseDocument(...elements) {
             const { controllerHandler: controller, resourceHandler: resource } = this;
-            this.initializing = false;
-            this.rootElements.clear();
+            const rootElements = new Set();
             const sessionId = controller.generateSessionId;
-            this.session.active.push(sessionId);
-            controller.init();
-            this.setStyleMap(sessionId);
             const preloadImages = !!resource && resource.userSettings.preloadImages;
             const preloaded = [];
             const imageElements = [];
+            const processing = {
+                cache: new NodeList(),
+                excluded: new NodeList(),
+                rootElements,
+                initializing: false,
+            };
+            this.session.active.set(sessionId, processing);
+            controller.init();
+            this.setStyleMap(sessionId);
             const styleElement = insertStyleSheetRule('html > body { overflow: hidden !important; }');
             let documentRoot;
             if (elements.length === 0) {
                 documentRoot = document.body;
-                this.rootElements.add(documentRoot);
+                rootElements.add(documentRoot);
             } else {
                 let i = 0;
                 while (i < elements.length) {
@@ -497,13 +485,13 @@
                     if (!documentRoot) {
                         documentRoot = element;
                     }
-                    this.rootElements.add(element);
+                    rootElements.add(element);
                 }
             }
             if (!documentRoot) {
                 return Promise.reject(new Error('Document root not found.'));
             }
-            for (const element of this.rootElements) {
+            for (const element of rootElements) {
                 element.querySelectorAll('picture > source').forEach(source => parseSrcSet(source.srcset));
                 element.querySelectorAll('video').forEach(source => addImageSrc(source.poster));
                 element
@@ -525,8 +513,9 @@
                 });
             }
             const resumeThread = () => {
-                this.initializing = false;
-                const length = preloaded.length;
+                const extensions = this.extensions;
+                processing.initializing = false;
+                let length = preloaded.length;
                 let i = 0;
                 while (i < length) {
                     const image = preloaded[i++];
@@ -535,16 +524,23 @@
                     }
                 }
                 preloaded.length = 0;
-                this.extensions.forEach(ext => ext.beforeParseDocument());
+                length = extensions.length;
+                i = 0;
+                while (i < length) {
+                    extensions[i++].beforeParseDocument(sessionId);
+                }
                 const success = [];
-                for (const element of this.rootElements) {
+                for (const element of rootElements) {
                     const node = this.createCache(element, sessionId);
                     if (node) {
                         this.afterCreateCache(node);
                         success.push(node);
                     }
                 }
-                this.extensions.forEach(ext => ext.afterParseDocument());
+                i = 0;
+                while (i < length) {
+                    extensions[i++].afterParseDocument(sessionId);
+                }
                 try {
                     document.head.removeChild(styleElement);
                 } catch (_a) {}
@@ -588,7 +584,7 @@
                 }
             }
             if (resource) {
-                for (const element of this.rootElements) {
+                for (const element of rootElements) {
                     element.querySelectorAll('img').forEach(image => {
                         parseSrcSet(image.srcset);
                         if (!preloadImages) {
@@ -606,7 +602,7 @@
                 }
             }
             if (imageElements.length) {
-                this.initializing = true;
+                processing.initializing = true;
                 return Promise.all(
                     plainMap(imageElements, image => {
                         return new Promise((resolve, reject) => {
@@ -660,7 +656,7 @@
         createCache(documentRoot, sessionId) {
             const node = this.createRootNode(documentRoot, sessionId);
             if (node) {
-                this.controllerHandler.sortInitialCache();
+                this.controllerHandler.sortInitialCache(this.getProcessingCache(sessionId));
             }
             return node;
         }
@@ -679,6 +675,16 @@
                 }
             }
         }
+        getProcessing(sessionId) {
+            return this.session.active.get(sessionId);
+        }
+        getProcessingCache(sessionId) {
+            var _a;
+            return (
+                ((_a = this.session.active.get(sessionId)) === null || _a === void 0 ? void 0 : _a.cache) ||
+                new NodeList()
+            );
+        }
         getDatasetName(attr, element) {
             return element.dataset[attr + capitalize(this.systemName)] || element.dataset[attr];
         }
@@ -689,16 +695,17 @@
             return this.systemName;
         }
         createRootNode(element, sessionId) {
-            const processing = this.processing;
-            const cache = processing.cache;
-            cache.clear();
-            processing.excluded.clear();
-            processing.documentElement = undefined;
-            this._cascadeAll = false;
+            const processing = this.getProcessing(sessionId);
             const extensions = this.extensionsCascade;
-            const node = extensions.length
-                ? this.cascadeParentNode(element, sessionId, 0, extensions)
-                : this.cascadeParentNode(element, sessionId, 0);
+            const node = this.cascadeParentNode(
+                processing.cache,
+                processing.excluded,
+                processing.rootElements,
+                element,
+                sessionId,
+                0,
+                extensions.length ? extensions : undefined
+            );
             if (node) {
                 const parent = new this.Node(0, sessionId, element.parentElement || document.documentElement);
                 this._afterInsertNode(parent);
@@ -711,14 +718,12 @@
                 }
             }
             processing.node = node;
-            cache.afterAdd = undefined;
             return node;
         }
-        cascadeParentNode(parentElement, sessionId, depth, extensions) {
+        cascadeParentNode(cache, excluded, rootElements, parentElement, sessionId, depth, extensions) {
             const node = this.insertNode(parentElement, sessionId);
             if (node) {
-                const { controllerHandler: controller, processing } = this;
-                const cache = processing.cache;
+                const { controllerHandler: controller } = this;
                 node.depth = depth;
                 if (depth === 0) {
                     cache.add(node);
@@ -745,7 +750,15 @@
                             }
                         }
                     } else if (controller.includeElement(element)) {
-                        child = this.cascadeParentNode(element, sessionId, depth + 1, extensions);
+                        child = this.cascadeParentNode(
+                            cache,
+                            excluded,
+                            rootElements,
+                            element,
+                            sessionId,
+                            depth + 1,
+                            extensions
+                        );
                         if (child) {
                             elements[k++] = child;
                             cache.add(child);
@@ -754,7 +767,7 @@
                     } else {
                         child = this.insertNode(element, sessionId);
                         if (child) {
-                            processing.excluded.add(child);
+                            excluded.add(child);
                             inlineText = false;
                         }
                     }
@@ -806,7 +819,9 @@
                     this.applyCSSRuleList(item.cssRules, sessionId);
                     break;
                 case CSSRule.STYLE_RULE: {
+                    const unusedStyles = this.session.unusedStyles;
                     const baseMap = {};
+                    const important = {};
                     {
                         const cssStyle = item.style;
                         const items = Array.from(cssStyle);
@@ -820,7 +835,6 @@
                     parseImageUrl(resourceHandler, baseMap, 'backgroundImage', styleSheetHref);
                     parseImageUrl(resourceHandler, baseMap, 'listStyleImage', styleSheetHref);
                     parseImageUrl(resourceHandler, baseMap, 'content', styleSheetHref);
-                    const important = {};
                     {
                         const pattern = /\s*([a-z-]+):[^!;]+!important;/g;
                         let match;
@@ -844,7 +858,7 @@
                         const elements = document.querySelectorAll(selector || '*');
                         const q = elements.length;
                         if (q === 0) {
-                            this.processing.unusedStyles.add(selectorText);
+                            unusedStyles.add(selectorText);
                             continue;
                         }
                         let i = 0;
@@ -999,6 +1013,14 @@
                 this.applyStyleRule(rules[i++], sessionId);
             }
         }
+        get initializing() {
+            for (const processing of this.session.active.values()) {
+                if (processing.initializing) {
+                    return true;
+                }
+            }
+            return false;
+        }
         get controllerHandler() {
             return this._controllerHandler;
         }
@@ -1011,17 +1033,25 @@
         get extensionsCascade() {
             return [];
         }
+        get childrenAll() {
+            let result = [];
+            for (const item of this.session.active.values()) {
+                result = result.concat(item.cache.children);
+            }
+            return result;
+        }
         get nextId() {
-            return this._cache.nextId;
+            return ++this._nextId;
         }
         get length() {
-            return 0;
+            return this.session.active.size;
         }
     }
     Application.KEY_NAME = 'squared.application';
 
     class Controller {
-        constructor() {
+        constructor(application) {
+            this.application = application;
             this.localSettings = {
                 mimeType: {
                     font: '*',
@@ -1032,7 +1062,7 @@
             };
         }
         init() {}
-        sortInitialCache() {}
+        sortInitialCache(cache) {}
         applyDefaultStyles(element, sessionId) {}
         reset() {}
         includeElement(element) {
@@ -1042,7 +1072,7 @@
             return false;
         }
         get generateSessionId() {
-            return Date.now().toString() + '-' + this.application.session.active.length;
+            return Date.now().toString() + '-' + this.application.session.active.size;
         }
         get afterInsertNode() {
             return node => {};
@@ -1066,8 +1096,8 @@
         require(name, preload = false) {
             this.dependencies.push({ name, preload });
         }
-        beforeParseDocument() {}
-        afterParseDocument() {}
+        beforeParseDocument(sessionId) {}
+        afterParseDocument(sessionId) {}
         set application(value) {
             this._application = value;
             this._controller = value.controllerHandler;
@@ -1903,7 +1933,6 @@
                         notData.pseudoList = [not];
                         break;
                     case '[': {
-                        SELECTOR_ATTR.lastIndex = 0;
                         const match = SELECTOR_ATTR.exec(not);
                         if (match) {
                             const caseInsensitive = match[6] === 'i';
@@ -1919,6 +1948,7 @@
                                     caseInsensitive,
                                 },
                             ];
+                            SELECTOR_ATTR.lastIndex = 0;
                         } else {
                             continue;
                         }
@@ -2713,12 +2743,11 @@
                     const query = queries[i++];
                     const selectors = [];
                     let offset = -1;
-                    invalid: {
-                        if (query === '*') {
-                            selectors.push({ all: true });
-                            ++offset;
-                        } else {
-                            SELECTOR_G.lastIndex = 0;
+                    if (query === '*') {
+                        selectors.push({ all: true });
+                        ++offset;
+                    } else {
+                        invalid: {
                             let adjacent, match;
                             while ((match = SELECTOR_G.exec(query))) {
                                 let segment = match[1],
@@ -2842,6 +2871,7 @@
                                 adjacent = undefined;
                             }
                         }
+                        SELECTOR_G.lastIndex = 0;
                     }
                     length = queryMap.length;
                     if (selectors.length && offset !== -1 && offset < length) {
@@ -4950,7 +4980,7 @@
                 this._excludeSection |= section;
             }
         }
-        setExclusions(systemName) {
+        setExclusions() {
             var _a;
             if (this.naturalElement) {
                 const element = this._element;
@@ -4958,7 +4988,7 @@
                 const parentDataset =
                     ((_a = element.parentElement) === null || _a === void 0 ? void 0 : _a.dataset) || {};
                 if (hasKeys(dataset) || hasKeys(parentDataset)) {
-                    systemName = capitalize$1(systemName || this.localSettings.systemName);
+                    const systemName = capitalize$1(this.localSettings.systemName);
                     this.exclude({
                         resource: parseExclusions('excludeResource', NODE_RESOURCE, dataset, parentDataset, systemName),
                         procedure: parseExclusions(
@@ -6497,7 +6527,6 @@
         !(node.blockDimension && node.css('width') === '100%') &&
         (!(node.plainText && node.multiline) || node.floating);
     const requirePadding = (node, depth) => node.textElement && (node.blockStatic || node.multiline || depth === 1);
-    const hasOuterParentExtension = node => node.ascend({ condition: item => isString$1(item.use) }).length > 0;
     const getMapIndex = value => value * -1 - 2;
     class ApplicationUI extends Application {
         constructor(
@@ -6509,11 +6538,10 @@
         ) {
             super(framework, nodeConstructor, ControllerConstructor, ResourceConstructor, ExtensionManagerConstructor);
             this.session = {
-                cache: new NodeList(),
-                excluded: new NodeList(),
                 extensionMap: new Map(),
                 clearMap: new Map(),
-                active: [],
+                active: new Map(),
+                unusedStyles: new Set(),
             };
             this.builtInExtensions = {};
             this.extensions = [];
@@ -6528,11 +6556,9 @@
             if (super.finalize()) {
                 return false;
             }
-            const { controllerHandler, session } = this;
-            const cache = session.cache;
-            const extensions = this.extensions;
+            const controllerHandler = this.controllerHandler;
             const layouts = this._layouts;
-            const children = cache.children;
+            const children = this.childrenAll;
             let length = children.length;
             const rendered = new Array(length);
             let i = 0,
@@ -6551,6 +6577,7 @@
             }
             rendered.length = j;
             controllerHandler.optimize(rendered);
+            const extensions = this.extensions;
             length = extensions.length;
             i = 0;
             while (i < length) {
@@ -6567,11 +6594,13 @@
                     node.setBoxSpacing();
                 }
                 if (node.documentRoot) {
-                    if (node.renderChildren.length === 0 && !node.inlineText) {
-                        const naturalElement = node.naturalElements;
-                        if (naturalElement.length && naturalElement.every(item => item.documentRoot)) {
-                            continue;
-                        }
+                    if (
+                        node.renderChildren.length === 0 &&
+                        !node.inlineText &&
+                        node.naturalElements.length &&
+                        node.naturalElements.every(item => item.documentRoot)
+                    ) {
+                        continue;
                     }
                     const layoutName = node.innerMostWrapped.data(Application.KEY_NAME, 'layoutName');
                     if (layoutName) {
@@ -6581,7 +6610,7 @@
             }
             i = 0;
             while (i < length) {
-                extensions[i++].beforeCascade(documentRoot);
+                extensions[i++].beforeCascade(rendered, documentRoot);
             }
             const baseTemplate = this._controllerSettings.layout.baseTemplate;
             const systemName = capitalize$2(this.systemName);
@@ -6624,20 +6653,21 @@
             return super.saveToArchive(filename, this.createAssetOptions(options));
         }
         reset() {
-            super.reset();
-            const iterationName = 'iteration' + capitalize$2(this.systemName);
-            for (const element of this.rootElements) {
-                delete element.dataset[iterationName];
-            }
             const session = this.session;
-            session.cache.reset();
-            session.excluded.reset();
+            const iterationName = 'iteration' + capitalize$2(this.systemName);
+            for (const item of session.active.values()) {
+                for (const element of item.rootElements) {
+                    delete element.dataset[iterationName];
+                }
+            }
+            super.reset();
             session.extensionMap.clear();
+            session.clearMap.clear();
             this._layouts.length = 0;
         }
-        conditionElement(element, sessionId, pseudoElt) {
+        conditionElement(element, sessionId, cascadeAll, pseudoElt) {
             if (!this._excluded.has(element.tagName)) {
-                if (this.controllerHandler.visibleElement(element, sessionId, pseudoElt) || this._cascadeAll) {
+                if (this.controllerHandler.visibleElement(element, sessionId, pseudoElt) || cascadeAll) {
                     return true;
                 } else if (!pseudoElt) {
                     if (hasCoords(getStyle$2(element).position)) {
@@ -6662,8 +6692,8 @@
             }
             return false;
         }
-        insertNode(element, sessionId, pseudoElt) {
-            if (element.nodeName === '#text' || this.conditionElement(element, sessionId, pseudoElt)) {
+        insertNode(element, sessionId, cascadeAll, pseudoElt) {
+            if (element.nodeName === '#text' || this.conditionElement(element, sessionId, cascadeAll, pseudoElt)) {
                 this.controllerHandler.applyDefaultStyles(element, sessionId);
                 return this.createNode(sessionId, { element, append: false });
             } else {
@@ -6738,6 +6768,7 @@
         }
         createNode(sessionId, options) {
             const { element, parent, children } = options;
+            const cache = this.getProcessingCache(sessionId);
             const node = new this.Node(this.nextId, sessionId, element);
             this.controllerHandler.afterInsertNode(node);
             if (parent) {
@@ -6759,26 +6790,24 @@
                 }
             }
             if (options.append !== false) {
-                this.processing.cache.add(node, options.delegate === true, options.cascade === true);
+                cache.add(node, options.delegate === true, options.cascade === true);
             }
             return node;
         }
         createCache(documentRoot, sessionId) {
             const node = this.createRootNode(documentRoot, sessionId);
             if (node) {
-                const cache = this._cache;
-                {
-                    const parent = node.parent;
-                    parent.visible = false;
-                    node.documentParent = parent;
-                    if (parent.tagName === 'HTML') {
-                        parent.addAlign(4 /* AUTO_LAYOUT */);
-                        parent.exclude({
-                            resource: NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING,
-                            procedure: NODE_PROCEDURE.ALL,
-                        });
-                        cache.add(parent);
-                    }
+                const { cache, excluded } = this.getProcessing(sessionId);
+                const parent = node.parent;
+                parent.visible = false;
+                node.documentParent = parent;
+                if (parent.tagName === 'HTML') {
+                    parent.addAlign(4 /* AUTO_LAYOUT */);
+                    parent.exclude({
+                        resource: NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING,
+                        procedure: NODE_PROCEDURE.ALL,
+                    });
+                    cache.add(parent);
                 }
                 node.rootElement = true;
                 const preAlignment = {};
@@ -6817,7 +6846,7 @@
                         }
                     }
                 });
-                this.processing.excluded.each(item => {
+                excluded.each(item => {
                     if (!item.pageFlow) {
                         item.cssTry('display', 'none');
                     }
@@ -6871,7 +6900,7 @@
                         data.item.cssFinally('display');
                     }
                 }
-                this.processing.excluded.each(item => {
+                excluded.each(item => {
                     if (!item.lineBreak) {
                         item.setBounds(!resetBounds);
                         item.saveAsInitial();
@@ -6896,7 +6925,7 @@
                     item.saveAsInitial();
                 });
                 this.controllerHandler.evaluateNonStatic(node, cache);
-                this.controllerHandler.sortInitialCache();
+                this.controllerHandler.sortInitialCache(cache);
             }
             return node;
         }
@@ -6914,9 +6943,10 @@
             dataset['iteration' + systemName] = suffix.toString();
             dataset['layoutName' + systemName] = layoutName;
             node.data(Application.KEY_NAME, 'layoutName', layoutName);
-            this.setBaseLayout();
-            this.setConstraints();
-            this.setResources();
+            const sessionId = node.sessionId;
+            this.setBaseLayout(sessionId);
+            this.setConstraints(sessionId);
+            this.setResources(sessionId);
         }
         useElement(element) {
             const use = this.getDatasetName('use', element);
@@ -6926,26 +6956,24 @@
             var _a;
             return ((_a = this.layouts[0]) === null || _a === void 0 ? void 0 : _a.content) || '';
         }
-        cascadeParentNode(parentElement, sessionId, depth, extensions) {
+        cascadeParentNode(cache, excluded, rootElements, parentElement, sessionId, depth, extensions, cascadeAll) {
             var _a;
-            const node = this.insertNode(parentElement, sessionId);
-            if (node.display !== 'none' || depth === 0 || hasOuterParentExtension(node)) {
-                if (depth === 0) {
-                    node.depth = depth;
-                    this._cache.add(node);
-                    for (const name of node.extensions) {
-                        if (
-                            (_a = this.extensionManager.retrieve(name)) === null || _a === void 0
-                                ? void 0
-                                : _a.cascadeAll
-                        ) {
-                            this._cascadeAll = true;
-                            break;
-                        }
+            const node = this.insertNode(parentElement, sessionId, cascadeAll);
+            if (depth === 0) {
+                node.depth = depth;
+                cache.add(node);
+                for (const name of node.extensions) {
+                    if (
+                        (_a = this.extensionManager.retrieve(name)) === null || _a === void 0 ? void 0 : _a.cascadeAll
+                    ) {
+                        cascadeAll = true;
+                        break;
                     }
                 }
+            }
+            if (node.display !== 'none' || depth === 0 || cascadeAll) {
                 const controllerHandler = this.controllerHandler;
-                if ((node.excluded && !hasOuterParentExtension(node)) || controllerHandler.preventNodeCascade(node)) {
+                if (node.excluded || controllerHandler.preventNodeCascade(node)) {
                     return node;
                 }
                 const beforeElement = this.createPseduoElement(parentElement, '::before', sessionId);
@@ -6963,14 +6991,14 @@
                     const element = childNodes[i++];
                     let child;
                     if (element === beforeElement) {
-                        child = this.insertNode(beforeElement, sessionId, '::before');
+                        child = this.insertNode(beforeElement, sessionId, cascadeAll, '::before');
                         node.innerBefore = child;
                         if (!child.textEmpty) {
                             child.inlineText = true;
                         }
                         inlineText = false;
                     } else if (element === afterElement) {
-                        child = this.insertNode(afterElement, sessionId, '::after');
+                        child = this.insertNode(afterElement, sessionId, cascadeAll, '::after');
                         node.innerAfter = child;
                         if (!child.textEmpty) {
                             child.inlineText = true;
@@ -6992,12 +7020,21 @@
                         if (extensions) {
                             const use = this.getDatasetName('use', element);
                             if (use) {
-                                prioritizeExtensions(use, extensions).some(item => item.init(element));
+                                prioritizeExtensions(use, extensions).some(item => item.init(element, sessionId));
                             }
                         }
-                        if (!this.rootElements.has(element)) {
-                            child = this.cascadeParentNode(element, sessionId, childDepth, extensions);
-                            if ((child === null || child === void 0 ? void 0 : child.excluded) === false) {
+                        if (!rootElements.has(element)) {
+                            child = this.cascadeParentNode(
+                                cache,
+                                excluded,
+                                rootElements,
+                                element,
+                                sessionId,
+                                childDepth,
+                                extensions,
+                                cascadeAll
+                            );
+                            if (!child.excluded) {
                                 inlineText = false;
                             }
                         } else {
@@ -7023,7 +7060,7 @@
                 node.inlineText = inlineText;
                 if (!inlineText) {
                     if (j > 0) {
-                        this.cacheNodeChildren(node, children);
+                        this.cacheNodeChildren(cache, excluded, node, children);
                     }
                     node.inlineText = inlineText;
                 } else {
@@ -7035,15 +7072,14 @@
             }
             return node;
         }
-        cacheNodeChildren(node, children) {
+        cacheNodeChildren(cache, excluded, node, children) {
             const length = children.length;
             if (length > 1) {
-                const cache = this._cache;
                 let siblingsLeading = [],
                     siblingsTrailing = [],
                     trailing = children[0],
                     floating = false,
-                    excluded;
+                    hasExcluded;
                 for (let i = 0, j = 0; i < length; ++i) {
                     const child = children[i];
                     if (child.pageFlow) {
@@ -7071,8 +7107,8 @@
                         }
                     }
                     if (child.excluded) {
-                        excluded = true;
-                        this.processing.excluded.add(child);
+                        hasExcluded = true;
+                        excluded.add(child);
                     } else {
                         child.$parent = node;
                         child.containerIndex = j++;
@@ -7082,30 +7118,29 @@
                 }
                 trailing.siblingsTrailing = siblingsTrailing;
                 node.floatContainer = floating;
-                node.retainAs(excluded ? children.filter(item => !item.excluded) : children.slice(0));
+                node.retainAs(hasExcluded ? children.filter(item => !item.excluded) : children.slice(0));
             } else {
                 const child = children[0];
                 if (child.excluded) {
-                    this.processing.excluded.add(child);
+                    excluded.add(child);
                 } else {
                     child.$parent = node;
                     child.containerIndex = 0;
                     node.add(child);
-                    this._cache.add(child);
+                    cache.add(child);
                     node.floatContainer = child.floating;
                 }
                 child.actualParent = node;
             }
         }
-        setBaseLayout() {
-            const { controllerHandler, processing, session } = this;
+        setBaseLayout(sessionId) {
+            const { controllerHandler, session } = this;
             const { extensionMap, clearMap } = session;
-            const cache = processing.cache;
-            const documentRoot = processing.node;
+            const { cache, node: rootNode } = this.getProcessing(sessionId);
             const mapY = new Map();
             {
                 let maxDepth = 0;
-                setMapDepth(mapY, -1, documentRoot.parent);
+                setMapDepth(mapY, -1, rootNode.parent);
                 cache.each(node => {
                     if (node.length) {
                         const depth = node.depth;
@@ -7175,7 +7210,7 @@
             const length = extensions.length;
             let i = 0;
             while (i < length) {
-                extensions[i++].beforeBaseLayout();
+                extensions[i++].beforeBaseLayout(sessionId);
             }
             let extensionsTraverse = this.extensionsTraverse;
             for (const depth of mapY.values()) {
@@ -7515,14 +7550,12 @@
                         ext.postBaseLayout(node);
                     }
                 }
-                ext.afterBaseLayout();
+                ext.afterBaseLayout(sessionId);
             }
-            session.cache.joinWith(cache);
-            session.excluded.joinWith(processing.excluded);
         }
-        setConstraints() {
-            const cache = this._cache;
-            this.controllerHandler.setConstraints();
+        setConstraints(sessionId) {
+            const cache = this.getProcessingCache(sessionId);
+            this.controllerHandler.setConstraints(cache);
             const extensions = this.extensions;
             const length = extensions.length;
             let i = 0;
@@ -7533,12 +7566,12 @@
                         ext.postConstraints(node);
                     }
                 }
-                ext.afterConstraints();
+                ext.afterConstraints(sessionId);
             }
         }
-        setResources() {
+        setResources(sessionId) {
             const resourceHandler = this.resourceHandler;
-            this._cache.each(node => {
+            this.getProcessingCache(sessionId).each(node => {
                 resourceHandler.setBoxStyle(node);
                 if (
                     node.hasResource(NODE_RESOURCE.VALUE_STRING) &&
@@ -7550,7 +7583,12 @@
                     resourceHandler.setValueString(node);
                 }
             });
-            this.extensions.forEach(ext => ext.afterResources());
+            const extensions = this.extensions;
+            const length = extensions.length;
+            let i = 0;
+            while (i < length) {
+                extensions[i++].afterResources(sessionId);
+            }
         }
         processFloatHorizontal(layout) {
             const controllerHandler = this.controllerHandler;
@@ -8344,9 +8382,6 @@
         get clearMap() {
             return this.session.clearMap;
         }
-        get length() {
-            return this.session.cache.length;
-        }
     }
 
     const { USER_AGENT: USER_AGENT$1, isUserAgent: isUserAgent$1 } = squared.lib.client;
@@ -9023,7 +9058,7 @@
             }
         }
         sortInitialCache(cache) {
-            (cache || this.cache).sort((a, b) => {
+            cache.sort((a, b) => {
                 if (a.depth !== b.depth) {
                     return a.depth < b.depth ? -1 : 1;
                 } else {
@@ -9144,10 +9179,6 @@
     class ExtensionUI extends Extension {
         constructor(name, framework, options, tagNames = []) {
             super(name, framework, options);
-            this.eventOnly = false;
-            this.documentBase = false;
-            this.cascadeAll = false;
-            this.removeIs = false;
             this.tagNames = tagNames;
             this._isAll = tagNames.length === 0;
         }
@@ -9196,18 +9227,16 @@
         postBaseLayout(node) {}
         postConstraints(node) {}
         postOptimize(node) {}
-        afterBaseLayout() {}
-        afterConstraints() {}
-        afterResources() {}
-        beforeBaseLayout() {}
-        beforeCascade(documentRoot) {}
+        afterBaseLayout(sessionId) {}
+        afterConstraints(sessionId) {}
+        afterResources(sessionId) {}
+        beforeBaseLayout(sessionId) {}
+        beforeCascade(rendered, documentRoot) {}
         afterFinalize() {}
         set application(value) {
             this._application = value;
             this._controller = value.controllerHandler;
             this._resource = value.resourceHandler;
-            this._cache = value.session.cache;
-            this._cacheProcessing = value.processing.cache;
         }
         get application() {
             return this._application;
@@ -9217,12 +9246,6 @@
         }
         get resource() {
             return this._resource;
-        }
-        get cache() {
-            return this._cache;
-        }
-        get cacheProcessing() {
-            return this._cacheProcessing;
         }
     }
 
@@ -9801,7 +9824,7 @@
             if (start === 1) {
                 name += '_' + i;
             }
-            const ids = this.ASSETS.ids;
+            const ids = this.STORED.ids;
             const previous = ids.get(section) || [];
             do {
                 if (!previous.includes(name)) {
@@ -9878,7 +9901,6 @@
         static parseBackgroundImage(node, backgroundImage, screenDimension) {
             var _a, _b;
             if (backgroundImage !== '') {
-                REGEXP_BACKGROUNDIMAGE.lastIndex = 0;
                 const images = [];
                 let i = 0,
                     match;
@@ -10075,6 +10097,7 @@
                     }
                     ++i;
                 }
+                REGEXP_BACKGROUNDIMAGE.lastIndex = 0;
                 if (images.length) {
                     return images;
                 }
@@ -10695,6 +10718,7 @@
         }
     }
     ResourceUI.STORED = {
+        ids: new Map(),
         strings: new Map(),
         arrays: new Map(),
         fonts: new Map(),
@@ -11015,7 +11039,6 @@
             for (let index = 0; index < 4; ++index) {
                 const value = gridTemplates[index];
                 if (value !== '' && value !== 'none' && value !== 'auto') {
-                    REGEXP_NAMED.lastIndex = 0;
                     const data = index === 0 ? row : column;
                     const { name, repeat, unit, unitMin } = data;
                     let i = 1,
@@ -11043,7 +11066,6 @@
                                             break;
                                     }
                                     if (iterations > 0) {
-                                        REGEXP_REPEAT.lastIndex = 0;
                                         const repeating = [];
                                         let subMatch;
                                         while ((subMatch = REGEXP_REPEAT.exec(match[3]))) {
@@ -11084,6 +11106,7 @@
                                                 }
                                             }
                                         }
+                                        REGEXP_REPEAT.lastIndex = 0;
                                     }
                                 } else if (command.startsWith('minmax')) {
                                     unit.push(convertLength(node, match[6], index));
@@ -11114,6 +11137,7 @@
                                 break;
                         }
                     }
+                    REGEXP_NAMED.lastIndex = 0;
                 }
             }
             if (horizontal) {
@@ -12481,17 +12505,16 @@
                     renderParent.support.positionRelative &&
                     node.renderChildren.length === 0
                 ) {
-                    const application = this.application;
-                    target = node.clone(application.nextId);
+                    target = node.clone(this.application.nextId);
                     target.baselineAltered = true;
                     node.hide({ hidden: true });
-                    this.cache.add(target, false);
+                    this.application.getProcessingCache(node.sessionId).add(target, false);
                     const layout = new LayoutUI(renderParent, target, target.containerType, target.alignmentType);
                     const index = renderParent.renderChildren.findIndex(item => item === node);
                     if (index !== -1) {
                         layout.renderIndex = index + 1;
                     }
-                    application.addLayout(layout);
+                    this.application.addLayout(layout);
                     if (node.parseUnit(node.css('textIndent')) < 0) {
                         const documentId = node.documentId;
                         renderParent.renderEach(item => {
@@ -13665,11 +13688,11 @@
         !node.hasHeight && node.borderTopWidth === 0 && node.paddingTop === 0 && canResetChild(node, children);
     const validSibling = node => node.pageFlow && node.blockDimension && !node.floating && !node.excluded;
     class WhiteSpace extends ExtensionUI {
-        afterBaseLayout() {
-            const application = this.application;
+        afterBaseLayout(sessionId) {
+            const { cache, excluded } = this.application.getProcessing(sessionId);
+            const clearMap = this.application.session.clearMap;
             const processed = new Set();
-            const clearMap = application.session.clearMap;
-            this.cacheProcessing.each(node => {
+            cache.each(node => {
                 var _a, _b;
                 if (node.naturalElement && !node.hasAlign(4 /* AUTO_LAYOUT */)) {
                     const children = node.naturalChildren;
@@ -14037,7 +14060,7 @@
                     }
                 }
             });
-            application.processing.excluded.each(node => {
+            excluded.each(node => {
                 if (node.lineBreak && !node.lineBreakTrailing && !clearMap.has(node) && !processed.has(node.id)) {
                     let valid = false;
                     const previousSiblings = node.previousSiblings({ floating: false });
@@ -14165,8 +14188,8 @@
                 }
             });
         }
-        afterConstraints() {
-            this.cacheProcessing.each(node => {
+        afterConstraints(sessionId) {
+            this.application.getProcessingCache(sessionId).each(node => {
                 if (
                     node.naturalChild &&
                     node.styleElement &&

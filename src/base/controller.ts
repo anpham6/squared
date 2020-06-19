@@ -1,6 +1,4 @@
-export default abstract class Controller<T extends squared.base.Node> implements squared.base.Controller<T> {
-    public abstract application: squared.base.Application<T>;
-
+export default class Controller<T extends squared.base.Node> implements squared.base.Controller<T> {
     public readonly localSettings: ControllerSettings = {
         mimeType: {
             font: '*',
@@ -9,6 +7,8 @@ export default abstract class Controller<T extends squared.base.Node> implements
             video: '*'
         }
     };
+
+    constructor(public readonly application: squared.base.Application<T>) {}
 
     public init() {}
     public sortInitialCache(cache: squared.base.NodeList<T>) {}

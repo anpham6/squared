@@ -1,4 +1,4 @@
-/* android.widget.toolbar 1.11.1
+/* android.widget.toolbar 1.12.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -20,7 +20,8 @@ this.android.widget.toolbar = (function () {
             super(name, framework, options, tagNames);
             this.require('android.widget.menu' /* MENU */);
         }
-        init(element) {
+        init(element, sessionId) {
+            var _a;
             if (this.included(element)) {
                 const application = this.application;
                 iterateArray(element.children, item => {
@@ -43,7 +44,9 @@ this.android.widget.toolbar = (function () {
                             'android.widget.coordinator' /* COORDINATOR */
                         )
                     ) {
-                        application.rootElements.add(element);
+                        (_a = application.getProcessing(sessionId)) === null || _a === void 0
+                            ? void 0
+                            : _a.rootElements.add(element);
                     }
                 }
             }

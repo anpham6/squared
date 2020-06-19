@@ -68,14 +68,14 @@ const parseConditionText = (rule: string, value: string) => new RegExp(`\\s*@${r
 export default abstract class Application<T extends Node> implements squared.base.Application<T> {
     public static readonly KEY_NAME = 'squared.application';
 
+    public builtInExtensions: ObjectMap<Extension<T>> = {};
+    public extensions: Extension<T>[] = [];
     public closed = false;
     public readonly Node: Constructor<T>;
     public readonly session: squared.base.AppSession<T> = {
         active: new Map<string, squared.base.AppProcessing<T>>(),
         unusedStyles: new Set<string>()
     };
-    public abstract builtInExtensions: ObjectMap<Extension<T>>;
-    public abstract extensions: Extension<T>[];
     public abstract userSettings: UserSettings;
     public abstract readonly systemName: string;
 
@@ -102,14 +102,10 @@ export default abstract class Application<T extends Node> implements squared.bas
         this.Node = nodeConstructor;
     }
 
+    public abstract insertNode(element: Element, sessionId: string): Undef<T>;
+    public abstract afterCreateCache(node: T): void;
     public abstract set viewModel(data: Undef<AppVieModel>);
     public abstract get viewModel(): Undef<AppVieModel>;
-
-    public afterCreateCache(node: T) {}
-
-    public insertNode(element: Element, sessionId: string) {
-        return this.createNode(sessionId, { element });
-    }
 
     public createNode(sessionId: string, options: CreateNodeOptions) {
         return new this.Node(this.nextId, sessionId, options.element);

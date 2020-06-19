@@ -19,9 +19,9 @@
   },
   "exclude": [
     "md5",
+    "node",
     "node_modules",
     "build",
-    "dist",
-    "node"
+    "dist"
   ]
 }

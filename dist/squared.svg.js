@@ -1,4 +1,4 @@
-/* squared.svg 1.11.1
+/* squared.svg 1.12.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -801,10 +801,8 @@
                 value = SVG.polygon(element)
                     ? SvgBuild.drawPolygon(points, precision)
                     : SvgBuild.drawPolyline(points, precision);
-            } else {
-                value = '';
             }
-            return value;
+            return value || '';
         }
         static transformRefit(value, options) {
             let transforms, parent, container, precision;
@@ -1383,7 +1381,6 @@
             });
         }
         static parseCoordinates(value) {
-            REGEXP_DECIMAL.lastIndex = 0;
             const result = [];
             let match;
             while ((match = REGEXP_DECIMAL.exec(value))) {
@@ -1392,6 +1389,7 @@
                     result.push(coord);
                 }
             }
+            REGEXP_DECIMAL.lastIndex = 0;
             return result;
         }
         static getBoxRect(values) {
@@ -6132,12 +6130,12 @@
     function parseAttribute(element, attr) {
         const value = getAttribute(element, attr);
         if (attr === 'animation-timing-function') {
-            REGEXP_TIMINGFUNCTION.lastIndex = 0;
             const result = [];
             let match;
             while ((match = REGEXP_TIMINGFUNCTION.exec(value))) {
                 result.push(match[1]);
             }
+            REGEXP_TIMINGFUNCTION.lastIndex = 0;
             return result;
         }
         return value.split(/\s*,\s*/);
@@ -6758,8 +6756,8 @@
                     let parentWidth = parentAspectRatio.width || parent.viewBox.width,
                         parentHeight = parentAspectRatio.height || parent.viewBox.height,
                         parentUnknown = false,
-                        boxWidth,
-                        boxHeight;
+                        boxWidth = NaN,
+                        boxHeight = NaN;
                     if (parentWidth === 0 && parentHeight === 0) {
                         ({ width: parentWidth, height: parentHeight } = getDOMRect(parent.element));
                         parentAspectRatio.width = parentWidth;
@@ -6774,12 +6772,17 @@
                     if (parentUnknown) {
                         boxWidth = parentWidth;
                         boxHeight = parentHeight;
-                    } else if (SVG.svg(element)) {
-                        boxWidth = element.width.baseVal.value;
-                        boxHeight = element.height.baseVal.value;
                     } else {
-                        boxWidth = parseFloat(w);
-                        boxHeight = parseFloat(h);
+                        if (SVG.svg(element)) {
+                            try {
+                                boxWidth = element.width.baseVal.value;
+                                boxHeight = element.height.baseVal.value;
+                            } catch (_a) {}
+                        }
+                        if (!boxWidth && !boxHeight) {
+                            boxWidth = parseFloat(w);
+                            boxHeight = parseFloat(h);
+                        }
                     }
                     const hasWidth = hasLength(w);
                     const hasHeight = hasLength(h);
@@ -6793,7 +6796,7 @@
                         aspectRatio.unit = Math.min(ratioWidth, ratioHeight);
                     }
                     if (hasWidth || hasHeight) {
-                        if (!isNaN(boxWidth) && !isNaN(boxHeight)) {
+                        if (boxWidth && boxHeight) {
                             const { align, meetOrSlice } = element.preserveAspectRatio.baseVal;
                             if (boxRatioWidth === boxRatioHeight) {
                                 if (resizeUnit) {

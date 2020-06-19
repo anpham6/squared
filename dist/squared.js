@@ -1,4 +1,4 @@
-/* squared 1.11.1
+/* squared 1.12.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -35,7 +35,7 @@
     };
     const CSS = {
         URL: /^\s*url\((.+)\)\s*$/,
-        HEX: /[A-Za-z\d]{3,8}/,
+        HEX: /^#[A-Fa-f\d]{3,8}$/,
         RGBA: /rgba?\((\d+),\s+(\d+),\s+(\d+)(?:,\s+([\d.]+%?))?\)/,
         HSLA: /hsla?\((\d+),\s+(\d+)%,\s+(\d+)%(?:,\s+([\d.]+%?))?\)/,
         SELECTOR_G: new RegExp(
@@ -1345,8 +1345,6 @@
         if (!pattern) {
             pattern = new RegExp(`(-?\\d+\\.\\d{${precision}})(\\d)\\d*`, 'g');
             REGEXP_TRUNCATECACHE[precision] = pattern;
-        } else {
-            pattern.lastIndex = 0;
         }
         let output = value,
             match;
@@ -1357,6 +1355,7 @@
             }
             output = output.replace(match[0], truncateTrailingZero(trailing));
         }
+        pattern.lastIndex = 0;
         return output;
     }
     function convertRadian(value) {
@@ -2455,7 +2454,7 @@
             }
             let key = '',
                 rgba;
-            if (value.startsWith('#')) {
+            if (value.charAt(0) === '#') {
                 rgba = parseRGBA(value);
             } else {
                 let match = CSS.RGBA.exec(value);
@@ -2573,8 +2572,8 @@
         return '#' + getHexCode(value.r, value.g, value.b) + (value.a < 255 ? getHexCode(value.a) : '');
     }
     function parseRGBA(value) {
-        value = value.replace(/#/g, '').trim();
         if (CSS.HEX.test(value)) {
+            value = value.substring(1);
             let a = 255;
             switch (value.length) {
                 case 4:
@@ -4075,7 +4074,6 @@
         return [value];
     }
     function getSpecificity(value) {
-        CSS.SELECTOR_G.lastIndex = 0;
         let result = 0,
             match;
         while ((match = CSS.SELECTOR_G.exec(value))) {
@@ -4090,12 +4088,14 @@
                 }
             } else if (segment.startsWith('*|*')) {
                 if (segment.length > 3) {
-                    return 0;
+                    result = 0;
+                    break;
                 }
             } else if (segment.startsWith('*|')) {
                 segment = segment.substring(2);
             } else if (segment.startsWith('::')) {
-                return 0;
+                result = 0;
+                break;
             }
             let subMatch;
             while ((subMatch = CSS.SELECTOR_ATTR.exec(segment))) {
@@ -4147,6 +4147,7 @@
                 segment = spliceString(segment, subMatch.index, command.length);
             }
         }
+        CSS.SELECTOR_G.lastIndex = 0;
         return result;
     }
     function checkWritingMode(attr, value) {
@@ -6746,17 +6747,28 @@
         }
         return result;
     }
-    function createElement(parent, tagName, attrs) {
+    function createElement(tagName, options) {
         const element = document.createElement(tagName);
-        const style = element.style;
-        for (const attr in attrs) {
-            if (attr.includes('-')) {
-                style.setProperty(attr, attrs[attr]);
-            } else {
-                style[attr] = attrs[attr];
+        if (options) {
+            const { parent, attrs, style } = options;
+            if (style) {
+                for (const attr in style) {
+                    if (attr.includes('-')) {
+                        element.style.setProperty(attr, style[attr]);
+                    } else {
+                        element.style[attr] = style[attr];
+                    }
+                }
             }
+            if (attrs) {
+                for (const attr in attrs) {
+                    if (attr in element) {
+                        element[attr] = attrs[attr];
+                    }
+                }
+            }
+            parent === null || parent === void 0 ? void 0 : parent.appendChild(element);
         }
-        parent.appendChild(element);
         return element;
     }
     function measureTextWidth(value, fontFamily, fontSize) {
@@ -7475,8 +7487,9 @@
         }
         joinWith(...other) {
             let children = this._children;
-            for (let i = 0; i < other.length; ++i) {
-                children = children.concat(other[i].children);
+            let i = 0;
+            while (i < other.length) {
+                children = children.concat(other[i++].children);
             }
             this._children = children;
             return this;
@@ -7503,7 +7516,7 @@
     let main;
     let framework;
     function includeExtension(extensions, ext) {
-        if (main && !extensions.includes(ext)) {
+        if (!extensions.includes(ext)) {
             ext.application = main;
             extensions.push(ext);
         }
@@ -7523,16 +7536,16 @@
                 : _a.fileHandler;
         if (fileHandler) {
             const match = FILE.PROTOCOL.exec(value);
-            if (match && match[1].startsWith('http')) {
+            if (match === null || match === void 0 ? void 0 : match[1].startsWith('http')) {
                 fileHandler.hostname = match[1] + match[2] + (match[3] || '');
             }
         }
     }
-    function setFramework(value, options, cached = false) {
+    function setFramework(value, options, cached) {
         const reloading = framework !== undefined;
         if (framework !== value) {
             const appBase = cached ? value.cached() : value.create();
-            if (framework === undefined) {
+            if (!framework) {
                 Object.assign(appBase.userSettings, settings);
             }
             if (isPlainObject(options)) {
@@ -7665,7 +7678,7 @@
         const result = new Map();
         const length = elements.length;
         if (main) {
-            for (const sessionId of main.session.active) {
+            for (const sessionId of main.session.active.keys()) {
                 let i = 0;
                 while (i < length) {
                     let element = elements[i++];

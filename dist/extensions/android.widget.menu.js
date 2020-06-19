@@ -1,4 +1,4 @@
-/* android.widget.menu 1.11.1
+/* android.widget.menu 1.12.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -88,21 +88,27 @@ this.android.widget.menu = (function () {
             this.cascadeAll = true;
             this.require(EXT_ANDROID.EXTERNAL, true);
         }
-        init(element) {
+        init(element, sessionId) {
+            var _a;
             if (this.included(element)) {
                 if (element.childElementCount) {
                     if (!sameArray(element.children, item => item.tagName)) {
                         return false;
                     }
-                    const application = this.application;
-                    let current = element.parentElement;
-                    while (current) {
-                        if (current.tagName === 'NAV' && application.rootElements.has(current)) {
-                            return false;
+                    const rootElements =
+                        (_a = this.application.getProcessing(sessionId)) === null || _a === void 0
+                            ? void 0
+                            : _a.rootElements;
+                    if (rootElements) {
+                        let current = element.parentElement;
+                        while (current) {
+                            if (current.tagName === 'NAV' && rootElements.has(current)) {
+                                return false;
+                            }
+                            current = current.parentElement;
                         }
-                        current = current.parentElement;
+                        rootElements.add(element);
                     }
-                    application.rootElements.add(element);
                 }
             }
             return false;

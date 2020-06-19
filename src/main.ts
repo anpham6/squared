@@ -29,8 +29,8 @@ let main: Undef<Main>;
 let framework: Undef<Framework>;
 
 function includeExtension(extensions: Extension[], ext: Extension) {
-    if (main && !extensions.includes(ext)) {
-        ext.application = main;
+    if (!extensions.includes(ext)) {
+        ext.application = main!;
         extensions.push(ext);
     }
 }
@@ -47,7 +47,7 @@ export function setHostname(value: string) {
     const fileHandler = main?.resourceHandler?.fileHandler;
     if (fileHandler) {
         const match = regex.FILE.PROTOCOL.exec(value);
-        if (match && match[1].startsWith('http')) {
+        if (match?.[1].startsWith('http')) {
             fileHandler.hostname = match[1] + match[2] + (match[3] || '');
         }
     }

@@ -2,7 +2,7 @@
 
 ## Installation (global js variable: squared)
 
-Option #1 (chrome / html+css):
+Option #1 (chrome / bundle / html+css):
 
 * Install Node.js: http://www.nodejs.org
 
@@ -11,18 +11,17 @@ GitHub
 &nbsp;&nbsp;&nbsp;&gt; cd squared  
 &nbsp;&nbsp;&nbsp;&gt; npm install  
 &nbsp;&nbsp;&nbsp;&gt; npm run prod -OR- npm run dev  
-&nbsp;&nbsp;&nbsp;&gt; squared.settings.json (configure)  
-&nbsp;&nbsp;&nbsp;&gt; node serve.js [--help]
 
 NPM  
 &nbsp;&nbsp;&nbsp;&gt; npm install squared  
 &nbsp;&nbsp;&nbsp;&gt; cd node_modules/squared  
+
 &nbsp;&nbsp;&nbsp;&gt; squared.settings.json (configure)  
 &nbsp;&nbsp;&nbsp;&gt; node serve.js [--help]
 
 * http://localhost:3000
 
-Option #2 (android / kotlin+java):
+Option #2 (android / ui / kotlin+java):
 
 * Install Ktor: https://ktor.io
 
@@ -33,7 +32,7 @@ Option #2 (android / kotlin+java):
 
 * http://localhost:8080
 
-Option #3 (vdom / browser only):
+Option #3 (vdom / minimal / browser only):
 
 * Download (squared@version): https://unpkg.com
 
@@ -186,12 +185,23 @@ squared.settings = {
     ],
     preloadImages: false,
     excludePlainText: true,
+    createElementMap: true,
     createQuerySelectorMap: true,
     showErrorMessages: false,
     outputFileExclusions: [], // ['squared.*', '*.mp4'] | <script|link> data-chrome-file="exclude" | default is none
     outputEmptyCopyDirectory: false,
     outputArchiveName: 'chrome-data',
     outputArchiveFormat: 'zip' // zip | tar | gz/tgz | squared-apache: 7z | jar | cpio | xz | bz2 | lzma | lz4 | zstd
+};
+```
+
+#### Example: vdom
+
+```javascript
+squared.settings = {
+    builtInExtensions: [],
+    createQuerySelectorMap: true,
+    showErrorMessages: false
 };
 ```
 
@@ -210,19 +220,6 @@ parseDocument() // see installation section (Promise)
 
 get(...elements: (Element | string)[]) // Element map of any Node objects created during the active "parseDocument" session
 
-// Required: node-express / squared-apache
-// NOTE: options: { assets?: RequestAsset[], exclusions?: {}, callback?: () => void }
-
-saveToArchive(filename?: string, options?: {}) // save entire project as a new archive (Promise)
-createFrom(format: string, options: {}) // create new archive from only RequestAsset[] (Promise)
-
-// Required (local archives): --disk-read | --unc-read | --access-all (command-line)
-appendToArchive(pathname: string, options?: {}) // append entire project to a copy of a preexisting archive (Promise)
-appendFromArchive(pathname: string, options: {}) // create new archive from a preexisting archive and from only RequestAsset[] (Promise)
-
-// Required (all): --disk-write | --unc-write | --access-all (command-line)
-copyToDisk(directory: string, options?: {}) // copy entire project to local directory (Promise)
-
 ready() // boolean indicating if parseDocument can be called
 close() // close current session preceding write to disk or local output
 reset() // clear cached layouts and reopen new session
@@ -235,15 +232,29 @@ configure(name: string, options: {}) // see extension configuration section
 exclude(name: string) // remove an extension by namespace or control
 ```
 
+```javascript
+// Framework: android | chrome
+
+saveToArchive(filename?: string, options?: {}) // save entire project as a new archive (Promise)
+createFrom(format: string, options: {}) // create new archive from only RequestAsset[] (Promise)
+
+// Required (local archives): --disk-read | --unc-read | --access-all (command-line)
+appendToArchive(pathname: string, options?: {}) // append entire project to a copy of a preexisting archive (Promise)
+appendFromArchive(pathname: string, options: {}) // create new archive from a preexisting archive and from only RequestAsset[] (Promise)
+
+// Required (all): --disk-write | --unc-write | --access-all (command-line)
+copyToDisk(directory: string, options?: {}) // copy entire project to local directory (Promise)
+```
+
 ### ANDROID: Public Methods
 
 The system methods are used internally to create the entire project and generally are not useful other than for debugging purposes or extracting the raw assets.
 
 ```javascript
+// Synchronous
+
 squared.system.customize(build: number, widget: string, options: {}) // global attributes applied to specific views
 squared.system.addXmlNs(name: string, uri: string) // add global namespaces for third-party controls
-
-// NOTE: options: { assets?: RequestAsset[], callback?: () => void }
 
 squared.system.copyLayoutAllXml(directory: string, options?: {}) // copy generated xml
 squared.system.copyResourceAllXml(directory: string, options?: {})
@@ -308,7 +319,7 @@ squared.system.addXmlNs('aapt', 'http://schemas.android.com/aapt');
 ### CHROME: Public Methods
 
 ```javascript
-// Promise methods
+// Asynchronous
 
 chrome.getElementById(value: string, cache?: boolean) // cache: default "true"
 chrome.querySelector(value: string, cache?: boolean)
@@ -321,12 +332,10 @@ chrome.saveAsWebPage(filename?: string, options?: {}) // create archive with htm
 The system methods querySelector and querySelectorAll can also be called from every Node object and provide the same functionality as the similarly named DOM methods.
 
 ```javascript
-// Synchronous
-
 squared.system.getElementMap()
 squared.system.clearElementMap()
 
-// NOTE: options: { assets?: RequestAsset[], saveAs?: {}, callback?: () => void }
+// Asynchronous
 
 squared.system.copyHtmlPage(directory: string, options?: {}) // option "name": e.g. "index.html"
 squared.system.copyScriptAssets(directory: string, options?: {})

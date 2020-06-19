@@ -18,10 +18,10 @@ declare interface ChromeFramework<T extends NodeElement> extends squared.base.Ap
 declare namespace base {
     class Application<T extends NodeElement> extends squared.base.Application<T> {
         userSettings: ChromeUserSettings;
-        readonly controllerHandler: Controller<T>;
-        readonly resourceHandler: Resource<T>;
         readonly builtInExtensions: ObjectMap<Extension<T>>;
         readonly extensions: Extension<T>[];
+        readonly controllerHandler: Controller<T>;
+        readonly resourceHandler: Resource<T>;
         createNode(sessionId: string, options: CreateNodeOptions): T;
     }
 
