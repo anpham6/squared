@@ -2243,6 +2243,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     case 'VIDEO':
                     case 'AUDIO':
                     case 'OBJECT':
+                    case 'EMBED':
                         return;
                     case 'INPUT':
                         switch (this.toElementString('type')) {

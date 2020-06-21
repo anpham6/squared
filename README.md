@@ -67,7 +67,10 @@ The primary function "parseDocument" can be called on multiple elements and mult
 
     document.addEventListener('DOMContentLoaded', function() {
         squared.setFramework(android, /* optional { builtInExtensions: [] } */);
-        squared.parseDocument(/* document.getElementById('mainview') */, /* 'subview-id' */, /* ...etc */); // zero or more DOM elements
+
+        squared.parseDocument(/* HTMLElement */); // default: document.body 'BODY'
+        //OR
+        squared.parseDocument(/* HTMLElement */, /* 'subview-id' */, /* ...etc */);
 
         // With: node-express / squared-apache
         squared.saveToArchive(/* optional: archive name */, /* options */);
@@ -93,8 +96,8 @@ VDOM is the most minimal framework and has better performance when using selecto
     document.addEventListener('DOMContentLoaded', function() {
         squared.setFramework(vdom /* chrome */);
 
-        const elementBody = squared.parseDocument(); // default: document.body
-        const elementArray = squared.parseDocument(/* document.getElementById('mainview') */, /* 'subview-id' */);
+        const element = squared.parseDocument(/* HTMLElement */); // default: document.documentElement 'HTML'
+        const elementArray = squared.parseDocument(/* HTMLElement */, /* 'subview-id' */, /* ...etc */); // more than 1 element
 
         // start new "parseDocument" session (optional)
         squared.reset();

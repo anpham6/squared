@@ -109,6 +109,7 @@ declare module "base" {
         appendFromArchive(filename: string, options: FileArchivingOptions): Promise<ResultOfFileAction | void>;
         set viewModel(data: Undef<AppViewModel>);
         get viewModel(): Undef<AppViewModel>;
+        get mainElement(): Element;
         get controllerHandler(): Controller<T>;
         get resourceHandler(): Undef<Resource<T>>;
         get extensionManager(): ExtensionManager<T>;

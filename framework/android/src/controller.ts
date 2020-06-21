@@ -372,22 +372,23 @@ function getVerticalAlignedLayout(layout: LayoutUI<View>) {
 
 function setObjectContainer(layout: LayoutUI<View>) {
     const node = layout.node;
-    const element = node.element as HTMLObjectElement;
-    const type = element.type || parseMimeType(element.data);
+    const element = node.element as HTMLEmbedElement & HTMLObjectElement;
+    const src = (element.tagName === 'OBJECT' ? element.data : element.src).trim();
+    const type = element.type || parseMimeType(src);
     if (type.startsWith('image/')) {
         node.setCacheValue('tagName', 'IMG');
         node.setCacheValue('imageElement', true);
-        element['src'] = element.data.trim();
+        element.src = src;
         layout.setContainerType(CONTAINER_NODE.IMAGE);
     }
     else if (type.startsWith('video/')) {
         node.setCacheValue('tagName', 'VIDEO');
-        element['src'] = element.data.trim();
+        element.src = src;
         layout.setContainerType(CONTAINER_NODE.VIDEOVIEW);
     }
     else if (type.startsWith('audio/')) {
         node.setCacheValue('tagName', 'AUDIO');
-        element['src'] = element.data.trim();
+        element.src = src;
         layout.setContainerType(CONTAINER_NODE.VIDEOVIEW);
     }
     else {
@@ -737,12 +738,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 'IFRAME',
                 'VIDEO',
                 'AUDIO',
+                'OBJECT',
                 'svg'
             ]),
             tagName: new Set([
                 'HEAD',
                 'TITLE',
                 'META',
+                'BASE',
                 'SCRIPT',
                 'STYLE',
                 'LINK',
@@ -754,6 +757,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 'SOURCE',
                 'TEMPLATE',
                 'DATALIST',
+                'PARAM',
                 'TRACK'
             ]),
             excluded: new Set(['BR', 'WBR'])
@@ -844,7 +848,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public processUnknownParent(layout: LayoutUI<T>) {
         const node = layout.node;
-        if (node.tagName === 'OBJECT') {
+        const tagName = node.tagName;
+        if (tagName === 'OBJECT' || tagName === 'EMBED') {
             setObjectContainer(layout);
         }
         else if (layout.some(item => !item.pageFlow && !item.autoPosition)) {

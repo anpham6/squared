@@ -165,7 +165,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         const styleElement = insertStyleSheetRule('html > body { overflow: hidden !important; }');
         let documentRoot: Undef<HTMLElement>;
         if (elements.length === 0) {
-            documentRoot = document.body;
+            documentRoot = this.mainElement;
             rootElements.add(documentRoot);
         }
         else {
@@ -397,15 +397,16 @@ export default abstract class Application<T extends Node> implements squared.bas
         const extensions = this.extensionsCascade;
         const node = this.cascadeParentNode(processing.cache, processing.excluded, processing.rootElements, element, sessionId, 0, extensions.length ? extensions : undefined);
         if (node) {
-            const parent = new this.Node(0, sessionId, element.parentElement || document.documentElement);
+            const parent = new this.Node(0, sessionId, element.parentElement);
             this._afterInsertNode(parent);
             node.parent = parent;
             node.actualParent = parent;
-            node.childIndex = 0;
-            node.documentRoot = true;
             if (parent.tagName === 'HTML') {
                 processing.documentElement = parent;
             }
+            node.depth = 0;
+            node.childIndex = 0;
+            node.documentRoot = true;
         }
         processing.node = node;
         return node;
@@ -415,13 +416,13 @@ export default abstract class Application<T extends Node> implements squared.bas
         const node = this.insertNode(parentElement, sessionId);
         if (node) {
             const { controllerHandler: controller } = this;
-            node.depth = depth;
             if (depth === 0) {
                 cache.add(node);
             }
             if (controller.preventNodeCascade(node)) {
                 return node;
             }
+            const childDepth = depth + 1;
             const childNodes = parentElement.childNodes;
             const length = childNodes.length;
             const children: T[] = new Array(length);
@@ -440,10 +441,9 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                 }
                 else if (controller.includeElement(element)) {
-                    child = this.cascadeParentNode(cache, excluded, rootElements, element, sessionId, depth + 1, extensions);
+                    child = this.cascadeParentNode(cache, excluded, rootElements, element, sessionId, childDepth, extensions);
                     if (child) {
                         elements[k++] = child;
-                        cache.add(child);
                         inlineText = false;
                     }
                 }
@@ -458,7 +458,9 @@ export default abstract class Application<T extends Node> implements squared.bas
                     child.$parent = node;
                     child.childIndex = j;
                     child.actualParent = node;
+                    child.depth = childDepth;
                     children[j++] = child;
+                    cache.add(child);
                 }
             }
             children.length = j;
@@ -665,6 +667,10 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
     }
 
+    get mainElement() {
+        return document.documentElement;
+    }
+
     get initializing() {
         for (const processing of this.session.active.values()) {
             if (processing.initializing) {
@@ -693,7 +699,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     get childrenAll() {
         const active = this.session.active;
         if (active.size === 1) {
-            return active.values().next().value as T[];
+            return (active.values().next().value as squared.base.AppProcessing<T>).cache.children;
         }
         let result: T[] = [];
         for (const item of active.values()) {
