@@ -40,17 +40,22 @@ Option #3 (vdom / minimal / browser only):
 &nbsp;&nbsp;&nbsp;&gt; https://unpkg.com/squared/dist/squared.base.min.js  
 &nbsp;&nbsp;&nbsp;&gt; https://unpkg.com/squared/dist/vdom.framework.min.js
 
+OR
+
+&nbsp;&nbsp;&nbsp;&gt; https://unpkg.com/squared/dist/squared.min.js  
+&nbsp;&nbsp;&nbsp;&gt; https://unpkg.com/squared/dist/vdom-lite.framework.min.js
+
 ### ALL: Usage
 
-Library files are in the /dist folder. A minimum of *three* files are required to run squared.
+Library files are in the /dist folder. A minimum of *two* files are required to run squared.
 
 1. squared
-2. squared-base
+2. squared-base - *required: except vdom-lite*
 3. squared-svg - *optional*
-4. framework (e.g. android | chrome | vdom)
+4. framework (e.g. android | chrome | vdom | vdom-lite)
 5. extensions (e.g. android.widget) - *optional*
 
-Usable combinations: 1-2-4 + 1-2-4-5 + 1-2-3-4-5 + 1-3
+Usable combinations: 1-2-4 + 1-2-4-5 + 1-2-3-4-5 + 1-3 + 1-vdom-lite
 
 #### Example: android
 
@@ -86,7 +91,7 @@ The primary function "parseDocument" can be called on multiple elements and mult
 
 #### Example: vdom / chrome
 
-VDOM is the most minimal framework and has better performance when using selector queries. Chrome framework has more convenience methods which are outlined in the API section.
+VDOM is a minimal framework with slightly better performance when using selector queries. The "lite" version is about half the bundle size and recommended for most browser applications. Chrome framework has more convenience methods which are outlined in the API section.
 
 ```javascript
 <script src="/dist/squared.min.js"></script>

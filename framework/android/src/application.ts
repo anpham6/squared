@@ -1,5 +1,5 @@
 
-type AppViewModel = squared.base.AppViewModel;
+type AppViewModel = android.base.AppViewModel;
 type View = android.base.View;
 
 const isTargeted = (node: View, target: Null<HTMLElement | string>) => node.element === target || node.elementId === target || node.controlId === target;

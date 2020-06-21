@@ -13,14 +13,13 @@ const Resource = android.base.Resource;
 
 export default class Coordinator<T extends View> extends squared.base.ExtensionUI<T> {
     public processNode(node: T, parent: T) {
-        const extensionManager = this.application.extensionManager;
         const options = createViewAttribute(this.options[node.elementId]);
-        Resource.formatOptions(options, extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
+        Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
         const element = Coordinator.findNestedElement(node, WIDGET_NAME.TOOLBAR);
         if (element) {
             const toolbar = getElementAsNode<T>(element, node.sessionId);
             if (toolbar) {
-                const data: StandardMap = extensionManager.retrieve(WIDGET_NAME.TOOLBAR)?.options[toolbar.elementId];
+                const data: StandardMap = this.application.extensionManager.retrieve(WIDGET_NAME.TOOLBAR)?.options[toolbar.elementId];
                 if (data && 'collapsingToolbar' in data) {
                     node.android('fitsSystemWindows', 'true');
                 }

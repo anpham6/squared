@@ -84,7 +84,7 @@ function processExtensions(this: chrome.base.File<NodeElement>, data: ChromeAsse
         }
     }
     for (const name of extensions) {
-        const ext = this.application.extensionManager.retrieve(name, true) as Extension;
+        const ext = this.application.extensionManager!.retrieve(name, true) as Extension;
         if (ext && !processed.includes(ext)) {
             ext.processFile(data, true);
         }

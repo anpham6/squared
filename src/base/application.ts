@@ -1,6 +1,5 @@
 import Controller from './controller';
 import Extension from './extension';
-import ExtensionManager from './extensionmanager';
 import Node from './node';
 import NodeList from './nodelist';
 import Resource from './resource';
@@ -83,8 +82,8 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     private _nextId = 0;
     private readonly _controllerHandler: Controller<T>;
-    private readonly _extensionManager: ExtensionManager<T>;
     private readonly _resourceHandler?: Resource<T>;
+    private readonly _extensionManager?: squared.base.ExtensionManager<T>;
 
     protected constructor(
         public readonly framework: number,
@@ -97,7 +96,9 @@ export default abstract class Application<T extends Node> implements squared.bas
         if (ResourceConstructor) {
             this._resourceHandler = (new ResourceConstructor(this) as unknown) as Resource<T>;
         }
-        this._extensionManager = (new (ExtensionManagerConstructor || ExtensionManager)(this) as unknown) as ExtensionManager<T>;
+        if (ExtensionManagerConstructor) {
+            this._extensionManager = (new ExtensionManagerConstructor(this) as unknown) as squared.base.ExtensionManager<T>;
+        }
         this._afterInsertNode = this._controllerHandler.afterInsertNode;
         this.Node = nodeConstructor;
     }

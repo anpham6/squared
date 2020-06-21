@@ -191,10 +191,10 @@ const appBase: chrome.ChromeFramework<NodeElement> = {
     },
     create() {
         const EC = constant.EXT_CHROME;
-        application = new Application<NodeElement>(framework, squared.base.NodeElement, Controller, Resource);
+        application = new Application<NodeElement>(framework, squared.base.NodeElement, Controller, Resource, squared.base.ExtensionManager);
         controller = application.controllerHandler as Controller<NodeElement>;
         file = new File();
-        application.resourceHandler!.fileHandler = file;
+        application.resourceHandler.fileHandler = file;
         elementMap = controller.elementMap;
         Object.assign(application.builtInExtensions, {
             [EC.COMPRESS_BROTLI]: new CompressBrotli(EC.COMPRESS_BROTLI, framework),

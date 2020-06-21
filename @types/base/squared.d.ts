@@ -112,7 +112,7 @@ declare module "base" {
         get mainElement(): Element;
         get controllerHandler(): Controller<T>;
         get resourceHandler(): Undef<Resource<T>>;
-        get extensionManager(): ExtensionManager<T>;
+        get extensionManager(): Undef<ExtensionManager<T>>;
         get extensionsCascade(): Extension<T>[];
         get childrenAll(): Node[];
         get nextId(): number;
@@ -140,7 +140,8 @@ declare module "base" {
         addLayoutTemplate(parent: T, node: T, template: Undef<NodeTemplate<T>>, index?: number): void;
         saveDocument(filename: string, content: string, pathname?: string, index?: number): void;
         get controllerHandler(): ControllerUI<T>;
-        get resourceHandler(): Undef<ResourceUI<T>>;
+        get resourceHandler(): ResourceUI<T>;
+        get extensionManager(): ExtensionManager<T>;
         get layouts(): FileAsset[];
         get clearMap(): Map<T, string>;
         get extensionsTraverse(): ExtensionUI<T>[];
@@ -148,8 +149,8 @@ declare module "base" {
             framework: number,
             nodeConstructor: Constructor<T>,
             ControllerConstructor: Constructor<ControllerUI<T>>,
-            ResourceConstructor?: Constructor<ResourceUI<T>>,
-            ExtensionManagerConstructor?: Constructor<ExtensionManager<T>>
+            ResourceConstructor: Constructor<ResourceUI<T>>,
+            ExtensionManagerConstructor: Constructor<ExtensionManager<T>>
         );
     }
 

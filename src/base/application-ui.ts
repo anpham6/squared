@@ -203,6 +203,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public readonly extensions: ExtensionUI<T>[] = [];
     public readonly controllerHandler!: ControllerUI<T>;
     public readonly resourceHandler!: ResourceUI<T>;
+    public readonly extensionManager!: squared.base.ExtensionManager<T>;
     public readonly fileHandler!: FileUI<T>;
     public abstract userSettings: UserSettingsUI;
 
@@ -216,7 +217,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         nodeConstructor: Constructor<T>,
         ControllerConstructor: Constructor<T>,
         ResourceConstructor: Constructor<T>,
-        ExtensionManagerConstructor?: Constructor<T>)
+        ExtensionManagerConstructor: Constructor<T>)
     {
         super(framework, nodeConstructor, ControllerConstructor, ResourceConstructor, ExtensionManagerConstructor);
         const localSettings = this.controllerHandler.localSettings;

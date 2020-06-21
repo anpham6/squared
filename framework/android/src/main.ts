@@ -310,7 +310,7 @@ const appBase: squared.base.AppFramework<View> = {
     create() {
         const EN = squared.base.lib.constant.EXT_NAME;
         const EA = constant.EXT_ANDROID;
-        application = new Application<View>(framework, View, Controller, Resource);
+        application = new Application<View>(framework, View, Controller, Resource, squared.base.ExtensionManager);
         file = new File();
         application.resourceHandler.fileHandler = file;
         Object.assign(application.builtInExtensions, {

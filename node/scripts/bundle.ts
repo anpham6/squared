@@ -25,6 +25,7 @@ let output: String;
                     case 'chrome':
                     case 'vdom':
                         files[1] = 'squared.base';
+                    case 'vdom-lite':
                         framework = `${name}.framework`;
                         break;
                 }

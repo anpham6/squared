@@ -102,12 +102,14 @@ export function setViewModel(data?: {}) {
 
 export function parseDocument(...elements: (HTMLElement | string)[]) {
     if (main) {
-        if (extensionsQueue.size) {
-            const extensionManager = main.extensionManager;
-            for (const item of extensionsQueue) {
-                extensionManager.include(item);
+        const extensionManager = main.extensionManager;
+        if (extensionManager) {
+            if (extensionsQueue.size) {
+                for (const item of extensionsQueue) {
+                    extensionManager.include(item);
+                }
+                extensionsQueue.clear();
             }
-            extensionsQueue.clear();
         }
         if (optionsQueue.size) {
             for (const [name, options] of optionsQueue.entries()) {
@@ -127,26 +129,29 @@ export function parseDocument(...elements: (HTMLElement | string)[]) {
 }
 
 export function include(value: ExtensionRequest, options?: {}) {
-    if (typeof value === 'string') {
-        value = value.trim();
-        value = main?.builtInExtensions[value] || retrieve(value);
-    }
-    if (value instanceof squared.base.Extension) {
-        extensionsExternal.add(value);
-        if (!(main?.extensionManager.include(value) === true)) {
-            extensionsQueue.add(value);
+    const extensionManager = main?.extensionManager;
+    if (extensionManager) {
+        if (typeof value === 'string') {
+            value = value.trim();
+            value = main!.builtInExtensions[value] || retrieve(value);
         }
-        if (options) {
-            configure(value, options);
+        if (value instanceof squared.base.Extension) {
+            extensionsExternal.add(value);
+            if (!extensionManager.include(value)) {
+                extensionsQueue.add(value);
+            }
+            if (options) {
+                configure(value, options);
+            }
+            return true;
         }
-        return true;
     }
     return false;
 }
 
 export function exclude(value: ExtensionRequest) {
-    if (main) {
-        const extensionManager = main.extensionManager;
+    const extensionManager = main?.extensionManager;
+    if (extensionManager) {
         if (typeof value === 'string') {
             value = extensionManager.retrieve(value.trim());
         }
@@ -160,10 +165,11 @@ export function exclude(value: ExtensionRequest) {
 }
 
 export function configure(value: ExtensionRequest, options: {}) {
-    if (util.isPlainObject(options)) {
+    const extensionManager = main?.extensionManager;
+    if (extensionManager && util.isPlainObject(options)) {
         if (typeof value === 'string') {
             value = value.trim();
-            const extension = main?.extensionManager.retrieve(value) || util.findSet(extensionsQueue, item => item.name === value);
+            const extension = extensionManager.retrieve(value) || util.findSet(extensionsQueue, item => item.name === value);
             if (extension) {
                 Object.assign(extension.options, options);
             }
@@ -181,15 +187,19 @@ export function configure(value: ExtensionRequest, options: {}) {
 }
 
 export function retrieve(value: string) {
-    let result = main?.extensionManager.retrieve(value) || null;
-    if (!result) {
-        for (const ext of extensionsExternal) {
-            if (ext.name === value) {
-                return ext;
+    const extensionManager = main?.extensionManager;
+    if (extensionManager) {
+        const result = extensionManager.retrieve(value) || null;
+        if (!result) {
+            for (const ext of extensionsExternal) {
+                if (ext.name === value) {
+                    return ext;
+                }
             }
         }
+        return result;
     }
-    return result;
+    return null;
 }
 
 export function get(...elements: (Element | string)[]) {
