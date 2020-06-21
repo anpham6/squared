@@ -242,6 +242,7 @@ setViewModel(data?: {}) // object data for layout bindings
 parseDocument() // see installation section (Promise)
 
 get(...elements: (Element | string)[]) // Element map of any Node objects created during the active "parseDocument" session
+latest() // most recent parseDocument sessionId
 
 ready() // boolean indicating if parseDocument can be called
 close() // close current session preceding write to disk or local output

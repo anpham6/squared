@@ -181,14 +181,11 @@ export function configure(value: ExtensionRequest, options: {}) {
 }
 
 export function retrieve(value: string) {
-    let result: Null<Extension> = null;
-    if (main) {
-        result = main.extensionManager.retrieve(value);
-        if (!result) {
-            for (const ext of extensionsExternal) {
-                if (ext.name === value) {
-                    return ext;
-                }
+    let result = main?.extensionManager.retrieve(value) || null;
+    if (!result) {
+        for (const ext of extensionsExternal) {
+            if (ext.name === value) {
+                return ext;
             }
         }
     }
@@ -225,6 +222,16 @@ export function get(...elements: (Element | string)[]) {
             ? result.values().next().value as Node[]
             : []
         : result;
+}
+
+export function latest() {
+    let result = '';
+    if (main) {
+        for (const sessionId of main.session.active.keys()) {
+            result = sessionId;
+        }
+    }
+    return result;
 }
 
 export function reset() {
