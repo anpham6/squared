@@ -817,7 +817,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     protected constructor(
         public readonly id: number,
-        public readonly sessionId = '0',
+        public sessionId = '0',
         element?: Element)
     {
         super();
@@ -835,48 +835,72 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public init() {
         const element = this._element as HTMLElement;
         if (element) {
-            const { style, styleElement, sessionId } = this;
-            const styleMap: StringMap = getElementCache(element, 'styleMap', sessionId) || {};
-            if (styleElement) {
-                if (!this.pseudoElement) {
-                    const items = Array.from(element.style);
-                    const length = items.length;
-                    if (length) {
-                        let i = 0;
-                        while (i < length) {
-                            const attr = items[i++];
-                            styleMap[convertCamelCase(attr)] = element.style.getPropertyValue(attr);
-                        }
-                    }
-                }
-                const revisedMap: StringMap = {};
-                const writingMode = style.writingMode;
-                for (let attr in styleMap) {
-                    const value = styleMap[attr];
-                    const alias = checkWritingMode(attr, writingMode);
-                    if (alias !== '') {
-                        if (!styleMap[alias]) {
-                            attr = alias;
-                        }
-                        else {
-                            continue;
-                        }
-                    }
-                    const result = checkStyleValue(element, attr, value, style);
-                    if (result !== '') {
-                        revisedMap[attr] = result;
-                    }
-                }
-                this._styleMap = revisedMap;
+            const sessionId = this.sessionId;
+            if (!this.syncWith(sessionId)) {
+                this._styleMap = {};
+                this._cssStyle = {};
             }
-            else {
-                this._styleMap = styleMap;
-            }
-            this._cssStyle = styleMap;
             if (sessionId !== '0') {
                 setElementCache(element, 'node', sessionId, this);
             }
         }
+    }
+
+    public syncWith(sessionId?: string, cache?: boolean) {
+        const element = this._element as HTMLElement;
+        if (element) {
+            if (!sessionId) {
+                sessionId = getElementCache(element, 'sessionId', '0');
+                if (sessionId === this.sessionId) {
+                    return true;
+                }
+            }
+            const styleMap: Undef<StringMap> = getElementCache(element, 'styleMap', sessionId);
+            if (styleMap) {
+                if (this.styleElement) {
+                    const style = this.style;
+                    const revisedMap: StringMap = {};
+                    const writingMode = style.writingMode;
+                    if (!this.pseudoElement) {
+                        const items = Array.from(element.style);
+                        const length = items.length;
+                        if (length) {
+                            let i = 0;
+                            while (i < length) {
+                                const attr = items[i++];
+                                styleMap[convertCamelCase(attr)] = element.style.getPropertyValue(attr);
+                            }
+                        }
+                    }
+                    for (let attr in styleMap) {
+                        const value = styleMap[attr];
+                        const alias = checkWritingMode(attr, writingMode);
+                        if (alias !== '') {
+                            if (!styleMap[alias]) {
+                                attr = alias;
+                            }
+                            else {
+                                continue;
+                            }
+                        }
+                        const result = checkStyleValue(element, attr, value, style);
+                        if (result !== '') {
+                            revisedMap[attr] = result;
+                        }
+                    }
+                    this._styleMap = revisedMap;
+                }
+                else {
+                    this._styleMap = styleMap;
+                }
+                this._cssStyle = styleMap;
+                if (cache) {
+                    this._cached = {};
+                }
+                return true;
+            }
+        }
+        return false;
     }
 
     public saveAsInitial() {

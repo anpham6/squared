@@ -111,7 +111,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         const imageMimeType = this.mimeTypeMap.image;
         if (imageMimeType === '*' || imageMimeType.includes(mimeType)) {
             if (!filename) {
-                const ext = '.' + fromMimeType(mimeType);
+                const ext = '.' + (fromMimeType(mimeType) || 'unknown');
                 filename = uri.endsWith(ext) ? fromLastIndexOf(uri, '/', '\\') : this.randomUUID + ext;
             }
             Resource.ASSETS.rawData.set(uri, {

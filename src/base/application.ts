@@ -415,11 +415,11 @@ export default abstract class Application<T extends Node> implements squared.bas
     protected cascadeParentNode(cache: squared.base.NodeList<T>, excluded: squared.base.NodeList<T>, rootElements: Set<HTMLElement>, parentElement: HTMLElement, sessionId: string, depth: number, extensions?: Extension<T>[]) {
         const node = this.insertNode(parentElement, sessionId);
         if (node) {
-            const { controllerHandler: controller } = this;
+            const controllerHandler = this.controllerHandler;
             if (depth === 0) {
                 cache.add(node);
             }
-            if (controller.preventNodeCascade(node)) {
+            if (controllerHandler.preventNodeCascade(node)) {
                 return node;
             }
             const childDepth = depth + 1;
@@ -435,12 +435,10 @@ export default abstract class Application<T extends Node> implements squared.bas
                 if (element.nodeName.charAt(0) === '#') {
                     if (element.nodeName === '#text') {
                         child = this.insertNode(element, sessionId);
-                        if (child) {
-                            child.cssApply(node.textStyle);
-                        }
+                        child?.cssApply(node.textStyle);
                     }
                 }
-                else if (controller.includeElement(element)) {
+                else if (controllerHandler.includeElement(element)) {
                     child = this.cascadeParentNode(cache, excluded, rootElements, element, sessionId, childDepth, extensions);
                     if (child) {
                         elements[k++] = child;
