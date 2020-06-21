@@ -10,7 +10,7 @@ export default class Png<T extends squared.base.NodeElement> extends Extension<T
         whenSmaller: true
     };
 
-    public processFile(data: ChromeAsset, override = false) {
+    public processFile(data: ChromeAsset, override?: boolean) {
         if (!override) {
             const mimeType = data.mimeType;
             if (mimeType) {

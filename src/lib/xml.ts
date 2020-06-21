@@ -69,7 +69,7 @@ export function replaceIndent(value: string, depth: number, pattern: RegExp) {
     return value;
 }
 
-export function replaceTab(value: string, spaces = 4, preserve = false) {
+export function replaceTab(value: string, spaces = 4, preserve?: boolean) {
     if (spaces > 0) {
         if (preserve) {
             return joinArray(value.split('\n'), line => {
@@ -172,7 +172,7 @@ export function applyTemplate(tagName: string, template: StandardMap, children: 
     return output;
 }
 
-export function formatTemplate(value: string, closeEmpty = false, startIndent = -1, char = '\t') {
+export function formatTemplate(value: string, closeEmpty?: boolean, startIndent = -1, char = '\t') {
     const lines: XMLTagData[] = [];
     const pattern = /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g;
     let output = '',

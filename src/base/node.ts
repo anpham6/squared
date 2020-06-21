@@ -1196,7 +1196,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         });
     }
 
-    public cssPX(attr: string, value: number, cache = false, options?: CssPXOptions) {
+    public cssPX(attr: string, value: number, cache?: boolean, options?: CssPXOptions) {
         const current = this._styleMap[attr];
         if (current && isLength(current)) {
             value += parseUnit(current, this.fontSize);
@@ -1758,6 +1758,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             this._cached.naturalElement = result;
         }
         return result;
+    }
+
+    get parentElement() {
+        return this._element?.parentElement || this.actualParent?.element || null;
     }
 
     get textElement() {
@@ -2835,7 +2839,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     result = parseFloat(value);
                 }
                 else if (isPercent(value) && this._element !== document.documentElement) {
-                    result = (this.actualParent?.fontSize || getFontSize(getStyle((this._element as Element).parentElement || document.documentElement))) * parseFloat(value) / 100;
+                    result = (this.actualParent?.fontSize ?? getFontSize(getStyle((this._element as Element).parentElement || document.documentElement))) * parseFloat(value) / 100;
                 }
                 else {
                     result = getFontSize(this.style);

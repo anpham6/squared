@@ -9,7 +9,7 @@ export default class Jpeg<T extends squared.base.NodeElement> extends Extension<
         replaceWith: true
     };
 
-    public processFile(data: ChromeAsset, override = false) {
+    public processFile(data: ChromeAsset, override?: boolean) {
         const mimeType = data.mimeType;
         if (mimeType && !/jpeg[(%@:]/.test(mimeType)) {
             const mimeTypes = this.options.mimeTypes;

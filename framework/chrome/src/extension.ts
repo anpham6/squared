@@ -21,7 +21,7 @@ export default abstract class Extension<T extends squared.base.NodeElement> exte
 
     public application!: chrome.base.Application<T>;
 
-    public processFile(data: ChromeAsset, override = false) {
+    public processFile(data: ChromeAsset, override?: boolean) {
         return false;
     }
 }

@@ -9,7 +9,7 @@ export default class Tiff<T extends squared.base.NodeElement> extends Extension<
         replaceWith: true
     };
 
-    public processFile(data: ChromeAsset, override = false) {
+    public processFile(data: ChromeAsset, override?: boolean) {
         const mimeType = data.mimeType;
         if (mimeType && !/tiff[(%@:]/.test(mimeType)) {
             const mimeTypes = this.options.mimeTypes;

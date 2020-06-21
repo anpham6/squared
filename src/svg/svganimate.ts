@@ -298,7 +298,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         }
     }
 
-    public getIntervalEndTime(leadTime: number, complete = false) {
+    public getIntervalEndTime(leadTime: number, complete?: boolean) {
         const endTime = this.getTotalDuration();
         if (leadTime < endTime) {
             const { duration, keyTimes } = this;
@@ -311,7 +311,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         return endTime;
     }
 
-    public getTotalDuration(minimum = false) {
+    public getTotalDuration(minimum?: boolean) {
         let iterationCount = this.iterationCount;
         if (minimum && iterationCount === -1) {
             iterationCount = 1;

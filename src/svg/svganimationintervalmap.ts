@@ -256,7 +256,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
         return !!map;
     }
 
-    public get(attr: string, time: number, playing = false) {
+    public get(attr: string, time: number, playing?: boolean) {
         let value: Undef<string>;
         const map = this.map[attr];
         if (map) {

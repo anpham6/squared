@@ -735,7 +735,7 @@ export function cloneInstance<T>(value: T): T {
     return Object.assign(Object.create(Object.getPrototypeOf(value)), value);
 }
 
-export function cloneArray(data: any[], result: any[] = [], object = false) {
+export function cloneArray(data: any[], result: any[] = [], object?: boolean) {
     for (let i = 0; i < data.length; ++i) {
         const value = data[i];
         if (Array.isArray(value)) {
@@ -751,7 +751,7 @@ export function cloneArray(data: any[], result: any[] = [], object = false) {
     return result;
 }
 
-export function cloneObject(data: {}, result = {}, array = false) {
+export function cloneObject(data: {}, result = {}, array?: boolean) {
     for (const attr in data) {
         const value = data[attr];
         if (Array.isArray(value)) {

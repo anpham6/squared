@@ -531,7 +531,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 let i = 0;
                 while (i < length) {
                     const item = pseudoElements[i++];
-                    const parentElement = item.actualParent!.element as HTMLElement;
+                    const parentElement = item.parentElement as HTMLElement;
                     let id = parentElement.id.trim(),
                         styleElement: Undef<HTMLStyleElement>;
                     if (item.pageFlow) {
@@ -1717,12 +1717,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                 cascadeCounterSibling(current);
                                             }
                                         }
-                                        else if (current.parentElement) {
-                                            current = current.parentElement;
-                                            ascending = true;
-                                        }
                                         else {
-                                            break;
+                                            current = current.parentElement;
+                                            if (!current) {
+                                                break;
+                                            }
+                                            ascending = true;
                                         }
                                         if (current && current.className !== '__squared.pseudo') {
                                             const pesudoIncrement = getCounterIncrementValue(current, counterName, pseudoElt, sessionId);

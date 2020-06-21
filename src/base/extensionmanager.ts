@@ -57,7 +57,7 @@ export default class ExtensionManager<T extends squared.base.Node> implements sq
         return false;
     }
 
-    public retrieve(name: string, checkBuiltIn = false) {
+    public retrieve(name: string, checkBuiltIn?: boolean) {
         const extensions = this.extensions;
         const length = extensions.length;
         let i = 0;

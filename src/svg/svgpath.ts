@@ -106,12 +106,12 @@ function updatePathRadius(path: SvgPathCommand[], rx?: number, ry?: number) {
     }
 }
 
-function getDashOffset(map: SvgAnimationIntervalMap, valueOffset: number, time: number, playing = false) {
+function getDashOffset(map: SvgAnimationIntervalMap, valueOffset: number, time: number, playing?: boolean) {
     const value = map.get('stroke-dashoffset', time, playing);
     return value ? parseFloat(value) : valueOffset;
 }
 
-function getDashArray(map: SvgAnimationIntervalMap, valueArray: number[], time: number, playing = false) {
+function getDashArray(map: SvgAnimationIntervalMap, valueArray: number[], time: number, playing?: boolean) {
     const value = map.get('stroke-dasharray', time, playing);
     return value ? SvgBuild.parseCoordinates(value) : valueArray;
 }

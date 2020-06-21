@@ -502,7 +502,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
-    public static syncPathPoints(values: SvgPathCommand[], points: SvgPoint[], transformed = false) {
+    public static syncPathPoints(values: SvgPathCommand[], points: SvgPoint[], transformed?: boolean) {
         invalid: {
             let location: Undef<Point>;
             const length = values.length;

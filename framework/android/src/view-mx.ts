@@ -2504,7 +2504,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
         }
 
-        public setSingleLine(ellipsize = false) {
+        public setSingleLine(ellipsize?: boolean) {
             if (this.textElement && this.naturalChild && (ellipsize || !this.hasPX('width'))) {
                 const parent = this.actualParent as T;
                 if (!parent.preserveWhiteSpace && parent.tagName !== 'CODE' && (!this.multiline || parent.css('whiteSpace') === 'nowrap')) {

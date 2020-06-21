@@ -40,37 +40,7 @@ Option #3 (vdom / minimal / browser only):
 &nbsp;&nbsp;&nbsp;&gt; https://unpkg.com/squared/dist/squared.base.min.js  
 &nbsp;&nbsp;&nbsp;&gt; https://unpkg.com/squared/dist/vdom.framework.min.js
 
-```javascript
-<script src="/dist/squared.min.js"></script>
-<script src="/dist/squared.base.min.js"></script>
-<script src="/dist/squared.svg.min.js"></script> /* optional */
-<script src="/dist/android.framework.min.js"></script> /* OR: chrome.framework.min.js */
-<script>
-    // optional
-    squared.settings.targetAPI = 29;
-
-    document.addEventListener('DOMContentLoaded', function() {
-        // Required
-        squared.setFramework(android /* chrome */, { builtInExtensions: [/* optional */] }); // override default settings
-
-        // Required: zero or more DOM elements
-        squared.parseDocument(/* document.getElementById('mainview') */, /* 'subview-id' */, /* etc... */);
-        squared.close();
-
-        // Optional: node-express / squared-apache
-        squared.saveToArchive(/* optional: archive name */, /* options */);
-        // OR
-        squared.copyToDisk(/* required: local directory */, /* options */);
-        // OR
-        squared.appendToArchive(/* required: location uri */, /* options */);
-
-        // optional: start new "parseDocument" session
-        squared.reset();
-    });
-</script>
-```
-
-The primary function "parseDocument" can be called on multiple elements and multiple times per session. The application will continuously and progressively build the layout files into a single entity with combined shared resources.
+### ALL: Usage
 
 Library files are in the /dist folder. A minimum of *three* files are required to run squared.
 
@@ -81,6 +51,56 @@ Library files are in the /dist folder. A minimum of *three* files are required t
 5. extensions (e.g. android.widget) - *optional*
 
 Usable combinations: 1-2-4 + 1-2-4-5 + 1-2-3-4-5 + 1-3
+
+#### Example: android
+
+The primary function "parseDocument" can be called on multiple elements and multiple times per session. The application will continuously and progressively build the layout files into a single entity with combined shared resources.
+
+```javascript
+<script src="/dist/squared.min.js"></script>
+<script src="/dist/squared.base.min.js"></script>
+<script src="/dist/squared.svg.min.js"></script> /* optional */
+<script src="/dist/android.framework.min.js"></script>
+<script>
+    // optional
+    squared.settings.targetAPI = 29;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        squared.setFramework(android, /* optional { builtInExtensions: [] } */);
+        squared.parseDocument(/* document.getElementById('mainview') */, /* 'subview-id' */, /* ...etc */); // zero or more DOM elements
+
+        // With: node-express / squared-apache
+        squared.saveToArchive(/* optional: archive name */, /* options */);
+        // OR
+        squared.copyToDisk(/* required: local directory */, /* options */);
+        // OR
+        squared.appendToArchive(/* required: location uri */, /* options */);
+
+        squared.reset(); // start new "parseDocument" session
+    });
+</script>
+```
+
+#### Example: vdom / chrome
+
+VDOM is the most minimal framework and has better performance when using selector queries. Chrome framework has more convenience methods which are outlined in the API section.
+
+```javascript
+<script src="/dist/squared.min.js"></script>
+<script src="/dist/squared.base.min.js"></script>
+<script src="/dist/vdom.framework.min.js"></script> /* OR: chrome.framework.min.js */
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        squared.setFramework(vdom /* chrome */);
+
+        const elementBody = squared.parseDocument(); // default: document.body
+        const elementArray = squared.parseDocument(/* document.getElementById('mainview') */, /* 'subview-id' */);
+
+        // start new "parseDocument" session (optional)
+        squared.reset();
+    });
+</script>
+```
 
 There are ES2017 minified versions (*.min.js) and also ES2017 non-minified versions. Past versions until 1.6.5 were using ES2015 (ES6).
 

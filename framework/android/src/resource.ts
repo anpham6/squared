@@ -11,7 +11,7 @@ const STORED = squared.base.ResourceUI.STORED as AndroidResourceStoredMap;
 
 let CACHE_IMAGE: StringMap = {};
 
-function formatObject(obj: {}, numberAlias = false) {
+function formatObject(obj: {}, numberAlias?: boolean) {
     for (const attr in obj) {
         if (isPlainObject(obj[attr])) {
             formatObject(obj, numberAlias);
@@ -53,7 +53,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
     private static UUID_COUNTER = 0;
     private static SYMBOL_COUNTER = 0;
 
-    public static formatOptions(options: ViewAttribute, numberAlias = false) {
+    public static formatOptions(options: ViewAttribute, numberAlias?: boolean) {
         for (const namespace in options) {
             const obj: StandardMap = options[namespace];
             if (isPlainObject(obj)) {
@@ -122,7 +122,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         return true;
     }
 
-    public static addString(value: string, name?: string, numberAlias = false) {
+    public static addString(value: string, name?: string, numberAlias?: boolean) {
         if (value !== '') {
             const numeric = isNumber(value);
             if (!numeric || numberAlias) {
@@ -187,7 +187,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         return '';
     }
 
-    public static addColor(color: Undef<ColorData | string>, transparency = false) {
+    public static addColor(color: Undef<ColorData | string>, transparency?: boolean) {
         if (typeof color === 'string') {
             color = parseColor(color, 1, transparency);
         }

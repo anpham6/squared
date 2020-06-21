@@ -483,7 +483,7 @@ export function setHorizontalAlignment(node: View) {
     }
 }
 
-export function setVerticalAlignment(node: View, onlyChild = true, biasOnly = false) {
+export function setVerticalAlignment(node: View, onlyChild = true, biasOnly?: boolean) {
     const autoMargin = node.autoMargin;
     let bias = onlyChild ? 0 : NaN;
     if (node.floating) {

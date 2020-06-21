@@ -9,7 +9,7 @@ type AppVieModel = squared.base.AppViewModel;
 type FileActionOptions = squared.base.FileActionOptions;
 type PreloadImage = HTMLImageElement | string;
 
-const { CSS_PROPERTIES, checkMediaRule, getSpecificity, getStyle, hasComputedStyle, insertStyleSheetRule, parseSelectorText } = squared.lib.css;
+const { CSS_PROPERTIES, checkMediaRule, getSpecificity, hasComputedStyle, insertStyleSheetRule, parseSelectorText } = squared.lib.css;
 const { FILE, STRING } = squared.lib.regex;
 const { frameworkNotInstalled, getElementCache, setElementCache } = squared.lib.session;
 const { capitalize, convertCamelCase, isString, parseMimeType, plainMap, promisify, resolvePath, trimBoth } = squared.lib.util;
@@ -147,10 +147,10 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     public parseDocument(...elements: any[]) {
-        const { controllerHandler: controller, resourceHandler: resource } = this;
+        const { controllerHandler, resourceHandler } = this;
         const rootElements = new Set<HTMLElement>();
-        const sessionId = controller.generateSessionId;
-        const preloadImages = !!resource && resource.userSettings.preloadImages;
+        const sessionId = controllerHandler.generateSessionId;
+        const preloadImages = !!resourceHandler && resourceHandler.userSettings.preloadImages;
         const preloaded: HTMLImageElement[] = [];
         const imageElements: PreloadImage[] = [];
         const processing: squared.base.AppProcessing<T> = {
@@ -160,7 +160,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             initializing: false
         };
         this.session.active.set(sessionId, processing);
-        controller.init();
+        controllerHandler.init();
         this.setStyleMap(sessionId);
         const styleElement = insertStyleSheetRule('html > body { overflow: hidden !important; }');
         let documentRoot: Undef<HTMLElement>;
@@ -279,19 +279,19 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
             }
         }
-        if (resource) {
+        if (resourceHandler) {
             for (const element of rootElements) {
                 element.querySelectorAll('img').forEach((image: HTMLImageElement) => {
                     parseSrcSet(image.srcset);
                     if (!preloadImages) {
-                        resource.addImage(image);
+                        resourceHandler.addImage(image);
                     }
                     else {
                         if (isSvg(image.src)) {
                             imageElements.push(image.src);
                         }
                         else if (image.complete) {
-                            resource.addImage(image);
+                            resourceHandler.addImage(image);
                         }
                         else {
                             imageElements.push(image);
@@ -323,11 +323,11 @@ export default abstract class Application<T extends Node> implements squared.bas
                     if (typeof value === 'string') {
                         const uri = imageElements[i];
                         if (typeof uri === 'string') {
-                            resource!.addRawData(uri, 'image/svg+xml', value, { encoding: 'utf8' });
+                            resourceHandler!.addRawData(uri, 'image/svg+xml', value, { encoding: 'utf8' });
                         }
                     }
                     else {
-                        resource!.addImage(value);
+                        resourceHandler!.addImage(value);
                     }
                 }
                 return resumeThread();
@@ -565,7 +565,6 @@ export default abstract class Application<T extends Node> implements squared.bas
                             for (const attr in styleMap) {
                                 specificityData[attr] = specificity + (important[attr] ? 1000 : 0);
                             }
-                            setElementCache(element, `style${targetElt}`, '0', getStyle(element, targetElt));
                             setElementCache(element, 'sessionId', '0', sessionId);
                             setElementCache(element, attrStyle, sessionId, styleMap);
                             setElementCache(element, attrSpecificity, sessionId, specificityData);
@@ -692,8 +691,12 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     get childrenAll() {
+        const active = this.session.active;
+        if (active.size === 1) {
+            return active.values().next().value as T[];
+        }
         let result: T[] = [];
-        for (const item of this.session.active.values()) {
+        for (const item of active.values()) {
             result = result.concat(item.cache.children);
         }
         return result;

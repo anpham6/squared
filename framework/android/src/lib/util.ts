@@ -18,7 +18,7 @@ function calculateBias(start: number, end: number, accuracy = 3) {
     return parseFloat(truncate(Math.max(start / (start + end), 0), accuracy));
 }
 
-export function convertLength(value: string | number, font = false, precision = 3) {
+export function convertLength(value: string | number, font?: boolean, precision = 3) {
     if (typeof value === 'string') {
         value = parseFloat(value);
     }

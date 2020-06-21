@@ -332,7 +332,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         return '';
     }
 
-    public static getOptionArray(element: HTMLSelectElement | HTMLOptGroupElement, showDisabled = false) {
+    public static getOptionArray(element: HTMLSelectElement | HTMLOptGroupElement, showDisabled?: boolean) {
         let result: string[] = [],
             numberArray = true;
         iterateArray(element.children, (item: HTMLOptionElement) => {
@@ -596,7 +596,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         return width > 0 && height > 0 ? { width: Math.round(width), height: Math.round(height) } : undefined;
     }
 
-    public static hasLineBreak(node: NodeUI, lineBreak = false, trim = false) {
+    public static hasLineBreak(node: NodeUI, lineBreak?: boolean, trim?: boolean) {
         if (node.naturalElements.length) {
             return node.naturalElements.some(item => item.lineBreak);
         }

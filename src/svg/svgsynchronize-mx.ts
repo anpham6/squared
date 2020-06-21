@@ -88,7 +88,7 @@ function convertToFraction(values: TimelineEntries) {
     return values;
 }
 
-function convertToAnimateValue(value: AnimateValue, fromString = false) {
+function convertToAnimateValue(value: AnimateValue, fromString?: boolean) {
     if (typeof value === 'string') {
         if (isNumber(value)) {
             value = parseFloat(value);
@@ -535,7 +535,7 @@ function appendPartialKeyTimes(map: SvgAnimationIntervalMap, forwardMap: Forward
     return [keyTimes, values, keySplines];
 }
 
-function setTimelineValue(map: TimelineIndex, time: number, value: AnimateValue, duplicate = false) {
+function setTimelineValue(map: TimelineIndex, time: number, value: AnimateValue, duplicate?: boolean) {
     if (value !== '') {
         let stored = map.get(time),
             previousTime = false;

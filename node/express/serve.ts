@@ -1084,7 +1084,7 @@ class FileManager implements serve.IFileManager {
         const index = value.lastIndexOf('.');
         return value.substring(0, index !== -1 ? index : value.length) + '.' + ext;
     }
-    appendContent(file: ExpressAsset, content: string, outputOnly = false) {
+    appendContent(file: ExpressAsset, content: string, outputOnly?: boolean) {
         const filepath = file.filepath || this.getFileOutput(file).filepath;
         if (filepath && file.bundleIndex !== undefined) {
             const { mimeType, format } = file;

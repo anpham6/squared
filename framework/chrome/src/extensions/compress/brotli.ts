@@ -11,7 +11,7 @@ export default class Brotli<T extends squared.base.NodeElement> extends Extensio
         level: 11
     };
 
-    public processFile(data: ChromeAsset, override = false) {
+    public processFile(data: ChromeAsset, override?: boolean) {
         if (!override) {
             const mimeType = data.mimeType;
             if (mimeType) {

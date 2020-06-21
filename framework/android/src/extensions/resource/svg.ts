@@ -477,13 +477,13 @@ function getTransformInitialValue(name: string) {
     return undefined;
 }
 
-function getColorValue<T>(value: string, asArray = false) {
+function getColorValue<T>(value: string, asArray?: T) {
     const colorName = '@color/' + Resource.addColor(value);
-    return (asArray ? [colorName] : colorName) as T extends true ? string[] : string;
+    return (asArray ? [colorName] : colorName) as T extends boolean ? string[] : string;
 }
 
-function convertValueType<T = string | string[]>(item: SvgAnimation, value: string) {
-    return isColorType(item.attributeName) ? getColorValue<T>(value) : value.trim() || undefined;
+function convertValueType(item: SvgAnimation, value: string) {
+    return isColorType(item.attributeName) ? getColorValue(value) : value.trim() || undefined;
 }
 
 function getTileMode(value: number) {
@@ -1065,7 +1065,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                     if (item.setterType) {
                                         const propertyNames = getAttributePropertyName(item.attributeName);
                                         if (propertyNames) {
-                                            const values = isColorType(item.attributeName) ? getColorValue<true>(item.to, true) : item.to.trim().split(' ');
+                                            const values = isColorType(item.attributeName) ? getColorValue(item.to, true) : item.to.trim().split(' ');
                                             const q = propertyNames.length;
                                             if (values.length === q && !values.some(value => value === '')) {
                                                 let companionBefore: Undef<PropertyValue[]>,
@@ -1195,7 +1195,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                     values = item.values.slice(0);
                                                     if (isColorType(item.attributeName)) {
                                                         if (requireBefore && item.baseValue) {
-                                                            beforeValues = getColorValue<true>(item.baseValue, true);
+                                                            beforeValues = getColorValue(item.baseValue, true);
                                                         }
                                                         for (let k = 0; k < values.length; ++k) {
                                                             if (values[k] !== '') {

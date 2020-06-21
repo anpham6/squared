@@ -11,7 +11,7 @@ export default class Gzip<T extends squared.base.NodeElement> extends Extension<
         level: 9
     };
 
-    public processFile(data: ChromeAsset, override = false) {
+    public processFile(data: ChromeAsset, override?: boolean) {
         if (!override) {
             const mimeType = data.mimeType;
             if (mimeType) {

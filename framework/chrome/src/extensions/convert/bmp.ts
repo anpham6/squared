@@ -9,7 +9,7 @@ export default class Bmp<T extends squared.base.NodeElement> extends Extension<T
         replaceWith: true
     };
 
-    public processFile(data: ChromeAsset, override = false) {
+    public processFile(data: ChromeAsset, override?: boolean) {
         const mimeType = data.mimeType;
         if (mimeType && !/bmp[(%@:]/.test(mimeType)) {
             const mimeTypes = this.options.mimeTypes;

@@ -972,7 +972,7 @@ export function findColorShade(value: string) {
     return undefined;
 }
 
-export function parseColor(value: string, opacity = 1, transparency = false) {
+export function parseColor(value: string, opacity = 1, transparency?: boolean) {
     if (value && (value !== 'transparent' || transparency)) {
         let colorData = CACHE_COLORDATA[value];
         if (colorData) {

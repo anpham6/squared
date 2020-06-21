@@ -428,6 +428,7 @@ declare module "base" {
         get tagName(): string;
         get naturalChild(): boolean;
         get naturalElement(): boolean;
+        get parentElement(): Null<Element>;
         get htmlElement(): boolean;
         get styleElement(): boolean;
         get imageElement(): boolean;
