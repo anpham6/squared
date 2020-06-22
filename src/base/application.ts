@@ -78,12 +78,11 @@ export default abstract class Application<T extends Node> implements squared.bas
     public abstract userSettings: UserSettings;
     public abstract readonly systemName: string;
 
-    protected _afterInsertNode: BindGeneric<Node, void>;
-
     private _nextId = 0;
     private readonly _controllerHandler: Controller<T>;
     private readonly _resourceHandler?: Resource<T>;
     private readonly _extensionManager?: squared.base.ExtensionManager<T>;
+    private readonly _afterInsertNode: BindGeneric<Node, void>;
 
     protected constructor(
         public readonly framework: number,
@@ -342,9 +341,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 return !isString(message) || !this.userSettings.showErrorMessages || confirm(`FAIL: ${message}`) ? resumeThread() : Promise.reject(message);
             });
         }
-        else {
-            return promisify<T[]>(resumeThread)();
-        }
+        return promisify<T[]>(resumeThread)();
     }
 
     public createCache(documentRoot: HTMLElement, sessionId: string) {

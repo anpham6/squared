@@ -22,13 +22,20 @@ export default abstract class NodeGroupUI extends NodeUI {
     }
 
     public previousSiblings(options?: SiblingOptions) {
-        const node = (this._initial?.children || this.children)[0] as NodeUI;
+        let node = this as NodeUI;
+        do {
+            node = node.item(0) as NodeUI;
+        }
+        while (node?.nodeGroup);
         return node?.previousSiblings(options) || [];
     }
 
     public nextSiblings(options?: SiblingOptions) {
-        const children = this._initial?.children || this.children;
-        const node = children[children.length - 1] as NodeUI;
+        let node = this as NodeUI;
+        do {
+            node = node.item() as NodeUI;
+        }
+        while (node?.nodeGroup);
         return node?.nextSiblings(options) || [];
     }
 

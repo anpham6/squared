@@ -621,12 +621,14 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
             if (node.lineBreak && !node.lineBreakTrailing && !clearMap.has(node) && !processed.has(node.id)) {
                 let valid = false;
                 const previousSiblings = node.previousSiblings({ floating: false });
-                if (previousSiblings.length) {
+                const q = previousSiblings.length;
+                if (q) {
                     const actualParent = node.actualParent as T;
-                    const nextSiblings = node.nextSiblings();
-                    if (nextSiblings.length) {
-                        let above = previousSiblings.pop() as T,
-                            below = nextSiblings.pop() as T,
+                    const nextSiblings = node.siblingsTrailing;
+                    const r = nextSiblings.length;
+                    if (r) {
+                        let above = previousSiblings[q - 1],
+                            below = nextSiblings[r - 1],
                             lineHeight = 0,
                             aboveLineBreak: Undef<T>,
                             offset: number;
@@ -635,18 +637,6 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             if (inline && previousSiblings.length === 0) {
                                 processed.add(node.id);
                                 return;
-                            }
-                            if (!above.multiline && above.has('lineHeight')) {
-                                const aboveOffset = Math.floor((above.lineHeight - above.bounds.height) / 2);
-                                if (aboveOffset > 0) {
-                                    lineHeight += aboveOffset;
-                                }
-                            }
-                            if (!below.multiline && below.has('lineHeight')) {
-                                const belowOffset = Math.round((below.lineHeight - below.bounds.height) / 2);
-                                if (belowOffset > 0) {
-                                    lineHeight += belowOffset;
-                                }
                             }
                             if (inline) {
                                 aboveLineBreak = previousSiblings[0] as T;
@@ -665,6 +655,46 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 while (belowParent && belowParent !== actualParent) {
                                     below = belowParent as T;
                                     belowParent = below.renderParent;
+                                }
+                            }
+                            if (!above.multiline) {
+                                let value: Undef<number>;
+                                if (above.has('lineHeight')) {
+                                    value = above.lineHeight;
+                                }
+                                else if (above.length) {
+                                    if (above.layoutVertical) {
+                                        value = above.lastStaticChild?.lineHeight;
+                                    }
+                                    else {
+                                        value = maxArray(above.map(item => item.lineHeight));
+                                    }
+                                }
+                                if (value) {
+                                    const aboveOffset = Math.floor((value - above.bounds.height) / 2);
+                                    if (aboveOffset > 0) {
+                                        lineHeight += aboveOffset;
+                                    }
+                                }
+                            }
+                            if (!below.multiline) {
+                                let value: Undef<number>;
+                                if (below.has('lineHeight')) {
+                                    value = below.lineHeight;
+                                }
+                                else if (below.length) {
+                                    if (below.layoutVertical) {
+                                        value = below.firstStaticChild?.lineHeight;
+                                    }
+                                    else {
+                                        value = maxArray(below.map(item => item.lineHeight));
+                                    }
+                                }
+                                if (value) {
+                                    const belowOffset = Math.round((value - below.bounds.height) / 2);
+                                    if (belowOffset > 0) {
+                                        lineHeight += belowOffset;
+                                    }
                                 }
                             }
                             [offset, below] = getMarginOffset(below, above, lineHeight, aboveLineBreak);
@@ -693,41 +723,26 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             }
                         }
                     }
-                    else if (actualParent.visible && !actualParent.preserveWhiteSpace && actualParent.tagName !== 'CODE') {
-                        if (!actualParent.documentRoot && !actualParent.documentBody) {
-                            const previousStart = previousSiblings[previousSiblings.length - 1];
-                            const rect = previousStart.bounds.height === 0 && previousStart.length ? NodeUI.outerRegion(previousStart) : previousStart.linear;
-                            const offset = actualParent.box.bottom - (previousStart.lineBreak || previousStart.excluded ? rect.top : rect.bottom);
-                            if (offset !== 0) {
-                                if (previousStart.rendered || actualParent.visibleStyle.background) {
-                                    actualParent.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset);
-                                }
-                                else if (!actualParent.hasHeight) {
-                                    setMinHeight(actualParent, offset);
-                                }
+                    else if (actualParent.visible && !actualParent.preserveWhiteSpace && actualParent.tagName !== 'CODE' && !actualParent.documentRoot && !actualParent.documentBody) {
+                        const previousStart = previousSiblings[previousSiblings.length - 1];
+                        const rect = previousStart.bounds.height === 0 && previousStart.length ? NodeUI.outerRegion(previousStart) : previousStart.linear;
+                        const offset = actualParent.box.bottom - (previousStart.lineBreak || previousStart.excluded ? rect.top : rect.bottom);
+                        if (offset !== 0) {
+                            if (previousStart.rendered || actualParent.visibleStyle.background) {
+                                actualParent.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset);
+                            }
+                            else if (!actualParent.hasHeight) {
+                                setMinHeight(actualParent, offset);
                             }
                         }
-                        else if (nextSiblings.length) {
-                            const nextStart = nextSiblings[nextSiblings.length - 1];
-                            const offset = (nextStart.lineBreak || nextStart.excluded ? nextStart.linear.bottom : nextStart.linear.top) - actualParent.box.top;
-                            if (offset !== 0) {
-                                if (nextStart.rendered || actualParent.visibleStyle.background) {
-                                    actualParent.modifyBox(BOX_STANDARD.PADDING_TOP, offset);
-                                }
-                                else if (!actualParent.hasHeight) {
-                                    setMinHeight(actualParent, offset);
-                                }
-                            }
-                        }
-                        valid = true;
                     }
                     if (valid) {
                         let i = 0;
-                        while (i < previousSiblings.length) {
+                        while (i < q) {
                             processed.add(previousSiblings[i++].id);
                         }
                         i = 0;
-                        while (i < nextSiblings.length) {
+                        while (i < r) {
                             processed.add(nextSiblings[i++].id);
                         }
                     }

@@ -91,7 +91,7 @@ The primary function "parseDocument" can be called on multiple elements and mult
 
 #### Example: vdom / chrome
 
-VDOM is a minimal framework with slightly better performance when using selector queries. The "lite" version is about half the bundle size and recommended for most browser applications. Chrome framework has more convenience methods which are outlined in the API section.
+VDOM is a minimal framework with slightly better performance when using selector queries. The "lite" version is about half the bundle size and recommended for most browser applications. Chrome is used with NodeJS and is better for bundling assets.
 
 ```javascript
 <script src="/dist/squared.min.js"></script>

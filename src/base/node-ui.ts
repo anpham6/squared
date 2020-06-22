@@ -607,7 +607,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public namespace(name: string): StringMap {
-        return this['__' + name] || {};
+        return (
+            this['__' + name] ??
+            (() => {
+                this._namespaces.push(name);
+                return (this['__' + name] = {});
+            })()
+        );
     }
 
     public delete(name: string, ...attrs: string[]) {
@@ -1098,12 +1104,20 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         }
     }
 
-    public previousSiblings(options?: SiblingOptions) {
-        return traverseElementSibling((this.nodeGroup ? this.firstChild?.element?.previousSibling : this.innerMostWrapped.element?.previousSibling) as Element, 'previousSibling', this.sessionId, options);
+    public previousSiblings(options?: SiblingOptions): T[] {
+        const node = this.innerMostWrapped;
+        if (options) {
+            return traverseElementSibling(node.element?.previousSibling as Element, 'previousSibling', this.sessionId, options);
+        }
+        return node.siblingsLeading;
     }
 
-    public nextSiblings(options?: SiblingOptions) {
-        return traverseElementSibling((this.nodeGroup ? this.firstChild?.element?.nextSibling : this.innerMostWrapped.element?.nextSibling) as Element, 'nextSibling', this.sessionId, options);
+    public nextSiblings(options?: SiblingOptions): T[] {
+        const node = this.innerMostWrapped;
+        if (options) {
+            return traverseElementSibling(node.element?.nextSibling as Element, 'nextSibling', this.sessionId, options);
+        }
+        return node.siblingsTrailing;
     }
 
     public modifyBox(region: number, offset?: number, negative = true) {
@@ -1534,7 +1548,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get textContent() {
         return (
             this._cached.textContent ??
-                (() => {
+            (() => {
                 this._cached.textContent = super.textContent;
                 return this._cached.textContent;
             })()
@@ -1779,14 +1793,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         this._siblingsLeading = value;
     }
     get siblingsLeading() {
-        return this._siblingsLeading || this.previousSiblings();
+        return this._siblingsLeading ?? (this._siblingsLeading = this.previousSiblings({ lineBreak: true, excluded: true }));
     }
 
     set siblingsTrailing(value) {
         this._siblingsTrailing = value;
     }
     get siblingsTrailing() {
-        return this._siblingsTrailing || this.nextSiblings();
+        return this._siblingsTrailing ?? (this._siblingsTrailing = this.nextSiblings({ lineBreak: true, excluded: true }));
     }
 
     get previousSibling() {
