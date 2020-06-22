@@ -34,7 +34,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
     public map: SvgAnimationIntervalAttributeMap<SvgAnimation>;
 
     constructor(animations: SvgAnimation[], ...attrs: string[]) {
-        animations = (attrs.length ? animations.filter(item => attrs.includes(item.attributeName)) : animations.slice(0)).sort((a, b) => {
+        animations = (attrs.length > 0 ? animations.filter(item => attrs.includes(item.attributeName)) : animations.slice(0)).sort((a, b) => {
             if (a.delay === b.delay) {
                 return a.group.id < b.group.id ? 1 : -1;
             }
@@ -119,7 +119,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                         }
                     }
                 }
-                if (values.length) {
+                if (values.length > 0) {
                     values.sort((a, b) => {
                         if (a.animation && b.animation) {
                             if (a.fillMode === b.fillMode) {

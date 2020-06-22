@@ -28,7 +28,7 @@ export function actualTextRangeRect(element: Element, sessionId?: string) {
         }
     }
     let hidden: Undef<[HTMLElement, string][]>;
-    if (element.childElementCount) {
+    if (element.childElementCount > 0) {
         iterateArray(element.children, (item: HTMLElement) => {
             const style = getStyle(item);
             if (style.getPropertyValue('visibility') !== 'visible') {

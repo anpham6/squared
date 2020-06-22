@@ -66,7 +66,7 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                         }
                         break;
                     case 'BUTTON':
-                        if (node.length) {
+                        if (node.length > 0) {
                             let { width, height } = node.bounds;
                             let modified = false;
                             node.cascade((item: T) => {
@@ -83,7 +83,7 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                                 node.css('minHeight', formatPX(height));
                             }
                             const embedded = node.extract((item: T) => !item.textElement) as T[];
-                            if (embedded.length && node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
+                            if (embedded.length > 0 && node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
                                 node.data(Resource.KEY_NAME, 'embedded', embedded);
                             }
                             node.clear();

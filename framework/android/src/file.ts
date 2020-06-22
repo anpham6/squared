@@ -27,7 +27,7 @@ const STORED = Resource.STORED as AndroidResourceStoredMap;
 
 function getFileAssets(pathname: string, items: string[]) {
     const length = items.length;
-    if (length) {
+    if (length > 0) {
         const result: FileAsset[] = new Array(length / 3);
         for (let i = 0, j = 0; i < length; i += 3) {
             result[j++] = {
@@ -43,7 +43,7 @@ function getFileAssets(pathname: string, items: string[]) {
 
 function getImageAssets(pathname: string, items: string[], convertExt: string, compress: boolean) {
     const length = items.length;
-    if (length) {
+    if (length > 0) {
         convertExt = convertExt.toLowerCase();
         let mimeTypeTo = parseMimeType(convertExt);
         if (!mimeTypeTo.startsWith('image/')) {
@@ -77,7 +77,7 @@ function getImageAssets(pathname: string, items: string[], convertExt: string, c
 
 function getRawAssets(pathname: string, items: string[]) {
     const length = items.length;
-    if (length) {
+    if (length > 0) {
         const result: FileAsset[] = new Array(length / 3);
         for (let i = 0, j = 0; i < length; i += 3) {
             result[j++] = {
@@ -195,7 +195,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
     }
 
     public resourceStringArrayToXml(options: FileUniversalOptions = {}): string[] {
-        if (STORED.arrays.size) {
+        if (STORED.arrays.size > 0) {
             const item: ObjectMap<any[]> = { 'string-array': [] };
             const itemArray = item['string-array'];
             for (const [name, values] of Array.from(STORED.arrays.entries()).sort()) {
@@ -218,7 +218,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
     }
 
     public resourceFontToXml(options: FileUniversalOptions = {}): string[] {
-        if (STORED.fonts.size) {
+        if (STORED.fonts.size > 0) {
             const resource = this.resource;
             const { insertSpaces, targetAPI } = this.userSettings;
             const xmlns = targetAPI < BUILD_ANDROID.OREO ? XMLNS_ANDROID.app : XMLNS_ANDROID.android;
@@ -263,7 +263,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
     }
 
     public resourceColorToXml(options: FileUniversalOptions = {}): string[] {
-        if (STORED.colors.size) {
+        if (STORED.colors.size > 0) {
             const item: ObjectMap<ItemValue[]> = { color: [] };
             const itemArray = item.color;
             for (const [innerText, name] of Array.from(STORED.colors.entries()).sort()) {
@@ -283,7 +283,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
 
     public resourceStyleToXml(options: FileUniversalOptions = {}): string[] {
         const result: string[] = [];
-        if (STORED.styles.size) {
+        if (STORED.styles.size > 0) {
             const item: ObjectMap<any[]> = { style: [] };
             const itemArray = item.style;
             for (const style of Array.from(STORED.styles.values()).sort((a, b) => a.name.toString().toLowerCase() >= b.name.toString().toLowerCase() ? 1 : -1)) {
@@ -305,7 +305,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                 'styles.xml'
             );
         }
-        if (STORED.themes.size) {
+        if (STORED.themes.size > 0) {
             const { convertPixels, insertSpaces, manifestThemeName } = this.userSettings;
             const appTheme: ObjectMap<boolean> = {};
             for (const [filename, theme] of STORED.themes.entries()) {
@@ -346,7 +346,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
     }
 
     public resourceDimenToXml(options: FileUniversalOptions = {}): string[] {
-        if (STORED.dimens.size) {
+        if (STORED.dimens.size > 0) {
             const convertPixels = this.userSettings.convertPixels;
             const item: ObjectMap<ItemValue[]> = { dimen: [] };
             const itemArray = item.dimen;
@@ -363,7 +363,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
     }
 
     public resourceDrawableToXml(options: FileUniversalOptions = {}): string[] {
-        if (STORED.drawables.size) {
+        if (STORED.drawables.size > 0) {
             const { convertPixels, insertSpaces } = this.userSettings;
             const directory = this.directory.image;
             const result: string[] = [];
@@ -383,7 +383,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
     }
 
     public resourceAnimToXml(options: FileUniversalOptions = {}): string[] {
-        if (STORED.animators.size) {
+        if (STORED.animators.size > 0) {
             const insertSpaces = this.userSettings.insertSpaces;
             const result: string[] = [];
             for (const [name, value] of STORED.animators.entries()) {
@@ -399,7 +399,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
     }
 
     public resourceDrawableImageToString(options: FileUniversalOptions = {}): string[] {
-        if (STORED.images.size) {
+        if (STORED.images.size > 0) {
             const imageDirectory = this.directory.image;
             const result: string[] = [];
             for (const [name, images] of STORED.images.entries()) {
@@ -439,7 +439,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
     }
 
     public resourceRawVideoToString(options: FileUniversalOptions = {}): string[] {
-        if (Resource.ASSETS.video.size) {
+        if (Resource.ASSETS.video.size > 0) {
             const result: string[] = [];
             for (const video of Resource.ASSETS.video.values()) {
                 const uri = video.uri as string;
@@ -460,7 +460,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
     }
 
     public resourceRawAudioToString(options: FileUniversalOptions = {}): string[] {
-        if (Resource.ASSETS.video.size) {
+        if (Resource.ASSETS.video.size > 0) {
             const result: string[] = [];
             for (const video of Resource.ASSETS.audio.values()) {
                 const uri = video.uri as string;

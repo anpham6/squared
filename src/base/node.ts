@@ -276,7 +276,7 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
                 case ':nth-last-child(n)':
                     break;
                 case ':empty':
-                    if ((child.element as HTMLElement).childNodes.length) {
+                    if ((child.element as HTMLElement).childNodes.length > 0) {
                         return false;
                     }
                     break;
@@ -861,7 +861,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     if (!this.pseudoElement) {
                         const items = Array.from(element.style);
                         const length = items.length;
-                        if (length) {
+                        if (length > 0) {
                             let i = 0;
                             while (i < length) {
                                 const attr = items[i++];
@@ -903,7 +903,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public saveAsInitial() {
         this._initial = {
             styleMap: { ...this._styleMap },
-            children: this.length ? this.duplicate() : undefined,
+            children: this.length > 0 ? this.duplicate() : undefined,
             bounds: this._bounds
         };
     }
@@ -932,7 +932,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public unsetCache(...attrs: string[]) {
         const length = attrs.length;
-        if (length) {
+        if (length > 0) {
             const cached = this._cached;
             let i = 0;
             while (i < length) {
@@ -1613,7 +1613,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     SELECTOR_G.lastIndex = 0;
                 }
                 length = queryMap.length;
-                if (selectors.length && offset !== -1 && offset < length) {
+                if (selectors.length > 0 && offset !== -1 && offset < length) {
                     const dataEnd = selectors.pop() as QueryData;
                     const lastEnd = selectors.length === 0;
                     const currentCount = result.length;
@@ -1641,7 +1641,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                             }
                         }
                     }
-                    if (selectors.length) {
+                    if (selectors.length > 0) {
                         selectors.reverse();
                         let count = currentCount;
                         const r = pending.length;
@@ -1915,7 +1915,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (this._box === undefined) {
             const bounds = this.bounds;
             if (bounds) {
-                if (this.styleElement && this.naturalChildren.length) {
+                if (this.styleElement && this.naturalChildren.length > 0) {
                     this._box = {
                         top: bounds.top + (this.paddingTop + this.borderTopWidth),
                         right: bounds.right - (this.paddingRight + this.borderRightWidth),
@@ -2492,7 +2492,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 else {
                     const children = this.naturalChildren;
                     const length = children.length;
-                    if (length) {
+                    if (length > 0) {
                         let top = Infinity,
                             right = -Infinity,
                             bottom = -Infinity,

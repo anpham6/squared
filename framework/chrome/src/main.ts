@@ -245,7 +245,7 @@ const appBase: chrome.ChromeFramework<NodeElement> = {
     querySelectorAll: (value: string, cache = true) => {
         if (application) {
             const query = document.querySelectorAll(value);
-            if (query.length) {
+            if (query.length > 0) {
                 if (!cache) {
                     elementMap.clear();
                 }

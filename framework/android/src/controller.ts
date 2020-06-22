@@ -403,7 +403,7 @@ const getBaselineAnchor = (node: View) => node.imageOrSvgElement ? 'baseline' : 
 const hasWidth = (style: CSSStyleDeclaration) => (style.getPropertyValue('width') === '100%' || style.getPropertyValue('minWidth') === '100%') && style.getPropertyValue('max-width') === 'none';
 const sortTemplateInvalid = (a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>) => getSortOrderInvalid(a.node.innerMostWrapped as View, b.node.innerMostWrapped as View);
 const sortTemplateStandard = (a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>) => getSortOrderStandard(a.node.innerMostWrapped as View, b.node.innerMostWrapped as View);
-const hasCleared = (layout: LayoutUI<View>, clearMap: Map<View, string>, ignoreFirst = true) => clearMap.size && layout.some((node, index) => (index > 0 || !ignoreFirst) && clearMap.has(node));
+const hasCleared = (layout: LayoutUI<View>, clearMap: Map<View, string>, ignoreFirst = true) => clearMap.size > 0 && layout.some((node, index) => (index > 0 || !ignoreFirst) && clearMap.has(node));
 const isMultiline = (node: View) => node.plainText && Resource.hasLineBreak(node, false, true) || node.preserveWhiteSpace && /^\s*\n+/.test(node.textContent);
 const getMaxHeight = (node: View) => Math.max(node.actualHeight, node.lineHeight);
 const isUnknownParent = (parent: View, value: number, length: number) => parent.containerType === value && parent.length === length && (parent.alignmentType === 0 || parent.hasAlign(NODE_ALIGNMENT.UNKNOWN));
@@ -422,7 +422,7 @@ function getBoxWidth(this: Controller<View>, node: View, children: View[]) {
             else if (parent.floatContainer) {
                 const { containerType, alignmentType } = this.containerTypeVerticalMargin;
                 const container = node.ascend({ condition: (item: View) => item.of(containerType, alignmentType), including: parent, attr: 'renderParent' });
-                if (container.length) {
+                if (container.length > 0) {
                     const { left, right, width } = node.box;
                     let offsetLeft = 0,
                         offsetRight = 0;
@@ -917,7 +917,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
             else if (this.checkLinearHorizontal(layout)) {
                 layout.setContainerType(CONTAINER_NODE.LINEAR);
-                if (layout.floated.size) {
+                if (layout.floated.size > 0) {
                     sortHorizontalFloat(layout.children);
                 }
             }
@@ -1130,7 +1130,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         else if (this.checkLinearHorizontal(layout)) {
             layout.setContainerType(CONTAINER_NODE.LINEAR, NODE_ALIGNMENT.HORIZONTAL);
-            if (layout.floated.size) {
+            if (layout.floated.size > 0) {
                 sortHorizontalFloat(layout.children);
             }
         }
@@ -1167,7 +1167,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 result.sort(sortTemplateStandard);
                 length = nested.length;
-                if (length) {
+                if (length > 0) {
                     const map = new Map<T, NodeXmlTemplate<T>[]>();
                     const invalid: NodeXmlTemplate<T>[] = [];
                     const below: NodeXmlTemplate<T>[] = [];
@@ -1207,11 +1207,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                         }
                     }
-                    if (below.length) {
+                    if (below.length > 0) {
                         below.sort(sortTemplateInvalid);
                         result = below.concat(result);
                     }
-                    if (invalid.length) {
+                    if (invalid.length > 0) {
                         invalid.sort(sortTemplateInvalid);
                         result = result.concat(invalid);
                     }
@@ -1341,7 +1341,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         cache.each(node => {
             const renderChildren = node.renderChildren as T[];
             const length = renderChildren.length;
-            if (length && node.hasProcedure(NODE_PROCEDURE.CONSTRAINT)) {
+            if (length > 0 && node.hasProcedure(NODE_PROCEDURE.CONSTRAINT)) {
                 if (node.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
                     if (node.layoutConstraint && !node.layoutElement) {
                         this.evaluateAnchors(renderChildren);
@@ -1959,7 +1959,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             unbound.push(node);
         }
         length = unbound.length;
-        if (length) {
+        if (length > 0) {
             const options: ViewAttribute = {
                 android: {},
                 app: {
@@ -2434,7 +2434,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const q = items.length;
                 if (q > 1) {
                     const bottomAligned = getTextBottom(items);
-                    baseline = NodeUI.baseline(bottomAligned.length ? items.filter(item => !bottomAligned.includes(item)) : items);
+                    baseline = NodeUI.baseline(bottomAligned.length > 0 ? items.filter(item => !bottomAligned.includes(item)) : items);
                     let textBottom = bottomAligned[0] as Undef<T>,
                         maxCenterHeight = 0,
                         textBaseline: Null<T> = null;
@@ -2471,7 +2471,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                         let alignTop = false;
                         if (item.baseline) {
-                            if (item.renderChildren.length && (isLength(item.verticalAlign) || !item.baselineElement)) {
+                            if (item.renderChildren.length > 0 && (isLength(item.verticalAlign) || !item.baselineElement)) {
                                 alignTop = true;
                             }
                             else {
@@ -2560,7 +2560,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     const r = baselineAlign.length;
                     if (baseline) {
                         baseline.baselineActive = true;
-                        if (r) {
+                        if (r > 0) {
                             adjustBaseline(baseline, baselineAlign, singleRow, node.box.top);
                             if (singleRow && baseline.is(CONTAINER_NODE.BUTTON)) {
                                 baseline.anchor('centerVertical', 'true');
@@ -2743,7 +2743,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     case 0.5: {
                         let floating: T[];
                         [floating, children] = partitionArray(children, item => item.floating || item.autoMargin.horizontal === true);
-                        if (floating.length) {
+                        if (floating.length > 0) {
                             this.processConstraintChain(node, floating);
                         }
                         break;
@@ -2751,7 +2751,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     case 1: {
                         let leftAligned: T[];
                         [leftAligned, children] = segmentLeftAligned(children);
-                        if (leftAligned.length) {
+                        if (leftAligned.length > 0) {
                             this.processConstraintChain(node, leftAligned);
                         }
                         break;
@@ -2759,7 +2759,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     default: {
                         let rightAligned: T[];
                         [rightAligned, children] = segmentRightAligned(children);
-                        if (rightAligned.length) {
+                        if (rightAligned.length > 0) {
                             this.processConstraintChain(node, rightAligned);
                         }
                         break;
@@ -2927,7 +2927,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         break;
                 }
             }
-            else if (valid && baseline.baselineElement && !baseline.imageOrSvgElement && node.ascend({ condition: (item: T) => item.layoutHorizontal, error: (item: T) => item.naturalChild && item.layoutVertical || item.layoutGrid, attr: 'renderParent' }).length) {
+            else if (valid && baseline.baselineElement && !baseline.imageOrSvgElement && node.ascend({ condition: (item: T) => item.layoutHorizontal, error: (item: T) => item.naturalChild && item.layoutVertical || item.layoutGrid, attr: 'renderParent' }).length > 0) {
                 baseline.anchorParent('vertical');
                 baseline.anchor('baseline', 'parent');
             }
@@ -3196,7 +3196,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             if (node.autoPosition) {
                 const siblings = node.siblingsLeading;
                 const length = siblings.length;
-                if (length && !node.alignedVertically()) {
+                if (length > 0 && !node.alignedVertically()) {
                     let i = length - 1;
                     while (i >= 0) {
                         const previous = siblings[i--] as T;
@@ -3324,7 +3324,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             location = 0;
         if (!node.leftTopAxis && documentParent.rootElement) {
             const renderParent = node.renderParent;
-            if (documentParent.ascend({ condition: item => item === renderParent, attr: 'renderParent' }).length) {
+            if (documentParent.ascend({ condition: item => item === renderParent, attr: 'renderParent' }).length > 0) {
                 location = horizontal
                     ? !opposing
                         ? documentParent.marginLeft

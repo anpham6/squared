@@ -276,7 +276,7 @@ export function replaceCharacterData(value: string, tab?: number) {
                 break;
         }
     }
-    if (char.length) {
+    if (char.length > 0) {
         const parts = value.split('');
         let j = 0;
         while (j < char.length) {

@@ -1065,7 +1065,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     case '100% 100%':
                     case '100% auto':
                     case 'auto 100%':
-                        if (node.ascend({ condition: item => item.hasPX('width'), startSelf: true }).length) {
+                        if (node.ascend({ condition: item => item.hasPX('width'), startSelf: true }).length > 0) {
                             gravityX = '';
                             gravityY = '';
                         }
@@ -1473,7 +1473,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 gravityX = '';
                                 break;
                             case 'center_horizontal':
-                                if (node.renderChildren.length) {
+                                if (node.renderChildren.length > 0) {
                                     tileModeY = '';
                                 }
                                 break;

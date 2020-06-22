@@ -6,7 +6,7 @@ const { isLength } = squared.lib.css;
 
 export default abstract class NodeGroupUI extends NodeUI {
     public init() {
-        if (this.length) {
+        if (this.length > 0) {
             this.setBounds();
             this.saveAsInitial();
         }
@@ -14,7 +14,7 @@ export default abstract class NodeGroupUI extends NodeUI {
     }
 
     public setBounds() {
-        if (this.length) {
+        if (this.length > 0) {
             this._bounds = NodeUI.outerRegion(this);
             return this._bounds;
         }

@@ -383,7 +383,7 @@ export function lowerCaseString(value: string) {
     while (match = pattern.exec(value)) {
         entities.push(match[0]);
     }
-    if (entities.length) {
+    if (entities.length > 0) {
         let result = '';
         const segments = value.split(pattern);
         const length = segments.length;
@@ -1010,7 +1010,7 @@ export function flatArray<T>(list: any[], depth = 0, current = 0): T[] {
     while (i < length) {
         const item = list[i++];
         if (current < depth && Array.isArray(item)) {
-            if (item.length) {
+            if (item.length > 0) {
                 result = result.concat(flatArray<T>(item, depth, current + 1));
             }
         }
@@ -1059,7 +1059,7 @@ export function partitionArray<T>(list: ArrayLike<T>, predicate: IteratorPredica
 
 export function sameArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, any>) {
     const length = list.length;
-    if (length) {
+    if (length > 0) {
         let baseValue!: any;
         for (let i = 0; i < length; ++i) {
             const value = predicate(list[i], i, list);

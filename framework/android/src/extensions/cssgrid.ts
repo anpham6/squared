@@ -38,7 +38,7 @@ function getGridSize(node: View, mainData: CssGridData<View>, horizontal: boolea
     const unit = data.unit;
     const length = unit.length;
     let value = 0;
-    if (length) {
+    if (length > 0) {
         const dimension = horizontal ? 'width' : 'height';
         for (let i = 0; i < length; ++i) {
             const unitPX = unit[i];
@@ -254,7 +254,7 @@ function checkRowSpan(node: View, rowSpan: number, rowStart: number, mainData: C
 
 function checkAutoDimension(data: CssGridDirectionData, horizontal: boolean) {
     const unit = data.unit;
-    if (unit.length && unit.every(value => value === 'auto')) {
+    if (unit.length > 0 && unit.every(value => value === 'auto')) {
         data.unit = new Array(length).fill(horizontal ? '1fr' : '');
     }
 }

@@ -77,7 +77,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
         });
         const nextCoordsX = Object.keys(nextMapX);
         const length = nextCoordsX.length;
-        if (length) {
+        if (length > 0) {
             let columnLength = -1;
             for (let i = 0; i < length; ++i) {
                 const nextAxisX: T[] = nextMapX[nextCoordsX[i]];
@@ -225,7 +225,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                                 }
                             }
                         }
-                        if (columnEnd.length) {
+                        if (columnEnd.length > 0) {
                             const l = Math.min(i + (columnSpan - 1), columnEnd.length - 1);
                             const naturalChildren = item.actualParent!.naturalChildren as T[];
                             const q = naturalChildren.length;

@@ -28,12 +28,12 @@ export default class ResourceData<T extends View> extends squared.base.Extension
                     }
                 }
             }
-            if (applied.size) {
+            if (applied.size > 0) {
                 i = 0;
                 while (i < documentRoot.length) {
                     const node = documentRoot[i++].node;
                     for (const child of applied) {
-                        if (child.ascend({ condition: item => item === node, attr: 'renderParent'}).length) {
+                        if (child.ascend({ condition: item => item === node, attr: 'renderParent'}).length > 0) {
                             const { import: importing, variable } = viewModel;
                             const { depth, id } = node;
                             const indentA = '\t'.repeat(depth);

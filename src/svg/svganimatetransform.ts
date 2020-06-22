@@ -121,7 +121,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
     public expandToValues() {
         if (this.additiveSum) {
             const { duration, keyTimes: keyTimesBase, iterationCount } = this;
-            if (iterationCount !== -1 && duration > 0 && keyTimesBase.length) {
+            if (iterationCount !== -1 && duration > 0 && keyTimesBase.length > 0) {
                 const durationTotal = duration * iterationCount;
                 invalid: {
                     const { type, keySplines: keySplinesBase, values: valuesBase } = this;
@@ -137,7 +137,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                         for (let j = 0; j < length; ++j) {
                             const coordinates = SvgBuild.parseCoordinates(valuesBase[j]);
                             const q = coordinates.length;
-                            if (q) {
+                            if (q > 0) {
                                 let currentValues: Undef<number[]>;
                                 switch (type) {
                                     case SVGTransform.SVG_TRANSFORM_TRANSLATE:
@@ -202,7 +202,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                     }
                     this.values = values;
                     this.keyTimes = keyTimes;
-                    this.keySplines = keySplines.length ? keySplines : undefined;
+                    this.keySplines = keySplines.length > 0 ? keySplines : undefined;
                     this.duration = durationTotal;
                     this.iterationCount = 1;
                     this.accumulateSum = false;

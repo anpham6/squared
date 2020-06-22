@@ -342,7 +342,7 @@ let Node: serve.INode,
         getBaseDirectory(location: string, asset: string): [string[], string[]] {
             const locationDir = location.split(/[\\/]/);
             const assetDir = asset.split(/[\\/]/);
-            while (locationDir.length && assetDir.length) {
+            while (locationDir.length > 0 && assetDir.length > 0) {
                 if (locationDir[0] === assetDir[0]) {
                     locationDir.shift();
                     assetDir.shift();
@@ -474,7 +474,8 @@ let Node: serve.INode,
     (GZIP_LEVEL, BROTLI_QUALITY, JPEG_QUALITY);
 
     Chrome = new class implements serve.IChrome {
-        constructor(public external: Undef<ExternalModules>) {}
+        constructor(public external: Undef<ExternalModules>) {
+        }
 
         findExternalPlugin(data: ObjectMap<StandardMap>, name: string): [string, StandardMap] {
             for (const module in data) {
@@ -813,7 +814,8 @@ let Node: serve.INode,
     (EXTERNAL);
 
     Image = new class implements serve.IImage {
-        constructor(public tinify_api_key: boolean) {}
+        constructor(public tinify_api_key: boolean) {
+        }
 
         findCompress(compress: Undef<CompressFormat[]>) {
             return this.tinify_api_key ? Compress.findFormat(compress, 'png') : undefined;
@@ -854,7 +856,7 @@ let Node: serve.INode,
                     }
                 }
             }
-            return result.size ? Array.from(result) : undefined;
+            return result.size > 0 ? Array.from(result) : undefined;
         }
         resize(self: jimp, width: number, height: number, mode?: string) {
             switch (mode) {
@@ -1250,7 +1252,7 @@ class FileManager implements serve.IFileManager {
                         saved.add(location);
                     }
                 }
-                if (saved.size) {
+                if (saved.size > 0) {
                     html = source;
                 }
                 pattern = /(\s*)<(script|style)[^>]*>([\s\S]*?)<\/\2>\n*/ig;
@@ -1694,9 +1696,6 @@ class FileManager implements serve.IFileManager {
             const pattern = /[uU][rR][lL]\(([^)]+)\)/g;
             let match: Null<RegExpExecArray>;
             while (match = pattern.exec(content)) {
-                if (result === undefined) {
-                    result = content;
-                }
                 const url = match[1]
                     .trim()
                     .replace(/^["']/, '')
@@ -1705,7 +1704,7 @@ class FileManager implements serve.IFileManager {
                 if (!Node.isFileURI(url) || Express.fromSameOrigin(baseUrl, url)) {
                     let location = this.getRelativeUrl(file, url);
                     if (location) {
-                        result = result.replace(match[0], `url(${location})`);
+                        result = (result || content).replace(match[0], `url(${location})`);
                     }
                     else {
                         location = Express.resolvePath(url, this.requestMain.uri!);
@@ -1714,7 +1713,7 @@ class FileManager implements serve.IFileManager {
                             if (asset) {
                                 location = this.getRelativeUrl(file, location);
                                 if (location) {
-                                    result = result.replace(match[0], `url(${location})`);
+                                    result = (result || content).replace(match[0], `url(${location})`);
                                 }
                             }
                         }
@@ -1724,7 +1723,7 @@ class FileManager implements serve.IFileManager {
                     const asset = assets.find(item => item.uri === url && !item.excluded);
                     if (asset) {
                         const count = file.pathname.split(/[\\/]/).length;
-                        result = result.replace(match[0], `url(${(count > 0 ? '../'.repeat(count) : '') + Express.getFullUri(asset)})`);
+                        result = (result || content).replace(match[0], `url(${(count > 0 ? '../'.repeat(count) : '') + Express.getFullUri(asset)})`);
                     }
                 }
             }
@@ -2122,7 +2121,7 @@ class FileManager implements serve.IFileManager {
         }
         return promisify<void>(() => {
             const replaced = this.assets.filter(item => item.originalName);
-            if (replaced.length || release) {
+            if (replaced.length > 0 || release) {
                 for (const item of this.assets) {
                     if (item.excluded) {
                         continue;

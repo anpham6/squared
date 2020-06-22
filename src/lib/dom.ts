@@ -97,7 +97,7 @@ export function getRangeClientRect(element: Element) {
     }
     let bounds: BoxRectDimension;
     length = domRect.length;
-    if (length) {
+    if (length > 0) {
         let numberOfLines = 1,
             overflow = false;
         bounds = assignRect(domRect[0]);

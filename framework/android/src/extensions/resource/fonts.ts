@@ -254,7 +254,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     const data = sorted[0];
                     for (const attr in data) {
                         const item = data[attr];
-                        if (item.length) {
+                        if (item.length > 0) {
                             styleTag[attr] = item;
                         }
                     }
@@ -282,7 +282,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                     const dataB = sorted[j];
                                     for (const attr in dataB) {
                                         const compare = dataB[attr];
-                                        if (compare.length) {
+                                        if (compare.length > 0) {
                                             const q = ids.length;
                                             let k = 0;
                                             while (k < q) {
@@ -345,12 +345,12 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         }
                     }
                     const shared = Object.keys(styleKey);
-                    if (shared.length) {
+                    if (shared.length > 0) {
                         styleTag[shared.join(';')] = styleKey[shared[0]];
                     }
                     spliceArray(sorted, item => {
                         for (const attr in item) {
-                            if (item[attr].length) {
+                            if (item[attr].length > 0) {
                                 return false;
                             }
                         }
@@ -358,7 +358,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     });
                 }
             }
-            while (sorted.length);
+            while (sorted.length > 0);
         }
         const resourceMap: TagNameMap = {};
         const nodeMap: NodeStyleMap = {};

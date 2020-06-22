@@ -115,7 +115,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                 if (item instanceof SVGAnimationElement) {
                     const begin = getNamedItem(item, 'begin');
                     const times = begin !== '' ? sortNumber(replaceMap(begin.split(';'), (value: string) => SvgAnimation.convertClockTime(value)).filter(value => !isNaN(value))) : [0];
-                    if (times.length) {
+                    if (times.length > 0) {
                         switch (item.tagName) {
                             case 'set':
                                 for (let i = 0; i < times.length; ++i) {
@@ -152,7 +152,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
             });
             const animationName = parseAttribute(element, 'animation-name');
             const length = animationName.length;
-            if (length) {
+            if (length > 0) {
                 const cssData: ObjectMap<string[]> = {};
                 const groupName: SvgAnimate[] = [];
                 const groupOrdering: SvgAnimationAttribute[] = [];

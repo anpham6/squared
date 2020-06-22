@@ -2737,7 +2737,7 @@ export function calculateVarAsString(element: CSSElement, value: string, options
         if (seg !== '') {
             const calc = splitEnclosing(seg, 'calc');
             const length = calc.length;
-            if (length) {
+            if (length > 0) {
                 let partial = '';
                 let i = 0, j = 0;
                 while (i < length) {

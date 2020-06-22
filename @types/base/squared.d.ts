@@ -672,7 +672,7 @@ declare module "base" {
         constructor(id: number, sessionId?: string, element?: Element);
     }
 
-    class NodeElement extends squared.base.Node {
+    class NodeElement extends Node {
         constructor(id: number, sessionId: string, element: Element);
     }
 
@@ -681,7 +681,7 @@ declare module "base" {
     class NodeList<T extends Node> extends squared.lib.base.Container<T> {
         afterAdd?: (node: T, cascade?: boolean) => void;
         add(node: T, delegate?: boolean, cascade?: boolean): this;
-        reset(): void;
+        reset(): this;
         constructor(children?: T[]);
     }
 

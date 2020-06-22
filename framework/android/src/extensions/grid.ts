@@ -15,7 +15,7 @@ export default class Grid <T extends View> extends squared.base.extensions.Grid<
     public processNode(node: T, parent: T) {
         super.processNode(node, parent);
         const columnCount: number = node.data(this.name, 'columnCount');
-        if (columnCount) {
+        if (columnCount > 0) {
             return {
                 output: this.application.renderNode(
                     LayoutUI.create({

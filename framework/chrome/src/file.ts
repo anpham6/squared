@@ -198,7 +198,7 @@ export default class File<T extends squared.base.NodeElement> extends squared.ba
             else {
                 prefix = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
                 let length = path.length;
-                if (length) {
+                if (length > 0) {
                     let index = 0;
                     length = Math.min(length, prefix.length);
                     for (let i = 0; i < length; ++i) {

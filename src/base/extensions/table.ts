@@ -242,7 +242,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         }
                     }
                 }
-                if (td.length || td.inlineText) {
+                if (td.length > 0 || td.inlineText) {
                     rowWidth[i] += width + horizontal;
                 }
                 if (spacingWidth > 0) {
@@ -331,7 +331,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         }
                         else {
                             const td = node.cascade(item => item.tagName === 'TD');
-                            return td.length && td.every(item => withinRange(item.bounds.width, td[0].bounds.width)) ? LAYOUT_TABLE.NONE : LAYOUT_TABLE.VARIABLE;
+                            return td.length > 0 && td.every(item => withinRange(item.bounds.width, td[0].bounds.width)) ? LAYOUT_TABLE.NONE : LAYOUT_TABLE.VARIABLE;
                         }
                     }
                     else if (node.hasWidth) {

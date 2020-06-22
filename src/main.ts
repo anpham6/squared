@@ -104,14 +104,14 @@ export function parseDocument(...elements: (HTMLElement | string)[]) {
     if (main) {
         const extensionManager = main.extensionManager;
         if (extensionManager) {
-            if (extensionsQueue.size) {
+            if (extensionsQueue.size > 0) {
                 for (const item of extensionsQueue) {
                     extensionManager.include(item);
                 }
                 extensionsQueue.clear();
             }
         }
-        if (optionsQueue.size) {
+        if (optionsQueue.size > 0) {
             for (const [name, options] of optionsQueue.entries()) {
                 configure(name, options);
             }

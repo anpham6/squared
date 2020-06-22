@@ -32,7 +32,7 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
         let { x, y, width, height, parent: container } = this;
         const transforms = exclude ? SvgBuild.filterTransforms(this.transforms, exclude) : this.transforms;
         const length = transforms.length;
-        if (length) {
+        if (length > 0) {
             transforms.reverse();
             let i = 0;
             while (i < length) {

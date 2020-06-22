@@ -162,7 +162,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
             this._transforms = super.transforms;
             const transforms = SvgBuild.convertTransforms(this.patternElement.patternTransform.baseVal);
             const length = transforms.length;
-            if (length) {
+            if (length > 0) {
                 const rotateOrigin = TRANSFORM.rotateOrigin(this.patternElement, 'patternTransform');
                 const x = this.patternWidth / 2;
                 const y = this.patternHeight / 2;

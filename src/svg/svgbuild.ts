@@ -51,7 +51,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     public static asAnimateTransform = (object: SvgAnimation): object is SvgAnimateTransform => object.instanceType === INSTANCE_TYPE.SVG_ANIMATE_TRANSFORM;
     public static asAnimateMotion = (object: SvgAnimation): object is SvgAnimateMotion => object.instanceType === INSTANCE_TYPE.SVG_ANIMATE_MOTION;
     public static drawCircle = (cx: number, cy: number, r: number, precision?: number) => SvgBuild.drawEllipse(cx, cy, r, r, precision);
-    public static drawPolygon = (values: Point[] | DOMPoint[], precision?: number) => values.length ? SvgBuild.drawPolyline(values, precision) + 'Z' : '';
+    public static drawPolygon = (values: Point[] | DOMPoint[], precision?: number) => values.length > 0 ? SvgBuild.drawPolyline(values, precision) + 'Z' : '';
 
     public static drawLine(x1: number, y1: number, x2 = 0, y2 = 0, precision?: number) {
         if (precision) {
@@ -150,9 +150,9 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             value = getNamedItem(element, 'd');
             if (parent?.requireRefit) {
                 const commands = SvgBuild.getPathCommands(value);
-                if (commands.length) {
+                if (commands.length > 0) {
                     const points = SvgBuild.getPathPoints(commands);
-                    if (points.length) {
+                    if (points.length > 0) {
                         parent.refitPoints(points);
                         value = SvgBuild.drawPath(SvgBuild.syncPathPoints(commands, points), precision);
                     }
@@ -219,9 +219,9 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             ({ transforms, parent, container, precision } = options);
         }
         const commands = SvgBuild.getPathCommands(value);
-        if (commands.length) {
+        if (commands.length > 0) {
             let points = SvgBuild.getPathPoints(commands);
-            if (points.length) {
+            if (points.length > 0) {
                 const transformed = isArray(transforms);
                 if (transformed) {
                     points = SvgBuild.applyTransforms(transforms as SvgTransform[], points, parent && TRANSFORM.origin(parent.element));
@@ -283,7 +283,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             }
             while (++key <= totalLength) {
                 const nextPoint = element.getPointAtLength(key);
-                if (keyPoints.length) {
+                if (keyPoints.length > 0) {
                     const index = keyPoints.findIndex((pt: Point) => {
                         const x = pt.x.toString();
                         const y = pt.y.toString();

@@ -355,7 +355,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             if (i > 0) {
                                 const previousSiblings = current.previousSiblings({ floating: false });
                                 const q = previousSiblings.length;
-                                if (q) {
+                                if (q > 0) {
                                     let inheritedTop = false;
                                     const previous = previousSiblings[q - 1];
                                     if (isBlockElement(previous, false)) {
@@ -622,11 +622,11 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                 let valid = false;
                 const previousSiblings = node.previousSiblings({ floating: false });
                 const q = previousSiblings.length;
-                if (q) {
+                if (q > 0) {
                     const actualParent = node.actualParent as T;
                     const nextSiblings = node.siblingsTrailing;
                     const r = nextSiblings.length;
-                    if (r) {
+                    if (r > 0) {
                         let above = previousSiblings[q - 1],
                             below = nextSiblings[r - 1],
                             lineHeight = 0,
@@ -662,7 +662,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 if (above.has('lineHeight')) {
                                     value = above.lineHeight;
                                 }
-                                else if (above.length) {
+                                else if (above.length > 0) {
                                     if (above.layoutVertical) {
                                         value = above.lastStaticChild?.lineHeight;
                                     }
@@ -682,7 +682,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 if (below.has('lineHeight')) {
                                     value = below.lineHeight;
                                 }
-                                else if (below.length) {
+                                else if (below.length > 0) {
                                     if (below.layoutVertical) {
                                         value = below.firstStaticChild?.lineHeight;
                                     }
@@ -725,7 +725,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                     }
                     else if (actualParent.visible && !actualParent.preserveWhiteSpace && actualParent.tagName !== 'CODE' && !actualParent.documentRoot && !actualParent.documentBody) {
                         const previousStart = previousSiblings[previousSiblings.length - 1];
-                        const rect = previousStart.bounds.height === 0 && previousStart.length ? NodeUI.outerRegion(previousStart) : previousStart.linear;
+                        const rect = previousStart.bounds.height === 0 && previousStart.length > 0 ? NodeUI.outerRegion(previousStart) : previousStart.linear;
                         const offset = actualParent.box.bottom - (previousStart.lineBreak || previousStart.excluded ? rect.top : rect.bottom);
                         if (offset !== 0) {
                             if (previousStart.rendered || actualParent.visibleStyle.background) {
@@ -866,7 +866,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             let current = node;
                             while (true) {
                                 const siblingsLeading = current.siblingsLeading;
-                                if (siblingsLeading.length && !siblingsLeading.some(item => item.lineBreak || item.excluded && item.blockStatic)) {
+                                if (siblingsLeading.length > 0 && !siblingsLeading.some(item => item.lineBreak || item.excluded && item.blockStatic)) {
                                     const previousSibling = siblingsLeading[0] as T;
                                     if (previousSibling.inlineVertical) {
                                         setSpacingOffset(outerWrapper, BOX_STANDARD.MARGIN_LEFT, previousSibling.actualRect('right'));
@@ -894,7 +894,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                     }
                     if (!item.floating) {
                         const q = floating.length;
-                        if (q) {
+                        if (q > 0) {
                             const outerWrapper = item.outerMostWrapper;
                             let renderParent = outerWrapper.renderParent;
                             if (renderParent) {

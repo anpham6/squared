@@ -622,7 +622,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 }
             });
             const length = layers.length;
-            if (length) {
+            if (length > 0) {
                 const children = node.children as T[];
                 for (let i = 0, j = 0, k = 1; i < length; ++i, ++j) {
                     const order = layers[i];

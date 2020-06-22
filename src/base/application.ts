@@ -301,7 +301,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 });
             }
         }
-        if (imageElements.length) {
+        if (imageElements.length > 0) {
             processing.initializing = true;
             return Promise.all(plainMap(imageElements, image => {
                 return new Promise((resolve, reject) => {
@@ -375,7 +375,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         return this.session.active.get(sessionId);
     }
 
-    public getProcessingCache(sessionId: string): squared.base.NodeList<T> {
+    public getProcessingCache(sessionId: string): NodeList<T> {
         return this.session.active.get(sessionId)?.cache || new NodeList();
     }
 
@@ -394,24 +394,27 @@ export default abstract class Application<T extends Node> implements squared.bas
     protected createRootNode(element: HTMLElement, sessionId: string) {
         const processing = this.getProcessing(sessionId)!;
         const extensions = this.extensionsCascade;
-        const node = this.cascadeParentNode(processing.cache, processing.excluded, processing.rootElements, element, sessionId, 0, extensions.length ? extensions : undefined);
+        const node = this.cascadeParentNode(processing.cache, processing.excluded, processing.rootElements, element, sessionId, 0, extensions.length > 0 ? extensions : undefined);
         if (node) {
             const parent = new this.Node(0, sessionId, element.parentElement);
             this._afterInsertNode(parent);
             node.parent = parent;
             node.actualParent = parent;
-            if (parent.tagName === 'HTML') {
+            if (node.tagName === 'HTML') {
+                processing.documentElement = node;
+            }
+            else if (parent.tagName === 'HTML') {
                 processing.documentElement = parent;
             }
             node.depth = 0;
             node.childIndex = 0;
             node.documentRoot = true;
+            processing.node = node;
         }
-        processing.node = node;
         return node;
     }
 
-    protected cascadeParentNode(cache: squared.base.NodeList<T>, excluded: squared.base.NodeList<T>, rootElements: Set<HTMLElement>, parentElement: HTMLElement, sessionId: string, depth: number, extensions?: Extension<T>[]) {
+    protected cascadeParentNode(cache: NodeList<T>, excluded: NodeList<T>, rootElements: Set<HTMLElement>, parentElement: HTMLElement, sessionId: string, depth: number, extensions?: Extension<T>[]) {
         const node = this.insertNode(parentElement, sessionId);
         if (node) {
             const controllerHandler = this.controllerHandler;
@@ -510,18 +513,13 @@ export default abstract class Application<T extends Node> implements squared.bas
                         const attr = items[i++];
                         baseMap[convertCamelCase(attr)] = cssStyle[attr];
                     }
-                }
-                parseImageUrl(resourceHandler, baseMap, 'backgroundImage', styleSheetHref);
-                parseImageUrl(resourceHandler, baseMap, 'listStyleImage', styleSheetHref);
-                parseImageUrl(resourceHandler, baseMap, 'content', styleSheetHref);
-                {
                     const pattern = /\s*([a-z-]+):[^!;]+!important;/g;
                     let match: Null<RegExpExecArray>;
                     while (match = pattern.exec(cssText)) {
                         const attr = convertCamelCase(match[1]);
                         const value = CSS_PROPERTIES[attr]?.value;
                         if (Array.isArray(value)) {
-                            let i = 0;
+                            i = 0;
                             while (i < value.length) {
                                 important[value[i++]] = true;
                             }
@@ -531,6 +529,9 @@ export default abstract class Application<T extends Node> implements squared.bas
                         }
                     }
                 }
+                parseImageUrl(resourceHandler, baseMap, 'backgroundImage', styleSheetHref);
+                parseImageUrl(resourceHandler, baseMap, 'listStyleImage', styleSheetHref);
+                parseImageUrl(resourceHandler, baseMap, 'content', styleSheetHref);
                 for (const selectorText of parseSelectorText(item.selectorText, true)) {
                     const specificity = getSpecificity(selectorText);
                     const [selector, target] = selectorText.split('::');
@@ -580,7 +581,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         if (fontFamily !== '') {
                             const match = (/\s*src:\s*([^;]+);/.exec(attr)?.[1] || '').split(',');
                             const length = match.length;
-                            if (length) {
+                            if (length > 0) {
                                 const fontStyle = /\s*font-style:\s*(\w+)\s*;/.exec(attr)?.[1].toLowerCase() || 'normal';
                                 const fontWeight = parseInt(/\s*font-weight:\s*(\d+)\s*;/.exec(attr)?.[1] || '400');
                                 let i = 0;

@@ -19,7 +19,7 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
         let i = 0;
         while (i < length) {
             const item = children[i++];
-            if (!(item.positionStatic || item.positionRelative && item.length)) {
+            if (!(item.positionStatic || item.positionRelative && item.length > 0)) {
                 return false;
             }
             else if (item.inlineVertical) {
@@ -75,7 +75,7 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
                         baseline = item;
                     }
                 }
-                if (aboveBaseline.length) {
+                if (aboveBaseline.length > 0) {
                     const above = aboveBaseline[0];
                     const top = above.linear.top;
                     i = 0;

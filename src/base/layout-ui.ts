@@ -48,7 +48,7 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
             this._linearX = linearData.linearX;
             this._linearY = linearData.linearY;
         }
-        else if (length) {
+        else if (length > 0) {
             this._linearY = this.item(0)!.blockStatic;
             this._linearX = !this._linearY;
         }
@@ -137,7 +137,7 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
         if (result === undefined) {
             const children = this.children;
             const length = children.length;
-            if (length) {
+            if (length > 0) {
                 result = true;
                 if (length > 1) {
                     let previousBottom = Infinity;

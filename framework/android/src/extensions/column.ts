@@ -112,7 +112,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                         for (let j = 0, k = 0, l = 0; j < q; ++j, ++l) {
                             const item = row[j];
                             const iteration = l % perRowCount === 0;
-                            if (k < columnMin - 1 && (iteration || excessCount <= 0 || j > 0 && (row[j - 1].bounds.height >= maxHeight || columns[k].length && j < q - 2 && (q - j + 1 === columnMin - k) && row[j - 1].bounds.height > row[j + 1].bounds.height))) {
+                            if (k < columnMin - 1 && (iteration || excessCount <= 0 || j > 0 && (row[j - 1].bounds.height >= maxHeight || columns[k].length > 0 && j < q - 2 && (q - j + 1 === columnMin - k) && row[j - 1].bounds.height > row[j + 1].bounds.height))) {
                                 if (j > 0) {
                                     ++k;
                                     if (iteration) {
@@ -205,7 +205,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                             }
                         }
                         s = elements.length;
-                        if (s) {
+                        if (s > 0) {
                             const container = createElement('div', {
                                 parent: document.body,
                                 style: {

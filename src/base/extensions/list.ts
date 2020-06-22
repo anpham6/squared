@@ -13,7 +13,7 @@ const createDataAttribute = (): ListData => ({ ordinal: '', imageSrc: '', imageP
 export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
     public condition(node: T) {
         const length = node.length;
-        if (length) {
+        if (length > 0) {
             const children = node.children;
             let blockStatic = true,
                 inlineVertical = true,

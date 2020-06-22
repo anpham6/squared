@@ -555,7 +555,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 ++i;
             }
             REGEXP_BACKGROUNDIMAGE.lastIndex = 0;
-            if (images.length) {
+            if (images.length > 0) {
                 return images;
             }
         }
@@ -597,7 +597,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     }
 
     public static hasLineBreak(node: NodeUI, lineBreak?: boolean, trim?: boolean) {
-        if (node.naturalElements.length) {
+        if (node.naturalElements.length > 0) {
             return node.naturalElements.some(item => item.lineBreak);
         }
         else if (!lineBreak && node.naturalChild) {
@@ -614,7 +614,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     public static checkPreIndent(node: NodeUI): Undef<[string, NodeUI]> {
         if (node.plainText) {
             const parent = node.actualParent as NodeUI;
-            if (parent.preserveWhiteSpace && parent.ascend({ condition: item => item.tagName === 'PRE', startSelf: true }).length) {
+            if (parent.preserveWhiteSpace && parent.ascend({ condition: item => item.tagName === 'PRE', startSelf: true }).length > 0) {
                 let nextSibling = node.nextSibling as Undef<NodeUI>;
                 if (nextSibling?.naturalElement) {
                     const textContent = node.textContent;
@@ -724,7 +724,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         borderRadius.length = radius === '0px' || radius === '' ? 0 : 1;
                     }
                     const length = borderRadius.length;
-                    if (length) {
+                    if (length > 0) {
                         const dimension = horizontal ? 'width' : 'height';
                         let i = 0;
                         while (i < length) {
@@ -969,7 +969,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             else if (previousSibling.naturalElement) {
                                 const textContent = previousSibling.textContent;
                                 const length = textContent.length;
-                                if (length) {
+                                if (length > 0) {
                                     previousSpaceEnd = textContent.charCodeAt(length - 1) === 32;
                                 }
                             }

@@ -1,7 +1,8 @@
 const { hasBit, isObject } = squared.lib.util;
 
 export default class ExtensionManager<T extends squared.base.Node> implements squared.base.ExtensionManager<T> {
-    constructor(public readonly application: squared.base.Application<T>) {}
+    constructor(public readonly application: squared.base.Application<T>) {
+    }
 
     public include(ext: squared.base.Extension<T> | string) {
         const application = this.application;

@@ -136,7 +136,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                 children.add(item);
             }
         });
-        if (children.size || right || bottom) {
+        if (children.size > 0 || right || bottom) {
             node.data(this.name, 'mainData', { children: Array.from(children), right, bottom });
             return true;
         }
@@ -148,7 +148,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
         if (mainData) {
             const children = mainData.children as T[];
             let container: Undef<T>;
-            if (children.length) {
+            if (children.length > 0) {
                 container = (this.controller as android.base.Controller<T>).createNodeWrapper(node, parent, {
                     children,
                     resetMargin: !node.rootElement && !node.pageFlow || parent.layoutGrid,

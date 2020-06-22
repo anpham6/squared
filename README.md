@@ -74,7 +74,7 @@ The primary function "parseDocument" can be called on multiple elements and mult
         squared.setFramework(android, /* optional { builtInExtensions: [] } */);
 
         squared.parseDocument(/* HTMLElement */); // default: document.body 'BODY'
-        //OR
+        // OR
         squared.parseDocument(/* HTMLElement */, /* 'subview-id' */, /* ...etc */);
 
         // With: node-express / squared-apache

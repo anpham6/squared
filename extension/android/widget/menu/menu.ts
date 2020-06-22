@@ -105,7 +105,7 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
 
     public init(element: HTMLElement, sessionId: string) {
         if (this.included(element)) {
-            if (element.childElementCount) {
+            if (element.childElementCount > 0) {
                 if (!sameArray(element.children, (item: Element) => item.tagName)) {
                     return false;
                 }

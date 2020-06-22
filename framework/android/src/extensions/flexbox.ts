@@ -319,7 +319,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 node.each((item: T) => {
                     if (item.hasAlign(NODE_ALIGNMENT.SEGMENTED)) {
                         const pageFlow = item.renderChildren.filter(child => child.pageFlow) as T[];
-                        if (pageFlow.length) {
+                        if (pageFlow.length > 0) {
                             if (row) {
                                 item.setLayoutWidth('match_parent');
                                 chainHorizontal.push(pageFlow);
@@ -646,7 +646,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                     setLayoutWeightOpposing(chain, 'match_parent', horizontal);
                                                 }
                                                 else if (isNaN(maxSize)) {
-                                                    if (!horizontal && !wrap && chain.length || dimension && alignContent === 'normal') {
+                                                    if (!horizontal && !wrap && chain.length > 0 || dimension && alignContent === 'normal') {
                                                         setLayoutWeightOpposing(chain, dimension ? '0px' : 'match_parent', horizontal);
                                                     }
                                                     else {

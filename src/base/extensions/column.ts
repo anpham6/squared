@@ -16,7 +16,7 @@ export default abstract class Column<T extends squared.base.NodeUI> extends Exte
         const rows: T[][] = [items];
         node.each((item: T) => {
             if (item.css('columnSpan') === 'all') {
-                if (items.length) {
+                if (items.length > 0) {
                     rows.push([item]);
                 }
                 else {

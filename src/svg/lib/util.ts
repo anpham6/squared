@@ -246,7 +246,7 @@ export const TRANSFORM = {
                     }
                 }
             }
-            if (result.length) {
+            if (result.length > 0) {
                 for (const item of result) {
                     item.fromStyle = true;
                 }

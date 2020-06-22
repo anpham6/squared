@@ -312,7 +312,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                             repeating.push({ unit: convertLength(node, namedMatch[0], index) });
                                         }
                                     }
-                                    if (repeating.length) {
+                                    if (repeating.length > 0) {
                                         for (let j = 0; j < iterations; ++j) {
                                             for (let k = 0; k < repeating.length; ++k) {
                                                 const item = repeating[k];
@@ -803,7 +803,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                     span = 0;
                                 }
                             }
-                            if (range.length) {
+                            if (range.length > 0) {
                                 available.push(range);
                             }
                             else {
@@ -815,7 +815,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         }
                     }
                     const length = available.length;
-                    if (length) {
+                    if (length > 0) {
                         const data = available[0];
                         if (data[0][1] === -1) {
                             PLACEMENT[colA] = 1;
@@ -897,7 +897,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             }
         });
         let columnCount = rowData.length;
-        if (columnCount) {
+        if (columnCount > 0) {
             let rowMain: RowData;
             if (horizontal) {
                 rowMain = rowData;
@@ -1077,7 +1077,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         else {
                             const auto = data.auto;
                             const q = auto.length;
-                            if (q) {
+                            if (q > 0) {
                                 let i = 0;
                                 while (unit.length < iteration) {
                                     if (i === q) {

@@ -9,7 +9,6 @@ import ResourceUI from './resource-ui';
 import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TRAVERSE } from './lib/enumeration';
 
 type FileActionOptions = squared.base.FileActionOptions;
-type LayoutMap = Map<number, Set<NodeUI>>;
 
 const { convertListStyle, formatPX, getStyle, hasComputedStyle, hasCoords, insertStyleSheetRule, resolveURL } = squared.lib.css;
 const { getNamedItem, removeElementsByClassName } = squared.lib.dom;
@@ -36,7 +35,7 @@ function prioritizeExtensions<T extends NodeUI>(value: string, extensions: Exten
             untagged.push(ext);
         }
     }
-    return result.length ? flatArray<ExtensionUI<T>>(result).concat(untagged) : extensions;
+    return result.length > 0 ? flatArray<ExtensionUI<T>>(result).concat(untagged) : extensions;
 }
 
 function getFloatAlignmentType(nodes: NodeUI[]) {
@@ -151,7 +150,7 @@ function getRelativeOffset(node: NodeUI, fromRight: boolean) {
         : 0;
 }
 
-function setMapDepth(map: LayoutMap, depth: number, node: NodeUI) {
+function setMapDepth(map: Map<number, Set<NodeUI>>, depth: number, node: NodeUI) {
     const data = map.get(depth);
     if (data) {
         data.add(node);
@@ -267,7 +266,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 node.setBoxSpacing();
             }
             if (node.documentRoot) {
-                if (node.renderChildren.length === 0 && !node.inlineText && node.naturalElements.length && node.naturalElements.every(item => item.documentRoot)) {
+                if (node.renderChildren.length === 0 && !node.inlineText && node.naturalElements.length > 0 && node.naturalElements.every(item => item.documentRoot)) {
                     continue;
                 }
                 const layoutName = node.innerMostWrapped.data(Application.KEY_NAME, 'layoutName');
@@ -486,7 +485,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             cache.each(item => {
                 if (item.styleElement) {
                     const element = item.element as HTMLElement;
-                    if (item.length) {
+                    if (item.length > 0) {
                         const textAlign = item.cssInitial('textAlign');
                         switch (textAlign) {
                             case 'center':
@@ -529,7 +528,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             });
             const length = pseudoElements.length;
-            if (length) {
+            if (length > 0) {
                 const pseudoMap: { item: T; id: string; parentElement: Element; styleElement?: HTMLStyleElement }[] = [];
                 let i = 0;
                 while (i < length) {
@@ -804,7 +803,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             let maxDepth = 0;
             setMapDepth(mapY, -1, rootNode!.parent as T);
             cache.each(node => {
-                if (node.length) {
+                if (node.length > 0) {
                     const depth = node.depth;
                     setMapDepth(mapY, depth, node);
                     maxDepth = Math.max(depth, maxDepth);
@@ -818,7 +817,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             const item = children[i++];
                             if (item.pageFlow) {
                                 const floating = item.floating;
-                                if (floated.size) {
+                                if (floated.size > 0) {
                                     const clear = item.css('clear');
                                     if (floated.has(clear) || clear === 'both') {
                                         if (!floating) {
@@ -850,9 +849,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             cache.afterAdd = (node: T, cascade = false) => {
                 setMapDepth(mapY, getMapIndex(node.depth), node);
-                if (cascade && node.length) {
+                if (cascade && node.length > 0) {
                     node.cascade((item: T) => {
-                        if (item.length) {
+                        if (item.length > 0) {
                             const depth = item.depth;
                             mapY.get(depth)?.delete(item);
                             setMapDepth(mapY, getMapIndex(depth), item);
@@ -932,7 +931,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         if (floatContainer) {
                                             const status = item.alignedVertically(orientation ? horizontal : vertical, clearMap, orientation);
                                             if (status > 0) {
-                                                if (horizontal.length) {
+                                                if (horizontal.length > 0) {
                                                     if (floatActive && status < NODE_TRAVERSE.FLOAT_CLEAR && !item.siblingsLeading.some((node: T) => clearMap.has(node) && !horizontal.includes(node))) {
                                                         horizontal.push(item);
                                                         continue;
@@ -952,7 +951,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                 vertical.push(item);
                                             }
                                             else {
-                                                if (vertical.length) {
+                                                if (vertical.length > 0) {
                                                     break traverse;
                                                 }
                                                 horizontal.push(item);
@@ -960,13 +959,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         }
                                         else {
                                             if (item.alignedVertically(orientation ? horizontal : vertical, undefined, orientation) > 0) {
-                                                if (horizontal.length) {
+                                                if (horizontal.length > 0) {
                                                     break traverse;
                                                 }
                                                 vertical.push(item);
                                             }
                                             else {
-                                                if (vertical.length) {
+                                                if (vertical.length > 0) {
                                                     break traverse;
                                                 }
                                                 horizontal.push(item);
@@ -979,7 +978,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 }
                                 else if (item.autoPosition) {
                                     const r = vertical.length;
-                                    if (r) {
+                                    if (r > 0) {
                                         if (vertical[r - 1].blockStatic && !item.renderExclude) {
                                             vertical.push(item);
                                         }
@@ -1118,7 +1117,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (!nodeY.rendered && nodeY.hasSection(APP_SECTION.RENDER)) {
                         let layout = this.createLayoutControl(parentY, nodeY);
                         if (layout.containerType === 0) {
-                            const result: squared.base.LayoutResult<T> = nodeY.length ? controllerHandler.processUnknownParent(layout) : controllerHandler.processUnknownChild(layout);
+                            const result: squared.base.LayoutResult<T> = nodeY.length > 0 ? controllerHandler.processUnknownParent(layout) : controllerHandler.processUnknownChild(layout);
                             if (result.next) {
                                 continue;
                             }
@@ -1242,7 +1241,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 else if (float === 'right') {
                     rightAbove.push(node);
                 }
-                else if (leftAbove.length || rightAbove.length) {
+                else if (leftAbove.length > 0 || rightAbove.length > 0) {
                     let top = node.linear.top;
                     if (node.styleText) {
                         const textBounds = node.textBounds;
@@ -1290,13 +1289,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 inlineBelow = [node];
             }
         });
-        if (leftAbove.length) {
+        if (leftAbove.length > 0) {
             leftSub = leftBelow ? [leftAbove, leftBelow] : leftAbove;
         }
         else if (leftBelow) {
             leftSub = leftBelow;
         }
-        if (rightAbove.length) {
+        if (rightAbove.length > 0) {
             rightSub = rightBelow ? [rightAbove, rightBelow] : rightAbove;
         }
         else if (rightBelow) {
@@ -1305,7 +1304,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (rightAbove.length + (rightBelow?.length || 0) === layout.length) {
             layout.addAlign(NODE_ALIGNMENT.RIGHT);
         }
-        if (inlineAbove.length) {
+        if (inlineAbove.length > 0) {
             layerIndex.push(inlineAbove);
             inheritStyle = layout.every(item => inlineAbove.includes(item) || !item.imageElement);
         }
@@ -1480,10 +1479,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
         });
-        if (floated.length) {
+        if (floated.length > 0) {
             floatedRows.push(floated);
         }
-        if (current.length) {
+        if (current.length > 0) {
             staticRows.push(current);
         }
         if (!layoutVertical) {
@@ -1494,7 +1493,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 const pageFlow = staticRows[i];
                 const floating = floatedRows[i];
                 const blockCount = pageFlow.length;
-                if (!floating && blockCount) {
+                if (!floating && blockCount > 0) {
                     const layoutType = controllerHandler.containerTypeVertical;
                     this.addLayout(new LayoutUI(
                         node,
@@ -1863,7 +1862,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const bottom = target.bounds.bottom;
         const boxWidth = parent.actualBoxWidth();
         let q = leftAbove.length;
-        if (q) {
+        if (q > 0) {
             let floatPosition = -Infinity,
                 spacing = false;
             i = 0;
@@ -1904,7 +1903,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
         }
         q = rightAbove.length;
-        if (q) {
+        if (q > 0) {
             let floatPosition = Infinity,
                 spacing = false;
             i = 0;
