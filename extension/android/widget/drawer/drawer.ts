@@ -55,7 +55,7 @@ export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> 
             const navigationViewOptions = createViewAttribute(this.options.navigationView);
             assignEmptyValue(navigationViewOptions, 'android', 'layout_gravity', node.localizeString('left'));
             const navView = node.item() as T;
-            navView.mergeGravity('layout_gravity', navigationViewOptions.android.layout_gravity);
+            navView.mergeGravity('layout_gravity', navigationViewOptions.android.layout_gravity!);
             navView.setLayoutHeight('match_parent');
             navView.positioned = true;
         }

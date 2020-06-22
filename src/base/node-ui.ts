@@ -581,7 +581,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 overwrite = false;
             }
             if (!overwrite && obj[attr]) {
-                value = obj[attr];
+                value = obj[attr] as string;
             }
             else {
                 obj[attr] = value;

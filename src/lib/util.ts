@@ -858,7 +858,7 @@ export function searchObject(obj: StringMap, value: string | StringMap) {
     const result: any[][] = [];
     if (typeof value === 'object') {
         for (const term in value) {
-            const attr = value[term];
+            const attr = value[term]!;
             if (hasValue(obj[attr])) {
                 result.push([attr, obj[attr]]);
             }

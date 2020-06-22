@@ -20,7 +20,7 @@ function createNamespaceData(namespace: string, node: View, group: ObjectMap<Vie
     const obj = node.namespace(namespace);
     for (const attr in obj) {
         if (attr !== 'text') {
-            const value = obj[attr];
+            const value = obj[attr]!;
             if (/\dpx$/.test(value)) {
                 safeNestedArray(group, `${namespace},${attr},${value}`).push(node);
             }

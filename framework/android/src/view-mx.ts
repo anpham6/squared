@@ -1560,7 +1560,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     for (const namespace in dataset) {
                         const name = namespace === 'attr' ? 'android' : (/^attr[A-Z]/.test(namespace) ? capitalize(namespace.substring(4), false) : '');
                         if (name !== '') {
-                            for (const values of dataset[namespace].split(';')) {
+                            for (const values of dataset[namespace]!.split(';')) {
                                 const [key, value] = values.split('::');
                                 if (value) {
                                     this.attr(name, key, value);
@@ -1821,7 +1821,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 let maxHeight = 0,
                                     parentHeight = 0;
                                 for (const item of grandParent) {
-                                    const height = (item.data(EXT_NAME.FLEXBOX, 'boundsData') || item.bounds).height;
+                                    const height = (item.data(EXT_NAME.FLEXBOX as string, 'boundsData') || item.bounds).height;
                                     if (height > maxHeight) {
                                         maxHeight = height;
                                     }
@@ -2126,7 +2126,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 id = '';
             for (const name of this._namespaces) {
                 if (all || objs.includes(name)) {
-                    const obj: StringMap = this['__' + name];
+                    const obj: StringSafeMap = this['__' + name];
                     let prefix = name + ':';
                     switch (name) {
                         case 'android':

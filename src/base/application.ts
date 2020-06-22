@@ -27,7 +27,7 @@ function addImageSrc(uri: string, width = 0, height = 0) {
 }
 
 function parseSrcSet(value: string) {
-    if (value) {
+    if (isString(value)) {
         for (const uri of value.split(',')) {
             addImageSrc(resolvePath(uri.trim().split(' ')[0]));
         }
@@ -151,7 +151,6 @@ export default abstract class Application<T extends Node> implements squared.bas
         const rootElements = new Set<HTMLElement>();
         const sessionId = controllerHandler.generateSessionId;
         const preloadImages = !!resourceHandler && resourceHandler.userSettings.preloadImages;
-        const preloaded: HTMLImageElement[] = [];
         const imageElements: PreloadImage[] = [];
         const processing: squared.base.AppProcessing<T> = {
             cache: new NodeList<T>(),
@@ -164,6 +163,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         this.setStyleMap(sessionId);
         const styleElement = insertStyleSheetRule('html > body { overflow: hidden !important; }');
         let documentRoot: Undef<HTMLElement>;
+        let preloaded: Undef<HTMLImageElement[]>;
         if (elements.length === 0) {
             documentRoot = this.mainElement;
             rootElements.add(documentRoot);
@@ -210,15 +210,17 @@ export default abstract class Application<T extends Node> implements squared.bas
         const resumeThread = () => {
             const extensions = this.extensions;
             processing.initializing = false;
-            let length = preloaded.length;
-            let i = 0;
-            while (i < length) {
-                const image = preloaded[i++];
-                if (image.parentElement) {
-                    documentRoot!.removeChild(image);
+            let i: number, length: number;
+            if (preloaded) {
+                length = preloaded.length;
+                i = 0;
+                while (i < length) {
+                    const image = preloaded[i++];
+                    if (image.parentElement) {
+                        documentRoot!.removeChild(image);
+                    }
                 }
             }
-            preloaded.length = 0;
             length = extensions.length;
             i = 0;
             while (i < length) {
@@ -244,6 +246,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             return elements.length > 1 ? success : success[0];
         };
         if (preloadImages) {
+            preloaded = [];
             for (const image of ASSET_IMAGE.values()) {
                 const uri = image.uri as string;
                 if (isSvg(uri)) {

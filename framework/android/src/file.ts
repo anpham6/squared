@@ -405,7 +405,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
             for (const [name, images] of STORED.images.entries()) {
                 if (Object.keys(images).length > 1) {
                     for (const dpi in images) {
-                        const value = images[dpi];
+                        const value = images[dpi]!;
                         result.push(
                             value,
                             imageDirectory + '-' + dpi,

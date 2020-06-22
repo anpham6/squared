@@ -469,10 +469,10 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             const borderRight = node.cssAsObject('borderRightColor', 'borderRightStyle', 'borderRightWidth');
             const borderBottom = node.cssAsObject('borderBottomColor', 'borderBottomStyle', 'borderBottomWidth');
             const borderLeft = node.cssAsObject('borderLeftColor', 'borderLeftStyle', 'borderLeftWidth');
-            const borderTopWidth = parseInt(borderTop.borderTopWidth);
-            const borderRightWidth = parseInt(borderRight.borderRightWidth);
-            const borderBottomWidth = parseInt(borderBottom.borderBottomWidth);
-            const borderLeftWidth = parseInt(borderLeft.borderLeftWidth);
+            const borderTopWidth = parseInt(borderTop.borderTopWidth!);
+            const borderRightWidth = parseInt(borderRight.borderRightWidth!);
+            const borderBottomWidth = parseInt(borderBottom.borderBottomWidth!);
+            const borderLeftWidth = parseInt(borderLeft.borderLeftWidth!);
             let hideTop = false,
                 hideRight = false,
                 hideBottom = false,

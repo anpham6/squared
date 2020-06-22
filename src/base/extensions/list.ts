@@ -72,7 +72,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                 else {
                     if (ordered && enabled && item.tagName === 'LI') {
                         const value = item.attributes['value'];
-                        if (isNumber(value)) {
+                        if (value && isNumber(value)) {
                             i = Math.floor(parseFloat(value));
                         }
                     }

@@ -182,7 +182,7 @@ export function createElement(tagName: string, options?: CreateElementOptions) {
         if (style) {
             for (const attr in style) {
                 if (attr.includes('-')) {
-                    element.style.setProperty(attr, style[attr]);
+                    element.style.setProperty(attr, style[attr]!);
                 }
                 else {
                     element.style[attr] = style[attr];

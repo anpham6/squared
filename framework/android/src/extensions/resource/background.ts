@@ -367,7 +367,7 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LATEST
     return result;
 }
 
-function createLayerList(boxStyle: BoxStyle, images: BackgroundImageData[] = [], borderOnly = true, stroke?: ObjectMap<any> | false, corners?: ObjectMap<string> | false, indentOffset?: string) {
+function createLayerList(boxStyle: BoxStyle, images: BackgroundImageData[] = [], borderOnly = true, stroke?: ObjectMap<any> | false, corners?: StringMap | false, indentOffset?: string) {
     const item: StandardMap[] = [];
     const result: StandardMap[] = [{ 'xmlns:android': XMLNS_ANDROID.android, item }];
     const solid = !borderOnly && getBackgroundColor(boxStyle.backgroundColor);
@@ -395,7 +395,7 @@ function createLayerList(boxStyle: BoxStyle, images: BackgroundImageData[] = [],
     return result;
 }
 
-function createShapeData(stroke?: ObjectMap<any> | false, solid?: StringMap | false, corners?: ObjectMap<string> | false) {
+function createShapeData(stroke?: ObjectMap<any> | false, solid?: StringMap | false, corners?: StringMap | false) {
     return [{
         'xmlns:android': XMLNS_ANDROID.android,
         'android:shape': 'rectangle',

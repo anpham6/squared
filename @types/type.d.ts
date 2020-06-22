@@ -16,7 +16,8 @@ type ObjectMap<T> = { [key: string]: T };
 type ObjectIndex<T> = { [key: number]: T };
 type ObjectKeyed<T> = ObjectMap<T> | ObjectIndex<T>;
 type ObjectMapNested<T> = ObjectKeyed<ObjectKeyed<T>>;
-type StringMap = ObjectMap<string>;
+type StringMap = ObjectMap<Undef<string>>;
+type StringSafeMap = ObjectMap<string>;
 type CallbackResult = (result: {}) => void;
 
 type StandardMap = ObjectMap<any>;

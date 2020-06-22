@@ -91,8 +91,8 @@ function hasTextAlign(node: T, ...values: string[]) {
 function setDimension(node: T, styleMap: StringMap, attr: DimensionAttr, attrMin: string, attrMax: string) {
     const options = { dimension: attr };
     const valueA = styleMap[attr];
-    const baseValue = node.parseUnit(valueA, options);
-    let value = Math.max(baseValue, node.parseUnit(styleMap[attrMin], options));
+    const baseValue = valueA ? node.parseUnit(valueA, options) : 0;
+    let value = Math.max(baseValue, styleMap[attrMin] ? node.parseUnit(styleMap[attrMin]!, options) : 0);
     if (value === 0 && node.styleElement) {
         const element = node.element as HTMLInputElement;
         switch (element.tagName) {
@@ -124,15 +124,17 @@ function setDimension(node: T, styleMap: StringMap, attr: DimensionAttr, attrMin
     let maxValue = 0;
     if (baseValue > 0 && !node.imageElement) {
         const valueB = styleMap[attrMax];
-        if (valueA === valueB) {
-            delete styleMap[attrMax];
-        }
-        else {
-            maxValue = node.parseUnit(valueB, { dimension: attr });
-            if (maxValue > 0 && maxValue <= baseValue && isLength(valueA)) {
-                maxValue = 0;
-                styleMap[attr] = valueB;
+        if (valueB) {
+            if (valueA === valueB) {
                 delete styleMap[attrMax];
+            }
+            else {
+                maxValue = node.parseUnit(valueB, { dimension: attr });
+                if (maxValue > 0 && maxValue <= baseValue && valueA && isLength(valueA)) {
+                    maxValue = 0;
+                    styleMap[attr] = valueB;
+                    delete styleMap[attrMax];
+                }
             }
         }
     }
@@ -870,7 +872,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         }
                     }
                     for (let attr in styleMap) {
-                        const value = styleMap[attr];
+                        const value = styleMap[attr]!;
                         const alias = checkWritingMode(attr, writingMode);
                         if (alias !== '') {
                             if (!styleMap[alias]) {
@@ -1273,7 +1275,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             const element = this._element as HTMLElement;
             const style = getStyle(element);
             for (const attr in values) {
-                if (setStyleCache(element, attr, this.sessionId, values[attr], style.getPropertyValue(attr))) {
+                if (setStyleCache(element, attr, this.sessionId, values[attr]!, style.getPropertyValue(attr))) {
                     success.push(attr);
                 }
                 else {
@@ -1330,12 +1332,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public toInt(attr: string, fallback = NaN, initial = false) {
-        const value = parseInt((initial && this._initial?.styleMap || this._styleMap)[attr]);
+        const value = parseInt((initial && this._initial?.styleMap || this._styleMap)[attr]!);
         return !isNaN(value) ? value : fallback;
     }
 
     public toFloat(attr: string, fallback = NaN, initial = false) {
-        const value = parseFloat((initial && this._initial?.styleMap || this._styleMap)[attr]);
+        const value = parseFloat((initial && this._initial?.styleMap || this._styleMap)[attr]!);
         return !isNaN(value) ? value : fallback;
     }
 
@@ -1418,7 +1420,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (options) {
             ({ initial, percent } = options);
         }
-        return isLength((initial && this._initial?.styleMap || this._styleMap)[attr], percent !== false);
+        const value = (initial && this._initial?.styleMap || this._styleMap)[attr];
+        return !!value && isLength(value, percent !== false);
     }
 
     public setBounds(cache = true) {
@@ -1940,7 +1943,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         let result = this._cached.flexdata;
         if (result === undefined) {
             if (this.flexElement) {
-                const { flexWrap, flexDirection, alignContent, justifyContent } = this.cssAsObject('flexWrap', 'flexDirection', 'alignContent', 'justifyContent');
+                const { flexWrap, flexDirection, alignContent, justifyContent } = this.cssAsObject('flexWrap', 'flexDirection', 'alignContent', 'justifyContent') as StringSafeMap;
                 const row = flexDirection.startsWith('row');
                 result = {
                     row,

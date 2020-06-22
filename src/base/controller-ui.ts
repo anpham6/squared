@@ -105,7 +105,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public applyDefaultStyles(element: Element, sessionId: string) {
-        let styleMap: StringMap;
+        let styleMap: StringSafeMap;
         if (element.nodeName === '#text') {
             styleMap = {
                 position: 'static',

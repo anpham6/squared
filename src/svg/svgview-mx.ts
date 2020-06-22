@@ -194,7 +194,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                             const key = parseFloat(percent) / 100;
                             const data = keyframes[percent];
                             for (const attr in data) {
-                                let value: string = data[attr];
+                                let value = data[attr]!;
                                 if (hasCalc(value)) {
                                     value = calculateStyle(element, attr, value);
                                 }

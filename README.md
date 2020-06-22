@@ -73,7 +73,7 @@ The primary function "parseDocument" can be called on multiple elements and mult
     document.addEventListener('DOMContentLoaded', function() {
         squared.setFramework(android, /* optional { builtInExtensions: [] } */);
 
-        squared.parseDocument(/* HTMLElement */); // default: document.body 'BODY'
+        squared.parseDocument(); // default: document.body 'BODY'
         // OR
         squared.parseDocument(/* HTMLElement */, /* 'subview-id' */, /* ...etc */);
 
