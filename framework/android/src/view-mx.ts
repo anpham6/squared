@@ -453,7 +453,7 @@ function transferVerticalStyle(node: T, sibling: T) {
 
 function transferLayoutAlignment(node: T, replaceWith: T) {
     replaceWith.anchorClear();
-    for (const name of ['android', 'app']) {
+    for (const name of node.unsafe<string[]>('namespaces')) {
         const data = node.namespace(name);
         for (const attr in data) {
             switch (attr) {
@@ -1522,8 +1522,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             this.cloneBase(node);
             if (attributes !== false) {
-                Object.assign(node.unsafe('boxReset'), this._boxReset);
-                Object.assign(node.unsafe('boxAdjustment'), this._boxAdjustment);
+                Object.assign(node.unsafe<BoxModel>('boxReset'), this._boxReset);
+                Object.assign(node.unsafe<BoxModel>('boxAdjustment'), this._boxAdjustment);
                 for (const name of this._namespaces) {
                     const obj: StringMap = this['__' + name];
                     for (const attr in obj) {
@@ -2455,7 +2455,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 if (this.onlyChild && renderChildren.length > 0 && this.controlName ===  renderParent.controlName && !this.visibleStyle.borderWidth && this.elementId === '') {
                     let valid = true;
                     for (const name of this._namespaces) {
-                        const parentObj = renderParent.unsafe('_' + name);
+                        const parentObj = renderParent.unsafe<StringMap>('_' + name);
                         if (parentObj) {
                             const obj: StringMap = this['__' + name];
                             for (const attr in obj) {

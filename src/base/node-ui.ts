@@ -593,13 +593,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         }
     }
 
-    public unsafe(name: string, value?: any): any {
+    public unsafe<T = any>(name: string, value?: any): T {
         if (value !== undefined) {
             this['_' + name] = value;
         }
-        else {
-            return this['_' + name];
-        }
+        return this['_' + name];
     }
 
     public unset(name: string) {
@@ -708,7 +706,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     break;
                 }
                 case 'initial':
-                    result = node.unsafe('initial') as InitialData<T>;
+                    result = node.unsafe<InitialData<T>>('initial');
                     this.inheritApply('initial', result);
                     break;
                 case 'alignment': {
@@ -727,7 +725,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     break;
                 }
                 case 'styleMap':
-                    this.cssCopyIfEmpty(node, ...Object.keys(node.unsafe('styleMap')));
+                    this.cssCopyIfEmpty(node, ...Object.keys(node.unsafe<StringMap>('styleMap')));
                     break;
                 case 'textStyle':
                     result = node.textStyle;
@@ -1226,7 +1224,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             node = boxRegister[region];
         }
         while (node) {
-            const next: Undef<NodeUI> = (node.unsafe('boxRegister') as ObjectIndex<T>)[region];
+            const next: Undef<NodeUI> = (node.unsafe<ObjectIndex<T>>('boxRegister'))[region];
             if (next) {
                 node = next;
             }
@@ -1315,7 +1313,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             node.retainAs(this.duplicate());
         }
         node.inherit(this, 'initial', 'base', 'alignment', 'styleMap', 'textStyle');
-        Object.assign(node.unsafe('cached'), this._cached);
+        Object.assign(node.unsafe<CachedValueUI<T>>('cached'), this._cached);
     }
 
     public unsetCache(...attrs: string[]) {
@@ -1389,7 +1387,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get element() {
-        return this._element || !!this.innerWrapped && this.innerMostWrapped.unsafe('element') as Null<Element> || null;
+        return this._element || !!this.innerWrapped && this.innerMostWrapped.unsafe<Null<Element>>('element') || null;
     }
 
     set naturalChild(value) {
@@ -1803,6 +1801,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return this._siblingsTrailing ?? (this._siblingsTrailing = this.nextSiblings({ lineBreak: true, excluded: true }));
     }
 
+    get flowElement() {
+        return this.pageFlow && (!this.excluded || this.lineBreak);
+    }
+
     get previousSibling() {
         const parent = this.actualParent;
         if (parent) {
@@ -1812,7 +1814,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 let i = index - 1;
                 while (i >= 0) {
                     const node = children[i--];
-                    if (node && (!node.excluded || node.lineBreak)) {
+                    if (node.flowElement) {
                         return node;
                     }
                 }
@@ -1831,7 +1833,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 let i = index + 1;
                 while (i < length) {
                     const node = children[i++];
-                    if (node && (!node.excluded || node.lineBreak)) {
+                    if (node.flowElement) {
                         return node;
                     }
                 }
@@ -1857,7 +1859,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get firstStaticChild() {
-        return (this.naturalChildren as NodeUI[]).find(node => node.pageFlow && (!node.excluded || node.lineBreak)) || null;
+        return (this.naturalChildren as NodeUI[]).find(node => node.flowElement) || null;
     }
 
     get lastStaticChild() {
@@ -1865,7 +1867,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         let i = children.length - 1;
         while (i >= 0) {
             const node = children[i--] as NodeUI;
-            if (node.pageFlow && (!node.excluded || node.lineBreak)) {
+            if (node.flowElement) {
                 return node;
             }
         }

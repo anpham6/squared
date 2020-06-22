@@ -561,7 +561,7 @@ declare module "base" {
         is(containerType: number): boolean;
         of(containerType: number, ...alignmentType: number[]): boolean;
         namespace(name: string): StringMap;
-        unsafe(name: string, value?: any): any;
+        unsafe<T = any>(name: string, value?: any): T;
         unset(name: string): void;
         delete(name: string, ...attrs: string[]): void;
         apply(options: {}): void;
@@ -658,6 +658,7 @@ declare module "base" {
         get positiveAxis(): boolean;
         get leftTopAxis(): boolean;
         get baselineElement(): boolean;
+        get flowElement(): boolean;
         get previousSibling(): Null<NodeUI>;
         get nextSibling(): Null<NodeUI>;
         get firstStaticChild(): Null<NodeUI>;

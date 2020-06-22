@@ -1459,7 +1459,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             case 'IMG':
             case 'CANVAS': {
                 const element = node.element as HTMLImageElement;
-                const absoluteParent = node.absoluteParent || node.documentParent;
                 let imageSet: Undef<ImageSrcSet[]>;
                 if (node.actualParent!.tagName === 'PICTURE') {
                     const mimeType = this.localSettings.mimeType.image;
@@ -1524,7 +1523,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         node.android('src', `@drawable/${src}`);
                     }
                 }
-                if (!node.pageFlow && parent === absoluteParent && (node.left < 0 && parent.css('overflowX') === 'hidden' || node.top < 0 && parent.css('overflowY') === 'hidden')) {
+                if (!node.pageFlow && parent === node.absoluteParent && (node.left < 0 && parent.css('overflowX') === 'hidden' || node.top < 0 && parent.css('overflowY') === 'hidden')) {
                     const container = this.application.createNode(node.sessionId, { parent, innerWrap: node });
                     container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                     container.inherit(node, 'base');

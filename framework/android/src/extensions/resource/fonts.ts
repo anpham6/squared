@@ -152,7 +152,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         fontFamily = fontName;
                     }
                     else if (fontStyle && fontWeight) {
-                        let createFont = false;
+                        let createFont: Undef<boolean>;
                         if (resource.getFont(value, fontStyle, fontWeight)) {
                             createFont = true;
                         }
@@ -309,13 +309,13 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         if (hasKeys(filtered)) {
                             const combined: ObjectMap<Set<string>> = {};
                             const deleteKeys = new Set<string>();
-                            const joinArray: StringSafeMap = {};
+                            const joinArray: StringMap = {};
                             for (const attr in filtered) {
                                 joinArray[attr] = filtered[attr].join(',');
                             }
                             for (const attrA in filtered) {
                                 for (const attrB in filtered) {
-                                    const index = joinArray[attrA];
+                                    const index = joinArray[attrA]!;
                                     if (attrA !== attrB && index === joinArray[attrB]) {
                                         let data = combined[index];
                                         if (!data) {
