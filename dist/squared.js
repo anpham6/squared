@@ -1,4 +1,4 @@
-/* squared 1.12.0
+/* squared 1.12.1
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -790,7 +790,7 @@
     function cloneInstance(value) {
         return Object.assign(Object.create(Object.getPrototypeOf(value)), value);
     }
-    function cloneArray(data, result = [], object = false) {
+    function cloneArray(data, result = [], object) {
         for (let i = 0; i < data.length; ++i) {
             const value = data[i];
             if (Array.isArray(value)) {
@@ -803,7 +803,7 @@
         }
         return result;
     }
-    function cloneObject(data, result = {}, array = false) {
+    function cloneObject(data, result = {}, array) {
         for (const attr in data) {
             const value = data[attr];
             if (Array.isArray(value)) {
@@ -2446,7 +2446,7 @@
         }
         return undefined;
     }
-    function parseColor(value, opacity = 1, transparency = false) {
+    function parseColor(value, opacity = 1, transparency) {
         if (value && (value !== 'transparent' || transparency)) {
             let colorData = CACHE_COLORDATA[value];
             if (colorData) {
@@ -6955,7 +6955,7 @@
         }
         return value;
     }
-    function replaceTab(value, spaces = 4, preserve = false) {
+    function replaceTab(value, spaces = 4, preserve) {
         if (spaces > 0) {
             if (preserve) {
                 return joinArray(value.split('\n'), line => {
@@ -7049,7 +7049,7 @@
         }
         return output;
     }
-    function formatTemplate(value, closeEmpty = false, startIndent = -1, char = '\t') {
+    function formatTemplate(value, closeEmpty, startIndent = -1, char = '\t') {
         const lines = [];
         const pattern = /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g;
         let output = '',
@@ -7587,12 +7587,14 @@
     }
     function parseDocument(...elements) {
         if (main) {
-            if (extensionsQueue.size) {
-                const extensionManager = main.extensionManager;
-                for (const item of extensionsQueue) {
-                    extensionManager.include(item);
+            const extensionManager = main.extensionManager;
+            if (extensionManager) {
+                if (extensionsQueue.size) {
+                    for (const item of extensionsQueue) {
+                        extensionManager.include(item);
+                    }
+                    extensionsQueue.clear();
                 }
-                extensionsQueue.clear();
             }
             if (optionsQueue.size) {
                 for (const [name, options] of optionsQueue.entries()) {
@@ -7610,25 +7612,28 @@
         return frameworkNotInstalled();
     }
     function include(value, options) {
-        if (typeof value === 'string') {
-            value = value.trim();
-            value = (main === null || main === void 0 ? void 0 : main.builtInExtensions[value]) || retrieve(value);
-        }
-        if (value instanceof squared.base.Extension) {
-            extensionsExternal.add(value);
-            if (!((main === null || main === void 0 ? void 0 : main.extensionManager.include(value)) === true)) {
-                extensionsQueue.add(value);
+        const extensionManager = main === null || main === void 0 ? void 0 : main.extensionManager;
+        if (extensionManager) {
+            if (typeof value === 'string') {
+                value = value.trim();
+                value = main.builtInExtensions[value] || retrieve(value);
             }
-            if (options) {
-                configure(value, options);
+            if (value instanceof squared.base.Extension) {
+                extensionsExternal.add(value);
+                if (!extensionManager.include(value)) {
+                    extensionsQueue.add(value);
+                }
+                if (options) {
+                    configure(value, options);
+                }
+                return true;
             }
-            return true;
         }
         return false;
     }
     function exclude(value) {
-        if (main) {
-            const extensionManager = main.extensionManager;
+        const extensionManager = main === null || main === void 0 ? void 0 : main.extensionManager;
+        if (extensionManager) {
             if (typeof value === 'string') {
                 value = extensionManager.retrieve(value.trim());
             }
@@ -7641,12 +7646,12 @@
         return false;
     }
     function configure(value, options) {
-        if (isPlainObject(options)) {
+        const extensionManager = main === null || main === void 0 ? void 0 : main.extensionManager;
+        if (extensionManager && isPlainObject(options)) {
             if (typeof value === 'string') {
                 value = value.trim();
                 const extension =
-                    (main === null || main === void 0 ? void 0 : main.extensionManager.retrieve(value)) ||
-                    findSet(extensionsQueue, item => item.name === value);
+                    extensionManager.retrieve(value) || findSet(extensionsQueue, item => item.name === value);
                 if (extension) {
                     Object.assign(extension.options, options);
                 } else {
@@ -7661,9 +7666,9 @@
         return false;
     }
     function retrieve(value) {
-        let result = null;
-        if (main) {
-            result = main.extensionManager.retrieve(value);
+        const extensionManager = main === null || main === void 0 ? void 0 : main.extensionManager;
+        if (extensionManager) {
+            const result = extensionManager.retrieve(value) || null;
             if (!result) {
                 for (const ext of extensionsExternal) {
                     if (ext.name === value) {
@@ -7671,8 +7676,9 @@
                     }
                 }
             }
+            return result;
         }
-        return result;
+        return null;
     }
     function get(...elements) {
         const result = new Map();
@@ -7699,6 +7705,15 @@
             }
         }
         return length <= 1 ? (result.size === 1 ? result.values().next().value : []) : result;
+    }
+    function latest() {
+        let result = '';
+        if (main) {
+            for (const sessionId of main.session.active.keys()) {
+                result = sessionId;
+            }
+        }
+        return result;
     }
     function reset() {
         main === null || main === void 0 ? void 0 : main.reset();
@@ -7785,6 +7800,7 @@
     exports.exclude = exclude;
     exports.get = get;
     exports.include = include;
+    exports.latest = latest;
     exports.lib = lib;
     exports.parseDocument = parseDocument;
     exports.ready = ready;

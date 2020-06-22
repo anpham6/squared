@@ -1,4 +1,4 @@
-/* squared.svg 1.12.0
+/* squared.svg 1.12.1
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -1092,7 +1092,7 @@
             }
             return result;
         }
-        static syncPathPoints(values, points, transformed = false) {
+        static syncPathPoints(values, points, transformed) {
             invalid: {
                 let location;
                 const length = values.length;
@@ -2123,7 +2123,7 @@
                 }
             }
         }
-        getIntervalEndTime(leadTime, complete = false) {
+        getIntervalEndTime(leadTime, complete) {
             const endTime = this.getTotalDuration();
             if (leadTime < endTime) {
                 const { duration, keyTimes } = this;
@@ -2135,7 +2135,7 @@
             }
             return endTime;
         }
-        getTotalDuration(minimum = false) {
+        getTotalDuration(minimum) {
             let iterationCount = this.iterationCount;
             if (minimum && iterationCount === -1) {
                 iterationCount = 1;
@@ -2980,7 +2980,7 @@
             }
             return !!map;
         }
-        get(attr, time, playing = false) {
+        get(attr, time, playing) {
             let value;
             const map = this.map[attr];
             if (map) {
@@ -3145,7 +3145,7 @@
         }
         return values;
     }
-    function convertToAnimateValue(value, fromString = false) {
+    function convertToAnimateValue(value, fromString) {
         if (typeof value === 'string') {
             if (isNumber$1(value)) {
                 value = parseFloat(value);
@@ -3643,7 +3643,7 @@
         }
         return [keyTimes, values, keySplines];
     }
-    function setTimelineValue(map, time, value, duplicate = false) {
+    function setTimelineValue(map, time, value, duplicate) {
         if (value !== '') {
             let stored = map.get(time),
                 previousTime = false;
@@ -7029,7 +7029,7 @@
                 (SvgBuild.asUseSymbol(this) && !!this.symbolElement.viewBox.baseVal)
             );
         }
-        clipViewBox(x, y, width, height, precision, documentRoot = false) {
+        clipViewBox(x, y, width, height, precision, documentRoot) {
             if (documentRoot) {
                 width -= x;
                 height -= y;
@@ -7944,11 +7944,11 @@
             }
         }
     }
-    function getDashOffset(map, valueOffset, time, playing = false) {
+    function getDashOffset(map, valueOffset, time, playing) {
         const value = map.get('stroke-dashoffset', time, playing);
         return value ? parseFloat(value) : valueOffset;
     }
-    function getDashArray(map, valueArray, time, playing = false) {
+    function getDashArray(map, valueArray, time, playing) {
         const value = map.get('stroke-dasharray', time, playing);
         return value ? SvgBuild.parseCoordinates(value) : valueArray;
     }

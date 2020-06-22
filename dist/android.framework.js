@@ -1,4 +1,4 @@
-/* android-framework 1.12.0
+/* android-framework 1.12.1
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -341,7 +341,7 @@ var android = (function () {
     } = squared.lib.util;
     const STORED = squared.base.ResourceUI.STORED;
     let CACHE_IMAGE = {};
-    function formatObject(obj, numberAlias = false) {
+    function formatObject(obj, numberAlias) {
         var _a;
         for (const attr in obj) {
             if (isPlainObject(obj[attr])) {
@@ -393,7 +393,7 @@ var android = (function () {
                 this._imageFormat = spliceArray(mimeType.slice(0), value => value === 'image/svg+xml');
             }
         }
-        static formatOptions(options, numberAlias = false) {
+        static formatOptions(options, numberAlias) {
             for (const namespace in options) {
                 const obj = options[namespace];
                 if (isPlainObject(obj)) {
@@ -457,7 +457,7 @@ var android = (function () {
             themes.set(filename, storedFile);
             return true;
         }
-        static addString(value, name, numberAlias = false) {
+        static addString(value, name, numberAlias) {
             if (value !== '') {
                 const numeric = isNumber(value);
                 if (!numeric || numberAlias) {
@@ -522,7 +522,7 @@ var android = (function () {
             }
             return '';
         }
-        static addColor(color, transparency = false) {
+        static addColor(color, transparency) {
             if (typeof color === 'string') {
                 color = parseColor(color, 1, transparency);
             }
@@ -1213,7 +1213,7 @@ var android = (function () {
         }
         return parseFloat(truncate(Math.max(start / (start + end), 0), accuracy));
     }
-    function convertLength(value, font = false, precision = 3) {
+    function convertLength(value, font, precision = 3) {
         if (typeof value === 'string') {
             value = parseFloat(value);
         }
@@ -3714,6 +3714,7 @@ var android = (function () {
                             case 'VIDEO':
                             case 'AUDIO':
                             case 'OBJECT':
+                            case 'EMBED':
                                 return;
                             case 'INPUT':
                                 switch (this.toElementString('type')) {
@@ -4039,7 +4040,7 @@ var android = (function () {
                         setCustomization(this, assign[controlName], overwrite);
                     }
                 }
-                setSingleLine(ellipsize = false) {
+                setSingleLine(ellipsize) {
                     if (this.textElement && this.naturalChild && (ellipsize || !this.hasPX('width'))) {
                         const parent = this.actualParent;
                         if (
@@ -4730,19 +4731,20 @@ var android = (function () {
     function setObjectContainer(layout) {
         const node = layout.node;
         const element = node.element;
-        const type = element.type || parseMimeType(element.data);
+        const src = (element.tagName === 'OBJECT' ? element.data : element.src).trim();
+        const type = element.type || parseMimeType(src);
         if (type.startsWith('image/')) {
             node.setCacheValue('tagName', 'IMG');
             node.setCacheValue('imageElement', true);
-            element['src'] = element.data.trim();
+            element.src = src;
             layout.setContainerType(CONTAINER_NODE.IMAGE);
         } else if (type.startsWith('video/')) {
             node.setCacheValue('tagName', 'VIDEO');
-            element['src'] = element.data.trim();
+            element.src = src;
             layout.setContainerType(CONTAINER_NODE.VIDEOVIEW);
         } else if (type.startsWith('audio/')) {
             node.setCacheValue('tagName', 'AUDIO');
-            element['src'] = element.data.trim();
+            element.src = src;
             layout.setContainerType(CONTAINER_NODE.VIDEOVIEW);
         } else {
             layout.setContainerType(CONTAINER_NODE.TEXT);
@@ -4838,7 +4840,7 @@ var android = (function () {
             }
         }
     }
-    function setVerticalAlignment(node, onlyChild = true, biasOnly = false) {
+    function setVerticalAlignment(node, onlyChild = true, biasOnly) {
         const autoMargin = node.autoMargin;
         let bias = onlyChild ? 0 : NaN;
         if (node.floating) {
@@ -4963,12 +4965,14 @@ var android = (function () {
                         'IFRAME',
                         'VIDEO',
                         'AUDIO',
+                        'OBJECT',
                         'svg',
                     ]),
                     tagName: new Set([
                         'HEAD',
                         'TITLE',
                         'META',
+                        'BASE',
                         'SCRIPT',
                         'STYLE',
                         'LINK',
@@ -4980,6 +4984,7 @@ var android = (function () {
                         'SOURCE',
                         'TEMPLATE',
                         'DATALIST',
+                        'PARAM',
                         'TRACK',
                     ]),
                     excluded: new Set(['BR', 'WBR']),
@@ -5208,7 +5213,8 @@ var android = (function () {
         }
         processUnknownParent(layout) {
             const node = layout.node;
-            if (node.tagName === 'OBJECT') {
+            const tagName = node.tagName;
+            if (tagName === 'OBJECT' || tagName === 'EMBED') {
                 setObjectContainer(layout);
             } else if (layout.some(item => !item.pageFlow && !item.autoPosition)) {
                 layout.setContainerType(CONTAINER_NODE.CONSTRAINT, 32 /* ABSOLUTE */ | 2 /* UNKNOWN */);
@@ -6796,9 +6802,7 @@ var android = (function () {
                                     !relativeFloatWrap(item, previous, multiline, rowWidth, relativeData)) ||
                                 (!item.floating &&
                                     (previous.blockStatic ||
-                                        item
-                                            .previousSiblings()
-                                            .some(sibling => sibling.excluded && sibling.blockStatic) ||
+                                        item.siblingsLeading.some(sibling => sibling.excluded && sibling.blockStatic) ||
                                         (siblings === null || siblings === void 0
                                             ? void 0
                                             : siblings.some(element => causesLineBreak(element))))) ||
@@ -16709,7 +16713,7 @@ var android = (function () {
         }
         return undefined;
     }
-    function getColorValue$1(value, asArray = false) {
+    function getColorValue$1(value, asArray) {
         const colorName = '@color/' + Resource.addColor(value);
         return asArray ? [colorName] : colorName;
     }
@@ -18878,7 +18882,7 @@ var android = (function () {
         create() {
             const EN = squared.base.lib.constant.EXT_NAME;
             const EA = EXT_ANDROID;
-            application = new Application(framework, View, Controller, Resource);
+            application = new Application(framework, View, Controller, Resource, squared.base.ExtensionManager);
             file = new File();
             application.resourceHandler.fileHandler = file;
             Object.assign(application.builtInExtensions, {

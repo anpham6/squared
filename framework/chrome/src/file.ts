@@ -491,15 +491,15 @@ export default class File<T extends squared.base.NodeElement> extends squared.ba
             return undefined;
         };
         document.querySelectorAll('video').forEach((element: HTMLVideoElement) => processUri(null, resolvePath(element.poster)));
-        document.querySelectorAll('picture > source').forEach((source: HTMLSourceElement) => {
-            for (const uri of source.srcset.trim().split(',')) {
-                processUri(source, resolvePath(uri.split(' ')[0]));
+        document.querySelectorAll('picture > source').forEach((element: HTMLSourceElement) => {
+            for (const uri of element.srcset.trim().split(',')) {
+                processUri(element, resolvePath(uri.split(' ')[0]));
             }
         });
-        document.querySelectorAll('img, input[type=image]').forEach((image: HTMLImageElement) => {
-            const src = image.src.trim();
+        document.querySelectorAll('img, input[type=image]').forEach((element: HTMLImageElement) => {
+            const src = element.src.trim();
             if (!src.startsWith('data:image/')) {
-                processUri(image, resolvePath(src));
+                processUri(element, resolvePath(src));
             }
         });
         document.querySelectorAll('img[srcset], picture > source[srcset]').forEach((element: HTMLImageElement) => {
@@ -507,6 +507,12 @@ export default class File<T extends squared.base.NodeElement> extends squared.ba
             let match: Null<RegExpExecArray>;
             while (match = pattern.exec(element.srcset.trim())) {
                 processUri(element, resolvePath(match[1]));
+            }
+        });
+        document.querySelectorAll('object, embed').forEach((element: HTMLObjectElement & HTMLEmbedElement) => {
+            const src = element.data || element.src;
+            if (src && (element.type.startsWith('image/') || parseMimeType(src).startsWith('image/'))) {
+                processUri(element, src.trim());
             }
         });
         for (const uri of Resource.ASSETS.image.keys()) {

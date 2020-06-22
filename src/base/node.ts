@@ -811,7 +811,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     private _data = {};
     private _inlineText = false;
     private _parent: Null<T> = null;
-    private _documentBody: boolean;
     private _dataset?: {};
     private _textStyle?: StringMap;
 
@@ -829,7 +828,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             this.style = {} as CSSStyleDeclaration;
             this._styleMap = {};
         }
-        this._documentBody = element === document.body;
     }
 
     public init() {
@@ -838,7 +836,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             const sessionId = this.sessionId;
             if (!this.syncWith(sessionId)) {
                 this._styleMap = {};
-                this._cssStyle = {};
             }
             if (sessionId !== '0') {
                 setElementCache(element, 'node', sessionId, this);
@@ -1875,7 +1872,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get documentBody() {
-        return this._documentBody;
+        return this._element === document.body;
     }
 
     get initial() {
@@ -1887,7 +1884,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get linear() {
-        return this._linear ?? (() => {
+        if (this._linear === undefined) {
             const bounds = this.bounds;
             if (bounds) {
                 if (this.styleElement) {
@@ -1906,14 +1903,16 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 else {
                     this._linear = bounds;
                 }
-                return this._linear;
             }
-            return newBoxRectDimension();
-        })();
+            else {
+                return newBoxRectDimension();
+            }
+        }
+        return this._linear;
     }
 
     get box() {
-        return this._box ?? (() => {
+        if (this._box === undefined) {
             const bounds = this.bounds;
             if (bounds) {
                 if (this.styleElement && this.naturalChildren.length) {
@@ -1929,10 +1928,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 else {
                     this._box = bounds;
                 }
-                return this._box;
             }
-            return newBoxRectDimension();
-        })();
+            else {
+                return newBoxRectDimension();
+            }
+        }
+        return this._box;
     }
 
     get flexdata() {

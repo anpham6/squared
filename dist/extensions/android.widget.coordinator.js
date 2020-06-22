@@ -1,4 +1,4 @@
-/* android.widget.coordinator 1.12.0
+/* android.widget.coordinator 1.12.1
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -15,19 +15,21 @@ this.android.widget.coordinator = (function () {
     class Coordinator extends squared.base.ExtensionUI {
         processNode(node, parent) {
             var _a;
-            const extensionManager = this.application.extensionManager;
             const options = createViewAttribute(this.options[node.elementId]);
             Resource.formatOptions(
                 options,
-                extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')
+                this.application.extensionManager.optionValueAsBoolean(
+                    EXT_ANDROID.RESOURCE_STRINGS,
+                    'numberResourceValue'
+                )
             );
             const element = Coordinator.findNestedElement(node, 'android.widget.toolbar' /* TOOLBAR */);
             if (element) {
                 const toolbar = getElementAsNode(element, node.sessionId);
                 if (toolbar) {
                     const data =
-                        (_a = extensionManager.retrieve('android.widget.toolbar' /* TOOLBAR */)) === null ||
-                        _a === void 0
+                        (_a = this.application.extensionManager.retrieve('android.widget.toolbar' /* TOOLBAR */)) ===
+                            null || _a === void 0
                             ? void 0
                             : _a.options[toolbar.elementId];
                     if (data && 'collapsingToolbar' in data) {

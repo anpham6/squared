@@ -1,4 +1,4 @@
-/* chrome-framework 1.12.0
+/* chrome-framework 1.12.1
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -559,15 +559,15 @@
                 return undefined;
             };
             document.querySelectorAll('video').forEach(element => processUri(null, resolvePath(element.poster)));
-            document.querySelectorAll('picture > source').forEach(source => {
-                for (const uri of source.srcset.trim().split(',')) {
-                    processUri(source, resolvePath(uri.split(' ')[0]));
+            document.querySelectorAll('picture > source').forEach(element => {
+                for (const uri of element.srcset.trim().split(',')) {
+                    processUri(element, resolvePath(uri.split(' ')[0]));
                 }
             });
-            document.querySelectorAll('img, input[type=image]').forEach(image => {
-                const src = image.src.trim();
+            document.querySelectorAll('img, input[type=image]').forEach(element => {
+                const src = element.src.trim();
                 if (!src.startsWith('data:image/')) {
-                    processUri(image, resolvePath(src));
+                    processUri(element, resolvePath(src));
                 }
             });
             document.querySelectorAll('img[srcset], picture > source[srcset]').forEach(element => {
@@ -575,6 +575,12 @@
                 let match;
                 while ((match = pattern.exec(element.srcset.trim()))) {
                     processUri(element, resolvePath(match[1]));
+                }
+            });
+            document.querySelectorAll('object, embed').forEach(element => {
+                const src = element.data || element.src;
+                if (element.type.startsWith('image/') || parseMimeType(src).startsWith('image/')) {
+                    processUri(element, src.trim());
                 }
             });
             for (const uri of Resource.ASSETS.image.keys()) {
@@ -770,7 +776,7 @@
             result += getSizeRange(options);
             return name + (result !== '(0,*)' ? result : '') + (opacity > 0 && opacity < 1 ? `|${opacity}|` : '') + ':';
         }
-        processFile(data, override = false) {
+        processFile(data, override) {
             return false;
         }
     }
@@ -797,7 +803,7 @@
                 level: 11,
             };
         }
-        processFile(data, override = false) {
+        processFile(data, override) {
             if (!override) {
                 const mimeType = data.mimeType;
                 if (mimeType) {
@@ -839,7 +845,7 @@
                 level: 9,
             };
         }
-        processFile(data, override = false) {
+        processFile(data, override) {
             if (!override) {
                 const mimeType = data.mimeType;
                 if (mimeType) {
@@ -871,7 +877,7 @@
                 level: 100,
             };
         }
-        processFile(data, override = false) {
+        processFile(data, override) {
             if (!override) {
                 const mimeType = data.mimeType;
                 if (mimeType) {
@@ -904,7 +910,7 @@
                 whenSmaller: true,
             };
         }
-        processFile(data, override = false) {
+        processFile(data, override) {
             if (!override) {
                 const mimeType = data.mimeType;
                 if (mimeType) {
@@ -937,7 +943,7 @@
                 replaceWith: true,
             };
         }
-        processFile(data, override = false) {
+        processFile(data, override) {
             const mimeType = data.mimeType;
             if (mimeType && !/bmp[(%@:]/.test(mimeType)) {
                 const mimeTypes = this.options.mimeTypes;
@@ -961,7 +967,7 @@
                 replaceWith: true,
             };
         }
-        processFile(data, override = false) {
+        processFile(data, override) {
             const mimeType = data.mimeType;
             if (mimeType && !/jpeg[(%@:]/.test(mimeType)) {
                 const mimeTypes = this.options.mimeTypes;
@@ -986,7 +992,7 @@
                 opacity: 1,
             };
         }
-        processFile(data, override = false) {
+        processFile(data, override) {
             const mimeType = data.mimeType;
             if (mimeType && !/png[(%@:]/.test(mimeType)) {
                 const mimeTypes = this.options.mimeTypes;
@@ -1011,7 +1017,7 @@
                 opacity: 1,
             };
         }
-        processFile(data, override = false) {
+        processFile(data, override) {
             const mimeType = data.mimeType;
             if (mimeType && !/gif[(%@:]/.test(mimeType)) {
                 const mimeTypes = this.options.mimeTypes;
@@ -1035,7 +1041,7 @@
                 replaceWith: true,
             };
         }
-        processFile(data, override = false) {
+        processFile(data, override) {
             const mimeType = data.mimeType;
             if (mimeType && !/tiff[(%@:]/.test(mimeType)) {
                 const mimeTypes = this.options.mimeTypes;
@@ -1343,7 +1349,13 @@
         },
         create() {
             const EC = EXT_CHROME;
-            application = new Application(framework, squared.base.NodeElement, Controller, Resource);
+            application = new Application(
+                framework,
+                squared.base.NodeElement,
+                Controller,
+                Resource,
+                squared.base.ExtensionManager
+            );
             controller = application.controllerHandler;
             file = new File();
             application.resourceHandler.fileHandler = file;

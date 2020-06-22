@@ -191,9 +191,10 @@ export default abstract class Application<T extends Node> implements squared.bas
             element.querySelectorAll('picture > source').forEach((source: HTMLSourceElement) => parseSrcSet(source.srcset));
             element.querySelectorAll('video').forEach((source: HTMLVideoElement) => addImageSrc(source.poster));
             element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => addImageSrc(image.src, image.width, image.height));
-            element.querySelectorAll('object').forEach((source: HTMLObjectElement) => {
-                if (source.type.startsWith('image/') || parseMimeType(source.data).startsWith('image/')) {
-                    addImageSrc(source.data.trim());
+            element.querySelectorAll('object, embed').forEach((source: HTMLObjectElement & HTMLEmbedElement) => {
+                const src = source.data || source.src;
+                if (src && (source.type.startsWith('image/') || parseMimeType(src).startsWith('image/'))) {
+                    addImageSrc(src.trim());
                 }
             });
             element.querySelectorAll('svg use').forEach((use: SVGUseElement) => {
