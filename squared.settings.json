@@ -40,7 +40,7 @@
           "tabWidth": 4
         }
       },
-      "html_minifier": {
+      "html-minifier-terser": {
         "minify": {
           "collapseWhitespace": true,
           "collapseBooleanAttributes": true,

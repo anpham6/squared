@@ -704,7 +704,7 @@ You can also define your own optimizations in squared.settings.json:
 * npm i terser -> https://github.com/terser/terser
 * npm i prettier -> https://github.com/prettier/prettier
 * npm i clean-css -> https://github.com/jakubpawlowicz/clean-css
-* npm i html-minifier -> https://github.com/kangax/html-minifier
+* npm i html-minifier-terser -> https://github.com/DanielRuf/html-minifier-terser
 * npm i js-beautify -> https://github.com/beautify-web/js-beautify
 
 These plugins are not included with the default installation. You have to manually add them yourself since this feature is only relevant to the Chrome framework [<b>npm run install-chrome</b>].

@@ -543,7 +543,7 @@ let Node: serve.INode,
                                 };
                                 break;
                             case 'minify':
-                                module = 'html_minifier';
+                                module = 'html-minifier-terser';
                                 options = {
                                     collapseWhitespace: true,
                                     collapseBooleanAttributes: true,
@@ -570,8 +570,8 @@ let Node: serve.INode,
                                 }
                                 break;
                             }
-                            case 'html_minifier': {
-                                const result = require('html-minifier').minify(value, options);
+                            case 'html-minifier-terser': {
+                                const result = require('html-minifier-terser').minify(value, options);
                                 if (result) {
                                     if (j === length - 1) {
                                         return result;
