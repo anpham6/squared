@@ -516,7 +516,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     protected _documentParent?: T;
     protected _controlName?: string;
     protected abstract _cached: CachedValueUI<T>;
-    protected abstract _namespaces: string[];
+    protected abstract _namespaces: ObjectMap<StringMap>;
     protected abstract _boxAdjustment: BoxModel;
     protected abstract _boxReset: BoxModel;
 
@@ -568,54 +568,24 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public attr(name: string, attr: string, value?: string, overwrite = true): string {
-        let obj: StringMap = this['__' + name];
+        const obj = this.namespace(name);
         if (value) {
-            if (!obj) {
-                if (!this._namespaces.includes(name)) {
-                    this._namespaces.push(name);
-                }
-                obj = {};
-                this['__' + name] = obj;
-            }
             if (overwrite && this.lockedAttr(name, attr)) {
                 overwrite = false;
             }
             if (!overwrite && obj[attr]) {
-                value = obj[attr] as string;
+                return obj[attr] as string;
             }
             else {
                 obj[attr] = value;
+                return value;
             }
-            return value;
         }
-        else {
-            return obj?.[attr] || '';
-        }
-    }
-
-    public unsafe<T = any>(name: string, value?: any): T {
-        if (value !== undefined) {
-            this['_' + name] = value;
-        }
-        return this['_' + name];
-    }
-
-    public unset(name: string) {
-        delete this['_' + name];
-    }
-
-    public namespace(name: string): StringMap {
-        return (
-            this['__' + name] ??
-            (() => {
-                this._namespaces.push(name);
-                return (this['__' + name] = {});
-            })()
-        );
+        return obj[attr] || '';
     }
 
     public delete(name: string, ...attrs: string[]) {
-        const obj = this['__' + name];
+        const obj = this._namespaces[name];
         if (obj) {
             let i = 0;
             while (i < attrs.length) {
@@ -630,6 +600,28 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 }
             }
         }
+    }
+
+    public namespace(name: string) {
+        return (
+            this._namespaces[name] ??
+            (() => {
+                const result: StringMap = {};
+                this._namespaces[name] = result;
+                return result;
+            })()
+        );
+    }
+
+    public unsafe<T = any>(name: string, value?: any): T {
+        if (value !== undefined) {
+            this['_' + name] = value;
+        }
+        return this['_' + name];
+    }
+
+    public unset(name: string) {
+        delete this['_' + name];
     }
 
     public lockAttr(name: string, attr: string) {

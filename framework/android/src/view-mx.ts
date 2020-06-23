@@ -453,9 +453,10 @@ function transferVerticalStyle(node: T, sibling: T) {
 
 function transferLayoutAlignment(node: T, replaceWith: T) {
     replaceWith.anchorClear();
-    for (const name of node.unsafe<string[]>('namespaces')) {
-        const data = node.namespace(name);
-        for (const attr in data) {
+    const namespaces = node.unsafe<ObjectMap<StringMap>>('namespaces');
+    for (const name in namespaces) {
+        const item = namespaces[name];
+        for (const attr in item) {
             switch (attr) {
                 case 'layout_width':
                 case 'layout_height':
@@ -467,7 +468,7 @@ function transferLayoutAlignment(node: T, replaceWith: T) {
                     break;
             }
             if (attr.startsWith('layout_')) {
-                replaceWith.attr(name, attr, data[attr], true);
+                replaceWith.attr(name, attr, item[attr], true);
             }
         }
     }
@@ -909,7 +910,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             current: {}
         };
 
-        protected _namespaces = ['android', 'app'];
+        protected _namespaces: ObjectMap<StringMap> = { android: {}, app: {} };
         protected _cached: AndroidCachedValueUI<T> = {};
         protected _containerType = 0;
         protected _controlName = '';
@@ -922,9 +923,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         private _positioned = false;
         private _controlId?: string;
         private _labelFor?: T;
-
-        private __android: StringMap = {};
-        private __app: StringMap = {};
 
         constructor(id = 0, sessionId?: string, element?: Element) {
             super(id, sessionId, element);
@@ -1524,8 +1522,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (attributes !== false) {
                 Object.assign(node.unsafe<BoxModel>('boxReset'), this._boxReset);
                 Object.assign(node.unsafe<BoxModel>('boxAdjustment'), this._boxAdjustment);
-                for (const name of this._namespaces) {
-                    const obj: StringMap = this['__' + name];
+                for (const name in this._namespaces) {
+                    const obj: StringMap = this._namespaces[name];
                     for (const attr in obj) {
                         node.attr(name, attr, attr === 'id' && name === 'android' ? node.documentId : obj[attr]);
                     }
@@ -1875,7 +1873,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 this.delete('android', attr);
                 return '';
             }
-            return this.__android[attr] || '';
+            return this._namespaces['android']![attr] || '';
         }
 
         public app(attr: string, value?: string, overwrite = true) {
@@ -1889,7 +1887,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 this.delete('app', attr);
                 return '';
             }
-            return this.__app[attr] || '';
+            return this._namespaces['app']![attr] || '';
         }
 
         public formatted(value: string, overwrite = true) {
@@ -2124,16 +2122,16 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const result: string[] = [];
             let requireId = false,
                 id = '';
-            for (const name of this._namespaces) {
+            for (const name in this._namespaces) {
                 if (all || objs.includes(name)) {
-                    const obj: StringSafeMap = this['__' + name];
+                    const obj = this._namespaces[name];
                     let prefix = name + ':';
                     switch (name) {
                         case 'android':
                             if (this.api < BUILD_ANDROID.LATEST) {
                                 for (let attr in obj) {
                                     if (attr === 'id') {
-                                        id = obj[attr];
+                                        id = obj[attr]!;
                                     }
                                     else {
                                         const data: ObjectMap<string | boolean> = {};
@@ -2156,7 +2154,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             else {
                                 for (const attr in obj) {
                                     if (attr === 'id') {
-                                        id = obj[attr];
+                                        id = obj[attr]!;
                                     }
                                     else {
                                         result.push(prefix + `${attr}="${obj[attr]}"`);
@@ -2454,10 +2452,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 if (this.onlyChild && renderChildren.length > 0 && this.controlName ===  renderParent.controlName && !this.visibleStyle.borderWidth && this.elementId === '') {
                     let valid = true;
-                    for (const name of this._namespaces) {
-                        const parentObj = renderParent.unsafe<StringMap>('_' + name);
+                    for (const name in this._namespaces) {
+                        const parentObj = renderParent.unsafe<StringMap>('namespaces')[name];
                         if (parentObj) {
-                            const obj: StringMap = this['__' + name];
+                            const obj = this._namespaces[name];
                             for (const attr in obj) {
                                 if (attr !== 'id' && obj[attr] !== parentObj[attr]) {
                                     valid = false;
@@ -2741,11 +2739,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         get layoutWidth() {
-            return this.__android['layout_width'] || '';
+            return this._namespaces['android']!['layout_width'] || '';
         }
 
         get layoutHeight() {
-            return this.__android['layout_height'] || '';
+            return this._namespaces['android']!['layout_height'] || '';
         }
 
         get inlineWidth() {

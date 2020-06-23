@@ -478,7 +478,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
             node.rootElement = true;
-            const preAlignment: ObjectIndex<StringSafeMap> = {};
+            const preAlignment: ObjectIndex<StringMap> = {};
             const direction = new Set<HTMLElement>();
             const pseudoElements: T[] = [];
             let resetBounds = false;
@@ -584,7 +584,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     const reset = preAlignment[item.id];
                     if (reset) {
                         for (const attr in reset) {
-                            element.style.setProperty(attr, reset[attr]);
+                            element.style.setProperty(attr, reset[attr]!);
                         }
                     }
                     if (direction.has(element)) {
