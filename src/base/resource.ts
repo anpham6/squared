@@ -161,6 +161,10 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         return Resource.ASSETS.rawData.get(uri);
     }
 
+    public addUnsafeData(name: ResourceAssetType, uri: string, data: any) {
+        Resource.ASSETS[name].set(uri, data);
+    }
+
     set fileHandler(value: Undef<squared.base.File<T>>) {
         if (value) {
             value.resource = this;
@@ -181,5 +185,9 @@ export default abstract class Resource<T extends squared.base.Node> implements s
 
     get randomUUID() {
         return randomUUID();
+    }
+
+    get mapOfAssets() {
+        return Resource.ASSETS;
     }
 }

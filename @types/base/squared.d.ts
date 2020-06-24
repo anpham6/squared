@@ -162,6 +162,7 @@ declare module "base" {
         includeElement(element: HTMLElement): boolean;
         applyDefaultStyles(element: Element, sessionId: string): void;
         preventNodeCascade(node: T): boolean;
+        sortInitialCache(cache: NodeList<T>): void;
         get afterInsertNode(): BindGeneric<T, void>;
         get userSettings(): UserSettings;
         get generateSessionId(): string;
@@ -219,12 +220,14 @@ declare module "base" {
         getAudio(uri: string): Undef<Asset>;
         addRawData(uri: string, mimeType: string, content: Undef<string>, options?: RawDataOptions): string;
         getRawData(uri: string): Undef<RawAsset>;
+        addUnsafeData(name: ResourceAssetType, uri: string, data: any): void;
         set fileHandler(value: Undef<File<T>>);
         get fileHandler(): Undef<File<T>>;
         get controllerSettings(): ControllerSettings;
         get userSettings(): UserResourceSettings;
         get mimeTypeMap(): ObjectMap<MIMEOrAll>;
         get randomUUID(): string;
+        get mapOfAssets(): ResourceAssetMap;
     }
 
     class ResourceUI<T extends NodeUI> extends Resource<T> {

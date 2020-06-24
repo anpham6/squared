@@ -1,8 +1,5 @@
-import Controller from './controller';
-import Extension from './extension';
 import Node from './node';
 import NodeList from './nodelist';
-import Resource from './resource';
 
 type AppVieModel = squared.base.AppViewModel;
 type FileActionOptions = squared.base.FileActionOptions;
@@ -13,51 +10,22 @@ const { FILE, STRING } = squared.lib.regex;
 const { frameworkNotInstalled, getElementCache, setElementCache } = squared.lib.session;
 const { capitalize, convertCamelCase, isString, parseMimeType, plainMap, promisify, resolvePath, trimBoth } = squared.lib.util;
 
-const { image: ASSET_IMAGE, rawData: ASSET_RAWDATA } = Resource.ASSETS;
-
 const REGEXP_DATAURI = new RegExp(`url\\("?(${STRING.DATAURI})"?\\),?\\s*`, 'g');
+const CSS_IMAGEURI = ['backgroundImage', 'listStyleImage', 'content'];
 
-function addImageSrc(uri: string, width = 0, height = 0) {
+function addImageSrc(resourceHandler: squared.base.Resource<Node>, uri: string, width = 0, height = 0) {
     if (isString(uri)) {
-        const image = ASSET_IMAGE.get(uri);
-        if (width > 0 && height > 0 || !image || image.width === 0 || image.height === 0) {
-            ASSET_IMAGE.set(uri, { width, height, uri });
+        if (width > 0 && height > 0 || !resourceHandler.getImage(uri)) {
+            resourceHandler.addUnsafeData('image', uri, { width, height, uri });
         }
     }
 }
 
-function parseSrcSet(value: string) {
+function parseSrcSet(resourceHandler: squared.base.Resource<Node>, value: string) {
     if (isString(value)) {
         for (const uri of value.split(',')) {
-            addImageSrc(resolvePath(uri.trim().split(' ')[0]));
+            addImageSrc(resourceHandler, resolvePath(uri.trim().split(' ')[0]));
         }
-    }
-}
-
-function parseImageUrl(resourceHandler: Undef<Resource<Node>>, baseMap: StringMap, attr: string, styleSheetHref?: string) {
-    const value = baseMap[attr];
-    if (value && value !== 'initial') {
-        let result: Undef<string>,
-            match: Null<RegExpExecArray>;
-        while (match = REGEXP_DATAURI.exec(value)) {
-            if (match[2]) {
-                const [mimeType, encoding] = match[2].trim().split(/\s*;\s*/);
-                resourceHandler?.addRawData(match[1], mimeType, match[3], { encoding });
-            }
-            else {
-                const uri = resolvePath(match[3], styleSheetHref);
-                if (uri !== '') {
-                    if (resourceHandler && !resourceHandler.getImage(uri)) {
-                        addImageSrc(uri);
-                    }
-                    result = (result || value).replace(match[0], `url("${uri}")`);
-                }
-            }
-        }
-        if (result) {
-            baseMap[attr] = result;
-        }
-        REGEXP_DATAURI.lastIndex = 0;
     }
 }
 
@@ -67,8 +35,8 @@ const parseConditionText = (rule: string, value: string) => new RegExp(`\\s*@${r
 export default abstract class Application<T extends Node> implements squared.base.Application<T> {
     public static readonly KEY_NAME = 'squared.application';
 
-    public builtInExtensions: ObjectMap<Extension<T>> = {};
-    public extensions: Extension<T>[] = [];
+    public builtInExtensions: ObjectMap<squared.base.Extension<T>> = {};
+    public extensions: squared.base.Extension<T>[] = [];
     public closed = false;
     public readonly Node: Constructor<T>;
     public readonly session: squared.base.AppSession<T> = {
@@ -79,8 +47,8 @@ export default abstract class Application<T extends Node> implements squared.bas
     public abstract readonly systemName: string;
 
     private _nextId = 0;
-    private readonly _controllerHandler: Controller<T>;
-    private readonly _resourceHandler?: Resource<T>;
+    private readonly _controllerHandler: squared.base.Controller<T>;
+    private readonly _resourceHandler?: squared.base.Resource<T>;
     private readonly _extensionManager?: squared.base.ExtensionManager<T>;
     private readonly _afterInsertNode: BindGeneric<Node, void>;
 
@@ -91,9 +59,9 @@ export default abstract class Application<T extends Node> implements squared.bas
         ResourceConstructor?: Constructor<T>,
         ExtensionManagerConstructor?: Constructor<T>)
     {
-        this._controllerHandler = (new ControllerConstructor(this) as unknown) as Controller<T>;
+        this._controllerHandler = (new ControllerConstructor(this) as unknown) as squared.base.Controller<T>;
         if (ResourceConstructor) {
-            this._resourceHandler = (new ResourceConstructor(this) as unknown) as Resource<T>;
+            this._resourceHandler = (new ResourceConstructor(this) as unknown) as squared.base.Resource<T>;
         }
         if (ExtensionManagerConstructor) {
             this._extensionManager = (new ExtensionManagerConstructor(this) as unknown) as squared.base.ExtensionManager<T>;
@@ -187,25 +155,27 @@ export default abstract class Application<T extends Node> implements squared.bas
         if (!documentRoot) {
             return Promise.reject(new Error('Document root not found.'));
         }
-        for (const element of rootElements) {
-            element.querySelectorAll('picture > source').forEach((source: HTMLSourceElement) => parseSrcSet(source.srcset));
-            element.querySelectorAll('video').forEach((source: HTMLVideoElement) => addImageSrc(source.poster));
-            element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => addImageSrc(image.src, image.width, image.height));
-            element.querySelectorAll('object, embed').forEach((source: HTMLObjectElement & HTMLEmbedElement) => {
-                const src = source.data || source.src;
-                if (src && (source.type.startsWith('image/') || parseMimeType(src).startsWith('image/'))) {
-                    addImageSrc(src.trim());
-                }
-            });
-            element.querySelectorAll('svg use').forEach((use: SVGUseElement) => {
-                const href = use.href.baseVal || use.getAttributeNS('xlink', 'href');
-                if (href && href.indexOf('#') > 0) {
-                    const src = resolvePath(href.split('#')[0]);
-                    if (isSvg(src)) {
-                        addImageSrc(src);
+        if (resourceHandler) {
+            for (const element of rootElements) {
+                element.querySelectorAll('picture > source').forEach((source: HTMLSourceElement) => parseSrcSet(resourceHandler, source.srcset));
+                element.querySelectorAll('video').forEach((source: HTMLVideoElement) => addImageSrc(resourceHandler, source.poster));
+                element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => addImageSrc(resourceHandler, image.src, image.width, image.height));
+                element.querySelectorAll('object, embed').forEach((source: HTMLObjectElement & HTMLEmbedElement) => {
+                    const src = source.data || source.src;
+                    if (src && (source.type.startsWith('image/') || parseMimeType(src).startsWith('image/'))) {
+                        addImageSrc(resourceHandler, src.trim());
                     }
-                }
-            });
+                });
+                element.querySelectorAll('svg use').forEach((use: SVGUseElement) => {
+                    const href = use.href.baseVal || use.getAttributeNS('xlink', 'href');
+                    if (href && href.indexOf('#') > 0) {
+                        const src = resolvePath(href.split('#')[0]);
+                        if (isSvg(src)) {
+                            addImageSrc(resourceHandler, src);
+                        }
+                    }
+                });
+            }
         }
         const resumeThread = () => {
             const extensions = this.extensions;
@@ -246,18 +216,19 @@ export default abstract class Application<T extends Node> implements squared.bas
             return elements.length > 1 ? success : success[0];
         };
         if (preloadImages) {
+            const { image, rawData} = resourceHandler!.mapOfAssets;
             preloaded = [];
-            for (const image of ASSET_IMAGE.values()) {
-                const uri = image.uri as string;
+            for (const item of image.values()) {
+                const uri = item.uri as string;
                 if (isSvg(uri)) {
                     imageElements.push(uri);
                 }
-                else if (image.width === 0 || image.height === 0) {
+                else if (item.width === 0 || item.height === 0) {
                     const element = document.createElement('img');
                     element.src = uri;
                     if (element.naturalWidth > 0 && element.naturalHeight > 0) {
-                        image.width = element.naturalWidth;
-                        image.height = element.naturalHeight;
+                        item.width = element.naturalWidth;
+                        item.height = element.naturalHeight;
                     }
                     else {
                         documentRoot.appendChild(element);
@@ -265,7 +236,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                 }
             }
-            for (const [uri, data] of ASSET_RAWDATA.entries()) {
+            for (const [uri, data] of rawData.entries()) {
                 const mimeType = data.mimeType;
                 if (mimeType?.startsWith('image/') && !mimeType.endsWith('svg+xml')) {
                     const element = document.createElement('img');
@@ -274,7 +245,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     if (width > 0 && height > 0) {
                         data.width = width;
                         data.height = height;
-                        ASSET_IMAGE.set(uri, { width, height, uri: data.filename });
+                        image.set(uri, { width, height, uri: data.filename });
                     }
                     else {
                         document.body.appendChild(element);
@@ -286,7 +257,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         if (resourceHandler) {
             for (const element of rootElements) {
                 element.querySelectorAll('img').forEach((image: HTMLImageElement) => {
-                    parseSrcSet(image.srcset);
+                    parseSrcSet(resourceHandler, image.srcset);
                     if (!preloadImages) {
                         resourceHandler.addImage(image);
                     }
@@ -417,7 +388,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         return node;
     }
 
-    protected cascadeParentNode(cache: NodeList<T>, excluded: NodeList<T>, rootElements: Set<HTMLElement>, parentElement: HTMLElement, sessionId: string, depth: number, extensions?: Extension<T>[]) {
+    protected cascadeParentNode(cache: NodeList<T>, excluded: NodeList<T>, rootElements: Set<HTMLElement>, parentElement: HTMLElement, sessionId: string, depth: number, extensions?: squared.base.Extension<T>[]) {
         const node = this.insertNode(parentElement, sessionId);
         if (node) {
             const controllerHandler = this.controllerHandler;
@@ -531,10 +502,36 @@ export default abstract class Application<T extends Node> implements squared.bas
                             important[attr] = true;
                         }
                     }
+                    i = 0;
+                    while (i < 3) {
+                        const attr = CSS_IMAGEURI[i++];
+                        const value = baseMap[attr];
+                        if (value && value !== 'initial') {
+                            let result: Undef<string>;
+                            while (match = REGEXP_DATAURI.exec(value)) {
+                                if (match[2]) {
+                                    if (resourceHandler) {
+                                        const [mimeType, encoding] = match[2].trim().split(/\s*;\s*/);
+                                        resourceHandler.addRawData(match[1], mimeType, match[3], { encoding });
+                                    }
+                                }
+                                else {
+                                    const uri = resolvePath(match[3], styleSheetHref);
+                                    if (uri !== '') {
+                                        if (resourceHandler) {
+                                            addImageSrc(resourceHandler, uri);
+                                        }
+                                        result = (result || value).replace(match[0], `url("${uri}")`);
+                                    }
+                                }
+                            }
+                            if (result) {
+                                baseMap[attr] = result;
+                            }
+                            REGEXP_DATAURI.lastIndex = 0;
+                        }
+                    }
                 }
-                parseImageUrl(resourceHandler, baseMap, 'backgroundImage', styleSheetHref);
-                parseImageUrl(resourceHandler, baseMap, 'listStyleImage', styleSheetHref);
-                parseImageUrl(resourceHandler, baseMap, 'content', styleSheetHref);
                 for (const selectorText of parseSelectorText(item.selectorText, true)) {
                     const specificity = getSpecificity(selectorText);
                     const [selector, target] = selectorText.split('::');
@@ -693,7 +690,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         return this._extensionManager;
     }
 
-    get extensionsCascade(): Extension<T>[] {
+    get extensionsCascade(): squared.base.Extension<T>[] {
         return [];
     }
 
