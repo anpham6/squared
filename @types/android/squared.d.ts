@@ -46,6 +46,7 @@ declare namespace base {
         static addColor(value: Undef<ColorData | string>, transparency?: boolean): string;
         readonly application: Application<T>;
         get userSettings(): AndroidUserSettingsUI;
+        get mapOfStored(): AndroidResourceStoredMap;
         addImageSrc(element: HTMLImageElement | string, prefix?: string, imageSet?: ImageSrcSet[]): string;
         addImageSet(images: StringMap, prefix?: string): string;
     }

@@ -1073,4 +1073,8 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     get controllerSettings() {
         return (this.application.controllerHandler as squared.base.ControllerUI<T>).localSettings;
     }
+
+    get mapOfStored() {
+        return ResourceUI.STORED;
+    }
 }

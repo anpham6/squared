@@ -50,7 +50,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     private readonly _controllerHandler: squared.base.Controller<T>;
     private readonly _resourceHandler?: squared.base.Resource<T>;
     private readonly _extensionManager?: squared.base.ExtensionManager<T>;
-    private readonly _afterInsertNode: BindGeneric<Node, void>;
+    private readonly _afterInsertNode: BindGeneric<T, void>;
 
     protected constructor(
         public readonly framework: number,
@@ -115,10 +115,10 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     public parseDocument(...elements: any[]) {
-        const { controllerHandler, resourceHandler } = this;
+        const resourceHandler = this._resourceHandler;
+        const preloadImages = resourceHandler?.userSettings.preloadImages === true;
+        const sessionId = this._controllerHandler.generateSessionId;
         const rootElements = new Set<HTMLElement>();
-        const sessionId = controllerHandler.generateSessionId;
-        const preloadImages = !!resourceHandler && resourceHandler.userSettings.preloadImages;
         const imageElements: PreloadImage[] = [];
         const processing: squared.base.AppProcessing<T> = {
             cache: new NodeList<T>(),
@@ -126,12 +126,12 @@ export default abstract class Application<T extends Node> implements squared.bas
             rootElements,
             initializing: false
         };
+        let documentRoot: Undef<HTMLElement>,
+            preloaded: Undef<HTMLImageElement[]>;
         this.session.active.set(sessionId, processing);
-        controllerHandler.init();
+        this._controllerHandler.init();
         this.setStyleMap(sessionId);
         const styleElement = insertStyleSheetRule('html > body { overflow: hidden !important; }');
-        let documentRoot: Undef<HTMLElement>;
-        let preloaded: Undef<HTMLImageElement[]>;
         if (elements.length === 0) {
             documentRoot = this.mainElement;
             rootElements.add(documentRoot);

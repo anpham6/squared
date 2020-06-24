@@ -247,6 +247,7 @@ declare module "base" {
         setValueString(node: T): void;
         get controllerSettings(): ControllerSettingsUI;
         get userSettings(): UserSettingsUI;
+        get mapOfStored(): ResourceStoredMap;
     }
 
     class Extension<T extends Node> {

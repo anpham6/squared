@@ -1,4 +1,4 @@
-/* android.widget.menu 1.12.1
+/* android.widget.menu 1.12.2
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -91,7 +91,7 @@ this.android.widget.menu = (function () {
         init(element, sessionId) {
             var _a;
             if (this.included(element)) {
-                if (element.childElementCount) {
+                if (element.childElementCount > 0) {
                     if (!sameArray(element.children, item => item.tagName)) {
                         return false;
                     }

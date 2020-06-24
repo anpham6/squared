@@ -1,4 +1,4 @@
-/* squared 1.12.1
+/* squared 1.12.2
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -470,7 +470,7 @@
         while ((match = pattern.exec(value))) {
             entities.push(match[0]);
         }
-        if (entities.length) {
+        if (entities.length > 0) {
             let result = '';
             const segments = value.split(pattern);
             const length = segments.length;
@@ -1039,7 +1039,7 @@
         while (i < length) {
             const item = list[i++];
             if (current < depth && Array.isArray(item)) {
-                if (item.length) {
+                if (item.length > 0) {
                     result = result.concat(flatArray(item, depth, current + 1));
                 }
             } else if (item !== undefined && item !== null) {
@@ -1085,7 +1085,7 @@
     }
     function sameArray(list, predicate) {
         const length = list.length;
-        if (length) {
+        if (length > 0) {
             let baseValue;
             for (let i = 0; i < length; ++i) {
                 const value = predicate(list[i], i, list);
@@ -5319,7 +5319,7 @@
             if (seg !== '') {
                 const calc = splitEnclosing(seg, 'calc');
                 const length = calc.length;
-                if (length) {
+                if (length > 0) {
                     let partial = '';
                     let i = 0,
                         j = 0;
@@ -6668,7 +6668,7 @@
         }
         let bounds;
         length = domRect.length;
-        if (length) {
+        if (length > 0) {
             let numberOfLines = 1,
                 overflow = false;
             bounds = assignRect(domRect[0]);
@@ -6828,7 +6828,7 @@
             }
         }
         let hidden;
-        if (element.childElementCount) {
+        if (element.childElementCount > 0) {
             iterateArray(element.children, item => {
                 const style = getStyle(item);
                 if (style.getPropertyValue('visibility') !== 'visible') {
@@ -7147,7 +7147,7 @@
                     break;
             }
         }
-        if (char.length) {
+        if (char.length > 0) {
             const parts = value.split('');
             let j = 0;
             while (j < char.length) {
@@ -7338,7 +7338,7 @@
         every(predicate, options) {
             const children = this._children;
             let length = children.length;
-            if (length) {
+            if (length > 0) {
                 let i = 0;
                 if (options) {
                     if (options.start) {
@@ -7589,14 +7589,14 @@
         if (main) {
             const extensionManager = main.extensionManager;
             if (extensionManager) {
-                if (extensionsQueue.size) {
+                if (extensionsQueue.size > 0) {
                     for (const item of extensionsQueue) {
                         extensionManager.include(item);
                     }
                     extensionsQueue.clear();
                 }
             }
-            if (optionsQueue.size) {
+            if (optionsQueue.size > 0) {
                 for (const [name, options] of optionsQueue.entries()) {
                     configure(name, options);
                 }

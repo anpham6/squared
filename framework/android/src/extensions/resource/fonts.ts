@@ -117,7 +117,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         const disableFontAlias = this.options.disableFontAlias;
         const api = userSettings.targetAPI;
         const convertPixels = userSettings.convertPixels === 'dp';
-        const { fonts, styles } = Resource.STORED as AndroidResourceStoredMap;
+        const { fonts, styles } = resource.mapOfStored;
         const styleKeys = Object.keys(FONT_STYLE);
         const nameMap: ObjectMap<T[]> = {};
         const groupMap: ObjectMap<StyleList[]> = {};

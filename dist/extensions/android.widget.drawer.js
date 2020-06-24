@@ -1,4 +1,4 @@
-/* android.widget.drawer 1.12.1
+/* android.widget.drawer 1.12.2
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};

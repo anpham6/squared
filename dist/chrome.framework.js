@@ -1,4 +1,4 @@
-/* chrome-framework 1.12.1
+/* chrome-framework 1.12.2
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -276,7 +276,7 @@
                 } else {
                     prefix = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
                     let length = path.length;
-                    if (length) {
+                    if (length > 0) {
                         let index = 0;
                         length = Math.min(length, prefix.length);
                         for (let i = 0; i < length; ++i) {
@@ -579,7 +579,7 @@
             });
             document.querySelectorAll('object, embed').forEach(element => {
                 const src = element.data || element.src;
-                if (element.type.startsWith('image/') || parseMimeType(src).startsWith('image/')) {
+                if (src && (element.type.startsWith('image/') || parseMimeType(src).startsWith('image/'))) {
                     processUri(element, src.trim());
                 }
             });
@@ -1409,7 +1409,7 @@
         querySelectorAll: (value, cache = true) => {
             if (application) {
                 const query = document.querySelectorAll(value);
-                if (query.length) {
+                if (query.length > 0) {
                     if (!cache) {
                         elementMap.clear();
                     }

@@ -1,5 +1,3 @@
-import Resource from '../../resource';
-
 import { createStyleAttribute } from '../../lib/util';
 
 type View = android.base.View;
@@ -10,7 +8,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
     public readonly eventOnly = true;
 
     public beforeCascade(rendered: T[]) {
-        const STORED = Resource.STORED as AndroidResourceStoredMap;
+        const STORED = (this.resource as android.base.Resource<T>).mapOfStored;
         const length = rendered.length;
         let i = 0;
         while (i < length) {

@@ -1,4 +1,4 @@
-/* vdom-framework 1.12.1
+/* vdom-framework 1.12.2
    https://github.com/anpham6/squared */
 
 (function (global, factory) {

@@ -1,4 +1,4 @@
-/* squared.svg 1.12.1
+/* squared.svg 1.12.2
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -282,7 +282,7 @@
                         }
                     }
                 }
-                if (result.length) {
+                if (result.length > 0) {
                     for (const item of result) {
                         item.fromStyle = true;
                     }
@@ -749,9 +749,9 @@
                 value = getNamedItem$1(element, 'd');
                 if (parent === null || parent === void 0 ? void 0 : parent.requireRefit) {
                     const commands = SvgBuild.getPathCommands(value);
-                    if (commands.length) {
+                    if (commands.length > 0) {
                         const points = SvgBuild.getPathPoints(commands);
-                        if (points.length) {
+                        if (points.length > 0) {
                             parent.refitPoints(points);
                             value = SvgBuild.drawPath(SvgBuild.syncPathPoints(commands, points), precision);
                         }
@@ -810,9 +810,9 @@
                 ({ transforms, parent, container, precision } = options);
             }
             const commands = SvgBuild.getPathCommands(value);
-            if (commands.length) {
+            if (commands.length > 0) {
                 let points = SvgBuild.getPathPoints(commands);
-                if (points.length) {
+                if (points.length > 0) {
                     const transformed = isArray(transforms);
                     if (transformed) {
                         points = SvgBuild.applyTransforms(
@@ -876,7 +876,7 @@
                 }
                 while (++key <= totalLength) {
                     const nextPoint = element.getPointAtLength(key);
-                    if (keyPoints.length) {
+                    if (keyPoints.length > 0) {
                         const index = keyPoints.findIndex(pt => {
                             const x = pt.x.toString();
                             const y = pt.y.toString();
@@ -1446,7 +1446,8 @@
     SvgBuild.asAnimateTransform = object => object.instanceType === 98312 /* SVG_ANIMATE_TRANSFORM */;
     SvgBuild.asAnimateMotion = object => object.instanceType === 229384 /* SVG_ANIMATE_MOTION */;
     SvgBuild.drawCircle = (cx, cy, r, precision) => SvgBuild.drawEllipse(cx, cy, r, r, precision);
-    SvgBuild.drawPolygon = (values, precision) => (values.length ? SvgBuild.drawPolyline(values, precision) + 'Z' : '');
+    SvgBuild.drawPolygon = (values, precision) =>
+        values.length > 0 ? SvgBuild.drawPolyline(values, precision) + 'Z' : '';
 
     const { getNamedItem: getNamedItem$2 } = squared.lib.dom;
     function adjustPoints(values, x, y, scaleX, scaleY) {
@@ -2194,7 +2195,7 @@
                     if (this.to === '') {
                         const by = getNamedItem$4(animationElement, 'by');
                         const byCoords = SvgBuild.parseCoordinates(by);
-                        if (byCoords.length) {
+                        if (byCoords.length > 0) {
                             if (value === '') {
                                 value = this.baseValue || '';
                             }
@@ -2212,7 +2213,7 @@
                             }
                         }
                     }
-                    if (SvgBuild.parseCoordinates(this.to).length) {
+                    if (SvgBuild.parseCoordinates(this.to).length > 0) {
                         this.setAttribute('additive', 'sum');
                     }
                 }
@@ -2319,7 +2320,7 @@
             return this._timingFunction || ((_a = this.keySplines) === null || _a === void 0 ? void 0 : _a[0]) || '';
         }
         set reverse(value) {
-            if (this.length && value !== this._reverse) {
+            if (this.length > 0 && value !== this._reverse) {
                 const keyTimesBase = this.keyTimes;
                 const keySplinesBase = this._keySplines;
                 const length = keyTimesBase.length;
@@ -2516,7 +2517,7 @@
         expandToValues() {
             if (this.additiveSum) {
                 const { duration, keyTimes: keyTimesBase, iterationCount } = this;
-                if (iterationCount !== -1 && duration > 0 && keyTimesBase.length) {
+                if (iterationCount !== -1 && duration > 0 && keyTimesBase.length > 0) {
                     const durationTotal = duration * iterationCount;
                     invalid: {
                         const { type, keySplines: keySplinesBase, values: valuesBase } = this;
@@ -2532,7 +2533,7 @@
                             for (let j = 0; j < length; ++j) {
                                 const coordinates = SvgBuild.parseCoordinates(valuesBase[j]);
                                 const q = coordinates.length;
-                                if (q) {
+                                if (q > 0) {
                                     let currentValues;
                                     switch (type) {
                                         case SVGTransform.SVG_TRANSFORM_TRANSLATE:
@@ -2592,7 +2593,7 @@
                         }
                         this.values = values;
                         this.keyTimes = keyTimes;
-                        this.keySplines = keySplines.length ? keySplines : undefined;
+                        this.keySplines = keySplines.length > 0 ? keySplines : undefined;
                         this.duration = durationTotal;
                         this.iterationCount = 1;
                         this.accumulateSum = false;
@@ -2679,7 +2680,7 @@
     class SvgAnimationIntervalMap {
         constructor(animations, ...attrs) {
             var _a;
-            animations = (attrs.length
+            animations = (attrs.length > 0
                 ? animations.filter(item => attrs.includes(item.attributeName))
                 : animations.slice(0)
             ).sort((a, b) => {
@@ -2833,7 +2834,7 @@
                             }
                         }
                     }
-                    if (values.length) {
+                    if (values.length > 0) {
                         values.sort((a, b) => {
                             if (a.animation && b.animation) {
                                 if (a.fillMode === b.fillMode) {
@@ -3831,7 +3832,7 @@
         animations.push(item);
     }
     function removeAnimations(animations, values) {
-        if (values.length) {
+        if (values.length > 0) {
             spliceArray(animations, item => values.includes(item));
         }
     }
@@ -4203,7 +4204,7 @@
                                 return replaceValue;
                             };
                             const checkIncomplete = (delayIndex, itemIndex) => {
-                                if (incomplete.length) {
+                                if (incomplete.length > 0) {
                                     spliceArray(
                                         incomplete,
                                         previous => previous.getTotalDuration() <= actualMaxTime,
@@ -4327,7 +4328,7 @@
                                 }
                                 for (let i = 0; i < groupDelay.length; ++i) {
                                     const data = groupData[i];
-                                    if (removeable.length) {
+                                    if (removeable.length > 0) {
                                         for (let j = 0; j < data.length; ++j) {
                                             if (removeable.includes(data[j])) {
                                                 data.splice(j--, 1);
@@ -4444,7 +4445,7 @@
                                             iterationTotal = Math.ceil(iterationCount);
                                             iterationFraction = iterationCount - Math.floor(iterationCount);
                                         }
-                                        if (setterData.length && actualMaxTime > 0 && actualMaxTime < delay) {
+                                        if (setterData.length > 0 && actualMaxTime > 0 && actualMaxTime < delay) {
                                             checkSetterDelay(actualMaxTime, delay);
                                         }
                                         if (maxTime !== -1 && maxTime < delay) {
@@ -4496,7 +4497,7 @@
                                                 if (value !== Infinity) {
                                                     const dataA = groupData[k];
                                                     if (
-                                                        dataA.length &&
+                                                        dataA.length > 0 &&
                                                         !dataA.every(next =>
                                                             next.hasState(16 /* COMPLETE */, 64 /* INVALID */)
                                                         )
@@ -4511,7 +4512,7 @@
                                         let startTime = maxTime + 1,
                                             maxThreadTime = Math.min(nextDelayTime, item.end || Infinity),
                                             setterInterrupt;
-                                        if (item.animationElement && setterData.length) {
+                                        if (item.animationElement && setterData.length > 0) {
                                             const interruptTime = Math.min(nextDelayTime, totalDuration, maxThreadTime);
                                             setterInterrupt = setterData.find(
                                                 set => set.delay >= actualMaxTime && set.delay <= interruptTime
@@ -4591,7 +4592,7 @@
                                                                         !!previous.animationElement &&
                                                                         previous.delay < maxThreadTime
                                                                 );
-                                                            if (pending.length) {
+                                                            if (pending.length > 0) {
                                                                 sortEvaluateStart(pending, actualMaxTime);
                                                                 [keyTimes, values, keySplines] = appendPartialKeyTimes(
                                                                     intervalMap,
@@ -4621,7 +4622,7 @@
                                                             if (
                                                                 item.getIntervalEndTime(actualMaxTime) <
                                                                     maxThreadTime &&
-                                                                (incomplete.length || j < r - 1)
+                                                                (incomplete.length > 0 || j < r - 1)
                                                             ) {
                                                                 const pending = incomplete.filter(
                                                                     previous => !!previous.animationElement
@@ -4636,7 +4637,7 @@
                                                                         queueIncomplete(incomplete, previous);
                                                                     }
                                                                 }
-                                                                if (pending.length) {
+                                                                if (pending.length > 0) {
                                                                     sortIncomplete(pending, actualMaxTime);
                                                                     [
                                                                         keyTimes,
@@ -4896,7 +4897,7 @@
                                                     dataA.length = 0;
                                                 }
                                             }
-                                            if (incomplete.length && actualMaxTime < nextDelayTime) {
+                                            if (incomplete.length > 0 && actualMaxTime < nextDelayTime) {
                                                 sortIncomplete(incomplete);
                                                 const resume = incomplete.find(next => next.delay <= actualMaxTime);
                                                 if (resume) {
@@ -4913,9 +4914,9 @@
                                         }
                                     }
                                 }
-                                if (incomplete.length) {
+                                if (incomplete.length > 0) {
                                     sortIncomplete(incomplete);
-                                    while (incomplete.length) {
+                                    while (incomplete.length > 0) {
                                         const item = incomplete.shift();
                                         const { delay, duration } = item;
                                         const durationTotal = maxTime - delay;
@@ -4923,7 +4924,7 @@
                                         const insertKeyTimes = () => {
                                             let [keyTimes, values, keySplines] = cloneKeyTimes(item);
                                             const interval = getStartIteration(actualMaxTime, delay, duration);
-                                            if (incomplete.length) {
+                                            if (incomplete.length > 0) {
                                                 if (item.evaluateStart) {
                                                     const pending = incomplete.slice(0);
                                                     sortEvaluateStart(pending, actualMaxTime);
@@ -5792,7 +5793,7 @@
                         distance = result.length;
                     }
                     const fps = framesPerSecond ? 1000 / framesPerSecond : 0;
-                    if (keyPoints.length) {
+                    if (keyPoints.length > 0) {
                         const length = distance - 1;
                         const keyTimes = super.keyTimes;
                         const result = [];
@@ -6215,7 +6216,7 @@
                                       ).filter(value => !isNaN(value))
                                   )
                                 : [0];
-                        if (times.length) {
+                        if (times.length > 0) {
                             switch (item.tagName) {
                                 case 'set':
                                     for (let i = 0; i < times.length; ++i) {
@@ -6260,7 +6261,7 @@
                 });
                 const animationName = parseAttribute(element, 'animation-name');
                 const length = animationName.length;
-                if (length) {
+                if (length > 0) {
                     const cssData = {};
                     const groupName = [];
                     const groupOrdering = [];
@@ -7278,7 +7279,7 @@
             super.build(options);
         }
         synchronize(options) {
-            if (!this.documentRoot && this.animations.length) {
+            if (!this.documentRoot && this.animations.length > 0) {
                 this.animateSequentially(
                     this.getAnimateViewRect(),
                     this.getAnimateTransform(options),
@@ -7709,7 +7710,7 @@
             let { x, y, width, height, parent: container } = this;
             const transforms = exclude ? SvgBuild.filterTransforms(this.transforms, exclude) : this.transforms;
             const length = transforms.length;
-            if (length) {
+            if (length > 0) {
                 transforms.reverse();
                 let i = 0;
                 while (i < length) {
@@ -7974,7 +7975,7 @@
                     result[i] = values[i];
                 } else if (attr === 'points') {
                     const points = SvgBuild.convertPoints(SvgBuild.parseCoordinates(values[i]));
-                    if (points.length) {
+                    if (points.length > 0) {
                         result[i] =
                             parent && SVG.polygon(parent.element)
                                 ? SvgBuild.drawPolygon(points, precision)
@@ -8093,9 +8094,9 @@
                     patternRefit
                 ) {
                     const commands = SvgBuild.getPathCommands(d);
-                    if (commands.length) {
+                    if (commands.length > 0) {
                         let points = SvgBuild.getPathPoints(commands);
-                        if (points.length) {
+                        if (points.length > 0) {
                             if (patternRefit) {
                                 patternParent.patternRefitPoints(points);
                             }
@@ -8107,7 +8108,7 @@
                                         transforms
                                     );
                                 }
-                                if (transforms.length) {
+                                if (transforms.length > 0) {
                                     points = SvgBuild.applyTransforms(
                                         transforms,
                                         points,
@@ -8183,7 +8184,7 @@
                     if (typeof residualHandler === 'function') {
                         [this.transformResidual, transforms] = residualHandler.call(this, element, transforms, rx, ry);
                     }
-                    if (transforms.length) {
+                    if (transforms.length > 0) {
                         points = SvgBuild.applyTransforms(transforms, points, TRANSFORM.origin(this.element));
                         this.transformed = transforms;
                     }
@@ -8216,7 +8217,7 @@
                         if (typeof residualHandler === 'function') {
                             [this.transformResidual, transforms] = residualHandler.call(this, element, transforms);
                         }
-                        if (transforms.length) {
+                        if (transforms.length > 0) {
                             points = SvgBuild.applyTransforms(transforms, points, TRANSFORM.origin(this.element));
                             this.transformed = transforms;
                         }
@@ -8247,7 +8248,7 @@
                     if (typeof residualHandler === 'function') {
                         [this.transformResidual, transforms] = residualHandler.call(this, element, transforms);
                     }
-                    if (transforms.length) {
+                    if (transforms.length > 0) {
                         points = SvgBuild.applyTransforms(transforms, points, TRANSFORM.origin(this.element));
                         this.transformed = transforms;
                     }
@@ -8281,7 +8282,7 @@
                     case 'polyline': {
                         const commands = SvgBuild.getPathCommands(this.value);
                         const length = commands.length;
-                        if (length) {
+                        if (length > 0) {
                             const pathStart = commands[0];
                             const pathStartPoint = pathStart.start;
                             const pathEnd = commands[length - 1];
@@ -8484,7 +8485,7 @@
                 result;
             if (strokeWidth > 0) {
                 let valueArray = SvgBuild.parseCoordinates(this.strokeDasharray);
-                if (valueArray.length) {
+                if (valueArray.length > 0) {
                     const totalLength = this.totalLength;
                     const pathLength = this.pathLength || totalLength;
                     const dashGroup = [];
@@ -8741,7 +8742,7 @@
                                                     keyTime = keyTimeTo;
                                                     keyTimes.push(keyTime);
                                                     const q = values.length;
-                                                    if (q) {
+                                                    if (q > 0) {
                                                         values.push(values[q - 1]);
                                                         previousRemaining = parseFloat(values[q - 1]);
                                                     } else {
@@ -8990,7 +8991,7 @@
             }
         }
         synchronize(options) {
-            if (this.animations.length) {
+            if (this.animations.length > 0) {
                 const path = this.path;
                 if (path) {
                     const element = options === null || options === void 0 ? void 0 : options.element;
@@ -9167,7 +9168,7 @@
                 this._transforms = super.transforms;
                 const transforms = SvgBuild.convertTransforms(this.patternElement.patternTransform.baseVal);
                 const length = transforms.length;
-                if (length) {
+                if (length > 0) {
                     const rotateOrigin = TRANSFORM.rotateOrigin(this.patternElement, 'patternTransform');
                     const x = this.patternWidth / 2;
                     const y = this.patternHeight / 2;
@@ -9272,7 +9273,7 @@
         }
         synchronize(options) {
             options = Object.assign(Object.assign({}, options), { element: this.element });
-            if (this.animations.length) {
+            if (this.animations.length > 0) {
                 this.animateSequentially(
                     this.getAnimateViewRect(),
                     this.getAnimateTransform(options),
@@ -9321,7 +9322,7 @@
                     this.verifyBaseValue(item.attributeName, 0) === undefined
             );
             const transforms = this.getAnimateTransform(options);
-            if (animations.length || transforms.length) {
+            if (animations.length > 0 || transforms.length > 0) {
                 this.animateSequentially(this.getAnimateViewRect(animations), transforms, undefined, options);
             }
             super.synchronize(options);
@@ -9345,7 +9346,7 @@
             this.setPaint(this.getPathAll(), options === null || options === void 0 ? void 0 : options.precision);
         }
         synchronize(options) {
-            if (this.animations.length) {
+            if (this.animations.length > 0) {
                 this.animateSequentially(
                     this.getAnimateViewRect(),
                     this.getAnimateTransform(options),
