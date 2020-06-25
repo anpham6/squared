@@ -829,7 +829,17 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             else {
                 let flexible = false;
                 if (node.hasFlex(horizontal ? 'row' : 'column')) {
-                    flexible = setFlexGrow(node, horizontal, grow, node.hasPX(dimension, { percent: false }) ? (horizontal ? node.actualWidth : node.actualHeight) : 0, shrink);
+                    flexible = setFlexGrow(
+                        node,
+                        horizontal,
+                        grow,
+                        node.hasPX(dimension, { percent: false })
+                            ? horizontal
+                                ? node.actualWidth
+                                : node.actualHeight
+                            : 0,
+                        shrink
+                    );
                     if (flexible) {
                         setLayoutDimension(node, '0px', horizontal, true);
                     }
@@ -875,10 +885,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                         else if (isLength(value)) {
                             if (horizontal) {
-                                percent -= (Math.max(sibling.actualWidth + sibling.marginLeft + sibling.marginRight, 0)) / boxSize;
+                                percent -= Math.max(sibling.actualWidth + sibling.marginLeft + sibling.marginRight, 0) / boxSize;
                             }
                             else {
-                                percent -= (Math.max(sibling.actualHeight + sibling.marginTop + sibling.marginBottom, 0)) / boxSize;
+                                percent -= Math.max(sibling.actualHeight + sibling.marginTop + sibling.marginBottom, 0) / boxSize;
                             }
                             continue;
                         }
@@ -1556,7 +1566,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 const dataset = getDataSet(this.dataset, 'android');
                 if (dataset) {
                     for (const namespace in dataset) {
-                        const name = namespace === 'attr' ? 'android' : (/^attr[A-Z]/.test(namespace) ? capitalize(namespace.substring(4), false) : '');
+                        const name = namespace === 'attr'
+                             ? 'android'
+                             : /^attr[A-Z]/.test(namespace)
+                                ? capitalize(namespace.substring(4), false)
+                                : '';
                         if (name !== '') {
                             for (const values of dataset[namespace]!.split(';')) {
                                 const [key, value] = values.split('::');
@@ -2604,7 +2618,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     this._cached.support = result;
                 }
             }
-            return result as AndroidSupportUI;
+            return result;
         }
 
         set renderExclude(value) {

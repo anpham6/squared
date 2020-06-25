@@ -110,7 +110,9 @@ export default abstract class Application<T extends Node> implements squared.bas
         this.session.unusedStyles.clear();
         this.controllerHandler.reset();
         this.resourceHandler?.reset();
-        this.extensions.forEach(ext => ext.subscribers.clear());
+        for (const ext of this.extensions) {
+            ext.subscribers.clear();
+        }
         this.closed = false;
     }
 
@@ -340,7 +342,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             catch {
             }
             if (!isString(mediaText) || checkMediaRule(mediaText)) {
-                this.applyStyleSheet(styleSheet as CSSStyleSheet, sessionId);
+                this.applyStyleSheet(styleSheet, sessionId);
             }
         }
     }

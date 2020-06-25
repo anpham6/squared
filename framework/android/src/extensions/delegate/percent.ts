@@ -31,7 +31,7 @@ function hasPercentHeight(node: View, parent: View) {
 function hasMarginHorizontal(node: View, parent: View, clearMap: Map<View, string>) {
     return (validPercent(node.css('marginLeft')) || validPercent(node.css('marginRight'))) && (
         parent.layoutVertical && !parent.hasAlign(NODE_ALIGNMENT.UNKNOWN) ||
-        (parent as View).layoutFrame ||
+        parent.layoutFrame ||
         node.blockStatic && node.alignedVertically(undefined, clearMap) ||
         node.documentParent.length === 1 ||
         !node.pageFlow

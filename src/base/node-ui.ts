@@ -1207,7 +1207,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         }
     }
 
-    public registerBox(region: number, node?: T): Undef<NodeUI> {
+    public registerBox(region: number, node?: T): Undef<T> {
         const boxRegister = this._boxRegister;
         if (node) {
             boxRegister[region] = node;
@@ -1216,7 +1216,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             node = boxRegister[region];
         }
         while (node) {
-            const next: Undef<NodeUI> = (node.unsafe<ObjectIndex<T>>('boxRegister'))[region];
+            const next: Undef<T> = node.unsafe<ObjectIndex<T>>('boxRegister')[region];
             if (next) {
                 node = next;
             }

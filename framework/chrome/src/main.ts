@@ -228,7 +228,7 @@ const appBase: chrome.ChromeFramework<NodeElement> = {
         if (application) {
             const element = document.getElementById(value);
             if (element) {
-                return findElement(element as HTMLElement, cache);
+                return findElement(element, cache);
             }
         }
         return Promise.resolve(null);

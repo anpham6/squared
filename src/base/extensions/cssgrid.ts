@@ -117,7 +117,7 @@ function setFlexibleDimension(dimension: number, gap: number, count: number, uni
         }
     }
     if (percent < 1 && fractional > 0) {
-        const ratio = (((dimension * percent) - ((count - 1) * gap) - max.reduce((a, b) => a + Math.max(0, b), 0) - filled) / fractional);
+        const ratio = (dimension * percent - (count - 1) * gap - max.reduce((a, b) => a + Math.max(0, b), 0) - filled) / fractional;
         if (ratio > 0) {
             for (i = 0; i < length; ++i) {
                 const value = unit[i];
@@ -813,7 +813,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 const PLACEMENT = placement.slice(0);
                 if (PLACEMENT[rowA] === 0) {
                     let length = rowData.length;
-                    for (let i = (dense ? 0 : getOpenRowIndex(openCells)), j = 0, k = -1; i < length; ++i) {
+                    for (let i = dense ? 0 : getOpenRowIndex(openCells), j = 0, k = -1; i < length; ++i) {
                         const l = getOpenCellIndex(ITERATION, COLUMN_SPAN, openCells[i]);
                         if (l !== -1) {
                             if (j === 0) {

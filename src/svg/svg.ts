@@ -188,7 +188,7 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
     }
 
     get viewBox() {
-        return (this.element as SVGSVGElement).viewBox.baseVal || { x: 0, y: 0, width: 0, height: 0 };
+        return this.element.viewBox.baseVal || { x: 0, y: 0, width: 0, height: 0 };
     }
 
     get instanceType() {

@@ -474,7 +474,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
 
     public getPathAll(cascade = true) {
         const result: string[] = [];
-        for (const item of (cascade ? this.cascade() : this.children)) {
+        for (const item of cascade ? this.cascade() : this.children) {
             if (SvgBuild.isShape(item)) {
                 const value = item.path?.value;
                 if (value) {

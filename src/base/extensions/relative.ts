@@ -89,7 +89,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                     });
                 }
                 if (node.baselineActive && !node.baselineAltered) {
-                    for (const children of (renderParent.horizontalRows || [renderParent.renderChildren])) {
+                    for (const children of renderParent.horizontalRows || [renderParent.renderChildren]) {
                         if (children.includes(node)) {
                             const unaligned = children.filter(item => item.positionRelative && item.length > 0 && convertFloat(node.verticalAlign) !== 0);
                             const length = unaligned.length;

@@ -805,7 +805,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         case 'date':
                         case 'datetime-local':
                             if (value === '') {
-                                switch ((new Intl.DateTimeFormat()).resolvedOptions().locale) {
+                                switch (new Intl.DateTimeFormat().resolvedOptions().locale) {
                                     case 'en-US':
                                         hint = 'mm/dd/yyyy';
                                         break;

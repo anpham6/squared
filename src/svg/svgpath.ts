@@ -695,7 +695,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                     if (value) {
                                         offset = parseFloat(value);
                                     }
-                                    for (const array of (SvgBuild.asAnimate(item) ? intervalMap.evaluateStart(item) : [item.to])) {
+                                    for (const array of SvgBuild.asAnimate(item) ? intervalMap.evaluateStart(item) : [item.to]) {
                                         dashTotal = Math.max(dashTotal, this.flattenStrokeDash(SvgBuild.parseCoordinates(array), offset, totalLength, pathLength).items.length);
                                     }
                                 }

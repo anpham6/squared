@@ -76,6 +76,7 @@ module.exports = {
         "semi-spacing": "error",
         "no-extra-semi": "error",
         "no-shadow": "error",
+        "no-extra-boolean-cast": "error",
         "no-var": "warn",
         "no-console": "warn",
         "one-var": "off",
@@ -100,9 +101,17 @@ module.exports = {
         "no-undef": "off",
         "no-unused-vars": "off",
         "no-invalid-this": "off",
+        "no-extra-parens": "off",
         "@typescript-eslint/consistent-type-assertions": "error",
         "@typescript-eslint/prefer-function-type": "error",
         "@typescript-eslint/unified-signatures": "error",
+        "@typescript-eslint/no-extra-non-null-assertion": "error",
+        "@typescript-eslint/no-unnecessary-type-assertion": "error",
+        "@typescript-eslint/no-extra-parens": ["error", "all", {
+            "conditionalAssign": true,
+            "returnAssign": true,
+            "nestedBinaryExpressions": false
+        }],
         "@typescript-eslint/member-ordering": ["error", {
             "default": [
                 "static-field",
@@ -113,7 +122,6 @@ module.exports = {
             ]
         }],
         "@typescript-eslint/prefer-for-of": "off",
-        "@typescript-eslint/no-unnecessary-type-assertion": "off",
         "@typescript-eslint/triple-slash-reference": "off",
         "@typescript-eslint/no-non-null-assertion": "off",
         "@typescript-eslint/array-type": "off",
@@ -137,7 +145,6 @@ module.exports = {
         "@typescript-eslint/no-unsafe-member-access": "off",
         "@typescript-eslint/ban-types": "off",
         "@typescript-eslint/restrict-template-expressions": "off",
-        "@typescript-eslint/no-floating-promises": "off",
-        "@typescript-eslint/no-extra-non-null-assertion": "off"
+        "@typescript-eslint/no-floating-promises": "off"
     }
 };

@@ -352,7 +352,11 @@ function insertSplitValue(item: SvgAnimate, actualTime: number, baseValue: Anima
     }
     const duration = item.duration;
     const offset = actualTime - (delay + duration * iteration);
-    const fraction = offset === 0 ? (index === 0 ? 0 : 1) : clamp(offset / duration);
+    const fraction = offset === 0
+        ? index === 0
+            ? 0
+            : 1
+        : clamp(offset / duration);
     let previousIndex = -1,
         nextIndex = -1;
     const length = keyTimes.length;

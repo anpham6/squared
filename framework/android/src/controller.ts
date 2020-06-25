@@ -270,7 +270,7 @@ function isConstraintLayout(layout: LayoutUI<View>, vertical: boolean) {
         return false;
     }
     const multiple = layout.length > 1;
-    return layout.some(item => multiple && (item.rightAligned || item.centerAligned) && layout.singleRowAligned || (item.percentWidth > 0 && item.percentWidth < 1) || item.hasPX('maxWidth')) && (!vertical || layout.every(item => item.marginTop >= 0));
+    return layout.some(item => multiple && (item.rightAligned || item.centerAligned) && layout.singleRowAligned || item.percentWidth > 0 && item.percentWidth < 1 || item.hasPX('maxWidth')) && (!vertical || layout.every(item => item.marginTop >= 0));
 }
 
 function adjustBodyMargin(node: View, position: string) {
@@ -2977,11 +2977,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 let percentWidth = View.availablePercent(partition, 'width', node.box.width);
                 if (i === 1 || previousAlignParent) {
-                    alignParent = (
+                    alignParent =
                         !rowStart.floating && previousRow?.every(item => item.floating || !item.pageFlow) === true && (clearMap.size === 0 || !partition.some((item: T) => checkClearMap(item, clearMap))) ||
                         !rowStart.pageFlow && (!rowStart.autoPosition || q === 1) ||
-                        previousRow?.every(item => !item.pageFlow) === true
-                    );
+                        previousRow?.every(item => !item.pageFlow) === true;
                     previousAlignParent = alignParent;
                 }
                 tallest = undefined;

@@ -80,7 +80,7 @@ export function truncateString(value: string, precision = 3) {
     while (match = pattern.exec(value)) {
         let trailing = match[1];
         if (parseInt(match[2]) >= 5) {
-            trailing = truncateFraction((parseFloat(trailing) + 1 / Math.pow(10, precision))).toString();
+            trailing = truncateFraction(parseFloat(trailing) + 1 / Math.pow(10, precision)).toString();
         }
         output = output.replace(match[0], truncateTrailingZero(trailing));
     }

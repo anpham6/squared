@@ -307,7 +307,7 @@ function requireDirectionSpacer(data: CssGridDirectionData, dimension: number) {
     }
     const content = Math.ceil(size + (data.length - 1) * data.gap);
     if (percent > 0) {
-        return (percent + (content / dimension * 100));
+        return percent + (content / dimension * 100);
     }
     else if (size > 0) {
         return content < dimension ? -1 : 0;

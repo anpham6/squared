@@ -2473,7 +2473,7 @@ export function getKeyframesRules(): ObjectMap<KeyframesData> {
         let i = 0;
         while (i < length) {
             try {
-                const cssRules = (styleSheets[i++] as CSSStyleSheet).cssRules;
+                const cssRules = styleSheets[i++].cssRules;
                 if (cssRules) {
                     const q = cssRules.length;
                     for (let j = 0; j < q; ++j) {
@@ -2732,7 +2732,7 @@ export function calculateVarAsString(element: CSSElement, value: string, options
             break;
     }
     const result: string[] = [];
-    for (let seg of (separator ? value.split(separator) : [value])) {
+    for (let seg of separator ? value.split(separator) : [value]) {
         seg = seg.trim();
         if (seg !== '') {
             const calc = splitEnclosing(seg, 'calc');
@@ -2778,7 +2778,14 @@ export function calculateVarAsString(element: CSSElement, value: string, options
             }
         }
     }
-    value = result.length === 1 ? result[0] : result.join(separator === ' ' ? ' ' : (separator ? separator + ' ' : ''));
+    value = result.length === 1
+        ? result[0]
+        : result.join(separator === ' '
+            ? ' '
+            : separator
+                ? separator + ' '
+                : ''
+            );
     if (errorString) {
         let match: Null<RegExpExecArray>;
         while (match = errorString.exec(value)) {

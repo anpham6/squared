@@ -298,7 +298,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                             for (const attrB in found) {
                                 const dataB = found[attrB];
                                 if (dataB.length > 1) {
-                                    filtered[(attrA < attrB ? attrA + ';' + attrB : attrB + ';' + attrA)] = dataB;
+                                    filtered[attrA < attrB ? `${attrA};${attrB}` : `${attrB};${attrA}`] = dataB;
                                     merged = true;
                                 }
                             }
