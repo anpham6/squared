@@ -68,14 +68,14 @@ declare module "lib" {
 
     namespace client {
         const enum PLATFORM {
-            WINDOWS = 2,
-            MAC = 4
+            WINDOWS = 1,
+            MAC = 1 << 1
         }
         const enum USER_AGENT {
-            CHROME = 2,
-            SAFARI = 4,
-            FIREFOX = 8,
-            EDGE = 16
+            CHROME = 1,
+            SAFARI = 1 << 1,
+            FIREFOX = 1 << 2,
+            EDGE = 1 << 3
         }
         function isPlatform(value: string | number): boolean;
         function isUserAgent(value: string | number): boolean;
@@ -85,19 +85,21 @@ declare module "lib" {
     namespace css {
         const enum CSS_UNIT {
             NONE = 0,
-            LENGTH = 2,
-            PERCENT = 4,
-            TIME = 8,
-            ANGLE = 16,
-            INTEGER = 32,
-            DECIMAL = 64
+            LENGTH = 1,
+            PERCENT = 1 << 1,
+            TIME = 1 << 2,
+            ANGLE = 1 << 3,
+            INTEGER = 1 << 4,
+            DECIMAL = 1 << 5
         }
         const enum CSS_TRAITS {
             NONE = 0,
-            CALC = 2,
-            MULTIPLE = 4,
-            LAYOUT = 8,
-            CONTAIN = 16
+            CALC = 1,
+            SHORTHAND = 1 << 1,
+            LAYOUT = 1 << 2,
+            CONTAIN = 1 << 3,
+            COLOR = 1 << 4,
+            DEPRECATED = 1 << 5
         }
         const CSS_PROPERTIES: CssProperties;
         const SVG_PROPERTIES: CssProperties;

@@ -1,15 +1,15 @@
 import { hasBit } from './util';
 
 export const enum PLATFORM {
-    WINDOWS = 2,
-    MAC = 4
+    WINDOWS = 1,
+    MAC = 1 << 1
 }
 
 export const enum USER_AGENT {
-    CHROME = 2,
-    SAFARI = 4,
-    FIREFOX = 8,
-    EDGE = 16
+    CHROME = 1,
+    SAFARI = 1 << 1,
+    FIREFOX = 1 << 2,
+    EDGE = 1 << 3
 }
 
 export function isPlatform(value: string | number) {

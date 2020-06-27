@@ -137,7 +137,7 @@
     "playwright": "^1.1.1",
     "prettier": "^2.0.5",
     "readdirp": "^3.4.0",
-    "rollup": "^2.18.0",
+    "rollup": "^2.17.1",
     "rollup-plugin-prettier": "^2.1.0",
     "rollup-plugin-terser": "^6.1.0",
     "terser": "^4.8.0",

@@ -128,6 +128,7 @@ declare module "base" {
 
     class ApplicationUI<T extends NodeUI> extends Application<T> {
         userSettings: UserSettingsUI;
+        readonly fileHandler?: FileUI<T>;
         readonly session: AppSessionUI<T>;
         readonly builtInExtensions: ObjectMap<ExtensionUI<T>>;
         readonly extensions: ExtensionUI<T>[];
@@ -137,7 +138,7 @@ declare module "base" {
         createNode(sessionId: string, options: CreateNodeUIOptions<T>): T;
         renderNode(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
         addLayout(layout: LayoutUI<T>): void;
-        addLayoutTemplate(parent: T, node: T, template: Undef<NodeTemplate<T>>, index?: number): void;
+        addLayoutTemplate(parent: T, node: T, template: NodeTemplate<T>, index?: number): void;
         saveDocument(filename: string, content: string, pathname?: string, index?: number): void;
         get controllerHandler(): ControllerUI<T>;
         get resourceHandler(): ResourceUI<T>;
@@ -608,7 +609,6 @@ declare module "base" {
         get naturalChild(): boolean;
         set documentParent(value);
         get documentParent(): NodeUI;
-        get scrollElement(): boolean;
         set renderAs(value);
         get renderAs(): Null<NodeUI>;
         set containerName(value);
@@ -644,6 +644,7 @@ declare module "base" {
         set use(value: Undef<string>);
         get use(): Undef<string>;
         get extensions(): string[];
+        get scrollElement(): boolean;
         get controlElement(): boolean;
         get documentId(): string;
         get baselineHeight(): number;
@@ -720,80 +721,80 @@ declare module "base" {
             const enum APP_FRAMEWORK {
                 UNIVERSAL = 0,
                 VDOM = 1,
-                ANDROID = 2,
-                CHROME = 4
+                ANDROID = 1 << 1,
+                CHROME = 1 << 2
             }
             const enum NODE_ALIGNMENT {
-                UNKNOWN = 2,
-                AUTO_LAYOUT = 4,
-                HORIZONTAL = 8,
-                VERTICAL = 16,
-                ABSOLUTE = 32,
-                BLOCK = 64,
-                SEGMENTED = 128,
-                COLUMN = 256,
-                FLOAT = 512,
-                INLINE = 1024,
-                RIGHT = 2048,
-                SINGLE = 4096,
-                EXTENDABLE = 8192,
-                WRAPPER = 16384,
-                PERCENT = 32768
+                UNKNOWN = 1,
+                AUTO_LAYOUT = 1 << 1,
+                HORIZONTAL = 1 << 2,
+                VERTICAL = 1 << 3,
+                ABSOLUTE = 1 << 4,
+                BLOCK = 1 << 5,
+                SEGMENTED = 1 << 6,
+                COLUMN = 1 << 7,
+                FLOAT = 1 << 8,
+                INLINE = 1 << 9,
+                RIGHT = 1 << 10,
+                SINGLE = 1 << 11,
+                EXTENDABLE = 1 << 12,
+                WRAPPER = 1 << 13,
+                PERCENT = 1 << 14
             }
-            const enum NODE_TEMPLATE {
-                XML = 1,
-                INCLUDE
+            const enum BOX_STANDARD {
+                MARGIN_TOP = 1,
+                MARGIN_RIGHT = 1 << 1,
+                MARGIN_BOTTOM = 1 << 2,
+                MARGIN_LEFT = 1 << 3,
+                PADDING_TOP = 1 << 4,
+                PADDING_RIGHT = 1 << 5,
+                PADDING_BOTTOM = 1 << 6,
+                PADDING_LEFT = 1 << 7,
+                MARGIN = MARGIN_TOP | MARGIN_RIGHT | MARGIN_BOTTOM | MARGIN_LEFT,
+                MARGIN_VERTICAL = MARGIN_TOP | MARGIN_BOTTOM,
+                MARGIN_HORIZONTAL = MARGIN_RIGHT | MARGIN_LEFT,
+                PADDING = PADDING_TOP | PADDING_RIGHT | PADDING_BOTTOM | PADDING_LEFT,
+                PADDING_VERTICAL = PADDING_TOP | PADDING_BOTTOM,
+                PADDING_HORIZONTAL = PADDING_RIGHT | PADDING_LEFT
+            }
+            enum APP_SECTION {
+                DOM_TRAVERSE = 1,
+                EXTENSION  = 1 << 1,
+                RENDER = 1 << 2,
+                ALL = DOM_TRAVERSE | EXTENSION | RENDER
+            }
+            enum NODE_RESOURCE {
+                BOX_STYLE = 1,
+                BOX_SPACING = 1 << 1,
+                FONT_STYLE = 1 << 2,
+                VALUE_STRING = 1 << 3,
+                IMAGE_SOURCE  = 1 << 4,
+                ASSET = FONT_STYLE | VALUE_STRING | IMAGE_SOURCE,
+                ALL = BOX_STYLE | BOX_SPACING | ASSET
+            }
+            enum NODE_PROCEDURE {
+                CONSTRAINT = 1,
+                LAYOUT = 1 << 1,
+                ALIGNMENT = 1 << 2,
+                ACCESSIBILITY = 1 << 3,
+                LOCALIZATION = 1 << 4,
+                CUSTOMIZATION = 1 << 5,
+                ALL = CONSTRAINT | LAYOUT | ALIGNMENT | ACCESSIBILITY | LOCALIZATION | CUSTOMIZATION
             }
             const enum NODE_TRAVERSE {
                 HORIZONTAL = 0,
                 VERTICAL = 1,
                 LINEBREAK = 2,
                 INLINE_WRAP = 3,
-                FLOAT_WRAP = 4,
-                FLOAT_CLEAR = 5,
-                FLOAT_BLOCK = 6,
+                FLOAT_CLEAR = 4,
+                FLOAT_BLOCK = 5,
+                FLOAT_WRAP = 6,
                 FLOAT_INTERSECT = 7,
                 PERCENT_WRAP = 8
             }
-            const enum BOX_STANDARD {
-                MARGIN_TOP = 2,
-                MARGIN_RIGHT = 4,
-                MARGIN_BOTTOM = 8,
-                MARGIN_LEFT = 16,
-                PADDING_TOP = 32,
-                PADDING_RIGHT = 64,
-                PADDING_BOTTOM = 128,
-                PADDING_LEFT = 256,
-                MARGIN = 2 | 4 | 8 | 16,
-                MARGIN_VERTICAL = 2 | 8,
-                MARGIN_HORIZONTAL = 4 | 16,
-                PADDING = 32 | 64 | 128 | 256,
-                PADDING_VERTICAL = 32 | 128,
-                PADDING_HORIZONTAL = 64 | 256
-            }
-            enum APP_SECTION {
-                DOM_TRAVERSE = 2,
-                EXTENSION = 4,
-                RENDER = 8,
-                ALL = 14
-            }
-            enum NODE_RESOURCE {
-                BOX_STYLE = 2,
-                BOX_SPACING = 4,
-                FONT_STYLE = 8,
-                VALUE_STRING = 16,
-                IMAGE_SOURCE = 32,
-                ASSET = 8 | 16 | 32,
-                ALL = 126
-            }
-            enum NODE_PROCEDURE {
-                CONSTRAINT = 2,
-                LAYOUT = 4,
-                ALIGNMENT = 8,
-                ACCESSIBILITY = 16,
-                LOCALIZATION = 32,
-                CUSTOMIZATION = 64,
-                ALL = 126
+            const enum NODE_TEMPLATE {
+                XML = 1,
+                INCLUDE
             }
         }
     }

@@ -681,44 +681,44 @@ declare module "svg" {
         namespace constant {
             const enum INSTANCE_TYPE {
                 SVG_USE = 1,
-                SVG_CONTAINER = 2,
-                SVG_ELEMENT = 4,
-                SVG_ANIMATION = 8,
-                SVG = 2 | 16,
-                SVG_G = 2 | 32,
-                SVG_USE_G = 1 | 2 | 32 | 64,
-                SVG_USE_SYMBOL = 1 | 2 | 128,
-                SVG_PATTERN = 2 | 256,
-                SVG_SHAPE_PATTERN = 2 | 512,
-                SVG_USE_SHAPE_PATTERN = 1 | 2 | 512 | 1024,
-                SVG_SHAPE = 4 | 2048,
-                SVG_USE_SHAPE = 1 | 4 | 2048 | 4096,
-                SVG_IMAGE = 4 | 8192,
-                SVG_PATH = 4 | 16384,
-                SVG_ANIMATE = 8 | 32768,
-                SVG_ANIMATE_TRANSFORM = 8 | 32768 | 65536,
-                SVG_ANIMATE_MOTION = 8 | 32768 | 65536 | 131072
+                SVG_CONTAINER = 1 << 1,
+                SVG_ELEMENT = 1 << 2,
+                SVG_ANIMATION = 1 << 3,
+                SVG = SVG_CONTAINER | 1 << 4,
+                SVG_G = SVG_CONTAINER | 1 << 5,
+                SVG_USE_G = SVG_USE | SVG | 1 << 5 | 1 << 6,
+                SVG_USE_SYMBOL = SVG_CONTAINER | SVG_USE | 1 << 7,
+                SVG_PATTERN = SVG_CONTAINER | 1 << 8,
+                SVG_SHAPE_PATTERN = SVG_CONTAINER | 1 << 9,
+                SVG_USE_SHAPE_PATTERN = SVG_USE | SVG_SHAPE_PATTERN | 1 << 10,
+                SVG_SHAPE = SVG_ELEMENT | 1 << 11,
+                SVG_USE_SHAPE = SVG_USE | SVG_SHAPE | 1 << 12,
+                SVG_IMAGE = SVG_ELEMENT | 1 << 13,
+                SVG_PATH = SVG_ELEMENT | 1 << 14,
+                SVG_ANIMATE = SVG_ANIMATION | 1 << 15,
+                SVG_ANIMATE_TRANSFORM = SVG_ANIMATE | 1 << 16,
+                SVG_ANIMATE_MOTION = SVG_ANIMATE_TRANSFORM | 1 << 17
             }
             const enum SYNCHRONIZE_MODE {
-                FROMTO_ANIMATE = 2,
-                KEYTIME_ANIMATE = 4,
-                IGNORE_ANIMATE = 8,
-                FROMTO_TRANSFORM = 16,
-                KEYTIME_TRANSFORM = 32,
-                IGNORE_TRANSFORM = 64
+                FROMTO_ANIMATE = 1,
+                KEYTIME_ANIMATE = 1 << 1,
+                IGNORE_ANIMATE = 1 << 2,
+                FROMTO_TRANSFORM = 1 << 3,
+                KEYTIME_TRANSFORM = 1 << 4,
+                IGNORE_TRANSFORM = 1 << 5
             }
             const enum SYNCHRONIZE_STATE {
-                BACKWARDS = 2,
-                INTERRUPTED = 4,
-                RESUME = 8,
-                COMPLETE = 16,
-                EQUAL_TIME = 32,
-                INVALID = 64
+                BACKWARDS = 1,
+                INTERRUPTED = 1 << 1,
+                RESUME = 1 << 2,
+                COMPLETE = 1 << 3,
+                EQUAL_TIME = 1 << 4,
+                INVALID = 1 << 5
             }
             const enum FILL_MODE {
-                FREEZE = 2,
-                FORWARDS = 4,
-                BACKWARDS = 8
+                FREEZE = 1,
+                FORWARDS = 1 << 1,
+                BACKWARDS = 1 << 2
             }
             const enum REGION_UNIT {
                 USER_SPACE_ON_USE = 1,

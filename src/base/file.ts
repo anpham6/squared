@@ -95,7 +95,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
                         body: JSON.stringify(body)
                     }
                 )
-                .then(async (response: Response) => await response.json())
+                .then(async response => await response.json())
                 .then((result: ResultOfFileAction) => {
                     if (result) {
                         if (typeof options.callback === 'function') {
@@ -141,7 +141,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
                         const zipname = result.zipname;
                         if (zipname) {
                             fetch('/api/browser/download?filepath=' + encodeURIComponent(zipname))
-                                .then(async (download: Response) => File.downloadFile(await download.blob(), fromLastIndexOf(zipname, '/', '\\')));
+                                .then(async download => File.downloadFile(await download.blob(), fromLastIndexOf(zipname, '/', '\\')));
                         }
                         else if (result.system) {
                             (this.userSettings.showErrorMessages ? alert : console.log)(result.application + '\n\n' + result.system);

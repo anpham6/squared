@@ -111,7 +111,13 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     }
                     layout.retainAs(ordinal.children as T[]);
                 }
-                application.addLayoutTemplate(parent, ordinal, application.renderNode(layout));
+                const template = application.renderNode(layout);
+                if (template) {
+                    application.addLayoutTemplate(parent, ordinal, template);
+                }
+                else {
+                    return undefined;
+                }
             }
             else {
                 let top = 0,

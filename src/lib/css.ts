@@ -284,22 +284,22 @@ const trimSelector = (value: string) => /^\*(\s+\*){0,2}$/.test(value) ? '*' : v
 
 export const enum CSS_UNIT {
     NONE = 0,
-    LENGTH = 2,
-    PERCENT = 4,
-    TIME = 8,
-    ANGLE = 16,
-    INTEGER = 32,
-    DECIMAL = 64
+    LENGTH = 1,
+    PERCENT = 1 << 1,
+    TIME = 1 << 2,
+    ANGLE = 1 << 3,
+    INTEGER = 1 << 4,
+    DECIMAL = 1 << 5
 }
 
 export const enum CSS_TRAITS {
     NONE = 0,
-    CALC = 2,
-    SHORTHAND = 4,
-    LAYOUT = 8,
-    CONTAIN = 16,
-    COLOR = 32,
-    DEPRECATED = 64
+    CALC = 1,
+    SHORTHAND = 1 << 1,
+    LAYOUT = 1 << 2,
+    CONTAIN = 1 << 3,
+    COLOR = 1 << 4,
+    DEPRECATED = 1 << 5
 }
 
 export const CSS_PROPERTIES: CssProperties = {

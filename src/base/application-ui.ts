@@ -83,10 +83,7 @@ function checkPseudoDimension(styleMap: StringSafeMap, after: boolean, absolute:
     }
     if ((after || !parseFloat(styleMap.width)) && !parseFloat(styleMap.height)) {
         for (const attr in styleMap) {
-            if (/(padding|Width|Height)/.test(attr) && parseFloat(styleMap[attr]) > 0) {
-                return true;
-            }
-            else if (!absolute && attr.startsWith('margin') && parseFloat(styleMap[attr])) {
+            if (/(padding|Width|Height)/.test(attr) && parseFloat(styleMap[attr]) > 0 || !absolute && attr.startsWith('margin') && parseFloat(styleMap[attr])) {
                 return true;
             }
         }
@@ -189,7 +186,7 @@ const getCounterIncrementValue = (parent: HTMLElement, counterName: string, pseu
 const extractQuote = (value: string) => /^"(.+)"$/.exec(value)?.[1] || value;
 const isHorizontalAligned = (node: NodeUI) => !node.blockStatic && node.autoMargin.horizontal !== true && !(node.blockDimension && node.css('width') === '100%') && (!(node.plainText && node.multiline) || node.floating);
 const requirePadding = (node: NodeUI, depth?: number): boolean => node.textElement && (node.blockStatic || node.multiline || depth === 1);
-const getMapIndex = (value: number) => (value * -1) - 2;
+const getMapIndex = (value: number) => -(value + 2);
 
 export default abstract class ApplicationUI<T extends NodeUI> extends Application<T> implements squared.base.ApplicationUI<T> {
     public readonly session: squared.base.AppSessionUI<T> = {
@@ -203,13 +200,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public readonly controllerHandler!: ControllerUI<T>;
     public readonly resourceHandler!: ResourceUI<T>;
     public readonly extensionManager!: squared.base.ExtensionManager<T>;
-    public readonly fileHandler!: FileUI<T>;
+    public readonly fileHandler?: FileUI<T>;
     public abstract userSettings: UserSettingsUI;
 
     private readonly _layouts: LayoutAsset[] = [];
-    private readonly _controllerSettings!: ControllerSettingsUI;
-    private readonly _excluded!: Set<string>;
+    private readonly _controllerSettings: ControllerSettingsUI;
     private readonly _layoutFileExtension: RegExp;
+    private readonly _conditionExcluded: Set<string>;
 
     protected constructor(
         framework: number,
@@ -222,7 +219,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const localSettings = this.controllerHandler.localSettings;
         this._controllerSettings = localSettings;
         this._layoutFileExtension = new RegExp(`\\.${localSettings.layout.fileExtension}$`);
-        this._excluded = localSettings.unsupported.excluded;
+        this._conditionExcluded = localSettings.unsupported.excluded;
     }
 
     public finalize() {
@@ -332,7 +329,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     public conditionElement(element: HTMLElement, sessionId: string, cascadeAll?: boolean, pseudoElt?: string) {
-        if (!this._excluded.has(element.tagName)) {
+        if (!this._conditionExcluded.has(element.tagName)) {
             if (this.controllerHandler.visibleElement(element, sessionId, pseudoElt) || cascadeAll) {
                 return true;
             }
@@ -404,34 +401,31 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (layout.containerType !== 0) {
             const template = this.renderNode(layout);
             if (template) {
-                return this.addLayoutTemplate(template.parent || layout.parent, layout.node, template, layout.renderIndex);
+                this.addLayoutTemplate(template.parent || layout.parent, layout.node, template, layout.renderIndex);
+                return true;
             }
         }
         return false;
     }
 
-    public addLayoutTemplate(parent: T, node: T, template: Undef<NodeTemplate<T>>, index?: number) {
-        if (template) {
-            if (!node.renderExclude) {
-                if (node.renderParent) {
-                    const renderTemplates = safeNestedArray(parent as StandardMap, 'renderTemplates');
-                    if (index === undefined || !(index >= 0 && index < parent.renderChildren.length)) {
-                        parent.renderChildren.push(node);
-                        renderTemplates.push(template);
-                    }
-                    else {
-                        parent.renderChildren.splice(index, 0, node);
-                        renderTemplates.splice(index, 0, template);
-                    }
+    public addLayoutTemplate(parent: T, node: T, template: NodeTemplate<T>, index?: number) {
+        if (!node.renderExclude) {
+            if (node.renderParent) {
+                const renderTemplates = safeNestedArray(parent as StandardMap, 'renderTemplates');
+                if (index === undefined || !(index >= 0 && index < parent.renderChildren.length)) {
+                    parent.renderChildren.push(node);
+                    renderTemplates.push(template);
+                }
+                else {
+                    parent.renderChildren.splice(index, 0, node);
+                    renderTemplates.splice(index, 0, template);
                 }
             }
-            else {
-                node.hide({ remove: true });
-                node.excluded = true;
-            }
-            return true;
         }
-        return false;
+        else {
+            node.hide({ remove: true });
+            node.excluded = true;
+        }
     }
 
     public createNode(sessionId: string, options: CreateNodeUIOptions<T>) {
@@ -1056,7 +1050,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     if (result.renderAs && result.outputAs) {
                                         this.addLayoutTemplate(result.parentAs || parentY, result.renderAs, result.outputAs);
                                     }
-                                    parentY = result.parent || parentY;
+                                    if (result.parent) {
+                                        parentY = result.parent;
+                                    }
                                     if (result.subscribe) {
                                         ext.subscribers.add(nodeY);
                                     }
@@ -1075,7 +1071,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             const r = combined.length;
                             let j = 0;
                             while (j < r) {
-                                const ext = combined[j++];
+                                const ext = combined[j++] as ExtensionUI<T>;
                                 if (ext.is(nodeY)) {
                                     if (ext.condition(nodeY, parentY) && (!descendant || !descendant.includes(ext))) {
                                         const result = ext.processNode(nodeY, parentY);
@@ -1086,7 +1082,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             if (result.renderAs && result.outputAs) {
                                                 this.addLayoutTemplate(result.parentAs || parentY, result.renderAs, result.outputAs);
                                             }
-                                            parentY = result.parent || parentY;
+                                            if (result.parent) {
+                                                parentY = result.parent;
+                                            }
                                             if (result.include) {
                                                 safeNestedArray(nodeY as StandardMap, 'renderExtension').push(ext);
                                                 ext.subscribers.add(nodeY);
@@ -1095,7 +1093,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                 ext.subscribers.add(nodeY);
                                             }
                                             if (result.remove) {
-                                                const index = extensionsTraverse.indexOf(ext as ExtensionUI<T>);
+                                                const index = extensionsTraverse.indexOf(ext);
                                                 if (index !== -1) {
                                                     extensionsTraverse = extensionsTraverse.slice(0);
                                                     extensionsTraverse.splice(index, 1);
@@ -1717,6 +1715,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             if (current) {
                                                 cascadeCounterSibling(current);
                                             }
+                                            else {
+                                                break;
+                                            }
                                         }
                                         else {
                                             current = current.parentElement;
@@ -1725,7 +1726,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             }
                                             ascending = true;
                                         }
-                                        if (current && current.className !== '__squared.pseudo') {
+                                        if (current.className !== '__squared.pseudo') {
                                             const pesudoIncrement = getCounterIncrementValue(current, counterName, pseudoElt, sessionId);
                                             if (pesudoIncrement) {
                                                 incrementCounter(pesudoIncrement, true);
@@ -1823,14 +1824,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected createAssetOptions(options?: FileActionOptions) {
-        let assets = options?.assets;
-        if (assets) {
-            assets = this.layouts.concat(assets);
-        }
-        else {
-            assets = this.layouts;
-        }
-        return { ...options, assets };
+        return options ? { ...options, assets: options.assets ? this.layouts.concat(options.assets) : this.layouts } : { assets: this.layouts };
     }
 
     protected createLayoutControl(parent: T, node: T) {

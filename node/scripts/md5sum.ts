@@ -246,10 +246,10 @@ else if (host && data && browserName && snapshot) {
                 throw error;
             }
             else {
-                const items: PageRequest[] = [];
-                const failed: PageRequest[] = [];
                 (async () => {
                     try {
+                        const items: PageRequest[] = [];
+                        const failed: PageRequest[] = [];
                         const browser = await playwright[browserName!].launch({ executablePath });
                         const context = await browser.newContext({ viewport: { width, height } });
                         const tempDir = path.resolve(__dirname, snapshot!);
