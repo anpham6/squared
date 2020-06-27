@@ -2,7 +2,7 @@ import Extension from '../../extension';
 
 const { safeNestedArray } = squared.lib.util;
 
-export default class Brotli<T extends squared.base.NodeElement> extends Extension<T> {
+export default class Brotli<T extends squared.base.Node> extends Extension<T> {
     public readonly options: CompressOptions = {
         mimeTypes: ['text/css', 'text/javascript', 'text/plain', 'text/csv', 'text/vtt', 'application/json', 'application/javascript', 'application/ld+json', 'application/xml'],
         largerThan: 0,

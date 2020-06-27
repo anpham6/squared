@@ -1,9 +1,9 @@
 import * as squared from '../squared';
 
-type NodeElement = squared.base.NodeElement;
+type Node = squared.base.Node;
 
 declare namespace base {
-    class Application<T extends NodeElement> extends squared.base.Application<T> {
+    class Application<T extends Node> extends squared.base.Application<T> {
     }
 }
 

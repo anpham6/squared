@@ -75,7 +75,6 @@ declare namespace base {
         static setFlexDimension<T extends View>(node: T, dimension: DimensionAttr, percentWidth?: number): number;
         static availablePercent<T extends View>(nodes: T[], dimension: DimensionAttr, boxSize: number): number;
         static getControlName(containerType: number, api?: number): string;
-        tagName: string;
         api: number;
         readonly constraint: Constraint;
         readonly documentId: string;

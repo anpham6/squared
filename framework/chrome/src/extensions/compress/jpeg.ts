@@ -2,7 +2,7 @@ import Extension from '../../extension';
 
 const { safeNestedArray } = squared.lib.util;
 
-export default class Jpeg<T extends squared.base.NodeElement> extends Extension<T> {
+export default class Jpeg<T extends squared.base.Node> extends Extension<T> {
     public readonly options: CompressOptions = {
         mimeTypes: ['image/jpeg'],
         largerThan: 0,

@@ -1,7 +1,7 @@
 import Resource from './resource';
 
-type NodeElement = squared.base.NodeElement;
-type Extension = chrome.base.Extension<NodeElement>;
+type Node = squared.base.Node;
+type Extension = chrome.base.Extension<Node>;
 type BundleIndex = ObjectMap<ChromeAsset[]>;
 
 const { FILE } = squared.lib.regex;
@@ -76,7 +76,7 @@ function getExtensions(element: Null<HTMLElement>) {
     return [];
 }
 
-function processExtensions(this: chrome.base.File<NodeElement>, data: ChromeAsset, extensions: string[]) {
+function processExtensions(this: chrome.base.File<Node>, data: ChromeAsset, extensions: string[]) {
     const processed: Extension[] = [];
     for (const ext of this.application.extensions) {
         if (ext.processFile(data)) {
@@ -143,7 +143,7 @@ function sortBundle(a: ChromeAsset, b: ChromeAsset) {
 const getFileExt = (value: string) => value.includes('.') ? fromLastIndexOf(value, '.').toLowerCase() : '';
 const getDirectory = (path: string, start: number) => path.substring(start, path.lastIndexOf('/'));
 
-export default class File<T extends squared.base.NodeElement> extends squared.base.File<T> implements chrome.base.File<T> {
+export default class File<T extends squared.base.Node> extends squared.base.File<T> implements chrome.base.File<T> {
     public static parseUri(uri: string, options?: UriOptions): Undef<ChromeAsset> {
         let saveAs: Undef<string>,
             format: Undef<string>,

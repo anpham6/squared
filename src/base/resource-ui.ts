@@ -987,11 +987,15 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             }
                         }
                         else if (!/^[\s\n]+$/.test(value)) {
-                            value = value.replace(CHAR_LEADINGSPACE, previousSibling && (
-                                previousSibling.block ||
-                                previousSibling.lineBreak ||
-                                previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
-                                node.multiline && ResourceUI.hasLineBreak(node)) ? '' : STRING_SPACE
+                            value = value.replace(CHAR_LEADINGSPACE,
+                                previousSibling && (
+                                    previousSibling.block ||
+                                    previousSibling.lineBreak ||
+                                    previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
+                                    node.multiline && ResourceUI.hasLineBreak(node)
+                                )
+                                    ? ''
+                                    : STRING_SPACE
                             );
                             value = value.replace(CHAR_TRAILINGSPACE, node.display === 'table-cell' || node.lineBreakTrailing || node.blockStatic || nextSibling?.floating ? '' : STRING_SPACE);
                         }

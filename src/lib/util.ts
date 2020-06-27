@@ -865,9 +865,14 @@ export function searchObject(obj: StringMap, value: string | StringMap) {
         }
     }
     else {
-        const search = /^\*.+\*$/.test(value) ? (a: string) => a.includes(value.replace(/^\*/, '').replace(/\*$/, '')) :
-                        value.startsWith('*') ? (a: string) => a.endsWith(value.replace(/^\*/, '')) :
-                          value.endsWith('*') ? (a: string) => a.startsWith(value.replace(/\*$/, '')) : (a: string): boolean => a === value;
+        const search =
+            /^\*.+\*$/.test(value)
+                ? (a: string) => a.includes(value.replace(/^\*/, '').replace(/\*$/, ''))
+            : value.startsWith('*')
+                ? (a: string) => a.endsWith(value.replace(/^\*/, ''))
+            : value.endsWith('*')
+                ? (a: string) => a.startsWith(value.replace(/\*$/, ''))
+                : (a: string) => a === value;
         for (const i in obj) {
             if (search(i)) {
                 result.push([i, obj[i]]);

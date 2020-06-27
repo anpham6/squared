@@ -18,7 +18,7 @@ import SETTINGS from './settings';
 
 import * as constant from './lib/constant';
 
-type NodeElement = squared.base.NodeElement;
+type Node = squared.base.Node;
 type FileOptions = ChromeFileArchivingOptions | ChromeFileCopyingOptions;
 
 const { util, session } = squared.lib;
@@ -29,10 +29,10 @@ const { frameworkNotInstalled } = session;
 const framework = squared.base.lib.enumeration.APP_FRAMEWORK.CHROME;
 
 let initialized = false;
-let application: Application<NodeElement>;
-let controller: Controller<NodeElement>;
-let file: Undef<File<NodeElement>>;
-let elementMap: Map<Element, NodeElement>;
+let application: Application<Node>;
+let controller: Controller<Node>;
+let file: Undef<File<Node>>;
+let elementMap: Map<Element, Node>;
 
 function getCachedElement(element: HTMLElement, cache: boolean) {
     if (!cache) {
@@ -44,13 +44,13 @@ function getCachedElement(element: HTMLElement, cache: boolean) {
 
 function findElement(element: HTMLElement, cache: boolean) {
     const result = getCachedElement(element, cache);
-    return result ? Promise.resolve(result) : application.parseDocument(element) as Promise<NodeElement>;
+    return result ? Promise.resolve(result) : application.parseDocument(element) as Promise<Node>;
 }
 
 async function findElementAll(query: NodeListOf<Element>) {
     let incomplete = false;
     const length = query.length;
-    const result: NodeElement[] = new Array(length);
+    const result: Node[] = new Array(length);
     for (let i = 0; i < length; ++i) {
         const element = query[i] as HTMLElement;
         let item = elementMap.get(element);
@@ -58,7 +58,7 @@ async function findElementAll(query: NodeListOf<Element>) {
             result[i] = item;
         }
         else {
-            item = await application.parseDocument(element) as NodeElement;
+            item = await application.parseDocument(element) as Node;
             if (item) {
                 result[i] = item;
             }
@@ -68,7 +68,7 @@ async function findElementAll(query: NodeListOf<Element>) {
         }
     }
     if (incomplete) {
-        flatArray<NodeElement>(result);
+        flatArray<Node>(result);
     }
     return result;
 }
@@ -93,7 +93,7 @@ function createAssetsOptions(assets: ChromeAsset[], options?: FileOptions, direc
 
 const directoryNotProvided = () => Promise.reject('Directory not provided.');
 
-const appBase: chrome.ChromeFramework<NodeElement> = {
+const appBase: chrome.ChromeFramework<Node> = {
     base: {
         Application,
         Controller,
@@ -120,7 +120,7 @@ const appBase: chrome.ChromeFramework<NodeElement> = {
     },
     system: {
         getElementMap() {
-            return controller?.elementMap || new Map<Element, NodeElement>();
+            return controller?.elementMap || new Map<Element, Node>();
         },
         clearElementMap() {
             controller?.elementMap.clear();
@@ -191,8 +191,8 @@ const appBase: chrome.ChromeFramework<NodeElement> = {
     },
     create() {
         const EC = constant.EXT_CHROME;
-        application = new Application<NodeElement>(framework, squared.base.NodeElement, Controller, Resource, squared.base.ExtensionManager);
-        controller = application.controllerHandler as Controller<NodeElement>;
+        application = new Application<Node>(framework, squared.base.Node, Controller, Resource, squared.base.ExtensionManager);
+        controller = application.controllerHandler as Controller<Node>;
         file = new File();
         application.resourceHandler.fileHandler = file;
         elementMap = controller.elementMap;
@@ -249,7 +249,7 @@ const appBase: chrome.ChromeFramework<NodeElement> = {
                 if (!cache) {
                     elementMap.clear();
                 }
-                return promisify<NodeElement[]>(findElementAll)(query);
+                return promisify<Node[]>(findElementAll)(query);
             }
         }
         return Promise.resolve([]);
@@ -268,7 +268,7 @@ const appBase: chrome.ChromeFramework<NodeElement> = {
             const preloadImages = settings.preloadImages;
             settings.preloadImages = false;
             application.reset();
-            return application.parseDocument(document.body).then((response: NodeElement[]) => {
+            return application.parseDocument(document.body).then((response: Node[]) => {
                 file!.saveToArchive(filename || application.userSettings.outputArchiveName, options);
                 settings.preloadImages = preloadImages;
                 return response;

@@ -1,6 +1,6 @@
 const { setElementCache } = squared.lib.session;
 
-export default class Controller<T extends squared.base.NodeElement> extends squared.base.Controller<T> implements chrome.base.Controller<T> {
+export default class Controller<T extends squared.base.Node> extends squared.base.Controller<T> implements chrome.base.Controller<T> {
     private _elementMap = new Map<Element, T>();
 
     constructor(public readonly application: chrome.base.Application<T>) {

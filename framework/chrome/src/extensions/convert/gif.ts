@@ -1,6 +1,6 @@
 import Extension from '../../extension';
 
-export default class Gif<T extends squared.base.NodeElement> extends Extension<T> {
+export default class Gif<T extends squared.base.Node> extends Extension<T> {
     public readonly options: ConvertOptions = {
         mimeTypes: ['image/png', 'image/jpeg', 'image/bmp', 'image/tiff'],
         largerThan: 0,

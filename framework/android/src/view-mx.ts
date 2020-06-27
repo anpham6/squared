@@ -921,23 +921,18 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         };
 
         protected _namespaces: ObjectMap<StringMap> = { android: {}, app: {} };
-        protected _cached: AndroidCachedValueUI<T> = {};
         protected _containerType = 0;
         protected _controlName = '';
         protected _localSettings!: AndroidLocalSettingsUI;
         protected _documentParent?: T;
         protected _boxAdjustment = newBoxModel();
         protected _boxReset = newBoxModel();
+        protected _cached!: AndroidCachedValueUI<T>;
         protected _innerWrapped?: T;
 
         private _positioned = false;
         private _controlId?: string;
         private _labelFor?: T;
-
-        constructor(id = 0, sessionId?: string, element?: Element) {
-            super(id, sessionId, element);
-            this.init();
-        }
 
         public setControlType(controlName: string, containerType?: number) {
             this.controlName = controlName;

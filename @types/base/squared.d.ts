@@ -372,7 +372,6 @@ declare module "base" {
         queryMap?: Node[][];
         readonly id: number;
         readonly style: CSSStyleDeclaration;
-        init(): void;
         syncWith(sessionId?: string, cache?: boolean): boolean;
         saveAsInitial(): void;
         data(name: string, attr: string, value?: any, overwrite?: boolean): any;
@@ -676,10 +675,6 @@ declare module "base" {
         get outerMostWrapper(): NodeUI;
         get preserveWhiteSpace(): boolean;
         constructor(id: number, sessionId?: string, element?: Element);
-    }
-
-    class NodeElement extends Node {
-        constructor(id: number, sessionId: string, element: Element);
     }
 
     class NodeGroupUI extends NodeUI {}

@@ -765,7 +765,7 @@ function getInitialValue(this: T, attr: string, options?: CssInitialOptions) {
     return !this._preferInitial && this._styleMap[attr] || this.cssInitial(attr, options);
 }
 
-export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
+export default class Node extends squared.lib.base.Container<T> implements squared.base.Node {
     public static readonly BOX_POSITION = [
         'top',
         'right',
@@ -793,8 +793,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public readonly style: CSSStyleDeclaration;
 
-    public abstract queryMap?: T[][];
+    public queryMap?: T[][];
 
+    protected _cached: CachedValue<T> = {};
     protected _preferInitial = false;
     protected _styleMap!: StringMap;
     protected _cssStyle?: StringMap;
@@ -809,14 +810,13 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     protected readonly _element: Null<Element> = null;
 
-    protected abstract _cached: CachedValue<T>;
     private _data = {};
     private _inlineText = false;
     private _parent: Null<T> = null;
     private _dataset?: {};
     private _textStyle?: StringMap;
 
-    protected constructor(
+    constructor(
         public readonly id: number,
         public sessionId = '0',
         element?: Element)
@@ -825,23 +825,16 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (element) {
             this._element = element;
             this.style = !this.pseudoElement ? getStyle(element) : getStyle(element.parentElement, getPseudoElt(element, sessionId));
-        }
-        else {
-            this.style = {} as CSSStyleDeclaration;
-            this._styleMap = {};
-        }
-    }
-
-    public init() {
-        const element = this._element as HTMLElement;
-        if (element) {
-            const sessionId = this.sessionId;
             if (!this.syncWith(sessionId)) {
                 this._styleMap = {};
             }
             if (sessionId !== '0') {
                 setElementCache(element, 'node', sessionId, this);
             }
+        }
+        else {
+            this.style = {} as CSSStyleDeclaration;
+            this._styleMap = {};
         }
     }
 

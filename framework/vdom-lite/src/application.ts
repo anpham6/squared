@@ -1,7 +1,7 @@
 import Application from '../../../src/base/application';
-import NodeElement from '../../../src/base/node-element';
+import Node from '../../../src/base/node';
 
-export default class <T extends NodeElement> extends Application<T> implements vdom.base.Application<T> {
+export default class <T extends Node> extends Application<T> implements vdom.base.Application<T> {
     public userSettings!: UserSettings;
     public viewModel!: squared.base.AppViewModel;
     public readonly systemName = 'vdom';

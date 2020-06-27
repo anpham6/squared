@@ -1,15 +1,15 @@
 import Application from './application';
 import Controller from '../../../src/base/controller';
-import NodeElement from '../../../src/base/node-element';
+import Node from '../../../src/base/node';
 
 import SETTINGS from './settings';
 
 const framework = squared.base.lib.enumeration.APP_FRAMEWORK.VDOM;
 
 let initialized = false;
-let application: Application<NodeElement>;
+let application: Application<Node>;
 
-const appBase: squared.base.AppFramework<NodeElement> = {
+const appBase: squared.base.AppFramework<Node> = {
     base: {
         Application
     },
@@ -17,7 +17,7 @@ const appBase: squared.base.AppFramework<NodeElement> = {
     extensions: {},
     system: {},
     create() {
-        application = new Application<NodeElement>(framework, NodeElement, (Controller as unknown) as Constructor<NodeElement>);
+        application = new Application<Node>(framework, Node, (Controller as unknown) as Constructor<Node>);
         initialized = true;
         return {
             application,

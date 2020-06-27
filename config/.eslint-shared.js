@@ -77,6 +77,17 @@ module.exports = {
         "no-extra-semi": "error",
         "no-shadow": "error",
         "no-extra-boolean-cast": "error",
+        "no-loss-of-precision": "error",
+        "no-useless-backreference": "error",
+        "no-implicit-globals": "error",
+        "no-undef-init": "error",
+        "sort-imports": ["error", {
+            "ignoreDeclarationSort": true,
+            "memberSyntaxSortOrder": ["none", "single", "all", "multiple"]
+        }],
+        "prefer-spread": "error",
+        "prefer-const": "error",
+        "multiline-ternary": ["error", "always-multiline"],
         "no-var": "warn",
         "no-console": "warn",
         "one-var": "off",

@@ -2,14 +2,14 @@ import Application from './application';
 
 import SETTINGS from './settings';
 
-type NodeElement = squared.base.NodeElement;
+type Node = squared.base.Node;
 
 const framework = squared.base.lib.enumeration.APP_FRAMEWORK.VDOM;
 
 let initialized = false;
-let application: Application<NodeElement>;
+let application: Application<Node>;
 
-const appBase: squared.base.AppFramework<NodeElement> = {
+const appBase: squared.base.AppFramework<Node> = {
     base: {
         Application
     },
@@ -17,7 +17,7 @@ const appBase: squared.base.AppFramework<NodeElement> = {
     extensions: {},
     system: {},
     create() {
-        application = new Application<NodeElement>(framework, squared.base.NodeElement, squared.base.Controller);
+        application = new Application<Node>(framework, squared.base.Node, squared.base.Controller);
         initialized = true;
         return {
             application,
