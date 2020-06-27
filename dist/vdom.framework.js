@@ -1,4 +1,4 @@
-/* vdom-framework 1.12.2
+/* vdom-framework 1.12.3
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -38,7 +38,7 @@
         extensions: {},
         system: {},
         create() {
-            application = new Application(framework, squared.base.NodeElement, squared.base.Controller);
+            application = new Application(framework, squared.base.Node, squared.base.Controller);
             initialized = true;
             return {
                 application,

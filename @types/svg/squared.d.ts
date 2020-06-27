@@ -722,7 +722,7 @@ declare module "svg" {
             }
             const enum REGION_UNIT {
                 USER_SPACE_ON_USE = 1,
-                OBJECT_BOUNDING_BOX = 2
+                OBJECT_BOUNDING_BOX
             }
 
             const KEYSPLINE_NAME: {

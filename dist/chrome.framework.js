@@ -1,4 +1,4 @@
-/* chrome-framework 1.12.2
+/* chrome-framework 1.12.3
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -1351,7 +1351,7 @@
             const EC = EXT_CHROME;
             application = new Application(
                 framework,
-                squared.base.NodeElement,
+                squared.base.Node,
                 Controller,
                 Resource,
                 squared.base.ExtensionManager

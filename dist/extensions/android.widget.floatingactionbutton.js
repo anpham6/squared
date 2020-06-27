@@ -1,4 +1,4 @@
-/* android.widget.floatingactionbutton 1.12.2
+/* android.widget.floatingactionbutton 1.12.3
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -75,14 +75,14 @@ this.android.widget.floatingactionbutton = (function () {
                 } else if (node.hasPX('left')) {
                     node.mergeGravity('layout_gravity', node.localizeString('left'));
                     node.modifyBox(
-                        16 /* MARGIN_LEFT */,
-                        adjustAbsolutePaddingOffset(offsetParent, 256 /* PADDING_LEFT */, node.left)
+                        8 /* MARGIN_LEFT */,
+                        adjustAbsolutePaddingOffset(offsetParent, 128 /* PADDING_LEFT */, node.left)
                     );
                 } else if (node.hasPX('right')) {
                     node.mergeGravity('layout_gravity', node.localizeString('right'));
                     node.modifyBox(
-                        4 /* MARGIN_RIGHT */,
-                        adjustAbsolutePaddingOffset(offsetParent, 64 /* PADDING_RIGHT */, node.right)
+                        2 /* MARGIN_RIGHT */,
+                        adjustAbsolutePaddingOffset(offsetParent, 32 /* PADDING_RIGHT */, node.right)
                     );
                 }
                 if (node.autoMargin.topBottom) {
@@ -91,14 +91,14 @@ this.android.widget.floatingactionbutton = (function () {
                     node.app('layout_dodgeInsetEdges', 'top');
                     node.mergeGravity('layout_gravity', 'top');
                     node.modifyBox(
-                        2 /* MARGIN_TOP */,
-                        adjustAbsolutePaddingOffset(offsetParent, 32 /* PADDING_TOP */, node.top)
+                        1 /* MARGIN_TOP */,
+                        adjustAbsolutePaddingOffset(offsetParent, 16 /* PADDING_TOP */, node.top)
                     );
                 } else if (node.hasPX('bottom')) {
                     node.mergeGravity('layout_gravity', 'bottom');
                     node.modifyBox(
-                        8 /* MARGIN_BOTTOM */,
-                        adjustAbsolutePaddingOffset(offsetParent, 128 /* PADDING_BOTTOM */, node.bottom)
+                        4 /* MARGIN_BOTTOM */,
+                        adjustAbsolutePaddingOffset(offsetParent, 64 /* PADDING_BOTTOM */, node.bottom)
                     );
                 }
                 node.positioned = true;
@@ -109,20 +109,20 @@ this.android.widget.floatingactionbutton = (function () {
                 const verticalBias = getVerticalBias(node);
                 if (horizontalBias < 0.5) {
                     node.mergeGravity('layout_gravity', node.localizeString('left'));
-                    node.modifyBox(16 /* MARGIN_LEFT */, linear.left - box.left);
+                    node.modifyBox(8 /* MARGIN_LEFT */, linear.left - box.left);
                 } else if (horizontalBias > 0.5) {
                     node.mergeGravity('layout_gravity', node.localizeString('right'));
-                    node.modifyBox(4 /* MARGIN_RIGHT */, box.right - linear.right);
+                    node.modifyBox(2 /* MARGIN_RIGHT */, box.right - linear.right);
                 } else {
                     node.mergeGravity('layout_gravity', 'center_horizontal');
                 }
                 if (verticalBias < 0.5) {
                     node.app('layout_dodgeInsetEdges', 'top');
                     node.mergeGravity('layout_gravity', 'top');
-                    node.modifyBox(2 /* MARGIN_TOP */, linear.top - box.top);
+                    node.modifyBox(1 /* MARGIN_TOP */, linear.top - box.top);
                 } else if (verticalBias > 0.5) {
                     node.mergeGravity('layout_gravity', 'bottom');
-                    node.modifyBox(8 /* MARGIN_BOTTOM */, box.bottom - linear.bottom);
+                    node.modifyBox(4 /* MARGIN_BOTTOM */, box.bottom - linear.bottom);
                 } else {
                     node.mergeGravity('layout_gravity', 'center_vertical');
                 }

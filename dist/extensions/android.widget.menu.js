@@ -1,4 +1,4 @@
-/* android.widget.menu 1.12.2
+/* android.widget.menu 1.12.3
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -122,7 +122,7 @@ this.android.widget.menu = (function () {
             outerParent.actualParent = parent.actualParent;
             node.documentRoot = true;
             node.setControlType(NAVIGATION.MENU, CONTAINER_NODE.INLINE);
-            node.addAlign(4 /* AUTO_LAYOUT */);
+            node.addAlign(2 /* AUTO_LAYOUT */);
             node.exclude({ resource: NODE_RESOURCE.ALL, procedure: NODE_PROCEDURE.ALL });
             node.render(outerParent);
             node.cascade(item => {
@@ -176,10 +176,10 @@ this.android.widget.menu = (function () {
             }
             switch (controlName) {
                 case NAVIGATION.MENU:
-                    node.addAlign(4 /* AUTO_LAYOUT */);
+                    node.addAlign(2 /* AUTO_LAYOUT */);
                     break;
                 case NAVIGATION.GROUP:
-                    node.addAlign(4 /* AUTO_LAYOUT */);
+                    node.addAlign(2 /* AUTO_LAYOUT */);
                     parseDataSet(REGEXP_GROUP, element, options);
                     break;
                 case NAVIGATION.ITEM:

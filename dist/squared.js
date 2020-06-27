@@ -1,4 +1,4 @@
-/* squared 1.12.2
+/* squared 1.12.3
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -1239,34 +1239,34 @@
             return platform.includes(value.toLowerCase());
         }
         return (
-            (hasBit(value, 2 /* WINDOWS */) && platform.includes('win')) ||
-            (hasBit(value, 4 /* MAC */) && /(mac|iphone|ipad|ipod)/.test(platform))
+            (hasBit(value, 1 /* WINDOWS */) && platform.includes('win')) ||
+            (hasBit(value, 2 /* MAC */) && /(mac|iphone|ipad|ipod)/.test(platform))
         );
     }
     function isUserAgent(value) {
         const userAgent = navigator.userAgent;
-        let client = 2; /* CHROME */
+        let client = 1; /* CHROME */
         if (userAgent.includes('Safari/') && !userAgent.includes('Chrome/')) {
-            client = 4 /* SAFARI */;
+            client = 2 /* SAFARI */;
         } else if (userAgent.includes('Firefox/')) {
-            client = 8 /* FIREFOX */;
+            client = 4 /* FIREFOX */;
         } else if (userAgent.includes('Edg/')) {
-            client = 16 /* EDGE */;
+            client = 8 /* EDGE */;
         }
         if (typeof value === 'string') {
             const name = value.toUpperCase();
             value = 0;
             if (name.includes('CHROME')) {
-                value |= 2 /* CHROME */;
+                value |= 1 /* CHROME */;
             }
             if (name.includes('SAFARI')) {
-                value |= 4 /* SAFARI */;
+                value |= 2 /* SAFARI */;
             }
             if (name.includes('FIREFOX')) {
-                value |= 8 /* FIREFOX */;
+                value |= 4 /* FIREFOX */;
             }
             if (name.includes('EDGE')) {
-                value |= 16 /* EDGE */;
+                value |= 8 /* EDGE */;
             }
         }
         return hasBit(value, client);
@@ -2809,7 +2809,7 @@
                                 if (isCalc(rgb)) {
                                     if (hsl && (j === 1 || j === 2)) {
                                         const result = calculateVar(element, rgb, {
-                                            unitType: 4 /* PERCENT */,
+                                            unitType: 2 /* PERCENT */,
                                             supportPercent: true,
                                         });
                                         if (!isNaN(result)) {
@@ -2822,7 +2822,7 @@
                                         let result = calculateVar(
                                             element,
                                             rgb,
-                                            percent ? { unitType: 4 /* PERCENT */ } : { unitType: 64 /* DECIMAL */ }
+                                            percent ? { unitType: 2 /* PERCENT */ } : { unitType: 32 /* DECIMAL */ }
                                         );
                                         if (!isNaN(result)) {
                                             if (percent) {
@@ -2834,7 +2834,7 @@
                                         }
                                     } else {
                                         const result = calculateVar(element, rgb, {
-                                            unitType: 64 /* DECIMAL */,
+                                            unitType: 32 /* DECIMAL */,
                                             supportPercent: false,
                                         });
                                         if (!isNaN(result)) {
@@ -2983,19 +2983,19 @@
     const trimSelector = value => (/^\*(\s+\*){0,2}$/.test(value) ? '*' : value.replace(/^(\*\s+){1,2}/, ''));
     const CSS_PROPERTIES = {
         alignContent: {
-            trait: 16 /* CONTAIN */,
+            trait: 8 /* CONTAIN */,
             value: 'normal',
         },
         alignItems: {
-            trait: 16 /* CONTAIN */,
+            trait: 8 /* CONTAIN */,
             value: 'normal',
         },
         alignSelf: {
-            trait: 16 /* CONTAIN */,
+            trait: 8 /* CONTAIN */,
             value: 'auto',
         },
         animation: {
-            trait: 2 /* CALC */ | 4 /* SHORTHAND */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */,
             value: [
                 'animationDuration',
                 'animationTimingFunction',
@@ -3008,7 +3008,7 @@
             ],
         },
         animationDelay: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '0s',
         },
         animationDirection: {
@@ -3016,7 +3016,7 @@
             value: 'normal',
         },
         animationDuration: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '0s',
         },
         animationFillMode: {
@@ -3024,7 +3024,7 @@
             value: 'none',
         },
         animationIterationCount: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '1',
         },
         animationName: {
@@ -3044,7 +3044,7 @@
             value: 'visible',
         },
         background: {
-            trait: 2 /* CALC */ | 4 /* SHORTHAND */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */,
             value: [
                 'backgroundImage',
                 'backgroundPositionX',
@@ -3066,11 +3066,11 @@
             value: 'border-box',
         },
         backgroundColor: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: 'rgba(0, 0, 0, 0)',
         },
         backgroundImage: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: 'none',
         },
         backgroundOrigin: {
@@ -3078,15 +3078,15 @@
             value: 'padding-box',
         },
         backgroundPosition: {
-            trait: 2 /* CALC */ | 4 /* SHORTHAND */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */,
             value: ['backgroundPositionX', 'backgroundPositionY'],
         },
         backgroundPositionX: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '0%',
         },
         backgroundPositionY: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '0%',
         },
         backgroundRepeat: {
@@ -3094,11 +3094,11 @@
             value: 'repeat',
         },
         backgroundSize: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: 'auto',
         },
         border: {
-            trait: 2 /* CALC */ | 4 /* SHORTHAND */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */,
             value: [
                 'borderTopWidth',
                 'borderTopStyle',
@@ -3115,19 +3115,19 @@
             ],
         },
         borderBottom: {
-            trait: 2 /* CALC */ | 4 /* SHORTHAND */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */,
             value: ['borderBottomWidth', 'borderBottomStyle', 'borderBottomColor'],
         },
         borderBottomColor: {
-            trait: 2 /* CALC */ | 32 /* COLOR */,
+            trait: 1 /* CALC */ | 16 /* COLOR */,
             value: '',
         },
         borderBottomLeftRadius: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '0',
         },
         borderBottomRightRadius: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '0',
         },
         borderBottomStyle: {
@@ -3135,19 +3135,19 @@
             value: 'none',
         },
         borderBottomWidth: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: '0',
         },
         borderCollapse: {
-            trait: 8 /* LAYOUT */,
+            trait: 4 /* LAYOUT */,
             value: 'separate',
         },
         borderColor: {
-            trait: 2 /* CALC */ | 4 /* SHORTHAND */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */,
             value: ['borderTopColor', 'borderRightColor', 'borderBottomColor', 'borderLeftColor'],
         },
         borderImage: {
-            trait: 2 /* CALC */ | 4 /* SHORTHAND */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */,
             value: [
                 'borderImageSource',
                 'borderImageSlice',
@@ -3157,7 +3157,7 @@
             ],
         },
         borderImageOutset: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '0',
         },
         borderImageRepeat: {
@@ -3165,23 +3165,23 @@
             value: 'stretch',
         },
         borderImageSlice: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '100%',
         },
         borderImageSource: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: 'none',
         },
         borderImageWidth: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '1',
         },
         borderLeft: {
-            trait: 2 /* CALC */ | 4 /* SHORTHAND */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */,
             value: ['borderLeftWidth', 'borderLeftStyle', 'borderLeftColor'],
         },
         borderLeftColor: {
-            trait: 2 /* CALC */ | 32 /* COLOR */,
+            trait: 1 /* CALC */ | 16 /* COLOR */,
             value: '',
         },
         borderLeftStyle: {
@@ -3189,19 +3189,19 @@
             value: 'none',
         },
         borderLeftWidth: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: '0',
         },
         borderRadius: {
-            trait: 2 /* CALC */ | 4 /* SHORTHAND */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */,
             value: ['borderTopLeftRadius', 'borderTopRightRadius', 'borderBottomRightRadius', 'borderBottomLeftRadius'],
         },
         borderRight: {
-            trait: 2 /* CALC */ | 4 /* SHORTHAND */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */,
             value: ['borderRightWidth', 'borderRightStyle', 'borderRightColor'],
         },
         borderRightColor: {
-            trait: 2 /* CALC */ | 32 /* COLOR */,
+            trait: 1 /* CALC */ | 16 /* COLOR */,
             value: '',
         },
         borderRightStyle: {
@@ -3209,31 +3209,31 @@
             value: 'none',
         },
         borderRightWidth: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: '0',
         },
         borderSpacing: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '0',
         },
         borderStyle: {
-            trait: 4 /* SHORTHAND */,
+            trait: 2 /* SHORTHAND */,
             value: ['borderTopStyle', 'borderRightStyle', 'borderBottomStyle', 'borderLeftStyle'],
         },
         borderTop: {
-            trait: 2 /* CALC */ | 4 /* SHORTHAND */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */,
             value: ['borderTopWidth', 'borderTopStyle', 'borderTopColor'],
         },
         borderTopColor: {
-            trait: 2 /* CALC */ | 32 /* COLOR */,
+            trait: 1 /* CALC */ | 16 /* COLOR */,
             value: '',
         },
         borderTopLeftRadius: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '0',
         },
         borderTopRightRadius: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '0',
         },
         borderTopStyle: {
@@ -3241,23 +3241,23 @@
             value: 'none',
         },
         borderTopWidth: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: '0',
         },
         borderWidth: {
-            trait: 2 /* CALC */ | 4 /* SHORTHAND */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */,
             value: ['borderTopWidth', 'borderRightWidth', 'borderBottomWidth', 'borderLeftWidth'],
         },
         bottom: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'auto',
         },
         boxShadow: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'none',
         },
         boxSizing: {
-            trait: 8 /* LAYOUT */,
+            trait: 4 /* LAYOUT */,
             value: 'content-box',
         },
         captionSide: {
@@ -3265,23 +3265,23 @@
             value: 'top',
         },
         clear: {
-            trait: 8 /* LAYOUT */,
+            trait: 4 /* LAYOUT */,
             value: 'none',
         },
         clip: {
-            trait: 2 /* CALC */ | 64 /* DEPRECATED */,
+            trait: 1 /* CALC */ | 32 /* DEPRECATED */,
             value: 'clip',
         },
         clipPath: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: 'none',
         },
         color: {
-            trait: 2 /* CALC */ | 32 /* COLOR */,
+            trait: 1 /* CALC */ | 16 /* COLOR */,
             value: '',
         },
         columnCount: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: 'auto',
         },
         columnFill: {
@@ -3289,15 +3289,15 @@
             value: 'balance',
         },
         columnGap: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: 'normal',
         },
         columnRule: {
-            trait: 2 /* CALC */ | 4 /* SHORTHAND */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */,
             value: ['columRuleWidth', 'columnRuleStyle', 'columnRuleColor'],
         },
         columnRuleColor: {
-            trait: 2 /* CALC */ | 32 /* COLOR */,
+            trait: 1 /* CALC */ | 16 /* COLOR */,
             value: '',
         },
         columnRuleStyle: {
@@ -3305,7 +3305,7 @@
             value: 'none',
         },
         columnRuleWidth: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '0',
         },
         columnSpan: {
@@ -3313,11 +3313,11 @@
             value: 'none',
         },
         columnWidth: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: 'auto',
         },
         columns: {
-            trait: 2 /* CALC */ | 4 /* SHORTHAND */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */,
             value: ['columnCount', 'columnWidth'],
         },
         content: {
@@ -3325,11 +3325,11 @@
             value: 'normal',
         },
         counterIncrement: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: 'none',
         },
         counterReset: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: 'none',
         },
         cursor: {
@@ -3337,11 +3337,11 @@
             value: 'auto',
         },
         direction: {
-            trait: 8 /* LAYOUT */,
+            trait: 4 /* LAYOUT */,
             value: 'ltr',
         },
         display: {
-            trait: 8 /* LAYOUT */,
+            trait: 4 /* LAYOUT */,
             value: 'inline',
         },
         emptyCells: {
@@ -3349,103 +3349,103 @@
             value: 'show',
         },
         flex: {
-            trait: 2 /* CALC */ | 4 /* SHORTHAND */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */,
             value: ['flexGrow', 'flexShrink', 'flexBasis'],
         },
         flexBasis: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'auto',
         },
         flexDirection: {
-            trait: 8 /* LAYOUT */,
+            trait: 4 /* LAYOUT */,
             value: 'row',
         },
         flexFlow: {
-            trait: 4 /* SHORTHAND */ | 8 /* LAYOUT */,
+            trait: 2 /* SHORTHAND */ | 4 /* LAYOUT */,
             value: ['flexDirection', 'flexWrap'],
         },
         flexGrow: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: '0',
         },
         flexShrink: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: '1',
         },
         flexWrap: {
-            trait: 8 /* LAYOUT */,
+            trait: 4 /* LAYOUT */,
             value: 'nowrap',
         },
         float: {
-            trait: 8 /* LAYOUT */,
+            trait: 4 /* LAYOUT */,
             value: 'none',
         },
         font: {
-            trait: 2 /* CALC */ | 4 /* SHORTHAND */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */,
             value: ['fontStyle', 'fontVariant', 'fontWeight', 'fontStretch', 'fontSize', 'lineHeight', 'fontFamily'],
         },
         fontFamily: {
-            trait: 8 /* LAYOUT */,
+            trait: 4 /* LAYOUT */,
             value: '',
         },
         fontFeatureSettings: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'normal',
         },
         fontKerning: {
-            trait: 8 /* LAYOUT */,
+            trait: 4 /* LAYOUT */,
             value: 'auto',
         },
         fontSize: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'medium',
         },
         fontSizeAdjust: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'none',
         },
         fontStretch: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'normal',
         },
         fontStyle: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'normal',
         },
         fontVariant: {
-            trait: 2 /* CALC */ | 4 /* SHORTHAND */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */,
             value: ['fontVariantCaps', 'fontVariantLigatures', 'fontVariantNumeric', 'fontVariantEastAsian'],
         },
         fontVariantCaps: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'normal',
         },
         fontVariantEastAsian: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'normal',
         },
         fontVariantLigatures: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'normal',
         },
         fontVariantNumeric: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'normal',
         },
         fontVariationSettings: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'normal',
         },
         fontWeight: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'normal',
         },
         gap: {
-            trait: 2 /* CALC */ | 4 /* SHORTHAND */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */,
             value: ['rowGap', 'columnGap'],
         },
         grid: {
-            trait: 2 /* CALC */ | 4 /* SHORTHAND */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */,
             value: [
                 'gridTemplateRows',
                 'gridAutoColumns',
@@ -3458,155 +3458,155 @@
             ],
         },
         gridArea: {
-            trait: 2 /* CALC */ | 4 /* SHORTHAND */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */,
             value: ['gridRowStart', 'gridColumnStart', 'gridRowEnd', 'gridColumnEnd'],
         },
         gridAutoColumns: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'auto',
         },
         gridAutoFlow: {
-            trait: 8 /* LAYOUT */,
+            trait: 4 /* LAYOUT */,
             value: 'row',
         },
         gridAutoRows: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'auto',
         },
         gridColumn: {
-            trait: 2 /* CALC */ | 4 /* SHORTHAND */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */,
             value: ['gridColumnStart', 'gridColumnEnd'],
         },
         gridColumnEnd: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'auto',
         },
         gridColumnGap: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'normal',
         },
         gridColumnStart: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'auto',
         },
         gridGap: {
-            trait: 2 /* CALC */ | 4 /* SHORTHAND */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */,
             value: ['gridRowGap', 'gridColumnGap'],
         },
         gridRow: {
-            trait: 2 /* CALC */ | 4 /* SHORTHAND */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */,
             value: ['gridRowStart', 'gridRowEnd'],
         },
         gridRowEnd: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'auto',
         },
         gridRowGap: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'normal',
         },
         gridRowStart: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'auto',
         },
         gridTemplate: {
-            trait: 2 /* CALC */ | 4 /* SHORTHAND */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */,
             value: ['gridTemplateRows', 'gridTemplateColumns', 'gridTemplateAreas'],
         },
         gridTemplateAreas: {
-            trait: 8 /* LAYOUT */,
+            trait: 4 /* LAYOUT */,
             value: 'none',
         },
         gridTemplateColumns: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'none',
         },
         gridTemplateRows: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'none',
         },
         height: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'auto',
         },
         justifyContent: {
-            trait: 16 /* CONTAIN */,
+            trait: 8 /* CONTAIN */,
             value: 'normal',
         },
         justifyIems: {
-            trait: 16 /* CONTAIN */,
+            trait: 8 /* CONTAIN */,
             value: 'normal',
         },
         justifySelf: {
-            trait: 16 /* CONTAIN */,
+            trait: 8 /* CONTAIN */,
             value: 'auto',
         },
         left: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'auto',
         },
         letterSpacing: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'normal',
         },
         lineHeight: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'normal',
         },
         listStyle: {
-            trait: 4 /* SHORTHAND */ | 8 /* LAYOUT */,
+            trait: 2 /* SHORTHAND */ | 4 /* LAYOUT */,
             value: ['listStyleType', 'listStylePosition', 'listStyleImage'],
         },
         listStyleImage: {
-            trait: 8 /* LAYOUT */,
+            trait: 4 /* LAYOUT */,
             value: 'none',
         },
         listStylePosition: {
-            trait: 8 /* LAYOUT */,
+            trait: 4 /* LAYOUT */,
             value: 'outside',
         },
         listStyleType: {
-            trait: 8 /* LAYOUT */,
+            trait: 4 /* LAYOUT */,
             value: 'disc',
         },
         margin: {
-            trait: 2 /* CALC */ | 4 /* SHORTHAND */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */,
             value: ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'],
         },
         marginBottom: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: '0',
         },
         marginLeft: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: '0',
         },
         marginRight: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: '0',
         },
         marginTop: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: '0',
         },
         maxHeight: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'none',
         },
         maxWidth: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'none',
         },
         minHeight: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: '0',
         },
         minWidth: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: '0',
         },
         offset: {
-            trait: 2 /* CALC */ | 4 /* SHORTHAND */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */,
             value: ['offsetPath', 'offsetDistance', 'offsetRotate', 'offsetAnchor'],
         },
         offsetPath: {
@@ -3614,35 +3614,35 @@
             value: 'none',
         },
         offsetDistance: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '0',
         },
         offsetRotate: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: 'auto 0deg',
         },
         offsetAnchor: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: 'auto',
         },
         opacity: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '1',
         },
         order: {
-            trait: 2 /* CALC */ | 4 /* SHORTHAND */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */,
             value: '0',
         },
         outline: {
-            trait: 2 /* CALC */ | 4 /* SHORTHAND */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */,
             value: ['outlineWidth', 'outlineStyle', 'outlineColor'],
         },
         outlineColor: {
-            trait: 2 /* CALC */ | 32 /* COLOR */,
+            trait: 1 /* CALC */ | 16 /* COLOR */,
             value: '',
         },
         outlineOffset: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '0',
         },
         outlineStyle: {
@@ -3650,39 +3650,39 @@
             value: 'none',
         },
         outlineWidth: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '0',
         },
         overflow: {
-            trait: 4 /* SHORTHAND */ | 8 /* LAYOUT */,
+            trait: 2 /* SHORTHAND */ | 4 /* LAYOUT */,
             value: ['overflowX', 'overflowY'],
         },
         overflowX: {
-            trait: 8 /* LAYOUT */,
+            trait: 4 /* LAYOUT */,
             value: 'visible',
         },
         overflowY: {
-            trait: 8 /* LAYOUT */,
+            trait: 4 /* LAYOUT */,
             value: 'visible',
         },
         padding: {
-            trait: 2 /* CALC */ | 4 /* SHORTHAND */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */,
             value: ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'],
         },
         paddingBottom: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: '0',
         },
         paddingLeft: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: '0',
         },
         paddingRight: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: '0',
         },
         paddingTop: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: '0',
         },
         pageBreakAfter: {
@@ -3698,95 +3698,95 @@
             value: 'auto',
         },
         perspective: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: 'none',
         },
         perspectiveOrigin: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '50% 50%',
         },
         placeContent: {
-            trait: 16 /* CONTAIN */,
+            trait: 8 /* CONTAIN */,
             value: ['alignContent', 'justifyContent'],
         },
         placeItems: {
-            trait: 4 /* SHORTHAND */ | 16 /* CONTAIN */,
+            trait: 2 /* SHORTHAND */ | 8 /* CONTAIN */,
             value: ['alignItems', 'justifyItems'],
         },
         placeSelf: {
-            trait: 4 /* SHORTHAND */ | 16 /* CONTAIN */,
+            trait: 2 /* SHORTHAND */ | 8 /* CONTAIN */,
             value: ['alignSelf', 'justifySelf'],
         },
         position: {
-            trait: 8 /* LAYOUT */,
+            trait: 4 /* LAYOUT */,
             value: 'static',
         },
         quotes: {
-            trait: 8 /* LAYOUT */,
+            trait: 4 /* LAYOUT */,
             value: 'none',
         },
         resize: {
-            trait: 8 /* LAYOUT */,
+            trait: 4 /* LAYOUT */,
             value: 'none',
         },
         right: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: '0',
         },
         rowGap: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'normal',
         },
         scrollMargin: {
-            trait: 2 /* CALC */ | 4 /* SHORTHAND */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */,
             value: ['scrollMarginTop', 'scrollMarginRight', 'scrollMarginBottom', 'scrollMarginLeft'],
         },
         scrollMarginBottom: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: '0',
         },
         scrollMarginLeft: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: '0',
         },
         scrollMarginRight: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: '0',
         },
         scrollMarginTop: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: '0',
         },
         scrollPadding: {
-            trait: 2 /* CALC */ | 4 /* SHORTHAND */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */,
             value: ['scrollPaddingTop', 'scrollPaddingRight', 'scrollPaddingBottom', 'scrollPaddingLeft'],
         },
         scrollPaddingBottom: {
-            trait: 8 /* LAYOUT */,
+            trait: 4 /* LAYOUT */,
             value: '0',
         },
         scrollPaddingLeft: {
-            trait: 8 /* LAYOUT */,
+            trait: 4 /* LAYOUT */,
             value: '0',
         },
         scrollPaddingRight: {
-            trait: 8 /* LAYOUT */,
+            trait: 4 /* LAYOUT */,
             value: '0',
         },
         scrollPaddingTop: {
-            trait: 8 /* LAYOUT */,
+            trait: 4 /* LAYOUT */,
             value: '0',
         },
         shapeOutside: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: 'none',
         },
         tabSize: {
-            trait: 8 /* LAYOUT */,
+            trait: 4 /* LAYOUT */,
             value: '8',
         },
         tableLayout: {
-            trait: 8 /* LAYOUT */,
+            trait: 4 /* LAYOUT */,
             value: 'auto',
         },
         textAlign: {
@@ -3798,11 +3798,11 @@
             value: 'auto',
         },
         textDecoration: {
-            trait: 4 /* SHORTHAND */,
+            trait: 2 /* SHORTHAND */,
             value: ['textDecorationLine', 'textDecorationStyle', 'textDecorationColor'],
         },
         textDecorationColor: {
-            trait: 2 /* CALC */ | 32 /* COLOR */,
+            trait: 1 /* CALC */ | 16 /* COLOR */,
             value: '',
         },
         textDecorationLine: {
@@ -3814,7 +3814,7 @@
             value: 'solid',
         },
         textIndent: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: '0',
         },
         textJustify: {
@@ -3826,23 +3826,23 @@
             value: 'clip',
         },
         textShadow: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: 'none',
         },
         textTransform: {
-            trait: 8 /* LAYOUT */,
+            trait: 4 /* LAYOUT */,
             value: 'none',
         },
         top: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: '0',
         },
         transform: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: 'none',
         },
         transformOrigin: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '50% 50% 0',
         },
         transformStyle: {
@@ -3850,15 +3850,15 @@
             value: 'flat',
         },
         transition: {
-            trait: 2 /* CALC */ | 4 /* SHORTHAND */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */,
             value: ['transitionProperty', 'transitionDuration', 'transitionTimingFunction', 'transitionDelay'],
         },
         transitionDelay: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '0s',
         },
         transitionDuration: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '0s',
         },
         transitionProperty: {
@@ -3866,43 +3866,43 @@
             value: 'all',
         },
         transitionTimingFunction: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: 'ease',
         },
         unicodeBidi: {
-            trait: 8 /* LAYOUT */,
+            trait: 4 /* LAYOUT */,
             value: 'normal',
         },
         verticalAlign: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'baseline',
         },
         visibility: {
-            trait: 8 /* LAYOUT */,
+            trait: 4 /* LAYOUT */,
             value: 'visible',
         },
         whiteSpace: {
-            trait: 8 /* LAYOUT */,
+            trait: 4 /* LAYOUT */,
             value: 'normal',
         },
         width: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'auto',
         },
         wordBreak: {
-            trait: 8 /* LAYOUT */,
+            trait: 4 /* LAYOUT */,
             value: 'normal',
         },
         wordSpacing: {
-            trait: 2 /* CALC */ | 8 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'normal',
         },
         wordWrap: {
-            trait: 8 /* LAYOUT */,
+            trait: 4 /* LAYOUT */,
             value: 'normal',
         },
         zIndex: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: 'auto',
         },
     };
@@ -3912,19 +3912,19 @@
             value: 'nonzero',
         },
         cx: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '0',
         },
         cy: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '0',
         },
         fill: {
-            trait: 2 /* CALC */ | 32 /* COLOR */,
+            trait: 1 /* CALC */ | 16 /* COLOR */,
             value: 'black',
         },
         fillOpacity: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '1',
         },
         fillRule: {
@@ -3932,15 +3932,15 @@
             value: 'nonzero',
         },
         stroke: {
-            trait: 2 /* CALC */ | 32 /* COLOR */,
+            trait: 1 /* CALC */ | 16 /* COLOR */,
             value: 'none',
         },
         strokeDasharray: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: 'none',
         },
         strokeDashoffset: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '0',
         },
         strokeLinecap: {
@@ -3952,51 +3952,51 @@
             value: 'miter',
         },
         strokeMiterlimit: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '4',
         },
         strokeOpacity: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '1',
         },
         strokeWidth: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '1',
         },
         r: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '0',
         },
         rx: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '0',
         },
         ry: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '0',
         },
         x: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '0',
         },
         x1: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '0',
         },
         x2: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '0',
         },
         y: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '0',
         },
         y1: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '0',
         },
         y2: {
-            trait: 2 /* CALC */,
+            trait: 1 /* CALC */,
             value: '0',
         },
     };
@@ -4451,18 +4451,18 @@
                 return calculateVarAsString(element, value, { min: 0, supportPercent: false });
             case 'gridAutoColumns':
             case 'gridTemplateColumns':
-                return calculateGeneric(element, value, 32 /* INTEGER */, 1, boundingBox);
+                return calculateGeneric(element, value, 16 /* INTEGER */, 1, boundingBox);
             case 'gridAutoRows':
             case 'gridTemplateRows':
-                return calculateGeneric(element, value, 32 /* INTEGER */, 1, boundingBox, 'height');
+                return calculateGeneric(element, value, 16 /* INTEGER */, 1, boundingBox, 'height');
             case 'zIndex':
-                return formatDecimal(calculateVar(element, value, { unitType: 32 /* INTEGER */ }));
+                return formatDecimal(calculateVar(element, value, { unitType: 16 /* INTEGER */ }));
             case 'tabSize':
-                return formatDecimal(calculateVar(element, value, { unitType: 32 /* INTEGER */, min: 0 }));
+                return formatDecimal(calculateVar(element, value, { unitType: 16 /* INTEGER */, min: 0 }));
             case 'columnCount':
             case 'fontWeight':
             case 'widows':
-                return formatDecimal(calculateVar(element, value, { unitType: 32 /* INTEGER */, min: 1 }));
+                return formatDecimal(calculateVar(element, value, { unitType: 16 /* INTEGER */, min: 1 }));
             case 'gridRow':
             case 'gridRowEnd':
             case 'gridRowStart':
@@ -4471,32 +4471,32 @@
             case 'gridColumnStart':
             case 'counterIncrement':
             case 'counterReset':
-                return calculateVarAsString(element, value, { unitType: 32 /* INTEGER */ });
+                return calculateVarAsString(element, value, { unitType: 16 /* INTEGER */ });
             case 'gridArea':
-                return calculateVarAsString(element, value, { unitType: 32 /* INTEGER */, min: 1 });
+                return calculateVarAsString(element, value, { unitType: 16 /* INTEGER */, min: 1 });
             case 'flexGrow':
             case 'flexShrink':
-                return formatDecimal(calculateVar(element, value, { unitType: 64 /* DECIMAL */, min: 0 }));
+                return formatDecimal(calculateVar(element, value, { unitType: 32 /* DECIMAL */, min: 0 }));
             case 'animationIterationCount':
             case 'fontSizeAdjust':
                 return formatDecimal(
-                    calculateVar(element, value, { unitType: 64 /* DECIMAL */, min: 0, supportPercent: false })
+                    calculateVar(element, value, { unitType: 32 /* DECIMAL */, min: 0, supportPercent: false })
                 );
             case 'opacity':
             case 'shapeImageThreshold': {
                 const percent = value.includes('%');
-                const result = calculateVar(element, value, { unitType: percent ? 4 /* PERCENT */ : 64 /* DECIMAL */ });
+                const result = calculateVar(element, value, { unitType: percent ? 2 /* PERCENT */ : 32 /* DECIMAL */ });
                 return !isNaN(result) ? clamp(result / (percent ? 100 : 1)).toString() : '';
             }
             case 'fontStretch':
                 return calculateVarAsString(element, value, {
-                    unitType: 4 /* PERCENT */,
+                    unitType: 2 /* PERCENT */,
                     min: 0,
                     supportPercent: true,
                 });
             case 'fontStyle':
             case 'offsetRotate':
-                return calculateVarAsString(element, value, { unitType: 16 /* ANGLE */, supportPercent: false });
+                return calculateVarAsString(element, value, { unitType: 8 /* ANGLE */, supportPercent: false });
             case 'offsetAnchor':
             case 'transformOrigin':
                 return calculatePosition(element, value, boundingBox);
@@ -4514,7 +4514,7 @@
                                 case 'matrix':
                                 case 'matrix3d':
                                     calc = calculateVarAsString(element, seg, {
-                                        unitType: 64 /* DECIMAL */,
+                                        unitType: 32 /* DECIMAL */,
                                         supportPercent: false,
                                     });
                                     break;
@@ -4522,7 +4522,7 @@
                                 case 'scaleY':
                                 case 'scaleZ': {
                                     const result = calculateVar(element, seg, {
-                                        unitType: 64 /* DECIMAL */,
+                                        unitType: 32 /* DECIMAL */,
                                         min: 0,
                                         supportPercent: false,
                                     });
@@ -4534,7 +4534,7 @@
                                 case 'scale':
                                 case 'scale3d':
                                     calc = calculateVarAsString(element, seg, {
-                                        unitType: 64 /* DECIMAL */,
+                                        unitType: 32 /* DECIMAL */,
                                         min: 0,
                                         supportPercent: false,
                                     });
@@ -4564,7 +4564,7 @@
                                 case 'skew':
                                 case 'rotate':
                                     calc = calculateVarAsString(element, seg, {
-                                        unitType: 16 /* ANGLE */,
+                                        unitType: 8 /* ANGLE */,
                                         supportPercent: false,
                                     });
                                     break;
@@ -4574,7 +4574,7 @@
                                 case 'rotateY':
                                 case 'rotateZ': {
                                     const result = calculateVar(element, seg, {
-                                        unitType: 16 /* ANGLE */,
+                                        unitType: 8 /* ANGLE */,
                                         supportPercent: false,
                                     });
                                     if (!isNaN(result)) {
@@ -4591,7 +4591,7 @@
                                             let rotate = component[j];
                                             if (isCalc(rotate)) {
                                                 const result = calculateVar(element, rotate, {
-                                                    unitType: j === 3 ? 16 /* ANGLE */ : 64 /* DECIMAL */,
+                                                    unitType: j === 3 ? 8 /* ANGLE */ : 32 /* DECIMAL */,
                                                     supportPercent: false,
                                                 });
                                                 if (!isNaN(result)) {
@@ -4686,7 +4686,7 @@
             case 'transitionDelay':
             case 'transitionDuration':
                 return calculateVarAsString(element, value, {
-                    unitType: 8 /* TIME */,
+                    unitType: 4 /* TIME */,
                     min: 0,
                     precision: 0,
                     separator: ',',
@@ -4697,13 +4697,13 @@
             case 'fontVariantLigatures':
             case 'fontVariantNumeric':
             case 'fontVariationSettings':
-                return calculateVarAsString(element, value, { unitType: 32 /* INTEGER */, min: 0, separator: ',' });
+                return calculateVarAsString(element, value, { unitType: 16 /* INTEGER */, min: 0, separator: ',' });
             case 'columns':
-                return calculateGeneric(element, value, 32 /* INTEGER */, 1, boundingBox);
+                return calculateGeneric(element, value, 16 /* INTEGER */, 1, boundingBox);
             case 'borderImageSlice':
             case 'flex':
             case 'font':
-                return calculateGeneric(element, value, 64 /* DECIMAL */, 0, boundingBox);
+                return calculateGeneric(element, value, 32 /* DECIMAL */, 0, boundingBox);
             case 'backgroundPosition': {
                 const result = [];
                 for (const position of value.split(CHAR_SEPARATOR)) {
@@ -4768,7 +4768,7 @@
                                 const q = cubic.length;
                                 if (q === 4) {
                                     calc = '';
-                                    const options = { unitType: 64 /* DECIMAL */, supportPercent: false };
+                                    const options = { unitType: 32 /* DECIMAL */, supportPercent: false };
                                     for (let j = 0; j < q; ++j) {
                                         let bezier = cubic[j];
                                         if (isCalc(bezier)) {
@@ -4790,7 +4790,7 @@
                                     }
                                 }
                             } else if (prefix.endsWith('steps')) {
-                                calc = calculateVarAsString(element, seg, { unitType: 32 /* INTEGER */, min: 1 });
+                                calc = calculateVarAsString(element, seg, { unitType: 16 /* INTEGER */, min: 1 });
                             }
                             if (calc) {
                                 timingFunction[i] = `(${calc})`;
@@ -5295,22 +5295,22 @@
         value = value.trim();
         let unit;
         switch (unitType) {
-            case 32 /* INTEGER */:
-            case 64 /* DECIMAL */:
+            case 16 /* INTEGER */:
+            case 32 /* DECIMAL */:
                 unit = '';
                 break;
-            case 4 /* PERCENT */:
+            case 2 /* PERCENT */:
                 unit = '%';
                 break;
-            case 8 /* TIME */:
+            case 4 /* TIME */:
                 unit = 'ms';
                 break;
-            case 16 /* ANGLE */:
+            case 8 /* ANGLE */:
                 unit = 'deg';
                 break;
             default:
                 unit = 'px';
-                unitType = 2 /* LENGTH */;
+                unitType = 1 /* LENGTH */;
                 break;
         }
         const result = [];
@@ -5349,7 +5349,7 @@
                                 if (
                                     output !== '' &&
                                     (!checkUnit ||
-                                        (unitType === 2 /* LENGTH */ && (isLength(output, true) || output === 'auto')))
+                                        (unitType === 1 /* LENGTH */ && (isLength(output, true) || output === 'auto')))
                                 ) {
                                     ++j;
                                 }
@@ -5390,7 +5390,7 @@
         const output = parseVar(element, value);
         if (output) {
             if (value.includes('%')) {
-                if (options.supportPercent === false || options.unitType === 32 /* INTEGER */) {
+                if (options.supportPercent === false || options.unitType === 16 /* INTEGER */) {
                     return NaN;
                 } else if (options.boundingSize === undefined) {
                     const { dimension, boundingBox } = options;
@@ -5451,7 +5451,7 @@
                 return NaN;
             }
             if (
-                (!options.unitType || options.unitType === 2) /* LENGTH */ &&
+                (!options.unitType || options.unitType === 1) /* LENGTH */ &&
                 /\d(em|ch)/.test(value) &&
                 options.fontSize === undefined
             ) {
@@ -5936,7 +5936,7 @@
     }
     function insertStyleSheetRule(value, index = 0) {
         const style = document.createElement('style');
-        if (isUserAgent(4 /* SAFARI */)) {
+        if (isUserAgent(2 /* SAFARI */)) {
             style.appendChild(document.createTextNode(''));
         }
         document.head.appendChild(style);
@@ -6017,8 +6017,8 @@
                                     const match = /\s*{(\d+)}\s*/.exec(partial);
                                     if (match) {
                                         switch (unitType) {
-                                            case 32 /* INTEGER */:
-                                            case 64 /* DECIMAL */:
+                                            case 16 /* INTEGER */:
+                                            case 32 /* DECIMAL */:
                                                 break;
                                             default:
                                                 if (!checkCalculateNumber(operand, operator)) {
@@ -6032,7 +6032,7 @@
                                         found = true;
                                     } else {
                                         switch (unitType) {
-                                            case 4 /* PERCENT */:
+                                            case 2 /* PERCENT */:
                                                 if (isNumber(partial)) {
                                                     if (!checkCalculateOperator(operand, operator)) {
                                                         return NaN;
@@ -6048,7 +6048,7 @@
                                                     return NaN;
                                                 }
                                                 break;
-                                            case 8 /* TIME */:
+                                            case 4 /* TIME */:
                                                 if (isNumber(partial)) {
                                                     if (!checkCalculateOperator(operand, operator)) {
                                                         return NaN;
@@ -6064,7 +6064,7 @@
                                                     return NaN;
                                                 }
                                                 break;
-                                            case 16 /* ANGLE */:
+                                            case 8 /* ANGLE */:
                                                 if (isNumber(partial)) {
                                                     if (!checkCalculateOperator(operand, operator)) {
                                                         return NaN;
@@ -6085,7 +6085,7 @@
                                                     return NaN;
                                                 }
                                                 break;
-                                            case 32 /* INTEGER */:
+                                            case 16 /* INTEGER */:
                                                 if (/^\s*-?\d+\s*$/.test(partial)) {
                                                     seg.push(parseInt(partial));
                                                     found = true;
@@ -6093,7 +6093,7 @@
                                                     return NaN;
                                                 }
                                                 break;
-                                            case 64 /* DECIMAL */:
+                                            case 32 /* DECIMAL */:
                                                 if (isNumber(partial)) {
                                                     seg.push(parseFloat(partial));
                                                     found = true;

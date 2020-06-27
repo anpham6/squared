@@ -10,11 +10,11 @@ const { maxArray } = squared.lib.math;
 const { isNumber, replaceMap, safeNestedArray, withinRange } = squared.lib.util;
 
 const enum LAYOUT_TABLE {
-    NONE = 0,
-    STRETCH = 1,
-    FIXED = 2,
-    VARIABLE = 3,
-    COMPRESS = 4
+    NONE,
+    STRETCH,
+    FIXED,
+    VARIABLE,
+    COMPRESS
 }
 
 function setAutoWidth(node: NodeUI, td: NodeUI, data: StandardMap) {

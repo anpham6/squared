@@ -45,7 +45,7 @@ export const enum FILL_MODE {
 
 export const enum REGION_UNIT {
     USER_SPACE_ON_USE = 1,
-    OBJECT_BOUNDING_BOX = 2
+    OBJECT_BOUNDING_BOX
 }
 
 export const KEYSPLINE_NAME = {

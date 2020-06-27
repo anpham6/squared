@@ -1,4 +1,4 @@
-/* vdom-lite-framework 1.12.2
+/* vdom-lite-framework 1.12.3
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -41,7 +41,6 @@
     const {
         capitalize,
         convertCamelCase,
-        isString,
         parseMimeType,
         plainMap,
         promisify,
@@ -51,14 +50,14 @@
     const REGEXP_DATAURI = new RegExp(`url\\("?(${STRING.DATAURI})"?\\),?\\s*`, 'g');
     const CSS_IMAGEURI = ['backgroundImage', 'listStyleImage', 'content'];
     function addImageSrc(resourceHandler, uri, width = 0, height = 0) {
-        if (isString(uri)) {
+        if (uri !== '') {
             if ((width > 0 && height > 0) || !resourceHandler.getImage(uri)) {
                 resourceHandler.addUnsafeData('image', uri, { width, height, uri });
             }
         }
     }
     function parseSrcSet(resourceHandler, value) {
-        if (isString(value)) {
+        if (value !== '') {
             for (const uri of value.split(',')) {
                 addImageSrc(resourceHandler, resolvePath(uri.trim().split(' ')[0]));
             }
@@ -159,7 +158,9 @@
             this.session.unusedStyles.clear();
             this.controllerHandler.reset();
             (_a = this.resourceHandler) === null || _a === void 0 ? void 0 : _a.reset();
-            this.extensions.forEach(ext => ext.subscribers.clear());
+            for (const ext of this.extensions) {
+                ext.subscribers.clear();
+            }
             this.closed = false;
         }
         parseDocument(...elements) {
@@ -329,16 +330,13 @@
                     plainMap(imageElements, image => {
                         return new Promise((resolve, reject) => {
                             if (typeof image === 'string') {
-                                (async () => {
-                                    const result = await fetch(image, {
-                                        method: 'GET',
-                                        headers: new Headers({
-                                            'Accept': 'application/xhtml+xml, image/svg+xml',
-                                            'Content-Type': 'image/svg+xml',
-                                        }),
-                                    });
-                                    resolve(await result.text());
-                                })();
+                                fetch(image, {
+                                    method: 'GET',
+                                    headers: new Headers({
+                                        'Accept': 'application/xhtml+xml, image/svg+xml',
+                                        'Content-Type': 'image/svg+xml',
+                                    }),
+                                }).then(async result => resolve(await result.text()));
                             } else {
                                 image.addEventListener('load', () => resolve(image));
                                 image.addEventListener('error', () => reject(image));
@@ -362,12 +360,11 @@
                         return resumeThread();
                     })
                     .catch(error => {
-                        let target = error;
                         if (error instanceof Event) {
-                            target = error.target;
+                            error = error.target;
                         }
-                        const message = target instanceof HTMLImageElement ? target.src : '';
-                        return !isString(message) || !this.userSettings.showErrorMessages || confirm(`FAIL: ${message}`)
+                        const message = error instanceof HTMLImageElement ? error.src : '';
+                        return message === '' || !this.userSettings.showErrorMessages || confirm(`FAIL: ${message}`)
                             ? resumeThread()
                             : Promise.reject(message);
                     });
@@ -391,7 +388,7 @@
                 try {
                     mediaText = styleSheet.media.mediaText;
                 } catch (_a) {}
-                if (!isString(mediaText) || checkMediaRule(mediaText)) {
+                if (!mediaText || checkMediaRule(mediaText)) {
                     this.applyStyleSheet(styleSheet, sessionId);
                 }
             }
@@ -533,7 +530,7 @@
         }
         applyStyleRule(item, sessionId) {
             var _a, _b, _c, _d, _e, _f, _g, _h;
-            const resourceHandler = this.resourceHandler;
+            const resourceHandler = this._resourceHandler;
             const styleSheetHref =
                 ((_a = item.parentStyleSheet) === null || _a === void 0 ? void 0 : _a.href) || location.href;
             const cssText = item.cssText;
@@ -618,7 +615,7 @@
                                 for (const attr in baseMap) {
                                     const previous = specificityData[attr];
                                     const revised = specificity + (important[attr] ? 1000 : 0);
-                                    if (previous === undefined || revised >= previous) {
+                                    if (!previous || revised >= previous) {
                                         styleData[attr] = baseMap[attr];
                                         specificityData[attr] = revised;
                                     }
@@ -644,54 +641,44 @@
                                 ? void 0
                                 : _c[1];
                         if (attr) {
-                            const fontFamily = trimBoth(
-                                (
-                                    ((_d = /\s*font-family:([^;]+);/.exec(attr)) === null || _d === void 0
+                            const src =
+                                (_d = /\s*src:\s*([^;]+);/.exec(attr)) === null || _d === void 0 ? void 0 : _d[1];
+                            let fontFamily =
+                                (_e = /\s*font-family:([^;]+);/.exec(attr)) === null || _e === void 0
+                                    ? void 0
+                                    : _e[1].trim();
+                            if (src && fontFamily) {
+                                fontFamily = trimBoth(fontFamily, '"');
+                                const fontStyle =
+                                    ((_f = /\s*font-style:\s*(\w+)\s*;/.exec(attr)) === null || _f === void 0
                                         ? void 0
-                                        : _d[1]) || ''
-                                ).trim(),
-                                '"'
-                            );
-                            if (fontFamily !== '') {
-                                const match = (
-                                    ((_e = /\s*src:\s*([^;]+);/.exec(attr)) === null || _e === void 0
+                                        : _f[1].toLowerCase()) || 'normal';
+                                const fontWeight = parseInt(
+                                    ((_g = /\s*font-weight:\s*(\d+)\s*;/.exec(attr)) === null || _g === void 0
                                         ? void 0
-                                        : _e[1]) || ''
-                                ).split(',');
-                                const length = match.length;
-                                if (length > 0) {
-                                    const fontStyle =
-                                        ((_f = /\s*font-style:\s*(\w+)\s*;/.exec(attr)) === null || _f === void 0
-                                            ? void 0
-                                            : _f[1].toLowerCase()) || 'normal';
-                                    const fontWeight = parseInt(
-                                        ((_g = /\s*font-weight:\s*(\d+)\s*;/.exec(attr)) === null || _g === void 0
-                                            ? void 0
-                                            : _g[1]) || '400'
+                                        : _g[1]) || '400'
+                                );
+                                for (const value of src.split(',')) {
+                                    const urlMatch = /\s*(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*format\("?([\w-]+)"?\))?\s*/.exec(
+                                        value
                                     );
-                                    let i = 0;
-                                    while (i < length) {
-                                        const urlMatch = /\s*(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*format\("?([\w-]+)"?\))?\s*/.exec(
-                                            match[i++]
-                                        );
-                                        if (urlMatch) {
-                                            const data = {
-                                                fontFamily,
-                                                fontWeight,
-                                                fontStyle,
-                                                srcFormat:
-                                                    ((_h = urlMatch[4]) === null || _h === void 0
-                                                        ? void 0
-                                                        : _h.toLowerCase().trim()) || 'truetype',
-                                            };
-                                            const url = (urlMatch[2] || urlMatch[3]).trim();
-                                            if (urlMatch[1] === 'url') {
-                                                data.srcUrl = resolvePath(url, styleSheetHref);
-                                            } else {
-                                                data.srcLocal = url;
-                                            }
-                                            resourceHandler.addFont(data);
+                                    if (urlMatch) {
+                                        const data = {
+                                            fontFamily,
+                                            fontWeight,
+                                            fontStyle,
+                                            srcFormat:
+                                                ((_h = urlMatch[4]) === null || _h === void 0
+                                                    ? void 0
+                                                    : _h.toLowerCase().trim()) || 'truetype',
+                                        };
+                                        const url = (urlMatch[2] || urlMatch[3]).trim();
+                                        if (urlMatch[1] === 'url') {
+                                            data.srcUrl = resolvePath(url, styleSheetHref);
+                                        } else {
+                                            data.srcLocal = url;
                                         }
+                                        resourceHandler.addFont(data);
                                     }
                                 }
                             }
@@ -702,7 +689,7 @@
             }
         }
         applyStyleSheet(item, sessionId) {
-            var _a, _b;
+            var _a;
             try {
                 const cssRules = item.cssRules;
                 if (cssRules) {
@@ -715,30 +702,28 @@
                             case CSSRule.FONT_FACE_RULE:
                                 this.applyStyleRule(rule, sessionId);
                                 break;
-                            case CSSRule.IMPORT_RULE: {
-                                const uri = resolvePath(
-                                    rule.href,
-                                    ((_a = rule.parentStyleSheet) === null || _a === void 0 ? void 0 : _a.href) ||
-                                        location.href
-                                );
-                                if (uri !== '') {
-                                    (_b = this.resourceHandler) === null || _b === void 0
-                                        ? void 0
-                                        : _b.addRawData(uri, 'text/css', undefined, { encoding: 'utf8' });
+                            case CSSRule.IMPORT_RULE:
+                                if (this._resourceHandler) {
+                                    const uri = resolvePath(
+                                        rule.href,
+                                        ((_a = rule.parentStyleSheet) === null || _a === void 0 ? void 0 : _a.href) ||
+                                            location.href
+                                    );
+                                    if (uri !== '') {
+                                        this._resourceHandler.addRawData(uri, 'text/css', undefined, {
+                                            encoding: 'utf8',
+                                        });
+                                    }
                                 }
                                 this.applyStyleSheet(rule.styleSheet, sessionId);
                                 break;
-                            }
                             case CSSRule.MEDIA_RULE:
                                 if (checkMediaRule(rule.conditionText || parseConditionText('media', rule.cssText))) {
                                     this.applyCSSRuleList(rule.cssRules, sessionId);
                                 }
                                 break;
                             case CSSRule.SUPPORTS_RULE:
-                                if (
-                                    CSS.supports &&
-                                    CSS.supports(rule.conditionText || parseConditionText('supports', rule.cssText))
-                                ) {
+                                if (CSS.supports(rule.conditionText || parseConditionText('supports', rule.cssText))) {
                                     this.applyCSSRuleList(rule.cssRules, sessionId);
                                 }
                                 break;
@@ -1668,6 +1653,7 @@
             this.documentRoot = false;
             this.depth = -1;
             this.childIndex = Infinity;
+            this._cached = {};
             this._preferInitial = false;
             this._element = null;
             this._data = {};
@@ -1678,21 +1664,15 @@
                 this.style = !this.pseudoElement
                     ? getStyle(element)
                     : getStyle(element.parentElement, getPseudoElt(element, sessionId));
-            } else {
-                this.style = {};
-                this._styleMap = {};
-            }
-        }
-        init() {
-            const element = this._element;
-            if (element) {
-                const sessionId = this.sessionId;
                 if (!this.syncWith(sessionId)) {
                     this._styleMap = {};
                 }
                 if (sessionId !== '0') {
                     setElementCache$1(element, 'node', sessionId, this);
                 }
+            } else {
+                this.style = {};
+                this._styleMap = {};
             }
         }
         syncWith(sessionId, cache) {
@@ -1860,9 +1840,9 @@
             }
             if (!this._preferInitial) {
                 let parent;
-                if (attrs.some(value => hasBit(CSS_PROPERTIES$1[value].trait, 8 /* LAYOUT */))) {
+                if (attrs.some(value => hasBit(CSS_PROPERTIES$1[value].trait, 4 /* LAYOUT */))) {
                     parent = (this.pageFlow && this.ascend({ condition: item => item.documentRoot })[0]) || this;
-                } else if (attrs.some(value => hasBit(CSS_PROPERTIES$1[value].trait, 16 /* CONTAIN */))) {
+                } else if (attrs.some(value => hasBit(CSS_PROPERTIES$1[value].trait, 8 /* CONTAIN */))) {
                     parent = this;
                 }
                 if (parent) {
@@ -2252,10 +2232,10 @@
                 }
                 if (type) {
                     return (
-                        (hasBit(type, 2 /* LENGTH */) && isLength(value)) ||
-                        (hasBit(type, 4 /* PERCENT */) && isPercent(value)) ||
-                        (hasBit(type, 8 /* TIME */) && isTime(value)) ||
-                        (hasBit(type, 16 /* ANGLE */) && isAngle(value))
+                        (hasBit(type, 1 /* LENGTH */) && isLength(value)) ||
+                        (hasBit(type, 2 /* PERCENT */) && isPercent(value)) ||
+                        (hasBit(type, 4 /* TIME */) && isTime(value)) ||
+                        (hasBit(type, 8 /* ANGLE */) && isAngle(value))
                     );
                 }
                 return true;
@@ -3057,7 +3037,7 @@
             return result;
         }
         get contentBox() {
-            return this.css('boxSizing') !== 'border-box' || (this.tableElement && isUserAgent(8 /* FIREFOX */));
+            return this.css('boxSizing') !== 'border-box' || (this.tableElement && isUserAgent(4 /* FIREFOX */));
         }
         get contentBoxWidth() {
             let result = this._cached.contentBoxWidth;
@@ -3772,14 +3752,6 @@
         'wordSpacing',
     ];
 
-    class NodeElement extends Node {
-        constructor(id, sessionId, element) {
-            super(id, sessionId, element);
-            this._cached = {};
-            this.init();
-        }
-    }
-
     const settings = {
         builtInExtensions: [],
         createQuerySelectorMap: true,
@@ -3797,7 +3769,7 @@
         extensions: {},
         system: {},
         create() {
-            application = new Application$1(framework, NodeElement, Controller);
+            application = new Application$1(framework, Node, Controller);
             initialized = true;
             return {
                 application,

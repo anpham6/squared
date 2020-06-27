@@ -68,15 +68,15 @@ export enum NODE_PROCEDURE {
 }
 
 export const enum NODE_TRAVERSE {
-    HORIZONTAL = 0,
-    VERTICAL = 1,
-    LINEBREAK = 2,
-    INLINE_WRAP = 3,
-    FLOAT_CLEAR = 4,
-    FLOAT_BLOCK = 5,
-    FLOAT_WRAP = 6,
-    FLOAT_INTERSECT = 7,
-    PERCENT_WRAP = 8
+    HORIZONTAL,
+    VERTICAL,
+    LINEBREAK,
+    INLINE_WRAP,
+    FLOAT_CLEAR,
+    FLOAT_BLOCK,
+    FLOAT_WRAP,
+    FLOAT_INTERSECT,
+    PERCENT_WRAP
 }
 
 export const enum NODE_TEMPLATE {

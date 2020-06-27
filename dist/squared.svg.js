@@ -1,4 +1,4 @@
-/* squared.svg 1.12.2
+/* squared.svg 1.12.3
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -458,13 +458,13 @@
                 return calculateCssStyle(element, 'fontColor', value);
             case 'fillOpacity':
             case 'strokeOpacity': {
-                const result = calculateVar(element, value, { boundingSize: 1, unitType: 64 /* DECIMAL */ });
+                const result = calculateVar(element, value, { boundingSize: 1, unitType: 32 /* DECIMAL */ });
                 return !isNaN(result) ? clamp(result).toString() : '';
             }
             case 'strokeMiterlimit': {
                 const result = calculateVar(element, value, {
                     supportPercent: false,
-                    unitType: 64 /* DECIMAL */,
+                    unitType: 32 /* DECIMAL */,
                     min: 1,
                 });
                 return !isNaN(result) ? result.toString() : '';
@@ -513,14 +513,14 @@
             case 'strokeDashoffset': {
                 const result = calculateVar(element, value, {
                     boundingSize: getViewportArea(viewBox, true),
-                    unitType: 64 /* DECIMAL */,
+                    unitType: 32 /* DECIMAL */,
                 });
                 return !isNaN(result) ? result.toString() : '';
             }
             case 'strokeWidth': {
                 const result = calculateVar(element, value, {
                     boundingSize: getViewportArea(viewBox),
-                    unitType: 64 /* DECIMAL */,
+                    unitType: 32 /* DECIMAL */,
                     min: 0,
                 });
                 return !isNaN(result) ? result.toString() : '';
@@ -1437,7 +1437,7 @@
     SvgBuild.asPattern = object => object.instanceType === 258 /* SVG_PATTERN */;
     SvgBuild.asShapePattern = object => object.instanceType === 514 /* SVG_SHAPE_PATTERN */;
     SvgBuild.asImage = object => object.instanceType === 8196 /* SVG_IMAGE */;
-    SvgBuild.asUseG = object => object.instanceType === 99 /* SVG_USE_G */;
+    SvgBuild.asUseG = object => object.instanceType === 115 /* SVG_USE_G */;
     SvgBuild.asUseSymbol = object => object.instanceType === 131 /* SVG_USE_SYMBOL */;
     SvgBuild.asUseShape = object => object.instanceType === 6149 /* SVG_USE_SHAPE */;
     SvgBuild.asUseShapePattern = object => object.instanceType === 1539 /* SVG_USE_SHAPE_PATTERN */;
@@ -1767,22 +1767,22 @@
             return this._to;
         }
         set fillBackwards(value) {
-            setFillMode.call(this, value, 8 /* BACKWARDS */);
+            setFillMode.call(this, value, 4 /* BACKWARDS */);
         }
         get fillBackwards() {
-            return hasBit$1(this.fillMode, 8 /* BACKWARDS */);
+            return hasBit$1(this.fillMode, 4 /* BACKWARDS */);
         }
         set fillForwards(value) {
-            setFillMode.call(this, value, 4 /* FORWARDS */);
+            setFillMode.call(this, value, 2 /* FORWARDS */);
         }
         get fillForwards() {
-            return hasBit$1(this.fillMode, 4 /* FORWARDS */);
+            return hasBit$1(this.fillMode, 2 /* FORWARDS */);
         }
         set fillFreeze(value) {
-            setFillMode.call(this, value, 2 /* FREEZE */);
+            setFillMode.call(this, value, 1 /* FREEZE */);
         }
         get fillFreeze() {
-            return hasBit$1(this.fillMode, 2 /* FREEZE */);
+            return hasBit$1(this.fillMode, 1 /* FREEZE */);
         }
         set parent(value) {
             this._parent = value;
@@ -1803,7 +1803,7 @@
         get fillReplace() {
             switch (this.fillMode) {
                 case 0:
-                case 8 /* BACKWARDS */:
+                case 4 /* BACKWARDS */:
                     return true;
                 default:
                     return false;
@@ -2722,7 +2722,7 @@
                         backwards,
                         delay === 0,
                         false,
-                        8 /* BACKWARDS */
+                        4 /* BACKWARDS */
                     );
                 }
             }
@@ -2745,7 +2745,7 @@
                         item,
                         fillReplace,
                         !fillReplace,
-                        2 /* FREEZE */
+                        1 /* FREEZE */
                     );
                     if (fillReplace) {
                         insertIntervalValue(
@@ -2758,7 +2758,7 @@
                             item,
                             false,
                             true,
-                            2 /* FREEZE */
+                            1 /* FREEZE */
                         );
                     }
                 } else if (SvgBuild.isAnimate(item) && item.duration > 0) {
@@ -2789,7 +2789,7 @@
                             item,
                             false,
                             true,
-                            item.fillForwards ? 4 /* FORWARDS */ : 2 /* FREEZE */
+                            item.fillForwards ? 2 /* FORWARDS */ : 1 /* FREEZE */
                         );
                     }
                 }
@@ -2819,8 +2819,8 @@
                                         interval.animation !== previous.animation &&
                                         previous.value !== '' &&
                                         (previous.time === -1 ||
-                                        previous.fillMode === 4 /* FORWARDS */ ||
-                                            previous.fillMode === 2) /* FREEZE */
+                                        previous.fillMode === 2 /* FORWARDS */ ||
+                                            previous.fillMode === 1) /* FREEZE */
                                     ) {
                                         value = previous.value;
                                         break;
@@ -2856,7 +2856,7 @@
                         const itemA = dataA[i++];
                         const animationA = itemA.animation;
                         if (animationA) {
-                            if (itemA.fillMode === 2 /* FREEZE */) {
+                            if (itemA.fillMode === 1 /* FREEZE */) {
                                 const previous = [];
                                 for (const [timeB, dataB] of map[keyName].entries()) {
                                     if (timeB < timeA) {
@@ -2896,7 +2896,7 @@
                                         }
                                     }
                                 }
-                            } else if (itemA.fillMode === 4 /* FORWARDS */ || itemA.infinite) {
+                            } else if (itemA.fillMode === 2 /* FORWARDS */ || itemA.infinite) {
                                 let forwarded = false;
                                 const group = animationA.group;
                                 const ordering = group.ordering;
@@ -2995,8 +2995,8 @@
                                 (previous.value !== '' &&
                                     (previous.time === -1 ||
                                         (previous.end &&
-                                            (previous.fillMode === 4 /* FORWARDS */ ||
-                                                previous.fillMode === 2) /* FREEZE */))) ||
+                                            (previous.fillMode === 2 /* FORWARDS */ ||
+                                                previous.fillMode === 1) /* FREEZE */))) ||
                                 (playing && previous.start && time !== interval)
                             ) {
                                 value = previous.value;
@@ -3032,8 +3032,8 @@
                                 }
                             } else if (
                                 previous.end &&
-                                (previous.fillMode === 4 /* FORWARDS */ ||
-                                    (value === 1 && previous.fillMode === 2)) /* FREEZE */
+                                (previous.fillMode === 2 /* FORWARDS */ ||
+                                    (value === 1 && previous.fillMode === 1)) /* FREEZE */
                             ) {
                                 value = 0;
                                 break;
@@ -3510,7 +3510,7 @@
                 const sub = queued[i];
                 if (sub !== item) {
                     const totalDuration = sub.getTotalDuration();
-                    sub.addState(4 /* INTERRUPTED */);
+                    sub.addState(2 /* INTERRUPTED */);
                     if (totalDuration > maxTime) {
                         const [subKeyTimes, subValues, subKeySplines] = cloneKeyTimes(sub);
                         setStartItemValues(
@@ -3626,7 +3626,7 @@
                                                 maxTime = time;
                                                 if (time >= totalDuration) {
                                                     if (totalDuration <= itemEndTime) {
-                                                        sub.addState(16 /* COMPLETE */);
+                                                        sub.addState(8 /* COMPLETE */);
                                                     }
                                                     break partialEnd;
                                                 } else if (time >= nextStartTime) {
@@ -3755,13 +3755,13 @@
         }
     }
     function queueIncomplete(incomplete, item) {
-        if (!item.hasState(16 /* COMPLETE */, 64 /* INVALID */)) {
+        if (!item.hasState(8 /* COMPLETE */, 32 /* INVALID */)) {
             const index = incomplete.indexOf(item);
             if (index !== -1) {
                 incomplete.splice(index, 1);
             }
             incomplete.push(item);
-            item.addState(4 /* INTERRUPTED */);
+            item.addState(2 /* INTERRUPTED */);
         }
     }
     function sortIncomplete(incomplete, maxTime = Infinity) {
@@ -3843,9 +3843,9 @@
             ? plainMap$1(value, pt => pt.x + ',' + pt.y).join(' ')
             : (value === null || value === void 0 ? void 0 : value.toString()) || '';
     const isKeyTimeFormat = (transforming, keyTimeMode) =>
-        hasBit$2(keyTimeMode, transforming ? 32 /* KEYTIME_TRANSFORM */ : 4 /* KEYTIME_ANIMATE */);
+        hasBit$2(keyTimeMode, transforming ? 16 /* KEYTIME_TRANSFORM */ : 2 /* KEYTIME_ANIMATE */);
     const isFromToFormat = (transforming, keyTimeMode) =>
-        hasBit$2(keyTimeMode, transforming ? 16 /* FROMTO_TRANSFORM */ : 2 /* FROMTO_ANIMATE */);
+        hasBit$2(keyTimeMode, transforming ? 8 /* FROMTO_TRANSFORM */ : 1 /* FROMTO_ANIMATE */);
     const playableAnimation = item => item.playable || (item.animationElement && item.duration !== -1);
     const cloneKeyTimes = item => {
         var _a;
@@ -3945,7 +3945,7 @@
             }
             animateSequentially(animations, transforms, path, options) {
                 var _a, _b, _c;
-                let keyTimeMode = 2 /* FROMTO_ANIMATE */ | 16 /* FROMTO_TRANSFORM */,
+                let keyTimeMode = 1 /* FROMTO_ANIMATE */ | 8 /* FROMTO_TRANSFORM */,
                     precision;
                 if (options) {
                     if (options.keyTimeMode) {
@@ -3959,8 +3959,8 @@
                     if (
                         !mergeable ||
                         mergeable.length === 0 ||
-                        (!transforming && hasBit$2(keyTimeMode, 8 /* IGNORE_ANIMATE */)) ||
-                        (transforming && hasBit$2(keyTimeMode, 64 /* IGNORE_TRANSFORM */))
+                        (!transforming && hasBit$2(keyTimeMode, 4 /* IGNORE_ANIMATE */)) ||
+                        (transforming && hasBit$2(keyTimeMode, 32 /* IGNORE_TRANSFORM */))
                     ) {
                         continue;
                     }
@@ -4134,7 +4134,7 @@
                                 previousComplete;
                             const checkComplete = (item, nextDelay) => {
                                 repeatingAnimations.add(item);
-                                item.addState(16 /* COMPLETE */);
+                                item.addState(8 /* COMPLETE */);
                                 previousComplete = item;
                                 if (item.fillForwards) {
                                     setFreezeValue(actualMaxTime, baseValue, item.type, item);
@@ -4209,7 +4209,7 @@
                                         incomplete,
                                         previous => previous.getTotalDuration() <= actualMaxTime,
                                         previous => {
-                                            previous.addState(16 /* COMPLETE */);
+                                            previous.addState(8 /* COMPLETE */);
                                             if (previous.fillForwards) {
                                                 setFreezeValue(
                                                     previous.getTotalDuration(),
@@ -4230,7 +4230,7 @@
                                                         while (j < q) {
                                                             const next = data[j++];
                                                             if (previous.group.id > next.group.id) {
-                                                                next.addState(16 /* COMPLETE */);
+                                                                next.addState(8 /* COMPLETE */);
                                                             }
                                                         }
                                                     }
@@ -4260,7 +4260,7 @@
                                             for (let j = 0; j < group.length; ++j) {
                                                 const next = group[j];
                                                 if (next.group.id < item.group.id) {
-                                                    next.addState(16 /* COMPLETE */);
+                                                    next.addState(8 /* COMPLETE */);
                                                 }
                                             }
                                         }
@@ -4340,7 +4340,7 @@
                                         groupDelay.splice(i--, 1);
                                     }
                                 }
-                                backwards.addState(2 /* BACKWARDS */);
+                                backwards.addState(1 /* BACKWARDS */);
                             }
                             if (!transforming) {
                                 const value = baseValueMap[attr];
@@ -4415,8 +4415,8 @@
                                     for (let j = 0; j < data.length; ++j) {
                                         const item = data[j];
                                         if (
-                                            item.hasState(16 /* COMPLETE */, 64 /* INVALID */) ||
-                                            (item.hasState(4 /* INTERRUPTED */) && item.animationElement)
+                                            item.hasState(8 /* COMPLETE */, 32 /* INVALID */) ||
+                                            (item.hasState(2 /* INTERRUPTED */) && item.animationElement)
                                         ) {
                                             continue;
                                         }
@@ -4428,7 +4428,7 @@
                                             totalDuration = item.getTotalDuration();
                                             if (totalDuration <= maxTime) {
                                                 if (item.fillReplace) {
-                                                    item.addState(64 /* INVALID */);
+                                                    item.addState(32 /* INVALID */);
                                                 } else {
                                                     queueIncomplete(incomplete, item);
                                                 }
@@ -4483,7 +4483,7 @@
                                                                 if (next.fillFreeze) {
                                                                     sortSetterData(setterData, next);
                                                                 }
-                                                                next.addState(16 /* COMPLETE */);
+                                                                next.addState(8 /* COMPLETE */);
                                                             } else if (next.delay < totalDuration) {
                                                                 queueIncomplete(incomplete, next);
                                                             }
@@ -4499,7 +4499,7 @@
                                                     if (
                                                         dataA.length > 0 &&
                                                         !dataA.every(next =>
-                                                            next.hasState(16 /* COMPLETE */, 64 /* INVALID */)
+                                                            next.hasState(8 /* COMPLETE */, 32 /* INVALID */)
                                                         )
                                                     ) {
                                                         nextDelayTime = value;
@@ -4545,15 +4545,15 @@
                                                         }
                                                         break;
                                                     case nextDelayTime:
-                                                        setterInterrupt.addState(32 /* EQUAL_TIME */);
+                                                        setterInterrupt.addState(16 /* EQUAL_TIME */);
                                                         break;
                                                     default:
                                                         maxThreadTime = setterInterrupt.delay;
-                                                        setterInterrupt.addState(32 /* EQUAL_TIME */);
+                                                        setterInterrupt.addState(16 /* EQUAL_TIME */);
                                                         break;
                                                 }
                                                 spliceArray(setterData, set => set !== setterInterrupt);
-                                                item.addState(4 /* INTERRUPTED */);
+                                                item.addState(2 /* INTERRUPTED */);
                                             }
                                         }
                                         let complete = false,
@@ -4569,9 +4569,9 @@
                                             }
                                             let parallel =
                                                 delay === Infinity ||
-                                                ((maxTime !== -1 || item.hasState(2 /* BACKWARDS */)) &&
+                                                ((maxTime !== -1 || item.hasState(1 /* BACKWARDS */)) &&
                                                     !(i === 0 && j === 0)) ||
-                                                item.hasState(8 /* RESUME */);
+                                                item.hasState(4 /* RESUME */);
                                             complete = true;
                                             threadTimeExceeded: {
                                                 const forwardItem = getForwardItem(forwardMap, attr);
@@ -4610,7 +4610,7 @@
                                                                 for (let l = 0; l < pending.length; ++l) {
                                                                     const previous = pending[l];
                                                                     if (
-                                                                        previous.hasState(4 /* INTERRUPTED */) &&
+                                                                        previous.hasState(2 /* INTERRUPTED */) &&
                                                                         data.includes(previous)
                                                                     ) {
                                                                         queueIncomplete(incomplete, previous);
@@ -4755,7 +4755,7 @@
                                                                     complete = false;
                                                                     break threadTimeExceeded;
                                                                 } else if (parallel) {
-                                                                    if (item.hasState(2 /* BACKWARDS */)) {
+                                                                    if (item.hasState(1 /* BACKWARDS */)) {
                                                                         actualMaxTime = actualStartTime;
                                                                     }
                                                                     if (delay >= maxTime) {
@@ -4826,7 +4826,7 @@
                                             }
                                         }
                                         if (setterInterrupt) {
-                                            if (setterInterrupt.hasState(32 /* EQUAL_TIME */)) {
+                                            if (setterInterrupt.hasState(16 /* EQUAL_TIME */)) {
                                                 lastValue = setterInterrupt.to;
                                                 maxTime = setSetterValue(
                                                     baseMap,
@@ -4842,7 +4842,7 @@
                                                     setterInterrupt.type,
                                                     setterInterrupt
                                                 );
-                                            } else if (item.hasState(64 /* INVALID */)) {
+                                            } else if (item.hasState(32 /* INVALID */)) {
                                                 setTimeRange(animateTimeRangeMap, maxTime, setterInterrupt.type);
                                             }
                                             removeIncomplete(incomplete);
@@ -4883,9 +4883,9 @@
                                                         if (
                                                             nextDuration > actualMaxTime &&
                                                             !next.hasState(
-                                                                4 /* INTERRUPTED */,
-                                                                16 /* COMPLETE */,
-                                                                64 /* INVALID */
+                                                                2 /* INTERRUPTED */,
+                                                                8 /* COMPLETE */,
+                                                                32 /* INVALID */
                                                             )
                                                         ) {
                                                             queueIncomplete(incomplete, next);
@@ -4901,8 +4901,8 @@
                                                 sortIncomplete(incomplete);
                                                 const resume = incomplete.find(next => next.delay <= actualMaxTime);
                                                 if (resume) {
-                                                    resume.removeState(4 /* INTERRUPTED */, 2 /* BACKWARDS */);
-                                                    resume.addState(8 /* RESUME */);
+                                                    resume.removeState(2 /* INTERRUPTED */, 1 /* BACKWARDS */);
+                                                    resume.addState(4 /* RESUME */);
                                                     removeIncomplete(incomplete, resume);
                                                     delay = resume.delay;
                                                     data = [resume];
@@ -6654,9 +6654,9 @@
     const { USER_AGENT, isUserAgent } = squared.lib.client;
     function hasUnsupportedAccess(element) {
         if (element.tagName === 'svg') {
-            if (isUserAgent(8 /* FIREFOX */)) {
+            if (isUserAgent(4 /* FIREFOX */)) {
                 return element.parentElement instanceof HTMLElement;
-            } else if (isUserAgent(4 /* SAFARI */)) {
+            } else if (isUserAgent(2 /* SAFARI */)) {
                 return !(element.parentElement instanceof HTMLElement);
             }
         }
@@ -9244,7 +9244,7 @@
             super.build(options);
         }
         get instanceType() {
-            return 99 /* SVG_USE_G */;
+            return 115 /* SVG_USE_G */;
         }
     }
 
