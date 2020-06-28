@@ -453,10 +453,9 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
 
     set parent(value) {
         this._parent = value;
-        if (this.parentContainer?.requireRefit) {
-            if (this.path) {
-                this.path = SvgBuild.transformRefit(this.path, { container: this.parentContainer });
-            }
+        const container = this.parentContainer;
+        if (container?.requireRefit && this.path) {
+            this.path = SvgBuild.transformRefit(this.path, { container });
        }
     }
     get parent() {
@@ -481,13 +480,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     }
 
     get offsetLength() {
-        let result = this._offsetLength;
-        if (result === 0) {
-            if (this.path) {
-                result = getPathLength(this.path);
-            }
-        }
-        return result;
+        return this._offsetLength === 0 && this.path ? getPathLength(this.path) : this._offsetLength;
     }
 
     get instanceType() {

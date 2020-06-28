@@ -792,9 +792,9 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         const length = values.length;
         if (length % 2 === 0) {
             const result: Point[] = new Array(length / 2);
-            let i = 0, k = 0;
+            let i = 0, j = 0;
             while (i < length) {
-                result[k++] = { x: values[i++], y: values[i++] };
+                result[j++] = { x: values[i++], y: values[i++] };
             }
             return result;
         }

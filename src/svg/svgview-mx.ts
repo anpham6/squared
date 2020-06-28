@@ -151,7 +151,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                 }
             });
             const animationName = parseAttribute(element, 'animation-name');
-            const length = animationName.length;
+            let length = animationName.length;
             if (length > 0) {
                 const cssData: ObjectMap<string[]> = {};
                 const groupName: SvgAnimate[] = [];
@@ -458,8 +458,10 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                     }
                 }
                 groupOrdering.reverse();
-                for (let i = 0; i < groupName.length; ++i) {
-                    groupName[i].setGroupOrdering(groupOrdering);
+                length =  groupName.length;
+                let i = 0;
+                while (i < length) {
+                    groupName[i++].setGroupOrdering(groupOrdering);
                 }
             }
             return result;

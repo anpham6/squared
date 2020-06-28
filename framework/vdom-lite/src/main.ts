@@ -2,7 +2,7 @@ import Application from './application';
 import Controller from '../../../src/base/controller';
 import Node from '../../../src/base/node';
 
-import SETTINGS from './settings';
+import SETTINGS from '../../vdom/src/settings';
 
 const framework = squared.base.lib.enumeration.APP_FRAMEWORK.VDOM;
 

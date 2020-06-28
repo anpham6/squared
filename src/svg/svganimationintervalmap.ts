@@ -42,8 +42,9 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
         }) as SvgAnimate[];
         attrs.length = 0;
         const length = animations.length;
-        for (let i = 0; i < length; ++i) {
-            const item = animations[i];
+        let i = 0;
+        while (i < length) {
+            const item = animations[i++];
             const value = SvgAnimationIntervalMap.getKeyName(item);
             if (!attrs.includes(value)) {
                 attrs.push(value);
@@ -52,8 +53,9 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
         const map: SvgAnimationIntervalAttributeMap<SvgAnimation> = {};
         const intervalMap: IntervalMap = {};
         const intervalTimes: IntervalTime = {};
-        for (let i = 0; i < attrs.length; ++i) {
-            const keyName = attrs[i];
+        i = 0;
+        while (i < attrs.length) {
+            const keyName = attrs[i++];
             map[keyName] = new Map<number, SvgAnimationIntervalValue<SvgAnimation>[]>();
             intervalMap[keyName] = {};
             intervalTimes[keyName] = new Set<number>();
@@ -64,8 +66,9 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                 insertIntervalValue(intervalMap, intervalTimes, keyName, 0, backwards.values[0], delay, backwards, delay === 0, false, FILL_MODE.BACKWARDS);
             }
         }
-        for (let i = 0; i < length; ++i) {
-            const item = animations[i];
+        i = 0;
+        while (i < length) {
+            const item = animations[i++];
             const keyName = SvgAnimationIntervalMap.getKeyName(item);
             if (item.baseValue && intervalMap[keyName][-1] === undefined) {
                 insertIntervalValue(intervalMap, intervalTimes, keyName, -1, item.baseValue);
@@ -90,7 +93,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
         for (const keyName in intervalMap) {
             const keyTimes = sortNumber(Array.from(intervalTimes[keyName]));
             const q = keyTimes.length;
-            let i = 0;
+            i = 0;
             while (i < q) {
                 const time = keyTimes[i++];
                 const values = intervalMap[keyName][time];
@@ -136,7 +139,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
         for (const keyName in map) {
             for (const [timeA, dataA] of map[keyName].entries()) {
                 const q = dataA.length;
-                let i = 0;
+                i = 0;
                 while (i < q) {
                     const itemA = dataA[i++];
                     const animationA = itemA.animation;
