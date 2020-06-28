@@ -1431,10 +1431,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             case CONTAINER_NODE.GRID: {
                 const options = createViewAttribute();
                 const android = options.android;
-                if (layout.rowCount > 0) {
+                if (layout.rowCount) {
                     android.rowCount = layout.rowCount.toString();
                 }
-                android.columnCount = layout.columnCount > 0 ? layout.columnCount.toString() : '1';
+                android.columnCount = layout.columnCount ? layout.columnCount.toString() : '1';
                 node.apply(options);
                 break;
             }

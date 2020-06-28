@@ -390,7 +390,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public addLayout(layout: LayoutUI<T>) {
         const renderType = layout.renderType;
-        if (hasBit(renderType, NODE_ALIGNMENT.FLOAT)) {
+        if (renderType && hasBit(renderType, NODE_ALIGNMENT.FLOAT)) {
             if (hasBit(renderType, NODE_ALIGNMENT.HORIZONTAL)) {
                 layout = this.processFloatHorizontal(layout);
             }

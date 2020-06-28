@@ -103,13 +103,13 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     layout.setContainerType(CONTAINER_NODE.TEXT);
                 }
                 else {
+                    layout.retainAs(ordinal.children as T[]);
                     if (layout.singleRowAligned) {
                         layout.setContainerType(CONTAINER_NODE.RELATIVE, NODE_ALIGNMENT.HORIZONTAL);
                     }
                     else {
                         layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.UNKNOWN);
                     }
-                    layout.retainAs(ordinal.children as T[]);
                 }
                 const template = application.renderNode(layout);
                 if (template) {

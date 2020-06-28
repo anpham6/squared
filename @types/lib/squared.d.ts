@@ -23,7 +23,6 @@ declare module "lib" {
             partition(predicate: IteratorPredicate<T, boolean>): [T[], T[]];
             findIndex(predicate: IteratorPredicate<T, boolean>): number;
             sort(predicate: (a: T, b: T) => number): this;
-            joinWith(...other: Container<T>[]): this;
             iterator(): ListIterator<T>;
             get children(): T[];
             get isEmpty(): boolean;
@@ -37,7 +36,7 @@ declare module "lib" {
             public next(): Undef<T>;
             public hasNext(): boolean;
             public remove(): void;
-            public forEachRemaining(action: BindGeneric<T, void>): void;
+            public forEachRemaining(predicate: BindGeneric<T, void>): void;
             constructor(children: T[]);
         }
 

@@ -18,10 +18,10 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
         return layout;
     }
 
-    public rowCount = 0;
-    public columnCount = 0;
-    public renderType = 0;
-    public renderIndex = -1;
+    public rowCount?: number;
+    public columnCount?: number;
+    public renderType?: number;
+    public renderIndex?: number;
 
     private _initialized?: boolean;
     private _itemCount?: number;
@@ -48,8 +48,8 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
             this._linearX = linearData.linearX;
             this._linearY = linearData.linearY;
         }
-        else if (length > 0) {
-            this._linearY = this.item(0)!.blockStatic;
+        else if (length === 1) {
+            this._linearY = this.children[0].blockStatic;
             this._linearX = !this._linearY;
         }
         else {
@@ -65,10 +65,6 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
         }
     }
 
-    public hasAlign(value: number) {
-        return hasBit(this.alignmentType, value);
-    }
-
     public addAlign(value: number) {
         if (!hasBit(this.alignmentType, value)) {
             this.alignmentType |= value;
@@ -76,23 +72,25 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
         return this.alignmentType;
     }
 
+    public hasAlign(value: number) {
+        return hasBit(this.alignmentType, value);
+    }
+
     public addRender(value: number) {
+        if (this.renderType === undefined) {
+            this.renderType = 0;
+        }
         if (!hasBit(this.renderType, value)) {
             this.renderType |= value;
         }
         return this.renderType;
     }
 
-    public delete(value: number) {
-        if (hasBit(this.alignmentType, value)) {
-            this.alignmentType ^= value;
-        }
-        return this.alignmentType;
-    }
-
     public retainAs(list: T[]) {
         super.retainAs(list);
-        this.init();
+        if (this._initialized) {
+            this.init();
+        }
         return this;
     }
 

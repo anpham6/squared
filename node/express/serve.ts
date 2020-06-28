@@ -108,7 +108,7 @@ let Node: serve.INode,
             });
         }
 
-        app.use(body_parser.json({ limit: request_post_limit || '100mb' }));
+        app.use(body_parser.json({ limit: request_post_limit || '250mb' }));
     }
     catch (err) {
         console.log(`${chalk.bold.bgGrey.blackBright('FAIL')}: ${err}`);
@@ -231,7 +231,7 @@ let Node: serve.INode,
         console.log(`\n${chalk.bold(mounted)} directories were mounted.\n`);
     }
     else {
-        app.use(body_parser.json({ limit: '100mb' }));
+        app.use(body_parser.json({ limit: '250mb' }));
         app.use('/', express.static(path.join(__dirname, 'html')));
         app.use('/dist', express.static(path.join(__dirname, 'dist')));
         if (ENV === 'development') {
@@ -415,7 +415,7 @@ let Node: serve.INode,
         createGzipWriteStream(source: string, filepath: string, level?: number) {
             const o = fs.createWriteStream(filepath);
             fs.createReadStream(source)
-                .pipe(zlib.createGzip({ level: level || this.gzip_level }))
+                .pipe(zlib.createGzip({ level: level ?? this.gzip_level }))
                 .pipe(o);
             return o;
         }
@@ -426,7 +426,7 @@ let Node: serve.INode,
                     zlib.createBrotliCompress({
                         params: {
                             [zlib.constants.BROTLI_PARAM_MODE]: mimeType.includes('text/') ? zlib.constants.BROTLI_MODE_TEXT : zlib.constants.BROTLI_MODE_GENERIC,
-                            [zlib.constants.BROTLI_PARAM_QUALITY]: quality || this.brotli_quality,
+                            [zlib.constants.BROTLI_PARAM_QUALITY]: quality ?? this.brotli_quality,
                             [zlib.constants.BROTLI_PARAM_SIZE_HINT]: this.getFileSize(source)
                         }
                     })
@@ -777,10 +777,7 @@ let Node: serve.INode,
                 value = value.replace(/\./g, '\\.');
                 pattern = new RegExp(`^\\s*${value}[\\s\\n]*\\{[\\s\\S]*?\\}\\n*`, 'gm');
                 while (match = pattern.exec(source)) {
-                    if (output === undefined) {
-                        output = source;
-                    }
-                    output = output.replace(match[0], '');
+                    output = (output || source).replace(match[0], '');
                     found = true;
                 }
                 if (found) {
@@ -789,9 +786,6 @@ let Node: serve.INode,
                 }
                 pattern = new RegExp(`^[^,]*(,?[\\s\\n]*${value}[\\s\\n]*[,{](\\s*)).*?\\{?`, 'gm');
                 while (match = pattern.exec(source)) {
-                    if (output === undefined) {
-                        output = source;
-                    }
                     const segment = match[1];
                     let replaceWith = '';
                     if (segment.trim().endsWith('{')) {
@@ -800,7 +794,7 @@ let Node: serve.INode,
                     else if (segment.startsWith(',')) {
                         replaceWith = ', ';
                     }
-                    output = output.replace(match[0], match[0].replace(segment, replaceWith));
+                    output = (output || source).replace(match[0], match[0].replace(segment, replaceWith));
                     found = true;
                 }
                 if (found) {
@@ -1651,7 +1645,7 @@ class FileManager implements serve.IFileManager {
                 let value = item.value;
                 if (mimeType) {
                     if (mimeType.endsWith('text/css')) {
-                        if (!item.preserve && unusedStyles) {
+                        if (unusedStyles && !item.preserve) {
                             const result = Chrome.removeCss(value, unusedStyles);
                             if (result) {
                                 value = result;
@@ -1761,7 +1755,7 @@ class FileManager implements serve.IFileManager {
         const completed: string[] = [];
         const assets = this.assets;
         const exclusions = assets[0].exclusions;
-        const checkQueue = (file: ExpressAsset, filepath: string, content = false) => {
+        const checkQueue = (file: ExpressAsset, filepath: string, content?: boolean) => {
             const bundleIndex = file.bundleIndex;
             if (bundleIndex !== undefined) {
                 if (!appending[filepath]) {

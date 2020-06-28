@@ -7,7 +7,7 @@
   "cors": {
     "origin": false
   },
-  "request_post_limit": "100mb",
+  "request_post_limit": "250mb",
   "gzip_level": "9",
   "brotli_quality": "11",
   "jpeg_quality": "100",
