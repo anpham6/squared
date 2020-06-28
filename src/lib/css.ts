@@ -1533,7 +1533,7 @@ export function parseSelectorText(value: string, document?: boolean) {
                     break;
                 }
             }
-            return result;
+            return result.length ? result : [value];
         }
         return replaceMap(value.split(CHAR_SEPARATOR), (selector: string) => trimSelector(selector));
     }

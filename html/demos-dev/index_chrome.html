@@ -117,6 +117,10 @@
                         time = performance.now();
                         searchQuery(await chrome.getElement(document.documentElement));
 
+                        time = performance.now();
+                        console.log(await chrome.querySelectorAll(query, false));
+                        console.log(performance.now() - time);
+
                         squared.setFramework(vdom);
                         time = performance.now();
                         searchQuery(await squared.parseDocument());

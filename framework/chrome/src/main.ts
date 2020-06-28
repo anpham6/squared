@@ -34,22 +34,18 @@ let controller: Controller<Node>;
 let file: Undef<File<Node>>;
 let elementMap: Map<Element, Node>;
 
-function getCachedElement(element: HTMLElement, cache: boolean) {
-    if (!cache) {
-        elementMap.clear();
-        return undefined;
-    }
-    return elementMap.get(element);
-}
-
 function findElement(element: HTMLElement, cache: boolean) {
-    const result = getCachedElement(element, cache);
-    return result ? Promise.resolve(result) : application.parseDocument(element) as Promise<Node>;
+    if (cache) {
+        const result = elementMap.get(element);
+        if (result) {
+            return Promise.resolve(result);
+        }
+    }
+    return application.parseDocument(element) as Promise<Node>;
 }
 
-async function findElementAll(query: NodeListOf<Element>) {
+async function findElementAll(query: NodeListOf<Element>, length: number) {
     let incomplete = false;
-    const length = query.length;
     const result: Node[] = new Array(length);
     for (let i = 0; i < length; ++i) {
         const element = query[i] as HTMLElement;
@@ -71,6 +67,10 @@ async function findElementAll(query: NodeListOf<Element>) {
         flatArray<Node>(result);
     }
     return result;
+}
+
+async function findElementAsync(element: HTMLElement) {
+    return [await application.parseDocument(element) as Node];
 }
 
 function createAssetsOptions(assets: ChromeAsset[], options?: FileOptions, directory?: string, filename?: string): FileOptions {
@@ -245,11 +245,17 @@ const appBase: chrome.ChromeFramework<Node> = {
     querySelectorAll: (value: string, cache = true) => {
         if (application) {
             const query = document.querySelectorAll(value);
-            if (query.length > 0) {
-                if (!cache) {
-                    elementMap.clear();
+            const length = query.length;
+            if (length > 0) {
+                if (cache) {
+                    return promisify<Node[]>(findElementAll)(query, length);
                 }
-                return promisify<Node[]>(findElementAll)(query);
+                else if (length === 1) {
+                    return promisify<Node[]>(findElementAsync)(query[0] as HTMLElement);
+                }
+                else {
+                    return application.parseDocument(...Array.from(query) as HTMLElement[]) as Promise<Node[]>;
+                }
             }
         }
         return Promise.resolve([]);
