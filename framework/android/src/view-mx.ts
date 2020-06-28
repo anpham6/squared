@@ -2569,7 +2569,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             this._controlId = value;
         }
         get controlId() {
-            let result = this._controlId;
+            const result = this._controlId;
             if (result === undefined) {
                 const controlName = this.controlName;
                 if (controlName) {
@@ -2583,8 +2583,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             }
                         }
                     }
-                    result = convertWord(ResourceUI.generateId('android', name || fromLastIndexOf(controlName, '.').toLowerCase(), name ? 0 : 1));
-                    this._controlId = result;
+                    return this._controlId = convertWord(ResourceUI.generateId('android', name || fromLastIndexOf(controlName, '.').toLowerCase(), name ? 0 : 1));
                 }
                 else if (this.id === 0) {
                     return 'baseroot';

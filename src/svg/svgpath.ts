@@ -1038,10 +1038,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
     }
 
     get transforms() {
-        return this._transforms ?? (() => {
-            this._transforms = SvgBuild.filterTransforms(TRANSFORM.parse(this.element) || SvgBuild.convertTransforms(this.element.transform.baseVal));
-            return this._transforms;
-        })();
+        return this._transforms ?? (this._transforms = SvgBuild.filterTransforms(TRANSFORM.parse(this.element) || SvgBuild.convertTransforms(this.element.transform.baseVal)));
     }
 
     get pathLength() {

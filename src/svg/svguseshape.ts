@@ -41,17 +41,11 @@ export default class SvgUseShape extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$M
     }
 
     get transforms() {
-        return this._transforms ?? (() => {
-            this._transforms = this.getTransforms(this.useElement).concat(super.transforms);
-            return this._transforms;
-        })();
+        return this._transforms ?? (this._transforms = this.getTransforms(this.useElement).concat(super.transforms));
     }
 
     get animations() {
-        return this._animations ?? (() => {
-            this._animations = (this.getAnimations(this.useElement) as SvgAnimation[]).concat(super.animations);
-            return this._animations;
-        })();
+        return this._animations ?? (this._animations = (this.getAnimations(this.useElement) as SvgAnimation[]).concat(super.animations));
     }
 
     get instanceType() {

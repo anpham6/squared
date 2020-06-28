@@ -477,30 +477,18 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
             this._name = value;
         }
         get name() {
-            let result = this._name;
-            if (result === undefined) {
-                result = SvgBuild.setName(this.element);
-                this._name = result;
-            }
-            return result;
+            const result = this._name;
+            return result === undefined ? this._name = SvgBuild.setName(this.element) : result;
         }
 
         get transforms() {
-            let result = this._transforms;
-            if (result === undefined) {
-                result = this.getTransforms();
-                this._transforms = result;
-            }
-            return result;
+            const result = this._transforms;
+            return result === undefined ? this._transforms = this.getTransforms() : result;
         }
 
         get animations() {
-            let result = this._animations;
-            if (result === undefined) {
-                result = this.getAnimations();
-                this._animations = result;
-            }
-            return result;
+            const result = this._animations;
+            return result === undefined ? this._animations = this.getAnimations() : result;
         }
 
         get visible() {

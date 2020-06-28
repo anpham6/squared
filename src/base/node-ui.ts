@@ -1386,30 +1386,21 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         this._cached.naturalChild = value;
     }
     get naturalChild() {
-        let result = this._cached.naturalChild;
+        const result = this._cached.naturalChild;
         if (result === undefined) {
             const element = this._element;
-            result = element
-                ? element.parentElement
-                    ? true
-                    : element === document.documentElement
-                : false;
-            this._cached.naturalChild = result;
+            return this._cached.naturalChild =
+                element
+                    ? element.parentElement
+                        ? true
+                        : element === document.documentElement
+                    : false;
         }
         return result;
     }
 
     get pseudoElement() {
         return this._element?.className === '__squared.pseudo';
-    }
-
-    get layoutElement() {
-        let result = this._cached.layoutElement;
-        if (result === undefined) {
-            result = this.flexElement || this.gridElement;
-            this._cached.layoutElement = result;
-        }
-        return result;
     }
 
     get scrollElement() {
@@ -1462,97 +1453,62 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return result;
     }
 
+    get layoutElement() {
+        const result = this._cached.layoutElement;
+        return result === undefined ? this._cached.layoutElement = this.flexElement || this.gridElement : result;
+    }
+
     get imageElement() {
-        return (
-            this._cached.imageElement ??
-            (() => {
-                this._cached.imageElement = super.imageElement;
-                return this._cached.imageElement;
-            })()
-        );
+        const result = this._cached.imageElement;
+        return result === undefined ? this._cached.imageElement = super.imageElement : result;
     }
 
     get flexElement() {
-        return (
-            this._cached.flexElement ??
-            (() => {
-                this._cached.flexElement = super.flexElement;
-                return this._cached.flexElement;
-            })()
-        );
+        const result = this._cached.flexElement;
+        return result === undefined ? this._cached.flexElement = super.flexElement : result;
     }
 
     get gridElement() {
-        return (
-            this._cached.gridElement ??
-            (() => {
-                this._cached.gridElement = super.gridElement;
-                return this._cached.gridElement;
-            })()
-        );
+        const result = this._cached.gridElement;
+        return result === undefined ? this._cached.gridElement = super.gridElement : result;
     }
 
     get tableElement() {
-        return (
-            this._cached.tableElement ??
-            (() => {
-                this._cached.tableElement = super.tableElement;
-                return this._cached.tableElement;
-            })()
-        );
+        const result = this._cached.tableElement;
+        return result === undefined ? this._cached.tableElement = super.tableElement : result;
     }
 
     get inputElement() {
-        return (
-            this._cached.inputElement ??
-            (() => {
-                this._cached.inputElement = super.inputElement;
-                return this._cached.inputElement;
-            })()
-        );
+        const result = this._cached.inputElement;
+        return result === undefined ? this._cached.inputElement = super.inputElement : result;
     }
 
     get floating() {
-        return (
-            this._cached.floating ??
-            (() => {
-                this._cached.floating = super.floating;
-                return this._cached.floating;
-            })()
-        );
+        const result = this._cached.floating;
+        return result === undefined ? this._cached.floating = super.floating : result;
     }
 
     get float() {
-        return (
-            this._cached.float ??
-            (() => {
-                this._cached.float = super.float;
-                return this._cached.float;
-            })()
-        );
+        const result = this._cached.float;
+        return result === undefined ? this._cached.float = super.float : result;
     }
 
     set textContent(value) {
         this._cached.textContent = value;
     }
     get textContent() {
-        return (
-            this._cached.textContent ??
-            (() => {
-                this._cached.textContent = super.textContent;
-                return this._cached.textContent;
-            })()
-        );
+        const result = this._cached.textContent;
+        return result === undefined ? this._cached.textContent = super.textContent : result;
     }
 
     get contentBox() {
-        return (
-            this._cached.contentBox ??
-            (() => {
-                this._cached.contentBox = super.contentBox;
-                return this._cached.contentBox;
-            })()
-        );
+        const result = this._cached.contentBox;
+        return result === undefined ? this._cached.contentBox = super.contentBox : result;
+    }
+
+    get positionRelative() {
+        const result = this._cached.positionRelative;
+        return result === undefined ? this._cached.positionRelative = super.positionRelative : result;
     }
 
     set documentParent(value) {
@@ -1615,10 +1571,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return this._renderAs;
     }
 
-    get positionRelative() {
-        return this._cached.positionRelative ?? super.positionRelative;
-    }
-
     get inlineVertical() {
         let result = this._cached.inlineVertical;
         if (result === undefined) {
@@ -1635,21 +1587,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get inlineDimension() {
-        let result = this._cached.inlineDimension;
-        if (result === undefined) {
-            result = (this.naturalElement || this.pseudoElement) && (this.display.startsWith('inline-') || this.floating);
-            this._cached.inlineDimension = result;
-        }
-        return result;
+        const result = this._cached.inlineDimension;
+        return result === undefined ? this._cached.inlineDimension = (this.naturalElement || this.pseudoElement) && (this.display.startsWith('inline-') || this.floating) : result;
     }
 
     get inlineFlow() {
-        let result = this._cached.inlineFlow;
-        if (result === undefined) {
-            result = this.inline || this.inlineDimension || this.inlineVertical || this.imageElement || this.svgElement && this.hasPX('width', { percent: false }) || this.tableElement && this.previousSibling?.floating === true;
-            this._cached.inlineFlow = result;
-        }
-        return result;
+        const result = this._cached.inlineFlow;
+        return result === undefined ? this._cached.inlineFlow = this.inline || this.inlineDimension || this.inlineVertical || this.imageElement || this.svgElement && this.hasPX('width', { percent: false }) || this.tableElement && this.previousSibling?.floating === true : result;
     }
 
     get blockStatic() {
@@ -1672,12 +1616,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get blockVertical() {
-        let result = this._cached.blockVertical;
-        if (result === undefined) {
-            result = this.blockDimension && this.hasHeight;
-            this._cached.blockVertical = result;
-        }
-        return result;
+        const result = this._cached.blockVertical;
+        return result === undefined ? this._cached.blockVertical = this.blockDimension && this.hasHeight : result;
     }
 
     get rightAligned() {
@@ -1703,12 +1643,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get positiveAxis() {
-        let result = this._cached.positiveAxis;
-        if (result === undefined) {
-            result = (!this.positionRelative || this.positionRelative && this.top >= 0 && this.left >= 0 && (this.right <= 0 || this.hasPX('left')) && (this.bottom <= 0 || this.hasPX('top'))) && this.marginTop >= 0 && this.marginLeft >= 0 && this.marginRight >= 0;
-            this._cached.positiveAxis = result;
-        }
-        return result;
+        const result = this._cached.positiveAxis;
+        return result === undefined ? this._cached.positiveAxis = (!this.positionRelative || this.positionRelative && this.top >= 0 && this.left >= 0 && (this.right <= 0 || this.hasPX('left')) && (this.bottom <= 0 || this.hasPX('top'))) && this.marginTop >= 0 && this.marginLeft >= 0 && this.marginRight >= 0 : result;
     }
 
     get leftTopAxis() {
@@ -1771,12 +1707,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         this._cached.actualParent = value;
     }
     get actualParent(): Null<T> {
-        let result = this._cached.actualParent;
-        if (result === undefined) {
-            result = super.actualParent as Null<T> || this.innerMostWrapped.actualParent;
-            this._cached.actualParent = result;
-        }
-        return result;
+        const result = this._cached.actualParent;
+        return result === undefined ? this._cached.actualParent = super.actualParent as Null<T> || this.innerMostWrapped.actualParent : result;
     }
 
     set siblingsLeading(value) {
@@ -1993,11 +1925,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get preserveWhiteSpace() {
-        let result = this._cached.preserveWhiteSpace;
+        const result = this._cached.preserveWhiteSpace;
         if (result === undefined) {
             const value = this.css('whiteSpace');
-            result = value === 'pre' || value === 'pre-wrap';
-            this._cached.preserveWhiteSpace = result;
+            return this._cached.preserveWhiteSpace = value === 'pre' || value === 'pre-wrap';
         }
         return result;
     }
@@ -2013,11 +1944,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get extensions() {
-        let result = this._cached.extensions;
+        const result = this._cached.extensions;
         if (result === undefined) {
             const use = this.use?.trim();
-            result = use ? use.split(/\s*,\s*/) : [];
-            this._cached.extensions = result;
+            return this._cached.extensions = use ? use.split(/\s*,\s*/) : [];
         }
         return result;
     }

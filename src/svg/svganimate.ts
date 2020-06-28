@@ -438,10 +438,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         }
     }
     get values() {
-        return this._values ?? (() => {
-            this._values = [];
-            return this._values;
-        })();
+        return this._values ?? (this._values = []);
     }
 
     set keyTimes(value) {
@@ -451,10 +448,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         }
     }
     get keyTimes() {
-        return this._keyTimes ?? (() => {
-            this._keyTimes = [];
-            return this._keyTimes;
-        })();
+        return this._keyTimes ?? (this._keyTimes = []);
     }
 
     set keySplines(value) {

@@ -1,4 +1,4 @@
-import { getStyle } from './css';
+import { getStyle, hasCoords } from './css';
 import { getRangeClientRect } from './dom';
 import { convertCamelCase, iterateArray } from './util';
 
@@ -32,8 +32,7 @@ export function actualTextRangeRect(element: Element, sessionId?: string) {
         iterateArray(element.children, (item: HTMLElement) => {
             const style = getStyle(item);
             if (style.getPropertyValue('visibility') !== 'visible') {
-                const position = style.getPropertyValue('position');
-                if (position === 'absolute' || position === 'fixed') {
+                if (hasCoords(style.getPropertyValue('position'))) {
                     const display = style.getPropertyValue('display');
                     if (display !== 'none') {
                         item.style.display = 'none';

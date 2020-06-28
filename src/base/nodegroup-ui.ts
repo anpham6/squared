@@ -2,7 +2,7 @@ import NodeUI from './node-ui';
 
 import { NODE_ALIGNMENT } from './lib/enumeration';
 
-const { isLength } = squared.lib.css;
+const { hasCoords, isLength } = squared.lib.css;
 
 export default abstract class NodeGroupUI extends NodeUI {
     public init() {
@@ -43,72 +43,48 @@ export default abstract class NodeGroupUI extends NodeUI {
         if (this.hasAlign(NODE_ALIGNMENT.BLOCK)) {
             return false;
         }
-        let result = this._cached.inline;
-        if (result === undefined) {
-            result = this.every(node => node.inline);
-            this._cached.inline = result;
-        }
-        return result;
+        const result = this._cached.inline;
+        return result === undefined ? this._cached.inline = this.every(node => node.inline) : result;
     }
 
     get inlineStatic() {
         if (this.hasAlign(NODE_ALIGNMENT.BLOCK)) {
             return false;
         }
-        let result = this._cached.inlineStatic;
-        if (result === undefined) {
-            result = this.every(node => node.inlineStatic);
-            this._cached.inlineStatic = result;
-        }
-        return result;
+        const result = this._cached.inlineStatic;
+        return result === undefined ? this._cached.inlineStatic = this.every(node => node.inlineStatic) : result;
     }
 
     get inlineVertical() {
         if (this.hasAlign(NODE_ALIGNMENT.BLOCK)) {
             return false;
         }
-        let result = this._cached.inlineVertical;
-        if (result === undefined) {
-            result = this.every((node: NodeUI) => node.inlineVertical);
-            this._cached.inlineVertical = result;
-        }
-        return result;
+        const result = this._cached.inlineVertical;
+        return result === undefined ? this._cached.inlineVertical = this.every((node: NodeUI) => node.inlineVertical) : result;
     }
 
     get inlineFlow() {
         if (this.hasAlign(NODE_ALIGNMENT.BLOCK)) {
             return false;
         }
-        let result = this._cached.inlineFlow;
-        if (result === undefined) {
-            result = this.every((node: NodeUI) => node.inlineFlow);
-            this._cached.inlineFlow = result;
-        }
-        return result;
+        const result = this._cached.inlineFlow;
+        return result === undefined ? this._cached.inlineFlow = this.every((node: NodeUI) => node.inlineFlow) : result;
     }
 
     get inlineDimension() {
         if (this.hasAlign(NODE_ALIGNMENT.BLOCK)) {
             return false;
         }
-        let result = this._cached.inlineDimension;
-        if (result === undefined) {
-            result = this.every((node: NodeUI) => node.inlineDimension);
-            this._cached.inlineDimension = result;
-        }
-        return result;
+        const result = this._cached.inlineDimension;
+        return result === undefined ? this._cached.inlineDimension = this.every((node: NodeUI) => node.inlineDimension) : result;
     }
 
     get block() {
         if (this.hasAlign(NODE_ALIGNMENT.BLOCK)) {
             return true;
         }
-        let result = this._cached.block;
-        if (result === undefined) {
-            result = this.some(node => node.block);
-            this._cached.block = result;
-        }
-        return result;
+        const result = this._cached.block;
+        return result === undefined ? this._cached.block = this.some(node => node.block) : result;
     }
 
     get blockStatic() {
@@ -131,31 +107,18 @@ export default abstract class NodeGroupUI extends NodeUI {
     }
 
     get blockDimension() {
-        let result = this._cached.blockDimension;
-        if (result === undefined) {
-            result = this.every((node: NodeUI) => node.blockDimension);
-            this._cached.blockDimension = result;
-        }
-        return result;
+        const result = this._cached.blockDimension;
+        return result === undefined ? this._cached.blockDimension = this.every((node: NodeUI) => node.blockDimension) : result;
     }
 
     get blockVertical() {
-        let result = this._cached.blockVertical;
-        if (result === undefined) {
-            result = this.every((node: NodeUI) => node.blockVertical);
-            this._cached.blockVertical = result;
-        }
-        return result;
+        const result = this._cached.blockVertical;
+        return result === undefined ? this._cached.blockVertical = this.every((node: NodeUI) => node.blockVertical) : result;
     }
 
     get pageFlow() {
-        let result = this._cached.pageFlow;
-        if (result === undefined) {
-            const value = this.css('position');
-            result = value !== 'absolute' && value !== 'fixed';
-            this._cached.pageFlow = result;
-        }
-        return result;
+        const result = this._cached.pageFlow;
+        return result === undefined ? this._cached.pageFlow = !hasCoords(this.css('position')) : result;
     }
 
     set baseline(value) {
@@ -240,24 +203,16 @@ export default abstract class NodeGroupUI extends NodeUI {
     }
 
     get centerAligned() {
-        let result = this._cached.centerAligned;
-        if (result === undefined) {
-            result = this.every(node => node.centerAligned);
-            this._cached.centerAligned = result;
-        }
-        return result;
+        const result = this._cached.centerAligned;
+        return result === undefined ? this._cached.centerAligned = this.every(node => node.centerAligned) : result;
     }
 
     get rightAligned() {
         if (this.hasAlign(NODE_ALIGNMENT.RIGHT)) {
             return true;
         }
-        let result = this._cached.rightAligned;
-        if (result === undefined) {
-            result = this.every(node => node.rightAligned);
-            this._cached.rightAligned = result;
-        }
-        return result;
+        const result = this._cached.rightAligned;
+        return result === undefined ? this._cached.rightAligned = this.every(node => node.rightAligned) : result;
     }
 
     get tagName() {
