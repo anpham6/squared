@@ -61,24 +61,6 @@ function cascadeActualPadding(children: T[], attr: string, value: number) {
     return valid;
 }
 
-function parseExclusions(attr: string, enumeration: {}, dataset: DOMStringMap, parentDataset: DOMStringMap, systemName: string) {
-    const value = parentDataset[attr + 'Child' + systemName] || parentDataset[attr + 'Child'];
-    let exclude = dataset[attr + systemName] || dataset[attr] || '',
-        offset = 0;
-    if (value) {
-        exclude += (exclude !== '' ? '|' : '') + value;
-    }
-    if (exclude !== '') {
-        for (const name of exclude.split('|')) {
-            const i: number = enumeration[name.trim().toUpperCase()] || 0;
-            if (i > 0 && !hasBit(offset, i)) {
-                offset |= i;
-            }
-        }
-    }
-    return offset;
-}
-
 function traverseElementSibling(element: Null<Element>, direction: "previousSibling" | "nextSibling", sessionId: string, options?: SiblingOptions) {
     let floating: Undef<boolean>,
         pageFlow: Undef<boolean>,
@@ -168,6 +150,18 @@ function setOverflow(node: T) {
         }
     }
     return result;
+}
+
+function getExclusionValue(enumeration: {}, offset: number, value?: string) {
+    if (value) {
+        for (const name of value.split('|')) {
+            const i: number = enumeration[name.trim().toUpperCase()] || 0;
+            if (i > 0 && !hasBit(offset, i)) {
+                offset |= i;
+            }
+        }
+    }
+    return offset;
 }
 
 const canCascadeChildren = (node: T) =>  node.naturalElements.length > 0 && !node.layoutElement && !node.tableElement;
@@ -544,19 +538,19 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public abstract translateY(value: number, options?: TranslateOptions): boolean;
     public abstract localizeString(value: string): string;
 
-    public abstract get controlElement(): boolean;
     public abstract set containerType(value: number);
     public abstract get containerType(): number;
     public abstract set controlId(name: string);
     public abstract get controlId(): string;
-    public abstract get documentId(): string;
-    public abstract get baselineHeight(): number;
     public abstract set renderExclude(value: boolean);
     public abstract get renderExclude(): boolean;
     public abstract set positioned(value);
     public abstract get positioned(): boolean;
     public abstract set localSettings(value);
     public abstract get localSettings(): LocalSettingsUI;
+    public abstract get controlElement(): boolean;
+    public abstract get documentId(): string;
+    public abstract get baselineHeight(): number;
     public abstract get support(): SupportUI;
 
     public is(containerType: number) {
@@ -604,7 +598,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public namespace(name: string) {
         const result = this._namespaces[name];
-        return result === undefined ? this._namespaces[name] = {} : result;
+        return result === undefined
+            ? this._namespaces[name] = {}
+            : result;
     }
 
     public *namespaces(): Generator<[string, StringMap], void, unknown> {
@@ -843,17 +839,22 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public setExclusions() {
         if (this.naturalElement) {
-            const element = this._element as HTMLElement;
-            const dataset = element.dataset;
-            const parentDataset = element.parentElement?.dataset || {};
-            if (hasKeys(dataset) || hasKeys(parentDataset)) {
+            const dataset = (this._element as HTMLElement).dataset;
+            if (hasKeys(dataset)) {
                 const systemName = capitalize(this.localSettings.systemName);
-                this.exclude({
-                    resource: parseExclusions('excludeResource', NODE_RESOURCE, dataset, parentDataset, systemName),
-                    procedure: parseExclusions('excludeProcedure', NODE_PROCEDURE, dataset, parentDataset, systemName),
-                    section: parseExclusions('excludeSection', APP_SECTION, dataset, parentDataset, systemName)
-                });
-             }
+                this._excludeResource = getExclusionValue(NODE_RESOURCE, this._excludeResource, dataset['excludeResource' + systemName] || dataset.excludeResource);
+                this._excludeProcedure = getExclusionValue(NODE_PROCEDURE, this._excludeProcedure, dataset['excludeProcedure' + systemName] || dataset.excludeProcedure);
+                this._excludeSection = getExclusionValue(APP_SECTION, this._excludeSection, dataset['excludeSection' + systemName] || dataset.excludeSection);
+                if (this.length) {
+                    const resource = getExclusionValue(NODE_RESOURCE, 0, dataset['excludeResourceChild' + systemName] || dataset.excludeResourceChild);
+                    const procedure = getExclusionValue(NODE_PROCEDURE, 0, dataset['excludeProcedureChild' + systemName] || dataset.excludeProcedureChild);
+                    const section = getExclusionValue(APP_SECTION, 0, dataset['excludeSectionChild' + systemName] || dataset.excludeSectionChild);
+                    if (resource > 0 || procedure > 0 || section > 0) {
+                        const data = { resource, procedure, section };
+                        this.each((node: T) => node.exclude(data));
+                    }
+                }
+            }
         }
     }
 
@@ -1108,18 +1109,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public previousSiblings(options?: SiblingOptions): T[] {
         const node = this.innerMostWrapped;
-        if (options) {
-            return traverseElementSibling(node.element?.previousSibling as Element, 'previousSibling', this.sessionId, options);
-        }
-        return node.siblingsLeading;
+        return options ? traverseElementSibling(node.element?.previousSibling as Element, 'previousSibling', this.sessionId, options) : node.siblingsLeading;
     }
 
     public nextSiblings(options?: SiblingOptions): T[] {
         const node = this.innerMostWrapped;
-        if (options) {
-            return traverseElementSibling(node.element?.nextSibling as Element, 'nextSibling', this.sessionId, options);
-        }
-        return node.siblingsTrailing;
+        return options ? traverseElementSibling(node.element?.nextSibling as Element, 'nextSibling', this.sessionId, options) : node.siblingsTrailing;
     }
 
     public modifyBox(region: number, offset?: number, negative = true) {
@@ -1466,42 +1461,58 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     get layoutElement() {
         const result = this._cached.layoutElement;
-        return result === undefined ? this._cached.layoutElement = this.flexElement || this.gridElement : result;
+        return result === undefined
+            ? this._cached.layoutElement = this.flexElement || this.gridElement
+            : result;
     }
 
     get imageElement() {
         const result = this._cached.imageElement;
-        return result === undefined ? this._cached.imageElement = super.imageElement : result;
+        return result === undefined
+            ? this._cached.imageElement = super.imageElement
+            : result;
     }
 
     get flexElement() {
         const result = this._cached.flexElement;
-        return result === undefined ? this._cached.flexElement = super.flexElement : result;
+        return result === undefined
+            ? this._cached.flexElement = super.flexElement
+            : result;
     }
 
     get gridElement() {
         const result = this._cached.gridElement;
-        return result === undefined ? this._cached.gridElement = super.gridElement : result;
+        return result === undefined
+            ? this._cached.gridElement = super.gridElement
+            : result;
     }
 
     get tableElement() {
         const result = this._cached.tableElement;
-        return result === undefined ? this._cached.tableElement = super.tableElement : result;
+        return result === undefined
+            ? this._cached.tableElement = super.tableElement
+            : result;
     }
 
     get inputElement() {
         const result = this._cached.inputElement;
-        return result === undefined ? this._cached.inputElement = super.inputElement : result;
+        return result === undefined
+            ? this._cached.inputElement = super.inputElement
+            : result;
     }
 
     get floating() {
         const result = this._cached.floating;
-        return result === undefined ? this._cached.floating = super.floating : result;
+        return result === undefined
+            ? this._cached.floating = super.floating
+            : result;
     }
 
     get float() {
         const result = this._cached.float;
-        return result === undefined ? this._cached.float = super.float : result;
+        return result === undefined
+            ? this._cached.float = super.float
+            : result;
     }
 
     set textContent(value) {
@@ -1509,17 +1520,23 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
     get textContent() {
         const result = this._cached.textContent;
-        return result === undefined ? this._cached.textContent = super.textContent : result;
+        return result === undefined
+            ? this._cached.textContent = super.textContent
+            : result;
     }
 
     get contentBox() {
         const result = this._cached.contentBox;
-        return result === undefined ? this._cached.contentBox = super.contentBox : result;
+        return result === undefined
+            ? this._cached.contentBox = super.contentBox
+            : result;
     }
 
     get positionRelative() {
         const result = this._cached.positionRelative;
-        return result === undefined ? this._cached.positionRelative = super.positionRelative : result;
+        return result === undefined
+            ? this._cached.positionRelative = super.positionRelative
+            : result;
     }
 
     set documentParent(value) {
@@ -1583,28 +1600,29 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get inlineVertical() {
-        let result = this._cached.inlineVertical;
+        const result = this._cached.inlineVertical;
         if (result === undefined) {
             if ((this.naturalElement || this.pseudoElement) && !this.floating) {
                 const value = this.display;
-                result = value.startsWith('inline') || value === 'table-cell';
+                return this._cached.inlineVertical = value.startsWith('inline') || value === 'table-cell';
             }
-            else {
-                result = false;
-            }
-            this._cached.inlineVertical = result;
+            return this._cached.inlineVertical = false;
         }
         return result;
     }
 
     get inlineDimension() {
         const result = this._cached.inlineDimension;
-        return result === undefined ? this._cached.inlineDimension = (this.naturalElement || this.pseudoElement) && (this.display.startsWith('inline-') || this.floating) : result;
+        return result === undefined
+            ? this._cached.inlineDimension = (this.naturalElement || this.pseudoElement) && (this.display.startsWith('inline-') || this.floating)
+            : result;
     }
 
     get inlineFlow() {
         const result = this._cached.inlineFlow;
-        return result === undefined ? this._cached.inlineFlow = this.inline || this.inlineDimension || this.inlineVertical || this.imageElement || this.svgElement && this.hasPX('width', { percent: false }) || this.tableElement && this.previousSibling?.floating === true : result;
+        return result === undefined
+            ? this._cached.inlineFlow = this.inline || this.inlineDimension || this.inlineVertical || this.imageElement || this.svgElement && this.hasPX('width', { percent: false }) || this.tableElement && this.previousSibling?.floating === true
+            : result;
     }
 
     get blockStatic() {
@@ -1627,7 +1645,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     get blockVertical() {
         const result = this._cached.blockVertical;
-        return result === undefined ? this._cached.blockVertical = this.blockDimension && this.hasHeight : result;
+        return result === undefined
+            ? this._cached.blockVertical = this.blockDimension && this.hasHeight
+            : result;
     }
 
     get rightAligned() {
@@ -1656,7 +1676,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     get positiveAxis() {
         const result = this._cached.positiveAxis;
-        return result === undefined ? this._cached.positiveAxis = (!this.positionRelative || this.positionRelative && this.top >= 0 && this.left >= 0 && (this.right <= 0 || this.hasPX('left')) && (this.bottom <= 0 || this.hasPX('top'))) && this.marginTop >= 0 && this.marginLeft >= 0 && this.marginRight >= 0 : result;
+        return result === undefined
+            ? this._cached.positiveAxis = (!this.positionRelative || this.positionRelative && this.top >= 0 && this.left >= 0 && (this.right <= 0 || this.hasPX('left')) && (this.bottom <= 0 || this.hasPX('top'))) && this.marginTop >= 0 && this.marginLeft >= 0 && this.marginRight >= 0
+            : result;
     }
 
     get leftTopAxis() {
@@ -1716,7 +1738,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
     get actualParent(): Null<T> {
         const result = this._cached.actualParent;
-        return result === undefined ? this._cached.actualParent = super.actualParent as Null<T> || this.innerMostWrapped.actualParent : result;
+        return result === undefined
+            ? this._cached.actualParent = super.actualParent as Null<T> || this.innerMostWrapped.actualParent
+            : result;
     }
 
     set siblingsLeading(value) {

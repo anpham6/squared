@@ -3449,7 +3449,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         return (node: T) => {
             node.localSettings = this._defaultViewSettings;
             node.api = this._targetAPI;
-            node.setExclusions();
         };
     }
 

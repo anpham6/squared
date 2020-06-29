@@ -76,7 +76,9 @@ export default abstract class Application<T extends Node> implements squared.bas
     public abstract get viewModel(): Undef<AppVieModel>;
 
     public createNode(sessionId: string, options: CreateNodeOptions) {
-        return new this.Node(this.nextId, sessionId, options.element);
+        const node = new this.Node(this.nextId, sessionId, options.element);
+        this.controllerHandler.afterInsertNode(node);
+        return node;
     }
 
     public copyToDisk(directory: string, options?: FileActionOptions) {
@@ -116,7 +118,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         this.closed = false;
     }
 
-    public parseDocument(...elements: any[]) {
+    public parseDocument(...elements: (string | HTMLElement)[]) {
         const resourceHandler = this._resourceHandler;
         const preloadImages = resourceHandler?.userSettings.preloadImages === true;
         const sessionId = this._controllerHandler.generateSessionId;

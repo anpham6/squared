@@ -13,7 +13,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
             }
             this.controllerHandler.applyDefaultStyles(element, sessionId);
         }
-        return new this.Node(this.nextId, sessionId, element);
+        return this.createNode(sessionId, { element });
     }
 
     public afterCreateCache(node: T) {

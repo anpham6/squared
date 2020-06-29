@@ -288,7 +288,7 @@ declare module "lib" {
         function findSet<T = unknown>(list: Set<T>, predicate: IteratorPredicate<T, boolean, Set<T>>): Undef<T>;
         function safeNestedArray<T = unknown>(list: T[][] | ObjectMap<T[]>, index: number | string): T[];
         function safeNestedMap<T = unknown>(map: ObjectMapNested<T>, index: number | string): ObjectMap<T>;
-        function sortArray<T = unknown>(list: T[], ascending: boolean, ...attrs: string[]): T[];
+        function sortArray<T = any>(list: T[], ascending: boolean, ...attrs: string[]): T[];
         function flatArray<T = unknown>(list: any[], depth?: number): T[];
         function spliceArray<T = unknown>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>, deleteCount?: number): T[];
         function partitionArray<T = unknown>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>): [T[], T[]];
@@ -297,7 +297,7 @@ declare module "lib" {
         function iterateArray<T = unknown>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start?: number, end?: number): number;
         function iterateReverseArray<T = unknown>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start?: number, end?: number): number;
         function conditionArray<T = unknown>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, any>): void;
-        function replaceMap<T, U>(list: any[], predicate: IteratorPredicate<T, U>): U[];
+        function replaceMap<T, U>(list: (T | U)[], predicate: IteratorPredicate<T, U>): U[];
         function plainMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>): U[];
     }
 

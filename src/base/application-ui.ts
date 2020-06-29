@@ -583,6 +583,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (direction.has(element)) {
                         element.dir = 'rtl';
                     }
+                    item.setExclusions();
                 }
                 item.saveAsInitial();
             });

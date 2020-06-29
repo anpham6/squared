@@ -973,11 +973,11 @@ export function safeNestedMap<T = unknown>(map: ObjectMapNested<T>, index: numbe
     return result;
 }
 
-export function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]) {
+export function sortArray<T = any>(list: T[], ascending: boolean, ...attrs: string[]) {
     return list.sort((a, b) => {
         for (let i = 0; i < attrs.length; ++i) {
-            let valueA: any = a,
-                valueB: any = b;
+            let valueA = a,
+                valueB = b;
             for (const name of attrs[i].split('.')) {
                 const vA = valueA[name];
                 const vB = valueB[name];
