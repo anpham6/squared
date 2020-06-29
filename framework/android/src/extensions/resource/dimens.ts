@@ -51,7 +51,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
                 const [namespace, attr, value] = name.split(',');
                 const key = getResourceName(dimens, fromLastIndexOf(containerName, '.') + '_' + convertUnderscore(attr), value);
                 for (const node of group[name]) {
-                    node[namespace](attr, `@dimen/${key}`);
+                    node.attr(namespace, attr, `@dimen/${key}`);
                 }
                 dimens.set(key, value);
             }

@@ -8,7 +8,7 @@ type SvgAnimation = squared.svg.SvgAnimation;
 type IntervalMap = ObjectMap<ObjectIndex<SvgAnimationIntervalValue<SvgAnimation>[]>>;
 type IntervalTime = ObjectMap<Set<number>>;
 
-const { hasValue, safeNestedArray, sortNumber } = squared.lib.util;
+const { safeNestedArray, sortNumber } = squared.lib.util;
 
 function insertIntervalValue(intervalMap: IntervalMap, intervalTimes: IntervalTime, keyName: string, time: number, value: string, endTime = 0, animation?: SvgAnimation, start = false, end = false, fillMode = 0, infinite = false, valueFrom?: string) {
     if (value) {
@@ -316,21 +316,17 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
         return value === 0;
     }
 
-    public evaluateStart(item: SvgAnimate, otherValue?: any) {
+    public evaluateStart(item: SvgAnimate, fallback?: string) {
         const values = item.values;
-        let value = item.reverse ? values[values.length - 1] : values[0];
-        if (value === '') {
-            value = this.get(item.attributeName, item.delay) || otherValue?.toString() || item.baseValue;
-            if (hasValue<string>(value)) {
-                value = value.toString();
-                if (item.reverse) {
-                    values[values.length - 1] = value;
-                    item.to = value;
-                }
-                else {
-                    values[0] = value;
-                    item.from = value;
-                }
+        const value = (item.reverse ? values[values.length - 1] : values[0]) || this.get(item.attributeName, item.delay) || fallback || item.baseValue;
+        if (value) {
+            if (item.reverse) {
+                values[values.length - 1] = value;
+                item.to = value;
+            }
+            else {
+                values[0] = value;
+                item.from = value;
             }
         }
         return values;

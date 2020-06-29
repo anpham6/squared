@@ -9,7 +9,7 @@ const { CSS_PROPERTIES, CSS_UNIT, formatPX, getBackgroundPosition, isLength, isP
 const { createElement, getNamedItem } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
 const { actualTextRangeRect } = squared.lib.session;
-const { capitalize, convertFloat, convertInt, convertWord, fromLastIndexOf, hasKeys, isNumber, isPlainObject, isString, replaceMap } = squared.lib.util;
+const { capitalize, convertFloat, convertInt, convertWord, fromLastIndexOf, hasKeys, isNumber, isString, replaceMap } = squared.lib.util;
 
 const { EXT_NAME } = squared.base.lib.constant;
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE } = squared.base.lib.enumeration;
@@ -1495,13 +1495,19 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public apply(options: {}) {
             for (const name in options) {
                 const data = options[name];
-                if (isPlainObject(data)) {
-                    for (const attr in data) {
-                        this.attr(name, attr, data[attr]);
-                    }
-                }
-                else if (data) {
-                    this.attr('_', name, data.toString());
+                switch (typeof data) {
+                    case 'object':
+                        if (data) {
+                            for (const attr in data) {
+                                this.attr(name, attr, data[attr]);
+                            }
+                        }
+                        break;
+                    case 'string':
+                    case 'number':
+                    case 'boolean':
+                        this.attr('_', name, data.toString());
+                        break;
                 }
             }
         }

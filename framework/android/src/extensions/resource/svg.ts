@@ -207,7 +207,7 @@ function getPathInterpolator(keySplines: Undef<string[]>, index: number) {
 
 function getPaintAttribute(value: string) {
     for (const attr in ATTRIBUTE_ANDROID) {
-        if (ATTRIBUTE_ANDROID[attr].includes(value)) {
+        if ((ATTRIBUTE_ANDROID[attr] as string[]).includes(value)) {
             return convertCamelCase(attr);
         }
     }

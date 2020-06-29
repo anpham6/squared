@@ -45,6 +45,19 @@ interface ShapeStrokeData {
     dashGap: string;
 }
 
+interface LayerList {
+    'xmlns:android': string;
+    item: LayerData[] ;
+}
+
+interface LayerData {
+    top?: string;
+    right?: string;
+    left?: string;
+    bottom?: string;
+    shape?: StandardMap;
+}
+
 const { reduceRGBA } = squared.lib.color;
 const { extractURL, formatPercent, formatPX, getBackgroundPosition } = squared.lib.css;
 const { truncate } = squared.lib.math;
@@ -368,8 +381,8 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LATEST
 }
 
 function createLayerList(boxStyle: BoxStyle, images: BackgroundImageData[] = [], borderOnly = true, stroke?: ObjectMap<any> | false, corners?: StringMap | false, indentOffset?: string) {
-    const item: StandardMap[] = [];
-    const result: StandardMap[] = [{ 'xmlns:android': XMLNS_ANDROID.android, item }];
+    const item: LayerData[] = [];
+    const result: LayerList[] = [{ 'xmlns:android': XMLNS_ANDROID.android, item }];
     const solid = !borderOnly && getBackgroundColor(boxStyle.backgroundColor);
     if (solid && !images.find(image => !!image.gradient)) {
         item.push({ shape: { 'android:shape': 'rectangle', solid, corners } });
@@ -423,7 +436,7 @@ function fillBackgroundAttribute(attribute: string[], length: number) {
     return attribute;
 }
 
-function setBorderStyle(layerList: ObjectMap<any>, borders: Undef<BorderAttribute>[], index: number, corners: Undef<StringMap>, indentWidth: number, indentOffset: string) {
+function setBorderStyle(layerList: LayerList, borders: Undef<BorderAttribute>[], index: number, corners: Undef<StringMap>, indentWidth: number, indentOffset: string) {
     const item = borders[index];
     if (item) {
         const width = roundFloat(item.width);
@@ -575,29 +588,29 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     stored.borderRadius = undefined;
                 }
                 const outline = stored.outline;
-                let [shapeData, layerListData] = this.getDrawableBorder(stored, undefined, images, drawOutline && outline ? getIndentOffset(outline) : 0);
-                const emptyBackground = shapeData === undefined && layerListData === undefined;
+                let [shapeData, layerList] = this.getDrawableBorder(stored, undefined, images, drawOutline && outline ? getIndentOffset(outline) : 0);
+                const emptyBackground = shapeData === undefined && layerList === undefined;
                 if (outline && (drawOutline || emptyBackground)) {
-                    const [outlineShapeData, outlineLayerListData] = this.getDrawableBorder(stored, outline, emptyBackground ? images : undefined, undefined, !emptyBackground);
+                    const [outlineShapeData, outlineLayerList] = this.getDrawableBorder(stored, outline, emptyBackground ? images : undefined, undefined, !emptyBackground);
                     if (outlineShapeData) {
                         if (!shapeData) {
                             shapeData = outlineShapeData;
                         }
                     }
-                    else if (outlineLayerListData) {
-                        if (layerListData) {
-                            layerListData[0].item = layerListData[0].item.concat(outlineLayerListData[0].item);
+                    else if (outlineLayerList) {
+                        if (layerList) {
+                            layerList[0].item = layerList[0].item.concat(outlineLayerList[0].item);
                         }
                         else {
-                            layerListData = outlineLayerListData;
+                            layerList = outlineLayerList;
                         }
                     }
                 }
                 if (shapeData) {
                     setDrawableBackground(node, applyTemplate('shape', SHAPE_TMPL, shapeData));
                 }
-                else if (layerListData) {
-                    setDrawableBackground(node, applyTemplate('layer-list', LAYERLIST_TMPL, layerListData));
+                else if (layerList) {
+                    setDrawableBackground(node, applyTemplate('layer-list', LAYERLIST_TMPL, layerList));
                 }
                 else {
                     const backgroundColor = stored.backgroundColor;
@@ -632,7 +645,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         });
     }
 
-    public getDrawableBorder(data: BoxStyle, outline?: BorderAttribute, images?: BackgroundImageData[], indentWidth = 0, borderOnly = false) {
+    public getDrawableBorder(data: BoxStyle, outline?: BorderAttribute, images?: BackgroundImageData[], indentWidth = 0, borderOnly = false): [Undef<StandardMap[]>, Undef<LayerList[]>] {
         const borderVisible: boolean[] = new Array(4);
         const corners = !borderOnly ? getBorderRadius(data.borderRadius) : undefined;
         const indentOffset = indentWidth > 0 ? formatPX(indentWidth) : '';
@@ -642,7 +655,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             border: Undef<BorderAttribute>,
             borderData: Undef<BorderAttribute>,
             shapeData: Undef<StandardMap[]>,
-            layerListData: Undef<StandardMap[]>;
+            layerList: Undef<LayerList[]>;
         if (outline) {
             borderData = outline;
             borders = new Array(4);
@@ -682,19 +695,19 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         if (border && !isAlternatingBorder(border.style, roundFloat(border.width)) && !(border.style === 'double' && parseInt(border.width) > 1) || !borderData && (corners || images?.length)) {
             const stroke = border ? getBorderStroke(border) : false;
             if (images?.length || indentWidth > 0 || borderOnly) {
-                layerListData = createLayerList(data, images, borderOnly, stroke, corners, indentOffset);
+                layerList = createLayerList(data, images, borderOnly, stroke, corners, indentOffset);
             }
             else {
                 shapeData = createShapeData(stroke, !borderOnly && getBackgroundColor(data.backgroundColor), corners);
             }
         }
         else if (borderData) {
-            layerListData = createLayerList(data, images, borderOnly);
+            layerList = createLayerList(data, images, borderOnly);
             if (borderStyle && !isAlternatingBorder(borderData.style)) {
                 const width = roundFloat(borderData.width);
                 if (borderData.style === 'double' && width > 1) {
                     insertDoubleBorder(
-                        layerListData[0].item,
+                        layerList[0].item,
                         borderData,
                         borderVisible[0],
                         borderVisible[1],
@@ -706,7 +719,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
                 else {
                     const hideOffset = '-' + formatPX(width + indentWidth + 1);
-                    layerListData[0].item.push({
+                    layerList[0].item.push({
                         top: borderVisible[0] ? indentOffset : hideOffset,
                         right: borderVisible[1] ? indentOffset : hideOffset,
                         bottom: borderVisible[2] ? indentOffset : hideOffset,
@@ -720,14 +733,14 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
             }
             else {
-                const layer = layerListData[0];
-                setBorderStyle(layer, borders, 0, corners, indentWidth, indentOffset);
-                setBorderStyle(layer, borders, 3, corners, indentWidth, indentOffset);
-                setBorderStyle(layer, borders, 2, corners, indentWidth, indentOffset);
-                setBorderStyle(layer, borders, 1, corners, indentWidth, indentOffset);
+                const layerData = layerList[0];
+                setBorderStyle(layerData, borders, 0, corners, indentWidth, indentOffset);
+                setBorderStyle(layerData, borders, 3, corners, indentWidth, indentOffset);
+                setBorderStyle(layerData, borders, 2, corners, indentWidth, indentOffset);
+                setBorderStyle(layerData, borders, 1, corners, indentWidth, indentOffset);
             }
         }
-        return [shapeData, layerListData];
+        return [shapeData, layerList];
     }
 
     public getDrawableImages(node: T, data: BoxStyle) {

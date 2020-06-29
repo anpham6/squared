@@ -11,26 +11,26 @@ const STORED = squared.base.ResourceUI.STORED as AndroidResourceStoredMap;
 
 let CACHE_IMAGE: StringMap = {};
 
-function formatObject(obj: {}, numberAlias?: boolean) {
+function formatObject(obj: ObjectMap<Undef<string | StringMap>>, numberAlias?: boolean) {
     for (const attr in obj) {
         if (isPlainObject(obj[attr])) {
             formatObject(obj, numberAlias);
         }
         else {
-            let value: string = obj[attr]?.toString();
+            const value = obj[attr]?.toString();
             if (value) {
                 switch (attr) {
                     case 'text':
                         if (!value.startsWith('@string/')) {
-                            obj[attr] =  Resource.addString(value, '', numberAlias);
+                            obj[attr] = Resource.addString(value, '', numberAlias);
                         }
                         break;
                     case 'src':
                     case 'srcCompat':
                         if (FILE.PROTOCOL.test(value)) {
-                            value = Resource.addImage({ mdpi: value });
-                            if (value !== '') {
-                                obj[attr] = `@drawable/${value}`;
+                            const src = Resource.addImage({ mdpi: value });
+                            if (src !== '') {
+                                obj[attr] = `@drawable/${src}`;
                             }
                         }
                         break;

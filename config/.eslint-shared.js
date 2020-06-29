@@ -132,6 +132,8 @@ module.exports = {
                 "private-method"
             ]
         }],
+        "@typescript-eslint/no-unsafe-call": "error",
+        "@typescript-eslint/no-unsafe-return": "error",
         "@typescript-eslint/prefer-for-of": "off",
         "@typescript-eslint/triple-slash-reference": "off",
         "@typescript-eslint/no-non-null-assertion": "off",
@@ -151,8 +153,6 @@ module.exports = {
         "@typescript-eslint/explicit-module-boundary-types": "off",
         "@typescript-eslint/restrict-plus-operands": "off",
         "@typescript-eslint/no-unsafe-assignment": "off",
-        "@typescript-eslint/no-unsafe-return": "error",
-        "@typescript-eslint/no-unsafe-call": "off",
         "@typescript-eslint/no-unsafe-member-access": "off",
         "@typescript-eslint/ban-types": "off",
         "@typescript-eslint/restrict-template-expressions": "off",

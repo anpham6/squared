@@ -643,7 +643,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         super.reset();
         const STORED = ResourceUI.STORED;
         for (const name in STORED) {
-            STORED[name].clear();
+            (STORED[name] as Map<unknown, unknown>).clear();
         }
     }
 
@@ -659,8 +659,10 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     width,
                     height
                 } as Partial<RawAsset>;
-                if (encoding === 'base64') {
-                    asset.base64 = data.startsWith('data:image/') ? data.substring(data.indexOf(',') + 1) : data;
+                if (typeof data === 'string') {
+                    if (encoding === 'base64') {
+                        asset.base64 = data.startsWith('data:image/') ? data.substring(data.indexOf(',') + 1) : data;
+                    }
                 }
                 else if (Array.isArray(data)) {
                     asset.bytes = data;

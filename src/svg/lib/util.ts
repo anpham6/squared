@@ -18,7 +18,7 @@ function getDataSetValue(element: SVGElement, attr: string) {
     const data = element.dataset.baseValue;
     if (data) {
         try {
-            const obj: ObjectMap<any> = JSON.parse(data);
+            const obj: SvgDataSet = JSON.parse(data);
             if (obj) {
                 return obj[attr]?.toString().trim() as string || '';
             }

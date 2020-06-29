@@ -590,7 +590,7 @@ declare module "svg" {
         get parentContainer(): Undef<SvgContainer>;
         get fillReplace(): boolean;
         get instanceType(): number;
-        get dataset(): ObjectMapNested<any>;
+        get dataset(): SvgDataSet;
         constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimationElement);
     }
 
@@ -673,7 +673,7 @@ declare module "svg" {
         has(attr: string): boolean;
         get(attr: string, time: number, playing?: boolean): Undef<string>;
         paused(attr: string, time: number): boolean;
-        evaluateStart(item: SvgAnimate, otherValue?: any): string[];
+        evaluateStart(item: SvgAnimate, fallback?: string): string[];
         constructor(animations: SvgAnimation[], ...attrs: string[]);
     }
 

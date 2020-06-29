@@ -75,7 +75,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     protected _parent?: SvgView | SvgPath;
 
     private _attributeName = '';
-    private _dataset: ObjectMap<ObjectMap<any>> = {};
+    private _dataset: SvgDataSet = {};
     private _group?: SvgAnimationGroup;
 
     constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimationElement) {
@@ -146,9 +146,9 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
 
     set attributeName(value) {
         if (value !== 'transform' && !this.baseValue) {
-            let baseValue: Undef<string> = this._dataset.baseValue?.[value]?.toString().trim();
-            if (baseValue) {
-                this.baseValue = baseValue;
+            let baseValue = this._dataset.baseValue?.[value];
+            if (baseValue !== undefined) {
+                this.baseValue = baseValue.toString().trim();
             }
             else {
                 const element = this.element;
@@ -167,8 +167,8 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
                         const animationElement = this.animationElement;
                         if (animationElement && getComputedStyle(element).animationPlayState === 'paused') {
                             const parentElement = animationElement.parentElement;
-                            baseValue = parentElement?.[value]?.baseVal?.valueAsString;
-                            if (baseValue && isLength(baseValue)) {
+                            const valueAsString = parentElement?.[value]?.baseVal?.valueAsString;
+                            if (valueAsString && isLength(valueAsString)) {
                                 this.baseValue = parseUnit(baseValue, getFontSize(parentElement!)).toString();
                             }
                         }

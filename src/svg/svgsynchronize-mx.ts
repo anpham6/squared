@@ -986,12 +986,8 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                             }
                             else {
                                 value = this[attr];
-                                if (value === undefined) {
-                                    try {
-                                        this['getBaseValue'](attr);
-                                    }
-                                    catch {
-                                    }
+                                if (value === undefined && typeof this['getBaseValue'] === 'function') {
+                                    value = ((this as unknown) as squared.svg.SvgBaseVal).getBaseValue(attr);
                                 }
                             }
                             if (hasValue(value)) {

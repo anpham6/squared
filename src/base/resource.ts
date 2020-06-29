@@ -28,7 +28,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
     public reset() {
         const ASSETS = Resource.ASSETS;
         for (const name in ASSETS) {
-            ASSETS[name].clear();
+            (ASSETS[name] as Map<unknown, unknown>).clear();
         }
         this._fileHandler?.reset();
     }
