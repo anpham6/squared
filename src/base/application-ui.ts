@@ -227,7 +227,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             return false;
         }
         const controllerHandler = this.controllerHandler;
-        const layouts = this._layouts;
         const children = this.childrenAll;
         let length = children.length;
         const rendered: T[] = new Array(length);
@@ -291,8 +290,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 );
             }
         }
-        this.resourceHandler.finalize(layouts);
-        controllerHandler.finalize(layouts);
+        this.resourceHandler.finalize(this._layouts);
+        controllerHandler.finalize(this._layouts);
         i = 0;
         while (i < length) {
             extensions[i++].afterFinalize();
@@ -697,8 +696,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 else {
                     continue;
                 }
-                child.depth = childDepth;
-                child.childIndex = j;
+                child.init(node, childDepth, j);
                 child.naturalChild = true;
                 children[j++] = child;
             }
@@ -762,7 +760,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     excluded.add(child);
                 }
                 else {
-                    child.$parent = node;
                     child.containerIndex = j++;
                     cache.add(child);
                 }
@@ -778,7 +775,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 excluded.add(child);
             }
             else {
-                child.$parent = node;
                 child.containerIndex = 0;
                 node.add(child);
                 cache.add(child);

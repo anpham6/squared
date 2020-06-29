@@ -860,10 +860,18 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         for (let i = 0; i < length; ++i) {
             const item = children[i];
             if (item === child || item === child.outerMostWrapper) {
+                replaceWith.parent?.remove(replaceWith);
+                if (replaceWith.naturalChild && this.naturalElement) {
+                    replaceWith.actualParent!.naturalChildren.splice(replaceWith.childIndex, 1);
+                    this.naturalChildren.splice(child.childIndex, 1, replaceWith);
+                    replaceWith.init(this, child.depth, child.childIndex);
+                }
+                else {
+                    replaceWith.unsafe('parent', this);
+                    replaceWith.depth = child.depth;
+                }
                 children[i] = replaceWith;
-                replaceWith.$parent = this;
                 replaceWith.containerIndex = child.containerIndex;
-                replaceWith.depth = child.depth;
                 return true;
             }
         }

@@ -504,8 +504,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         ++k;
                     }
                     item.parent!.remove(item);
-                    item.$parent = parent;
-                    item.depth = depth;
+                    item.init(parent, depth, item.childIndex);
                     item.documentParent = parent;
                     const clear = item.css('clear');
                     switch (clear) {
@@ -686,9 +685,9 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         let i = 0;
         while (i < length) {
             const item = templates[i++];
-            const node = item.node;
             switch (item.type) {
                 case NODE_TEMPLATE.XML: {
+                    const node = item.node;
                     const { controlName, attributes } = item as NodeXmlTemplate<T>;
                     const { id, renderTemplates } = node;
                     const next = depth + 1;

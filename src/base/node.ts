@@ -795,6 +795,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     public queryMap?: T[][];
 
+    protected _parent: Null<T> = null;
     protected _cached: CachedValue<T> = {};
     protected _preferInitial = false;
     protected _styleMap!: StringMap;
@@ -812,7 +813,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     private _data = {};
     private _inlineText = false;
-    private _parent: Null<T> = null;
     private _dataset?: {};
     private _textStyle?: StringMap;
 
@@ -836,6 +836,12 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             this.style = {} as CSSStyleDeclaration;
             this._styleMap = {};
         }
+    }
+
+    public init(parent: T, depth: number, index: number) {
+        this._parent = parent;
+        this.depth = depth;
+        this.childIndex = index;
     }
 
     public syncWith(sessionId?: string, cache?: boolean) {
@@ -1692,10 +1698,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             }
         }
         return result.sort(sortById);
-    }
-
-    set $parent(value: T) {
-        this._parent = value;
     }
 
     set parent(value) {

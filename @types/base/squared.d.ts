@@ -371,6 +371,7 @@ declare module "base" {
         queryMap?: Node[][];
         readonly id: number;
         readonly style: CSSStyleDeclaration;
+        init(parent: Node, depth: number, index: number): void;
         syncWith(sessionId?: string, cache?: boolean): boolean;
         saveAsInitial(): void;
         data(name: string, attr: string, value?: any, overwrite?: boolean): any;

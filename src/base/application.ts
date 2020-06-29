@@ -434,10 +434,8 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                 }
                 if (child) {
-                    child.$parent = node;
-                    child.childIndex = j;
+                    child.init(node, childDepth, j);
                     child.actualParent = node;
-                    child.depth = childDepth;
                     children[j++] = child;
                     cache.add(child);
                 }
@@ -483,58 +481,56 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const unusedStyles = this.session.unusedStyles;
                 const baseMap: StringMap = {};
                 const important: ObjectMap<boolean> = {};
-                {
-                    const cssStyle = item.style;
-                    const items = Array.from(cssStyle);
-                    const length = items.length;
-                    let i = 0;
-                    while (i < length) {
-                        const attr = items[i++];
-                        baseMap[convertCamelCase(attr)] = cssStyle[attr];
+                const cssStyle = item.style;
+                const items = Array.from(cssStyle);
+                const length = items.length;
+                let i = 0;
+                while (i < length) {
+                    const attr = items[i++];
+                    baseMap[convertCamelCase(attr)] = cssStyle[attr];
+                }
+                const pattern = /\s*([a-z-]+):[^!;]+!important;/g;
+                let match: Null<RegExpExecArray>;
+                while (match = pattern.exec(cssText)) {
+                    const attr = convertCamelCase(match[1]);
+                    const value = CSS_PROPERTIES[attr]?.value;
+                    if (Array.isArray(value)) {
+                        i = 0;
+                        while (i < value.length) {
+                            important[value[i++]] = true;
+                        }
                     }
-                    const pattern = /\s*([a-z-]+):[^!;]+!important;/g;
-                    let match: Null<RegExpExecArray>;
-                    while (match = pattern.exec(cssText)) {
-                        const attr = convertCamelCase(match[1]);
-                        const value = CSS_PROPERTIES[attr]?.value;
-                        if (Array.isArray(value)) {
-                            i = 0;
-                            while (i < value.length) {
-                                important[value[i++]] = true;
+                    else {
+                        important[attr] = true;
+                    }
+                }
+                i = 0;
+                while (i < 3) {
+                    const attr = CSS_IMAGEURI[i++];
+                    const value = baseMap[attr];
+                    if (value && value !== 'initial') {
+                        let result: Undef<string>;
+                        while (match = REGEXP_DATAURI.exec(value)) {
+                            if (match[2]) {
+                                if (resourceHandler) {
+                                    const [mimeType, encoding] = match[2].trim().split(/\s*;\s*/);
+                                    resourceHandler.addRawData(match[1], mimeType, match[3], { encoding });
+                                }
                             }
-                        }
-                        else {
-                            important[attr] = true;
-                        }
-                    }
-                    i = 0;
-                    while (i < 3) {
-                        const attr = CSS_IMAGEURI[i++];
-                        const value = baseMap[attr];
-                        if (value && value !== 'initial') {
-                            let result: Undef<string>;
-                            while (match = REGEXP_DATAURI.exec(value)) {
-                                if (match[2]) {
+                            else {
+                                const uri = resolvePath(match[3], styleSheetHref);
+                                if (uri !== '') {
                                     if (resourceHandler) {
-                                        const [mimeType, encoding] = match[2].trim().split(/\s*;\s*/);
-                                        resourceHandler.addRawData(match[1], mimeType, match[3], { encoding });
+                                        addImageSrc(resourceHandler, uri);
                                     }
-                                }
-                                else {
-                                    const uri = resolvePath(match[3], styleSheetHref);
-                                    if (uri !== '') {
-                                        if (resourceHandler) {
-                                            addImageSrc(resourceHandler, uri);
-                                        }
-                                        result = (result || value).replace(match[0], `url("${uri}")`);
-                                    }
+                                    result = (result || value).replace(match[0], `url("${uri}")`);
                                 }
                             }
-                            if (result) {
-                                baseMap[attr] = result;
-                            }
-                            REGEXP_DATAURI.lastIndex = 0;
                         }
+                        if (result) {
+                            baseMap[attr] = result;
+                        }
+                        REGEXP_DATAURI.lastIndex = 0;
                     }
                 }
                 for (const selectorText of parseSelectorText(item.selectorText, true)) {
@@ -547,7 +543,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         unusedStyles.add(selectorText);
                         continue;
                     }
-                    let i = 0;
+                    i = 0;
                     while (i < q) {
                         const element = elements[i++];
                         const attrStyle = `styleMap${targetElt}`;
