@@ -102,7 +102,7 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
                     container = container.parent;
                 }
             }
-            while (container);
+            while (container !== undefined);
         }
         this.setBaseValue('x', x);
         this.setBaseValue('y', y);

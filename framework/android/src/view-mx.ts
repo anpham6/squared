@@ -373,7 +373,7 @@ function ascendFlexibleWidth(node: T) {
     }
     let parent = node.renderParent as Undef<T>;
     let i = 0;
-    while (parent) {
+    while (parent !== undefined) {
         if (!parent.inlineWidth && (parent.hasWidth || parseInt(parent.layoutWidth) > 0 || parent.of(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.BLOCK) || parent.documentRoot && (parent.blockWidth || parent.blockStatic))) {
             return true;
         }
@@ -2718,7 +2718,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 target = target.outerWrapper as T;
             }
-            while (target);
+            while (target !== undefined);
             return this;
         }
 

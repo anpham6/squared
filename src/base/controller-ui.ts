@@ -521,7 +521,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                         if (clear === 'both' || float === clear) {
                                             (this.application as squared.base.ApplicationUI<T>).session.clearMap.set(item, clear);
                                             let nextSibling = item.nextElementSibling as Null<T>;
-                                            while (nextSibling) {
+                                            while (nextSibling !== null) {
                                                 if (nextSibling.floating && !appending.includes(nextSibling)) {
                                                     appending.push(nextSibling);
                                                 }

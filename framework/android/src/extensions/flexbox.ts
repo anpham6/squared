@@ -192,7 +192,7 @@ function setLayoutWeightOpposing(item: View, value: string, horizontal: boolean)
 }
 
 function getOuterFrameChild(item: Undef<View>) {
-    while (item) {
+    while (item !== undefined) {
         if (item.layoutFrame) {
             return item.innerWrapped;
         }

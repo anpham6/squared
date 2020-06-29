@@ -684,7 +684,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                             break;
                                         }
                                     }
-                                    while (parent);
+                                    while (parent !== undefined);
                                 }
                             }
                             break;

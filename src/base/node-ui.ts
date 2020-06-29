@@ -88,7 +88,7 @@ function traverseElementSibling(element: Null<Element>, direction: "previousSibl
         ({ floating, pageFlow, lineBreak, excluded } = options);
     }
     const result: T[] = [];
-    while (element) {
+    while (element !== null) {
         const node = getElementAsNode<T>(element, sessionId);
         if (node) {
             if (lineBreak !== false && node.lineBreak || excluded !== false && node.excluded && !node.lineBreak) {
@@ -1179,12 +1179,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     boxReset[attr] = reset;
                 }
                 if (adjustment !== undefined) {
-                    let value = boxAdjustment[attr];
+                    let value = adjustment;
                     if (options.accumulate) {
-                        value += adjustment;
-                    }
-                    else {
-                        value = adjustment;
+                        value += boxAdjustment[attr];
                     }
                     if (options.negative === false && (boxReset[attr] === 0 ? this[attr] : 0) + value <= 0) {
                         value = 0;
@@ -1229,7 +1226,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         else {
             node = this._boxRegister[region];
         }
-        while (node) {
+        while (node !== undefined) {
             const next: Undef<T> = node.unsafe<ObjectIndex<T>>('boxRegister')?.[region];
             if (next) {
                 node = next;
@@ -1279,7 +1276,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             let offsetLeft = 0,
                 offsetRight = 0,
                 current = this.actualParent;
-            while (current) {
+            while (current !== null) {
                 if (current.hasPX('width', { percent: false }) || !current.pageFlow) {
                     return value;
                 }
@@ -1615,16 +1612,15 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get blockDimension() {
-        let result = this._cached.blockDimension;
+        const result = this._cached.blockDimension;
         if (result === undefined) {
             if (this.block || this.floating || this.imageElement || this.svgElement) {
-                result = true;
+                return this._cached.blockDimension = true;
             }
             else {
                 const value = this.display;
-                result = value.startsWith('inline-') || value === 'table';
+                return this._cached.blockDimension = value.startsWith('inline-') || value === 'table';
             }
-            this._cached.blockDimension = result;
         }
         return result;
     }
@@ -1635,23 +1631,25 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get rightAligned() {
-        return super.rightAligned || this.hasAlign(NODE_ALIGNMENT.RIGHT);
+        if (this.hasAlign(NODE_ALIGNMENT.RIGHT)) {
+            return true;
+        }
+        return super.rightAligned;
     }
 
     set autoPosition(value) {
         this._cached.autoPosition = value;
     }
     get autoPosition() {
-        let result = this._cached.autoPosition;
+        const result = this._cached.autoPosition;
         if (result === undefined) {
             if (this.pageFlow) {
-                result = false;
+                return this._cached.autoPosition = false;
             }
             else {
                 const { top, right, bottom, left } = this._styleMap;
-                result = (!top || top === 'auto') && (!left || left === 'auto') && (!right || right === 'auto') && (!bottom || bottom === 'auto');
+                return this._cached.autoPosition = (!top || top === 'auto') && (!left || left === 'auto') && (!right || right === 'auto') && (!bottom || bottom === 'auto');
             }
-            this._cached.autoPosition = result;
         }
         return result;
     }
@@ -1662,20 +1660,16 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get leftTopAxis() {
-        let result = this._cached.leftTopAxis;
+        const result = this._cached.leftTopAxis;
         if (result === undefined) {
             switch (this.cssInitial('position')) {
                 case 'absolute':
-                    result = this.absoluteParent === this.documentParent;
-                    break;
+                    return this._cached.leftTopAxis = this.absoluteParent === this.documentParent;
                 case 'fixed':
-                    result = true;
-                    break;
+                    return this._cached.leftTopAxis = true;
                 default:
-                    result = false;
-                    break;
+                    return this._cached.leftTopAxis = false;
             }
-            this._cached.leftTopAxis = result;
         }
         return result;
     }
@@ -1834,16 +1828,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get textEmpty() {
-        let result = this._cached.textEmpty;
+        const result = this._cached.textEmpty;
         if (result === undefined) {
             if (this.styleElement && !this.imageElement && !this.svgElement && !this.inputElement) {
                 const value = this.textContent;
-                result = value === '' || !this.preserveWhiteSpace && value.trim() === '';
+                return this._cached.textEmpty = value === '' || !this.preserveWhiteSpace && value.trim() === '';
             }
-            else {
-                result = false;
-            }
-            this._cached.textEmpty = result;
+            return this._cached.textEmpty = false;
         }
         return result;
     }
@@ -1865,7 +1856,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     }
                     wrapped = wrapped.innerWrapped;
                 }
-                while (wrapped);
+                while (wrapped !== undefined);
             }
             else {
                 const element = this._element;
@@ -1894,7 +1885,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         let result = this._containerIndex;
         if (result === Infinity) {
             let wrapped = this.innerWrapped;
-            while (wrapped) {
+            while (wrapped !== undefined) {
                 const index = wrapped.containerIndex;
                 if (index !== Infinity) {
                     result = index;
@@ -1912,7 +1903,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             return this;
         }
         let result = this.innerWrapped;
-        while (result) {
+        while (result !== undefined) {
             const innerWrapped = result.innerWrapped;
             if (innerWrapped) {
                 result = innerWrapped;
@@ -1926,7 +1917,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     get outerMostWrapper() {
         let result = this.outerWrapper;
-        while (result) {
+        while (result !== undefined) {
             const outerWrapper = result.outerWrapper;
             if (outerWrapper) {
                 result = outerWrapper;

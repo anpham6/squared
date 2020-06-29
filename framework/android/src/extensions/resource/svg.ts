@@ -265,7 +265,7 @@ function createTransformData(transform: SvgTransform[]) {
 function getOuterOpacity(target: SvgView) {
     let value = parseFloat(target.opacity),
         current = target.parent;
-    while (current) {
+    while (current !== undefined) {
         const opacity = parseFloat(current['opacity'] || '1');
         if (!isNaN(opacity) && opacity < 1) {
             value *= opacity;

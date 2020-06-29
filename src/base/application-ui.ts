@@ -337,7 +337,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     return this.useElement(element);
                 }
                 let current = element.parentElement;
-                while (current) {
+                while (current !== null) {
                     if (getStyle(current).display === 'none') {
                         return this.useElement(element);
                     }
@@ -1609,7 +1609,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                         current = current.parentElement;
                     }
-                    while (current);
+                    while (current !== null);
                 }
                 const style = getStyle(element);
                 let tagName = '',
@@ -1704,7 +1704,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             });
                                         }
                                     };
-                                    while (current) {
+                                    while (current !== null) {
                                         ascending = false;
                                         if (current.previousElementSibling) {
                                             current = current.previousElementSibling as Null<HTMLElement>;
@@ -1717,7 +1717,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         }
                                         else {
                                             current = current.parentElement;
-                                            if (!current) {
+                                            if (current === null) {
                                                 break;
                                             }
                                             ascending = true;

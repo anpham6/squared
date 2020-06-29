@@ -2848,7 +2848,7 @@ export function calculateVar(element: CSSElement, value: string, options: Calcul
                                         }
                                         break;
                                     }
-                                    while (boundingElement);
+                                    while (boundingElement !== null);
                                 }
                                 else {
                                     style = getStyle(boundingElement);

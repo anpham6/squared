@@ -523,7 +523,7 @@ export function getTargetElement(element: Element, rootElement?: Null<Element>, 
         if (!rootElement) {
             let parent = element.parentElement;
             rootElement = parent;
-            while (parent) {
+            while (parent !== null) {
                 if (parent.parentElement instanceof HTMLElement) {
                     break;
                 }
@@ -569,7 +569,7 @@ export function getTargetElement(element: Element, rootElement?: Null<Element>, 
 
 export function getNearestViewBox(element: SVGElement) {
     let current = element.parentElement;
-    while (current) {
+    while (current !== null) {
         if (SVG.svg(current) || SVG.symbol(current)) {
             const viewBox = current.viewBox;
             if (viewBox) {
