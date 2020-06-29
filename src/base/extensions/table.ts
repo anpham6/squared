@@ -375,10 +375,10 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             j = 0;
             while (j < length) {
                 const td = tr[j];
-                const data: TableCellData = td.data(this.name, 'cellData');
+                const cellData = td.data<TableCellData>(this.name, 'cellData')!;
                 const columnWidth = mapWidth[j];
-                j += data.colSpan;
-                if (data.placed) {
+                j += cellData.colSpan;
+                if (cellData.placed) {
                     continue;
                 }
                 if (columnWidth) {
@@ -389,17 +389,17 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             if (columnWidth === 'auto') {
                                 if (mapPercent >= 1) {
                                     setBoundsWidth(td);
-                                    data.exceed = !hasWidth;
-                                    data.downsized = true;
+                                    cellData.exceed = !hasWidth;
+                                    cellData.downsized = true;
                                 }
                                 else {
-                                    setAutoWidth(node, td, data);
+                                    setAutoWidth(node, td, cellData);
                                 }
                             }
                             else if (isPercent(columnWidth)) {
                                 if (percentAll) {
-                                    data.percent = columnWidth;
-                                    data.expand = true;
+                                    cellData.percent = columnWidth;
+                                    cellData.expand = true;
                                 }
                                 else {
                                     setBoundsWidth(td);
@@ -408,40 +408,40 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             else if (isLength(columnWidth) && parseInt(columnWidth) > 0) {
                                 if (td.bounds.width >= parseInt(columnWidth)) {
                                     setBoundsWidth(td);
-                                    data.expand = false;
-                                    data.downsized = false;
+                                    cellData.expand = false;
+                                    cellData.downsized = false;
                                 }
                                 else if (mainData.layoutFixed) {
-                                    setAutoWidth(node, td, data);
-                                    data.downsized = true;
+                                    setAutoWidth(node, td, cellData);
+                                    cellData.downsized = true;
                                 }
                                 else {
                                     setBoundsWidth(td);
-                                    data.expand = false;
+                                    cellData.expand = false;
                                 }
                             }
                             else {
                                 if (!td.hasPX('width', { percent: false }) || td.percentWidth) {
                                     setBoundsWidth(td);
                                 }
-                                data.expand = false;
+                                cellData.expand = false;
                             }
                             break;
                         case LAYOUT_TABLE.FIXED:
-                            setAutoWidth(node, td, data);
+                            setAutoWidth(node, td, cellData);
                             break;
                         case LAYOUT_TABLE.STRETCH:
                             if (columnWidth === 'auto') {
-                                data.flexible = true;
+                                cellData.flexible = true;
                             }
                             else {
                                 if (mainData.layoutFixed) {
-                                    data.downsized = true;
+                                    cellData.downsized = true;
                                 }
                                 else {
                                     setBoundsWidth(td);
                                 }
-                                data.expand = false;
+                                cellData.expand = false;
                             }
                             break;
                         case LAYOUT_TABLE.COMPRESS:
@@ -451,13 +451,13 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             break;
                     }
                 }
-                data.placed = true;
+                cellData.placed = true;
                 td.parent = node;
             }
             if (length < columnCount) {
-                const data: StandardMap = tr[length - 1].data(this.name, 'cellData');
-                if (data) {
-                    data.spaceSpan = columnCount - length;
+                const cellData = tr[length - 1].data<StandardMap>(this.name, 'cellData');
+                if (cellData) {
+                    cellData.spaceSpan = columnCount - length;
                 }
             }
         }

@@ -102,7 +102,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         }
         else {
             if (content) {
-                content = content.replace(/\\(["'])/g, (match, ...capture) => capture[0]);
+                content = content.replace(/\\(["'])/g, (match, ...capture: string[]) => capture[0]);
             }
             else if (!Array.isArray(data)) {
                 return '';

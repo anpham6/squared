@@ -242,7 +242,7 @@ function checkRowSpan(node: View, rowSpan: number, rowStart: number, mainData: C
         const rowData = mainData.rowData;
         for (const item of flatArray<View>(rowData[rowStart], Infinity)) {
             if (item !== node) {
-                const data: CssGridCellData = item.data(dataName, 'cellData');
+                const data = item.data<CssGridCellData>(dataName, 'cellData');
                 if (data && data.rowSpan > rowSpan && (rowStart === 0 || data.rowSpan < rowData.length)) {
                     return true;
                 }
@@ -262,8 +262,8 @@ function checkAutoDimension(data: CssGridDirectionData, horizontal: boolean) {
 function isFlexibleParent(node: View, dataName: string) {
     const parent = node.actualParent;
     if (parent?.gridElement) {
-        const mainData: CssGridData<View> = parent.data(dataName, 'mainData');
-        const cellData: CssGridCellData = node.data(dataName, 'cellData');
+        const mainData = parent.data<CssGridData<View>>(dataName, 'mainData');
+        const cellData = node.data<CssGridCellData>(dataName, 'cellData');
         if (mainData && cellData) {
             const unit = mainData.column.unit;
             const { columnStart, columnSpan } = cellData;
@@ -359,7 +359,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
             );
         }
         super.processNode(node, parent);
-        const mainData: CssGridData<T> = node.data(this.name, 'mainData');
+        const mainData = node.data<CssGridData<T>>(this.name, 'mainData');
         if (mainData) {
             const { column, row } = mainData;
             const unit = column.unit;
@@ -424,8 +424,8 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
     }
 
     public processChild(node: T, parent: T) {
-        const mainData: CssGridData<T> = parent.data(this.name, 'mainData');
-        const cellData: CssGridCellData = node.data(this.name, 'cellData');
+        const mainData = parent.data<CssGridData<T>>(this.name, 'mainData');
+        const cellData = node.data<CssGridCellData>(this.name, 'cellData');
         let renderAs: Undef<T>,
             outputAs: Undef<NodeXmlTemplate<T>>;
         if (mainData && cellData) {
@@ -737,7 +737,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 target.mergeGravity('layout_gravity', 'fill_horizontal');
             }
             const [rowStart, rowSpan] = applyLayout(target, false, 'height');
-            if (mainData.alignContent === 'normal' && !parent.hasPX('height') && !node.hasPX('minHeight') && (!row.unit[rowStart] || row.unit[rowStart] === 'auto') && Math.floor(node.bounds.height) > (node.data(this.name, 'boundsData') as BoxRectDimension)?.height && checkRowSpan(node, rowSpan, rowStart, mainData, this.name)) {
+            if (mainData.alignContent === 'normal' && !parent.hasPX('height') && !node.hasPX('minHeight') && (!row.unit[rowStart] || row.unit[rowStart] === 'auto') && Math.floor(node.bounds.height) > (node.data<BoxRectDimension>(this.name, 'boundsData')?.height || Infinity) && checkRowSpan(node, rowSpan, rowStart, mainData, this.name)) {
                 target.css('minHeight', formatPX(node.box.height));
             }
             else if (!target.hasPX('height') && !target.hasPX('maxHeight') && !(row.length === 1 && mainData.alignContent.startsWith('space') && !hasAlignment(mainData.alignItems))) {
@@ -751,11 +751,11 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
     }
 
     public postBaseLayout(node: T) {
-        const mainData: CssGridData<T> = node.data(this.name, 'mainData');
+        const mainData = node.data<CssGridData<T>>(this.name, 'mainData');
         if (mainData) {
             const controller = this.controller as android.base.Controller<T>;
             const { children, column, row, rowData } = mainData;
-            const wrapped = node.data(this.name, 'unsetContentBox') === true;
+            const wrapped = node.data<boolean>(this.name, 'unsetContentBox') === true;
             const insertId = children[children.length - 1].id;
             if (CssGrid.isJustified(node)) {
                 setContentSpacing(node, mainData, mainData.justifyContent, true, 'width', wrapped, BOX_STANDARD.MARGIN_LEFT, BOX_STANDARD.MARGIN_RIGHT, controller.userSettings.resolutionScreenWidth - node.bounds.left, 0);
@@ -870,7 +870,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                     }
                 }
             }
-            const constraintData: T[][] = node.data(this.name, 'constraintData');
+            const constraintData = node.data<T[][]>(this.name, 'constraintData');
             if (constraintData) {
                 const { gap, length } = column;
                 const rowCount = constraintData.length;
@@ -1089,7 +1089,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
     }
 
     public postOptimize(node: T) {
-        const mainData: CssGridData<T> = node.data(this.name, 'mainData');
+        const mainData = node.data<CssGridData<T>>(this.name, 'mainData');
         if (mainData) {
             if (node.blockStatic && !node.hasPX('minWidth', { percent: false }) && node.actualParent?.layoutElement === false) {
                 const { gap, length, unit } = mainData.column;

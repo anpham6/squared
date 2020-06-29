@@ -16,7 +16,7 @@ const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE
 
 export default class <T extends View> extends squared.base.extensions.Sprite<T> {
     public processNode(node: T, parent: T) {
-        const mainData: SpriteData = node.data(this.name, 'mainData');
+        const mainData = node.data<SpriteData>(this.name, 'mainData');
         if (mainData) {
             const drawable = (this.resource as android.base.Resource<T>).addImageSrc(node.backgroundImage);
             if (drawable !== '') {

@@ -8,7 +8,7 @@ export function frameworkNotInstalled<T = void>(): Promise<T> {
 
 export function actualClientRect(element: Element, sessionId?: string) {
     if (sessionId) {
-        const rect: ClientRect = getElementCache(element, 'clientRect', sessionId);
+        const rect = getElementCache<ClientRect>(element, 'clientRect', sessionId);
         if (rect) {
             return rect;
         }
@@ -22,7 +22,7 @@ export function actualClientRect(element: Element, sessionId?: string) {
 
 export function actualTextRangeRect(element: Element, sessionId?: string) {
     if (sessionId) {
-        const rect: ClientRect = getElementCache(element, 'textRangeRect', sessionId);
+        const rect = getElementCache<ClientRect>(element, 'textRangeRect', sessionId);
         if (rect) {
             return rect;
         }
@@ -59,26 +59,26 @@ export function actualTextRangeRect(element: Element, sessionId?: string) {
 }
 
 export function getStyleValue(element: Element, attr: string, sessionId?: string) {
-    return getElementCache(element, 'styleMap', sessionId)?.[convertCamelCase(attr)] || '';
+    return getElementCache<StringMap>(element, 'styleMap', sessionId)?.[convertCamelCase(attr)] || '';
 }
 
 export function getPseudoElt(element: Element, sessionId?: string) {
-    return getElementCache(element, 'pseudoElement', sessionId) || '';
+    return getElementCache<string>(element, 'pseudoElement', sessionId) || '';
 }
 
-export function getElementAsNode<T>(element: Element, sessionId?: string): Null<T> {
-    return getElementCache(element, 'node', sessionId) || null;
+export function getElementAsNode<T>(element: Element, sessionId?: string)  {
+    return getElementCache<T>(element, 'node', sessionId) || null;
 }
 
 export function setElementCache(element: Element, attr: string, sessionId: string, data: any) {
     element[`__${attr}::${sessionId}`] = data;
 }
 
-export function getElementCache(element: Element, attr: string, sessionId?: string) {
+export function getElementCache<T = unknown>(element: Element, attr: string, sessionId?: string) {
     if (!sessionId) {
         sessionId = element['__sessionId::0'] || '0';
     }
-    return element[`__${attr}::${sessionId}`];
+    return element[`__${attr}::${sessionId}`] as Undef<T>;
 }
 
 export function deleteElementCache(element: Element, attr: string, sessionId: string) {

@@ -14,13 +14,13 @@ function setOriginPosition(element: Element, point: Point, attr: string, value: 
     }
 }
 
-function getDataSetValue(element: SVGElement, attr: string): string {
+function getDataSetValue(element: SVGElement, attr: string) {
     const data = element.dataset.baseValue;
     if (data) {
         try {
             const obj: ObjectMap<any> = JSON.parse(data);
             if (obj) {
-                return obj[attr]?.toString().trim() || '';
+                return obj[attr]?.toString().trim() as string || '';
             }
         }
         catch {

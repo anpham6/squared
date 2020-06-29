@@ -40,7 +40,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
     }
 
     public processChild(node: T, parent: T) {
-        const mainData: ListData = node.data(this.name, 'mainData');
+        const mainData = node.data<ListData>(this.name, 'mainData');
         if (mainData) {
             const application = this.application;
             const controller = this.controller as android.base.Controller<T>;

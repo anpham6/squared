@@ -779,7 +779,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     if (node.baseline) {
                         node.android('baselineAlignBottom', 'true');
                     }
-                    const svg: Svg = node.data(Resource.KEY_NAME, 'svg');
+                    const svg = node.data<Svg>(Resource.KEY_NAME, 'svg');
                     if (svg) {
                         const title = svg.getTitle();
                         const desc = svg.getDesc();

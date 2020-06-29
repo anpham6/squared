@@ -548,9 +548,9 @@ export default abstract class Application<T extends Node> implements squared.bas
                         const element = elements[i++];
                         const attrStyle = `styleMap${targetElt}`;
                         const attrSpecificity = `styleSpecificity${targetElt}`;
-                        const styleData: StringMap = getElementCache(element, attrStyle, sessionId);
+                        const styleData = getElementCache<StringMap>(element, attrStyle, sessionId);
                         if (styleData) {
-                            const specificityData: ObjectMap<number> = getElementCache(element, attrSpecificity, sessionId) || {};
+                            const specificityData = getElementCache<ObjectMap<number>>(element, attrSpecificity, sessionId) || {};
                             for (const attr in baseMap) {
                                 const previous = specificityData[attr];
                                 const revised = specificity + (important[attr] ? 1000 : 0);

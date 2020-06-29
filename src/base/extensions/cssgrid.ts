@@ -1034,7 +1034,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                 while (k < length) {
                                     const item = columnItem[k++] as T;
                                     if (!modified.has(item)) {
-                                        const { columnSpan, rowSpan } = item.data(this.name, 'cellData') as CssGridCellData;
+                                        const { columnSpan, rowSpan } = item.data<CssGridCellData>(this.name, 'cellData')!;
                                         const x = j + columnSpan - 1;
                                         const y = i + rowSpan - 1;
                                         if (columnGap > 0 && x < columnCount - 1) {

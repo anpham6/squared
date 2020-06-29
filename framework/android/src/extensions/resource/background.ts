@@ -558,12 +558,12 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             }
         };
         this.application.getProcessingCache(sessionId).each(node => {
-            const stored: BoxStyle = node.data(Resource.KEY_NAME, 'boxStyle');
+            const stored = node.data<BoxStyle>(Resource.KEY_NAME, 'boxStyle');
             if (stored) {
                 if (node.inputElement) {
                     const companion = node.companion;
                     if (companion?.tagName === 'LABEL' && !companion.visible) {
-                        const backgroundColor = (companion.data(Resource.KEY_NAME, 'boxStyle') as BoxStyle)?.backgroundColor;
+                        const backgroundColor = companion.data<BoxStyle>(Resource.KEY_NAME, 'boxStyle')?.backgroundColor;
                         if (backgroundColor) {
                             stored.backgroundColor = backgroundColor;
                         }
@@ -618,7 +618,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     }
                                 }
                             }
-                            const fontStyle: FontAttribute = node.data(Resource.KEY_NAME, 'fontStyle');
+                            const fontStyle = node.data<FontAttribute>(Resource.KEY_NAME, 'fontStyle');
                             if (fontStyle) {
                                 fontStyle.backgroundColor = backgroundColor;
                             }
@@ -732,7 +732,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
 
     public getDrawableImages(node: T, data: BoxStyle) {
         const backgroundImage = data.backgroundImage;
-        const embedded: Undef<T[]> = node.data(Resource.KEY_NAME, 'embedded');
+        const embedded = node.data<T[]>(Resource.KEY_NAME, 'embedded');
         if (backgroundImage || embedded) {
             const resource = this.resource as android.base.Resource<T>;
             const screenDimension = node.localSettings.screenDimension;
@@ -764,7 +764,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 if (parentElement && element) {
                                     const drawable = svgInstance.createSvgDrawable(node, element);
                                     if (drawable) {
-                                        const dimension = node.data(Resource.KEY_NAME, 'svg')?.viewBox as DOMRect || { width: element.width.baseVal.value, height: element.height.baseVal.value };
+                                        const dimension = node.data<squared.svg.Svg>(Resource.KEY_NAME, 'svg')?.viewBox || { width: element.width.baseVal.value, height: element.height.baseVal.value };
                                         if (!node.svgElement) {
                                             let { width, height } = dimension;
                                             if (width > boundsWidth || height > boundsHeight) {

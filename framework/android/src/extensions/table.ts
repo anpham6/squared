@@ -18,39 +18,41 @@ function setLayoutHeight(node: View) {
 export default class <T extends View> extends squared.base.extensions.Table<T> {
     public processNode(node: T, parent: T) {
         super.processNode(node, parent);
-        const mainData: TableData = node.data(this.name, 'mainData');
+        const mainData = node.data<TableData>(this.name, 'mainData')!;
         let requireWidth = false;
         if (mainData.columnCount > 1) {
             requireWidth = mainData.expand;
             node.each((item: T) => {
-                const data: TableCellData = item.data(this.name, 'cellData');
-                if (data.flexible) {
-                    item.android('layout_columnWeight', data.colSpan.toString());
-                    item.setLayoutWidth('0px');
-                    requireWidth = true;
-                }
-                else {
-                    if (data.expand === false) {
-                        item.android('layout_columnWeight', '0');
+                const cellData = item.data<TableCellData>(this.name, 'cellData');
+                if (cellData) {
+                    if (cellData.flexible) {
+                        item.android('layout_columnWeight', cellData.colSpan.toString());
+                        item.setLayoutWidth('0px');
+                        requireWidth = true;
                     }
-                    else if (data.percent) {
-                        const value = convertFloat(data.percent) / 100;
-                        if (value > 0) {
-                            item.setLayoutWidth('0px');
-                            item.android('layout_columnWeight', trimEnd(value.toPrecision(3), '0'));
-                            requireWidth = true;
+                    else {
+                        if (cellData.expand === false) {
+                            item.android('layout_columnWeight', '0');
                         }
-                    }
-                    if (data.downsized) {
-                        if (data.exceed) {
-                            item.setLayoutWidth('0px');
-                            item.android('layout_columnWeight', '0.01');
-                            requireWidth = true;
+                        else if (cellData.percent) {
+                            const value = convertFloat(cellData.percent) / 100;
+                            if (value > 0) {
+                                item.setLayoutWidth('0px');
+                                item.android('layout_columnWeight', trimEnd(value.toPrecision(3), '0'));
+                                requireWidth = true;
+                            }
                         }
-                        else if (item.hasPX('width')) {
-                            const width = item.bounds.width;
-                            if (item.actualWidth < width) {
-                                item.setLayoutWidth(formatPX(width));
+                        if (cellData.downsized) {
+                            if (cellData.exceed) {
+                                item.setLayoutWidth('0px');
+                                item.android('layout_columnWeight', '0.01');
+                                requireWidth = true;
+                            }
+                            else if (item.hasPX('width')) {
+                                const width = item.bounds.width;
+                                if (item.actualWidth < width) {
+                                    item.setLayoutWidth(formatPX(width));
+                                }
                             }
                         }
                     }
@@ -113,7 +115,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
     }
 
     public processChild(node: T, parent: T) {
-        const cellData: TableCellData = node.data(this.name, 'cellData');
+        const cellData = node.data<TableCellData>(this.name, 'cellData');
         if (cellData) {
             if (cellData.rowSpan > 1) {
                 node.android('layout_rowSpan', cellData.rowSpan.toString());

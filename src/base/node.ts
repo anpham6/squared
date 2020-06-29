@@ -28,7 +28,7 @@ function setStyleCache(element: HTMLElement, attr: string, sessionId: string, va
 }
 
 function deleteStyleCache(element: HTMLElement, attr: string, sessionId: string) {
-    const value: string = getElementCache(element, attr, sessionId);
+    const value = getElementCache<string>(element, attr, sessionId);
     if (value !== undefined) {
         element.style.setProperty(attr, value);
         deleteElementCache(element, attr, sessionId);
@@ -909,7 +909,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         };
     }
 
-    public data(name: string, attr: string, value?: any, overwrite = true) {
+    public data<T = unknown>(name: string, attr: string, value?: any, overwrite = true): Undef<T> {
         const data = this._data;
         if (value === null) {
             if (data[name]) {
@@ -928,7 +928,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             }
         }
         const stored: {} = data[name];
-        return isObject(stored) ? stored[attr] : undefined;
+        return isObject(stored) ? stored[attr] as T : undefined;
     }
 
     public unsetCache(...attrs: string[]) {
@@ -1145,7 +1145,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 return value;
             }
         }
-        return this._styleMap[attr] || this.styleElement && this.style[attr] || '';
+        return this._styleMap[attr] as string || this.styleElement && this.style[attr] as string || '';
     }
 
     public cssApply(values: StringMap, cache = true) {
@@ -1162,8 +1162,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return this.actualParent?.css(attr, value, cache) || '';
     }
 
-    public cssInitial(attr: string, options?: CssInitialOptions): string {
-        return (this._initial?.styleMap || this._styleMap)[attr] || options?.modified && this._styleMap[attr] || options?.computed && this.style[attr] || '';
+    public cssInitial(attr: string, options?: CssInitialOptions) {
+        return (this._initial?.styleMap || this._styleMap)[attr] as string || options?.modified && this._styleMap[attr] as string || options?.computed && this.style[attr] as string || '';
     }
 
     public cssAscend(attr: string, options?: CssAscendOptions) {
@@ -1240,8 +1240,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (this.styleElement) {
             const element = this._element as Element;
             result = this.pseudoElement
-                ? getElementCache(element.parentElement as Element, `styleSpecificity${getPseudoElt(element, this.sessionId)}`, this.sessionId)?.[attr]
-                : getElementCache(element, 'styleSpecificity', this.sessionId)?.[attr];
+                ? getElementCache<ObjectMap<number>>(element.parentElement as Element, `styleSpecificity${getPseudoElt(element, this.sessionId)}`, this.sessionId)?.[attr]
+                : getElementCache<ObjectMap<number>>(element, 'styleSpecificity', this.sessionId)?.[attr];
         }
         return result || 0;
     }
@@ -1356,7 +1356,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public toElementString(attr: string, fallback = '') {
-        return (this._element?.[attr] ?? fallback).toString();
+        return (this._element?.[attr] as Undef<string> ?? fallback).toString();
     }
 
     public parseUnit(value: string, options?: ParseUnitOptions) {

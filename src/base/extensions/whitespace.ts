@@ -537,7 +537,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                     return;
                                                 });
                                                 if (float) {
-                                                    const clear = (getElementCache(previous.element as Element, 'styleMap::after', previous.sessionId) as Undef<StringMap>)?.clear;
+                                                    const clear = getElementCache<StringMap>(previous.element as Element, 'styleMap::after', previous.sessionId)?.clear;
                                                     valid = !(clear === 'both' || clear === float);
                                                 }
                                             }

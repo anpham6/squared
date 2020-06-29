@@ -49,8 +49,8 @@ declare module "svg" {
     }
 
     interface SvgBaseVal extends SvgElement {
-        setBaseValue(attr: string, value?: any): boolean;
-        getBaseValue(attr: string, fallback?: any): any;
+        setBaseValue<T = unknown>(attr: string, value?: T): boolean;
+        getBaseValue<T = unknown>(attr: string, fallback?: T): Undef<T>;
         refitBaseValue(x: number, y: number, precision?: number, scaleX?: number, scaleY?: number): void;
         verifyBaseValue(attr: string, value?: any): Undef<boolean>;
     }

@@ -3,7 +3,7 @@ import NodeUI from '../node-ui';
 
 import { BOX_STANDARD } from '../lib/enumeration';
 
-const { aboveRange, belowRange, plainMap, safeNestedArray, withinRange } = squared.lib.util;
+const { aboveRange, belowRange, safeNestedArray, withinRange } = squared.lib.util;
 
 function getRowIndex(columns: NodeUI[][], target: NodeUI) {
     const topA = target.bounds.top;
@@ -25,7 +25,7 @@ function getRowIndex(columns: NodeUI[][], target: NodeUI) {
 }
 
 export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
-    public static createDataCellAttribute(): GridCellData<NodeUI> {
+    public static createDataCellAttribute<T extends NodeUI>(): GridCellData<T> {
         return {
             rowSpan: 0,
             columnSpan: 0,
@@ -67,7 +67,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
     public processNode(node: T) {
         const columnEnd: number[] = [];
         const nextMapX: ObjectIndex<T[]> = {};
-        let columns: T[][] = [];
+        const columns: T[][] = [];
         node.each(row => {
             row.each((column: T) => {
                 if (column.visible) {
@@ -90,7 +90,10 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                 }
             }
             if (columnLength !== -1) {
-                columns = plainMap<string, T[]>(nextCoordsX, value => nextMapX[value]);
+                let i = 0;
+                while (i < length) {
+                    columns.push(nextMapX[nextCoordsX[i++]]);
+                }
             }
             else {
                 const columnRight: number[] = [];
@@ -198,7 +201,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                     const item = column[j];
                     const rowData = safeNestedArray(rows, j);
                      if (!item['spacer']) {
-                        const data: GridCellData<T> = Object.assign(Grid.createDataCellAttribute(), item.data(this.name, 'cellData'));
+                        const data = Object.assign(Grid.createDataCellAttribute(), item.data<GridCellData<T>>(this.name, 'cellData'));
                         let rowSpan = 1,
                             columnSpan = 1 + spacer;
                         let k = i + 1;

@@ -97,7 +97,7 @@ function getPseudoQuoteValue(element: HTMLElement, pseudoElt: string, outside: s
         found = 0;
     let i = 0, j = -1;
     while (current?.tagName === 'Q') {
-        const quotes = (getElementCache(current, `styleMap`, sessionId) as Undef<CSSStyleDeclaration>)?.quotes || getComputedStyle(current).quotes;
+        const quotes = getElementCache<CSSStyleDeclaration>(current, `styleMap`, sessionId)?.quotes || getComputedStyle(current).quotes;
         if (quotes) {
             const match = /("(?:[^"]|\\")+"|[^\s]+)\s+("(?:[^"]|\\")+"|[^\s]+)(?:\s+("(?:[^"]|\\")+"|[^\s]+)\s+("(?:[^"]|\\")+"|[^\s]+))?/.exec(quotes);
             if (match) {
@@ -182,7 +182,7 @@ function setColumnMaxWidth(nodes: NodeUI[], offset: number) {
     }
 }
 
-const getCounterIncrementValue = (parent: HTMLElement, counterName: string, pseudoElt: string, sessionId: string, fallback?: number) => getCounterValue((getElementCache(parent, `styleMap${pseudoElt}`, sessionId) as Undef<CSSStyleDeclaration>)?.counterIncrement, counterName, fallback);
+const getCounterIncrementValue = (parent: HTMLElement, counterName: string, pseudoElt: string, sessionId: string, fallback?: number) => getCounterValue(getElementCache<CSSStyleDeclaration>(parent, `styleMap${pseudoElt}`, sessionId)?.counterIncrement, counterName, fallback);
 const extractQuote = (value: string) => /^"(.+)"$/.exec(value)?.[1] || value;
 const isHorizontalAligned = (node: NodeUI) => !node.blockStatic && node.autoMargin.horizontal !== true && !(node.blockDimension && node.css('width') === '100%') && (!(node.plainText && node.multiline) || node.floating);
 const requirePadding = (node: NodeUI, depth?: number): boolean => node.textElement && (node.blockStatic || node.multiline || depth === 1);
@@ -265,7 +265,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (node.renderChildren.length === 0 && !node.inlineText && node.naturalElements.length > 0 && node.naturalElements.every(item => item.documentRoot)) {
                     continue;
                 }
-                const layoutName = node.innerMostWrapped.data(Application.KEY_NAME, 'layoutName');
+                const layoutName = node.innerMostWrapped.data<string>(Application.KEY_NAME, 'layoutName');
                 if (layoutName) {
                     documentRoot.push({ node, layoutName });
                 }
@@ -1550,7 +1550,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected createPseduoElement(element: HTMLElement, pseudoElt: string, sessionId: string) {
-        let styleMap: StringSafeMap = getElementCache(element, `styleMap${pseudoElt}`, sessionId);
+        let styleMap = getElementCache<StringSafeMap>(element, `styleMap${pseudoElt}`, sessionId);
         if (element.tagName === 'Q') {
             if (!styleMap) {
                 styleMap = {};

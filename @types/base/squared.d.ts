@@ -300,7 +300,7 @@ declare module "base" {
         include(ext: Extension<T> | string): boolean;
         exclude(ext: Extension<T> | string): boolean;
         retrieve(name: string, checkBuiltIn?: boolean): Null<Extension<T>>;
-        optionValue(name: string, attr: string, fallback?: any): any;
+        optionValue<T = unknown>(name: string, attr: string, fallback?: T): Undef<T>;
         optionValueAsObject(name: string, attr: string, fallback?: Null<{}>): Null<{}>;
         optionValueAsString(name: string, attr: string, fallback?: string): string;
         optionValueAsNumber(name: string, attr: string, fallback?: number): number;
@@ -374,7 +374,7 @@ declare module "base" {
         init(parent: Node, depth: number, index: number): void;
         syncWith(sessionId?: string, cache?: boolean): boolean;
         saveAsInitial(): void;
-        data(name: string, attr: string, value?: any, overwrite?: boolean): any;
+        data<T = unknown>(name: string, attr: string, value?: any, overwrite?: boolean): Undef<T>;
         unsetCache(...attrs: string[]): void;
         ascend(options: AscendOptions<Node>): Node[];
         intersectX(rect: BoxRectDimension, dimension?: BoxType): boolean;
@@ -565,7 +565,8 @@ declare module "base" {
         is(containerType: number): boolean;
         of(containerType: number, ...alignmentType: number[]): boolean;
         namespace(name: string): StringMap;
-        unsafe<T = any>(name: string, value?: any): T;
+        namespaces(): Generator<[string, StringMap], void, unknown>;
+        unsafe<T = unknown>(name: string, value?: any): Undef<T>;
         unset(name: string): void;
         delete(name: string, ...attrs: string[]): void;
         apply(options: {}): void;

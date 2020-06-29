@@ -35,7 +35,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
     }
 
     public condition(node: T) {
-        return getInputName(node.element as HTMLInputElement) !== '' && !node.data(this.name, 'siblings');
+        return getInputName(node.element as HTMLInputElement) !== '' && node.data<T[]>(this.name, 'siblings') === undefined;
     }
 
     public processNode(node: T, parent: T) {

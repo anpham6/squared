@@ -303,7 +303,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
             assignEmptyValue(app, 'menu', `@menu/${menu}`);
             node.app('menu', app.menu);
         }
-        const themeData: ToolbarThemeData = node.data(WIDGET_NAME.TOOLBAR, 'themeData');
+        const themeData = node.data<ToolbarThemeData>(WIDGET_NAME.TOOLBAR, 'themeData');
         if (themeData) {
             const options = createStyleAttribute(this.options.resource);
             const optionsActionBar = createStyleAttribute({ name: '.NoActionBar', output: options.output });
@@ -320,7 +320,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
             Resource.addTheme(optionsAppBar);
             Resource.addTheme(optionsPopup);
         }
-        const appBar = node.data(WIDGET_NAME.TOOLBAR, 'background');
+        const appBar = node.data<T>(WIDGET_NAME.TOOLBAR, 'background');
         if (appBar) {
             const background = node.android('background');
             if (background !== '') {

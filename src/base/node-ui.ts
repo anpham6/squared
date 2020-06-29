@@ -511,10 +511,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public abstract horizontalRows?: T[][];
     public abstract renderChildren: T[];
 
-    protected _boxRegister: ObjectIndex<T> = {};
     protected _preferInitial = true;
     protected _documentParent?: T;
     protected _controlName?: string;
+    protected _boxRegister?: ObjectIndex<T>;
     protected abstract _cached: CachedValueUI<T>;
     protected abstract _namespaces: ObjectMap<StringMap>;
     protected abstract _boxAdjustment: BoxModel;
@@ -603,21 +603,23 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public namespace(name: string) {
-        return (
-            this._namespaces[name] ??
-            (() => {
-                const result: StringMap = {};
-                this._namespaces[name] = result;
-                return result;
-            })()
-        );
+        const result = this._namespaces[name];
+        return result === undefined ? this._namespaces[name] = {} : result;
     }
 
-    public unsafe<T = any>(name: string, value?: any): T {
+    public *namespaces(): Generator<[string, StringMap], void, unknown> {
+        const namespaces = this._namespaces;
+        for (const name in namespaces) {
+            yield [name, namespaces[name]];
+        }
+        return;
+    }
+
+    public unsafe<T = unknown>(name: string, value?: any): Undef<T> {
         if (value !== undefined) {
             this['_' + name] = value;
         }
-        return this['_' + name];
+        return this['_' + name] as Undef<T>;
     }
 
     public unset(name: string) {
@@ -699,7 +701,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 }
                 case 'initial':
                     result = node.unsafe<InitialData<T>>('initial');
-                    this.inheritApply('initial', result);
+                    if (result) {
+                        this.inheritApply('initial', result);
+                    }
                     break;
                 case 'alignment': {
                     this.cssCopy(node, 'position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex');
@@ -717,7 +721,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     break;
                 }
                 case 'styleMap':
-                    this.cssCopyIfEmpty(node, ...Object.keys(node.unsafe<StringMap>('styleMap')));
+                    this.cssCopyIfEmpty(node, ...Object.keys(node.unsafe<StringMap>('styleMap')!));
                     break;
                 case 'textStyle':
                     result = node.textStyle;
@@ -1122,7 +1126,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (offset !== 0) {
             const attr = CSS_SPACING.get(region);
             if (attr) {
-                const node = this._boxRegister[region];
+                const node = this._boxRegister?.[region];
                 if (offset === undefined) {
                     if (node) {
                         const value: number = this[attr] || node.getBox(region)[1];
@@ -1163,7 +1167,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public setBox(region: number, options: BoxOptions) {
         const attr = CSS_SPACING.get(region);
         if (attr) {
-            const node = this._boxRegister[region];
+            const node = this._boxRegister?.[region];
             if (node) {
                 node.setBox(region, options);
             }
@@ -1216,15 +1220,17 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public registerBox(region: number, node?: T): Undef<T> {
-        const boxRegister = this._boxRegister;
+        if (this._boxRegister === undefined) {
+            this._boxRegister = {};
+        }
         if (node) {
-            boxRegister[region] = node;
+            this._boxRegister[region] = node;
         }
         else {
-            node = boxRegister[region];
+            node = this._boxRegister[region];
         }
         while (node) {
-            const next: Undef<T> = node.unsafe<ObjectIndex<T>>('boxRegister')[region];
+            const next: Undef<T> = node.unsafe<ObjectIndex<T>>('boxRegister')?.[region];
             if (next) {
                 node = next;
             }
@@ -1355,7 +1361,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         super.unsetCache(...attrs);
     }
 
-    public css(attr: string, value?: string, cache = false): string {
+    public css(attr: string, value?: string, cache = false) {
         if (arguments.length >= 2) {
             if (value) {
                 this._styleMap[attr] = value;
@@ -1367,7 +1373,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 this.unsetCache(attr);
             }
         }
-        return this._styleMap[attr] || this.styleElement && this.style[attr] || '';
+        return this._styleMap[attr] as string || this.styleElement && this.style[attr] as string || '';
     }
 
     public cssApply(values: StringMap, cache?: boolean) {
@@ -1387,7 +1393,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get element() {
-        return this._element || !!this.innerWrapped && this.innerMostWrapped.unsafe<Null<Element>>('element') || null;
+        return this._element || this.innerWrapped && this.innerMostWrapped.unsafe<Null<Element>>('element') || null;
     }
 
     set naturalChild(value) {

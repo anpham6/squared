@@ -62,7 +62,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
     }
 
     public processNode(node: T, parent: T) {
-        const mainData: PercentData = node.data(this.name, 'mainData');
+        const mainData = node.data<PercentData>(this.name, 'mainData');
         if (mainData) {
             let container: Undef<T>;
             if (!parent.layoutConstraint || mainData.percentHeight) {
@@ -113,7 +113,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
 
     public postBaseLayout(node: T) {
         const controller = this.controller as android.base.Controller<T>;
-        const mainData: PercentData = node.data(this.name, 'mainData');
+        const mainData = node.data<PercentData>(this.name, 'mainData')!;
         const constraint = LAYOUT_ANDROID.constraint;
         const renderParent = node.renderParent as T;
         const templateId = node.anchorTarget.renderParent!.id;

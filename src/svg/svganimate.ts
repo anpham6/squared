@@ -18,7 +18,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public static convertTimingFunction(value: string) {
         const keySpline = KEYSPLINE_NAME[value];
         if (keySpline) {
-            return keySpline;
+            return keySpline as string;
         }
         else if (/\s*[\d.]+\s+[\d.]+\s+[\d.]+\s+[\d.]+\s*/.test(value)) {
             return value.trim();

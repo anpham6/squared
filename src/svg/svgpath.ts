@@ -252,7 +252,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         this.transformed = undefined;
         let d: string;
         if (SVG.path(element)) {
-            d = this.getBaseValue('d');
+            d = this.getBaseValue<string>('d')!;
             if (transforms?.length || requireRefit || patternRefit) {
                 const commands = SvgBuild.getPathCommands(d);
                 if (commands.length > 0) {
@@ -287,8 +287,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         }
         else if (SVG.line(element)) {
             let points: SvgPoint[] = [
-                { x: this.getBaseValue('x1'), y: this.getBaseValue('y1') },
-                { x: this.getBaseValue('x2'), y: this.getBaseValue('y2') }
+                { x: this.getBaseValue<number>('x1')!, y: this.getBaseValue<number>('y1')! },
+                { x: this.getBaseValue<number>('x2')!, y: this.getBaseValue<number>('y2')! }
             ];
             if (patternRefit) {
                 patternParent.patternRefitPoints(points);
@@ -313,16 +313,16 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             }
         }
         else if (SVG.circle(element) || SVG.ellipse(element)) {
-            const x = this.getBaseValue('cx');
-            const y = this.getBaseValue('cy');
+            const x = this.getBaseValue<number>('cx')!;
+            const y = this.getBaseValue<number>('cy')!;
             let rx: number,
                 ry: number;
             if (SVG.ellipse(element)) {
-                rx = this.getBaseValue('rx');
-                ry = this.getBaseValue('ry');
+                rx = this.getBaseValue<number>('rx')!;
+                ry = this.getBaseValue<number>('ry')!;
             }
             else {
-                rx = this.getBaseValue('r');
+                rx = this.getBaseValue<number>('r')!;
                 ry = rx;
             }
             let points: SvgPoint[] = [{ x, y, rx, ry }];
@@ -350,10 +350,10 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             }
         }
         else if (SVG.rect(element)) {
-            let x: number = this.getBaseValue('x'),
-                y: number = this.getBaseValue('y'),
-                width: number = this.getBaseValue('width'),
-                height: number = this.getBaseValue('height');
+            let x = this.getBaseValue<number>('x')!,
+                y = this.getBaseValue<number>('y')!,
+                width = this.getBaseValue<number>('width')!,
+                height = this.getBaseValue<number>('height')!;
             if (requireRefit || transforms?.length) {
                 let points: SvgPoint[] = [
                     { x, y },
@@ -394,7 +394,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             }
         }
         else if (SVG.polygon(element) || SVG.polyline(element)) {
-            let points: SvgPoint[] = this.getBaseValue('points');
+            let points = this.getBaseValue<SvgPoint[]>('points')!;
             if (patternRefit) {
                 patternParent.patternRefitPoints(points);
             }

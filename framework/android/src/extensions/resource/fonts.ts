@@ -135,7 +135,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             let i = 0;
             while (i < length) {
                 let node = data[i++];
-                const stored: FontAttribute = node.data(Resource.KEY_NAME, 'fontStyle');
+                const stored = node.data<FontAttribute>(Resource.KEY_NAME, 'fontStyle')!;
                 const { id, companion } = node;
                 let { fontFamily, fontStyle, fontWeight } = stored;
                 if (companion?.tagName === 'LABEL' && !companion.visible) {

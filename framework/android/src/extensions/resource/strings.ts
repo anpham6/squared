@@ -44,7 +44,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
         this.application.getProcessingCache(sessionId).each(node => {
             if (node.hasResource(NODE_RESOURCE.VALUE_STRING)) {
                 if (node.styleElement) {
-                    const title: string =  node.data(Resource.KEY_NAME, 'titleString') || node.toElementString('title');
+                    const title =  node.data<string>(Resource.KEY_NAME, 'titleString') || node.toElementString('title');
                     if (title !== '') {
                         setTextValue(
                             node,
@@ -60,7 +60,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                             this.createOptionArray(list as HTMLSelectElement, node.controlId);
                         }
                     }
-                    const hintString: string = node.data(Resource.KEY_NAME, 'hintString');
+                    const hintString = node.data<string>(Resource.KEY_NAME, 'hintString');
                     if (hintString) {
                         setTextValue(
                             node,
@@ -79,14 +79,14 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                         break;
                     }
                     case 'IFRAME': {
-                        const valueString: string = node.data(Resource.KEY_NAME, 'valueString');
+                        const valueString = node.data<string>(Resource.KEY_NAME, 'valueString');
                         if (valueString) {
                             Resource.addString(replaceCharacterData(valueString));
                         }
                         break;
                     }
                     default: {
-                        let valueString: string = node.data(Resource.KEY_NAME, 'valueString');
+                        let valueString = node.data<string>(Resource.KEY_NAME, 'valueString');
                         if (valueString) {
                             let indent = 0;
                             if (node.blockDimension || node.display === 'table-cell') {

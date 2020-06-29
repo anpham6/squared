@@ -507,10 +507,10 @@ export function convertRoman(value: number) {
     return 'M'.repeat(parseInt(digits.join(''))) + result;
 }
 
-export function convertEnum(value: number, source: {}, derived: {}): string {
+export function convertEnum(value: number, source: {}, derived: {}) {
     for (const key of Object.keys(source)) {
         if (value === source[key]) {
-            return derived[key];
+            return derived[key] as string;
         }
     }
     return '';
@@ -731,18 +731,18 @@ export function includes(source: Undef<string>, value: string, delimiter = ',') 
     return false;
 }
 
-export function cloneInstance<T>(value: T): T {
-    return Object.assign(Object.create(Object.getPrototypeOf(value)), value);
+export function cloneInstance<T = unknown>(value: T) {
+    return Object.assign(Object.create(Object.getPrototypeOf(value)), value) as T;
 }
 
-export function cloneArray(data: any[], result: any[] = [], object?: boolean) {
+export function cloneArray<T = unknown>(data: T[], result: T[] = [], object?: boolean) {
     for (let i = 0; i < data.length; ++i) {
         const value = data[i];
         if (Array.isArray(value)) {
-            result.push(cloneArray(value, [], object));
+            result.push(cloneArray(value, [], object) as any);
         }
         else if (object && isPlainObject(value)) {
-            result.push(cloneObject(value, {}, true));
+            result.push(cloneObject(value, {}, true) as T);
         }
         else {
             result.push(value);
@@ -941,7 +941,11 @@ export function assignEmptyValue(dest: {}, ...attrs: string[]) {
     }
 }
 
-export function findSet<T>(list: Set<T>, predicate: IteratorPredicate<T, boolean, Set<T>>) {
+export function sortNumber(values: number[], ascending = true) {
+    return ascending ? values.sort((a, b) => a < b ? -1 : 1) : values.sort((a, b) => a > b ? -1 : 1);
+}
+
+export function findSet<T = unknown>(list: Set<T>, predicate: IteratorPredicate<T, boolean, Set<T>>) {
     let i = 0;
     for (const item of list) {
         if (predicate(item, i++, list)) {
@@ -951,11 +955,7 @@ export function findSet<T>(list: Set<T>, predicate: IteratorPredicate<T, boolean
     return undefined;
 }
 
-export function sortNumber(values: number[], ascending = true) {
-    return ascending ? values.sort((a, b) => a < b ? -1 : 1) : values.sort((a, b) => a > b ? -1 : 1);
-}
-
-export function safeNestedArray<T>(list: T[][] | ObjectMap<T[]>, index: number | string) {
+export function safeNestedArray<T = unknown>(list: T[][] | ObjectMap<T[]>, index: number | string) {
     let result: T[] = list[index];
     if (result === undefined || result === null) {
         result = [];
@@ -964,7 +964,7 @@ export function safeNestedArray<T>(list: T[][] | ObjectMap<T[]>, index: number |
     return result;
 }
 
-export function safeNestedMap<T>(map: ObjectMapNested<T>, index: number | string) {
+export function safeNestedMap<T = unknown>(map: ObjectMapNested<T>, index: number | string) {
     let result: ObjectMap<T> = map[index];
     if (result === undefined || result === null) {
         result = {};
@@ -1008,8 +1008,8 @@ export function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]) 
     });
 }
 
-export function flatArray<T>(list: any[], depth = 0, current = 0): T[] {
-    let result: any[] = [];
+export function flatArray<T = unknown>(list: T[], depth = 0, current = 0): T[] {
+    let result: T[] = [];
     const length = list.length;
     let i = 0;
     while (i < length) {
@@ -1026,7 +1026,7 @@ export function flatArray<T>(list: any[], depth = 0, current = 0): T[] {
     return result;
 }
 
-export function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>, deleteCount?: number) {
+export function spliceArray<T = unknown>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>, deleteCount?: number) {
     let deleted = 0;
     for (let i = 0; i < list.length; ++i) {
         const item = list[i];
@@ -1043,7 +1043,7 @@ export function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolea
     return list;
 }
 
-export function partitionArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>): [T[], T[]] {
+export function partitionArray<T = unknown>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>): [T[], T[]] {
     const length = list.length;
     const valid: T[] = new Array(length);
     const invalid: T[] = new Array(length);
@@ -1062,7 +1062,7 @@ export function partitionArray<T>(list: ArrayLike<T>, predicate: IteratorPredica
     return [valid, invalid];
 }
 
-export function sameArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, any>) {
+export function sameArray<T = unknown>(list: ArrayLike<T>, predicate: IteratorPredicate<T, any>) {
     const length = list.length;
     if (length > 0) {
         let baseValue!: any;
@@ -1080,7 +1080,7 @@ export function sameArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T,
     return false;
 }
 
-export function joinArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, string>, char = '\n', trailing = true): string {
+export function joinArray<T = unknown>(list: ArrayLike<T>, predicate: IteratorPredicate<T, string>, char = '\n', trailing = true): string {
     let result = '';
     const length = list.length;
     let i = 0;
@@ -1093,7 +1093,7 @@ export function joinArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T,
     return trailing ? result : result.substring(0, result.length - char.length);
 }
 
-export function iterateArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start = 0, end = Infinity) {
+export function iterateArray<T = unknown>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start = 0, end = Infinity) {
     start = Math.max(start, 0);
     const length = Math.min(list.length, end);
     let i = start;
@@ -1107,7 +1107,7 @@ export function iterateArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate
     return length;
 }
 
-export function iterateReverseArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start = 0, end = Infinity) {
+export function iterateReverseArray<T = unknown>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start = 0, end = Infinity) {
     start = Math.max(start, 0);
     const length = Math.min(list.length, end);
     let i = length - 1;
@@ -1121,7 +1121,7 @@ export function iterateReverseArray<T>(list: ArrayLike<T>, predicate: IteratorPr
     return length;
 }
 
-export function conditionArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, any>) {
+export function conditionArray<T = unknown>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, any>) {
     const length = list.length;
     for (let i = 0; i < length; ++i) {
         const item = list[i];
@@ -1134,13 +1134,13 @@ export function conditionArray<T>(list: ArrayLike<T>, predicate: IteratorPredica
     }
 }
 
-export function replaceMap<T, U>(list: any[], predicate: IteratorPredicate<T, U>): U[] {
+export function replaceMap<T, U>(list: (T | U)[], predicate: IteratorPredicate<T, U>) {
     const length = list.length;
     let i = 0;
     while (i < length) {
-        list[i] = predicate(list[i], i++, list);
+        list[i] = predicate(list[i] as T, i++, list as T[]);
     }
-    return list;
+    return list as U[];
 }
 
 export function plainMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>): U[] {

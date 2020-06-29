@@ -176,8 +176,8 @@ export function createStyleAttribute(data?: StandardMap) {
     return result;
 }
 
-export function localizeString(value: string, rtl: boolean, api: number): string {
-    return rtl && api >= BUILD_ANDROID.JELLYBEAN_1 && LOCALIZE_ANDROID[value] || value;
+export function localizeString(value: string, rtl: boolean, api: number) {
+    return rtl && api >= BUILD_ANDROID.JELLYBEAN_1 && LOCALIZE_ANDROID[value] as string || value;
 }
 
 export function getXmlNs(value: string) {

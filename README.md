@@ -57,6 +57,8 @@ Library files are in the /dist folder. A minimum of *two* files are required to 
 
 Usable combinations: 1-2-4 + 1-2-4-5 + 1-2-3-4-5 + 1-3 + 1-vdom-lite
 
+One file bundles for common combinations are available in the /dist/bundles folder.
+
 #### Example: android
 
 The primary function "parseDocument" can be called on multiple elements and multiple times per session. The application will continuously and progressively build the layout files into a single entity with combined shared resources.

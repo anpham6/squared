@@ -218,7 +218,7 @@ const setBoxPercentage = (parent: View, node: View, attr: DimensionAttr) => node
 export default class <T extends View> extends squared.base.extensions.Flexbox<T> {
     public processNode(node: T, parent: T) {
         super.processNode(node, parent);
-        const mainData: FlexboxData<T> = node.data(this.name, 'mainData');
+        const mainData = node.data<FlexboxData<T>>(this.name, 'mainData')!;
         const { rowCount, columnCount } = mainData;
         if (rowCount === 1 && mainData.row || columnCount === 1 && mainData.column) {
             node.containerType = CONTAINER_NODE.CONSTRAINT;
@@ -266,7 +266,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
         else {
             const autoMargin = node.autoMargin;
             if (autoMargin.horizontal || autoMargin.vertical && parent.hasHeight) {
-                const mainData: FlexboxData<T> = parent.data(this.name, 'mainData');
+                const mainData = parent.data<FlexboxData<T>>(this.name, 'mainData');
                 if (mainData) {
                     const index = mainData.children.findIndex(item => item === node);
                     if (index !== -1) {
@@ -305,7 +305,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
     }
 
     public postBaseLayout(node: T) {
-        const mainData: FlexboxData<T> = node.data(this.name, 'mainData');
+        const mainData = node.data<FlexboxData<T>>(this.name, 'mainData');
         if (mainData) {
             const controller = this.controller as android.base.Controller<T>;
             const { row, column, reverse, wrap, wrapReverse, alignContent, justifyContent, children } = mainData;
@@ -439,7 +439,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             let j = 0;
                             while (j < q) {
                                 const chain = seg[j++];
-                                const value = (chain.data(this.name, 'boundsData') as BoxRectDimension || chain.bounds)[HWL];
+                                const value = (chain.data<BoxRectDimension>(this.name, 'boundsData') || chain.bounds)[HWL];
                                 if (sizeCount === 0) {
                                     maxSize = value;
                                     ++sizeCount;

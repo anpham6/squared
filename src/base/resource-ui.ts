@@ -852,7 +852,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             const backgroundPositionY = 'center, center';
                             const backgroundImage = ResourceUI.parseBackgroundImage(node, `linear-gradient(${backgroundColor}, ${backgroundColor}), linear-gradient(${borderColor}, ${borderColor})`) as Gradient[];
                             value = '';
-                            let boxStyle: BoxStyle = node.data(ResourceUI.KEY_NAME, 'boxStyle');
+                            let boxStyle = node.data<BoxStyle>(ResourceUI.KEY_NAME, 'boxStyle');
                             if (boxStyle) {
                                 const backgroundImageA = boxStyle.backgroundImage;
                                 if (backgroundImageA) {
@@ -947,7 +947,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             }
                         }
                     }
-                    else if (node.naturalChildren.length === 0 && !node.hasPX('height') && ResourceUI.isBackgroundVisible(node.data(ResourceUI.KEY_NAME, 'boxStyle')) && !isString(node.textContent)) {
+                    else if (node.naturalChildren.length === 0 && !node.hasPX('height') && ResourceUI.isBackgroundVisible(node.data<BoxStyle>(ResourceUI.KEY_NAME, 'boxStyle')) && !isString(node.textContent)) {
                         value = node.textContent;
                     }
                     break;

@@ -144,7 +144,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
     }
 
     public processNode(node: T, parent: T) {
-        const mainData: PositiveXData = node.data(this.name, 'mainData');
+        const mainData = node.data<PositiveXData>(this.name, 'mainData');
         if (mainData) {
             const children = mainData.children as T[];
             let container: Undef<T>;
@@ -193,7 +193,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
     }
 
     public postBaseLayout(node: T) {
-        const mainData: PositiveXData = node.data(this.name, 'mainData');
+        const mainData = node.data<PositiveXData>(this.name, 'mainData');
         if (mainData) {
             const documentId = node.documentId;
             const children = mainData.children;

@@ -453,9 +453,7 @@ function transferVerticalStyle(node: T, sibling: T) {
 
 function transferLayoutAlignment(node: T, replaceWith: T) {
     replaceWith.anchorClear();
-    const namespaces = node.unsafe<ObjectMap<StringMap>>('namespaces');
-    for (const name in namespaces) {
-        const item = namespaces[name];
+    for (const [name, item] of node.namespaces()) {
         for (const attr in item) {
             switch (attr) {
                 case 'layout_width':
@@ -899,9 +897,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return valid ? Math.max(0, percent) : 1;
         }
 
-        public static getControlName(containerType: number, api = BUILD_ANDROID.LATEST): string {
+        public static getControlName(containerType: number, api = BUILD_ANDROID.LATEST) {
             const name = CONTAINER_NODE[containerType];
-            return api >= BUILD_ANDROID.Q && CONTAINER_ANDROID_X[name] || CONTAINER_ANDROID[name];
+            return api >= BUILD_ANDROID.Q && CONTAINER_ANDROID_X[name] as string || CONTAINER_ANDROID[name] as string || '';
         }
 
         public api = BUILD_ANDROID.LATEST;
@@ -1828,7 +1826,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 let maxHeight = 0,
                                     parentHeight = 0;
                                 for (const item of grandParent) {
-                                    const height = (item.data(EXT_NAME.FLEXBOX as string, 'boundsData') || item.bounds).height;
+                                    const height = (item.data<BoxRectDimension>(EXT_NAME.FLEXBOX as string, 'boundsData') || item.bounds).height;
                                     if (height > maxHeight) {
                                         maxHeight = height;
                                     }
@@ -2462,7 +2460,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 if (this.onlyChild && renderChildren.length > 0 && this.controlName ===  renderParent.controlName && !this.visibleStyle.borderWidth && this.elementId === '') {
                     let valid = true;
                     for (const name in this._namespaces) {
-                        const parentObj = renderParent.unsafe<StringMap>('namespaces')[name];
+                        const parentObj = renderParent.unsafe<StringMap>('namespaces')![name];
                         if (parentObj) {
                             const obj = this._namespaces[name];
                             for (const attr in obj) {

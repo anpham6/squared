@@ -1477,11 +1477,11 @@ export function newBoxModel(): BoxModel {
     };
 }
 
-export function getStyle(element: Null<Element>, pseudoElt = ''): CSSStyleDeclaration {
+export function getStyle(element: Null<Element>, pseudoElt = '') {
     if (element) {
         const cached = element['__style' + pseudoElt];
         if (cached) {
-            return cached;
+            return cached as CSSStyleDeclaration;
         }
         if (hasComputedStyle(element)) {
             const style = getComputedStyle(element, pseudoElt);
@@ -2462,7 +2462,7 @@ export function checkStyleValue(element: HTMLElement, attr: string, value: strin
     else if (isCustomProperty(value)) {
         value = parseVar(element, value);
     }
-    return value === '' && style?.[attr] || value;
+    return value === '' && style?.[attr] as string || value;
 }
 
 export function getKeyframesRules(): ObjectMap<KeyframesData> {

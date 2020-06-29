@@ -125,7 +125,7 @@ export default class FloatingActionButton<T extends View> extends squared.base.E
             const layoutGravity = node.android('layout_gravity');
             let anchor = parent.documentId;
             if (parent.controlName === (node.api < BUILD_ANDROID.Q ? SUPPORT_ANDROID.TOOLBAR : SUPPORT_ANDROID_X.TOOLBAR)) {
-                const value: string = parent.data(WIDGET_NAME.TOOLBAR, 'outerParent');
+                const value = parent.data<string>(WIDGET_NAME.TOOLBAR, 'outerParent');
                 if (value) {
                     anchor = value;
                 }

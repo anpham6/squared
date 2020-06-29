@@ -102,7 +102,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
     }
 
     public postBaseLayout(node: T) {
-        const mainData: NegativeXData = node.data(this.name, 'mainData');
+        const mainData = node.data<NegativeXData>(this.name, 'mainData');
         if (mainData) {
             let firstChild = mainData.firstChild;
             if (firstChild) {
@@ -142,7 +142,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
 
     public beforeCascade() {
         for (const node of this.subscribers) {
-            const mainData: NegativeXData = node.data(this.name, 'mainData');
+            const mainData = node.data<NegativeXData>(this.name, 'mainData');
             if (mainData) {
                 const translateX = node.android('translationX');
                 const translateY = node.android('translationY');

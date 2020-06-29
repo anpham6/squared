@@ -231,7 +231,7 @@ declare module "lib" {
         function getStyleValue(element: Element, attr: string, sessionId?: string): string;
         function getElementAsNode<T>(element: Element, sessionId?: string): Null<T>;
         function setElementCache(element: Element, attr: string, sessionId: string, data: any): void;
-        function getElementCache(element: Element, attr: string, sessionId?: string): any;
+        function getElementCache<T = unknown>(element: Element, attr: string, sessionId?: string): Undef<T>;
         function deleteElementCache(element: Element, attr: string, sessionId: string): void;
         function frameworkNotInstalled<T = void>(): Promise<T>;
     }
@@ -284,19 +284,19 @@ declare module "lib" {
         function belowRange(a: number, b: number, offset?: number): boolean;
         function assignEmptyProperty(dest: {}, source: {}): {};
         function assignEmptyValue(dest: {}, ...attrs: string[]): void;
-        function findSet<T>(list: Set<T>, predicate: IteratorPredicate<T, boolean, Set<T>>): Undef<T>;
         function sortNumber(values: number[], ascending?: boolean): number[];
-        function safeNestedArray<T>(list: T[][] | ObjectMap<T[]>, index: number | string): T[];
-        function safeNestedMap<T>(map: ObjectMapNested<T>, index: number | string): ObjectMap<T>;
-        function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]): T[];
-        function flatArray<T>(list: any[], depth?: number): T[];
-        function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>, deleteCount?: number): T[];
-        function partitionArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>): [T[], T[]];
-        function sameArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, any>): boolean;
-        function joinArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, string>, char?: string, trailing?: boolean): string;
-        function iterateArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start?: number, end?: number): number;
-        function iterateReverseArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start?: number, end?: number): number;
-        function conditionArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, any>): void;
+        function findSet<T = unknown>(list: Set<T>, predicate: IteratorPredicate<T, boolean, Set<T>>): Undef<T>;
+        function safeNestedArray<T = unknown>(list: T[][] | ObjectMap<T[]>, index: number | string): T[];
+        function safeNestedMap<T = unknown>(map: ObjectMapNested<T>, index: number | string): ObjectMap<T>;
+        function sortArray<T = unknown>(list: T[], ascending: boolean, ...attrs: string[]): T[];
+        function flatArray<T = unknown>(list: any[], depth?: number): T[];
+        function spliceArray<T = unknown>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>, deleteCount?: number): T[];
+        function partitionArray<T = unknown>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>): [T[], T[]];
+        function sameArray<T = unknown>(list: ArrayLike<T>, predicate: IteratorPredicate<T, any>): boolean;
+        function joinArray<T = unknown>(list: ArrayLike<T>, predicate: IteratorPredicate<T, string>, char?: string, trailing?: boolean): string;
+        function iterateArray<T = unknown>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start?: number, end?: number): number;
+        function iterateReverseArray<T = unknown>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start?: number, end?: number): number;
+        function conditionArray<T = unknown>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, any>): void;
         function replaceMap<T, U>(list: any[], predicate: IteratorPredicate<T, U>): U[];
         function plainMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>): U[];
     }
