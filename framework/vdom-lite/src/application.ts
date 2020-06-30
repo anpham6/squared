@@ -17,6 +17,4 @@ export default class <T extends Node> extends Application<T> implements vdom.bas
     public insertNode(element: Element, sessionId: string) {
         return element.nodeName !== '#text' ? new this.Node(this.nextId, sessionId, element) : undefined;
     }
-
-    public afterCreateCache() {}
 }

@@ -115,13 +115,23 @@
 
                         squared.setFramework(chrome);
                         time = performance.now();
-                        searchQuery(await chrome.getElement(document.documentElement));
+                        searchQuery(await squared.getElement(document.documentElement));
 
                         time = performance.now();
-                        console.log(await chrome.querySelectorAll(query, false));
+                        console.log(await squared.querySelectorAll(query, false));
                         console.log(performance.now() - time);
 
+                        time = performance.now();
+                        searchQuery(await squared.parseDocument());
+
                         squared.setFramework(vdom);
+                        time = performance.now();
+                        searchQuery(await squared.getElement(document.documentElement));
+
+                        time = performance.now();
+                        console.log(await squared.querySelectorAll(query, false));
+                        console.log(performance.now() - time);
+
                         time = performance.now();
                         searchQuery(await squared.parseDocument());
                     });

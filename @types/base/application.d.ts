@@ -1,6 +1,7 @@
 interface UserSettings {
     builtInExtensions: string[];
     showErrorMessages: boolean;
+    createElementMap: boolean;
     createQuerySelectorMap: boolean;
 }
 

@@ -40,6 +40,46 @@ function deleteProperties(data: {}) {
     }
 }
 
+function findElement(element: HTMLElement, cache: boolean) {
+    if (cache) {
+        const result = main!.elementMap.get(element);
+        if (result) {
+            return Promise.resolve(result);
+        }
+    }
+    return main!.parseDocument(element) as Promise<Node>;
+}
+
+async function findElementAll(query: NodeListOf<Element>, length: number) {
+    let incomplete = false;
+    const elementMap = main!.elementMap;
+    const result: Node[] = new Array(length);
+    for (let i = 0; i < length; ++i) {
+        const element = query[i] as HTMLElement;
+        let item = elementMap.get(element);
+        if (item) {
+            result[i] = item;
+        }
+        else {
+            item = await main!.parseDocument(element) as Node;
+            if (item) {
+                result[i] = item;
+            }
+            else {
+                incomplete = true;
+            }
+        }
+    }
+    if (incomplete) {
+        util.flatArray<Node>(result);
+    }
+    return result;
+}
+
+async function findElementAsync(element: HTMLElement) {
+    return [await main!.parseDocument(element) as Node];
+}
+
 const checkWritable = (app: Undef<Main>): app is Main => app?.initializing === false && app.length > 0;
 
 export function setHostname(value: string) {
@@ -293,6 +333,60 @@ export function appendFromArchive(value: string, options: FileActionOptions) {
         return main.appendFromArchive(value, options);
     }
     return session.frameworkNotInstalled();
+}
+
+export function getElementById(value: string, cache = true) {
+    if (main) {
+        const element = document.getElementById(value);
+        if (element) {
+            return findElement(element, cache);
+        }
+    }
+    return Promise.resolve(null);
+}
+
+export function querySelector(value: string, cache = true) {
+    if (main) {
+        const element = document.querySelector(value);
+        if (element) {
+            return findElement(element as HTMLElement, cache);
+        }
+    }
+    return Promise.resolve(null);
+}
+
+export function querySelectorAll(value: string, cache = true) {
+    if (main) {
+        const query = document.querySelectorAll(value);
+        const length = query.length;
+        if (length > 0) {
+            if (cache) {
+                return util.promisify<Node[]>(findElementAll)(query, length);
+            }
+            else if (length === 1) {
+                return util.promisify<Node[]>(findElementAsync)(query[0] as HTMLElement);
+            }
+            else {
+                return main.parseDocument(...Array.from(query) as HTMLElement[]) as Promise<Node[]>;
+            }
+        }
+    }
+    return Promise.resolve([]);
+}
+
+export function fromElement(element: HTMLElement, cache = false) {
+    if (main) {
+        return findElement(element, cache);
+    }
+    return Promise.resolve(null);
+}
+
+export function getElementMap() {
+    return main?.elementMap || new Map<Element, Node>();
+}
+
+export function clearElementMap() {
+    main?.elementMap.clear();
 }
 
 export function toString() {

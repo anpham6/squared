@@ -39,6 +39,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     public extensions: squared.base.Extension<T>[] = [];
     public closed = false;
     public readonly Node: Constructor<T>;
+    public readonly elementMap = new Map<Element, T>();
     public readonly session: squared.base.AppSession<T> = {
         active: new Map<string, squared.base.AppProcessing<T>>(),
         unusedStyles: new Set<string>()
@@ -71,9 +72,15 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     public abstract insertNode(element: Element, sessionId: string): Undef<T>;
-    public abstract afterCreateCache(node: T): void;
     public abstract set viewModel(data: Undef<AppVieModel>);
     public abstract get viewModel(): Undef<AppVieModel>;
+
+    public afterCreateCache(node: T) {
+        if (this.userSettings.createElementMap) {
+            const elementMap = this.elementMap;
+            this.getProcessingCache(node.sessionId).each(item => elementMap.set(item.element as Element, item));
+        }
+    }
 
     public createNode(sessionId: string, options: CreateNodeOptions) {
         const node = new this.Node(this.nextId, sessionId, options.element);

@@ -611,6 +611,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     public afterCreateCache(node: T) {
+        super.afterCreateCache(node);
         const systemName = capitalize(this.systemName);
         const dataset = node.dataset;
         const filename = dataset['filename' + systemName] || dataset.filename;

@@ -84,6 +84,7 @@ declare module "base" {
         closed: boolean;
         readonly systemName: string;
         readonly framework: number;
+        readonly elementMap: Map<Element, T>;
         readonly session: AppSession<T>;
         readonly builtInExtensions: ObjectMap<Extension<T>>;
         readonly extensions: Extension<T>[];

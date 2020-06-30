@@ -1,6 +1,5 @@
 interface ChromeUserSettings extends UserResourceSettings {
     excludePlainText: boolean;
-    createElementMap: boolean;
     outputFileExclusions: string[];
 }
 

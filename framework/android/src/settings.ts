@@ -39,6 +39,7 @@ const settings: AndroidUserSettingsUI = {
     supportNegativeLeftTop: true,
     customizationsOverwritePrivilege: true,
     showAttributes: true,
+    createElementMap: false,
     createQuerySelectorMap: false,
     convertPixels: 'dp',
     insertSpaces: 4,

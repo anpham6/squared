@@ -15,10 +15,4 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         }
         return this.createNode(sessionId, { element });
     }
-
-    public afterCreateCache(node: T) {
-        if (this.userSettings.createElementMap) {
-            this.controllerHandler.cacheElementList(this.getProcessingCache(node.sessionId));
-        }
-    }
 }

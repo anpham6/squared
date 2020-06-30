@@ -182,6 +182,7 @@ squared.settings = {
     exclusionsDisabled: false,
     customizationsOverwritePrivilege: true,
     showAttributes: true,
+    createElementMap: false,
     createQuerySelectorMap: false,
     convertPixels: 'dp',
     insertSpaces: 4,
@@ -230,6 +231,7 @@ squared.settings = {
 ```javascript
 squared.settings = {
     builtInExtensions: [],
+    createElementMap: true,
     createQuerySelectorMap: true,
     showErrorMessages: false
 };
@@ -237,7 +239,7 @@ squared.settings = {
 
 ### ALL: Public Properties and Methods
 
-There is no official documentation as this project is still in early development. The entire source code is available on GitHub if you need further clarification. Most methods will return a Promise.
+There is no official documentation as this project is still in early development. The entire source code including TypeScript definitions are available on GitHub if you need further clarification.
 
 ```javascript
 .settings // see user preferences section
@@ -261,20 +263,34 @@ include(extension: string | squared.base.Extension, options?: {}) // see extensi
 retrieve(name: string) // retrieve an extension by namespace or control
 configure(name: string, options: {}) // see extension configuration section
 exclude(name: string) // remove an extension by namespace or control
+
+getElementMap() // map used for caching results from parseDocument
+clearElementMap()
+
+// Promise
+
+getElementById(value: string, cache?: boolean) // cache: default "true"
+querySelector(value: string, cache?: boolean)
+querySelectorAll(value: string, cache?: boolean)
+
+fromElement(element: HTMLElement, cache?: boolean) // cache: default "false"
 ```
 
-```javascript
-// Framework: android | chrome
+Packaging methods will return a Promise and require either node-express or squared-apache installed. These features are not supported the framework is VDOM.
 
-saveToArchive(filename?: string, options?: {}) // save entire project as a new archive (Promise)
-createFrom(format: string, options: {}) // create new archive from only RequestAsset[] (Promise)
+```javascript
+
+saveToArchive(filename?: string, options?: {}) // save entire project as a new archive
+createFrom(format: string, options: {}) // create new archive from only RequestAsset[]
 
 // Required (local archives): --disk-read | --unc-read | --access-all (command-line)
-appendToArchive(pathname: string, options?: {}) // append entire project to a copy of a preexisting archive (Promise)
-appendFromArchive(pathname: string, options: {}) // create new archive from a preexisting archive and from only RequestAsset[] (Promise)
+
+appendToArchive(pathname: string, options?: {}) // append entire project to a copy of a preexisting archive
+appendFromArchive(pathname: string, options: {}) // create new archive from a preexisting archive and from only RequestAsset[]
 
 // Required (all): --disk-write | --unc-write | --access-all (command-line)
-copyToDisk(directory: string, options?: {}) // copy entire project to local directory (Promise)
+
+copyToDisk(directory: string, options?: {}) // copy entire project to local directory
 ```
 
 ### ANDROID: Public Methods
@@ -352,20 +368,10 @@ squared.system.addXmlNs('aapt', 'http://schemas.android.com/aapt');
 ```javascript
 // Asynchronous
 
-chrome.getElementById(value: string, cache?: boolean) // cache: default "true"
-chrome.querySelector(value: string, cache?: boolean)
-chrome.querySelectorAll(value: string, cache?: boolean)
-chrome.getElement(element: HTMLElement, cache?: boolean) // cache: default "false"
-
-chrome.saveAsWebPage(filename?: string, options?: {}) // create archive with html and web page assets asynchronously
+chrome.saveAsWebPage(filename?: string, options?: {}) // create archive with html and web page assets
 ```
 
-The system methods querySelector and querySelectorAll can also be called from every Node object and provide the same functionality as the similarly named DOM methods.
-
 ```javascript
-squared.system.getElementMap()
-squared.system.clearElementMap()
-
 // Asynchronous
 
 squared.system.copyHtmlPage(directory: string, options?: {}) // option "name": e.g. "index.html"

@@ -2,16 +2,7 @@ import * as squared from '../squared';
 
 type Node = squared.base.Node;
 
-declare function getElement(element: HTMLElement, cache?: boolean): Promise<Null<Node>>;
-declare function getElementById(value: string, cache?: boolean): Promise<Null<Node>>;
-declare function querySelector(value: string): Promise<Null<Node>>;
-declare function querySelectorAll(value: string): Promise<Null<Node>>;
-
 declare interface ChromeFramework<T extends Node> extends squared.base.AppFramework<T> {
-    getElement: (element: HTMLElement, cache?: boolean) => Promise<Null<Node>>;
-    getElementById: (value: string, cache?: boolean) => Promise<Null<Node>>;
-    querySelector: (value: string) => Promise<Null<Node>>;
-    querySelectorAll: (value: string) => Promise<Node[]>;
     saveAsWebPage: (filename?: string, options?: squared.base.FileArchivingOptions) => Promise<Node[] | void>;
 }
 
@@ -27,10 +18,7 @@ declare namespace base {
 
     class Controller<T extends Node> extends squared.base.Controller<T> {
         application: Application<T>;
-        get elementMap(): Map<Element, T>;
         get userSettings(): ChromeUserSettings;
-        cacheElement(node: T): void;
-        cacheElementList(list: squared.base.NodeList<T>): void;
     }
 
     class Resource<T extends Node> extends squared.base.Resource<T> {
