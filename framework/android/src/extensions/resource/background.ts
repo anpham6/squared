@@ -3,6 +3,7 @@ import ResourceSvg from './svg';
 
 import { CONTAINER_ANDROID, EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X, XMLNS_ANDROID } from '../../lib/constant';
 import { BUILD_ANDROID, CONTAINER_NODE } from '../../lib/enumeration';
+import { applyTemplate } from '../../lib/util';
 
 import LAYERLIST_TMPL from '../../template/layer-list';
 import SHAPE_TMPL from '../../template/shape';
@@ -62,7 +63,6 @@ const { reduceRGBA } = squared.lib.color;
 const { extractURL, formatPercent, formatPX, getBackgroundPosition } = squared.lib.css;
 const { truncate } = squared.lib.math;
 const { delimitString, flatArray, isEqual, plainMap, resolvePath } = squared.lib.util;
-const { applyTemplate } = squared.lib.xml;
 
 const { BOX_STANDARD, NODE_RESOURCE } = squared.base.lib.enumeration;
 

@@ -4,7 +4,7 @@ import { BUILD_ANDROID } from './enumeration';
 type View = android.base.View;
 
 const { truncate } = squared.lib.math;
-const { capitalize, isPlainObject } = squared.lib.util;
+const { capitalize, joinArray, isPlainObject } = squared.lib.util;
 
 const { BOX_STANDARD } = squared.base.lib.enumeration;
 
@@ -16,6 +16,94 @@ function calculateBias(start: number, end: number, accuracy = 3) {
         return 1;
     }
     return parseFloat(truncate(Math.max(start / (start + end), 0), accuracy));
+}
+
+export function applyTemplate(tagName: string, template: StandardMap, children: StandardMap[], depth?: number) {
+    const tag: ObjectMap<any> = template[tagName];
+    const nested = tag['>>'] === true;
+    let output = '',
+        indent = '',
+        length = children.length;
+    if (depth === undefined) {
+        output += '<?xml version="1.0" encoding="utf-8"?>\n';
+        depth = 0;
+    }
+    else {
+        indent += '\t'.repeat(depth);
+    }
+    for (let i = 0; i < length; ++i) {
+        const item = children[i];
+        const include: Undef<string> = tag['#'] && item[tag['#']];
+        const closed = !nested && !include;
+        const attrs: Undef<string[]> = tag['@'];
+        const descend: Undef<StringMap> = tag['>'];
+        let valid = false;
+        output += indent + '<' + tagName;
+        if (attrs) {
+            const q = attrs.length;
+            let j = 0;
+            while (j < q) {
+                const attr = attrs[j++];
+                const value = item[attr];
+                if (value) {
+                    output += ` ${(tag['^'] ? tag['^'] + ':' : '') + attr}="${value}"`;
+                }
+            }
+        }
+        if (descend) {
+            let innerText = '';
+            const childDepth = depth + (nested ? i : 0) + 1;
+            for (const name in descend) {
+                const value = item[name];
+                if (Array.isArray(value)) {
+                    innerText += applyTemplate(name, descend, value, childDepth);
+                }
+                else if (isPlainObject(value)) {
+                    innerText += applyTemplate(name, descend, [value], childDepth);
+                }
+            }
+            if (innerText !== '') {
+                output += '>\n' +
+                          innerText;
+                if (closed) {
+                    output += indent + `</${tagName}>\n`;
+                }
+            }
+            else {
+                output += closed ? ' />\n' : '>\n';
+            }
+            valid = true;
+        }
+        else if (tag['~']) {
+            output += '>' + item.innerText;
+            if (closed) {
+                output += `</${tagName}>\n`;
+            }
+            valid = true;
+        }
+        else if (closed) {
+            output += ' />\n';
+        }
+        if (include) {
+            if (!valid) {
+                output += '>\n';
+            }
+            output += include;
+            if (!nested) {
+                output += indent + `</${tagName}>\n`;
+            }
+        }
+        if (nested) {
+            indent += '\t';
+        }
+    }
+    if (nested) {
+        while (--length >= 0) {
+            indent = indent.substring(1);
+            output += indent + `</${tagName}>\n`;
+        }
+    }
+    return output;
 }
 
 export function convertLength(value: string | number, font?: boolean, precision = 3) {
@@ -174,6 +262,66 @@ export function createStyleAttribute(data?: StandardMap) {
         }
     }
     return result;
+}
+
+export function replaceTab(value: string, spaces = 4, preserve?: boolean) {
+    if (spaces > 0) {
+        if (preserve) {
+            return joinArray(value.split('\n'), line => {
+                const match = /^(\t+)(.*)$/.exec(line);
+                return match ? ' '.repeat(spaces * match[1].length) + match[2] : line;
+            });
+        }
+        else {
+            return value.replace(/\t/g, ' '.repeat(spaces));
+        }
+    }
+    return value;
+}
+
+export function replaceCharacterData(value: string, tab?: number) {
+    value = value
+        .replace(/&nbsp;/g, '&#160;')
+        .replace(/&(?!#?[A-Za-z\d]{2,};)/g, '&amp;');
+    const char: { i: number; text: string }[] = [];
+    const length = value.length;
+    for (let i = 0; i < length; ++i) {
+        switch (value.charAt(i)) {
+            case "'":
+                char.push({ i, text: "\\'" });
+                break;
+            case '"':
+                char.push({ i, text: '&quot;' });
+                break;
+            case '<':
+                char.push({ i, text: '&lt;' });
+                break;
+            case '>':
+                char.push({ i, text: '&gt;' });
+                break;
+            case '\t':
+                if (tab) {
+                    char.push({ i, text: '&#160;'.repeat(tab) });
+                }
+                break;
+            case '\u0003':
+                char.push({ i, text: ' ' });
+                break;
+            case '\u00A0':
+                char.push({ i, text: '&#160;' });
+                break;
+        }
+    }
+    if (char.length > 0) {
+        const parts = value.split('');
+        let j = 0;
+        while (j < char.length) {
+            const item = char[j++];
+            parts[item.i] = item.text;
+        }
+        return parts.join('');
+    }
+    return value;
 }
 
 export function localizeString(value: string, rtl: boolean, api: number) {

@@ -7,8 +7,7 @@ const { USER_AGENT, isUserAgent } = squared.lib.client;
 const { CSS_PROPERTIES, formatPX, getStyle, hasCoords, isLength, isPercent } = squared.lib.css;
 const { withinViewport } = squared.lib.dom;
 const { actualClientRect, getElementCache, setElementCache } = squared.lib.session;
-const { capitalize, convertFloat, flatArray, iterateArray, safeNestedArray } = squared.lib.util;
-const { pushIndent, pushIndentArray } = squared.lib.xml;
+const { capitalize, convertFloat, flatArray, iterateArray, joinArray, safeNestedArray } = squared.lib.util;
 
 const BORDER_TOP = CSS_PROPERTIES.borderTop.value as string[];
 const BORDER_RIGHT = CSS_PROPERTIES.borderRight.value as string[];
@@ -48,6 +47,30 @@ function setButtonStyle(styleMap: StringMap, applied: boolean, defaultColor: str
         styleMap.paddingBottom = '3px';
         styleMap.paddingLeft = '6px';
     }
+}
+
+function pushIndent(value: string, depth: number, char = '\t', indent?: string) {
+    if (depth > 0) {
+        if (indent === undefined) {
+            indent = char.repeat(depth);
+        }
+        return joinArray(value.split('\n'), line => line !== '' ? indent + line : '');
+    }
+    return value;
+}
+
+function pushIndentArray(values: string[], depth: number, char = '\t', separator = '') {
+    if (depth > 0) {
+        let result = '';
+        const indent = char.repeat(depth);
+        const length = values.length;
+        let i = 0;
+        while (i < length) {
+            result += (i > 0 ? separator : '') + pushIndent(values[i++], depth, char, indent);
+        }
+        return result;
+    }
+    return values.join(separator);
 }
 
 export default abstract class ControllerUI<T extends NodeUI> extends Controller<T> implements squared.base.ControllerUI<T> {

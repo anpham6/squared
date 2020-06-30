@@ -15,7 +15,6 @@ const { getNamedItem, removeElementsByClassName } = squared.lib.dom;
 const { maxArray } = squared.lib.math;
 const { getElementCache, getPseudoElt, setElementCache } = squared.lib.session;
 const { appendSeparator, capitalize, convertWord, flatArray, hasBit, hasMimeType, isString, iterateArray, partitionArray, safeNestedArray, safeNestedMap, trimBoth, trimString } = squared.lib.util;
-const { isPlainText } = squared.lib.xml;
 
 const TEXT_STYLE = NodeUI.TEXT_STYLE.concat(['fontSize']);
 
@@ -180,6 +179,24 @@ function setColumnMaxWidth(nodes: NodeUI[], offset: number) {
             child.css('maxWidth', formatPX(offset));
         }
     }
+}
+
+function isPlainText(value: string) {
+    const length = value.length;
+    let i = 0;
+    while (i < length) {
+        switch (value.charCodeAt(i++)) {
+            case 32:
+            case 9:
+            case 10:
+            case 11:
+            case 13:
+                continue;
+            default:
+                return true;
+        }
+    }
+    return false;
 }
 
 const getCounterIncrementValue = (parent: HTMLElement, counterName: string, pseudoElt: string, sessionId: string, fallback?: number) => getCounterValue(getElementCache<CSSStyleDeclaration>(parent, `styleMap${pseudoElt}`, sessionId)?.counterIncrement, counterName, fallback);

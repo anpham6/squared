@@ -4,7 +4,7 @@ import ViewGroup from './viewgroup';
 
 import { CONTAINER_ANDROID, CONTAINER_ANDROID_X } from './lib/constant';
 import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
-import { adjustAbsolutePaddingOffset, createViewAttribute, getDocumentId, getRootNs } from './lib/util';
+import { adjustAbsolutePaddingOffset, createViewAttribute, getDocumentId, getRootNs, replaceTab } from './lib/util';
 
 import LayoutUI = squared.base.LayoutUI;
 
@@ -23,7 +23,6 @@ const { getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;
 const { getElementAsNode, getPseudoElt } = squared.lib.session;
 const { assignEmptyValue, convertFloat, convertWord, hasBit, hasMimeType, isString, iterateArray, parseMimeType, partitionArray, safeNestedArray, withinRange } = squared.lib.util;
-const { STRING_XMLENCODING, replaceTab } = squared.lib.xml;
 
 const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
@@ -699,7 +698,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         layout: {
             pathName: 'res/layout',
             fileExtension: 'xml',
-            baseTemplate: STRING_XMLENCODING
+            baseTemplate: '<?xml version="1.0" encoding="utf-8"?>\n'
         },
         directory: {
             string: 'res/values',

@@ -12,7 +12,6 @@ const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, 
 const { STRING } = squared.lib.regex;
 const { getElementAsNode } = squared.lib.session;
 const { appendSeparator, convertCamelCase, hasValue, isEqual, isNumber, isString, iterateArray } = squared.lib.util;
-const { STRING_SPACE } = squared.lib.xml;
 
 const BORDER_TOP = CSS_PROPERTIES.borderTop.value as string[];
 const BORDER_RIGHT = CSS_PROPERTIES.borderRight.value as string[];
@@ -266,6 +265,7 @@ function getGradientPosition(value: string) {
 }
 
 export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> implements squared.base.ResourceUI<T> {
+    public static STRING_SPACE = '&#160;';
     public static readonly STORED: ResourceStoredMap = {
         ids: new Map(),
         strings: new Map(),
@@ -899,13 +899,13 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     }
                     else if (node.inlineText) {
                         value = node.textEmpty
-                            ? STRING_SPACE
+                            ? ResourceUI.STRING_SPACE
                             : node.tagName === 'BUTTON'
                                 ? node.textContent
                                 : this.removeExcludedFromText(node, element);
                     }
                     if (value) {
-                        value = value.replace(/\u00A0/g, STRING_SPACE);
+                        value = value.replace(/\u00A0/g, ResourceUI.STRING_SPACE);
                         switch (node.css('whiteSpace')) {
                             case 'pre':
                             case 'pre-wrap': {
@@ -922,8 +922,8 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                 }
                                 value = value
                                     .replace(/\n/g, '\\n')
-                                    .replace(/\t/g, STRING_SPACE.repeat(node.toInt('tabSize', 8)))
-                                    .replace(/\s/g, STRING_SPACE);
+                                    .replace(/\t/g, ResourceUI.STRING_SPACE.repeat(node.toInt('tabSize', 8)))
+                                    .replace(/\s/g, ResourceUI.STRING_SPACE);
                                 inlined = true;
                                 trimming = false;
                                 break;
@@ -979,13 +979,13 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         if (inlined) {
                             const trailingSpace = !node.lineBreakTrailing && CHAR_TRAILINGSPACE.test(value);
                             if (CHAR_LEADINGSPACE.test(value) && previousSibling?.block === false && !previousSibling.lineBreak && !previousSpaceEnd) {
-                                value = STRING_SPACE + value.trim();
+                                value = ResourceUI.STRING_SPACE + value.trim();
                             }
                             else {
                                 value = value.trim();
                             }
                             if (trailingSpace && nextSibling?.blockStatic === false && !nextSibling.floating) {
-                                value += STRING_SPACE;
+                                value += ResourceUI.STRING_SPACE;
                             }
                         }
                         else if (!/^[\s\n]+$/.test(value)) {
@@ -997,9 +997,9 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                     node.multiline && ResourceUI.hasLineBreak(node)
                                 )
                                     ? ''
-                                    : STRING_SPACE
+                                    : ResourceUI.STRING_SPACE
                             );
-                            value = value.replace(CHAR_TRAILINGSPACE, node.display === 'table-cell' || node.lineBreakTrailing || node.blockStatic || nextSibling?.floating ? '' : STRING_SPACE);
+                            value = value.replace(CHAR_TRAILINGSPACE, node.display === 'table-cell' || node.lineBreakTrailing || node.blockStatic || nextSibling?.floating ? '' : ResourceUI.STRING_SPACE);
                         }
                         else if (!node.inlineText) {
                             return;
@@ -1040,7 +1040,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             value = value.replace(outerHTML, '');
                         }
                         else if (!preserveWhiteSpace) {
-                            value = value.replace(outerHTML, child.pageFlow && isString(child.textContent) ? STRING_SPACE : '');
+                            value = value.replace(outerHTML, child.pageFlow && isString(child.textContent) ? ResourceUI.STRING_SPACE : '');
                         }
                         return;
                     }
@@ -1055,7 +1055,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     }
                 }
                 else if (hasComputedStyle(item)) {
-                    value = value.replace(item.outerHTML, !hasCoords(getComputedStyle(item).getPropertyValue('position')) && isString(item.textContent!) ? STRING_SPACE : '');
+                    value = value.replace(item.outerHTML, !hasCoords(getComputedStyle(item).getPropertyValue('position')) && isString(item.textContent!) ? ResourceUI.STRING_SPACE : '');
                 }
                 if (!preserveWhiteSpace) {
                     if (index === 0) {
@@ -1071,7 +1071,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             return value;
         }
         else if (!preserveWhiteSpace && /^[\s\n]+$/.test(value)) {
-            return node.blockStatic ? STRING_SPACE : '';
+            return node.blockStatic ? ResourceUI.STRING_SPACE : '';
         }
         return value.replace(/&#(\d+);/g, (match, capture) => String.fromCharCode(parseInt(capture)));
     }

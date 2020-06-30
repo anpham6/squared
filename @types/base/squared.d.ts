@@ -232,6 +232,7 @@ declare module "base" {
     }
 
     class ResourceUI<T extends NodeUI> extends Resource<T> {
+        static readonly STRING_SPACE: string;
         static readonly STORED: ResourceStoredMap;
         static generateId(section: string, name: string, start?: number): string;
         static insertStoredAsset(asset: string, name: string, value: any): string;
@@ -565,7 +566,7 @@ declare module "base" {
         is(containerType: number): boolean;
         of(containerType: number, ...alignmentType: number[]): boolean;
         namespace(name: string): StringMap;
-        namespaces(): Generator<[string, StringMap], void, unknown>;
+        namespaces(): [string, StringMap][];
         unsafe<T = unknown>(name: string, value?: any): Undef<T>;
         unset(name: string): void;
         delete(name: string, ...attrs: string[]): void;

@@ -8,7 +8,6 @@ type View = android.base.View;
 
 const { formatPX, getBackgroundPosition, isPercent } = squared.lib.css;
 const { convertInt } = squared.lib.util;
-const { STRING_SPACE } = squared.lib.xml;
 
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
@@ -160,7 +159,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         minWidth -= paddingRight;
                     }
                     else if (value !== '') {
-                        value += STRING_SPACE.repeat(value.length === 1 ? 3 : 2);
+                        value += '&#160;'.repeat(value.length === 1 ? 3 : 2);
                     }
                 }
                 if (columnCount === 3) {

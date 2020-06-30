@@ -6,7 +6,6 @@ import * as math from './lib/math';
 import * as regex from './lib/regex';
 import * as session from './lib/session';
 import * as util from './lib/util';
-import * as xml from './lib/xml';
 
 import Container from './lib/base/container';
 import ArrayIterator from './lib/base/arrayiterator';
@@ -313,8 +312,7 @@ const lib = {
     math,
     regex,
     session,
-    util,
-    xml
+    util
 };
 
 export { lib, system, settings };

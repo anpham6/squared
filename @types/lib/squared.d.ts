@@ -241,6 +241,7 @@ declare module "lib" {
         function hasMimeType(formats: MIMEOrAll, value: string): boolean;
         function parseMimeType(value: string): string;
         function fromMimeType(value: string): string;
+        function formatXml(value: string, closeEmpty?: boolean): string;
         function hasKeys(obj: {}): boolean;
         function capitalize(value: string, upper?: boolean): string;
         function capitalizeString(value: string): string;
@@ -253,7 +254,6 @@ declare module "lib" {
         function convertFloat(value: string): number;
         function convertAlpha(value: number): string;
         function convertRoman(value: number): string;
-        function convertEnum(value: number, source: {}, derived: {}): string;
         function randomUUID(separator?: string): string;
         function formatString(value: string, ...params: string[]): string;
         function delimitString(options: DelimitStringOptions, ...appending: string[]): string;
@@ -299,18 +299,5 @@ declare module "lib" {
         function conditionArray<T = unknown>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, any>): void;
         function replaceMap<T, U>(list: (T | U)[], predicate: IteratorPredicate<T, U>): U[];
         function plainMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>): U[];
-    }
-
-    namespace xml {
-        const STRING_XMLENCODING: string;
-        const STRING_SPACE: string;
-        function isPlainText(value: string): string;
-        function pushIndent(value: string, depth: number, char?: string, indent?: string): string;
-        function pushIndentArray(values: string[], depth: number, char?: string, separator?: string): string;
-        function replaceIndent(value: string, depth: number, pattern: RegExp): string;
-        function replaceTab(value: string, spaces?: number, preserve?: boolean): string;
-        function applyTemplate(tagName: string, template: StandardMap, children: StandardMap[], depth?: number): string;
-        function formatTemplate(value: string, closeEmpty?: boolean): string;
-        function replaceCharacterData(value: string, tab?: number): string;
     }
 }

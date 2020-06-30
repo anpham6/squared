@@ -603,12 +603,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             : result;
     }
 
-    public *namespaces(): Generator<[string, StringMap], void, unknown> {
-        const namespaces = this._namespaces;
-        for (const name in namespaces) {
-            yield [name, namespaces[name]];
-        }
-        return;
+    public namespaces(): [string, StringMap][] {
+        return Object.entries(this._namespaces);
     }
 
     public unsafe<T = unknown>(name: string, value?: any): Undef<T> {
@@ -1591,7 +1587,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     set renderAs(value) {
-        if (!this.rendered && value?.rendered === false) {
+        if (value && !value.renderParent && !this.rendered) {
             this._renderAs = value;
         }
     }
@@ -1631,16 +1627,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     get blockDimension() {
         const result = this._cached.blockDimension;
-        if (result === undefined) {
-            if (this.block || this.floating || this.imageElement || this.svgElement) {
-                return this._cached.blockDimension = true;
-            }
-            else {
-                const value = this.display;
-                return this._cached.blockDimension = value.startsWith('inline-') || value === 'table';
-            }
-        }
-        return result;
+        return result === undefined
+            ? this.block || this.inlineDimension || this.imageElement || this.svgElement || this.display === 'table'
+            : result;
     }
 
     get blockVertical() {

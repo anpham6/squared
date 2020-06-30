@@ -412,6 +412,7 @@ declare namespace lib {
     }
 
     namespace util {
+        function applyTemplate(tagName: string, template: StandardMap, children: StandardMap[], depth?: number): string;
         function convertLength(value: string | number, font?: boolean, precision?: number): string;
         function getDocumentId(value: string): string;
         function isHorizontalAlign(value: string): boolean;
@@ -425,6 +426,8 @@ declare namespace lib {
         function createStyleAttribute(data?: StandardMap): Required<StyleAttribute>;
         function getDataSet(dataset: StringMap | DOMStringMap, prefix: string): Undef<StringMap>;
         function localizeString(value: string, rtl: boolean, api: number): string;
+        function replaceCharacterData(value: string, tab?: number): string;
+        function replaceTab(value: string, spaces?: number, preserve?: boolean): string;
         function getXmlNs(value: string): string;
         function getRootNs(value: string): string;
     }

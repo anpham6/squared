@@ -2,7 +2,7 @@ import Resource from './resource';
 
 import { XMLNS_ANDROID } from './lib/constant';
 import { BUILD_ANDROID } from './lib/enumeration';
-import { convertLength } from './lib/util';
+import { applyTemplate, convertLength, replaceTab } from './lib/util';
 
 import COLOR_TMPL from './template/resources/color';
 import DIMEN_TMPL from './template/resources/dimen';
@@ -21,7 +21,6 @@ interface ItemValue {
 }
 
 const { fromLastIndexOf, parseMimeType, plainMap } = squared.lib.util;
-const { applyTemplate, replaceTab } = squared.lib.xml;
 
 const STORED = Resource.STORED as AndroidResourceStoredMap;
 

@@ -1,5 +1,12 @@
 import { FILE, STRING } from './regex';
 
+interface XMLTagData {
+    tag: string;
+    tagName: string;
+    value: string;
+    closing: boolean;
+}
+
 const NUMERALS = [
     '', 'C', 'CC', 'CCC', 'CD', 'D', 'DC', 'DCC', 'DCCC', 'CM',
     '', 'X', 'XX', 'XXX', 'XL', 'L', 'LX', 'LXX', 'LXXX', 'XC',
@@ -352,6 +359,77 @@ export function fromMimeType(value: string) {
     }
 }
 
+export function formatXml(value: string, closeEmpty?: boolean, startIndent = -1, char = '\t') {
+    const lines: XMLTagData[] = [];
+    const pattern = /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g;
+    let output = '',
+        indent = startIndent,
+        ignoreIndent = false,
+        match: Null<RegExpExecArray>;
+    while (match = pattern.exec(value)) {
+        lines.push({
+            tag: match[1],
+            closing: !!match[2],
+            tagName: match[3],
+            value: match[4]
+        });
+    }
+    const length = lines.length;
+    for (let i = 0; i < length; ++i) {
+        const line = lines[i];
+        let previous = indent;
+        if (i > 0) {
+            let single = false;
+            if (line.closing) {
+                --indent;
+            }
+            else {
+                const next = lines[i + 1];
+                single = next.closing && line.tagName === next.tagName;
+                if (!/\/>\n*$/.exec(line.tag)) {
+                    if (closeEmpty && !isString(line.value)) {
+                        if (next?.closing && next.tagName === line.tagName) {
+                            line.tag = line.tag.replace(/\s*>$/, ' />');
+                            ++i;
+                        }
+                        else {
+                            ++indent;
+                        }
+                    }
+                    else {
+                        ++indent;
+                    }
+                }
+                ++previous;
+            }
+            const tags = line.tag.trim().split('\n');
+            const q = tags.length;
+            for (let j = 0; j < q; ++j) {
+                const partial = tags[j];
+                if (ignoreIndent) {
+                    output += partial;
+                    ignoreIndent = false;
+                }
+                else {
+                    const depth = previous + Math.min(j, 1);
+                    output += (depth > 0 ? char.repeat(depth) : '') + partial.trim();
+                }
+                if (single && q === 1) {
+                    ignoreIndent = true;
+                }
+                else {
+                    output += '\n';
+                }
+            }
+        }
+        else {
+            output += (startIndent > 0 ? char.repeat(startIndent) : '') + line.tag + '\n';
+        }
+        output += line.value;
+    }
+    return output;
+}
+
 export function hasKeys(obj: {}) {
     for (const attr in obj) {
         return obj[attr] !== undefined;
@@ -505,15 +583,6 @@ export function convertRoman(value: number) {
         result = (NUMERALS[parseInt(digits.pop() as string) + (i * 10)] || '') + result;
     }
     return 'M'.repeat(parseInt(digits.join(''))) + result;
-}
-
-export function convertEnum(value: number, source: {}, derived: {}) {
-    for (const key of Object.keys(source)) {
-        if (value === source[key]) {
-            return derived[key] as string;
-        }
-    }
-    return '';
 }
 
 export function randomUUID(separator = '-') {

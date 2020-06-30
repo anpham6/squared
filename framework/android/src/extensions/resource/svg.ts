@@ -4,6 +4,7 @@ import { convertColorStops } from './background';
 
 import { XMLNS_ANDROID } from '../../lib/constant';
 import { BUILD_ANDROID } from '../../lib/enumeration';
+import { applyTemplate } from '../../lib/util';
 import { VECTOR_GROUP, VECTOR_PATH } from '../../template/vector';
 
 import ANIMATEDVECTOR_TMPL from '../../template/animated-vector';
@@ -33,7 +34,6 @@ const { extractURL, formatPX, isPercent } = squared.lib.css;
 const { truncate } = squared.lib.math;
 const { FILE } = squared.lib.regex;
 const { convertCamelCase, convertInt, convertWord, formatString, hasKeys, isArray, isNumber, partitionArray, plainMap, replaceMap } = squared.lib.util;
-const { applyTemplate } = squared.lib.xml;
 
 const { KEYSPLINE_NAME, SYNCHRONIZE_MODE } = squared.svg.lib.constant;
 const { MATRIX, SVG, TRANSFORM, getAttribute, getRootOffset } = squared.svg.lib.util;
