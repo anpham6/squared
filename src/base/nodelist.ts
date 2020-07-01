@@ -1,7 +1,9 @@
 export default class NodeList<T extends squared.base.Node> extends squared.lib.base.Container<T> implements squared.base.NodeList<T> {
     public afterAdd?: (node: T, cascade?: boolean) => void;
 
-    constructor(children?: T[]) {
+    constructor(
+        children?: T[],
+        public sessionId = '') {
         super(children);
     }
 
@@ -15,6 +17,7 @@ export default class NodeList<T extends squared.base.Node> extends squared.lib.b
 
     public reset() {
         this.clear();
+        this.sessionId = '';
         return this;
     }
 }

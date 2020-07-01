@@ -1,7 +1,7 @@
 import Node from './node';
 import NodeList from './nodelist';
 
-type AppVieModel = squared.base.AppViewModel;
+type AppViewModel = squared.base.AppViewModel;
 type FileActionOptions = squared.base.FileActionOptions;
 type PreloadImage = HTMLImageElement | string;
 
@@ -14,10 +14,8 @@ const REGEXP_DATAURI = new RegExp(`url\\("?(${STRING.DATAURI})"?\\),?\\s*`, 'g')
 const CSS_IMAGEURI = ['backgroundImage', 'listStyleImage', 'content'];
 
 function addImageSrc(resourceHandler: squared.base.Resource<Node>, uri: string, width = 0, height = 0) {
-    if (uri !== '') {
-        if (width > 0 && height > 0 || !resourceHandler.getImage(uri)) {
-            resourceHandler.addUnsafeData('image', uri, { width, height, uri });
-        }
+    if (uri !== '' && (width > 0 && height > 0 || !resourceHandler.getImage(uri))) {
+        resourceHandler.addUnsafeData('image', uri, { width, height, uri });
     }
 }
 
@@ -72,8 +70,8 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     public abstract insertNode(element: Element, sessionId: string): Undef<T>;
-    public abstract set viewModel(data: Undef<AppVieModel>);
-    public abstract get viewModel(): Undef<AppVieModel>;
+    public abstract set viewModel(data: Undef<AppViewModel>);
+    public abstract get viewModel(): Undef<AppViewModel>;
 
     public afterCreateCache(node: T) {
         if (this.userSettings.createElementMap) {
@@ -133,8 +131,8 @@ export default abstract class Application<T extends Node> implements squared.bas
         const rootElements = new Set<HTMLElement>();
         const imageElements: PreloadImage[] = [];
         const processing: squared.base.AppProcessing<T> = {
-            cache: new NodeList<T>(),
-            excluded: new NodeList<T>(),
+            cache: new NodeList<T>(undefined, sessionId),
+            excluded: new NodeList<T>(undefined, sessionId),
             rootElements,
             initializing: false
         };

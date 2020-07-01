@@ -8,7 +8,7 @@ import LayoutUI = squared.base.LayoutUI;
 type View = android.base.View;
 
 const { formatPercent, formatPX, isLength, isPercent, isPx } = squared.lib.css;
-const { maxArray, truncate } = squared.lib.math;
+const { truncate } = squared.lib.math;
 const { conditionArray, flatArray, isArray } = squared.lib.util;
 
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.enumeration;
@@ -57,7 +57,7 @@ function getGridSize(node: View, mainData: CssGridData<View>, horizontal: boolea
         }
     }
     else {
-        value = maxArray(data.unitTotal);
+        value = Math.max(...data.unitTotal);
         if (value <= 0) {
             return 0;
         }

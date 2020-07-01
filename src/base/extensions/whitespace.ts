@@ -4,7 +4,6 @@ import NodeUI from '../node-ui';
 import { BOX_STANDARD, NODE_ALIGNMENT } from '../lib/enumeration';
 
 const { formatPX } = squared.lib.css;
-const { maxArray } = squared.lib.math;
 const { getElementCache } = squared.lib.session;
 const { iterateReverseArray } = squared.lib.util;
 
@@ -542,7 +541,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                 }
                                             }
                                             if (valid) {
-                                                current.modifyBox(BOX_STANDARD.MARGIN_TOP, previous.box.top - maxArray(previous.naturalElements.map(item => item.linear.bottom)), false);
+                                                current.modifyBox(BOX_STANDARD.MARGIN_TOP, previous.box.top - Math.max(...previous.naturalElements.map(item => item.linear.bottom)), false);
                                             }
                                         }
                                         if (inheritedTop) {
@@ -667,7 +666,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                         value = above.lastStaticChild?.lineHeight;
                                     }
                                     else {
-                                        value = maxArray(above.map(item => item.lineHeight));
+                                        value = Math.max(...above.map(item => item.lineHeight));
                                     }
                                 }
                                 if (value) {
@@ -687,7 +686,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                         value = below.firstStaticChild?.lineHeight;
                                     }
                                     else {
-                                        value = maxArray(below.map(item => item.lineHeight));
+                                        value = Math.max(...below.map(item => item.lineHeight));
                                     }
                                 }
                                 if (value) {

@@ -160,8 +160,6 @@ declare module "lib" {
     }
 
     namespace math {
-        function minArray(list: number[]): number;
-        function maxArray(list: number[]): number;
         function convertRadian(value: number): number;
         function equal(a: number, b: number, precision?: number): boolean;
         function moreEqual(a: number, b: number, precision?: number): boolean;

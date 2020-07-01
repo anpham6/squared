@@ -115,7 +115,7 @@ declare module "base" {
         get resourceHandler(): Undef<Resource<T>>;
         get extensionManager(): Undef<ExtensionManager<T>>;
         get extensionsCascade(): Extension<T>[];
-        get childrenAll(): Node[];
+        get childrenAll(): T[];
         get nextId(): number;
         get length(): number;
         constructor(
@@ -661,7 +661,6 @@ declare module "base" {
         get blockVertical(): boolean;
         get blockDimension(): boolean;
         get inlineFlow(): boolean;
-        get rightAligned(): boolean;
         get positiveAxis(): boolean;
         get leftTopAxis(): boolean;
         get baselineElement(): boolean;
@@ -683,6 +682,7 @@ declare module "base" {
     class NodeGroupUI extends NodeUI {}
 
     class NodeList<T extends Node> extends squared.lib.base.Container<T> {
+        sessionId: string;
         afterAdd?: (node: T, cascade?: boolean) => void;
         add(node: T, delegate?: boolean, cascade?: boolean): this;
         reset(): this;

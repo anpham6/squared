@@ -12,7 +12,6 @@ type FileActionOptions = squared.base.FileActionOptions;
 
 const { convertListStyle, formatPX, getStyle, hasComputedStyle, hasCoords, insertStyleSheetRule, resolveURL } = squared.lib.css;
 const { getNamedItem, removeElementsByClassName } = squared.lib.dom;
-const { maxArray } = squared.lib.math;
 const { getElementCache, getPseudoElt, setElementCache } = squared.lib.session;
 const { appendSeparator, capitalize, convertWord, flatArray, hasBit, hasMimeType, isString, iterateArray, partitionArray, safeNestedArray, safeNestedMap, trimBoth, trimString } = squared.lib.util;
 
@@ -836,7 +835,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         floated.clear();
                                         clearable.length = 0;
                                     }
-                                    else if (item.blockStatic && Math.ceil(item.bounds.top) >= maxArray(clearable.map(previous => previous.bounds.bottom))) {
+                                    else if (item.blockStatic && Math.ceil(item.bounds.top) >= Math.max(...clearable.map(previous => previous.bounds.bottom))) {
                                         item.data(Application.KEY_NAME, 'cleared', clearable);
                                         floated.clear();
                                         clearable = [];
@@ -1898,7 +1897,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
                 if (marginLeft !== -Infinity) {
-                    const offset = floatPosition - parent.box.left - marginLeft - maxArray(target.map((child: T) => !paddingNodes.includes(child) ? child.marginLeft : 0));
+                    const offset = floatPosition - parent.box.left - marginLeft - Math.max(...target.map((child: T) => !paddingNodes.includes(child) ? child.marginLeft : 0));
                     if (offset > 0 && offset < boxWidth) {
                         target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (
                             !spacing && target.find(child => child.multiline, { cascade: true })
@@ -1939,7 +1938,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
                 if (marginRight !== -Infinity) {
-                    const offset = parent.box.right - floatPosition - marginRight - maxArray(target.map((child: T) => !paddingNodes.includes(child) ? child.marginRight : 0));
+                    const offset = parent.box.right - floatPosition - marginRight - Math.max(...target.map((child: T) => !paddingNodes.includes(child) ? child.marginRight : 0));
                     if (offset > 0 && offset < boxWidth) {
                         target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (
                             !spacing && target.find(child => child.multiline, { cascade: true })

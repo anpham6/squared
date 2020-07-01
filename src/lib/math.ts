@@ -9,14 +9,6 @@ function convertDecimalNotation(value: number) {
         : value.toString();
 }
 
-export function minArray(list: number[]): number {
-    return Math.min.apply(null, list);
-}
-
-export function maxArray(list: number[]): number {
-    return Math.max.apply(null, list);
-}
-
 export function equal(a: number, b: number, precision = 5) {
     precision += Math.floor(a).toString().length;
     return a.toPrecision(precision) === b.toPrecision(precision);
@@ -39,7 +31,7 @@ export function truncate(value: number | string, precision = 3) {
         return value.toString();
     }
     else if ((value >= 0 && value <= 1 / Math.pow(10, precision)) || (value < 0 && value >= -1 / Math.pow(10, precision))) {
-         return '0';
+        return '0';
     }
     else {
         if (base !== 0) {
@@ -135,7 +127,7 @@ export function clamp(value: number, min = 0, max = 1) {
 export function multipleOf(values: number[], min = 0, offset?: number[]) {
     const length = values.length;
     if (length > 1) {
-        const increment = minArray(values);
+        const increment = Math.min(...values);
         if (offset?.length === length) {
             let i = 0;
             while (i < length) {

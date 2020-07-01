@@ -6,7 +6,6 @@ type NodeUI = squared.base.NodeUI;
 
 const { formatPercent, formatPX, getInheritedStyle, getStyle, isLength, isPercent } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
-const { maxArray } = squared.lib.math;
 const { isNumber, replaceMap, safeNestedArray, withinRange } = squared.lib.util;
 
 const enum LAYOUT_TABLE {
@@ -356,7 +355,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         caption.css('maxWidth', formatPX(caption.bounds.width));
                     }
                 }
-                else if (caption.bounds.width > maxArray(rowWidth)) {
+                else if (caption.bounds.width > Math.max(...rowWidth)) {
                     setBoundsWidth(caption as T);
                 }
             }

@@ -27,7 +27,6 @@ interface RepeatItem {
 }
 
 const { formatPercent, formatPX, isLength, isPercent, isPx } = squared.lib.css;
-const { maxArray } = squared.lib.math;
 const { isNumber, plainMap, safeNestedArray, trimString, withinRange } = squared.lib.util;
 
 const PATTERN_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
@@ -969,7 +968,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             if (horizontal) {
                 rowMain = rowData;
                 mainData.rowData = rowData;
-                columnCount = Math.max(maxArray(plainMap(rowData, item => item.length)), column.unit.length);
+                columnCount = Math.max(column.unit.length, ...plainMap(rowData, item => item.length));
             }
             else {
                 rowMain = mainData.rowData;
