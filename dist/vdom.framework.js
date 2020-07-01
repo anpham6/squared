@@ -1,4 +1,4 @@
-/* vdom-framework 1.12.3
+/* vdom-framework 1.13.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -18,11 +18,11 @@
         insertNode(element, sessionId) {
             return element.nodeName !== '#text' ? new this.Node(this.nextId, sessionId, element) : undefined;
         }
-        afterCreateCache() {}
     }
 
     const settings = {
         builtInExtensions: [],
+        createElementMap: true,
         createQuerySelectorMap: true,
         showErrorMessages: false,
     };

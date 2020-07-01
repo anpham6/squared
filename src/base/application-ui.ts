@@ -207,10 +207,10 @@ const getMapIndex = (value: number) => -(value + 2);
 
 export default abstract class ApplicationUI<T extends NodeUI> extends Application<T> implements squared.base.ApplicationUI<T> {
     public readonly session: squared.base.AppSessionUI<T> = {
-        extensionMap: new Map<number, ExtensionUI<T>[]>(),
-        clearMap: new Map<T, string>(),
         active: new Map<string, squared.base.AppProcessing<T>>(),
-        unusedStyles: new Set<string>()
+        unusedStyles: new Set<string>(),
+        extensionMap: new Map<number, ExtensionUI<T>[]>(),
+        clearMap: new Map<T, string>()
     };
     public readonly builtInExtensions: ObjectMap<ExtensionUI<T>> = {};
     public readonly extensions: ExtensionUI<T>[] = [];

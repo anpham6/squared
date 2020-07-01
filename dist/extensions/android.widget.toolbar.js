@@ -1,4 +1,4 @@
-/* android.widget.toolbar 1.12.3
+/* android.widget.toolbar 1.13.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};

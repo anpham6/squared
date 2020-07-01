@@ -1,4 +1,4 @@
-/* android.widget.coordinator 1.12.3
+/* android.widget.coordinator 1.13.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};

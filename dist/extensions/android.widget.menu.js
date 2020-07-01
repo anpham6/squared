@@ -1,4 +1,4 @@
-/* android.widget.menu 1.12.3
+/* android.widget.menu 1.13.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -101,7 +101,7 @@ this.android.widget.menu = (function () {
                             : _a.rootElements;
                     if (rootElements) {
                         let current = element.parentElement;
-                        while (current) {
+                        while (current !== null) {
                             if (current.tagName === 'NAV' && rootElements.has(current)) {
                                 return false;
                             }

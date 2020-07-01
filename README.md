@@ -276,7 +276,7 @@ querySelectorAll(value: string, cache?: boolean)
 fromElement(element: HTMLElement, cache?: boolean) // cache: default "false"
 ```
 
-Packaging methods will return a Promise and require either node-express or squared-apache installed. These features are not supported the framework is VDOM.
+Packaging methods will return a Promise and require either node-express or squared-apache installed. These features are not supported when the framework is VDOM.
 
 ```javascript
 
@@ -366,13 +366,13 @@ squared.system.addXmlNs('aapt', 'http://schemas.android.com/aapt');
 ### CHROME: Public Methods
 
 ```javascript
-// Asynchronous
+// Promise
 
 chrome.saveAsWebPage(filename?: string, options?: {}) // create archive with html and web page assets
 ```
 
 ```javascript
-// Asynchronous
+// Promise
 
 squared.system.copyHtmlPage(directory: string, options?: {}) // option "name": e.g. "index.html"
 squared.system.copyScriptAssets(directory: string, options?: {})

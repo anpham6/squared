@@ -115,6 +115,7 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     public reset() {
         this._nextId = 0;
+        this.elementMap.clear();
         this.session.active.clear();
         this.session.unusedStyles.clear();
         this.controllerHandler.reset();

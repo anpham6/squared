@@ -1,4 +1,4 @@
-/* squared.svg 1.12.3
+/* squared.svg 1.13.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -557,7 +557,7 @@
             if (!rootElement) {
                 let parent = element.parentElement;
                 rootElement = parent;
-                while (parent) {
+                while (parent !== null) {
                     if (parent.parentElement instanceof HTMLElement) {
                         break;
                     } else if (parent.parentElement) {
@@ -599,7 +599,7 @@
     }
     function getNearestViewBox(element) {
         let current = element.parentElement;
-        while (current) {
+        while (current !== null) {
             if (SVG.svg(current) || SVG.symbol(current)) {
                 const viewBox = current.viewBox;
                 if (viewBox) {
@@ -1366,9 +1366,9 @@
             if (length % 2 === 0) {
                 const result = new Array(length / 2);
                 let i = 0,
-                    k = 0;
+                    j = 0;
                 while (i < length) {
-                    result[k++] = { x: values[i++], y: values[i++] };
+                    result[j++] = { x: values[i++], y: values[i++] };
                 }
                 return result;
             }
@@ -1697,15 +1697,11 @@
             return values.some(value => hasBit$1(this.synchronizeState, value));
         }
         set attributeName(value) {
-            var _a, _b, _c, _d;
+            var _a, _b, _c;
             if (value !== 'transform' && !this.baseValue) {
-                let baseValue =
-                    (_b = (_a = this._dataset.baseValue) === null || _a === void 0 ? void 0 : _a[value]) === null ||
-                    _b === void 0
-                        ? void 0
-                        : _b.toString().trim();
-                if (baseValue) {
-                    this.baseValue = baseValue;
+                let baseValue = (_a = this._dataset.baseValue) === null || _a === void 0 ? void 0 : _a[value];
+                if (baseValue !== undefined) {
+                    this.baseValue = baseValue.toString().trim();
                 } else {
                     const element = this.element;
                     if (element) {
@@ -1723,17 +1719,17 @@
                             const animationElement = this.animationElement;
                             if (animationElement && getComputedStyle(element).animationPlayState === 'paused') {
                                 const parentElement = animationElement.parentElement;
-                                baseValue =
-                                    (_d =
-                                        (_c =
+                                const valueAsString =
+                                    (_c =
+                                        (_b =
                                             parentElement === null || parentElement === void 0
                                                 ? void 0
-                                                : parentElement[value]) === null || _c === void 0
+                                                : parentElement[value]) === null || _b === void 0
                                             ? void 0
-                                            : _c.baseVal) === null || _d === void 0
+                                            : _b.baseVal) === null || _c === void 0
                                         ? void 0
-                                        : _d.valueAsString;
-                                if (baseValue && isLength$1(baseValue)) {
+                                        : _c.valueAsString;
+                                if (valueAsString && isLength$1(valueAsString)) {
                                     this.baseValue = parseUnit$1(baseValue, getFontSize$1(parentElement)).toString();
                                 }
                             }
@@ -2254,12 +2250,7 @@
         }
         get values() {
             var _a;
-            return (_a = this._values) !== null && _a !== void 0
-                ? _a
-                : (() => {
-                      this._values = [];
-                      return this._values;
-                  })();
+            return (_a = this._values) !== null && _a !== void 0 ? _a : (this._values = []);
         }
         set keyTimes(value) {
             const values = this._values;
@@ -2272,12 +2263,7 @@
         }
         get keyTimes() {
             var _a;
-            return (_a = this._keyTimes) !== null && _a !== void 0
-                ? _a
-                : (() => {
-                      this._keyTimes = [];
-                      return this._keyTimes;
-                  })();
+            return (_a = this._keyTimes) !== null && _a !== void 0 ? _a : (this._keyTimes = []);
         }
         set keySplines(value) {
             if (value === null || value === void 0 ? void 0 : value.length) {
@@ -2647,7 +2633,7 @@
         }
     }
 
-    const { hasValue, safeNestedArray, sortNumber: sortNumber$1 } = squared.lib.util;
+    const { safeNestedArray, sortNumber: sortNumber$1 } = squared.lib.util;
     function insertIntervalValue(
         intervalMap,
         intervalTimes,
@@ -2691,8 +2677,9 @@
             });
             attrs.length = 0;
             const length = animations.length;
-            for (let i = 0; i < length; ++i) {
-                const item = animations[i];
+            let i = 0;
+            while (i < length) {
+                const item = animations[i++];
                 const value = SvgAnimationIntervalMap.getKeyName(item);
                 if (!attrs.includes(value)) {
                     attrs.push(value);
@@ -2701,8 +2688,9 @@
             const map = {};
             const intervalMap = {};
             const intervalTimes = {};
-            for (let i = 0; i < attrs.length; ++i) {
-                const keyName = attrs[i];
+            i = 0;
+            while (i < attrs.length) {
+                const keyName = attrs[i++];
                 map[keyName] = new Map();
                 intervalMap[keyName] = {};
                 intervalTimes[keyName] = new Set();
@@ -2726,8 +2714,9 @@
                     );
                 }
             }
-            for (let i = 0; i < length; ++i) {
-                const item = animations[i];
+            i = 0;
+            while (i < length) {
+                const item = animations[i++];
                 const keyName = SvgAnimationIntervalMap.getKeyName(item);
                 if (item.baseValue && intervalMap[keyName][-1] === undefined) {
                     insertIntervalValue(intervalMap, intervalTimes, keyName, -1, item.baseValue);
@@ -2797,7 +2786,7 @@
             for (const keyName in intervalMap) {
                 const keyTimes = sortNumber$1(Array.from(intervalTimes[keyName]));
                 const q = keyTimes.length;
-                let i = 0;
+                i = 0;
                 while (i < q) {
                     const time = keyTimes[i++];
                     const values = intervalMap[keyName][time];
@@ -2851,7 +2840,7 @@
             for (const keyName in map) {
                 for (const [timeA, dataA] of map[keyName].entries()) {
                     const q = dataA.length;
-                    let i = 0;
+                    i = 0;
                     while (i < q) {
                         const itemA = dataA[i++];
                         const animationA = itemA.animation;
@@ -3046,23 +3035,20 @@
             }
             return value === 0;
         }
-        evaluateStart(item, otherValue) {
+        evaluateStart(item, fallback) {
             const values = item.values;
-            let value = item.reverse ? values[values.length - 1] : values[0];
-            if (value === '') {
-                value =
-                    this.get(item.attributeName, item.delay) ||
-                    (otherValue === null || otherValue === void 0 ? void 0 : otherValue.toString()) ||
-                    item.baseValue;
-                if (hasValue(value)) {
-                    value = value.toString();
-                    if (item.reverse) {
-                        values[values.length - 1] = value;
-                        item.to = value;
-                    } else {
-                        values[0] = value;
-                        item.from = value;
-                    }
+            const value =
+                (item.reverse ? values[values.length - 1] : values[0]) ||
+                this.get(item.attributeName, item.delay) ||
+                fallback ||
+                item.baseValue;
+            if (value) {
+                if (item.reverse) {
+                    values[values.length - 1] = value;
+                    item.to = value;
+                } else {
+                    values[0] = value;
+                    item.from = value;
                 }
             }
             return values;
@@ -3077,7 +3063,7 @@
     const {
         hasBit: hasBit$2,
         hasKeys,
-        hasValue: hasValue$1,
+        hasValue,
         isEqual,
         isNumber: isNumber$1,
         joinArray,
@@ -3162,8 +3148,10 @@
     function getForwardValue(items, time) {
         let value;
         if (items) {
-            for (let i = 0; i < items.length; ++i) {
-                const item = items[i];
+            const length = items.length;
+            let i = 0;
+            while (i < length) {
+                const item = items[i++];
                 if (item.time <= time) {
                     value = item.value;
                 } else {
@@ -3323,16 +3311,21 @@
                         if (!item.accumulateSum) {
                             iteration = 0;
                         }
-                        let i = 0;
+                        let i = 0,
+                            j,
+                            k;
                         while (i < length) {
                             result[i] += baseArray[i++];
                         }
                         const q = valuesArray.length;
-                        for (i = 0; i < iteration; ++i) {
-                            for (let j = 0; j < q; ++j) {
-                                const value = valuesArray[j];
-                                for (let k = 0; k < value.length; ++k) {
-                                    result[k] += value[k];
+                        i = 0;
+                        while (i++ < iteration) {
+                            j = 0;
+                            while (j < q) {
+                                const value = valuesArray[j++];
+                                k = 0;
+                                while (k < value.length) {
+                                    result[k] += value[k++];
                                 }
                             }
                         }
@@ -3351,18 +3344,20 @@
                             iteration = 0;
                         }
                         const length = values.length;
-                        for (let i = 0; i < iteration; ++i) {
-                            for (let j = 0; j < length; ++j) {
-                                result += parseFloat(values[j]);
+                        let i = 0,
+                            j;
+                        while (i++ < iteration) {
+                            j = 0;
+                            while (j < length) {
+                                result += parseFloat(values[j++]);
                             }
                         }
                     }
                     return result;
-                } else {
-                    return baseValue || 0;
                 }
             }
         }
+        return baseValue || 0;
     }
     function getItemSplitValue(fraction, previousFraction, previousValue, nextFraction, nextValue) {
         if (fraction > previousFraction) {
@@ -3506,8 +3501,9 @@
         let maxTime = startTime;
         complete: {
             length = queued.length;
-            for (let i = 0; i < length; ++i) {
-                const sub = queued[i];
+            let i = 0;
+            while (i < length) {
+                const sub = queued[i++];
                 if (sub !== item) {
                     const totalDuration = sub.getTotalDuration();
                     sub.addState(2 /* INTERRUPTED */);
@@ -3528,26 +3524,26 @@
                             let joined = false,
                                 j = getStartIteration(maxTime, sub.delay, sub.duration) - 1;
                             const insertSubstituteTimeValue = (subTime, splitTime, index) => {
-                                let resultTime, splitValue;
-                                if (evaluateStart) {
-                                    resultTime = !joined && maxTime === startTime ? 0 : (subTime % duration) / duration;
-                                } else {
-                                    resultTime = splitTime === intervalEndTime ? 1 : (splitTime % duration) / duration;
-                                }
-                                if (subTime === splitTime) {
-                                    splitValue = convertToString(getItemValue(sub, subValues, j, index, baseValue));
-                                } else {
-                                    splitValue = getIntermediateSplitValue(
-                                        subTime,
-                                        splitTime,
-                                        sub,
-                                        subKeyTimes,
-                                        subValues,
-                                        sub.duration,
-                                        j,
-                                        baseValue
-                                    );
-                                }
+                                let resultTime = evaluateStart
+                                    ? !joined && maxTime === startTime
+                                        ? 0
+                                        : (subTime % duration) / duration
+                                    : splitTime === intervalEndTime
+                                    ? 1
+                                    : (splitTime % duration) / duration;
+                                let splitValue =
+                                    subTime === splitTime
+                                        ? convertToString(getItemValue(sub, subValues, j, index, baseValue))
+                                        : getIntermediateSplitValue(
+                                              subTime,
+                                              splitTime,
+                                              sub,
+                                              subKeyTimes,
+                                              subValues,
+                                              sub.duration,
+                                              j,
+                                              baseValue
+                                          );
                                 if (splitValue) {
                                     if (resultTime > 0) {
                                         splitValue = Math.round((parseFloat(splitValue) + finalValue) / 2).toString();
@@ -4044,6 +4040,18 @@
                     ) {
                         const groupName = {};
                         const groupAttributeMap = {};
+                        const intervalMap = new SvgAnimationIntervalMap(mergeable);
+                        const repeatingMap = {};
+                        const repeatingInterpolatorMap = new Map();
+                        const repeatingTransformOriginMap = transforming ? new Map() : undefined;
+                        const repeatingMaxTime = {};
+                        const repeatingAnimations = new Set();
+                        const infiniteMap = {};
+                        const infiniteInterpolatorMap = new Map();
+                        const infiniteTransformOriginMap = transforming ? new Map() : undefined;
+                        const baseValueMap = {};
+                        const forwardMap = {};
+                        const animateTimeRangeMap = new Map();
                         let repeatingDuration = 0,
                             repeatingAsInfinite = -1,
                             repeatingResult,
@@ -4087,18 +4095,6 @@
                             groupName[attr] = groupDelay;
                             groupAttributeMap[attr].reverse();
                         }
-                        const intervalMap = new SvgAnimationIntervalMap(mergeable);
-                        const repeatingMap = {};
-                        const repeatingInterpolatorMap = new Map();
-                        const repeatingTransformOriginMap = transforming ? new Map() : undefined;
-                        const repeatingMaxTime = {};
-                        const repeatingAnimations = new Set();
-                        const infiniteMap = {};
-                        const infiniteInterpolatorMap = new Map();
-                        const infiniteTransformOriginMap = transforming ? new Map() : undefined;
-                        const baseValueMap = {};
-                        const forwardMap = {};
-                        const animateTimeRangeMap = new Map();
                         for (const attr in groupName) {
                             const baseMap = new Map();
                             repeatingMap[attr] = baseMap;
@@ -4108,13 +4104,11 @@
                                     value = path.getBaseValue(attr);
                                 } else {
                                     value = this[attr];
-                                    if (value === undefined) {
-                                        try {
-                                            this['getBaseValue'](attr);
-                                        } catch (_d) {}
+                                    if (value === undefined && typeof this['getBaseValue'] === 'function') {
+                                        value = this.getBaseValue(attr);
                                     }
                                 }
-                                if (hasValue$1(value)) {
+                                if (hasValue(value)) {
                                     baseValueMap[attr] = value;
                                 }
                             }
@@ -4141,8 +4135,10 @@
                                     const { name, ordering } = item.group;
                                     if (ordering) {
                                         const duration = item.getTotalDuration();
-                                        for (let i = 0; i < ordering.length; ++i) {
-                                            const previous = ordering[i];
+                                        const length = ordering.length;
+                                        let i = 0;
+                                        while (i < length) {
+                                            const previous = ordering[i++];
                                             if (previous.name === name) {
                                                 return true;
                                             } else if (SvgAnimationIntervalMap.getGroupEndTime(previous) >= duration) {
@@ -4219,14 +4215,15 @@
                                                 );
                                                 if (delayIndex !== undefined && itemIndex !== undefined) {
                                                     const length = groupDelay.length;
-                                                    let i = delayIndex;
+                                                    let i = delayIndex,
+                                                        j;
                                                     while (i < length) {
                                                         if (i !== delayIndex) {
                                                             itemIndex = -1;
                                                         }
                                                         const data = groupData[i++];
                                                         const q = data.length;
-                                                        let j = itemIndex + 1;
+                                                        j = itemIndex + 1;
                                                         while (j < q) {
                                                             const next = data[j++];
                                                             if (previous.group.id > next.group.id) {
@@ -4255,10 +4252,13 @@
                                             set => set.group.id < item.group.id || set.delay < time
                                         );
                                         incomplete.length = 0;
-                                        for (let i = 0; i < groupData.length; ++i) {
-                                            const group = groupData[i];
-                                            for (let j = 0; j < group.length; ++j) {
-                                                const next = group[j];
+                                        let i = 0,
+                                            j;
+                                        while (i < groupData.length) {
+                                            const group = groupData[i++];
+                                            j = 0;
+                                            while (j < group.length) {
+                                                const next = group[j++];
                                                 if (next.group.id < item.group.id) {
                                                     next.addState(8 /* COMPLETE */);
                                                 }
@@ -4456,8 +4456,9 @@
                                         const ordering = item.group.ordering;
                                         if (ordering && ordering.length > 1) {
                                             let checkDelay = true;
-                                            for (let k = 0; k < ordering.length; ++k) {
-                                                const order = ordering[k];
+                                            let k = 0;
+                                            while (k < ordering.length) {
+                                                const order = ordering[k++];
                                                 if (order.name === item.group.name) {
                                                     checkDelay = false;
                                                     break;
@@ -4471,11 +4472,13 @@
                                             }
                                             if (checkDelay) {
                                                 nextDelay: {
-                                                    for (let k = i + 1; k < length; ++k) {
-                                                        const dataA = groupData[k];
+                                                    k = i + 1;
+                                                    while (k < length) {
+                                                        const dataA = groupData[k++];
                                                         const q = dataA.length;
-                                                        for (let l = 0; l < q; ++l) {
-                                                            const next = dataA[l];
+                                                        let l = 0;
+                                                        while (l < q) {
+                                                            const next = dataA[l++];
                                                             if (next.group.ordering) {
                                                                 nextDelayTime = next.delay;
                                                                 break nextDelay;
@@ -5366,8 +5369,10 @@
                             sortNumber$2(keyTimes);
                             for (const attr in timelineMap) {
                                 const map = timelineMap[attr];
-                                for (let i = 0; i < keyTimes.length; ++i) {
-                                    const time = keyTimes[i];
+                                const length = keyTimes.length;
+                                let i = 0;
+                                while (i < length) {
+                                    const time = keyTimes[i++];
                                     if (!map.has(time)) {
                                         insertAdjacentSplitValue(map, attr, time, intervalMap, transforming);
                                     }
@@ -5498,8 +5503,9 @@
                                             const entries = Array.from(result.entries());
                                             const delay = repeatingAsInfinite !== -1 ? repeatingAsInfinite : 0;
                                             let object;
-                                            for (let i = 0; i < entries.length; ++i) {
-                                                const item = entries[i];
+                                            let i = 0;
+                                            while (i < entries.length) {
+                                                const item = entries[i++];
                                                 keySplines.push(interpolatorMap.get(item[0]) || '');
                                                 item[0] -= delay;
                                             }
@@ -6060,12 +6066,10 @@
             return this._alternate;
         }
         set parent(value) {
-            var _a;
             this._parent = value;
-            if ((_a = this.parentContainer) === null || _a === void 0 ? void 0 : _a.requireRefit) {
-                if (this.path) {
-                    this.path = SvgBuild.transformRefit(this.path, { container: this.parentContainer });
-                }
+            const container = this.parentContainer;
+            if ((container === null || container === void 0 ? void 0 : container.requireRefit) && this.path) {
+                this.path = SvgBuild.transformRefit(this.path, { container });
             }
         }
         get parent() {
@@ -6085,13 +6089,7 @@
             return this._keyPoints;
         }
         get offsetLength() {
-            let result = this._offsetLength;
-            if (result === 0) {
-                if (this.path) {
-                    result = getPathLength(this.path);
-                }
-            }
-            return result;
+            return this._offsetLength === 0 && this.path ? getPathLength(this.path) : this._offsetLength;
         }
         get instanceType() {
             return 229384 /* SVG_ANIMATE_MOTION */;
@@ -6260,7 +6258,7 @@
                     }
                 });
                 const animationName = parseAttribute(element, 'animation-name');
-                const length = animationName.length;
+                let length = animationName.length;
                 if (length > 0) {
                     const cssData = {};
                     const groupName = [];
@@ -6599,8 +6597,10 @@
                         }
                     }
                     groupOrdering.reverse();
-                    for (let i = 0; i < groupName.length; ++i) {
-                        groupName[i].setGroupOrdering(groupOrdering);
+                    length = groupName.length;
+                    let i = 0;
+                    while (i < length) {
+                        groupName[i++].setGroupOrdering(groupOrdering);
                     }
                 }
                 return result;
@@ -6618,28 +6618,16 @@
                 this._name = value;
             }
             get name() {
-                let result = this._name;
-                if (result === undefined) {
-                    result = SvgBuild.setName(this.element);
-                    this._name = result;
-                }
-                return result;
+                const result = this._name;
+                return result === undefined ? (this._name = SvgBuild.setName(this.element)) : result;
             }
             get transforms() {
-                let result = this._transforms;
-                if (result === undefined) {
-                    result = this.getTransforms();
-                    this._transforms = result;
-                }
-                return result;
+                const result = this._transforms;
+                return result === undefined ? (this._transforms = this.getTransforms()) : result;
             }
             get animations() {
-                let result = this._animations;
-                if (result === undefined) {
-                    result = this.getAnimations();
-                    this._animations = result;
-                }
-                return result;
+                const result = this._animations;
+                return result === undefined ? (this._animations = this.getAnimations()) : result;
             }
             get visible() {
                 const value = getAttribute(this.element, 'visibility');
@@ -6883,7 +6871,7 @@
                 return container;
             }
             container = container.parent;
-        } while (container);
+        } while (container !== undefined);
         return undefined;
     }
     function getNearestViewBox$1(container) {
@@ -6892,7 +6880,7 @@
                 return container;
             }
             container = container.parent;
-        } while (container);
+        } while (container !== undefined);
         return undefined;
     }
     const hasLength = value => REGEXP_LENGTHPERCENTAGE.test(value);
@@ -7347,9 +7335,8 @@
         setDefinitions(item) {
             const definitions = this.definitions;
             item.querySelectorAll('clipPath, pattern, linearGradient, radialGradient').forEach(element => {
-                let id = element.id.trim();
-                if (id !== '') {
-                    id = '#' + id;
+                const id = '#' + element.id.trim();
+                if (id !== '#') {
                     if (SVG.clipPath(element)) {
                         if (!definitions.clipPath.has(id)) {
                             definitions.clipPath.set(id, element);
@@ -7615,7 +7602,7 @@
                         }
                     }
                     let current = this.useParent || this.parent;
-                    while (current) {
+                    while (current !== undefined) {
                         value = getAttribute(SvgBuild.isUse(current) ? current.useElement : current.element, attr);
                         if (value !== '') {
                             break;
@@ -7777,7 +7764,7 @@
                     } else {
                         container = container.parent;
                     }
-                } while (container);
+                } while (container !== undefined);
             }
             this.setBaseValue('x', x);
             this.setBaseValue('y', y);
@@ -7825,28 +7812,26 @@
             return SVG.image(element) ? resolvePath$1(element.href.baseVal) : '';
         }
         get transforms() {
-            var _a;
-            return (_a = this._transforms) !== null && _a !== void 0
-                ? _a
-                : (() => {
-                      this._transforms = super.transforms;
-                      if (this.imageElement) {
-                          this._transforms = this._transforms.concat(this.getTransforms(this.imageElement));
-                      }
-                      return this._transforms;
-                  })();
+            const result = this._transforms;
+            if (result === undefined) {
+                this._transforms = super.transforms;
+                if (this.imageElement) {
+                    this._transforms = this._transforms.concat(this.getTransforms(this.imageElement));
+                }
+                return this._transforms;
+            }
+            return result;
         }
         get animations() {
-            var _a;
-            return (_a = this._animations) !== null && _a !== void 0
-                ? _a
-                : (() => {
-                      this._animations = super.animations;
-                      if (this.imageElement) {
-                          this._animations = this._animations.concat(this.getAnimations(this.imageElement));
-                      }
-                      return this._animations;
-                  })();
+            const result = this._animations;
+            if (result === undefined) {
+                this._animations = super.animations;
+                if (this.imageElement) {
+                    this._animations = this._animations.concat(this.getAnimations(this.imageElement));
+                }
+                return this._animations;
+            }
+            return result;
         }
         get instanceType() {
             return 8196 /* SVG_IMAGE */;
@@ -8935,12 +8920,9 @@
             var _a;
             return (_a = this._transforms) !== null && _a !== void 0
                 ? _a
-                : (() => {
-                      this._transforms = SvgBuild.filterTransforms(
-                          TRANSFORM.parse(this.element) || SvgBuild.convertTransforms(this.element.transform.baseVal)
-                      );
-                      return this._transforms;
-                  })();
+                : (this._transforms = SvgBuild.filterTransforms(
+                      TRANSFORM.parse(this.element) || SvgBuild.convertTransforms(this.element.transform.baseVal)
+                  ));
         }
         get pathLength() {
             return convertFloat$1(getNamedItem$9(this.element, 'pathLength'));
@@ -9287,19 +9269,13 @@
             var _a;
             return (_a = this._transforms) !== null && _a !== void 0
                 ? _a
-                : (() => {
-                      this._transforms = this.getTransforms(this.useElement).concat(super.transforms);
-                      return this._transforms;
-                  })();
+                : (this._transforms = this.getTransforms(this.useElement).concat(super.transforms));
         }
         get animations() {
             var _a;
             return (_a = this._animations) !== null && _a !== void 0
                 ? _a
-                : (() => {
-                      this._animations = this.getAnimations(this.useElement).concat(super.animations);
-                      return this._animations;
-                  })();
+                : (this._animations = this.getAnimations(this.useElement).concat(super.animations));
         }
         get instanceType() {
             return 6149 /* SVG_USE_SHAPE */;

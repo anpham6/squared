@@ -168,22 +168,19 @@ export function parseDocument(...elements: (HTMLElement | string)[]) {
 }
 
 export function include(value: ExtensionRequest, options?: {}) {
-    const extensionManager = main?.extensionManager;
-    if (extensionManager) {
-        if (typeof value === 'string') {
-            value = value.trim();
-            value = main!.builtInExtensions[value] || retrieve(value);
+    if (typeof value === 'string') {
+        value = value.trim();
+        value = main?.builtInExtensions[value] || retrieve(value);
+    }
+    if (value instanceof squared.base.Extension) {
+        extensionsExternal.add(value);
+        if (!(main?.extensionManager?.include(value) === true)) {
+            extensionsQueue.add(value);
         }
-        if (value instanceof squared.base.Extension) {
-            extensionsExternal.add(value);
-            if (!extensionManager.include(value)) {
-                extensionsQueue.add(value);
-            }
-            if (options) {
-                configure(value, options);
-            }
-            return true;
+        if (options) {
+            configure(value, options);
         }
+        return true;
     }
     return false;
 }
@@ -204,11 +201,10 @@ export function exclude(value: ExtensionRequest) {
 }
 
 export function configure(value: ExtensionRequest, options: {}) {
-    const extensionManager = main?.extensionManager;
-    if (extensionManager && util.isPlainObject(options)) {
+    if (util.isPlainObject(options)) {
         if (typeof value === 'string') {
             value = value.trim();
-            const extension = extensionManager.retrieve(value) || util.findSet(extensionsQueue, item => item.name === value);
+            const extension = main?.extensionManager?.retrieve(value) || util.findSet(extensionsQueue, item => item.name === value);
             if (extension) {
                 Object.assign(extension.options, options);
             }

@@ -1,4 +1,4 @@
-/* squared 1.12.3
+/* squared 1.13.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -440,6 +440,73 @@
                 return '';
         }
     }
+    function formatXml(value, closeEmpty, startIndent = -1, char = '\t') {
+        const lines = [];
+        const pattern = /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g;
+        let output = '',
+            indent = startIndent,
+            ignoreIndent = false,
+            match;
+        while ((match = pattern.exec(value))) {
+            lines.push({
+                tag: match[1],
+                closing: !!match[2],
+                tagName: match[3],
+                value: match[4],
+            });
+        }
+        const length = lines.length;
+        for (let i = 0; i < length; ++i) {
+            const line = lines[i];
+            let previous = indent;
+            if (i > 0) {
+                let single = false;
+                if (line.closing) {
+                    --indent;
+                } else {
+                    const next = lines[i + 1];
+                    single = next.closing && line.tagName === next.tagName;
+                    if (!/\/>\n*$/.exec(line.tag)) {
+                        if (closeEmpty && !isString(line.value)) {
+                            if (
+                                (next === null || next === void 0 ? void 0 : next.closing) &&
+                                next.tagName === line.tagName
+                            ) {
+                                line.tag = line.tag.replace(/\s*>$/, ' />');
+                                ++i;
+                            } else {
+                                ++indent;
+                            }
+                        } else {
+                            ++indent;
+                        }
+                    }
+                    ++previous;
+                }
+                const tags = line.tag.trim().split('\n');
+                const q = tags.length;
+                for (let j = 0; j < q; ++j) {
+                    const partial = tags[j];
+                    if (ignoreIndent) {
+                        output += partial;
+                        ignoreIndent = false;
+                    } else {
+                        const depth = previous + Math.min(j, 1);
+                        output += (depth > 0 ? char.repeat(depth) : '') + partial.trim();
+                    }
+                    if (single && q === 1) {
+                        ignoreIndent = true;
+                    } else {
+                        output += '\n';
+                    }
+                }
+            } else {
+                output += (startIndent > 0 ? char.repeat(startIndent) : '') + line.tag + '\n';
+            }
+            output += line.value;
+        }
+        return output;
+    }
     function hasKeys(obj) {
         for (const attr in obj) {
             return obj[attr] !== undefined;
@@ -581,14 +648,6 @@
             result = (NUMERALS[parseInt(digits.pop()) + i * 10] || '') + result;
         }
         return 'M'.repeat(parseInt(digits.join(''))) + result;
-    }
-    function convertEnum(value, source, derived) {
-        for (const key of Object.keys(source)) {
-            if (value === source[key]) {
-                return derived[key];
-            }
-        }
-        return '';
     }
     function randomUUID(separator = '-') {
         const alpha = '0123456789abcdef';
@@ -974,6 +1033,9 @@
             } while (++i);
         }
     }
+    function sortNumber(values, ascending = true) {
+        return ascending ? values.sort((a, b) => (a < b ? -1 : 1)) : values.sort((a, b) => (a > b ? -1 : 1));
+    }
     function findSet(list, predicate) {
         let i = 0;
         for (const item of list) {
@@ -982,9 +1044,6 @@
             }
         }
         return undefined;
-    }
-    function sortNumber(values, ascending = true) {
-        return ascending ? values.sort((a, b) => (a < b ? -1 : 1)) : values.sort((a, b) => (a > b ? -1 : 1));
     }
     function safeNestedArray(list, index) {
         let result = list[index];
@@ -1173,6 +1232,7 @@
         hasMimeType: hasMimeType,
         parseMimeType: parseMimeType,
         fromMimeType: fromMimeType,
+        formatXml: formatXml,
         hasKeys: hasKeys,
         capitalize: capitalize,
         capitalizeString: capitalizeString,
@@ -1185,7 +1245,6 @@
         convertFloat: convertFloat,
         convertAlpha: convertAlpha,
         convertRoman: convertRoman,
-        convertEnum: convertEnum,
         randomUUID: randomUUID,
         formatString: formatString,
         delimitString: delimitString,
@@ -1216,8 +1275,8 @@
         belowRange: belowRange,
         assignEmptyProperty: assignEmptyProperty,
         assignEmptyValue: assignEmptyValue,
-        findSet: findSet,
         sortNumber: sortNumber,
+        findSet: findSet,
         safeNestedArray: safeNestedArray,
         safeNestedMap: safeNestedMap,
         sortArray: sortArray,
@@ -4067,7 +4126,7 @@
                         break;
                     }
                 }
-                return result;
+                return result.length ? result : [value];
             }
             return replaceMap(value.split(CHAR_SEPARATOR), selector => trimSelector(selector));
         }
@@ -5420,7 +5479,7 @@
                                                     continue;
                                             }
                                             break;
-                                        } while (boundingElement);
+                                        } while (boundingElement !== null);
                                     } else {
                                         style = getStyle(boundingElement);
                                     }
@@ -6832,8 +6891,7 @@
             iterateArray(element.children, item => {
                 const style = getStyle(item);
                 if (style.getPropertyValue('visibility') !== 'visible') {
-                    const position = style.getPropertyValue('position');
-                    if (position === 'absolute' || position === 'fixed') {
+                    if (hasCoords(style.getPropertyValue('position'))) {
                         const display = style.getPropertyValue('display');
                         if (display !== 'none') {
                             item.style.display = 'none';
@@ -6898,281 +6956,6 @@
         deleteElementCache: deleteElementCache,
     });
 
-    const STRING_XMLENCODING = '<?xml version="1.0" encoding="utf-8"?>\n';
-    const STRING_SPACE = '&#160;';
-    function isPlainText(value) {
-        const length = value.length;
-        let i = 0;
-        while (i < length) {
-            switch (value.charCodeAt(i++)) {
-                case 32:
-                case 9:
-                case 10:
-                case 11:
-                case 13:
-                    continue;
-                default:
-                    return true;
-            }
-        }
-        return false;
-    }
-    function pushIndent(value, depth, char = '\t', indent) {
-        if (depth > 0) {
-            if (indent === undefined) {
-                indent = char.repeat(depth);
-            }
-            return joinArray(value.split('\n'), line => (line !== '' ? indent + line : ''));
-        }
-        return value;
-    }
-    function pushIndentArray(values, depth, char = '\t', separator = '') {
-        if (depth > 0) {
-            let result = '';
-            const indent = char.repeat(depth);
-            const length = values.length;
-            let i = 0;
-            while (i < length) {
-                result += (i > 0 ? separator : '') + pushIndent(values[i++], depth, char, indent);
-            }
-            return result;
-        }
-        return values.join(separator);
-    }
-    function replaceIndent(value, depth, pattern) {
-        if (depth >= 0) {
-            let indent = -1;
-            return joinArray(value.split('\n'), line => {
-                const match = pattern.exec(line);
-                if (match) {
-                    if (indent === -1) {
-                        indent = match[2].length;
-                    }
-                    return (match[1] || '') + '\t'.repeat(depth + (match[2].length - indent)) + match[3];
-                }
-                return line;
-            });
-        }
-        return value;
-    }
-    function replaceTab(value, spaces = 4, preserve) {
-        if (spaces > 0) {
-            if (preserve) {
-                return joinArray(value.split('\n'), line => {
-                    const match = /^(\t+)(.*)$/.exec(line);
-                    return match ? ' '.repeat(spaces * match[1].length) + match[2] : line;
-                });
-            } else {
-                return value.replace(/\t/g, ' '.repeat(spaces));
-            }
-        }
-        return value;
-    }
-    function applyTemplate(tagName, template, children, depth) {
-        const tag = template[tagName];
-        const nested = tag['>>'] === true;
-        let output = '',
-            indent = '',
-            length = children.length;
-        if (depth === undefined) {
-            output += STRING_XMLENCODING;
-            depth = 0;
-        } else {
-            indent += '\t'.repeat(depth);
-        }
-        for (let i = 0; i < length; ++i) {
-            const item = children[i];
-            const include = tag['#'] && item[tag['#']];
-            const closed = !nested && !include;
-            const attrs = tag['@'];
-            const descend = tag['>'];
-            let valid = false;
-            output += indent + '<' + tagName;
-            if (attrs) {
-                const q = attrs.length;
-                let j = 0;
-                while (j < q) {
-                    const attr = attrs[j++];
-                    const value = item[attr];
-                    if (value) {
-                        output += ` ${(tag['^'] ? tag['^'] + ':' : '') + attr}="${value}"`;
-                    }
-                }
-            }
-            if (descend) {
-                let innerText = '';
-                const childDepth = depth + (nested ? i : 0) + 1;
-                for (const name in descend) {
-                    const value = item[name];
-                    if (Array.isArray(value)) {
-                        innerText += applyTemplate(name, descend, value, childDepth);
-                    } else if (isPlainObject(value)) {
-                        innerText += applyTemplate(name, descend, [value], childDepth);
-                    }
-                }
-                if (innerText !== '') {
-                    output += '>\n' + innerText;
-                    if (closed) {
-                        output += indent + `</${tagName}>\n`;
-                    }
-                } else {
-                    output += closed ? ' />\n' : '>\n';
-                }
-                valid = true;
-            } else if (tag['~']) {
-                output += '>' + item.innerText;
-                if (closed) {
-                    output += `</${tagName}>\n`;
-                }
-                valid = true;
-            } else if (closed) {
-                output += ' />\n';
-            }
-            if (include) {
-                if (!valid) {
-                    output += '>\n';
-                }
-                output += include;
-                if (!nested) {
-                    output += indent + `</${tagName}>\n`;
-                }
-            }
-            if (nested) {
-                indent += '\t';
-            }
-        }
-        if (nested) {
-            while (--length >= 0) {
-                indent = indent.substring(1);
-                output += indent + `</${tagName}>\n`;
-            }
-        }
-        return output;
-    }
-    function formatTemplate(value, closeEmpty, startIndent = -1, char = '\t') {
-        const lines = [];
-        const pattern = /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g;
-        let output = '',
-            indent = startIndent,
-            ignoreIndent = false,
-            match;
-        while ((match = pattern.exec(value))) {
-            lines.push({
-                tag: match[1],
-                closing: !!match[2],
-                tagName: match[3],
-                value: match[4],
-            });
-        }
-        const length = lines.length;
-        for (let i = 0; i < length; ++i) {
-            const line = lines[i];
-            let previous = indent;
-            if (i > 0) {
-                let single = false;
-                if (line.closing) {
-                    --indent;
-                } else {
-                    const next = lines[i + 1];
-                    single = next.closing && line.tagName === next.tagName;
-                    if (!/\/>\n*$/.exec(line.tag)) {
-                        if (closeEmpty && !isString(line.value)) {
-                            if (
-                                (next === null || next === void 0 ? void 0 : next.closing) &&
-                                next.tagName === line.tagName
-                            ) {
-                                line.tag = line.tag.replace(/\s*>$/, ' />');
-                                ++i;
-                            } else {
-                                ++indent;
-                            }
-                        } else {
-                            ++indent;
-                        }
-                    }
-                    ++previous;
-                }
-                const tags = line.tag.trim().split('\n');
-                const q = tags.length;
-                for (let j = 0; j < q; ++j) {
-                    const partial = tags[j];
-                    if (ignoreIndent) {
-                        output += partial;
-                        ignoreIndent = false;
-                    } else {
-                        const depth = previous + Math.min(j, 1);
-                        output += (depth > 0 ? char.repeat(depth) : '') + partial.trim();
-                    }
-                    if (single && q === 1) {
-                        ignoreIndent = true;
-                    } else {
-                        output += '\n';
-                    }
-                }
-            } else {
-                output += (startIndent > 0 ? char.repeat(startIndent) : '') + line.tag + '\n';
-            }
-            output += line.value;
-        }
-        return output;
-    }
-    function replaceCharacterData(value, tab) {
-        value = value.replace(/&nbsp;/g, '&#160;').replace(/&(?!#?[A-Za-z\d]{2,};)/g, '&amp;');
-        const char = [];
-        const length = value.length;
-        for (let i = 0; i < length; ++i) {
-            switch (value.charAt(i)) {
-                case "'":
-                    char.push({ i, text: "\\'" });
-                    break;
-                case '"':
-                    char.push({ i, text: '&quot;' });
-                    break;
-                case '<':
-                    char.push({ i, text: '&lt;' });
-                    break;
-                case '>':
-                    char.push({ i, text: '&gt;' });
-                    break;
-                case '\t':
-                    if (tab) {
-                        char.push({ i, text: STRING_SPACE.repeat(tab) });
-                    }
-                    break;
-                case '\u0003':
-                    char.push({ i, text: ' ' });
-                    break;
-                case '\u00A0':
-                    char.push({ i, text: '&#160;' });
-                    break;
-            }
-        }
-        if (char.length > 0) {
-            const parts = value.split('');
-            let j = 0;
-            while (j < char.length) {
-                const item = char[j++];
-                parts[item.i] = item.text;
-            }
-            return parts.join('');
-        }
-        return value;
-    }
-
-    var xml = /*#__PURE__*/ Object.freeze({
-        __proto__: null,
-        STRING_XMLENCODING: STRING_XMLENCODING,
-        STRING_SPACE: STRING_SPACE,
-        isPlainText: isPlainText,
-        pushIndent: pushIndent,
-        pushIndentArray: pushIndentArray,
-        replaceIndent: replaceIndent,
-        replaceTab: replaceTab,
-        applyTemplate: applyTemplate,
-        formatTemplate: formatTemplate,
-        replaceCharacterData: replaceCharacterData,
-    });
-
     class Iterator {
         constructor(children) {
             this.children = children;
@@ -7199,9 +6982,10 @@
                 this._iterating = 0;
             }
         }
-        forEachRemaining(action) {
+        forEachRemaining(predicate) {
+            const children = this.children;
             while (this.hasNext()) {
-                action(this.children[++this.index]);
+                predicate(children[++this.index]);
             }
         }
     }
@@ -7485,15 +7269,6 @@
             this._children.sort(predicate);
             return this;
         }
-        joinWith(...other) {
-            let children = this._children;
-            let i = 0;
-            while (i < other.length) {
-                children = children.concat(other[i++].children);
-            }
-            this._children = children;
-            return this;
-        }
         iterator() {
             return new ListIterator(this._children);
         }
@@ -7525,6 +7300,41 @@
         for (const attr in data) {
             delete data[attr];
         }
+    }
+    function findElement(element, cache) {
+        if (cache) {
+            const result = main.elementMap.get(element);
+            if (result) {
+                return Promise.resolve(result);
+            }
+        }
+        return main.parseDocument(element);
+    }
+    async function findElementAll(query, length) {
+        let incomplete = false;
+        const elementMap = main.elementMap;
+        const result = new Array(length);
+        for (let i = 0; i < length; ++i) {
+            const element = query[i];
+            let item = elementMap.get(element);
+            if (item) {
+                result[i] = item;
+            } else {
+                item = await main.parseDocument(element);
+                if (item) {
+                    result[i] = item;
+                } else {
+                    incomplete = true;
+                }
+            }
+        }
+        if (incomplete) {
+            flatArray(result);
+        }
+        return result;
+    }
+    async function findElementAsync(element) {
+        return [await main.parseDocument(element)];
     }
     const checkWritable = app =>
         (app === null || app === void 0 ? void 0 : app.initializing) === false && app.length > 0;
@@ -7612,22 +7422,26 @@
         return frameworkNotInstalled();
     }
     function include(value, options) {
-        const extensionManager = main === null || main === void 0 ? void 0 : main.extensionManager;
-        if (extensionManager) {
-            if (typeof value === 'string') {
-                value = value.trim();
-                value = main.builtInExtensions[value] || retrieve(value);
+        var _a;
+        if (typeof value === 'string') {
+            value = value.trim();
+            value = (main === null || main === void 0 ? void 0 : main.builtInExtensions[value]) || retrieve(value);
+        }
+        if (value instanceof squared.base.Extension) {
+            extensionsExternal.add(value);
+            if (
+                !(
+                    ((_a = main === null || main === void 0 ? void 0 : main.extensionManager) === null || _a === void 0
+                        ? void 0
+                        : _a.include(value)) === true
+                )
+            ) {
+                extensionsQueue.add(value);
             }
-            if (value instanceof squared.base.Extension) {
-                extensionsExternal.add(value);
-                if (!extensionManager.include(value)) {
-                    extensionsQueue.add(value);
-                }
-                if (options) {
-                    configure(value, options);
-                }
-                return true;
+            if (options) {
+                configure(value, options);
             }
+            return true;
         }
         return false;
     }
@@ -7646,12 +7460,14 @@
         return false;
     }
     function configure(value, options) {
-        const extensionManager = main === null || main === void 0 ? void 0 : main.extensionManager;
-        if (extensionManager && isPlainObject(options)) {
+        var _a;
+        if (isPlainObject(options)) {
             if (typeof value === 'string') {
                 value = value.trim();
                 const extension =
-                    extensionManager.retrieve(value) || findSet(extensionsQueue, item => item.name === value);
+                    ((_a = main === null || main === void 0 ? void 0 : main.extensionManager) === null || _a === void 0
+                        ? void 0
+                        : _a.retrieve(value)) || findSet(extensionsQueue, item => item.name === value);
                 if (extension) {
                     Object.assign(extension.options, options);
                 } else {
@@ -7771,6 +7587,52 @@
         }
         return frameworkNotInstalled();
     }
+    function getElementById(value, cache = true) {
+        if (main) {
+            const element = document.getElementById(value);
+            if (element) {
+                return findElement(element, cache);
+            }
+        }
+        return Promise.resolve(null);
+    }
+    function querySelector(value, cache = true) {
+        if (main) {
+            const element = document.querySelector(value);
+            if (element) {
+                return findElement(element, cache);
+            }
+        }
+        return Promise.resolve(null);
+    }
+    function querySelectorAll(value, cache = true) {
+        if (main) {
+            const query = document.querySelectorAll(value);
+            const length = query.length;
+            if (length > 0) {
+                if (cache) {
+                    return promisify(findElementAll)(query, length);
+                } else if (length === 1) {
+                    return promisify(findElementAsync)(query[0]);
+                } else {
+                    return main.parseDocument(...Array.from(query));
+                }
+            }
+        }
+        return Promise.resolve([]);
+    }
+    function fromElement(element, cache = false) {
+        if (main) {
+            return findElement(element, cache);
+        }
+        return Promise.resolve(null);
+    }
+    function getElementMap() {
+        return (main === null || main === void 0 ? void 0 : main.elementMap) || new Map();
+    }
+    function clearElementMap() {
+        main === null || main === void 0 ? void 0 : main.elementMap.clear();
+    }
     function toString() {
         return (main === null || main === void 0 ? void 0 : main.toString()) || '';
     }
@@ -7788,21 +7650,26 @@
         regex,
         session,
         util,
-        xml,
     };
 
     exports.appendFromArchive = appendFromArchive;
     exports.appendToArchive = appendToArchive;
+    exports.clearElementMap = clearElementMap;
     exports.close = close;
     exports.configure = configure;
     exports.copyToDisk = copyToDisk;
     exports.createFrom = createFrom;
     exports.exclude = exclude;
+    exports.fromElement = fromElement;
     exports.get = get;
+    exports.getElementById = getElementById;
+    exports.getElementMap = getElementMap;
     exports.include = include;
     exports.latest = latest;
     exports.lib = lib;
     exports.parseDocument = parseDocument;
+    exports.querySelector = querySelector;
+    exports.querySelectorAll = querySelectorAll;
     exports.ready = ready;
     exports.reset = reset;
     exports.retrieve = retrieve;

@@ -1,4 +1,4 @@
-/* chrome-framework 1.12.3
+/* chrome-framework 1.13.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -24,12 +24,7 @@
                 }
                 this.controllerHandler.applyDefaultStyles(element, sessionId);
             }
-            return new this.Node(this.nextId, sessionId, element);
-        }
-        afterCreateCache(node) {
-            if (this.userSettings.createElementMap) {
-                this.controllerHandler.cacheElementList(this.getProcessingCache(node.sessionId));
-            }
+            return this.createNode(sessionId, { element });
         }
     }
 
@@ -38,10 +33,6 @@
         constructor(application) {
             super();
             this.application = application;
-            this._elementMap = new Map();
-        }
-        reset() {
-            this._elementMap.clear();
         }
         applyDefaultStyles(element, sessionId) {
             if (element.nodeName === '#text') {
@@ -53,16 +44,6 @@
                     clear: 'none',
                 });
             }
-        }
-        cacheElement(node) {
-            this._elementMap.set(node.element, node);
-        }
-        cacheElementList(list) {
-            const elementMap = this._elementMap;
-            list.each(node => elementMap.set(node.element, node));
-        }
-        get elementMap() {
-            return this._elementMap;
         }
         get userSettings() {
             return this.application.userSettings;
@@ -739,12 +720,12 @@
                 .concat(this.getFontAssets(options));
         }
         get outputFileExclusions() {
-            let result = this._outputFileExclusions;
-            if (result === undefined) {
-                result = this.userSettings.outputFileExclusions.map(value => convertFileMatch(value));
-                this._outputFileExclusions = result;
-            }
-            return result;
+            const result = this._outputFileExclusions;
+            return result === undefined
+                ? (this._outputFileExclusions = this.userSettings.outputFileExclusions.map(value =>
+                      convertFileMatch(value)
+                  ))
+                : result;
         }
         get userSettings() {
             return this.resource.userSettings;
@@ -1085,48 +1066,12 @@
     });
 
     const { util, session } = squared.lib;
-    const { flatArray, isString: isString$1, isObject, promisify } = util;
+    const { isString: isString$1, isObject } = util;
     const { frameworkNotInstalled } = session;
     const framework = 4; /* CHROME */
     let initialized = false;
     let application;
-    let controller;
     let file;
-    let elementMap;
-    function getCachedElement(element, cache) {
-        if (!cache) {
-            elementMap.clear();
-            return undefined;
-        }
-        return elementMap.get(element);
-    }
-    function findElement(element, cache) {
-        const result = getCachedElement(element, cache);
-        return result ? Promise.resolve(result) : application.parseDocument(element);
-    }
-    async function findElementAll(query) {
-        let incomplete = false;
-        const length = query.length;
-        const result = new Array(length);
-        for (let i = 0; i < length; ++i) {
-            const element = query[i];
-            let item = elementMap.get(element);
-            if (item) {
-                result[i] = item;
-            } else {
-                item = await application.parseDocument(element);
-                if (item) {
-                    result[i] = item;
-                } else {
-                    incomplete = true;
-                }
-            }
-        }
-        if (incomplete) {
-            flatArray(result);
-        }
-        return result;
-    }
     function createAssetsOptions(assets, options, directory, filename) {
         if (isObject(options)) {
             const items = options.assets;
@@ -1165,12 +1110,6 @@
             },
         },
         system: {
-            getElementMap() {
-                return (controller === null || controller === void 0 ? void 0 : controller.elementMap) || new Map();
-            },
-            clearElementMap() {
-                controller === null || controller === void 0 ? void 0 : controller.elementMap.clear();
-            },
             copyHtmlPage(directory, options) {
                 if (isString$1(directory)) {
                     return (
@@ -1356,10 +1295,8 @@
                 Resource,
                 squared.base.ExtensionManager
             );
-            controller = application.controllerHandler;
             file = new File();
             application.resourceHandler.fileHandler = file;
-            elementMap = controller.elementMap;
             Object.assign(application.builtInExtensions, {
                 [EC.COMPRESS_BROTLI]: new Brotli(EC.COMPRESS_BROTLI, framework),
                 [EC.COMPRESS_GZIP]: new Gzip(EC.COMPRESS_GZIP, framework),
@@ -1387,42 +1324,6 @@
                 };
             }
             return appBase.create();
-        },
-        getElementById: (value, cache = true) => {
-            if (application) {
-                const element = document.getElementById(value);
-                if (element) {
-                    return findElement(element, cache);
-                }
-            }
-            return Promise.resolve(null);
-        },
-        querySelector: (value, cache = true) => {
-            if (application) {
-                const element = document.querySelector(value);
-                if (element) {
-                    return findElement(element, cache);
-                }
-            }
-            return Promise.resolve(null);
-        },
-        querySelectorAll: (value, cache = true) => {
-            if (application) {
-                const query = document.querySelectorAll(value);
-                if (query.length > 0) {
-                    if (!cache) {
-                        elementMap.clear();
-                    }
-                    return promisify(findElementAll)(query);
-                }
-            }
-            return Promise.resolve([]);
-        },
-        getElement: (element, cache = false) => {
-            if (application) {
-                return findElement(element, cache);
-            }
-            return Promise.resolve(null);
         },
         saveAsWebPage: (filename, options) => {
             if (application) {
