@@ -284,7 +284,7 @@ declare module "lib" {
         function assignEmptyValue(dest: {}, ...attrs: string[]): void;
         function sortNumber(values: number[], ascending?: boolean): number[];
         function findSet<T = unknown>(list: Set<T>, predicate: IteratorPredicate<T, boolean, Set<T>>): Undef<T>;
-        function safeNestedArray<T = unknown>(list: T[][] | ObjectMap<T[]>, index: number | string): T[];
+        function safeNestedArray<T = unknown>(list: T[][] | ObjectMap<T[]> | ObjectIndex<T[]>, index: number | string): T[];
         function safeNestedMap<T = unknown>(map: ObjectMapNested<T>, index: number | string): ObjectMap<T>;
         function sortArray<T = any>(list: T[], ascending: boolean, ...attrs: string[]): T[];
         function flatArray<T = unknown>(list: any[], depth?: number): T[];

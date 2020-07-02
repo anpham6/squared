@@ -96,7 +96,7 @@ interface NodeTemplate<T> {
 }
 
 interface NodeXmlTemplate<T> extends NodeTemplate<T> {
-    controlName?: string;
+    controlName: string;
     attributes?: string;
 }
 

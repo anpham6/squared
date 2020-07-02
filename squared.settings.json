@@ -24,11 +24,7 @@
     ],
     "production": [],
     "development": [
-      { "mount": "build", "path": "/build" },
-      { "mount": "html/common", "path": "/common" },
-      { "mount": "html/books", "path": "/books" },
-      { "mount": "html/demos", "path": "/demos" },
-      { "mount": "html/demos-dev", "path": "/demos-dev" }
+      { "mount": "build", "path": "/build" }
     ]
   },
   "external": {

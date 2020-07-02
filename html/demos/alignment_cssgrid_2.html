@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Language" content="en">
     <title>https://github.com/anpham6/squared</title>
-    <link rel="stylesheet" type="text/css" href="css/dev.css" />
+    <link rel="stylesheet" type="text/css" href="/common/css/dev.css" />
     <style>
         body {
             font: 1em/1.4 Helvetica, Arial, sans-serif;
@@ -23,7 +23,7 @@
             overflow: hidden;
         }
         .cards {
-            max-width: 800px;
+            max-width: 960px;
             display: grid;
             margin: 0 auto;
         }
@@ -51,15 +51,31 @@
             color: #757575;
         }
         .cards {
-            grid-auto-flow: dense;
-            grid-template-columns: repeat(12,[col] 1fr);
-            grid-gap: 20px;
+            background-image: url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour1.jpg);
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            grid-gap: 10px;
         }
-        .card {
-            grid-column: auto / span 3;
+        .cards {
+            grid-template-columns: repeat(12,1fr);
+            grid-gap: 10px;
         }
-        .wide {
-            grid-column: auto / span 6;
+        .card:nth-child(1) {
+            grid-column: 1 / 4;
+        }
+        .card:nth-child(2) {
+            grid-column: 1 / 4;
+            grid-row: 2;
+        }
+        .card:nth-child(3) {
+            grid-column: 10 / 13;
+            grid-row: 2;
+        }
+        .card:nth-child(4) {
+            grid-column: 4 / 10;
+        }
+        .card:nth-child(5) {
+            grid-column: 10 / 13;
         }
     </style>
     <script src="/common/system.js"></script>
@@ -81,25 +97,24 @@
                 <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour1.jpg" alt="Bristol harbour">
                 <div class="body">
                     <p>I live in Bristol. It mostly rains, but when it isn't raining we have hot air balloons.</p>
-                    <p>The balloons sometimes congregate for mass launches, raising the possibility of one landing in your garden.</p>
                 </div>
             </div>
-            <div class="card wide">
+            <div class="card">
                 <header>
                     <h2>Harbour Cranes</h2>
                 </header>
                 <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour2.jpg" alt="Bristol harbour">
                 <div class="body">
-                    <p>We also have giant cranes, and historic boats. It is best if the balloons avoid these.</p>
+                <p>We also have giant cranes, and historic boats. It is best if the balloons avoid these.</p>
                 </div>
             </div>
-            <div class="card wide">
+            <div class="card">
                 <header>
                     <h2>Striped Balloon</h2>
                 </header>
                 <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/coloured-balloon.jpg" alt="Coloured balloon">
                 <div class="body">
-                    <p>I like the nice standard balloons. Stripy. Solid looking basket.</p>
+                <p>I like the nice standard balloons. Stripy. Solid looking basket.</p>
                 </div>
             </div>
             <div class="card">
@@ -118,33 +133,6 @@
                 <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/funfair-balloons.jpg" alt="Funfair">
                 <div class="body">
                     <p>Here we have balloons getting tangled up with a funfair.</p>
-                </div>
-            </div>
-            <div class="card">
-                <header>
-                    <h2>Swatch</h2>
-                </header>
-                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/swatch.jpg" alt="Swatch Balloon">
-                <div class="body">
-                    <p>We have balloons in special shapes. This one is a Swatch.</p>
-                </div>
-            </div>
-            <div class="card">
-                <header>
-                    <h2>Minion</h2>
-                </header>
-                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/minion.jpg" alt="Minion Balloon">
-                <div class="body">
-                    <p>Here is a Minion. Minions are at least a reasonable shape for a balloon. Some of the special shapes struggle to leave the ground.</p>
-                </div>
-            </div>
-            <div class="card">
-                <header>
-                    <h2>Where is the basket?</h2>
-                </header>
-                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/where-is-the-basket.jpg" alt="Balloonist">
-                <div class="body">
-                    <p>If you don't need to take your lunch with you, you can do without the wicker basket.</p>
                 </div>
             </div>
         </div>

@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Language" content="en">
+    <title>https://github.com/anpham6/squared</title>
+    <link rel="stylesheet" type="text/css" href="/common/css/dev.css" />
+    <style>
+        ul {
+            margin: 0;
+            padding: 5px;
+            list-style: none;
+        }
+        h2 {
+            font-size: 12px;
+            font-weight: bold;
+            color: #fff;
+            background-color: darkblue;
+            border: 1px solid yellowgreen;
+            margin: 0;
+            padding: 8px;
+        }
+        a {
+            color: blue;
+        }
+        form {
+            font-size: 11px;
+            background-color: #fff;
+            padding: 5px 10px;
+            border: 1px solid #ccc;
+            overflow: hidden;
+        }
+        select {
+            min-width: 37px;
+            font-size: 11px;
+            padding: 2px 0;
+        }
+        input[type=button], input[type=submit] {
+            font-size: 12px;
+        }
+        input[value=Next] {
+            float: right;
+        }
+        li {
+            margin-bottom: 6px;
+            clear: left;
+            overflow: hidden;
+        }
+        li > label {
+            font-family: Arial, sans-serif;
+            width: 80px;
+            padding-top: 3px;
+            margin-right: 5px;
+            float: left;
+        }
+        li > div {
+            display: inline;
+        }
+        li input[type=button] {
+            font-size: 10px;
+        }
+        input[type=text] {
+            width: 40px;
+        }
+        div > label {
+            font-family: sans-serif;
+            margin-right: 1px;
+        }
+        .entry-date, .entry-topic, .entry-custom {
+            float: left;
+        }
+        .entry-date > div, .entry-topic > div, .entry-custom > div {
+            margin-bottom: 4px;
+        }
+        .entry-date > div:last-child {
+            margin-bottom: 0;
+        }
+        input[name^='topic'], input[name^='customname'] {
+            width: 130px;
+            margin-right: 5px;
+        }
+        input[value='Update'] {
+            margin-left: 4px;
+        }
+        hr {
+            width: 350px;
+            height: 1px;
+            margin: 10px auto;
+            padding: 0;
+            border: none;
+            background-color: #ccc;
+        }
+    </style>
+    <script src="/common/system.js"></script>
+    <script src="/common/transform.js"></script>
+    <script src="/common/babel-transform.js"></script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            squared.setFramework(android);
+            const copyTo = new URLSearchParams(location.search).get('copyTo');
+            if (copyTo) {
+                squared.settings.showErrorMessages = false;
+            }
+            squared.setViewModel({
+                import: ['android.util.SparseArray', 'java.util.Map', 'java.util.List'],
+                variable: [
+                    { name: 'user', type: 'com.example.User' },
+                    { name: 'list', type: 'List&lt;String>' },
+                    { name: 'sparse', type: 'SparseArray&lt;String>' },
+                    { name: 'map', type: 'Map&lt;String, String>' },
+                    { name: 'index', type: 'int' },
+                    { name: 'key', type: 'String' }
+                ]
+            });
+            squared.system.customize(squared.settings.targetAPI, 'Button', {
+                android: {
+                    layout_height: 'wrap_content',
+                    minWidth: '35px',
+                    minHeight: '25px'
+                }
+            });
+            const time = performance.now();
+            squared.parseDocument()
+                .then(() => {
+                    if (copyTo) {
+                        squared.copyToDisk(copyTo).then(response => {
+                            squared.lib.dom.createElement('div', {
+                                parent: document.body,
+                                attrs: {
+                                    id: 'md5_complete',
+                                    innerHTML: response.files.join('\n')
+                                },
+                                style: {
+                                    whiteSpace: 'pre',
+                                    display: 'none'
+                                }
+                            });
+                        });
+                    }
+                    else {
+                        console.log('SQ: ' + (performance.now() - time));
+                        squared.settings.outputEmptyCopyDirectory = true;
+                        squared.copyToDisk('C:/Users/An/git/flexbox', {
+                            assets: [
+                                {
+                                    pathname: 'app/src/main/res/drawable',
+                                    filename: 'ic_launcher_background.xml',
+                                    uri: 'C:/Users/An/git/squared/html/common/images/ic_launcher_background.xml'
+                                },
+                                {
+                                    pathname: 'app/src/main/res/drawable-v24',
+                                    filename: 'ic_launcher_foreground.xml',
+                                    uri: 'C:/Users/An/git/squared/html/common/images/ic_launcher_foreground.xml'
+                                }
+                            ]
+                        })
+                        .then(response => {
+                            console.log('CP: ' + (performance.now() - time))
+                            console.log(response);
+                        });
+                        console.log('NE: ' + (performance.now() - time));
+                    }
+                })
+                .catch(err => console.log(err));
+        });
+    </script>
+</head>
+<body>
+    <!-- START: DEMO -->
+    <div id="squared_ui">
+        <h2>Entry</h2>
+        <form name="entry" autocomplete="off">
+            <ul>
+                <li>
+                    <label for="order" style="font-style: italic;">Order:</label>
+                    <input id="order" type="text" name="order" class="null-allowed" data-viewmodel-android-text="user.firstName" />
+                </li>
+                <li>
+                    <label>Date (<a href="#">Add</a>):</label>
+                    <div class="entry-date">
+                        <select name="month0">
+                            <option value="1">01</option>
+                            <option value="2">02</option>
+                            <option value="3">03</option>
+                            <option value="4">04</option>
+                            <option value="5">05</option>
+                            <option value="6">06</option>
+                            <option value="7">07</option>
+                            <option value="8">08</option>
+                            <option value="9">09</option>
+                            <option value="10">10</option>
+                            <option value="11">11</option>
+                            <option value="12">12</option>
+                        </select>
+                        <select name="day0">
+                            <option value="1">01</option>
+                            <option value="2">02</option>
+                            <option value="3">03</option>
+                            <option value="4">04</option>
+                            <option value="5">05</option>
+                            <option value="6">06</option>
+                            <option value="7">07</option>
+                            <option value="8">08</option>
+                            <option value="9">09</option>
+                            <option value="10">10</option>
+                            <option value="11">11</option>
+                            <option value="12">12</option>
+                            <option value="13">13</option>
+                            <option value="14">14</option>
+                            <option value="15">15</option>
+                            <option value="16">16</option>
+                            <option value="17">17</option>
+                            <option value="18">18</option>
+                            <option value="19">19</option>
+                            <option value="20">20</option>
+                            <option value="21">21</option>
+                            <option value="22">22</option>
+                            <option value="23">23</option>
+                            <option value="24">24</option>
+                            <option value="25">25</option>
+                            <option value="26">26</option>
+                            <option value="27">27</option>
+                            <option value="28">28</option>
+                            <option value="29">29</option>
+                            <option value="30">30</option>
+                            <option value="31">31</option>
+                        </select>
+                        <select name="year0">
+                            <option value="2001">2001</option>
+                            <option value="2002">2002</option>
+                            <option value="2003">2003</option>
+                            <option value="2004">2004</option>
+                            <option value="2005">2005</option>
+                            <option value="2006">2006</option>
+                            <option value="2007">2007</option>
+                            <option value="2008">2008</option>
+                            <option value="2009">2009</option>
+                            <option value="2010">2010</option>
+                            <option value="2011">2011</option>
+                            <option value="2012">2012</option>
+                            <option value="2013">2013</option>
+                            <option value="2014">2014</option>
+                            <option value="2015">2015</option>
+                            <option value="2016">2016</option>
+                            <option value="2017">2017</option>
+                            <option value="2018" selected="selected">2018</option>
+                        </select>
+                        <br><br>
+                        <select name="month1">
+                            <option value="1">01</option>
+                            <option value="2">02</option>
+                            <option value="3">03</option>
+                            <option value="4">04</option>
+                            <option value="5">05</option>
+                            <option value="6">06</option>
+                            <option value="7">07</option>
+                            <option value="8">08</option>
+                            <option value="9">09</option>
+                            <option value="10">10</option>
+                            <option value="11">11</option>
+                            <option value="12">12</option>
+                        </select>
+                        <select name="day1">
+                            <option value="1">01</option>
+                            <option value="2">02</option>
+                            <option value="3">03</option>
+                            <option value="4">04</option>
+                            <option value="5">05</option>
+                            <option value="6">06</option>
+                            <option value="7">07</option>
+                            <option value="8">08</option>
+                            <option value="9">09</option>
+                            <option value="10">10</option>
+                            <option value="11">11</option>
+                            <option value="12">12</option>
+                            <option value="13">13</option>
+                            <option value="14">14</option>
+                            <option value="15">15</option>
+                            <option value="16">16</option>
+                            <option value="17">17</option>
+                            <option value="18">18</option>
+                            <option value="19">19</option>
+                            <option value="20">20</option>
+                            <option value="21">21</option>
+                            <option value="22">22</option>
+                            <option value="23">23</option>
+                            <option value="24">24</option>
+                            <option value="25">25</option>
+                            <option value="26">26</option>
+                            <option value="27">27</option>
+                            <option value="28">28</option>
+                            <option value="29">29</option>
+                            <option value="30">30</option>
+                            <option value="31">31</option>
+                        </select>
+                        <select name="year1">
+                            <option value="2001">2001</option>
+                            <option value="2002">2002</option>
+                            <option value="2003">2003</option>
+                            <option value="2004">2004</option>
+                            <option value="2005">2005</option>
+                            <option value="2006">2006</option>
+                            <option value="2007">2007</option>
+                            <option value="2008">2008</option>
+                            <option value="2009">2009</option>
+                            <option value="2010">2010</option>
+                            <option value="2011">2011</option>
+                            <option value="2012">2012</option>
+                            <option value="2013">2013</option>
+                            <option value="2014">2014</option>
+                            <option value="2015">2015</option>
+                            <option value="2016">2016</option>
+                            <option value="2017">2017</option>
+                            <option value="2018" selected="selected">2018</option>
+                        </select>
+                        <br><br>
+                        <select name="month2">
+                            <option value="1">01</option>
+                            <option value="2">02</option>
+                            <option value="3">03</option>
+                            <option value="4">04</option>
+                            <option value="5">05</option>
+                            <option value="6">06</option>
+                            <option value="7">07</option>
+                            <option value="8">08</option>
+                            <option value="9">09</option>
+                            <option value="10">10</option>
+                            <option value="11">11</option>
+                            <option value="12">12</option>
+                        </select>
+                        <select name="day2">
+                            <option value="1">01</option>
+                            <option value="2">02</option>
+                            <option value="3">03</option>
+                            <option value="4">04</option>
+                            <option value="5">05</option>
+                            <option value="6">06</option>
+                            <option value="7">07</option>
+                            <option value="8">08</option>
+                            <option value="9">09</option>
+                            <option value="10">10</option>
+                            <option value="11">11</option>
+                            <option value="12">12</option>
+                            <option value="13">13</option>
+                            <option value="14">14</option>
+                            <option value="15">15</option>
+                            <option value="16">16</option>
+                            <option value="17">17</option>
+                            <option value="18">18</option>
+                            <option value="19">19</option>
+                            <option value="20">20</option>
+                            <option value="21">21</option>
+                            <option value="22">22</option>
+                            <option value="23">23</option>
+                            <option value="24">24</option>
+                            <option value="25">25</option>
+                            <option value="26">26</option>
+                            <option value="27">27</option>
+                            <option value="28">28</option>
+                            <option value="29">29</option>
+                            <option value="30">30</option>
+                            <option value="31">31</option>
+                        </select>
+                        <select name="year2">
+                            <option value="2001">2001</option>
+                            <option value="2002">2002</option>
+                            <option value="2003">2003</option>
+                            <option value="2004">2004</option>
+                            <option value="2005">2005</option>
+                            <option value="2006">2006</option>
+                            <option value="2007">2007</option>
+                            <option value="2008">2008</option>
+                            <option value="2009">2009</option>
+                            <option value="2010">2010</option>
+                            <option value="2011">2011</option>
+                            <option value="2012">2012</option>
+                            <option value="2013">2013</option>
+                            <option value="2014">2014</option>
+                            <option value="2015">2015</option>
+                            <option value="2016">2016</option>
+                            <option value="2017">2017</option>
+                            <option value="2018" selected="selected">2018</option>
+                        </select>
+                    </div>
+                </li>
+                <li>
+                    <label>Time:</label>
+                    <select name="hour" class="null-allowed">
+                        <option value="0">00</option>
+                        <option value="1">01</option>
+                        <option value="2">02</option>
+                        <option value="3">03</option>
+                        <option value="4">04</option>
+                        <option value="5">05</option>
+                        <option value="6">06</option>
+                        <option value="7">07</option>
+                        <option value="8">08</option>
+                        <option value="9">09</option>
+                        <option value="10">10</option>
+                        <option value="11">11</option>
+                        <option value="12">12</option>
+                        <option value="13">13</option>
+                        <option value="14">14</option>
+                        <option value="15">15</option>
+                        <option value="16">16</option>
+                        <option value="17">17</option>
+                        <option value="18">18</option>
+                        <option value="19">19</option>
+                        <option value="20">20</option>
+                        <option value="21">21</option>
+                        <option value="22">22</option>
+                        <option value="23">23</option>
+                    </select>
+                    <select name="minute">
+                        <option value="00">00</option>
+                        <option value="15">15</option>
+                        <option value="30">30</option>
+                        <option value="45">45</option>
+                    </select>
+                </li>
+                <li>
+                    <label>Type:</label>
+                    <select name="typeofentry" style="width: 160px;">
+                        <option value=""></option>
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                    </select>
+                </li>
+                <li>
+                    <label>Topic (<a href="#">Add</a>):</label>
+                    <div class="entry-topic">
+                        <input type="text" name="topic0" data-viewmodel-android-text="map[key]" />
+                        <select name="prominence0">
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                        </select>
+                    </div>
+                </li>
+                <li>
+                    <label>Series:</label>
+                    <select name="series" style="width: 200px;">
+                        <option value="0">00 - Inactive</option>
+                        <option value="1">01 - Active</option>
+                    </select>
+                </li>
+                <li>
+                    <label>Subset:</label>
+                    <select name="subset">
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                    </select>
+                </li>
+                <li>
+                    <label>Active:</label>
+                    <select name="entryactive">
+                        <option value="1">Yes</option>
+                        <option value="0">No</option>
+                    </select>
+                </li>
+            </ul>
+            <hr />
+            <ul>
+                <li>
+                    <label style="font-style: italic;">Series:</label>
+                    <select name="series" class="req-pageurl-4" style="width: 200px;">
+                        <option value="0">00 - Inactive</option>
+                        <option value="1">01 - Active</option>
+                    </select>
+                </li>
+                <li>
+                    <label>Subset:</label>
+                    <select name="subset" class="req-pageurl-5">
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                    </select>
+                </li>
+                <li>
+                    <label>Entries:</label>
+                    <select name="entry" class="req-pageurl-0" style="width: 200px;">
+                        <option value=""></option>
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                    </select>
+                    <input type="button" value="Open" disabled="disabled" />
+                    <input type="button" value="All" disabled="disabled" />
+                </li>
+                <li>
+                    <label>Mode:</label>
+                    <select name="mode" class="req-pageurl-1">
+                        <option value="1">Variant</option>
+                        <option value="2">Predefined</option>
+                    </select>
+                </li>
+                <li>
+                    <label>Style:</label>
+                    <select name="style1" class="req-pageurl-2">
+                        <option value=""></option>
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                    </select>
+                </li>
+                <li>
+                    <label>Calendar:</label>
+                    <select name="calendar" class="req-pageurl-3">
+                        <option value=""></option>
+                        <option value="1">Birth</option>
+                        <option value="2">Death</option>
+                    </select>
+                </li>
+                <li>
+                    <label>Version:</label>
+                    <select name="version" class="req-pageurl-6">
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                    </select>
+                    <select name="version_update" class="null-allowed">
+                        <option value=""></option>
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                    </select>
+                    <input type="button" value="Update" />
+                </li>
+                <li>
+                    <label>Branch:</label>
+                    <select name="branch" class="req-pageurl-7">
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                        <option value="10">10</option>
+                    </select>
+                    <select name="branch_update" class="null-allowed">
+                        <option value=""></option>
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                        <option value="10">10</option>
+                    </select>
+                    <input type="button" value="Update" />
+                    <input type="button" value="Clone" />
+                </li>
+                <li>
+                    <label>Custom (<a href="#">Add</a>):</label>
+                    <div class="entry-custom">
+                        <input type="text" name="customname0" class="null-allowed" />
+                        <select name="custommonth0" class="null-allowed">
+                            <option value=""></option>
+                            <option value="1">01</option>
+                            <option value="2">02</option>
+                            <option value="3">03</option>
+                            <option value="4">04</option>
+                            <option value="5">05</option>
+                            <option value="6">06</option>
+                            <option value="7">07</option>
+                            <option value="8">08</option>
+                            <option value="9">09</option>
+                            <option value="10">10</option>
+                            <option value="11">11</option>
+                            <option value="12">12</option>
+                        </select>
+                        <select name="customday0" class="null-allowed">
+                            <option value=""></option>
+                            <option value="1">01</option>
+                            <option value="2">02</option>
+                            <option value="3">03</option>
+                            <option value="4">04</option>
+                            <option value="5">05</option>
+                            <option value="6">06</option>
+                            <option value="7">07</option>
+                            <option value="8">08</option>
+                            <option value="9">09</option>
+                            <option value="10">10</option>
+                            <option value="11">11</option>
+                            <option value="12">12</option>
+                            <option value="13">13</option>
+                            <option value="14">14</option>
+                            <option value="15">15</option>
+                            <option value="16">16</option>
+                            <option value="17">17</option>
+                            <option value="18">18</option>
+                            <option value="19">19</option>
+                            <option value="20">20</option>
+                            <option value="21">21</option>
+                            <option value="22">22</option>
+                            <option value="23">23</option>
+                            <option value="24">24</option>
+                            <option value="25">25</option>
+                            <option value="26">26</option>
+                            <option value="27">27</option>
+                            <option value="28">28</option>
+                            <option value="29">29</option>
+                            <option value="30">30</option>
+                            <option value="31">31</option>
+                        </select>
+                    </div>
+                </li>
+                <li>
+                    <label>Conclusion:</label>
+                    <select name="person" class="null-allowed" style="width: 100px;">
+                        <option value=""></option>
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                    </select>
+                    <div>
+                        <label for="c2"><input id="c2" type="radio" name="personbirth" value="1" checked="checked" />Birth</label>
+                        <label for="c3"><input id="c3" type="radio" name="personbirth" value="0" />Death</label>
+                        <input id="c4" type="checkbox" name="conclusionnone" value="1" /><label for="c4">None</label>
+                    </div>
+                    <input type="button" value="Update" />
+                </li>
+            </ul>
+        </form>
+    </div>
+    <!-- END: DEMO -->
+</body>
+</html>

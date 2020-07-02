@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Language" content="en">
+    <title>https://github.com/anpham6/squared</title>
+    <link rel="stylesheet" type="text/css" href="/common/css/dev.css" />
+    <style>
+        body {
+            font: 1em/1.4 Helvetica, Arial, sans-serif;
+            background-color: #fafafa;
+        }
+        body > div {
+            clear: left;
+            display: block;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        #squared_ui {
+            padding: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .cards {
+            max-width: 960px;
+            display: grid;
+            margin: 0 auto;
+        }
+        img {
+            max-width: 100%;
+        }
+        .card {
+            background-color: #fff;
+            box-shadow: 0 2px 2px 0 rgba(0,0,0,.14),0 3px 1px -2px rgba(0,0,0,.2),0 1px 5px 0 rgba(0,0,0,.12);
+        }
+        .card header {
+            padding: 10px;
+            background-color: rgb(41,73,130);
+            color: #fff;
+        }
+        .card header h2 {
+            font-size: 1.4rem;
+            font-weight: normal;
+            margin: 0;
+            padding: 0;
+        }
+        .card .body {
+            padding: 10px;
+            font-size: .9rem;
+            color: #757575;
+        }
+        .cards {
+            background-image: url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour1.jpg);
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            grid-gap: 10px;
+        }
+        .cards {
+            grid-template-columns: repeat(7,[col] 1fr [col2] 1fr);
+            grid-gap: 10px;
+        }
+        .card:nth-child(1) {
+            grid-column: col 1 / col2 2;
+        }
+        .card:nth-child(2) {
+            grid-column: col 1 / col2 2;
+            grid-row: 2;
+        }
+        .card:nth-child(3) {
+            grid-column: col2 5 / col 7;
+            grid-row: 2;
+        }
+        .card:nth-child(4) {
+            grid-column: col2 2 / col2 5;
+        }
+        .card:nth-child(5) {
+            grid-column: col2 5 / col 7;
+        }
+    </style>
+    <script src="/common/system.js"></script>
+    <script src="/common/transform.js"></script>
+    <script src="/common/babel-transform.js"></script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script src="/common/loader.js"></script>
+</head>
+<body>
+    <!-- START: DEMO -->
+    <div id="squared_ui">
+        <div class="cards">
+            <div class="card">
+                <header>
+                    <h2>Bristol</h2>
+                </header>
+                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour1.jpg" alt="Bristol harbour">
+                <div class="body">
+                    <p>I live in Bristol. It mostly rains, but when it isn't raining we have hot air balloons.</p>
+                </div>
+            </div>
+            <div class="card">
+                <header>
+                    <h2>Harbour Cranes</h2>
+                </header>
+                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour2.jpg" alt="Bristol harbour">
+                <div class="body">
+                <p>We also have giant cranes, and historic boats. It is best if the balloons avoid these.</p>
+                </div>
+            </div>
+            <div class="card">
+                <header>
+                    <h2>Striped Balloon</h2>
+                </header>
+                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/coloured-balloon.jpg" alt="Coloured balloon">
+                <div class="body">
+                <p>I like the nice standard balloons. Stripy. Solid looking basket.</p>
+                </div>
+            </div>
+            <div class="card">
+                <header>
+                    <h2>Fortnum &amp; Mason</h2>
+                </header>
+                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/champagne-balloons.jpg" alt="Fortnum and Mason balloon">
+                <div class="body">
+                    <p>This one uses the correct Pantone colour for Fortnum and Mason.</p>
+                </div>
+            </div>
+            <div class="card">
+                <header>
+                    <h2>Funfair Problems</h2>
+                </header>
+                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/funfair-balloons.jpg" alt="Funfair">
+                <div class="body">
+                    <p>Here we have balloons getting tangled up with a funfair.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- END: DEMO -->
+</body>
+</html>

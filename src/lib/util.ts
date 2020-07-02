@@ -1024,22 +1024,12 @@ export function findSet<T = unknown>(list: Set<T>, predicate: IteratorPredicate<
     return undefined;
 }
 
-export function safeNestedArray<T = unknown>(list: T[][] | ObjectMap<T[]>, index: number | string) {
-    let result: T[] = list[index];
-    if (result === undefined || result === null) {
-        result = [];
-        list[index] = result;
-    }
-    return result;
+export function safeNestedArray<T = unknown>(list: T[][] | ObjectMap<T[]> | ObjectIndex<T[]>, index: number | string) {
+    return (list[index] ?? (list[index] = [])) as T[];
 }
 
 export function safeNestedMap<T = unknown>(map: ObjectMapNested<T>, index: number | string) {
-    let result: ObjectMap<T> = map[index];
-    if (result === undefined || result === null) {
-        result = {};
-        map[index] = result;
-    }
-    return result;
+    return (map[index] ?? (map[index] = {})) as ObjectMap<T>;
 }
 
 export function sortArray<T = any>(list: T[], ascending: boolean, ...attrs: string[]) {

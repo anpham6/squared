@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Language" content="en">
+    <title>https://github.com/anpham6/squared</title>
+    <link rel="stylesheet" type="text/css" href="/common/css/dev.css" />
+    <style>
+        #squared_ui {
+            padding: 10px;
+        }
+    </style>
+    <script src="/common/system.js"></script>
+    <script src="/common/transform.js"></script>
+    <script src="/common/babel-transform.js"></script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/squared.svg.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script src="/common/loader.js"></script>
+</head>
+<body>
+    <!-- START: DEMO -->
+    <div id="squared_ui" style="width: 300px;">
+        <svg viewBox="0 0 500 300">
+            <path d="M-25,-12.5 L25,-12.5 L 0,-87.5 z" fill="yellow" stroke="red" stroke-width="7.06">
+                <animateMotion dur="6s" repeatCount="indefinite" rotate="auto" keyTimes="0; 1" values="0,0;100,100" keySplines="0.42 0 1 1" calcMode="spline" />
+            </path>
+            <path d="M-25,-12.5 L25,-12.5 L 0,-87.5 z" fill="yellow" stroke="red" stroke-width="7.06">
+                <animateMotion dur="6s" repeatCount="3" rotate="auto" from="50,50" by="50,50" additive="sum" accumulate="sum" fill="freeze" />
+            </path>
+        </svg>
+        <br />
+        <svg viewBox="0 0 500 300">
+            <path id="path1" d="M100,250 C 100,50 400,50 400,250 Z" fill="none" stroke="blue" stroke-width="7.06"  />
+            <circle cx="100" cy="250" r="17.64" fill="blue" />
+            <circle cx="250" cy="100" r="17.64" fill="blue" />
+            <circle cx="400" cy="250" r="17.64" fill="blue" />
+            <path id="path2" d="M-25,-12.5 L25,-12.5 L 0,-87.5 z" fill="yellow" stroke="red" stroke-width="7.06">
+                <animateMotion dur="500ms" repeatCount="indefinite" rotate="auto">
+                    <mpath href="#path1" />
+                </animateMotion>
+            </path>
+        </svg>
+        <br />
+        <svg viewBox="0 0 500 300">
+            <path id="path3" d="M100,250 L400,250 L200,50 z" fill="none" stroke="blue" stroke-width="7.06"  />
+            <circle cx="100" cy="250" r="17.64" fill="blue" />
+            <circle cx="250" cy="100" r="17.64" fill="blue" />
+            <circle cx="400" cy="250" r="17.64" fill="blue" />
+            <path id="path4" d="M-25,-12.5 L25,-12.5 L 0,-87.5 z" fill="yellow" stroke="red" stroke-width="7.06">
+                <animateMotion dur="6s" repeatCount="indefinite" rotate="auto-reverse" path="M100,250 L400,250 L200,50 z" />
+            </path>
+        </svg>
+        <br />
+        <svg viewBox="0 0 500 300">
+            <path id="path5" d="M100,250 L400,250 L200,50 z" fill="none" stroke="blue" stroke-width="7.06"  />
+            <circle cx="100" cy="250" r="17.64" fill="blue" />
+            <circle cx="250" cy="100" r="17.64" fill="blue" />
+            <circle cx="400" cy="250" r="17.64" fill="blue" />
+            <path id="path6" d="M-25,-12.5 L25,-12.5 L 0,-87.5 z" fill="yellow" stroke="red" stroke-width="7.06">
+                <animateMotion dur="6s" repeatCount="indefinite" rotate="auto" path="M100,250 L400,250 L200,50 z" keyPoints="0.3;1;0;0.3" keyTimes="0;0.7;0.7;1" calcMode="linear" />
+            </path>
+        </svg>
+    </div>
+    <!-- END: DEMO -->
+</body>
+</html>

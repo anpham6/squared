@@ -723,7 +723,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                         NODE_ALIGNMENT.SINGLE,
                         renderAs.children as T[]
                     )
-                );
+                ) as NodeXmlTemplate<T>;
             }
             else {
                 node.mergeGravity('layout_gravity', 'top');

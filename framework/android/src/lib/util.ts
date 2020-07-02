@@ -19,7 +19,7 @@ function calculateBias(start: number, end: number, accuracy = 3) {
 }
 
 export function applyTemplate(tagName: string, template: StandardMap, children: StandardMap[], depth?: number) {
-    const tag: ObjectMap<any> = template[tagName];
+    const tag: StandardMap = template[tagName];
     const nested = tag['>>'] === true;
     let output = '',
         indent = '',
@@ -44,7 +44,7 @@ export function applyTemplate(tagName: string, template: StandardMap, children: 
             let j = 0;
             while (j < q) {
                 const attr = attrs[j++];
-                const value = item[attr];
+                const value: Undef<string> = item[attr];
                 if (value) {
                     output += ` ${(tag['^'] ? tag['^'] + ':' : '') + attr}="${value}"`;
                 }

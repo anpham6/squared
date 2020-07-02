@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Language" content="en">
+    <title>https://github.com/anpham6/squared</title>
+    <link rel="stylesheet" type="text/css" href="/common/css/dev.css" />
+    <style>
+        #squared_ui {
+            width: 200px;
+        }
+        #menu_demo > div:first-child {
+            background: url(/common/images/icons8-chrome.png) no-repeat;
+            background-size: 24px;
+            background-position: 12px 6px;
+        }
+        #menu_demo_sub > ul {
+            margin: 10px 20px 0 20px;
+        }
+        body > div > nav, ul {
+            list-style-type: none;
+            padding: 0;
+            border: solid 1px #aaa;
+        }
+        nav {
+            display: none;
+        }
+        nav div, nav li {
+            font-size: 11px;
+            padding: 12px;
+            border-bottom: solid 1px #aaa;
+        }
+        nav div:last-child, nav li:last-child {
+            border-bottom: none;
+        }
+        nav div:hover:not(:nth-of-type(4)) {
+            background-color: azure;
+            cursor: pointer;
+        }
+        ul li {
+            padding-right: 24px;
+        }
+        div {
+            overflow: hidden;
+        }
+        div img {
+            width: 24px;
+            margin-right: 10px;
+            float: left;
+        }
+        div label {
+            margin-top: 4px;
+            float: left;
+        }
+        div input {
+            float: right;
+        }
+    </style>
+    <script src="/common/system.js"></script>
+    <script src="/common/transform.js"></script>
+    <script src="/common/babel-transform.js"></script>
+    <script src="/common/dev.js"></script>
+    <script>
+        System.import('/build/src/main.js').then(result => {
+            squared = result;        
+            System.import('/build/src/base/main.js').then(result => {
+                squared.base = result;
+                System.import('/build/framework/android/src/main.js').then(result => {
+                    android = result.default;
+                    squared.setFramework(android);
+                    System.import('/build/extension/android/widget/menu/main.js').then(() => {
+                        squared.parseDocument('squared_ui').then(function() {
+                            squared.close();
+
+                            var views = squared.system.writeLayoutAllXml();
+                            document.getElementById('output').innerHTML = stringify(views).replace(/</g, '&lt;');
+
+                            var resource = squared.system.writeResourceAllXml();
+                            document.getElementById('resource').innerHTML = stringify(resource).replace(/</g, '&lt;');
+                        });
+                    });
+                });
+            });
+        });
+        function toggleMenu() {
+            var submenu = document.getElementById('menu_demo_sub');
+            submenu.style.display = (submenu.style.display === 'block' ? 'none' : 'block');
+        }
+    </script>
+</head>
+<body>
+    <!-- START: DEMO -->
+    <div id="squared_ui">
+        <button onclick="document.getElementById('menu_demo').style.display = 'block';">Show Menu</button>
+        <button onclick="document.getElementById('menu_demo').style.display = 'none';">Hide Menu</button>
+        <nav id="menu_demo" data-use-android="android.widget.menu">
+            <div title="Item 1"
+                data-id="@+id/menu_item_1"
+                data-show-as-action="always"
+                data-alphabetic-shortcut="A"
+                data-alphabetic-modifiers="CTRL|ALT">
+                    &nbsp;
+            </div>
+            <div
+                data-id="@+id/menu_item_2"
+                data-show-as-action="always"
+                data-numeric-shortcut="2"
+                data-numeric-modifiers="CTRL">
+                    Item 2
+            </div>
+            <div data-show-as-action="ifRoom">
+                <img src="/common/images/icons8-google-docs.png" />
+                <label>Item 3</label>
+            </div>
+            <div>
+                <a href="#" onclick="toggleMenu();">Item 4</a>
+                <nav id="menu_demo_sub">
+                    <ul>
+                        <li>
+                            Item 7 <input type="radio" name="item_4" />
+                        </li>
+                        <li>
+                            Item 8 <input type="radio" name="item_4" /> 
+                        </li>
+                        <li>
+                            Item 9 <input type="radio" name="item_4" />
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+            <div>
+                <label>Item 5</label>
+                <input type="checkbox" />
+            </div>
+            <div>
+                <label>Item 6</label>
+                <input type="checkbox" />
+            </div>
+        </nav>
+    </div>
+    <!-- END: DEMO -->
+
+    <div>
+        <div class="output">
+            <pre id="output"></pre>
+            <div>
+                <button onclick="copy('output');">Copy</button>
+                <button onclick="squared.system.saveLayoutAllXml();">Save</button>
+                <button onclick="squared.saveToArchive();">Save All</button>
+                <button onclick="squared.copyToDisk('D:/git/menu');">Copy All</button>
+            </div>
+        </div>
+        <div class="output">
+            <pre id="resource"></pre>
+            <div>
+                <button onclick="copy('resource');">Copy</button>
+                <button onclick="squared.system.saveResourceAllXml();">Save</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
