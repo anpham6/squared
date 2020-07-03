@@ -229,13 +229,10 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                 const itemArray = item.font as StringMap[];
                 for (const attr in font) {
                     const [fontFamily, fontStyle, fontWeight] = attr.split('|');
-                    let fontName = name;
-                    if (fontStyle === 'normal') {
-                        fontName += fontWeight === '400' ? '_normal' : '_' + font[attr];
-                    }
-                    else {
-                        fontName += '_' + fontStyle + (fontWeight !== '400' ? font[attr] : '');
-                    }
+                    const fontName = name + (fontStyle === 'normal'
+                        ? fontWeight === '400' ? '_normal' : '_' + font[attr]
+                        : '_' + fontStyle + (fontWeight !== '400' ? font[attr] : '')
+                    );
                     itemArray.push({
                         font: `@font/${fontName}`,
                         fontStyle,

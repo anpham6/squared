@@ -1138,28 +1138,30 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         cache.sort((a, b) => {
             if (a.depth === b.depth) {
-                if (a.innerWrapped === b) {
-                    return -1;
-                }
-                else if (a === b.innerWrapped) {
-                    return 1;
-                }
-                const outerA = a.outerWrapper;
-                const outerB = b.outerWrapper;
-                if (a === outerB || !outerA && outerB) {
-                    return -1;
-                }
-                else if (b === outerA || !outerB && outerA) {
-                    return 1;
-                }
-                if (a.nodeGroup && b.nodeGroup) {
-                    return a.id < b.id ? -1 : 1;
-                }
-                else if (a.nodeGroup) {
-                    return -1;
-                }
-                else if (b.nodeGroup) {
-                    return 1;
+                if (!a.naturalChild || !b.naturalChild) {
+                    if (a.nodeGroup && b.nodeGroup) {
+                        return a.id < b.id ? -1 : 1;
+                    }
+                    else if (a.nodeGroup) {
+                        return -1;
+                    }
+                    else if (b.nodeGroup) {
+                        return 1;
+                    }
+                    if (a.innerWrapped === b) {
+                        return -1;
+                    }
+                    else if (a === b.innerWrapped) {
+                        return 1;
+                    }
+                    const outerA = a.outerWrapper;
+                    const outerB = b.outerWrapper;
+                    if (a === outerB || !outerA && outerB) {
+                        return -1;
+                    }
+                    else if (b === outerA || !outerB && outerA) {
+                        return 1;
+                    }
                 }
                 return 0;
             }

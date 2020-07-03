@@ -132,7 +132,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
                         body: JSON.stringify(body)
                     }
                 )
-                .then(async (response: Response) => await response.json() as ResultOfFileAction)
+                .then(async response => await response.json() as ResultOfFileAction)
                 .then(result => {
                     if (result) {
                         if (typeof options.callback === 'function') {
