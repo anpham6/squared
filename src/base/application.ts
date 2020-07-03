@@ -116,8 +116,8 @@ export default abstract class Application<T extends Node> implements squared.bas
         this.elementMap.clear();
         this.session.active.clear();
         this.session.unusedStyles.clear();
-        this.controllerHandler.reset();
-        this.resourceHandler?.reset();
+        this._controllerHandler.reset();
+        this._resourceHandler?.reset();
         for (const ext of this.extensions) {
             ext.subscribers.clear();
         }
@@ -424,7 +424,9 @@ export default abstract class Application<T extends Node> implements squared.bas
                 if (element.nodeName.charAt(0) === '#') {
                     if (element.nodeName === '#text') {
                         child = this.insertNode(element, sessionId);
-                        child?.cssApply(node.textStyle);
+                        if (child) {
+                            child.cssApply(node.textStyle);
+                        }
                     }
                 }
                 else if (controllerHandler.includeElement(element)) {

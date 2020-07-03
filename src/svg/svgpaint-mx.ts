@@ -73,6 +73,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                             const { top, right, bottom, left } = SvgBuild.getBoxRect(d);
                             const width = right - left;
                             const height = bottom - top;
+                            const parent = this.parent;
                             switch (name) {
                                 case 'inset': {
                                     let x1 = 0,
@@ -102,7 +103,9 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                         { x: x2, y: y2 },
                                         { x: x1, y: y2 }
                                     ];
-                                    this.parent?.refitPoints(points);
+                                    if (parent) {
+                                        parent.refitPoints(points);
+                                    }
                                     this.clipPath = SvgBuild.drawPolygon(points, precision);
                                     break;
                                 }
@@ -120,13 +123,14 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                         });
                                         return { x, y };
                                     });
-                                    this.parent?.refitPoints(points);
+                                    if (parent) {
+                                        parent.refitPoints(points);
+                                    }
                                     this.clipPath = SvgBuild.drawPolygon(points, precision);
                                     break;
                                 }
                                 default:
                                     if (name === 'circle' || name === 'ellipse') {
-                                        const parent = this.parent;
                                         const dimension = width < height ? width : height;
                                         let rx: number,
                                             ry: number;

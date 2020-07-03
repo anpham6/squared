@@ -1715,7 +1715,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (value) {
             const parent = this._parent;
             if (value !== parent) {
-                parent?.remove(this);
+                if (parent) {
+                    parent.remove(this);
+                }
                 this._parent = value;
                 value.add(this);
             }
@@ -2771,7 +2773,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get boundingClientRect() {
-        return (this.naturalElement && this._element?.getBoundingClientRect() || this._bounds || newBoxRectDimension()) as DOMRect;
+        return (this.naturalElement && this._element!.getBoundingClientRect() || this._bounds || newBoxRectDimension()) as DOMRect;
     }
 
     get fontSize(): number {

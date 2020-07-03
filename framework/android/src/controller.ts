@@ -130,7 +130,9 @@ function adjustBaseline(baseline: View, nodes: View[], singleRow: boolean, boxTo
                 if (imageElement) {
                     if (height > baseline.baselineHeight) {
                         if (!imageBaseline || height >= imageHeight) {
-                            imageBaseline?.anchor(getBaselineAnchor(node), node.documentId);
+                            if (imageBaseline) {
+                                imageBaseline.anchor(getBaselineAnchor(node), node.documentId);
+                            }
                             imageHeight = height;
                             imageBaseline = node;
                         }
@@ -1832,14 +1834,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     [node.previousSibling, node.nextSibling].some((sibling: T) => {
                         if (sibling?.visible && sibling.pageFlow) {
                             const id = node.elementId;
-                            const labelElement = sibling.element as HTMLLabelElement;
-                            const labelParent = sibling.documentParent.tagName === 'LABEL' && sibling.documentParent as T;
-                            if (id !== '' && id === labelElement.htmlFor?.trim()) {
+                            if (id !== '' && id ===  sibling.toElementString('htmlFor').trim()) {
                                 sibling.android('labelFor', node.documentId);
                                 return true;
                             }
-                            else if (labelParent && sibling.textElement) {
-                                labelParent.android('labelFor', node.documentId);
+                            else if (sibling.textElement && sibling.documentParent.tagName === 'LABEL') {
+                                (sibling.documentParent as T).android('labelFor', node.documentId);
                                 return true;
                             }
                         }
@@ -2977,9 +2977,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 let percentWidth = View.availablePercent(partition, 'width', node.box.width);
                 if (i === 1 || previousAlignParent) {
                     alignParent =
-                        !rowStart.floating && previousRow?.every(item => item.floating || !item.pageFlow) === true && (clearMap.size === 0 || !partition.some((item: T) => checkClearMap(item, clearMap))) ||
                         !rowStart.pageFlow && (!rowStart.autoPosition || q === 1) ||
-                        previousRow?.every(item => !item.pageFlow) === true;
+                        !!previousRow && (
+                            !rowStart.floating && previousRow.every(item => item.floating || !item.pageFlow) && (clearMap.size === 0 || !partition.some((item: T) => checkClearMap(item, clearMap))) ||
+                            previousRow.every(item => !item.pageFlow)
+                        )
                     previousAlignParent = alignParent;
                 }
                 tallest = undefined;

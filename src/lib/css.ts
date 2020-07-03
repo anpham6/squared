@@ -3371,7 +3371,7 @@ export function insertStyleSheetRule(value: string, index = 0) {
     }
     document.head.appendChild(style);
     const sheet = style.sheet as CSSStyleSheet;
-    if (typeof sheet?.insertRule === 'function') {
+    if (sheet && typeof sheet.insertRule === 'function') {
         try {
             sheet.insertRule(value, index);
         }

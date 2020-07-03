@@ -178,8 +178,13 @@ export default abstract class File<T extends squared.base.Node> implements squar
     }
 
     set hostname(value) {
-        if (value?.startsWith('http')) {
-            this._hostname = trimEnd(value, '/');
+        if (value) {
+            if (value.startsWith('http')) {
+                this._hostname = trimEnd(value, '/');
+            }
+        }
+        else {
+            this._hostname = undefined;
         }
     }
     get hostname() {

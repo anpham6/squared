@@ -1309,7 +1309,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         else if (rightBelow) {
             rightSub = rightBelow;
         }
-        if (rightAbove.length + (rightBelow?.length || 0) === layout.length) {
+        if (rightAbove.length + (rightBelow ? rightBelow.length : 0) === layout.length) {
             layout.addAlign(NODE_ALIGNMENT.RIGHT);
         }
         if (inlineAbove.length > 0) {

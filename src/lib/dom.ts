@@ -196,7 +196,9 @@ export function createElement(tagName: string, options?: CreateElementOptions) {
                 }
             }
         }
-        parent?.appendChild(element);
+        if (parent) {
+            parent.appendChild(element);
+        }
     }
     return element;
 }

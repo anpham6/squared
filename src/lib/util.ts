@@ -451,7 +451,7 @@ export function capitalizeString(value: string) {
         }
         result[match.index!] = match[1].charAt(0).toUpperCase();
     }
-    return result?.join('') || value;
+    return result ? result.join('') : value;
 }
 
 export function lowerCaseString(value: string) {

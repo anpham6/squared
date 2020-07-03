@@ -1158,10 +1158,10 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                         else if (SvgBuild.asAnimateMotion(item)) {
                                             propertyNames = getTransformPropertyName(item.type);
                                             values = getTransformValues(item);
-                                            if (propertyNames && values) {
-                                                const rotateValues = item.rotateValues;
+                                            const rotateValues = item.rotateValues;
+                                            if (rotateValues && propertyNames && values) {
                                                 const q = values.length;
-                                                if (rotateValues?.length === q) {
+                                                if (rotateValues.length === q) {
                                                     propertyNames.push('rotation');
                                                     let k = 0;
                                                     while (k < q) {

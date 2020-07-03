@@ -198,7 +198,9 @@ function getPathData(entries: TimelineEntries, path: SvgPath, parent: Undef<SvgC
             if (path.transformed) {
                 points = SvgBuild.applyTransforms(path.transformed, points, transformOrigin);
             }
-            parent?.refitPoints(points);
+            if (parent) {
+                parent.refitPoints(points);
+            }
             switch (tagName) {
                 case 'line':
                 case 'polyline':
@@ -599,13 +601,17 @@ function setStartItemValues(map: SvgAnimationIntervalMap, forwardMap: ForwardMap
         }
         keyTimes.unshift(0);
         values.unshift(value);
-        keySplines?.unshift(item.timingFunction);
+        if (keySplines) {
+            keySplines.unshift(item.timingFunction);
+        }
     }
     if (keyTimes[keyTimes.length - 1] < 1) {
         const value = map.get(SvgAnimationIntervalMap.getKeyName(item), item.delay) || convertToString(baseValueMap[item.attributeName]) || values[0];
         keyTimes.push(1);
         values.push(value);
-        keySplines?.push(item.timingFunction);
+        if (keySplines) {
+            keySplines.unshift(item.timingFunction);
+        }
     }
 }
 

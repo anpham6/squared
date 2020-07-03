@@ -642,7 +642,9 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 if (previousSiblings.length === 1) {
                                     aboveLineBreak = aboveLineBreak.lineBreak ? node : undefined;
                                 }
-                                aboveLineBreak?.setBounds(false);
+                                if (aboveLineBreak) {
+                                    aboveLineBreak.setBounds(false);
+                                }
                             }
                             let aboveParent = above.renderParent,
                                 belowParent = below.renderParent;
