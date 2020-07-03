@@ -3,7 +3,7 @@ const { getNamedItem } = squared.lib.dom;
 const { clamp, convertRadian, hypotenuse } = squared.lib.math;
 const { TRANSFORM: REGEXP_TRANSFORM } = squared.lib.regex;
 const { getStyleValue } = squared.lib.session;
-const { convertCamelCase, convertFloat, resolvePath } = squared.lib.util;
+const { convertCamelCase, convertFloat, resolvePath, splitPair } = squared.lib.util;
 
 function setOriginPosition(element: Element, point: Point, attr: string, value: string, dimension: number) {
     if (isLength(value)) {
@@ -549,18 +549,20 @@ export function getTargetElement(element: Element, rootElement?: Null<Element>, 
             return target;
         }
     }
-    else if (contentMap && value.indexOf('#') > 0) {
-        const [href, id] = value.split('#').map((item, index) => index === 0 ? resolvePath(item) : item);
-        const content = contentMap[href];
-        if (content) {
-            document.body.insertAdjacentHTML('beforeend', content);
-            element = document.body.lastElementChild as Element;
-            if (element instanceof SVGGraphicsElement) {
-                element.style.display = 'none';
-                return element.querySelector('#' + id);
-            }
-            else if (element) {
-                document.body.removeChild(element);
+    else if (contentMap) {
+        const [href, id] = splitPair(value, '#');
+        if (href !== '') {
+            const content = contentMap[resolvePath(href)];
+            if (content) {
+                document.body.insertAdjacentHTML('beforeend', content);
+                element = document.body.lastElementChild as Element;
+                if (element instanceof SVGGraphicsElement) {
+                    element.style.display = 'none';
+                    return element.querySelector('#' + id);
+                }
+                else if (element) {
+                    document.body.removeChild(element);
+                }
             }
         }
     }

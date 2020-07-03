@@ -255,6 +255,9 @@ declare module "lib" {
         function randomUUID(separator?: string): string;
         function formatString(value: string, ...params: string[]): string;
         function delimitString(options: DelimitStringOptions, ...appending: string[]): string;
+        function splitPair(value: string, char: string): [string, string];
+        function splitPairStart(value: string, char: string): string;
+        function splitPairEnd(value: string, char: string): string;
         function splitEnclosing(value: string, prefix?: string, separator?: string, opening?: string, closing?: string): string[];
         function hasBit(value: number, offset: number): boolean;
         function isNumber(value: string): boolean;

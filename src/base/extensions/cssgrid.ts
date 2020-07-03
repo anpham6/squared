@@ -27,7 +27,7 @@ interface RepeatItem {
 }
 
 const { formatPercent, formatPX, isLength, isPercent, isPx } = squared.lib.css;
-const { isNumber, plainMap, safeNestedArray, trimString, withinRange } = squared.lib.util;
+const { isNumber, plainMap, safeNestedArray, splitPairEnd, trimString, withinRange } = squared.lib.util;
 
 const PATTERN_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
 const PATTERN_MINMAX = 'minmax\\(\\s*([^,]+),\\s+([^)]+)\\s*\\)';
@@ -482,13 +482,13 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 let rowSpan = 1,
                     columnSpan = 1;
                 if (gridRowEnd.startsWith('span')) {
-                    rowSpan = parseInt(gridRowEnd.split(' ')[1]);
+                    rowSpan = parseInt(splitPairEnd(gridRowEnd, ' '));
                 }
                 else if (isNumber(gridRowEnd)) {
                     rowSpan = parseInt(gridRowEnd) - rowIndex;
                 }
                 if (gridColumnEnd.startsWith('span')) {
-                    columnSpan = parseInt(gridColumnEnd.split(' ')[1]);
+                    columnSpan = parseInt(splitPairEnd(gridColumnEnd, ' '));
                 }
                 else if (isNumber(gridColumnEnd)) {
                     columnSpan = parseInt(gridColumnEnd) - columnIndex;
@@ -648,7 +648,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                             }
                         }
                         else if (value.startsWith('span')) {
-                            const span = parseInt(value.split(' ')[1]);
+                            const span = parseInt(splitPairEnd(value, ' '));
                             if (span === length && previousPlacement) {
                                 if (horizontal) {
                                     if (!vertical) {

@@ -2,7 +2,7 @@ import { parseColor } from './color';
 import { USER_AGENT, getDeviceDPI, isUserAgent } from './client';
 import { clamp, truncate, truncateFraction } from './math';
 import { CSS, STRING, TRANSFORM } from './regex';
-import { convertAlpha, convertFloat, convertRoman, hasKeys, isNumber, isString, iterateArray, replaceMap, resolvePath, spliceString, splitEnclosing, trimBoth } from './util';
+import { convertAlpha, convertFloat, convertRoman, hasKeys, isNumber, isString, iterateArray, replaceMap, resolvePath, spliceString, splitEnclosing, splitPair, trimBoth } from './util';
 
 const PATTERN_SIZES = `(\\(\\s*(?:orientation:\\s*(?:portrait|landscape)|(?:max|min)-width:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\))`;
 const REGEXP_LENGTH = new RegExp(`^${STRING.LENGTH}$`);
@@ -2528,13 +2528,9 @@ export function parseKeyframes(rules: CSSRuleList) {
                 }
                 const keyframe: StringMap = {};
                 for (const property of match[2].split(/\s*;\s*/)) {
-                    const index = property.indexOf(':');
-                    if (index !== -1) {
-                        const value = property.substring(index + 1).trim();
-                        if (value !== '') {
-                            const attr = property.substring(0, index).trim();
-                            keyframe[attr] = value;
-                        }
+                    const [attr, value] = splitPair(property, ':');
+                    if (value !== '') {
+                        keyframe[attr.trim()] = value.trim();
                     }
                 }
                 result[percent] = keyframe;
@@ -2574,8 +2570,8 @@ export function checkMediaRule(value: string, fontSize?: number) {
                         case 'min-aspect-ratio':
                         case 'max-aspect-ratio':
                             if (rule) {
-                                const [width, height] = replaceMap(rule.split('/'), (ratio: string) => parseInt(ratio));
-                                valid = compareRange(operation, window.innerWidth / window.innerHeight, width / height);
+                                const [width, height] = splitPair(rule, '/');
+                                valid = compareRange(operation, window.innerWidth / window.innerHeight, parseInt(width) / parseInt(height));
                             }
                             else {
                                 valid = false;

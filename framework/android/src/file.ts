@@ -20,7 +20,7 @@ interface ItemValue {
     innerText: string;
 }
 
-const { fromLastIndexOf, parseMimeType, plainMap } = squared.lib.util;
+const { fromLastIndexOf, parseMimeType, plainMap, splitPairStart } = squared.lib.util;
 
 const STORED = Resource.STORED as AndroidResourceStoredMap;
 
@@ -245,7 +245,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                     if (uri) {
                         this.addAsset({
                             pathname: outputDirectory + pathname,
-                            filename: fontName + '.' + (Resource.getExtension(uri.split('?')[0]).toLowerCase() || 'ttf'),
+                            filename: fontName + '.' + (Resource.getExtension(splitPairStart(uri, '?')).toLowerCase() || 'ttf'),
                             uri
                         });
                     }

@@ -11,7 +11,7 @@ const { getNamedItem } = squared.lib.dom;
 const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = squared.lib.math;
 const { STRING } = squared.lib.regex;
 const { getElementAsNode } = squared.lib.session;
-const { appendSeparator, convertCamelCase, hasValue, isEqual, isNumber, isString, iterateArray } = squared.lib.util;
+const { appendSeparator, convertCamelCase, hasValue, isEqual, isNumber, isString, iterateArray, splitPair, splitPairEnd } = squared.lib.util;
 
 const BORDER_TOP = CSS_PROPERTIES.borderTop.value as string[];
 const BORDER_RIGHT = CSS_PROPERTIES.borderRight.value as string[];
@@ -661,7 +661,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 } as Partial<RawAsset>;
                 if (typeof data === 'string') {
                     if (encoding === 'base64') {
-                        asset.base64 = data.startsWith('data:image/') ? data.substring(data.indexOf(',') + 1) : data;
+                        asset.base64 = data.startsWith('data:image/') ? splitPairEnd(data, ',') : data;
                     }
                 }
                 else if (Array.isArray(data)) {
@@ -715,10 +715,10 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 }
                 if (node.css('borderRadius') !== '0px') {
                     const [borderTopLeftRadius, borderTopRightRadius, borderBottomRightRadius, borderBottomLeftRadius] = node.cssAsTuple('borderTopLeftRadius', 'borderTopRightRadius', 'borderBottomRightRadius', 'borderBottomLeftRadius');
-                    const [A, B] = borderTopLeftRadius.split(' ');
-                    const [C, D] = borderTopRightRadius.split(' ');
-                    const [E, F] = borderBottomRightRadius.split(' ');
-                    const [G, H] = borderBottomLeftRadius.split(' ');
+                    const [A, B] = splitPair(borderTopLeftRadius, ' ');
+                    const [C, D] = splitPair(borderTopRightRadius, ' ');
+                    const [E, F] = splitPair(borderBottomRightRadius, ' ');
+                    const [G, H] = splitPair(borderBottomLeftRadius, ' ');
                     const borderRadius = !B && !D && !F && !H ? [A, C, E, G] : [A, B || A, C, D || C, E, F || E, G, H || G];
                     const horizontal = node.actualWidth >= node.actualHeight;
                     const radius = borderRadius[0];

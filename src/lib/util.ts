@@ -639,6 +639,21 @@ export function delimitString(options: DelimitStringOptions, ...appending: strin
     return values.join(delimiter);
 }
 
+export function splitPair(value: string, char: string): [string, string] {
+    const index = value.indexOf(char);
+    return index !== -1 ? [value.substring(0, index), value.substring(index + char.length) ] : [value, ''];
+}
+
+export function splitPairStart(value: string, char: string) {
+    const index = value.indexOf(char);
+    return index !== -1 ? value.substring(0, index) : value;
+}
+
+export function splitPairEnd(value: string, char: string) {
+    const index = value.indexOf(char);
+    return index !== -1 ? value.substring(index + char.length) : '';
+}
+
 export function splitEnclosing(value: string, prefix?: string, separator = '', opening = '(', closing = ')') {
     if (separator.length > 1) {
         return [];

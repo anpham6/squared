@@ -16,7 +16,7 @@ interface AttributeData extends NumberValue {
 
 const { getFontSize, getKeyframesRules, isAngle, isCustomProperty, hasCalc, parseAngle, parseVar } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
-const { iterateArray, replaceMap, safeNestedArray, sortNumber } = squared.lib.util;
+const { iterateArray, replaceMap, safeNestedArray, sortNumber, splitPairEnd } = squared.lib.util;
 
 const ANIMATION_DEFAULT = {
     'animation-delay': '0s',
@@ -59,7 +59,7 @@ function convertRotate(value: string) {
         return 'auto 180deg';
     }
     else if (/^reverse\s+/.test(value)) {
-        const angle = value.split(' ')[1];
+        const angle = splitPairEnd(value, ' ');
         return 'auto ' + (isAngle(angle) ? 180 + parseAngle(angle, 0) : '0') + 'deg';
     }
     return value;

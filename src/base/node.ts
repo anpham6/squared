@@ -5,7 +5,7 @@ const { CSS_PROPERTIES, CSS_TRAITS, CSS_UNIT, checkStyleValue, checkWritingMode,
 const { ELEMENT_BLOCK, assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { CSS, FILE } = squared.lib.regex;
 const { actualClientRect, actualTextRangeRect, deleteElementCache, getElementAsNode, getElementCache, getPseudoElt, setElementCache } = squared.lib.session;
-const { aboveRange, belowRange, convertCamelCase, convertFloat, convertInt, hasBit, hasValue, isNumber, isObject, iterateArray, spliceString, splitEnclosing } = squared.lib.util;
+const { aboveRange, belowRange, convertCamelCase, convertFloat, convertInt, hasBit, hasValue, isNumber, isObject, iterateArray, spliceString, splitEnclosing, splitPair } = squared.lib.util;
 
 const { SELECTOR_ATTR, SELECTOR_G, SELECTOR_LABEL, SELECTOR_PSEUDO_CLASS } = CSS;
 
@@ -180,7 +180,7 @@ function convertBox(node: T, attr: string, margin: boolean) {
                     default: {
                         const parent = node.ascend({ condition: item => item.tagName === 'TABLE'})[0];
                         if (parent) {
-                            const [horizontal, vertical] = parent.css('borderSpacing').split(' ');
+                            const [horizontal, vertical] = splitPair(parent.css('borderSpacing'), ' ');
                             switch (attr) {
                                 case 'marginTop':
                                 case 'marginBottom':
@@ -2495,7 +2495,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         }
                         break;
                     default:
-                        if (result !== '' && this.styleElement && !this.inputElement && (!this._initial || getInitialValue.call(this, 'backgroundColor') === result)) {
+                        if (result !== '' && this.styleElement && !this.inputElement && (this._initial === undefined || getInitialValue.call(this, 'backgroundColor') === result)) {
                             let parent = this.actualParent;
                             while (parent !== null) {
                                 const color = getInitialValue.call(parent, 'backgroundColor', { modified: true });
@@ -2579,7 +2579,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     backgroundRepeatY = false;
                 if (backgroundImage) {
                     for (const repeat of this.css('backgroundRepeat').split(',')) {
-                        const [repeatX, repeatY] = repeat.trim().split(' ');
+                        const [repeatX, repeatY] = splitPair(repeat.trim(), ' ');
                         if (!backgroundRepeatX) {
                             backgroundRepeatX = repeatX === 'repeat' || repeatX === 'repeat-x';
                         }

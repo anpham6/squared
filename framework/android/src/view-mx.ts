@@ -9,7 +9,7 @@ const { CSS_PROPERTIES, CSS_UNIT, formatPX, getBackgroundPosition, isLength, isP
 const { createElement, getNamedItem } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
 const { actualTextRangeRect } = squared.lib.session;
-const { capitalize, convertFloat, convertInt, convertWord, fromLastIndexOf, hasKeys, isNumber, isString, replaceMap } = squared.lib.util;
+const { capitalize, convertFloat, convertInt, convertWord, fromLastIndexOf, hasKeys, isNumber, isString, replaceMap, splitPair } = squared.lib.util;
 
 const { EXT_NAME } = squared.base.lib.constant;
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE } = squared.base.lib.enumeration;
@@ -1569,10 +1569,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                              ? 'android'
                              : /^attr[A-Z]/.test(namespace)
                                 ? capitalize(namespace.substring(4), false)
-                                : '';
-                        if (name !== '') {
+                                : undefined;
+                        if (name) {
                             for (const values of dataset[namespace]!.split(';')) {
-                                const [key, value] = values.split('::');
+                                const [key, value] = splitPair(values, '::');
                                 if (value) {
                                     this.attr(name, key, value);
                                 }

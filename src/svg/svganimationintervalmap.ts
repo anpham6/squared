@@ -8,7 +8,7 @@ type SvgAnimation = squared.svg.SvgAnimation;
 type IntervalMap = ObjectMap<ObjectIndex<SvgAnimationIntervalValue<SvgAnimation>[]>>;
 type IntervalTime = ObjectMap<Set<number>>;
 
-const { safeNestedArray, sortNumber } = squared.lib.util;
+const { safeNestedArray, sortNumber, splitPairStart } = squared.lib.util;
 
 function insertIntervalValue(intervalMap: IntervalMap, intervalTimes: IntervalTime, keyName: string, time: number, value: string, endTime = 0, animation?: SvgAnimation, start = false, end = false, fillMode = 0, infinite = false, valueFrom?: string) {
     if (value) {
@@ -59,7 +59,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
             map[keyName] = new Map<number, SvgAnimationIntervalValue<SvgAnimation>[]>();
             intervalMap[keyName] = {};
             intervalTimes[keyName] = new Set<number>();
-            const attributeName = keyName.split(':')[0];
+            const attributeName = splitPairStart(keyName, ':');
             const backwards = animations.filter(item => item.fillBackwards && item.attributeName === attributeName).sort((a, b) => a.group.id < b.group.id ? 1 : -1)[0] as SvgAnimate;
             if (backwards) {
                 const delay = backwards.delay;

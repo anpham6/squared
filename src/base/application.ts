@@ -8,7 +8,7 @@ type PreloadImage = HTMLImageElement | string;
 const { CSS_PROPERTIES, checkMediaRule, getSpecificity, hasComputedStyle, insertStyleSheetRule, parseSelectorText } = squared.lib.css;
 const { FILE, STRING } = squared.lib.regex;
 const { frameworkNotInstalled, getElementCache, setElementCache } = squared.lib.session;
-const { capitalize, convertCamelCase, parseMimeType, plainMap, promisify, resolvePath, trimBoth } = squared.lib.util;
+const { capitalize, convertCamelCase, parseMimeType, plainMap, promisify, resolvePath, splitPair, splitPairStart, trimBoth } = squared.lib.util;
 
 const REGEXP_DATAURI = new RegExp(`url\\("?(${STRING.DATAURI})"?\\),?\\s*`, 'g');
 const CSS_IMAGEURI = ['backgroundImage', 'listStyleImage', 'content'];
@@ -22,7 +22,7 @@ function addImageSrc(resourceHandler: squared.base.Resource<Node>, uri: string, 
 function parseSrcSet(resourceHandler: squared.base.Resource<Node>, value: string) {
     if (value !== '') {
         for (const uri of value.split(',')) {
-            addImageSrc(resourceHandler, resolvePath(uri.trim().split(' ')[0]));
+            addImageSrc(resourceHandler, resolvePath(splitPairStart(uri.trim(), ' ')));
         }
     }
 }
@@ -179,7 +179,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 element.querySelectorAll('svg use').forEach((use: SVGUseElement) => {
                     const href = use.href.baseVal || use.getAttributeNS('xlink', 'href');
                     if (href && href.indexOf('#') > 0) {
-                        const src = resolvePath(href.split('#')[0]);
+                        const src = resolvePath(splitPairStart(href, '#'));
                         if (isSvg(src)) {
                             addImageSrc(resourceHandler, src);
                         }
@@ -543,7 +543,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
                 for (const selectorText of parseSelectorText(item.selectorText, true)) {
                     const specificity = getSpecificity(selectorText);
-                    const [selector, target] = selectorText.split('::');
+                    const [selector, target] = splitPair(selectorText, '::');
                     const targetElt = target ? '::' + target : '';
                     const elements = document.querySelectorAll(selector || '*');
                     const q = elements.length;

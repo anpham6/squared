@@ -5,7 +5,7 @@ type Extension = chrome.base.Extension<Node>;
 type BundleIndex = ObjectMap<ChromeAsset[]>;
 
 const { FILE } = squared.lib.regex;
-const { appendSeparator, convertWord, fromLastIndexOf, isString, iterateReverseArray, parseMimeType, partitionLastIndexOf, randomUUID, resolvePath, safeNestedArray, trimEnd } = squared.lib.util;
+const { appendSeparator, convertWord, fromLastIndexOf, isString, iterateReverseArray, parseMimeType, partitionLastIndexOf, randomUUID, resolvePath, safeNestedArray, splitPairStart, trimEnd } = squared.lib.util;
 
 const STRING_SERVERROOT = '__serverroot__';
 
@@ -493,7 +493,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         document.querySelectorAll('video').forEach((element: HTMLVideoElement) => processUri(null, resolvePath(element.poster)));
         document.querySelectorAll('picture > source').forEach((element: HTMLSourceElement) => {
             for (const uri of element.srcset.trim().split(',')) {
-                processUri(element, resolvePath(uri.split(' ')[0]));
+                processUri(element, resolvePath(splitPairStart(uri, ' ')));
             }
         });
         document.querySelectorAll('img, input[type=image]').forEach((element: HTMLImageElement) => {
