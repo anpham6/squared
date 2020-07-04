@@ -276,6 +276,7 @@ else if (host && data && browserName && snapshot) {
                                     const files = (await page.$eval('#md5_complete', element => element.innerHTML)).split('\n').sort();
                                     items.push({ name, filepath, files });
                                     console.log(chalk.yellow('OK') + ': ' + href);
+                                    await page.close();
                                 }
                                 catch (err) {
                                     failed.push({ name, filepath });
