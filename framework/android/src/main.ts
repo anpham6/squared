@@ -22,6 +22,7 @@ import ConstraintGuideline from './extensions/constraint/guideline';
 
 import DelegateBackground from './extensions/delegate/background';
 import DelegateMaxWidthHeight from './extensions/delegate/max-width-height';
+import DelegateMultiline from './extensions/delegate/multiline';
 import DelegateNegativeX from './extensions/delegate/negative-x';
 import DelegatePositiveX from './extensions/delegate/positive-x';
 import DelegatePercent from './extensions/delegate/percent';
@@ -102,6 +103,7 @@ const appBase: squared.base.AppFramework<View> = {
         delegate: {
             Background: DelegateBackground,
             MaxWidthHeight: DelegateMaxWidthHeight,
+            Multiline: DelegateMultiline,
             NegativeX: DelegateNegativeX,
             Percent: DelegatePercent,
             PositiveX: DelegatePositiveX,
@@ -329,6 +331,7 @@ const appBase: squared.base.AppFramework<View> = {
             [EA.SUBSTITUTE]: new Substitute(EA.SUBSTITUTE, framework),
             [EA.DELEGATE_BACKGROUND]: new DelegateBackground(EA.DELEGATE_BACKGROUND, framework),
             [EA.DELEGATE_MAXWIDTHHEIGHT]: new DelegateMaxWidthHeight(EA.DELEGATE_MAXWIDTHHEIGHT, framework),
+            [EA.DELEGATE_MULTILINE]: new DelegateMultiline(EA.DELEGATE_MULTILINE, framework),
             [EA.DELEGATE_NEGATIVEX]: new DelegateNegativeX(EA.DELEGATE_NEGATIVEX, framework),
             [EA.DELEGATE_PERCENT]: new DelegatePercent(EA.DELEGATE_PERCENT, framework),
             [EA.DELEGATE_POSITIVEX]: new DelegatePositiveX(EA.DELEGATE_POSITIVEX, framework),

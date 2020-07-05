@@ -1,5 +1,6 @@
 const settings: AndroidUserSettingsUI = {
     builtInExtensions: [
+        'squared.accessibility',
         'android.delegate.background',
         'android.delegate.negative-x',
         'android.delegate.positive-x',
@@ -7,7 +8,7 @@ const settings: AndroidUserSettingsUI = {
         'android.delegate.percent',
         'android.delegate.scrollbar',
         'android.delegate.radiogroup',
-        'squared.accessibility',
+        'android.delegate.multiline',
         'squared.relative',
         'squared.css-grid',
         'squared.flexbox',
@@ -37,6 +38,7 @@ const settings: AndroidUserSettingsUI = {
     compressImages: false,
     convertImages: '',
     supportNegativeLeftTop: true,
+    fontMeasureAdjust: 0.75,
     customizationsOverwritePrivilege: true,
     showAttributes: true,
     createElementMap: false,

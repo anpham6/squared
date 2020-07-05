@@ -527,7 +527,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         ++k;
                     }
                     item.parent!.remove(item);
-                    item.init(parent, depth, item.childIndex);
+                    item.init(parent, depth);
                     item.documentParent = parent;
                     const clear = item.css('clear');
                     switch (clear) {

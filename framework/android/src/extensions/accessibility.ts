@@ -72,9 +72,7 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                             node.cascade((item: T) => {
                                 if (item.width >= width && item.height >= height) {
                                     ({ width, height } = item);
-                                    if (!node.visibleStyle.background) {
-                                        node.inherit(item, 'boxStyle');
-                                    }
+                                    node.inherit(item, 'boxStyle');
                                     modified = true;
                                 }
                             });

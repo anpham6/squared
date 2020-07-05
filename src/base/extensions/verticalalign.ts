@@ -3,11 +3,11 @@ import NodeUI from '../node-ui';
 
 import { BOX_STANDARD } from '../lib/enumeration';
 
-const { isLength } = squared.lib.css;
+const hasVerticalAlign = (node: NodeUI) => node.verticalAlign !== '0px' || node.css('verticalAlign').includes('top');
 
 export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
     public is(node: T) {
-        return node.length > 0;
+        return node.length > 0 && !node.contentAltered;
     }
 
     public condition(node: T) {
@@ -46,7 +46,7 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
 
     public processNode(node: T) {
         node.each((item: T) => {
-            if (item.inlineVertical && isLength(item.verticalAlign) || item.imageElement || item.svgElement) {
+            if (item.inlineVertical && hasVerticalAlign(item) || item.imageElement || item.svgElement) {
                 item.baselineAltered = true;
             }
         });
@@ -84,7 +84,7 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
                         if (item !== baseline) {
                             if (item.inlineVertical) {
                                 if (!aboveBaseline.includes(item)) {
-                                    if (isLength(item.verticalAlign) || !baseline) {
+                                    if (!baseline || hasVerticalAlign(item)) {
                                         item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: item.linear.top - top });
                                         item.baselineAltered = true;
                                     }

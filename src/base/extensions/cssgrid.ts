@@ -1120,8 +1120,8 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 node.cssSort('zIndex', { byInt: true });
                 if (node.cssTry('display', 'block')) {
                     node.each((item: T) => {
-                        const { width, height } = item.boundingClientRect;
-                        item.data(this.name, 'boundsData', { ...item.bounds, width, height });
+                        const bounds = item.boundingClientRect;
+                        item.data(this.name, 'boundsData', bounds ? { ...item.bounds, width: bounds.width, height: bounds.height } : item.bounds);
                     });
                     node.cssFinally('display');
                 }

@@ -150,9 +150,7 @@ export default abstract class NodeGroupUI extends NodeUI {
             }
             else {
                 const value = this.css('verticalAlign');
-                result = value === ''
-                    ? this.every((node: NodeUI) => node.baseline)
-                    : value === 'baseline' || isLength(value, true);
+                result = value === '' ? this.every((node: NodeUI) => node.baseline) : value === 'baseline' || isLength(value, true);
             }
             this._cached.baseline = result;
         }
@@ -249,6 +247,7 @@ export default abstract class NodeGroupUI extends NodeUI {
         return false;
     }
 
+    set multiline(value) {}
     get multiline() {
         return false;
     }

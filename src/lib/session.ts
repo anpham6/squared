@@ -47,8 +47,9 @@ export function actualTextRangeRect(element: Element, sessionId?: string) {
     }
     const bounds = getRangeClientRect(element);
     if (hidden) {
-        for (let i = 0; i < hidden.length; ++i) {
-            const [item, display] = hidden[i];
+        let i = 0;
+        while (i < hidden.length) {
+            const [item, display] = hidden[i++];
             item.style.display = display;
         }
     }

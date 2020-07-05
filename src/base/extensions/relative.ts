@@ -4,12 +4,11 @@ import NodeUI from '../node-ui';
 
 import { BOX_STANDARD } from '../lib/enumeration';
 
-const { assignRect } = squared.lib.dom;
-const { convertFloat, withinRange } = squared.lib.util;
+const { withinRange } = squared.lib.util;
 
 export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> {
     public is(node: T) {
-        return node.positionRelative && !node.autoPosition || convertFloat(node.verticalAlign) !== 0;
+        return node.positionRelative && !node.autoPosition || node.verticalAlign !== '0px';
     }
 
     public condition() {
@@ -20,9 +19,9 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
         return { subscribe: true };
     }
 
-    public postOptimize(node: T) {
+    public postOptimize(node: T, rendered: T[]) {
         const renderParent = node.renderParent as T;
-        const verticalAlign = !node.baselineAltered ? convertFloat(node.verticalAlign) : 0;
+        const verticalAlign = !node.baselineAltered ? parseFloat(node.verticalAlign) : 0;
         let top = 0,
             right = 0,
             bottom = 0,
@@ -77,6 +76,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                     layout.renderIndex = index + 1;
                 }
                 this.application.addLayout(layout);
+                rendered.push(target);
                 if (node.parseUnit(node.css('textIndent')) < 0) {
                     const documentId = node.documentId;
                     renderParent.renderEach(item => {
@@ -91,7 +91,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                 if (node.baselineActive && !node.baselineAltered) {
                     for (const children of renderParent.horizontalRows || [renderParent.renderChildren]) {
                         if (children.includes(node)) {
-                            const unaligned = children.filter(item => item.positionRelative && item.length > 0 && convertFloat(node.verticalAlign) !== 0);
+                            const unaligned = children.filter(item => item.positionRelative && item.length > 0 && node.verticalAlign !== '0px');
                             const length = unaligned.length;
                             if (length > 0) {
                                 unaligned.sort((a, b) => {
@@ -107,7 +107,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                                 while (i < length) {
                                     const item = unaligned[i++];
                                     if (first) {
-                                        node.modifyBox(BOX_STANDARD.MARGIN_TOP, convertFloat(item.verticalAlign));
+                                        node.modifyBox(BOX_STANDARD.MARGIN_TOP, parseFloat(item.verticalAlign));
                                         first = false;
                                     }
                                     else {
@@ -135,27 +135,31 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                     if (item === node) {
                         if (preceding) {
                             if (hasVertical && renderParent.layoutVertical) {
-                                const rect = assignRect(node.boundingClientRect);
-                                if (top !== 0) {
-                                    top -= rect.top - bounds.top;
-                                }
-                                else if (previous?.positionRelative && previous.hasPX('top')) {
-                                    bottom += bounds.bottom - rect.bottom;
-                                }
-                                else {
-                                    bottom += rect.bottom - bounds.bottom;
+                                const rect = node.boundingClientRect;
+                                if (rect) {
+                                    if (top !== 0) {
+                                        top -= rect.top - bounds.top;
+                                    }
+                                    else if (previous?.positionRelative && previous.hasPX('top')) {
+                                        bottom += bounds.bottom - rect.bottom;
+                                    }
+                                    else {
+                                        bottom += rect.bottom - bounds.bottom;
+                                    }
                                 }
                             }
-                            if (hasHorizontal && renderParent.layoutHorizontal && !node.alignSibling('leftRight')) {
-                                const rect = assignRect(node.boundingClientRect);
-                                if (left !== 0) {
-                                    left -= rect.left - bounds.left;
-                                }
-                                else if (previous?.positionRelative && previous.hasPX('right')) {
-                                    right += bounds.right - rect.right;
-                                }
-                                else {
-                                    right += rect.right - bounds.right;
+                            if (hasHorizontal && renderParent.layoutHorizontal && node.alignSibling('leftRight') === '') {
+                                const rect = node.boundingClientRect;
+                                if (rect) {
+                                    if (left !== 0) {
+                                        left -= rect.left - bounds.left;
+                                    }
+                                    else if (previous?.positionRelative && previous.hasPX('right')) {
+                                        right += bounds.right - rect.right;
+                                    }
+                                    else {
+                                        right += rect.right - bounds.right;
+                                    }
                                 }
                             }
                         }

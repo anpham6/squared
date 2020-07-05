@@ -842,10 +842,12 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         }
     }
 
-    public init(parent: T, depth: number, index: number) {
+    public init(parent: T, depth: number, index?: number) {
         this._parent = parent;
         this.depth = depth;
-        this.childIndex = index;
+        if (index !== undefined) {
+            this.childIndex = index;
+        }
     }
 
     public syncWith(sessionId?: string, cache?: boolean) {
@@ -1309,7 +1311,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         let i = 0;
         while (i < attrs.length) {
             const attr = attrs[i++];
-            if (!hasValue(styleMap[attr])) {
+            const value = styleMap[attr];
+            if (!hasValue(value) || value === 'initial') {
                 styleMap[attr] = node.css(attr);
             }
         }
@@ -1445,12 +1448,14 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         }
         else if (this.plainText) {
             const rect = getRangeClientRect(this._element!);
-            bounds = assignRect(rect);
-            const lines = rect.numberOfLines as number;
-            bounds.numberOfLines = lines;
+            if (rect) {
+                const lines = rect.numberOfLines || 1;
+                rect.numberOfLines = lines;
+                this._textBounds = bounds;
+                this._cached.multiline = lines > 1;
+            }
+            bounds = rect || newBoxRectDimension();
             this._bounds = bounds;
-            this._textBounds = bounds;
-            this._cached.multiline = lines > 1;
         }
         if (!cache && bounds) {
             this._box = undefined;
@@ -1757,14 +1762,14 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     get htmlElement() {
         const result = this._cached.htmlElement;
         return result === undefined
-            ? this._cached.htmlElement = !this.plainText && this._element instanceof HTMLElement
+            ? this._cached.htmlElement = this._element instanceof HTMLElement
             : result;
     }
 
     get svgElement() {
         const result = this._cached.svgElement;
         return result === undefined
-            ? this._cached.svgElement = !this.htmlElement && !this.plainText && this._element instanceof SVGElement || this.imageElement && FILE.SVG.test(this.toElementString('src'))
+            ? this._cached.svgElement = !this.plainText && (!this.htmlElement && this._element instanceof SVGElement || this.imageElement && FILE.SVG.test(this.toElementString('src')))
             : result;
     }
 
@@ -2385,7 +2390,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (result === undefined) {
             if (this.pageFlow && !this.floating) {
                 const value = this.css('verticalAlign');
-                return this._cached.baseline = value === 'baseline' || value === 'initial' || this.naturalElements.length === 0 && isLength(value, true);
+                return this._cached.baseline = value === 'baseline' || value === 'initial' || this.naturalElements.length === 0 && isLength(value, true) && this.verticalAlign === '0px';
             }
             return this._cached.baseline = false;
         }
@@ -2396,15 +2401,38 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         let result = this._cached.verticalAlign;
         if (result === undefined) {
             if (this.pageFlow) {
-                result = this.css('verticalAlign');
-                if (isLength(result, true)) {
-                    result = this.parseUnit(result, { dimension: 'height' }) + 'px';
+                const value = this.css('verticalAlign');
+                if (isLength(value)) {
+                    result = -(isPx(value) ? parseFloat(value) : this.parseUnit(value)) + 'px';
+                }
+                else if (this.styleElement) {
+                    let valid = false;
+                    switch (value) {
+                        case 'baseline':
+                            break;
+                        case 'sub':
+                        case 'super':
+                        case 'text-top':
+                        case 'text-bottom':
+                        case 'middle':
+                        case 'top':
+                        case 'bottom':
+                            valid = true;
+                            break;
+                        default:
+                            valid = isPercent(value);
+                            break;
+                    }
+                    if (valid && this.cssTry('vertical-align', 'baseline')) {
+                        const bounds = this.boundingClientRect;
+                        if (bounds) {
+                            result = (this.bounds.top - bounds.top) + 'px';
+                        }
+                        this.cssFinally('vertical-align');
+                    }
                 }
             }
-            else {
-                result = '0px';
-            }
-            this._cached.verticalAlign = result;
+            return this._cached.verticalAlign = result || '0px';
         }
         return result;
     }
@@ -2417,7 +2445,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (result === undefined) {
             if (this.naturalChild) {
                 if (this.textElement) {
-                    return this._textBounds = actualTextRangeRect(this._element as Element, this.sessionId);
+                    return this._textBounds = actualTextRangeRect(this._element as Element, this.sessionId) || null;
                 }
                 else {
                     const children = this.naturalChildren;
@@ -2433,11 +2461,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             const node = children[i++];
                             if (node.textElement) {
                                 const rect = actualTextRangeRect(node.element as Element, node.sessionId);
-                                top = Math.min(rect.top, top);
-                                right = Math.max(rect.right, right);
-                                left = Math.min(rect.left, left);
-                                bottom = Math.max(rect.bottom, bottom);
-                                numberOfLines += rect.numberOfLines || 0;
+                                if (rect) {
+                                    numberOfLines += rect.numberOfLines || (top === Infinity || rect.top >= bottom ? 1 : 0);
+                                    top = Math.min(rect.top, top);
+                                    right = Math.max(rect.right, right);
+                                    left = Math.min(rect.left, left);
+                                    bottom = Math.max(rect.bottom, bottom);
+                                }
                             }
                         }
                         if (numberOfLines > 0) {
@@ -2461,13 +2491,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get multiline() {
         const result = this._cached.multiline;
-        if (result === undefined) {
-            return this._cached.multiline =
-                this.styleText
-                    ? (this.inline || this.naturalElements.length === 0 || isInlineVertical(this.display) || this.floating) && this.textBounds?.numberOfLines as number > 1
-                    : this.plainText && Math.floor(getRangeClientRect(this._element!).width) > this.actualParent!.box.width;
-        }
-        return result;
+        return result === undefined ? this._cached.multiline = (this.plainText || this.styleElement && this.inlineText && (this.inline || this.naturalElements.length === 0 || isInlineVertical(this.display) || this.floating || !this.pageFlow)) && this.textBounds?.numberOfLines as number > 1 : result;
     }
 
     get backgroundColor() {
@@ -2773,7 +2797,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get boundingClientRect() {
-        return (this.naturalElement && this._element!.getBoundingClientRect() || this._bounds || newBoxRectDimension()) as DOMRect;
+        return this.styleElement && this._element!.getBoundingClientRect() || this._bounds as Undef<DOMRect>;
     }
 
     get fontSize(): number {

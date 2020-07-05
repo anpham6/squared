@@ -267,11 +267,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         while (i < length) {
             const ext = extensions[i++];
             for (const node of ext.subscribers) {
-                ext.postOptimize(node);
+                ext.postOptimize(node, rendered);
             }
         }
         const documentRoot: squared.base.LayoutRoot<T>[] = [];
-        i = 0;
+        i = 0, j = rendered.length;
         while (i < j) {
             const node = rendered[i++];
             if (node.hasResource(NODE_RESOURCE.BOX_SPACING)) {
@@ -808,14 +808,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const { extensionMap, clearMap } = this.session;
         const { cache, node: rootNode } = this.getProcessing(sessionId)!;
         const mapY = new Map<number, Set<T>>();
-        let maxDepth = 0;
         let i: number, length: number;
         setMapDepth(mapY, -1, rootNode!.parent as T);
         cache.each(node => {
             if (node.length > 0) {
-                const depth = node.depth;
-                setMapDepth(mapY, depth, node);
-                maxDepth = Math.max(depth, maxDepth);
+                setMapDepth(mapY, node.depth, node);
                 if (node.floatContainer) {
                     const floated = new Set<string>();
                     let clearable: T[] = [];
@@ -852,19 +849,21 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
         });
-        i = 0;
-        while (i < maxDepth) {
-            mapY.set(getMapIndex(i++), new Set<T>());
+        for (const depth of Array.from(mapY.keys())) {
+            if (depth !== -1) {
+                mapY.set(getMapIndex(depth), new Set<T>());
+            }
         }
-        cache.afterAdd = (node: T, cascade?: boolean) => {
+        cache.afterAdd = (node: T, cascade?: boolean, remove?: boolean) => {
+            if (remove) {
+                mapY.get(node.depth)?.delete(node);
+            }
             setMapDepth(mapY, getMapIndex(node.depth), node);
             if (cascade && node.length > 0) {
                 node.cascade((item: T) => {
-                    if (item.length > 0) {
-                        const depth = item.depth;
-                        mapY.get(depth)?.delete(item);
-                        setMapDepth(mapY, getMapIndex(depth), item);
-                    }
+                    mapY.get(item.depth)?.delete(item);
+                    setMapDepth(mapY, getMapIndex(item.depth), item);
+                    return false;
                 });
             }
         };
@@ -877,13 +876,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         let extensionsTraverse = this.extensionsTraverse;
         for (const depth of mapY.values()) {
             for (const parent of depth.values()) {
-                if (parent.length === 0) {
+                const q = parent.length;
+                if (q === 0) {
                     continue;
                 }
                 const floatContainer = parent.floatContainer;
                 const renderExtension = parent.renderExtension as Undef<ExtensionUI<T>[]>;
                 const axisY = parent.duplicate() as T[];
-                const q = axisY.length;
                 for (i = 0; i < q; ++i) {
                     let nodeY = axisY[i];
                     if (nodeY.rendered || !nodeY.visible) {
@@ -1389,7 +1388,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 const seg = segments[j++];
                 const node = floatgroup || layout.node;
                 const target = controllerHandler.createNodeGroup(seg[0], seg, node, { delegate: true, cascade: true });
-                const group = new LayoutUI(node, target, 0, NODE_ALIGNMENT.SEGMENTED);
+                const group = new LayoutUI(node, target, 0, NODE_ALIGNMENT.SEGMENTED, seg);
                 if (seg === inlineAbove) {
                     group.addAlign(NODE_ALIGNMENT.COLUMN);
                     if (inheritStyle) {
@@ -1397,7 +1396,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             target.inheritApply('boxStyle', boxStyle);
                         }
                         else {
-                            target.inherit(layout.node, 'boxStyle');
+                            boxStyle = target.inherit(layout.node, 'boxStyle');
                         }
                     }
                 }
@@ -1538,18 +1537,19 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     else if (blockCount === 1) {
                         children.push(pageFlow[0]);
                     }
-                    const parent = controllerHandler.createNodeGroup((floating || pageFlow)[0], children, node);
+                    const wrapper = controllerHandler.createNodeGroup((floating || pageFlow)[0], children, node);
                     this.addLayout(new LayoutUI(
                         node,
-                        parent,
+                        wrapper,
                         containerTypeParent,
-                        alignmentTypeParent | alignmentFloat
+                        alignmentTypeParent | alignmentFloat,
+                        children
                     ));
                     let j = 0;
                     while (j < children.length) {
                         const item = children[j++];
                         this.addLayout(new LayoutUI(
-                            parent,
+                            wrapper,
                             item,
                             containerType,
                             alignmentType | NODE_ALIGNMENT.SEGMENTED | NODE_ALIGNMENT.BLOCK,

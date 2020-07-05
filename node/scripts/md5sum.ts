@@ -266,8 +266,9 @@ else if (host && data && browserName && snapshot) {
                                 const name = filename.substring(0, filename.lastIndexOf('.'));
                                 const filepath = path.resolve(__dirname, snapshot!, name);
                                 const href = host + url;
+                                let page: playwright.Page | undefined;
                                 try {
-                                    const page = await context.newPage();
+                                    page = await context.newPage();
                                     await page.goto(href + '?copyTo=' + encodeURIComponent(filepath));
                                     if (screenshot) {
                                         await page.screenshot({ path: filepath + '.png' });
@@ -276,11 +277,13 @@ else if (host && data && browserName && snapshot) {
                                     const files = (await page.$eval('#md5_complete', element => element.innerHTML)).split('\n').sort();
                                     items.push({ name, filepath, files });
                                     console.log(chalk.yellow('OK') + ': ' + href);
-                                    await page.close();
                                 }
                                 catch (err) {
                                     failed.push({ name, filepath });
                                     failMessage(href, err);
+                                }
+                                if (page) {
+                                    await page.close();
                                 }
                             }
                         }

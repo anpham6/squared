@@ -248,6 +248,7 @@ declare module "base" {
         setBoxStyle(node: T): void;
         setFontStyle(node: T): void;
         setValueString(node: T): void;
+        removeExcludedFromText(node: T, element: Element): string;
         get controllerSettings(): ControllerSettingsUI;
         get userSettings(): UserSettingsUI;
         get mapOfStored(): ResourceStoredMap;
@@ -283,7 +284,7 @@ declare module "base" {
         addDescendant(node: T): void;
         postBaseLayout(node: T): void;
         postConstraints(node: T): void;
-        postOptimize(node: T): void;
+        postOptimize(node: T, rendered: T[]): void;
         afterBaseLayout(sessionId: string): void;
         afterConstraints(sessionId: string): void;
         afterResources(sessionId: string): void;
@@ -373,7 +374,7 @@ declare module "base" {
         queryMap?: Node[][];
         readonly id: number;
         readonly style: CSSStyleDeclaration;
-        init(parent: Node, depth: number, index: number): void;
+        init(parent: Node, depth: number, index?: number): void;
         syncWith(sessionId?: string, cache?: boolean): boolean;
         saveAsInitial(): void;
         data<T = unknown>(name: string, attr: string, value?: any, overwrite?: boolean): Undef<T>;
@@ -515,7 +516,7 @@ declare module "base" {
         get previousElementSibling(): Null<Node>;
         get nextElementSibling(): Null<Node>;
         get attributes(): StringMap;
-        get boundingClientRect(): DOMRect;
+        get boundingClientRect(): Undef<DOMRect>;
         get cssStyle(): StringMap;
         get textStyle(): StringMap;
         get center(): Point;
@@ -527,9 +528,10 @@ declare module "base" {
         static refitScreen<T>(node: T, value: Dimension): Dimension;
         static linearData<T>(list: T[], cleared?: Map<T, string>): LinearData<T>;
         static outerRegion<T>(node: T): BoxRectDimension;
-        static baseline<T>(list: T[], text?: boolean): Null<T>;
+        static baseline<T>(list: T[], text?: boolean, nearest?: boolean): Null<T>;
         static partitionRows<T>(list: T[], cleared?: Map<T, string>): T[][];
         alignmentType: number;
+        contentAltered: boolean;
         baselineActive: boolean;
         baselineAltered: boolean;
         rendered: boolean;
@@ -549,6 +551,8 @@ declare module "base" {
         innerAfter?: NodeUI;
         companion?: NodeUI;
         labelFor?: NodeUI;
+        horizontalRowStart?: boolean;
+        horizontalRowEnd?: boolean;
         horizontalRows?: NodeUI[][];
         renderChildren: NodeUI[];
         setControlType(controlName: string, containerType?: number): void;
@@ -648,6 +652,7 @@ declare module "base" {
         get extensions(): string[];
         get scrollElement(): boolean;
         get controlElement(): boolean;
+        get imageContainer(): boolean;
         get documentId(): string;
         get baselineHeight(): number;
         get support(): SupportUI;
@@ -683,8 +688,8 @@ declare module "base" {
 
     class NodeList<T extends Node> extends squared.lib.base.Container<T> {
         sessionId: string;
-        afterAdd?: (node: T, cascade?: boolean) => void;
-        add(node: T, delegate?: boolean, cascade?: boolean): this;
+        afterAdd?: (node: T, cascade?: boolean, remove?: boolean) => void;
+        add(node: T, delegate?: boolean, cascade?: boolean, remove?: boolean): this;
         reset(): this;
         constructor(children?: T[]);
     }

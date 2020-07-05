@@ -8,6 +8,7 @@ interface AndroidUserSettingsUI extends UserSettingsUI {
     convertImages: string;
     customizationsOverwritePrivilege: boolean;
     convertPixels: string;
+    fontMeasureAdjust: number;
     manifestLabelAppName: string;
     manifestThemeName: string;
     manifestParentThemeName: string;
@@ -17,8 +18,6 @@ interface AndroidUserSettingsUI extends UserSettingsUI {
 interface AndroidControllerSettingsUI extends ControllerSettingsUI {
     deviations: {
         textMarginBoundarySize: number;
-        subscriptBottomOffset: number;
-        superscriptTopOffset: number;
         legendBottomOffset: number;
     };
 }

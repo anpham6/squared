@@ -80,7 +80,7 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
 
     public postBaseLayout(node: T) {}
     public postConstraints(node: T) {}
-    public postOptimize(node: T) {}
+    public postOptimize(node: T, rendered: T[]) {}
 
     public afterBaseLayout(sessionId: string) {}
     public afterConstraints(sessionId: string) {}

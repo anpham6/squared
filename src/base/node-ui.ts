@@ -5,7 +5,6 @@ import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURC
 type T = NodeUI;
 
 const { CSS_PROPERTIES } = squared.lib.css;
-const { equal } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
 const { capitalize, cloneObject, convertWord, hasBit, hasKeys, isArray, iterateArray, safeNestedMap, searchObject, withinRange } = squared.lib.util;
 
@@ -61,7 +60,7 @@ function cascadeActualPadding(children: T[], attr: string, value: number) {
     return valid;
 }
 
-function traverseElementSibling(element: Null<Element>, direction: "previousSibling" | "nextSibling", sessionId: string, options?: SiblingOptions) {
+function traverseElementSibling(element: UndefNull<Element>, direction: "previousSibling" | "nextSibling", sessionId: string, options?: SiblingOptions) {
     let floating: Undef<boolean>,
         pageFlow: Undef<boolean>,
         lineBreak: Undef<boolean>,
@@ -70,7 +69,7 @@ function traverseElementSibling(element: Null<Element>, direction: "previousSibl
         ({ floating, pageFlow, lineBreak, excluded } = options);
     }
     const result: T[] = [];
-    while (element !== null) {
+    while (element) {
         const node = getElementAsNode<T>(element, sessionId);
         if (node) {
             if (lineBreak !== false && node.lineBreak || excluded !== false && node.excluded && !node.lineBreak) {
@@ -266,13 +265,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         };
     }
 
-    public static baseline<T extends NodeUI>(list: T[], text = false): Null<T> {
+    public static baseline<T extends NodeUI>(list: T[], text = false, nearest = false): Null<T> {
         const result: T[] = [];
         const length = list.length;
         let i = 0;
         while (i < length) {
             const item = list[i++];
-            if (item.baseline && (!text || item.textElement) && !item.baselineAltered) {
+            if ((item.baseline || nearest) && (!text || item.textElement) && !item.baselineAltered) {
                 if (item.naturalElements.length > 0) {
                     if (item.baselineElement) {
                         result.push(item);
@@ -285,15 +284,31 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         }
         if (result.length > 1) {
             result.sort((a, b) => {
-                if (a.length > 0 && b.length === 0) {
-                    return 1;
-                }
-                else if (b.length > 0 && a.length === 0) {
+                if (!a.layoutHorizontal && b.layoutHorizontal) {
                     return -1;
                 }
-                const heightA = a.baselineHeight + a.marginBottom;
-                const heightB = b.baselineHeight + b.marginBottom;
-                if (!equal(heightA, heightB)) {
+                else if (!b.layoutHorizontal && a.layoutHorizontal) {
+                    return 1;
+                }
+                else if (!a.imageContainer && b.imageContainer) {
+                    return -1;
+                }
+                else if (!b.imageContainer && a.imageContainer) {
+                    return 1;
+                }
+                if (!nearest) {
+                    const vA = parseFloat(a.verticalAlign);
+                    const vB = parseFloat(b.verticalAlign);
+                    if (vA === 0 && vB !== 0) {
+                        return -1;
+                    }
+                    else if (vB === 0 && vA !== 0) {
+                        return 1;
+                    }
+                }
+                const heightA = Math.floor(a.baselineHeight + a.marginBottom + a.getBox(BOX_STANDARD.MARGIN_TOP)[1]);
+                const heightB = Math.floor(b.baselineHeight + b.marginBottom + b.getBox(BOX_STANDARD.MARGIN_TOP)[1]);
+                if (heightA !== heightB) {
                     return heightA > heightB ? -1 : 1;
                 }
                 else if (a.textElement && b.textElement) {
@@ -313,11 +328,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 else if (a.inputElement && b.inputElement && a.containerType !== b.containerType) {
                     return a.containerType > b.containerType ? -1 : 1;
                 }
-                else if (b.textElement && a.inputElement && b.childIndex < a.childIndex) {
-                    return 1;
-                }
                 else if (a.textElement && b.inputElement && a.childIndex < b.childIndex) {
                     return -1;
+                }
+                else if (b.textElement && a.inputElement && b.childIndex < a.childIndex) {
+                    return 1;
                 }
                 const bottomA = a.bounds.bottom;
                 const bottomB = b.bounds.bottom;
@@ -491,8 +506,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public lineBreakTrailing = false;
     public baselineActive = false;
     public baselineAltered = false;
+    public contentAltered = false;
     public visible = true;
     public documentChildren?: T[];
+    public horizontalRowStart?: boolean;
+    public horizontalRowEnd?: boolean;
     public abstract renderParent?: T;
     public abstract renderExtension?: squared.base.ExtensionUI<T>[];
     public abstract renderTemplates?: NodeTemplate<T>[];
@@ -551,6 +569,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public abstract get controlElement(): boolean;
     public abstract get documentId(): string;
     public abstract get baselineHeight(): number;
+    public abstract get imageContainer(): boolean;
     public abstract get support(): SupportUI;
 
     public is(containerType: number) {
@@ -720,37 +739,66 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     this.inheritApply('textStyle', result);
                     break;
                 case 'boxStyle': {
-                    result = node.cssAsObject(
-                        'backgroundRepeat',
-                        'backgroundSize',
-                        'backgroundPositionX',
-                        'backgroundPositionY',
-                        'backgroundClip',
-                        'boxSizing',
-                        'borderTopWidth',
-                        'borderRightWidth',
-                        'borderBottomWidth',
-                        'borderLeftWidth',
-                        'borderTopColor',
-                        'borderRightColor',
-                        'borderBottomColor',
-                        'borderLeftColor',
-                        'borderTopStyle',
-                        'borderRightStyle',
-                        'borderBottomStyle',
-                        'borderLeftStyle',
-                        'borderTopLeftRadius',
-                        'borderTopRightRadius',
-                        'borderBottomRightRadius',
-                        'borderBottomLeftRadius'
-                    );
-                    Object.assign(result, {
-                        backgroundColor: node.backgroundColor,
-                        backgroundImage: node.backgroundImage,
-                        border: 'inherit',
-                        borderRadius: 'inherit'
-                    });
-                    this.inheritApply('boxStyle', result);
+                    if (this.naturalChild) {
+                        const options = { values: ['initial', 'inherit', 'none', '0px', 'transparent', 'rgba(0, 0, 0, 0)'] };
+                        let properties: string[] = [];
+                        if (this.css('backgroundImage') === 'none') {
+                            properties = properties.concat(CSS_PROPERTIES.background.value as string[]);
+                            --properties.length;
+                        }
+                        if (this.cssAny('backgroundColor', options)) {
+                            properties.push('backgroundColor');
+                        }
+                        if (this.cssAny('borderTopStyle', options)) {
+                            properties = properties.concat(CSS_PROPERTIES.borderLeft.value as string[]);
+                        }
+                        if (this.cssAny('borderRightStyle', options)) {
+                            properties = properties.concat(CSS_PROPERTIES.borderRight.value as string[]);
+                        }
+                        if (this.cssAny('borderBottomStyle', options)) {
+                            properties = properties.concat(CSS_PROPERTIES.borderBottom.value as string[]);
+                        }
+                        if (this.cssAny('borderLeftStyle', options)) {
+                            properties = properties.concat(CSS_PROPERTIES.borderLeft.value as string[]);
+                        }
+                        if (this.cssAny('borderRadius', options)) {
+                            properties = properties.concat(CSS_PROPERTIES.borderRadius.value as string[]);
+                        }
+                        this.cssCopy(node, ...properties);
+                    }
+                    else {
+                        result = node.cssAsObject(
+                            'backgroundRepeat',
+                            'backgroundSize',
+                            'backgroundPositionX',
+                            'backgroundPositionY',
+                            'backgroundClip',
+                            'boxSizing',
+                            'borderTopWidth',
+                            'borderRightWidth',
+                            'borderBottomWidth',
+                            'borderLeftWidth',
+                            'borderTopColor',
+                            'borderRightColor',
+                            'borderBottomColor',
+                            'borderLeftColor',
+                            'borderTopStyle',
+                            'borderRightStyle',
+                            'borderBottomStyle',
+                            'borderLeftStyle',
+                            'borderTopLeftRadius',
+                            'borderTopRightRadius',
+                            'borderBottomRightRadius',
+                            'borderBottomLeftRadius'
+                        );
+                        Object.assign(result, {
+                            backgroundColor: node.backgroundColor,
+                            backgroundImage: node.backgroundImage,
+                            border: 'inherit',
+                            borderRadius: 'inherit'
+                        });
+                        this.inheritApply('boxStyle', result);
+                    }
                     this.setCacheValue('visibleStyle', undefined);
                     node.setCacheValue('backgroundColor', '');
                     node.setCacheValue('backgroundImage', '');
@@ -862,15 +910,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             const item = children[i];
             if (item === child || item === child.outerMostWrapper) {
                 replaceWith.parent?.remove(replaceWith);
+                let childIndex: Undef<number>;
                 if (replaceWith.naturalChild && this.naturalElement) {
+                    childIndex = child.childIndex;
                     replaceWith.actualParent!.naturalChildren.splice(replaceWith.childIndex, 1);
-                    this.naturalChildren.splice(child.childIndex, 1, replaceWith);
-                    replaceWith.init(this, child.depth, child.childIndex);
+                    this.naturalChildren.splice(childIndex, 1, replaceWith);
                 }
-                else {
-                    replaceWith.unsafe('parent', this);
-                    replaceWith.depth = child.depth;
-                }
+                replaceWith.init(this, child.depth, childIndex);
                 children[i] = replaceWith;
                 replaceWith.containerIndex = child.containerIndex;
                 return true;
@@ -1171,13 +1217,21 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 }
                 if (adjustment !== undefined) {
                     let value = adjustment;
-                    if (options.accumulate) {
-                        value += boxAdjustment[attr];
+                    if (options.max) {
+                        value = Math.max(value, boxAdjustment[attr]);
                     }
-                    if (options.negative === false && (boxReset[attr] === 0 ? this[attr] : 0) + value <= 0) {
-                        value = 0;
-                        if (this[attr] >= 0 && value < 0) {
-                            boxReset[attr] = 1;
+                    else if (options.min) {
+                        value = Math.min(value, boxAdjustment[attr] || Infinity);
+                    }
+                    else {
+                        if (options.accumulate) {
+                            value += boxAdjustment[attr];
+                        }
+                        if (options.negative === false && (boxReset[attr] === 0 ? this[attr] : 0) + value <= 0) {
+                            value = 0;
+                            if (this[attr] >= 0 && value < 0) {
+                                boxReset[attr] = 1;
+                            }
                         }
                     }
                     boxAdjustment[attr] = value;
@@ -1617,7 +1671,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get inlineFlow() {
         const result = this._cached.inlineFlow;
         return result === undefined
-            ? this._cached.inlineFlow = this.inline || this.inlineDimension || this.inlineVertical || this.imageElement || this.svgElement && this.hasPX('width', { percent: false }) || this.tableElement && this.previousSibling?.floating === true
+            ? this._cached.inlineFlow = this.pageFlow && (this.inline || this.inlineDimension || this.inlineVertical || this.imageElement || this.svgElement && this.hasPX('width', { percent: false }) || this.tableElement && this.previousSibling?.floating === true)
             : result;
     }
 

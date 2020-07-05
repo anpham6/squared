@@ -854,7 +854,6 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             }
                         }
                     }
-
                     if (!renderParent.layoutVertical && !outerWrapper.alignParent('left') && !NodeUI.justified(node)) {
                         const documentId = outerWrapper.alignSibling('leftRight');
                         if (documentId !== '') {

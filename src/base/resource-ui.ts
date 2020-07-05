@@ -264,6 +264,14 @@ function getGradientPosition(value: string) {
         : null;
 }
 
+function hasEndingSpace(element: HTMLElement) {
+    const textContent = element.textContent!;
+    const length = textContent.length;
+    return length > 0 && textContent.charCodeAt(length - 1) === 32;
+}
+
+const checkPreviousSibling = (node: UndefNull<NodeUI>) => !node || node.multiline && !node.contentAltered || node.lineBreak || node.floating || node.plainText && CHAR_TRAILINGSPACE.test(node.textContent);
+
 export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> implements squared.base.ResourceUI<T> {
     public static STRING_SPACE = '&#160;';
     public static readonly STORED: ResourceStoredMap = {
@@ -771,12 +779,12 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     }
 
     public setValueString(node: T) {
-        const element = node.element as HTMLInputElement;
-        if (element) {
-            let trimming = false,
-                inlined = false,
-                hint: Undef<string>,
-                value: Undef<string>;
+        let value: Undef<string>,
+            trimming: Undef<boolean>,
+            inlined: Undef<boolean>;
+        if (node.naturalChild) {
+            const element = node.element as HTMLInputElement;
+            let hint: Undef<string>;
             switch (element.tagName) {
                 case 'INPUT':
                     value = getNamedItem(element, 'value');
@@ -894,7 +902,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 default: {
                     trimming = true;
                     if (node.plainText || node.pseudoElement || node.hasAlign(NODE_ALIGNMENT.INLINE) && node.textElement) {
-                        value = node.textContent.replace(/&/g, '&amp;');
+                        value = trimming ? node.textContent.replace(/&/g, '&amp;') : node.textContent;
                         inlined = true;
                     }
                     else if (node.inlineText) {
@@ -904,125 +912,144 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                 ? node.textContent
                                 : this.removeExcludedFromText(node, element);
                     }
-                    if (value) {
-                        value = value.replace(/\u00A0/g, ResourceUI.STRING_SPACE);
-                        switch (node.css('whiteSpace')) {
-                            case 'pre':
-                            case 'pre-wrap': {
-                                if (node.renderParent?.layoutVertical === false) {
-                                    value = value.replace(/^\s*\n/, '');
-                                }
-                                const preIndent = ResourceUI.checkPreIndent(node);
-                                if (preIndent) {
-                                    const [indent, adjacent] = preIndent;
-                                    if (indent !== '') {
-                                        adjacent.textContent = indent + adjacent.textContent;
-                                    }
-                                    value = value.replace(REGEXP_TRAILINGINDENT, '');
-                                }
-                                value = value
-                                    .replace(/\n/g, '\\n')
-                                    .replace(/\t/g, ResourceUI.STRING_SPACE.repeat(node.toInt('tabSize', 8)))
-                                    .replace(/\s/g, ResourceUI.STRING_SPACE);
-                                inlined = true;
-                                trimming = false;
-                                break;
-                            }
-                            case 'pre-line':
-                                value
-                                    .replace(/\n/g, '\\n')
-                                    .replace(/\s+/g, ' ');
-                                inlined = true;
-                                trimming = false;
-                                break;
-                            case 'nowrap':
-                                value = value.replace(/\n+/g, ' ');
-                                inlined = true;
-                            default: {
-                                const trimBoth = node.onlyChild && node.htmlElement;
-                                if (trimBoth || node.previousSibling?.blockStatic) {
-                                    value = value.replace(CHAR_LEADINGSPACE, '');
-                                }
-                                if (trimBoth || node.nextSibling?.blockStatic) {
-                                    value = value.replace(CHAR_TRAILINGSPACE, '');
-                                }
-                            }
-                        }
-                    }
-                    else if (node.naturalChildren.length === 0 && !node.hasPX('height') && ResourceUI.isBackgroundVisible(node.data<BoxStyle>(ResourceUI.KEY_NAME, 'boxStyle')) && !isString(node.textContent)) {
-                        value = node.textContent;
-                    }
                     break;
                 }
             }
             if (hint) {
                 node.data(ResourceUI.KEY_NAME, 'hintString', hint);
             }
-            if (value) {
-                if (trimming) {
-                    if (node.pageFlow) {
-                        const previousSibling = node.siblingsLeading[0];
-                        const nextSibling = node.siblingsTrailing.find(item => !item.excluded || item.lineBreak);
-                        let previousSpaceEnd = false;
-                        if (value.length > 1) {
-                            if (!previousSibling || previousSibling.multiline || previousSibling.lineBreak || previousSibling.floating || previousSibling.plainText && CHAR_TRAILINGSPACE.test(previousSibling.textContent)) {
-                                value = value.replace(CHAR_LEADINGSPACE, '');
-                            }
-                            else if (previousSibling.naturalElement) {
-                                const textContent = previousSibling.textContent;
-                                const length = textContent.length;
-                                if (length > 0) {
-                                    previousSpaceEnd = textContent.charCodeAt(length - 1) === 32;
-                                }
+        }
+        else if (node.inlineText) {
+            value = node.textContent;
+            trimming = true;
+        }
+        if (value) {
+            value = value.replace(/\u00A0/g, ResourceUI.STRING_SPACE);
+            switch (node.css('whiteSpace')) {
+                case 'pre':
+                case 'pre-wrap': {
+                    if (node.renderParent?.layoutVertical === false) {
+                        value = value.replace(/^\s*\n/, '');
+                    }
+                    const preIndent = ResourceUI.checkPreIndent(node);
+                    if (preIndent) {
+                        const [indent, adjacent] = preIndent;
+                        if (indent !== '') {
+                            adjacent.textContent = indent + adjacent.textContent;
+                        }
+                        value = value.replace(REGEXP_TRAILINGINDENT, '');
+                    }
+                    value = value
+                        .replace(/\n/g, '\\n')
+                        .replace(/\t/g, ResourceUI.STRING_SPACE.repeat(node.toInt('tabSize', 8)))
+                        .replace(/\s/g, ResourceUI.STRING_SPACE);
+                    inlined = true;
+                    trimming = false;
+                    break;
+                }
+                case 'pre-line':
+                    value
+                        .replace(/\n/g, '\\n')
+                        .replace(/\s+/g, ' ');
+                    inlined = true;
+                    trimming = false;
+                    break;
+                case 'nowrap':
+                    value = value.replace(/\n+/g, ' ');
+                    inlined = true;
+                default: {
+                    if (node.onlyChild && node.htmlElement) {
+                        value = value
+                            .replace(CHAR_LEADINGSPACE, '')
+                            .replace(CHAR_TRAILINGSPACE, '');
+                    }
+                    else if (!node.naturalChild) {
+                        if (checkPreviousSibling(node.siblingsLeading[0])) {
+                            value = value.replace(CHAR_LEADINGSPACE, '');
+                        }
+                        else if (!node.horizontalRowStart) {
+                            const element = node.element;
+                            const previousSibling = element?.previousSibling;
+                            if (previousSibling && previousSibling instanceof HTMLElement && !hasEndingSpace(previousSibling) && element!.textContent!.trim().startsWith(value.trim())) {
+                                value = value.replace(CHAR_LEADINGSPACE, '&#160;');
+                                break;
                             }
                         }
-                        if (inlined) {
-                            const trailingSpace = !node.lineBreakTrailing && CHAR_TRAILINGSPACE.test(value);
-                            if (CHAR_LEADINGSPACE.test(value) && previousSibling?.block === false && !previousSibling.lineBreak && !previousSpaceEnd) {
-                                value = ResourceUI.STRING_SPACE + value.trim();
-                            }
-                            else {
-                                value = value.trim();
-                            }
-                            if (trailingSpace && nextSibling?.blockStatic === false && !nextSibling.floating) {
-                                value += ResourceUI.STRING_SPACE;
-                            }
-                        }
-                        else if (!/^[\s\n]+$/.test(value)) {
-                            value = value.replace(CHAR_LEADINGSPACE,
-                                previousSibling && (
-                                    previousSibling.block ||
-                                    previousSibling.lineBreak ||
-                                    previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
-                                    node.multiline && ResourceUI.hasLineBreak(node)
-                                )
-                                    ? ''
-                                    : ResourceUI.STRING_SPACE
-                            );
-                            value = value.replace(CHAR_TRAILINGSPACE, node.display === 'table-cell' || node.lineBreakTrailing || node.blockStatic || nextSibling?.floating ? '' : ResourceUI.STRING_SPACE);
-                        }
-                        else if (!node.inlineText) {
-                            return;
-                        }
+                        value = value.replace(CHAR_LEADINGSPACE, '');
                     }
                     else {
-                        value = value.trim();
+                        if (node.horizontalRowStart || node.previousSibling?.blockStatic) {
+                            value = value.replace(CHAR_LEADINGSPACE, '');
+                        }
+                        if (node.nextSibling?.blockStatic) {
+                            value = value.replace(CHAR_TRAILINGSPACE, '');
+                        }
                     }
-                }
-                if (value) {
-                    node.data(ResourceUI.KEY_NAME, 'valueString', value);
+                    break;
                 }
             }
         }
-        else if (node.inlineText) {
-            const value = node.textContent;
-            if (value) {
+        else if (node.naturalChildren.length === 0 && !node.hasPX('height') && ResourceUI.isBackgroundVisible(node.data<BoxStyle>(ResourceUI.KEY_NAME, 'boxStyle')) && !isString(node.textContent)) {
+            value = node.textContent;
+        }
+        if (value) {
+            if (trimming) {
+                if (!node.naturalChild) {
+                    if (trimming) {
+                        value = value.replace(CHAR_TRAILINGSPACE, node.horizontalRowEnd ? '' : '&#160;');
+                    }
+                }
+                else if (node.pageFlow) {
+                    const previousSibling = node.siblingsLeading[0];
+                    const nextSibling = node.siblingsTrailing.find(item => !item.excluded || item.lineBreak);
+                    let previousSpaceEnd = false;
+                    if (value.length > 1) {
+                        if (checkPreviousSibling(previousSibling)) {
+                            value = value.replace(CHAR_LEADINGSPACE, '');
+                        }
+                        else if (previousSibling.naturalElement) {
+                            previousSpaceEnd = hasEndingSpace(previousSibling.element as HTMLElement);
+                        }
+                    }
+                    if (inlined) {
+                        const trailingSpace = !node.lineBreakTrailing && CHAR_TRAILINGSPACE.test(value);
+                        if (CHAR_LEADINGSPACE.test(value) && previousSibling?.block === false && !previousSibling.lineBreak && !previousSpaceEnd) {
+                            value = ResourceUI.STRING_SPACE + value.trim();
+                        }
+                        else {
+                            value = value.trim();
+                        }
+                        if (trailingSpace && nextSibling?.blockStatic === false && !nextSibling.floating) {
+                            value += ResourceUI.STRING_SPACE;
+                        }
+                    }
+                    else if (!/^[\s\n]+$/.test(value)) {
+                        value = value.replace(CHAR_LEADINGSPACE, previousSibling && (
+                                previousSibling.block ||
+                                previousSibling.lineBreak ||
+                                previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
+                                node.multiline && ResourceUI.hasLineBreak(node)
+                            )
+                            ? ''
+                            : ResourceUI.STRING_SPACE
+                        );
+                        value = value.replace(CHAR_TRAILINGSPACE, node.display === 'table-cell' || node.lineBreakTrailing || node.blockStatic || nextSibling?.floating ? '' : ResourceUI.STRING_SPACE);
+                    }
+                    else if (!node.inlineText) {
+                        return;
+                    }
+                }
+                else {
+                    value = value.trim();
+                }
+            }
+            if (value !== '') {
                 node.data(ResourceUI.KEY_NAME, 'valueString', value);
             }
         }
     }
 
-    protected removeExcludedFromText(node: T, element: Element) {
+    public removeExcludedFromText(node: T, element: Element) {
         const { preserveWhiteSpace, sessionId } = node;
         const styled = element.children.length > 0 || element.tagName === 'CODE';
         const attr = styled ? 'innerHTML' : 'textContent';

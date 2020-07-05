@@ -60,26 +60,29 @@ export function withinViewport(rect: DOMRect | ClientRect) {
     return !(rect.top + window.scrollY + rect.height < 0 || rect.left + window.scrollX + rect.width < 0);
 }
 
-export function assignRect(rect: DOMRect | ClientRect | BoxRectDimension, scrollPosition = true): BoxRectDimension {
-    const result = {
-        top: rect.top,
-        right: rect.right,
-        bottom: rect.bottom,
-        left: rect.left,
-        width: rect.width,
-        height: rect.height
-    };
-    if (scrollPosition) {
-        if (window.scrollY !== 0) {
-            result.top += window.scrollY;
-            result.bottom += window.scrollY;
+export function assignRect(rect: Undef<DOMRect | ClientRect | BoxRectDimension>, scrollPosition = true) {
+    if (rect) {
+        const result = {
+            top: rect.top,
+            right: rect.right,
+            bottom: rect.bottom,
+            left: rect.left,
+            width: rect.width,
+            height: rect.height
+        };
+        if (scrollPosition) {
+            if (window.scrollY !== 0) {
+                result.top += window.scrollY;
+                result.bottom += window.scrollY;
+            }
+            if (window.scrollX !== 0) {
+                result.left += window.scrollX;
+                result.right += window.scrollX;
+            }
         }
-        if (window.scrollX !== 0) {
-            result.left += window.scrollX;
-            result.right += window.scrollX;
-        }
+        return result;
     }
-    return result;
+    return newBoxRectDimension();
 }
 
 export function getRangeClientRect(element: Element) {
@@ -95,7 +98,7 @@ export function getRangeClientRect(element: Element) {
             domRect.push(item);
         }
     }
-    let bounds: BoxRectDimension;
+    let bounds: Undef<BoxRectDimension>;
     length = domRect.length;
     if (length > 0) {
         let numberOfLines = 1,
@@ -129,9 +132,6 @@ export function getRangeClientRect(element: Element) {
             bounds.numberOfLines = numberOfLines;
             bounds.overflow = overflow;
         }
-    }
-    else {
-        bounds = newBoxRectDimension();
     }
     return bounds;
 }

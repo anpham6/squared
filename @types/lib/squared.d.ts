@@ -150,8 +150,8 @@ declare module "lib" {
         function newBoxRect(): BoxRect;
         function newBoxRectDimension(): BoxRectDimension;
         function withinViewport(rect: DOMRect | ClientRect): boolean;
-        function assignRect(rect: DOMRect | ClientRect | BoxRectDimension, scrollPosition?: boolean): BoxRectDimension;
-        function getRangeClientRect(element: Element): BoxRectDimension;
+        function assignRect(rect: Undef<DOMRect | ClientRect | BoxRectDimension>, scrollPosition?: boolean): BoxRectDimension;
+        function getRangeClientRect(element: Element): Undef<BoxRectDimension>;
         function removeElementsByClassName(className: string): void;
         function getElementsBetweenSiblings(elementStart: Null<Element>, elementEnd: Element): Undef<Element[]>;
         function getNamedItem(element: Element, attr: string): string;
@@ -224,7 +224,7 @@ declare module "lib" {
 
     namespace session {
         function actualClientRect(element: Element, sessionId?: string): ClientRect;
-        function actualTextRangeRect(element: Element, sessionId?: string): BoxRectDimension;
+        function actualTextRangeRect(element: Element, sessionId?: string): Undef<BoxRectDimension>;
         function getPseudoElt(element: Element, sessionId?: string): string;
         function getStyleValue(element: Element, attr: string, sessionId?: string): string;
         function getElementAsNode<T>(element: Element, sessionId?: string): Null<T>;

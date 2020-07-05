@@ -102,7 +102,6 @@ declare namespace base {
         set localSettings(value);
         get localSettings(): AndroidLocalSettingsUI;
         get anchorTarget(): View;
-        get imageOrSvgElement(): boolean;
         get layoutFrame(): boolean;
         get layoutLinear(): boolean;
         get layoutGrid(): boolean;
@@ -145,6 +144,7 @@ declare namespace extensions {
     namespace delegate {
         class Background<T extends View> extends squared.base.ExtensionUI<T> {}
         class MaxWidthHeight<T extends View> extends squared.base.ExtensionUI<T> {}
+        class Multiline<T extends View> extends squared.base.ExtensionUI<T> {}
         class NegativeX<T extends View> extends squared.base.ExtensionUI<T> {}
         class Percent<T extends View> extends squared.base.ExtensionUI<T> {}
         class PositiveX<T extends View> extends squared.base.ExtensionUI<T> {}

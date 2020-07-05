@@ -97,24 +97,6 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                     return;
                                 }
                             }
-                            if (node.naturalChild && node.alignParent('left') && node.pageFlow && !(node.preserveWhiteSpace && !node.plainText || node.plainText && node.actualParent!.preserveWhiteSpace)) {
-                                const textContent = node.textContent;
-                                const length = textContent.length;
-                                let i = 0, j = 0;
-                                while (i < length) {
-                                    switch (textContent.charCodeAt(i++)) {
-                                        case 9:
-                                        case 10:
-                                        case 32:
-                                            ++j;
-                                            continue;
-                                    }
-                                    break;
-                                }
-                                if (j > 0) {
-                                    valueString = valueString.replace(new RegExp(`^(\\s|&#160;){1,${j}}`), '');
-                                }
-                            }
                             switch (node.css('textTransform')) {
                                 case 'uppercase':
                                     node.android('textAllCaps', 'true');

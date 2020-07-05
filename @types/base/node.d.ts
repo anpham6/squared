@@ -156,6 +156,8 @@ interface HasPXOptions {
 interface BoxOptions {
     reset?: 0 | 1;
     adjustment?: number;
+    max?: boolean;
+    min?: boolean;
     accumulate?: boolean;
     negative?: boolean;
 }

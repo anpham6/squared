@@ -5,6 +5,7 @@ export const EXT_ANDROID = {
     SUBSTITUTE: 'android.substitute',
     DELEGATE_BACKGROUND: 'android.delegate.background',
     DELEGATE_MAXWIDTHHEIGHT: 'android.delegate.max-width-height',
+    DELEGATE_MULTILINE: 'android.delegate.multiline',
     DELEGATE_NEGATIVEX: 'android.delegate.negative-x',
     DELEGATE_PERCENT: 'android.delegate.percent',
     DELEGATE_POSITIVEX: 'android.delegate.positive-x',
