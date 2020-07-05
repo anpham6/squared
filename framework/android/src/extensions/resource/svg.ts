@@ -1323,8 +1323,9 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                         propertyValuesHolder: false
                                                     };
                                                     const s = values.length;
+                                                    let valueTo: string | number;
                                                     if (Array.isArray(values[0])) {
-                                                        const valueTo = values[s - 1][k];
+                                                        valueTo = values[s - 1][k];
                                                         if (s > 1) {
                                                             const from = values[0][k];
                                                             if (from !== valueTo) {
@@ -1337,23 +1338,23 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                         let valueFrom: Undef<string>;
                                                         if (s > 1) {
                                                             valueFrom = values[0].toString();
-                                                            propertyOptions.valueTo = values[s - 1].toString();
+                                                            valueTo = values[s - 1].toString();
                                                         }
                                                         else {
                                                             valueFrom = item.from || (!checkBefore && requireBefore && beforeValues ? beforeValues[j] : '');
-                                                            propertyOptions.valueTo = item.to;
+                                                            valueTo = item.to;
                                                         }
                                                         if (valueType === 'pathType') {
-                                                            propertyOptions.valueFrom = valueFrom || group.pathData || propertyOptions.valueTo;
+                                                            propertyOptions.valueFrom = valueFrom || group.pathData || valueTo;
                                                         }
-                                                        else if (valueFrom !== propertyOptions.valueTo && valueFrom) {
+                                                        else if (valueFrom && valueFrom !== valueTo) {
                                                             propertyOptions.valueFrom = convertValueType(item, valueFrom);
                                                         }
+                                                        propertyOptions.valueTo = valueTo;
                                                     }
-                                                    const valueA = propertyOptions.valueTo;
-                                                    if (valueA) {
+                                                    if (valueTo !== '') {
                                                         if (valueType === 'floatType') {
-                                                            propertyOptions.valueTo = truncate(valueA, precision);
+                                                            propertyOptions.valueTo = truncate(valueTo, precision);
                                                         }
                                                         (i === 0 ? objectAnimator : customAnimator).push(propertyOptions);
                                                     }

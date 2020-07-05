@@ -919,8 +919,9 @@ export function appendSeparator(preceding: string, value: string, separator = '/
 }
 
 export function fromLastIndexOf(value: string, ...char: string[]) {
-    for (let i = 0; i < char.length; ++i) {
-        const index = value.lastIndexOf(char[i]);
+    let i = 0;
+    while (i < char.length) {
+        const index = value.lastIndexOf(char[i++]);
         if (index !== -1) {
             return value.substring(index + 1);
         }
@@ -929,8 +930,9 @@ export function fromLastIndexOf(value: string, ...char: string[]) {
 }
 
 export function partitionLastIndexOf(value: string, ...char: string[]): [string, string] {
-    for (let i = 0; i < char.length; ++i) {
-        const index = value.lastIndexOf(char[i]);
+    let i = 0;
+    while (i < char.length) {
+        const index = value.lastIndexOf(char[i++]);
         if (index !== -1) {
             return [value.substring(0, index), value.substring(index + 1)];
         }
@@ -939,12 +941,12 @@ export function partitionLastIndexOf(value: string, ...char: string[]): [string,
 }
 
 export function searchObject(obj: StringMap, value: string | StringMap) {
-    const result: any[][] = [];
+    const result: [string, string][] = [];
     if (typeof value === 'object') {
         for (const term in value) {
             const attr = value[term]!;
             if (hasValue(obj[attr])) {
-                result.push([attr, obj[attr]]);
+                result.push([attr, obj[attr]!]);
             }
         }
     }
@@ -957,9 +959,9 @@ export function searchObject(obj: StringMap, value: string | StringMap) {
             : value.endsWith('*')
                 ? (a: string) => a.startsWith(value.replace(/\*$/, ''))
                 : (a: string) => a === value;
-        for (const i in obj) {
-            if (search(i)) {
-                result.push([i, obj[i]]);
+        for (const attr in obj) {
+            if (search(attr) && hasValue(obj[attr])) {
+                result.push([attr, obj[attr]!]);
             }
         }
     }
@@ -1049,10 +1051,11 @@ export function safeNestedMap<T = unknown>(map: ObjectMapNested<T>, index: numbe
 
 export function sortArray<T = any>(list: T[], ascending: boolean, ...attrs: string[]) {
     return list.sort((a, b) => {
-        for (let i = 0; i < attrs.length; ++i) {
+        let i = 0;
+        while (i < attrs.length) {
             let valueA = a,
                 valueB = b;
-            for (const name of attrs[i].split('.')) {
+            for (const name of attrs[i++].split('.')) {
                 const vA = valueA[name];
                 const vB = valueB[name];
                 if (vA !== undefined && vB !== undefined) {

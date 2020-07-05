@@ -81,9 +81,9 @@ export default abstract class File<T extends squared.base.Node> implements squar
     }
 
     public copying(options: FileCopyingOptions) {
-        if (this.hasHttpProtocol()) {
+        if (this.hasHttpProtocol() && options.directory) {
             const body = this.createRequestBody(options.assets, options);
-            if (body && options.directory) {
+            if (body) {
                 return fetch(
                     this.hostname +
                     '/api/assets/copy' +
@@ -116,9 +116,9 @@ export default abstract class File<T extends squared.base.Node> implements squar
     }
 
     public archiving(options: FileArchivingOptions) {
-        if (this.hasHttpProtocol()) {
+        if (this.hasHttpProtocol() && options.filename) {
             const body = this.createRequestBody(options.assets, options);
-            if (body && options.filename) {
+            if (body) {
                 return fetch(
                     this.hostname +
                     '/api/assets/archive' +

@@ -2981,7 +2981,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         !!previousRow && (
                             !rowStart.floating && previousRow.every(item => item.floating || !item.pageFlow) && (clearMap.size === 0 || !partition.some((item: T) => checkClearMap(item, clearMap))) ||
                             previousRow.every(item => !item.pageFlow)
-                        )
+                        );
                     previousAlignParent = alignParent;
                 }
                 tallest = undefined;
@@ -3254,7 +3254,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                             else if (!node.hasPX('top') && !node.hasPX('bottom') || !item.inlineStatic && item.hasPX('height', { percent: false, initial: true })) {
                                 position = 'topBottom';
-                                offset = bounds.top - boundsA.bottom;
+                                if (node.top !== 0) {
+                                    offset = bounds.top - boundsA.bottom;
+                                }
                             }
                         }
                         if (position) {

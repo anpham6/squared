@@ -700,8 +700,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         });
     }
 
-    public cascadeDocument(templates: NodeTemplate<T>[], depth: number) {
-        const showAttributes = this.userSettings.showAttributes;
+    public cascadeDocument(templates: NodeTemplate<T>[], depth: number, showAttributes: boolean) {
         const indent = '\t'.repeat(depth);
         let output = '';
         const length = templates.length;
@@ -729,7 +728,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     if (renderTemplates || beforeInside !== '' || afterInside !== '') {
                         template += '>\n' +
                                     beforeInside +
-                                    (renderTemplates ? this.cascadeDocument(this.sortRenderPosition(node, renderTemplates as NodeTemplate<T>[]), next) : '') +
+                                    (renderTemplates ? this.cascadeDocument(this.sortRenderPosition(node, renderTemplates as NodeTemplate<T>[]), next, showAttributes) : '') +
                                     afterInside +
                                     indent + `</${controlName}>\n`;
                     }
@@ -739,13 +738,9 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     output += this.getBeforeOutsideTemplate(id, previous) + template + this.getAfterOutsideTemplate(id, previous);
                     break;
                 }
-                case NODE_TEMPLATE.INCLUDE: {
-                    const content = (item as NodeIncludeTemplate<T>).content;
-                    if (content) {
-                        output += pushIndent(content, depth);
-                    }
+                case NODE_TEMPLATE.INCLUDE:
+                    output += pushIndent((item as NodeIncludeTemplate<T>).content, depth);
                     break;
-                }
             }
         }
         return output;

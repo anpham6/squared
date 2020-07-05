@@ -88,7 +88,7 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                         item.setLayoutHeight(formatPX(node.actualHeight));
                         item.android('scrollbars', 'vertical');
                         item.cssApply({
-                            width: length === 1 && node.css('width') || 'auto',
+                            width: length === 1 && node.cssInitial('width') || 'auto',
                             overflow: 'scroll visible',
                             overflowX: 'visible',
                             overflowY: 'scroll'
@@ -99,7 +99,7 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                         item.setLayoutWidth(formatPX(node.actualWidth));
                         item.android('scrollbars', 'horizontal');
                         item.cssApply({
-                            height: length === 1 && node.css('height') || 'auto',
+                            height: length === 1 && node.cssInitial('height') || 'auto',
                             overflow: 'visible scroll',
                             overflowX: 'scroll',
                             overflowY: 'visible'

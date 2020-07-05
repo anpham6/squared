@@ -79,7 +79,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                                     content: controller.renderNodeStatic({ controlName: 'include', width: 'match_parent' }, { layout: `@layout/${name}`, android: {} }),
                                     indent: true
                                 } as NodeIncludeTemplate<T>);
-                                let content = controller.cascadeDocument(templates, depth);
+                                let content = controller.cascadeDocument(templates, depth, this.application.userSettings.showAttributes);
                                 if (merge) {
                                     content = controller.getEnclosingXmlTag('merge', getRootNs(content), content);
                                 }

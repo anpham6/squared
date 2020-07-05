@@ -195,7 +195,7 @@ declare module "base" {
         getAfterInsideTemplate(id: number, depth: number): string;
         getAfterOutsideTemplate(id: number, depth: number): string;
         hasAppendProcessing(id?: number): boolean;
-        cascadeDocument(templates: NodeTemplate<T>[], depth: number): string;
+        cascadeDocument(templates: NodeTemplate<T>[], depth: number, showAttributes: boolean): string;
         getEnclosingXmlTag(controlName: string, attributes?: string, content?: string): string;
         get userSettings(): UserSettingsUI;
         get screenDimension(): Dimension;

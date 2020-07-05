@@ -2411,7 +2411,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 if (this.has('transform')) {
                     const transforms = parseTransform(this.css('transform'), { accumulate: true, boundingBox: this.bounds, fontSize: this.fontSize });
-                    let pivoted = false;
+                    let pivoted = false,
+                        offsetX = 0,
+                        offsetY = 0;
                     let i = 0;
                     while (i < transforms.length) {
                         const item = transforms[i++];
@@ -2450,16 +2452,18 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 if (z !== 0) {
                                     this.android('translationZ', formatPX(z));
                                 }
+                                offsetX = x;
+                                offsetY = y;
                                 break;
                         }
                     }
                     if (pivoted && this.has('transformOrigin')) {
                         const { left, top } = getBackgroundPosition(this.css('transformOrigin'), this.bounds, { fontSize: this.fontSize });
-                        if (left !== 0) {
-                            this.android('transformPivotX', formatPX(left));
-                        }
                         if (top !== 0) {
-                            this.android('transformPivotY', formatPX(top));
+                            this.android('transformPivotX', formatPX(top - (offsetX >= 0 ? offsetX : -(offsetX * 2))));
+                        }
+                        if (left !== 0) {
+                            this.android('transformPivotY', formatPX(left - (offsetY >= 0 ? offsetY : -(offsetY * 2))));
                         }
                     }
                 }

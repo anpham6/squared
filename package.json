@@ -34,7 +34,7 @@
     "md5-firefox-rebase-svg": "node md5sum.js -z -c ./md5/firefox/master-svg ./temp/firefox-svg",
     "md5-firefox-rebase-all": "node md5sum.js -z -c ./md5/firefox/master ./temp/firefox && node md5sum.js -z -c ./md5/firefox/master-raw ./temp/firefox-raw && node md5sum.js -z -c ./md5/firefox/master-svg ./temp/firefox-svg",
     "md5-webkit": "rimraf temp/webkit/* && node md5sum.js -h http://localhost:3000 -d ./md5/data.csv -b webkit -o ./temp/webkit -f 1",
-    "md5-webkit-raw": "rimraf temp/webkit-raw/* && node md5sum.js -h http://localhost:3000 -d ./md5/data.csv -b webkit -o ./temp/webkit-raw -f 2 -t 10",
+    "md5-webkit-raw": "rimraf temp/webkit-raw/* && node md5sum.js -h http://localhost:3000 -d ./md5/data.csv -b webkit -o ./temp/webkit-raw -f 2 -t 300",
     "md5-webkit-svg": "rimraf temp/webkit-svg/* && node md5sum.js -h http://localhost:3000 -d ./md5/data.csv -b webkit -o ./temp/webkit-svg -f 4",
     "md5-webkit-diff": "node md5sum.js -h http://localhost:3000 -d ./md5/data.csv -c ./md5/webkit/master ./temp/webkit",
     "md5-webkit-diff-raw": "node md5sum.js -h http://localhost:3000 -d ./md5/data.csv -c ./md5/webkit/master-raw ./temp/webkit-raw",
@@ -102,7 +102,7 @@
     "rimraf": "^3.0.2",
     "tinify": "^1.6.0-beta.2",
     "uuid": "^8.2.0",
-    "yargs": "^15.3.1"
+    "yargs": "^15.4.0"
   },
   "devDependencies": {
     "@types/archiver": "^3.1.0",
@@ -128,7 +128,7 @@
     "clean-css": "^4.2.3",
     "csv-parse": "^4.10.1",
     "diff": "^4.0.2",
-    "eslint": "^7.3.1",
+    "eslint": "^7.4.0",
     "eslint-plugin-tslint": "^3.1.0",
     "glob": "^7.1.6",
     "html-minifier-terser": "^5.1.1",
@@ -137,7 +137,7 @@
     "playwright": "^1.1.1",
     "prettier": "^2.0.5",
     "readdirp": "^3.4.0",
-    "rollup": "^2.18.1",
+    "rollup": "^2.18.2",
     "rollup-plugin-prettier": "^2.1.0",
     "rollup-plugin-terser": "^6.1.0",
     "terser": "^4.8.0",

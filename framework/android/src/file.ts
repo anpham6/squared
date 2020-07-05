@@ -125,7 +125,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
     }
 
     public resourceAllToXml(options: FileUniversalOptions = {}) {
-        const result = {
+        const result: ObjectMap<string[]> = {
             string: this.resourceStringToXml(),
             stringArray: this.resourceStringArrayToXml(),
             font: this.resourceFontToXml(),

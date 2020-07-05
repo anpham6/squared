@@ -278,7 +278,7 @@ declare module "lib" {
         function appendSeparator(preceding: string, value: string, separator?: string): string;
         function fromLastIndexOf(value: string, ...char: string[]): string;
         function partitionLastIndexOf(value: string, ...char: string[]): [string, string];
-        function searchObject(obj: StringMap, value: string | StringMap): any[][];
+        function searchObject(obj: StringMap, value: string | StringMap): [string, string][];
         function hasValue<T>(value: any): value is T;
         function withinRange(a: number, b: number, offset?: number): boolean;
         function aboveRange(a: number, b: number, offset?: number): boolean;

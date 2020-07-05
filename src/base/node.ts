@@ -654,41 +654,41 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
                 return false;
             }
             else {
-                const valueA = attr.value;
-                if (valueA) {
+                const valueAlt = attr.value;
+                if (valueAlt) {
                     if (attr.caseInsensitive) {
                         value = value.toLowerCase();
                     }
                     if (attr.symbol) {
                         switch (attr.symbol) {
                             case '~':
-                                if (!value.split(/\s+/).includes(valueA)) {
+                                if (!value.split(/\s+/).includes(valueAlt)) {
                                     return false;
                                 }
                                 break;
                             case '^':
-                                if (!value.startsWith(valueA)) {
+                                if (!value.startsWith(valueAlt)) {
                                     return false;
                                 }
                                 break;
                             case '$':
-                                if (!value.endsWith(valueA)) {
+                                if (!value.endsWith(valueAlt)) {
                                     return false;
                                 }
                                 break;
                             case '*':
-                                if (!value.includes(valueA)) {
+                                if (!value.includes(valueAlt)) {
                                     return false;
                                 }
                                 break;
                             case '|':
-                                if (value !== valueA && !value.startsWith(valueA + '-')) {
+                                if (value !== valueAlt && !value.startsWith(valueAlt + '-')) {
                                     return false;
                                 }
                                 break;
                         }
                     }
-                    else if (value !== valueA) {
+                    else if (value !== valueAlt) {
                         return false;
                     }
                 }

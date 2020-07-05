@@ -292,6 +292,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             extensions[i++].beforeCascade(rendered, documentRoot);
         }
         const baseTemplate = this._controllerSettings.layout.baseTemplate;
+        const showAttributes = this.userSettings.showAttributes;
         const systemName = capitalize(this.systemName);
         i = 0;
         while (i < documentRoot.length) {
@@ -300,7 +301,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (renderTemplates) {
                 this.saveDocument(
                     layoutName,
-                    baseTemplate + controllerHandler.cascadeDocument(renderTemplates as NodeTemplate<T>[], Math.abs(node.depth)),
+                    baseTemplate + controllerHandler.cascadeDocument(renderTemplates as NodeTemplate<T>[], Math.abs(node.depth), showAttributes),
                     node.dataset['pathname' + systemName],
                     node.renderExtension?.some(item => item.documentBase) ? 0 : undefined
                 );

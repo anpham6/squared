@@ -623,7 +623,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public unlockAttr(name: string, attr: string) {
-        const locked = this._locked[name];
+        const locked: Undef<ObjectKeyed<boolean>> = this._locked[name];
         if (locked) {
             locked[attr] = false;
         }
