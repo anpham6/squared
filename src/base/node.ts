@@ -1486,8 +1486,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 self
                     ? item[attr] as string
                     : initial
-                        ? this.cssInitial(attr, options)
-                        : this.css(attr)
+                        ? item.cssInitial(attr, options)
+                        : item.css(attr)
             );
             if (last) {
                 if (value <= min) {
@@ -1517,8 +1517,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 self
                     ? item[attr] as string
                     : initial
-                        ? this.cssInitial(attr, options)
-                        : this.css(attr)
+                        ? item.cssInitial(attr, options)
+                        : item.css(attr)
             );
             if (last) {
                 if (value >= max) {

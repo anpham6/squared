@@ -37,6 +37,7 @@ const settings: AndroidUserSettingsUI = {
     compressImages: false,
     convertImages: '',
     supportNegativeLeftTop: true,
+    fontMeasureWrap: true,
     fontMeasureAdjust: 0.75,
     customizationsOverwritePrivilege: true,
     showAttributes: true,

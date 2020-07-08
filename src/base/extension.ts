@@ -1,4 +1,5 @@
 export default abstract class Extension<T extends squared.base.Node> implements squared.base.Extension<T> {
+    public enabled = true;
     public readonly options: StandardMap = {};
     public readonly dependencies: ExtensionDependency[] = [];
     public readonly subscribers = new Set<T>();

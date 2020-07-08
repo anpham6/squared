@@ -142,6 +142,7 @@ These settings are available in the global variable "squared" to customize your 
 ```javascript
 squared.settings = {
     builtInExtensions: [ // default is all
+        'squared.accessibility',
         'android.delegate.background',
         'android.delegate.negative-x',
         'android.delegate.positive-x',
@@ -149,7 +150,7 @@ squared.settings = {
         'android.delegate.percent',
         'android.delegate.scrollbar',
         'android.delegate.radiogroup',
-        'squared.accessibility',
+        'android.delegate.multiline',
         'squared.relative',
         'squared.css-grid',
         'squared.flexbox',
@@ -179,7 +180,8 @@ squared.settings = {
     compressImages: false, // png | jpeg - TinyPNG API Key <https://tinypng.com/developers>
     convertImages: '', // png | jpeg | bmp | squared-apache: gif | tiff
     supportNegativeLeftTop: true,
-    exclusionsDisabled: false,
+    fontMeasureWrap: true, // possibly significant slower rendering performance (alias: android.delegate.multiline)
+    fontMeasureAdjust: 0.75, // 0 < wider | thinner > 0 (element: data-android-font-measure-adjust)
     customizationsOverwritePrivilege: true,
     showAttributes: true,
     createElementMap: false,

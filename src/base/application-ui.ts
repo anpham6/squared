@@ -867,7 +867,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 });
             }
         };
-        const extensions = this.extensions;
+        const extensions = this.extensionsAll as ExtensionUI<T>[];
         length = extensions.length;
         i = 0;
         while (i < length) {
@@ -1976,11 +1976,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     get extensionsCascade() {
-        return this.extensions.filter(item => !!item.init);
+        return this.extensions.filter(item => item.enabled && !!item.init);
     }
 
     get extensionsTraverse() {
-        return this.extensions.filter(item => !item.eventOnly);
+        return this.extensions.filter(item => item.enabled && !item.eventOnly);
     }
 
     get clearMap() {

@@ -2198,7 +2198,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const leftAlign = j === 1;
                 let forward = true,
                     rowWidth = baseWidth,
-                    anchoredParent = true,
                     alignParent: string,
                     rows: T[][],
                     previous!: T,
@@ -2298,17 +2297,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         if (previous.floating && adjustFloatingNegativeMargin(item, previous)) {
                             alignSibling = '';
                         }
-                        if (!anchoredParent) {
-                            if (!anchored) {
-                                item.anchor(alignParent, 'true');
-                            }
-                            if (textIndent < 0) {
-                                item.modifyBox(BOX_STANDARD.MARGIN_LEFT, -textIndent);
-                            }
-                            anchoredParent = true;
-                            items.push(item);
-                        }
-                        else if (
+                        if (
                             textNewRow ||
                             item.nodeGroup && !item.hasAlign(NODE_ALIGNMENT.SEGMENTED) ||
                             Math.ceil(item.bounds.top) >= previous.bounds.bottom && (item.blockStatic || item.floating && previous.float === item.float || node.preserveWhiteSpace) ||
@@ -2330,7 +2319,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 else {
                                     if (!anchored) {
                                         item.anchor(alignParent, 'true');
-                                        anchoredParent = true;
                                     }
                                     if (textIndent < 0) {
                                         item.modifyBox(BOX_STANDARD.MARGIN_LEFT, -textIndent);
@@ -2343,7 +2331,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     previousRowLeft = undefined;
                                 }
                                 previous.anchor(alignParent, 'true');
-                                anchoredParent = true;
                             }
                             rowWidth = baseWidth + Math.min(0, textNewRow && !previous.multiline && multiline && !item.preserveWhiteSpace && !clearMap.has(item) ? item.linear.right - node.box.right : 0);
                             items = [item];
@@ -2369,16 +2356,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     else {
                         if (forward && !anchored) {
                             item.anchor(alignParent, 'true');
-                            anchoredParent = !(textIndent < 0 && item.naturalElement && item.inlineFlow);
                         }
                         items = [item];
                         rows.push(items);
                     }
                     if (item.float === 'left' && leftAlign) {
-                        if (textIndent < 0) {
-                            anchoredParent = false;
-                        }
-                        else if (previousRowLeft) {
+                        if (previousRowLeft) {
                             if (item.linear.bottom > previousRowLeft.linear.bottom) {
                                 previousRowLeft = item;
                             }
@@ -2396,9 +2379,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                         }
                     }
-                    if (anchoredParent) {
-                        rowWidth += item.marginLeft + bounds.width + item.marginRight;
-                    }
+                    rowWidth += item.marginLeft + bounds.width + item.marginRight;
                     previous = item;
                 }
             }

@@ -114,6 +114,7 @@ declare module "base" {
         get controllerHandler(): Controller<T>;
         get resourceHandler(): Undef<Resource<T>>;
         get extensionManager(): Undef<ExtensionManager<T>>;
+        get extensionsAll(): Extension<T>[];
         get extensionsCascade(): Extension<T>[];
         get childrenAll(): T[];
         get nextId(): number;
@@ -255,6 +256,7 @@ declare module "base" {
     }
 
     class Extension<T extends Node> {
+        enabled: boolean;
         readonly framework: number;
         readonly name: string;
         readonly options: StandardMap;
