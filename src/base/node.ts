@@ -1203,8 +1203,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         const byFloat = options.byFloat === true;
         const byInt = !byFloat && options.byInt === true;
         return (options.duplicate ? this.duplicate() : this.children).sort((a, b) => {
-            let valueA: string | number,
-                valueB: string | number;
+            let valueA: NumString,
+                valueB: NumString;
             if (byFloat) {
                 valueA = a.toFloat(attr, a.childIndex), valueB = b.toFloat(attr, b.childIndex);
             }
@@ -2390,7 +2390,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (result === undefined) {
             if (this.pageFlow && !this.floating) {
                 const value = this.css('verticalAlign');
-                return this._cached.baseline = value === 'baseline' || value === 'initial' || this.naturalElements.length === 0 && isLength(value, true) && this.verticalAlign === '0px';
+                return this._cached.baseline = value === 'baseline' || value === 'initial' || this.naturalElements.length === 0 && isLength(value, true);
             }
             return this._cached.baseline = false;
         }
@@ -2403,16 +2403,19 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             if (this.pageFlow) {
                 const value = this.css('verticalAlign');
                 if (isLength(value)) {
-                    result = -(isPx(value) ? parseFloat(value) : this.parseUnit(value)) + 'px';
+                    result = isPx(value) ? parseFloat(value) : this.parseUnit(value);
                 }
                 else if (this.styleElement) {
                     let valid = false;
                     switch (value) {
                         case 'baseline':
                             break;
+                        case 'text-top':
+                            if (this.imageElement || this.svgElement) {
+                                break;
+                            }
                         case 'sub':
                         case 'super':
-                        case 'text-top':
                         case 'text-bottom':
                         case 'middle':
                         case 'top':
@@ -2426,13 +2429,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     if (valid && this.cssTry('vertical-align', 'baseline')) {
                         const bounds = this.boundingClientRect;
                         if (bounds) {
-                            result = (this.bounds.top - bounds.top) + 'px';
+                            result = bounds.top - this.bounds.top;
                         }
                         this.cssFinally('vertical-align');
                     }
                 }
             }
-            return this._cached.verticalAlign = result || '0px';
+            return this._cached.verticalAlign = result || 0;
         }
         return result;
     }

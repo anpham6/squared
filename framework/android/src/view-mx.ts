@@ -9,7 +9,7 @@ const { CSS_PROPERTIES, CSS_UNIT, formatPX, getBackgroundPosition, getStyle, isL
 const { createElement, getNamedItem } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
 const { actualTextRangeRect } = squared.lib.session;
-const { capitalize, convertFloat, convertInt, convertWord, fromLastIndexOf, hasKeys, isNumber, isString, iterateArray, replaceMap, splitPair } = squared.lib.util;
+const { capitalize, convertInt, convertWord, fromLastIndexOf, hasKeys, isNumber, isString, iterateArray, replaceMap, splitPair } = squared.lib.util;
 
 const { EXT_NAME } = squared.base.lib.constant;
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE } = squared.base.lib.enumeration;
@@ -2569,8 +2569,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         public setSingleLine(ellipsize?: boolean) {
             if (this.textElement && (this.naturalChild || this.plainText) && (ellipsize || !this.hasPX('width'))) {
-                const parent = this.actualParent as T;
-                if (!parent.preserveWhiteSpace && parent.tagName !== 'CODE' && (!this.multiline || parent.css('whiteSpace') === 'nowrap')) {
+                const parent = this.actualParent;
+                if (parent?.preserveWhiteSpace === false && parent.tagName !== 'CODE' && (!this.multiline || parent.css('whiteSpace') === 'nowrap')) {
                     this.android('maxLines', '1');
                 }
                 if (ellipsize && this.textContent.trim().length > 1) {
@@ -2744,7 +2744,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 result += 4;
                                 break;
                             default:
-                                result += Math.max(convertFloat(this.verticalAlign) * -1, 0);
+                                result += Math.max(-this.verticalAlign, 0);
                                 break;
                         }
                     }

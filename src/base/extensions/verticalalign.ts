@@ -3,8 +3,6 @@ import NodeUI from '../node-ui';
 
 import { BOX_STANDARD } from '../lib/enumeration';
 
-const hasVerticalAlign = (node: NodeUI) => node.verticalAlign !== '0px' || node.css('verticalAlign').includes('top');
-
 export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
     public is(node: T) {
         return node.length > 0 && !node.contentAltered;
@@ -12,41 +10,26 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
 
     public condition(node: T) {
         const children = node.children as T[];
-        let valid = false,
-            inlineVertical = 0,
-            sameValue = 0;
         const length = children.length;
-        let i = 0;
+        let i = 0, j = 0, k = 0;
         while (i < length) {
             const item = children[i++];
-            if (!(item.positionStatic || item.positionRelative && item.length > 0)) {
+            if (!item.inlineFlow || !(item.positionStatic || item.positionRelative && item.length > 0)) {
                 return false;
             }
             else if (item.inlineVertical) {
-                const value = parseFloat(item.verticalAlign);
-                if (!isNaN(value)) {
-                    valid = true;
-                    if (!isNaN(sameValue)) {
-                        if (sameValue === 0) {
-                            sameValue = value;
-                        }
-                        else if (sameValue !== value) {
-                            sameValue = NaN;
-                        }
-                    }
+                if (item.verticalAligned) {
+                    ++k;
                 }
-                ++inlineVertical;
-            }
-            else {
-                sameValue = NaN;
+                ++j;
             }
         }
-        return valid && isNaN(sameValue) && inlineVertical > 1 && NodeUI.linearData(children).linearX;
+        return j > 1 && k > 0 && NodeUI.linearData(children).linearX;
     }
 
     public processNode(node: T) {
         node.each((item: T) => {
-            if (item.inlineVertical && hasVerticalAlign(item) || item.imageElement || item.svgElement) {
+            if (item.inlineVertical && node.verticalAligned || item.imageElement || item.svgElement) {
                 item.baselineAltered = true;
             }
         });
@@ -84,13 +67,14 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
                         if (item !== baseline) {
                             if (item.inlineVertical) {
                                 if (!aboveBaseline.includes(item)) {
-                                    if (!baseline || hasVerticalAlign(item)) {
+                                    if (!baseline || item.verticalAligned) {
                                         item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: item.linear.top - top });
                                         item.baselineAltered = true;
                                     }
                                 }
                                 else if (baseline && (item.imageElement || item.svgElement) && baseline.documentId === item.alignSibling('baseline')) {
                                     item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: baseline.linear.top - item.linear.top });
+                                    item.baselineAltered = true;
                                 }
                             }
                             if (item.baselineAltered) {

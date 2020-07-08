@@ -33,6 +33,8 @@ function setTextValue(node: View, attr: string, name: string) {
     }
 }
 
+const hasTextIndent = (node: View) => node.blockDimension || node.display === 'table-cell';
+
 export default class ResourceStrings<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly options: ResourceStringsOptions = {
         numberResourceValue: false
@@ -89,7 +91,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                         let valueString = node.data<string>(Resource.KEY_NAME, 'valueString');
                         if (valueString) {
                             let indent = 0;
-                            if (node.blockDimension || node.display === 'table-cell') {
+                            if (hasTextIndent(node)) {
                                 const textIndent = node.css('textIndent');
                                 indent = node.parseUnit(textIndent);
                                 if (textIndent === '100%' || indent + node.bounds.width < 0) {
@@ -128,7 +130,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                             }
                             if (indent === 0) {
                                 const parent = node.actualParent;
-                                if (parent?.firstChild === node && (parent.blockDimension || parent.display === 'table-cell')) {
+                                if (parent?.firstStaticChild === node && hasTextIndent(parent as T)) {
                                     indent = parent.parseUnit(parent.css('textIndent'));
                                 }
                             }

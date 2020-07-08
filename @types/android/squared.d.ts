@@ -134,7 +134,6 @@ declare namespace extensions {
     class Sprite<T extends View> extends squared.base.extensions.Sprite<T> {}
     class Substitute<T extends View> extends squared.base.ExtensionUI<T> {}
     class Table<T extends View> extends squared.base.extensions.Table<T> {}
-    class VerticalAlign<T extends View> extends squared.base.extensions.VerticalAlign<T> {}
     class WhiteSpace<T extends View> extends squared.base.extensions.WhiteSpace<T> {}
 
     namespace constraint {

@@ -502,7 +502,7 @@ declare module "base" {
         get backgroundImage(): string;
         get visibleStyle(): VisibleStyle;
         get fontSize(): number;
-        get verticalAlign(): string;
+        get verticalAlign(): number;
         get absoluteParent(): Null<Node>;
         get actualWidth(): number;
         get actualHeight(): number;
@@ -528,7 +528,7 @@ declare module "base" {
         static refitScreen<T>(node: T, value: Dimension): Dimension;
         static linearData<T>(list: T[], cleared?: Map<T, string>): LinearData<T>;
         static outerRegion<T>(node: T): BoxRectDimension;
-        static baseline<T>(list: T[], text?: boolean, nearest?: boolean): Null<T>;
+        static baseline<T>(list: T[], text?: boolean): Null<T>;
         static partitionRows<T>(list: T[], cleared?: Map<T, string>): T[][];
         alignmentType: number;
         contentAltered: boolean;
@@ -666,6 +666,7 @@ declare module "base" {
         get blockVertical(): boolean;
         get blockDimension(): boolean;
         get inlineFlow(): boolean;
+        get verticalAligned(): boolean;
         get positiveAxis(): boolean;
         get leftTopAxis(): boolean;
         get baselineElement(): boolean;
@@ -711,7 +712,6 @@ declare module "base" {
         class Relative<T extends NodeUI> extends ExtensionUI<T> {}
         class Sprite<T extends NodeUI> extends ExtensionUI<T> {}
         class Table<T extends NodeUI> extends ExtensionUI<T> {}
-        class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {}
         class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {}
     }
 

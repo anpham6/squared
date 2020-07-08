@@ -44,7 +44,7 @@ function isTextElement(node: View) {
     while (true);
 }
 
-const isMultiline = (node: View) => node.plainText || node.naturalChild && node.naturalElements.length === 0 && node.contentBoxWidth === 0 && node.contentBoxHeight === 0 && !node.visibleStyle.background && node.verticalAlign === '0px';
+const isMultiline = (node: View) => node.plainText || node.naturalChild && node.naturalElements.length === 0 && node.baseline && node.contentBoxWidth === 0 && node.contentBoxHeight === 0 && !node.visibleStyle.background;
 
 export default class Multiline<T extends View> extends squared.base.ExtensionUI<T> {
     public condition(node: T, parent: T) {
@@ -54,7 +54,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                     return true;
                 }
             }
-            else if (parent.layoutVertical || parent.length === 1) {
+            else {
                 const length = node.length;
                 if (length > 0) {
                     const children = node.children as T[];

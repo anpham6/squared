@@ -24,7 +24,6 @@ import List from './extensions/list';
 import Relative from './extensions/relative';
 import Sprite from './extensions/sprite';
 import Table from './extensions/table';
-import VerticalAlign from './extensions/verticalalign';
 import WhiteSpace from './extensions/whitespace';
 
 import * as constant from './lib/constant';
@@ -40,7 +39,6 @@ const extensions = {
     Relative,
     Sprite,
     Table,
-    VerticalAlign,
     WhiteSpace
 };
 

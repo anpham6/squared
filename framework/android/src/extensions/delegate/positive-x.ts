@@ -150,7 +150,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
             let container: Undef<T>;
             if (children.length > 0) {
                 container = (this.controller as android.base.Controller<T>).createNodeWrapper(node, parent, {
-                    alignmentType: NODE_ALIGNMENT.VERTICAL, 
+                    alignmentType: NODE_ALIGNMENT.VERTICAL,
                     children,
                     resetMargin: !node.rootElement && !node.pageFlow || parent.layoutGrid,
                     cascade: true,

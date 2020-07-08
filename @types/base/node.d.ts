@@ -38,7 +38,7 @@ interface CachedValue<T> {
     blockStatic?: boolean;
     baseline?: boolean;
     baselineElement?: boolean;
-    verticalAlign?: string;
+    verticalAlign?: number;
     multiline?: boolean;
     centerAligned?: boolean;
     rightAligned?: boolean;
@@ -88,6 +88,7 @@ interface CachedValueUI<T> extends CachedValue<T> {
     inlineDimension?: boolean;
     blockDimension?: boolean;
     blockVertical?: boolean;
+    verticalAligned?: boolean;
     overflow?: number;
     textEmpty?: boolean;
     containerName?: string;

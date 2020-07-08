@@ -8,7 +8,7 @@ const { withinRange } = squared.lib.util;
 
 export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> {
     public is(node: T) {
-        return node.positionRelative && !node.autoPosition || node.verticalAlign !== '0px';
+        return node.positionRelative && !node.autoPosition || node.verticalAligned;
     }
 
     public condition() {
@@ -21,7 +21,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
 
     public postOptimize(node: T, rendered: T[]) {
         const renderParent = node.renderParent as T;
-        const verticalAlign = !node.baselineAltered ? parseFloat(node.verticalAlign) : 0;
+        const verticalAlign = !node.baselineAltered ? node.verticalAlign : 0;
         let top = 0,
             right = 0,
             bottom = 0,
@@ -91,7 +91,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                 if (node.baselineActive && !node.baselineAltered) {
                     for (const children of renderParent.horizontalRows || [renderParent.renderChildren]) {
                         if (children.includes(node)) {
-                            const unaligned = children.filter(item => item.positionRelative && item.length > 0 && node.verticalAlign !== '0px');
+                            const unaligned = children.filter(item => item.positionRelative && item.length > 0 && node.verticalAligned);
                             const length = unaligned.length;
                             if (length > 0) {
                                 unaligned.sort((a, b) => {
@@ -107,7 +107,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                                 while (i < length) {
                                     const item = unaligned[i++];
                                     if (first) {
-                                        node.modifyBox(BOX_STANDARD.MARGIN_TOP, parseFloat(item.verticalAlign));
+                                        node.modifyBox(BOX_STANDARD.MARGIN_TOP, item.verticalAlign);
                                         first = false;
                                     }
                                     else {
