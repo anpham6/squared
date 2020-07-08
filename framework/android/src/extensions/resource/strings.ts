@@ -88,8 +88,8 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                     default: {
                         let valueString = node.data<string>(Resource.KEY_NAME, 'valueString');
                         if (valueString) {
-                            const indent = node.textIndent;
-                            if (isNaN(indent)) {
+                            const textIndent = node.textIndent;
+                            if (isNaN(textIndent)) {
                                 node.delete('android', 'ellipsize', 'maxLines');
                                 return;
                             }
@@ -122,9 +122,9 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                             if (tagName === 'INS' && !textDecorationLine.includes('line-through')) {
                                 valueString = `<strike>${valueString}</strike>`;
                             }
-                            if (indent > 0) {
+                            if (textIndent > 0) {
                                 const width = measureTextWidth(' ', node.css('fontFamily'), node.fontSize) || node.fontSize / 2;
-                                valueString = Resource.STRING_SPACE.repeat(Math.max(Math.floor(indent / width), 1)) + valueString;
+                                valueString = Resource.STRING_SPACE.repeat(Math.max(Math.floor(textIndent / width), 1)) + valueString;
                             }
                             let fontVariation = getFontVariationStyle(node.css('fontStyle')),
                                 fontFeature = '';

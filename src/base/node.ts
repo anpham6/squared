@@ -1181,7 +1181,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         let parent = startSelf ? this : this.actualParent,
             value: string;
         while (parent !== null) {
-            value = initial ? parent.cssInitial(attr) : parent.css(attr);
+            value = initial ? parent.cssInitial(attr, options) : parent.css(attr);
             if (value !== '') {
                 return value;
             }
@@ -1391,7 +1391,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public has(attr: string, options?: HasOptions) {
-        const value = (options?.map === 'initial' && this._initial?.styleMap || this._styleMap)[attr];
+        const value = options?.initial ? this.cssInitial(attr, options) : this._styleMap[attr];
         if (value) {
             if (value === 'initial' || value === CSS_PROPERTIES[attr]?.value) {
                 return false;
@@ -1433,7 +1433,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (options) {
             ({ initial, percent } = options);
         }
-        const value = (initial && this._initial?.styleMap || this._styleMap)[attr];
+        const value = initial ? this.cssInitial(attr, options) : this._styleMap[attr];
         return !!value && isLength(value, percent !== false);
     }
 
@@ -1470,6 +1470,68 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         this._linear = undefined;
         this._textBounds = undefined;
         this._cached.multiline = undefined;
+    }
+
+    public min(attr: string, options?: MinMaxOptions) {
+        let self: Undef<boolean>,
+            last: Undef<boolean>,
+            initial: Undef<boolean>;
+        if (options) {
+            ({ self, last, initial } = options);
+        }
+        let result: Undef<T>,
+            min = Infinity;
+        this.each(item => {
+            const value = parseFloat(
+                self
+                    ? item[attr] as string
+                    : initial
+                        ? this.cssInitial(attr, options)
+                        : this.css(attr)
+            );
+            if (last) {
+                if (value <= min) {
+                    result = item;
+                    min = value;
+                }
+            }
+            else if (value < min) {
+                result = item;
+                min = value;
+            }
+        });
+        return result || this;
+    }
+
+    public max(attr: string, options?: MinMaxOptions) {
+        let self: Undef<boolean>,
+            last: Undef<boolean>,
+            initial: Undef<boolean>;
+        if (options) {
+            ({ self, last, initial } = options);
+        }
+        let result: Undef<T>,
+            max = -Infinity;
+        this.each(item => {
+            const value = parseFloat(
+                self
+                    ? item[attr] as string
+                    : initial
+                        ? this.cssInitial(attr, options)
+                        : this.css(attr)
+            );
+            if (last) {
+                if (value >= max) {
+                    result = item;
+                    max = value;
+                }
+            }
+            else if (value > max) {
+                result = item;
+                max = value;
+            }
+        });
+        return result || this;
     }
 
     public querySelector(value: string) {

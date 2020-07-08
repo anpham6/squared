@@ -5,7 +5,7 @@ import { getDataSet, isHorizontalAlign, isVerticalAlign, localizeString } from '
 
 type T = android.base.View;
 
-const { CSS_PROPERTIES, CSS_UNIT, formatPX, getBackgroundPosition, getStyle, isLength, isPercent, newBoxModel, parseTransform } = squared.lib.css;
+const { CSS_PROPERTIES, CSS_UNIT, formatPX, getBackgroundPosition, getStyle, isLength, isPercent, parseTransform } = squared.lib.css;
 const { createElement, getNamedItem } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
 const { actualTextRangeRect } = squared.lib.session;
@@ -115,28 +115,34 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top:
                 let upper = Math.round(offset);
                 if (upper > 0) {
                     const boxPadding = (inlineStyle || height > lineHeight) && (node.styleText || padding) && !node.inline && !(node.inputElement && !isLength(styleValue, true)) || !!parent;
-                    if (top) {
-                        if (boxPadding) {
+                    if (boxPadding) {
+                        if (top) {
+                            if (parent) {
+                                upper -= parent.paddingTop;
+                            }
                             if (upper > 0) {
                                 (parent || node).setBox(BOX_STANDARD.PADDING_TOP, { adjustment: upper, max: true });
                             }
                         }
-                        else if (inlineStyle || !node.baselineAltered) {
+                        if (bottom) {
+                            if (parent) {
+                                offset -= parent.paddingBottom;
+                            }
+                            offset = Math.floor(offset);
+                            if (offset > 0) {
+                                (parent || node).setBox(BOX_STANDARD.PADDING_BOTTOM, { adjustment: offset, max: true });
+                            }
+                        }
+                    }
+                    else {
+                        if (top && (inlineStyle || !node.baselineAltered)) {
                             upper -= node.paddingTop;
                             if (upper > 0) {
                                 node.setBox(BOX_STANDARD.MARGIN_TOP, { adjustment: upper, max: true });
                             }
                         }
-                    }
-                    if (bottom) {
-                        offset = Math.floor(offset);
-                        if (boxPadding) {
-                            if (offset > 0) {
-                                (parent || node).setBox(BOX_STANDARD.PADDING_BOTTOM, { adjustment: offset, max: true });
-                            }
-                        }
-                        else {
-                            offset -= node.paddingBottom;
+                        if (bottom) {
+                            offset = Math.floor(offset - node.paddingBottom);
                             if (offset > 0) {
                                 node.setBox(BOX_STANDARD.MARGIN_BOTTOM, { adjustment: offset, max: true });
                             }
@@ -938,15 +944,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public api = BUILD_ANDROID.LATEST;
+        public renderChildren!: T[];
         public renderParent?: T;
-        public renderTemplates?: NodeTemplate<T>[];
-        public outerWrapper?: T;
-        public companion?: T;
         public horizontalRows?: T[][];
-        public innerBefore?: T;
-        public innerAfter?: T;
-        public queryMap?: T[][];
-        public renderChildren: T[] = [];
         public readonly constraint: Constraint = {
             horizontal: false,
             vertical: false,
@@ -956,11 +956,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         protected _namespaces: ObjectMap<StringMap> = { android: {}, app: {} };
         protected _containerType = 0;
         protected _controlName = '';
+        protected _cached!: AndroidCachedValueUI<T>;
+        protected _boxReset!: BoxModel;
+        protected _boxAdjustment!: BoxModel;
         protected _localSettings!: AndroidLocalSettingsUI;
         protected _documentParent?: T;
-        protected _boxAdjustment = newBoxModel();
-        protected _boxReset = newBoxModel();
-        protected _cached!: AndroidCachedValueUI<T>;
         protected _innerWrapped?: T;
 
         private _positioned = false;
@@ -2374,7 +2374,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                 }
                 if (lineHeight > 0) {
-                    const hasOwnStyle = this.has('lineHeight', { map: 'initial' });
+                    const hasOwnStyle = this.has('lineHeight', { initial: true });
                     if (this.multiline) {
                         setMultiline(this, lineHeight, hasOwnStyle);
                     }

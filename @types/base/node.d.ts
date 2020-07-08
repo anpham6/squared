@@ -144,17 +144,6 @@ interface AscendOptions<T> {
     every?: boolean;
 }
 
-interface HasOptions {
-    map?: string;
-    not?: string | string[];
-    type?: number;
-}
-
-interface HasPXOptions {
-    percent?: boolean;
-    initial?: boolean;
-}
-
 interface BoxOptions {
     reset?: 0 | 1;
     adjustment?: number;
@@ -175,19 +164,36 @@ interface CssPXOptions {
     negative?: boolean;
 }
 
-interface CssAscendOptions {
-    startSelf?: boolean;
-    initial?: boolean;
-}
-
 interface CssInitialOptions {
     modified?: boolean;
     computed?: boolean;
 }
 
+interface HasOptions extends CssInitialOptions {
+    initial?: boolean;
+    not?: string | string[];
+    type?: number;
+}
+
+interface HasPXOptions extends CssInitialOptions {
+    initial?: boolean;
+    percent?: boolean;
+}
+
+interface CssAscendOptions extends CssInitialOptions {
+    initial?: boolean;
+    startSelf?: boolean;
+}
+
 interface CssAnyOptions extends CssInitialOptions {
-    values: string[];
     initial?: boolean
+    values: string[];
+}
+
+interface MinMaxOptions extends CssInitialOptions {
+    initial?: boolean;
+    self?: boolean;
+    last?: boolean;
 }
 
 interface ParseUnitOptions {

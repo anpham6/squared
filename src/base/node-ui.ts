@@ -4,7 +4,7 @@ import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURC
 
 type T = NodeUI;
 
-const { CSS_PROPERTIES, isLength } = squared.lib.css;
+const { CSS_PROPERTIES, isLength, newBoxModel } = squared.lib.css;
 const { getElementAsNode } = squared.lib.session;
 const { capitalize, cloneObject, convertWord, hasBit, hasKeys, isArray, iterateArray, safeNestedMap, searchObject, withinRange } = squared.lib.util;
 
@@ -286,10 +286,30 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (j > 1) {
             result.length = j;
             result.sort((a, b) => {
-                if (!a.layoutHorizontal && b.layoutHorizontal || b.siblingsLeading[0]?.float === 'left') {
+                if (a.siblingsLeading[0]?.float === 'left') {
+                    return 1;
+                }
+                else if (b.siblingsLeading[0]?.float === 'left') {
                     return -1;
                 }
-                if (!b.layoutHorizontal && a.layoutHorizontal || a.siblingsLeading[0]?.float === 'left') {
+                const vA = a.verticalAlign;
+                const vB = b.verticalAlign;
+                if (vA === 0 && vB !== 0) {
+                    return -1;
+                }
+                else if (vB === 0 && vA !== 0) {
+                    return 1;
+                }
+                if (a.layoutHorizontal && a.baselineElement) {
+                    a = a.max('baselineHeight', { self: true }) as T;
+                }
+                if (a.layoutHorizontal && b.baselineElement) {
+                    b = b.max('baselineHeight', { self: true }) as T;
+                }
+                if (!a.layoutHorizontal && b.layoutHorizontal) {
+                    return -1;
+                }
+                else if (!b.layoutHorizontal && a.layoutHorizontal) {
                     return 1;
                 }
                 const imageA = a.imageContainer;
@@ -298,14 +318,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     return -1;
                 }
                 else if (!imageB && imageA) {
-                    return 1;
-                }
-                const vA = a.verticalAlign;
-                const vB = b.verticalAlign;
-                if (vA === 0 && vB !== 0) {
-                    return -1;
-                }
-                else if (vB === 0 && vA !== 0) {
                     return 1;
                 }
                 const heightA = a.baselineHeight;
@@ -512,29 +524,29 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public baselineAltered = false;
     public contentAltered = false;
     public visible = true;
+    public renderChildren: T[] = [];
     public documentChildren?: T[];
     public horizontalRowStart?: boolean;
     public horizontalRowEnd?: boolean;
-    public abstract renderParent?: T;
-    public abstract renderExtension?: squared.base.ExtensionUI<T>[];
-    public abstract renderTemplates?: NodeTemplate<T>[];
-    public abstract outerWrapper?: T;
-    public abstract innerWrapped?: T;
-    public abstract innerBefore?: T;
-    public abstract innerAfter?: T;
-    public abstract companion?: T;
-    public abstract labelFor?: T;
-    public abstract horizontalRows?: T[][];
-    public abstract renderChildren: T[];
+    public renderParent?: T;
+    public outerWrapper?: T;
+    public innerWrapped?: T;
+    public innerBefore?: T;
+    public innerAfter?: T;
+    public companion?: T;
+    public labelFor?: T;
+    public renderExtension?: squared.base.ExtensionUI<T>[];
+    public renderTemplates?: NodeTemplate<T>[];
+    public horizontalRows?: T[][];
 
+    protected _boxAdjustment = newBoxModel();
+    protected _boxReset = newBoxModel();
     protected _preferInitial = true;
+    protected _cached!: CachedValueUI<T>;
     protected _documentParent?: T;
     protected _controlName?: string;
     protected _boxRegister?: ObjectIndex<T>;
-    protected abstract _cached: CachedValueUI<T>;
     protected abstract _namespaces: ObjectMap<StringMap>;
-    protected abstract _boxAdjustment: BoxModel;
-    protected abstract _boxReset: BoxModel;
 
     private _excludeSection = 0;
     private _excludeProcedure = 0;
@@ -1200,9 +1212,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public getBox(region: number): [number, number] {
         const attr = CSS_SPACING.get(region);
-        return attr
-            ? [this._boxReset[attr] as number, this._boxAdjustment[attr] as number]
-            : [NaN, 0];
+        return attr ? [this._boxReset[attr] as number, this._boxAdjustment[attr] as number] : [NaN, 0];
     }
 
     public setBox(region: number, options: BoxOptions) {
@@ -1698,9 +1708,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     get positiveAxis() {
         const result = this._cached.positiveAxis;
-        return result === undefined
-            ? this._cached.positiveAxis = (!this.positionRelative || this.positionRelative && this.top >= 0 && this.left >= 0 && (this.right <= 0 || this.hasPX('left')) && (this.bottom <= 0 || this.hasPX('top'))) && this.marginTop >= 0 && this.marginLeft >= 0 && this.marginRight >= 0
-            : result;
+        return result === undefined ? this._cached.positiveAxis = (!this.positionRelative || this.positionRelative && this.top >= 0 && this.left >= 0 && (this.right <= 0 || this.hasPX('left')) && (this.bottom <= 0 || this.hasPX('top'))) && this.marginTop >= 0 && this.marginLeft >= 0 && this.marginRight >= 0 : result;
     }
 
     get leftTopAxis() {
@@ -1718,13 +1726,31 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return result;
     }
 
-    get baselineElement() {
+    get baselineElement(): boolean {
         let result = this._cached.baselineElement;
         if (result === undefined) {
             if (this.baseline) {
                 const children = this.naturalChildren;
                 if (children.length > 0) {
-                    result = children.every((node: T) => node.baselineElement && node.length === 0);
+                    result = children.every((node: T) => {
+                        do {
+                            if (node.baselineElement) {
+                                switch (node.length) {
+                                    case 0:
+                                        return true;
+                                    case 1:
+                                        node = node.children[0] as T;
+                                        break;
+                                    default:
+                                        return false;
+                                }
+                            }
+                            else {
+                                return false;
+                            }
+                        }
+                        while (true);
+                    });
                 }
                 else {
                     result = this.inlineText && this.textElement || this.plainText && !this.multiline || this.inputElement || this.imageElement || this.svgElement;
@@ -1733,7 +1759,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             else {
                 result = false;
             }
-            this._cached.baselineElement = result;
+            return this._cached.baselineElement = result;
         }
         return result;
     }

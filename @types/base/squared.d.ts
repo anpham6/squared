@@ -413,6 +413,8 @@ declare module "base" {
         toElementString(attr: string, fallback?: string): string;
         setBounds(cache?: boolean): Undef<BoxRectDimension>;
         resetBounds(): void;
+        min(attr: string, options?: MinMaxOptions): Node;
+        max(attr: string, options?: MinMaxOptions): Node;
         querySelector(value: string): Null<Node>;
         querySelectorAll(value: string, resultCount?: number): Node[];
         set parent(value);
