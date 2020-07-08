@@ -163,6 +163,7 @@ function getExclusionValue(enumeration: {}, offset: number, value?: string) {
     return offset;
 }
 
+const hasTextIndent = (node: T) => node.blockDimension || node.display === 'table-cell';
 const canCascadeChildren = (node: T) =>  node.naturalElements.length > 0 && !node.layoutElement && !node.tableElement;
 const checkBlockDimension = (node: T, previous: T) => node.blockDimension && Math.ceil(node.bounds.top) >= previous.bounds.bottom && (node.blockVertical || previous.blockVertical || node.percentWidth > 0 || previous.percentWidth > 0);
 const getPercentWidth = (node: T) => node.inlineDimension && !node.hasPX('maxWidth') ? node.percentWidth : -Infinity;
@@ -307,8 +308,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 else if (vB === 0 && vA !== 0) {
                     return 1;
                 }
-                const heightA = a.baselineHeight + a.marginBottom + a.getBox(BOX_STANDARD.MARGIN_TOP)[1];
-                const heightB = b.baselineHeight + b.marginBottom + b.getBox(BOX_STANDARD.MARGIN_TOP)[1];
+                const heightA = a.baselineHeight;
+                const heightB = b.baselineHeight;
                 if (heightA !== heightB) {
                     return heightA > heightB ? -1 : 1;
                 }
@@ -395,8 +396,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 linearY = y === n;
                 if (linearX && floating) {
                     let boxLeft = Infinity,
-                        boxRight = -Infinity;
-                    let floatLeft = -Infinity,
+                        boxRight = -Infinity,
+                        floatLeft = -Infinity,
                         floatRight = Infinity;
                     i = 0;
                     while (i < n) {
@@ -1759,9 +1760,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
     get actualParent(): Null<T> {
         const result = this._cached.actualParent;
-        return result === undefined
-            ? this._cached.actualParent = super.actualParent as Null<T> || this.innerMostWrapped.actualParent
-            : result;
+        return result === undefined ? this._cached.actualParent = super.actualParent as Null<T> || this.innerMostWrapped.actualParent : result;
     }
 
     set siblingsLeading(value) {
@@ -1884,6 +1883,32 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return result;
     }
 
+    set textIndent(value) {
+        this._cached.textIndent = value;
+    }
+    get textIndent() {
+        let result = this._cached.textIndent;
+        if (result === undefined) {
+            if (this.naturalChild) {
+                if (hasTextIndent(this)) {
+                    const value = this.css('textIndent');
+                    result = this.parseUnit(value);
+                    if (value === '100%' || result + this.bounds.width < 0) {
+                        return this._cached.textIndent = NaN;
+                    }
+                }
+                if (!result) {
+                    const parent = this.actualParent;
+                    if (parent?.firstStaticChild === this && hasTextIndent(parent as T)) {
+                        result = parent.parseUnit(parent.css('textIndent'));
+                    }
+                }
+            }
+            return this._cached.textIndent = result || 0;
+        }
+        return result;
+    }
+
     set childIndex(value) {
         this._childIndex = value;
     }
@@ -1987,7 +2012,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         const use = this.use;
         this.dataset['use' + capitalize(this.localSettings.systemName)] = (use ? use + ', ' : '') + value;
     }
-
     get use() {
         const dataset = this.dataset;
         return dataset['use' + capitalize(this.localSettings.systemName)] || dataset['use'];

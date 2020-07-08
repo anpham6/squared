@@ -33,8 +33,6 @@ function setTextValue(node: View, attr: string, name: string) {
     }
 }
 
-const hasTextIndent = (node: View) => node.blockDimension || node.display === 'table-cell';
-
 export default class ResourceStrings<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly options: ResourceStringsOptions = {
         numberResourceValue: false
@@ -90,14 +88,10 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                     default: {
                         let valueString = node.data<string>(Resource.KEY_NAME, 'valueString');
                         if (valueString) {
-                            let indent = 0;
-                            if (hasTextIndent(node)) {
-                                const textIndent = node.css('textIndent');
-                                indent = node.parseUnit(textIndent);
-                                if (textIndent === '100%' || indent + node.bounds.width < 0) {
-                                    node.delete('android', 'ellipsize', 'maxLines');
-                                    return;
-                                }
+                            const indent = node.textIndent;
+                            if (isNaN(indent)) {
+                                node.delete('android', 'ellipsize', 'maxLines');
+                                return;
                             }
                             switch (node.css('textTransform')) {
                                 case 'uppercase':
@@ -127,12 +121,6 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                             }
                             if (tagName === 'INS' && !textDecorationLine.includes('line-through')) {
                                 valueString = `<strike>${valueString}</strike>`;
-                            }
-                            if (indent === 0) {
-                                const parent = node.actualParent;
-                                if (parent?.firstStaticChild === node && hasTextIndent(parent as T)) {
-                                    indent = parent.parseUnit(parent.css('textIndent'));
-                                }
                             }
                             if (indent > 0) {
                                 const width = measureTextWidth(' ', node.css('fontFamily'), node.fontSize) || node.fontSize / 2;

@@ -2749,7 +2749,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                     }
                 }
-                this._cached.baselineHeight = result;
+                this._cached.baselineHeight = result + this.marginBottom + this.getBox(BOX_STANDARD.MARGIN_TOP)[1];
             }
             return result;
         }

@@ -180,6 +180,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                         container.setCacheValue('marginLeft', seg.marginLeft);
                         container.siblingsLeading = seg.siblingsLeading;
                         container.lineBreakLeading = seg.lineBreakLeading;
+                        container.textIndent = seg.textIndent;
                     }
                     else {
                         previous.siblingsTrailing = [container];

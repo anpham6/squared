@@ -645,6 +645,8 @@ declare module "base" {
         get positioned(): boolean;
         set controlId(name: string);
         get controlId(): string;
+        set textIndent(value);
+        get textIndent(): number;
         set renderExclude(value: boolean);
         get renderExclude(): boolean;
         set use(value: Undef<string>);
