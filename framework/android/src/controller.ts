@@ -893,7 +893,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
             else if (this.checkLinearHorizontal(layout)) {
                 layout.setContainerType(CONTAINER_NODE.LINEAR);
-                if (layout.floated.size > 0) {
+                if (layout.floated) {
                     sortHorizontalFloat(layout.children);
                 }
             }
@@ -978,7 +978,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public processTraverseHorizontal(layout: LayoutUI<T>, siblings: T[]) {
         const parent = layout.parent;
-        if (layout.floated.size === 1 && layout.every(item => item.floating)) {
+        if (layout.floated?.size === 1 && layout.every(item => item.floating)) {
             if (isUnknownParent(parent, CONTAINER_NODE.CONSTRAINT, layout.length)) {
                 parent.addAlign(NODE_ALIGNMENT.FLOAT);
                 parent.removeAlign(NODE_ALIGNMENT.UNKNOWN);
@@ -1010,7 +1010,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     public processTraverseVertical(layout: LayoutUI<T>) {
         const parent = layout.parent;
         const clearMap = this.application.clearMap;
-        const floatSize = layout.floated.size;
+        const floatSize = layout.floated?.size;
         const length = layout.length;
         if (layout.some((item, index) => item.lineBreakTrailing && index < length - 1)) {
             if (!parent.hasAlign(NODE_ALIGNMENT.VERTICAL)) {
@@ -1106,7 +1106,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         else if (this.checkLinearHorizontal(layout)) {
             layout.setContainerType(CONTAINER_NODE.LINEAR, NODE_ALIGNMENT.HORIZONTAL);
-            if (layout.floated.size > 0) {
+            if (layout.floated) {
                 sortHorizontalFloat(layout.children);
             }
         }
@@ -1199,34 +1199,37 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public checkFrameHorizontal(layout: LayoutUI<T>) {
-        switch (layout.floated.size) {
-            case 1:
-                if (layout.node.cssAscend('textAlign') === 'center' && layout.some(item => !item.block && !item.floating)) {
-                    return true;
-                }
-                else if (layout.floated.has('right')) {
-                    let pageFlow = 0,
-                        multiline = false;
-                    for (const node of layout) {
-                        if (node.floating) {
-                            if (multiline) {
-                                return false;
-                            }
-                            continue;
-                        }
-                        else if (node.multiline) {
-                            multiline = true;
-                        }
-                        ++pageFlow;
+        const floated = layout.floated;
+        if (floated) {
+            switch (floated.size) {
+                case 1:
+                    if (layout.node.cssAscend('textAlign') === 'center' && layout.some(item => !item.block && !item.floating)) {
+                        return true;
                     }
-                    return pageFlow > 0 && !layout.singleRowAligned;
-                }
-                else if (layout.item(0)!.floating) {
-                    return layout.linearY || layout.some(item => item.block && !item.floating || !item.inlineFlow, { start: 1 });
-                }
-                break;
-            case 2:
-                return true;
+                    else if (floated.has('right')) {
+                        let pageFlow = 0,
+                            multiline = false;
+                        for (const node of layout) {
+                            if (node.floating) {
+                                if (multiline) {
+                                    return false;
+                                }
+                                continue;
+                            }
+                            else if (node.multiline) {
+                                multiline = true;
+                            }
+                            ++pageFlow;
+                        }
+                        return pageFlow > 0 && !layout.singleRowAligned;
+                    }
+                    else if (layout.item(0)!.floating) {
+                        return layout.linearY || layout.some(item => item.block && !item.floating || !item.inlineFlow, { start: 1 });
+                    }
+                    break;
+                case 2:
+                    return true;
+            }
         }
         return false;
     }
@@ -1257,7 +1260,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public checkConstraintHorizontal(layout: LayoutUI<T>) {
         if (layout.length > 1 && layout.singleRowAligned) {
-            switch (layout.floated.size) {
+            switch (layout.floated?.size) {
                 case 1:
                     if (hasCleared(layout, this.application.clearMap)) {
                         return false;
@@ -1292,8 +1295,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public checkLinearHorizontal(layout: LayoutUI<T>) {
         const floated = layout.floated;
-        const floatSize = floated.size;
-        if ((floatSize === 0 || floatSize === 1 && floated.has('left')) && layout.node.lineHeight === 0 && layout.singleRowAligned) {
+        if ((!floated || floated.size === 1 && floated.has('left')) && layout.node.lineHeight === 0 && layout.singleRowAligned) {
             const { fontSize, lineHeight } = layout.item(0) as T;
             const boxWidth = layout.parent.actualBoxWidth();
             let contentWidth = 0;

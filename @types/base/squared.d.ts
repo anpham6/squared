@@ -360,7 +360,7 @@ declare module "base" {
         set type(value: LayoutType);
         get linearX(): boolean;
         get linearY(): boolean;
-        get floated(): Set<string>;
+        get floated(): Undef<Set<string>>;
         get singleRowAligned(): boolean;
         get unknownAligned(): boolean;
         constructor(parent: T, node: T, containerType?: number, alignmentType?: number, children?: T[]);

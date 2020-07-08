@@ -127,7 +127,7 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
         if (!this._initialized) {
             this.init();
         }
-        return this._floated || new Set<string>();
+        return this._floated;
     }
 
     get singleRowAligned() {

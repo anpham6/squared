@@ -286,20 +286,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (j > 1) {
             result.length = j;
             result.sort((a, b) => {
-                if (a.siblingsLeading[0]?.float === 'left') {
-                    return 1;
-                }
-                else if (b.siblingsLeading[0]?.float === 'left') {
-                    return -1;
-                }
-                const vA = a.verticalAlign;
-                const vB = b.verticalAlign;
-                if (vA === 0 && vB !== 0) {
-                    return -1;
-                }
-                else if (vB === 0 && vA !== 0) {
-                    return 1;
-                }
                 if (a.layoutHorizontal && a.baselineElement) {
                     a = a.max('baselineHeight', { self: true }) as T;
                 }
@@ -309,7 +295,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 if (!a.layoutHorizontal && b.layoutHorizontal) {
                     return -1;
                 }
-                else if (!b.layoutHorizontal && a.layoutHorizontal) {
+                if (!b.layoutHorizontal && a.layoutHorizontal) {
                     return 1;
                 }
                 const imageA = a.imageContainer;
@@ -317,7 +303,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 if (!imageA && imageB) {
                     return -1;
                 }
-                else if (!imageB && imageA) {
+                if (!imageB && imageA) {
                     return 1;
                 }
                 const heightA = a.baselineHeight;
@@ -330,33 +316,25 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         if (!a.pseudoElement && b.pseudoElement) {
                             return -1;
                         }
-                        else if (a.pseudoElement && !b.pseudoElement) {
+                        if (a.pseudoElement && !b.pseudoElement) {
                             return 1;
                         }
-                        else if (!a.plainText && b.plainText) {
+                        if (!a.plainText && b.plainText) {
                             return -1;
                         }
-                        else if (a.plainText && !b.plainText) {
+                        if (a.plainText && !b.plainText) {
                             return 1;
                         }
                     }
-                    else if (a.inputElement && b.inputElement && a.containerType !== b.containerType) {
+                    if (a.inputElement && b.inputElement && a.containerType !== b.containerType) {
                         return a.containerType > b.containerType ? -1 : 1;
                     }
-                    else if (a.textElement && b.inputElement && a.childIndex < b.childIndex) {
+                    if (a.textElement && b.inputElement && a.childIndex < b.childIndex) {
                         return -1;
                     }
-                    else if (b.textElement && a.inputElement && b.childIndex < a.childIndex) {
+                    if (b.textElement && a.inputElement && b.childIndex < a.childIndex) {
                         return 1;
                     }
-                }
-                const bottomA = a.bounds.bottom;
-                const bottomB = b.bounds.bottom;
-                if (bottomA > bottomB) {
-                    return -1;
-                }
-                else if (bottomA < bottomB) {
-                    return 1;
                 }
                 return 0;
             });
@@ -365,9 +343,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public static linearData<T extends NodeUI>(list: T[], cleared?: Map<T, string>): LinearData<T> {
-        const floated = new Set<string>();
         let linearX = false,
-            linearY = false;
+            linearY = false,
+            floated: Undef<Set<string>>;
         const length = list.length;
         if (length > 1) {
             const nodes: T[] = new Array(length);
@@ -376,7 +354,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 const item = list[i++];
                 if (item.pageFlow) {
                     if (item.floating) {
-                        floated.add(item.float);
+                        (floated || (floated = new Set<string>())).add(item.float);
                     }
                     nodes[n++] = item;
                 }
@@ -386,14 +364,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             }
             if (n) {
                 nodes.length = n;
-                const floating = floated.size > 0;
                 const siblings = [nodes[0]];
                 let x = 1,
                     y = 1;
                 i = 1;
                 while (i < n) {
                     const node = nodes[i++];
-                    if (node.alignedVertically(siblings, floating ? cleared : undefined) > 0) {
+                    if (node.alignedVertically(siblings, floated ? cleared : undefined) > 0) {
                         ++y;
                     }
                     else {
@@ -406,7 +383,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 }
                 linearX = x === n;
                 linearY = y === n;
-                if (linearX && floating) {
+                if (linearX && floated) {
                     let boxLeft = Infinity,
                         boxRight = -Infinity,
                         floatLeft = -Infinity,
@@ -464,7 +441,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             linearY = list[0].blockStatic;
             linearX = !linearY;
         }
-        return { linearX, linearY, floated, cleared };
+        return { linearX, linearY, floated };
     }
 
     public static partitionRows(list: T[], cleared?: Map<T, string>) {
@@ -1925,7 +1902,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 }
                 if (!result) {
                     const parent = this.actualParent;
-                    if (parent?.firstStaticChild === this && hasTextIndent(parent as T)) {
+                    if (parent?.firstStaticChild === this && hasTextIndent(parent)) {
                         result = parent.parseUnit(parent.css('textIndent'));
                     }
                 }
