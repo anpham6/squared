@@ -12,7 +12,7 @@ export const enum USER_AGENT {
     EDGE = 1 << 3
 }
 
-export function isPlatform(value: string | number) {
+export function isPlatform(value: NumString) {
     const platform = navigator.platform.toLowerCase();
     if (typeof value === 'string') {
         return platform.includes(value.toLowerCase());
@@ -20,7 +20,7 @@ export function isPlatform(value: string | number) {
     return hasBit(value, PLATFORM.WINDOWS) && platform.includes('win') || hasBit(value, PLATFORM.MAC) && /(mac|iphone|ipad|ipod)/.test(platform);
 }
 
-export function isUserAgent(value: string | number) {
+export function isUserAgent(value: NumString) {
     const userAgent = navigator.userAgent;
     let client = USER_AGENT.CHROME;
     if (userAgent.includes('Safari/') && !userAgent.includes('Chrome/')) {

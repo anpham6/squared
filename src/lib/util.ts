@@ -1041,11 +1041,11 @@ export function findSet<T = unknown>(list: Set<T>, predicate: IteratorPredicate<
     return undefined;
 }
 
-export function safeNestedArray<T = unknown>(list: T[][] | ObjectMap<T[]> | ObjectIndex<T[]>, index: number | string) {
+export function safeNestedArray<T = unknown>(list: T[][] | ObjectMap<T[]> | ObjectIndex<T[]>, index: NumString) {
     return (list[index] ?? (list[index] = [])) as T[];
 }
 
-export function safeNestedMap<T = unknown>(map: ObjectMapNested<T>, index: number | string) {
+export function safeNestedMap<T = unknown>(map: ObjectMapNested<T>, index: NumString) {
     return (map[index] ?? (map[index] = {})) as ObjectMap<T>;
 }
 

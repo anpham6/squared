@@ -10,7 +10,7 @@ import { SVG, TRANSFORM } from './lib/util';
 
 type SvgContainer = squared.svg.SvgContainer;
 type SvgView = squared.svg.SvgView;
-type AnimateValue = number | Point[] | string;
+type AnimateValue = NumString | Point[];
 type TimelineValue = Map<any, AnimateValue>;
 type TimelineIndex = Map<number, AnimateValue>;
 type TimelineMap = ObjectMap<TimelineIndex>;

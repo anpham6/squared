@@ -3935,7 +3935,7 @@ export function formatPX(value: number) {
     return Math.round(value) + 'px';
 }
 
-export function formatPercent(value: string | number, round?: boolean) {
+export function formatPercent(value: NumString, round?: boolean) {
     if (typeof value === 'string') {
         value = parseFloat(value);
         if (isNaN(value)) {

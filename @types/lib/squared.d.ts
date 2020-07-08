@@ -76,8 +76,8 @@ declare module "lib" {
             FIREFOX = 1 << 2,
             EDGE = 1 << 3
         }
-        function isPlatform(value: string | number): boolean;
-        function isUserAgent(value: string | number): boolean;
+        function isPlatform(value: NumString): boolean;
+        function isUserAgent(value: NumString): boolean;
         function getDeviceDPI(): number;
     }
 
@@ -133,7 +133,7 @@ declare module "lib" {
         function convertAngle(value: string, unit?: string, fallback?: number): number;
         function parseTime(value: string): number;
         function formatPX(value: number): string;
-        function formatPercent(value: string | number, round?: boolean): string;
+        function formatPercent(value: NumString, round?: boolean): string;
         function isLength(value: string, percent?: boolean): boolean;
         function isPx(value: string): boolean;
         function isPercent(value: string): boolean;
@@ -164,7 +164,7 @@ declare module "lib" {
         function equal(a: number, b: number, precision?: number): boolean;
         function moreEqual(a: number, b: number, precision?: number): boolean;
         function lessEqual(a: number, b: number, precision?: number): boolean;
-        function truncate(value: number | string, precision?: number): string;
+        function truncate(value: NumString, precision?: number): string;
         function truncateTrailingZero(value: string): string;
         function truncateFraction(value: number): number;
         function truncateString(value: string, precision?: number): string;
@@ -287,8 +287,8 @@ declare module "lib" {
         function assignEmptyValue(dest: {}, ...attrs: string[]): void;
         function sortNumber(values: number[], ascending?: boolean): number[];
         function findSet<T = unknown>(list: Set<T>, predicate: IteratorPredicate<T, boolean, Set<T>>): Undef<T>;
-        function safeNestedArray<T = unknown>(list: T[][] | ObjectMap<T[]> | ObjectIndex<T[]>, index: number | string): T[];
-        function safeNestedMap<T = unknown>(map: ObjectMapNested<T>, index: number | string): ObjectMap<T>;
+        function safeNestedArray<T = unknown>(list: T[][] | ObjectMap<T[]> | ObjectIndex<T[]>, index: NumString): T[];
+        function safeNestedMap<T = unknown>(map: ObjectMapNested<T>, index: NumString): ObjectMap<T>;
         function sortArray<T = any>(list: T[], ascending: boolean, ...attrs: string[]): T[];
         function flatArray<T = unknown>(list: any[], depth?: number): T[];
         function spliceArray<T = unknown>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>, deleteCount?: number): T[];

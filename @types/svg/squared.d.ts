@@ -100,7 +100,7 @@ declare module "svg" {
         setAttribute(attr: string): void;
         getAttribute(attr: string): string;
         resetPaint(): void;
-        convertLength(value: string, dimension?: string | number): number;
+        convertLength(value: string, dimension?: NumString): number;
     }
 
     interface SvgSynchronize {
@@ -232,7 +232,7 @@ declare module "svg" {
         resetPaint(): void;
         setAttribute(attr: string, computed?: boolean, inherited?: boolean): void;
         getAttribute(attr: string, computed?: boolean, inherited?: boolean): string;
-        convertLength(value: string, dimension?: string | number): number;
+        convertLength(value: string, dimension?: NumString): number;
         getTransforms(element?: SVGGraphicsElement): SvgTransform[];
         getAnimations(element?: SVGGraphicsElement): SvgAnimation[];
         getTitle(lang?: string): string;
@@ -520,7 +520,7 @@ declare module "svg" {
         setAttribute(attr: string, computed?: boolean, inherited?: boolean): void;
         getAttribute(attr: string, computed?: boolean, inherited?: boolean): string;
         resetPaint(): void;
-        convertLength(value: string, dimension?: string | number): number;
+        convertLength(value: string, dimension?: NumString): number;
         patternRefitX(value: number): number;
         patternRefitY(value: number): number;
         patternRefitPoints(values: SvgPoint[]): SvgPoint[];
@@ -753,7 +753,7 @@ declare module "svg" {
                 origin(element: SVGElement, value?: string): Point;
                 rotateOrigin(element: SVGElement, attr?: string): SvgPoint[];
                 typeAsName(type: number): string;
-                typeAsValue(type: string | number): string;
+                typeAsValue(type: NumString): string;
             };
             const SVG: {
                 svg(element: Element): element is SVGSVGElement;

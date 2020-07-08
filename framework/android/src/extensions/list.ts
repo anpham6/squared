@@ -70,7 +70,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 }
             }
             if (node.length === 0 && !node.outerWrapper) {
-                container = controller.createNodeWrapper(node, parent);
+                container = controller.createNodeWrapper(node, parent, { alignmentType: parent.layoutGrid ? NODE_ALIGNMENT.VERTICAL : 0 });
                 wrapped = true;
             }
             else {
@@ -159,7 +159,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         minWidth -= paddingRight;
                     }
                     else if (value !== '') {
-                        value += '&#160;'.repeat(value.length === 1 ? 3 : 2);
+                        value += '&#160;'.repeat(value.length === 1 && node.fontSize <= 24 ? 3 : 2);
                     }
                 }
                 if (columnCount === 3) {

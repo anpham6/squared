@@ -22,7 +22,7 @@ export function lessEqual(a: number, b: number, precision = 5) {
     return a < b || equal(a, b, precision);
 }
 
-export function truncate(value: number | string, precision = 3) {
+export function truncate(value: NumString, precision = 3) {
     if (typeof value === 'string') {
         value = parseFloat(value);
     }

@@ -40,7 +40,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
             parentAs!: T;
         if (backgroundColor !== '') {
             if (!(visibleStyle.backgroundImage && visibleStyle.backgroundRepeatX && visibleStyle.backgroundRepeatY) || /\.(gif|png)"?\)$/i.test(backgroundImage)) {
-                container = controller.createNodeWrapper(node, renderParent, { resource: NODE_RESOURCE.BOX_SPACING | NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING });
+                container = controller.createNodeWrapper(node, renderParent, { alignmentType: NODE_ALIGNMENT.VERTICAL, resource: NODE_RESOURCE.BOX_SPACING | NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING });
                 container.css('backgroundColor', backgroundColor);
                 container.setCacheValue('backgroundColor', backgroundColor);
                 if (!parentVisible) {
@@ -73,11 +73,11 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
                     );
                     parentAs = container;
                     renderParent = container;
-                    container = controller.createNodeWrapper(node, parentAs, { resource: NODE_RESOURCE.BOX_SPACING });
+                    container = controller.createNodeWrapper(node, parentAs, { alignmentType: NODE_ALIGNMENT.VERTICAL, resource: NODE_RESOURCE.BOX_SPACING });
                 }
             }
             else {
-                container = controller.createNodeWrapper(node, renderParent, { resource: NODE_RESOURCE.BOX_SPACING | NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING });
+                container = controller.createNodeWrapper(node, renderParent, { alignmentType: NODE_ALIGNMENT.VERTICAL, resource: NODE_RESOURCE.BOX_SPACING | NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING });
             }
             container.setLayoutWidth('match_parent');
             const height = parent.cssInitial('height');
@@ -115,7 +115,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
         }
         if (isParentTransfer(parent)) {
             if (!container) {
-                container = controller.createNodeWrapper(node, renderParent);
+                container = controller.createNodeWrapper(node, renderParent, { alignmentType: NODE_ALIGNMENT.VERTICAL });
             }
             container.unsafe('excludeResource', NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING);
             parent.resetBox(BOX_STANDARD.MARGIN, container);

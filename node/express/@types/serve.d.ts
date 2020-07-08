@@ -2,6 +2,8 @@ import * as fs from 'fs';
 import * as cors from 'cors';
 import * as jimp from 'jimp';
 
+type BoolString = boolean | string;
+
 interface INode {
     readonly disk_read: boolean;
     readonly disk_write: boolean;
@@ -92,15 +94,15 @@ interface IFileManager {
 
 interface Settings {
     version?: string;
-    disk_read?: string | boolean;
-    disk_write?: string | boolean;
-    unc_read?: string | boolean;
-    unc_write?: string | boolean;
+    disk_read?: BoolString;
+    disk_write?: BoolString;
+    unc_read?: BoolString;
+    unc_write?: BoolString;
     cors?: cors.CorsOptions;
     request_post_limit?: string;
-    gzip_level?: string | number;
-    brotli_quality?: string | number;
-    jpeg_quality?: string | number;
+    gzip_level?: NumString;
+    brotli_quality?: NumString;
+    jpeg_quality?: NumString;
     tinypng_api_key?: string;
     env?: string;
     port?: { development?: string; production?: string };

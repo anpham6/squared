@@ -242,7 +242,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
             return value;
         }
 
-        public convertLength(value: string, dimension?: string | number) {
+        public convertLength(value: string, dimension?: NumString) {
             if (isNumber(value)) {
                 return parseFloat(value);
             }

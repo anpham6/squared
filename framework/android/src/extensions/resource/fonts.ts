@@ -382,8 +382,8 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 });
             }
             styleData.sort((a, b) => {
-                let c: number | string = a.ids!.length,
-                    d: number | string = b.ids!.length;
+                let c: NumString = a.ids!.length,
+                    d: NumString = b.ids!.length;
                 if (c === d) {
                     c = (a.items as StringValue[]).length;
                     d = (b.items as StringValue[]).length;

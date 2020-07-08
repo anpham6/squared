@@ -106,7 +106,7 @@ export function applyTemplate(tagName: string, template: StandardMap, children: 
     return output;
 }
 
-export function convertLength(value: string | number, font?: boolean, precision = 3) {
+export function convertLength(value: NumString, font?: boolean, precision = 3) {
     if (typeof value === 'string') {
         value = parseFloat(value);
     }

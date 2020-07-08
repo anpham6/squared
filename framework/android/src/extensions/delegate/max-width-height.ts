@@ -34,7 +34,7 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
     public processNode(node: T, parent: T) {
         const mainData = node.data<MaxWidthHeightData>(this.name, 'mainData');
         if (mainData) {
-            const container = (this.controller as android.base.Controller<T>).createNodeWrapper(node, parent, { containerType: CONTAINER_NODE.CONSTRAINT, alignmentType: NODE_ALIGNMENT.BLOCK, resetMargin: true });
+            const container = (this.controller as android.base.Controller<T>).createNodeWrapper(node, parent, { containerType: CONTAINER_NODE.CONSTRAINT, alignmentType: NODE_ALIGNMENT.BLOCK | NODE_ALIGNMENT.VERTICAL, resetMargin: true });
             if (mainData.maxWidth) {
                 node.setLayoutWidth('0px');
                 container.setLayoutWidth('match_parent');

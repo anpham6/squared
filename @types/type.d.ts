@@ -18,6 +18,8 @@ type StringMap = ObjectMap<Undef<string>>;
 type StringSafeMap = ObjectMap<string>;
 type CallbackResult = (result: {}) => void;
 
+type NumString = number | string;
+
 type StandardMap = ObjectMap<any>;
 
 interface ObjectMap<T> {

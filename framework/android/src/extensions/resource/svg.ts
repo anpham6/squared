@@ -368,7 +368,7 @@ function groupTransforms(element: SVGGraphicsElement, transforms: SvgTransform[]
     return [[], transforms];
 }
 
-function getPropertyValue(values: string[] | (string | number)[][], index: number, propertyIndex: number, keyFrames?: boolean, baseValue?: string) {
+function getPropertyValue(values: string[] | (NumString)[][], index: number, propertyIndex: number, keyFrames?: boolean, baseValue?: string) {
     const property = values[index];
     let value: Undef<string>;
     if (property) {
@@ -1323,7 +1323,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                         propertyValuesHolder: false
                                                     };
                                                     const s = values.length;
-                                                    let valueTo: string | number;
+                                                    let valueTo: NumString;
                                                     if (Array.isArray(values[0])) {
                                                         valueTo = values[s - 1][k];
                                                         if (s > 1) {
@@ -1454,8 +1454,8 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                             data,
                             name,
                             {
-                                set: [{ set: undefined as any, objectAnimator }],
-                                objectAnimator: undefined as any
+                                set: [{ set: [], objectAnimator }],
+                                objectAnimator: []
                             },
                             templateName,
                             imageLength

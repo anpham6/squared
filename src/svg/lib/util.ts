@@ -383,7 +383,7 @@ export const TRANSFORM = {
                 return '';
         }
     },
-    typeAsValue(type: string | number) {
+    typeAsValue(type: NumString) {
         switch (type) {
             case 'rotate':
             case SVGTransform.SVG_TRANSFORM_ROTATE:

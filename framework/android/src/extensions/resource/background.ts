@@ -62,7 +62,7 @@ interface LayerData {
 const { reduceRGBA } = squared.lib.color;
 const { extractURL, formatPercent, formatPX, getBackgroundPosition } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { delimitString, flatArray, isEqual, plainMap, resolvePath, splitPair } = squared.lib.util;
+const { delimitString, isEqual, plainMap, resolvePath, spliceArray, splitPair } = squared.lib.util;
 
 const { BOX_STANDARD, NODE_RESOURCE } = squared.base.lib.enumeration;
 
@@ -867,14 +867,14 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         ++length;
                     }
                     else {
-                        backgroundRepeat[i] = undefined as any;
-                        backgroundSize[i] = undefined as any;
+                        backgroundRepeat[i] = '';
+                        backgroundSize[i] = '';
                         modified = true;
                     }
                 }
                 if (modified) {
-                    backgroundRepeat = flatArray(backgroundRepeat);
-                    backgroundSize = flatArray(backgroundSize);
+                    spliceArray(backgroundRepeat, value => value === '');
+                    spliceArray(backgroundSize, value => value === '');
                 }
             }
             if (embedded) {

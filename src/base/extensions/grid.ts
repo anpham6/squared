@@ -3,6 +3,10 @@ import NodeUI from '../node-ui';
 
 import { BOX_STANDARD } from '../lib/enumeration';
 
+interface Node extends NodeUI {
+    spacer?: number;
+}
+
 const { aboveRange, belowRange, safeNestedArray, withinRange } = squared.lib.util;
 
 function getRowIndex(columns: NodeUI[][], target: NodeUI) {
@@ -24,6 +28,19 @@ function getRowIndex(columns: NodeUI[][], target: NodeUI) {
     return -1;
 }
 
+function checkAlignment(node: NodeUI) {
+    if (node.baseline || node.floating) {
+        return true;
+    }
+    switch (node.css('verticalAlign')) {
+        case 'top':
+        case 'middle':
+        case 'bottom':
+            return true;
+    }
+    return false;
+}
+
 export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
     public static createDataCellAttribute<T extends NodeUI>(): GridCellData<T> {
         return {
@@ -38,15 +55,19 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
     }
 
     public condition(node: T) {
-        if (node.length > 1 && !node.layoutElement && node.tagName !== 'TABLE' && !node.has('listStyle')) {
+        const length = node.length;
+        if (length > 1 && !node.layoutElement && node.tagName !== 'TABLE' && !node.has('listStyle')) {
             if (node.display === 'table') {
                 return node.every(item => item.display === 'table-row' && item.every(child => child.display === 'table-cell')) || node.every(item => item.display === 'table-cell');
             }
-            else if (node.percentWidth === 0 || !node.find(item => item.percentWidth > 0, { cascade: true })) {
+            else if (node.percentWidth === 0) {
+                const children = node.children;
                 let minLength = false,
                     itemCount = 0;
-                for (const item of node) {
-                    if (item.pageFlow && item.blockStatic && !item.visibleStyle.background && item.percentWidth === 0 && !item.autoMargin.leftRight && !item.autoMargin.left) {
+                let i = 0;
+                while (i < length) {
+                    const item = children[i++];
+                    if (item.pageFlow && item.blockStatic && !item.visibleStyle.background && item.percentWidth === 0 && !item.autoMargin.leftRight && !item.autoMargin.left && !item.find((child: T) => !checkAlignment(child) || child.percentWidth > 0)) {
                         if (item.length > 1) {
                             minLength = true;
                         }
@@ -58,7 +79,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         return false;
                     }
                 }
-                return itemCount === node.length || minLength && node.every(item => item.length > 0 && NodeUI.linearData(item.children as T[]).linearX);
+                return itemCount === length || minLength && node.every(item => item.length > 0 && NodeUI.linearData(item.children as T[]).linearX);
             }
         }
         return false;
@@ -67,7 +88,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
     public processNode(node: T) {
         const columnEnd: number[] = [];
         const nextMapX: ObjectIndex<T[]> = {};
-        const columns: T[][] = [];
+        const columns: Node[][] = [];
         node.each(row => {
             row.each((column: T) => {
                 if (column.visible) {
@@ -183,7 +204,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                     while (m < r) {
                         const row = columns[m++];
                         if (!row[l]) {
-                            row[l] = { spacer: 1 } as any;
+                            row[l] = { spacer: 1 } as Node;
                         }
                     }
                 }
@@ -192,8 +213,8 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
         }
         const columnCount = columns.length;
         if (columnCount > 1 && columns[0].length === node.length) {
-            const rows: T[][] = [];
-            const assigned = new Set<T>();
+            const rows: Node[][] = [];
+            const assigned = new Set<Node>();
             for (let i = 0, count = 0; i < columnCount; ++i) {
                 const column = columns[i];
                 const rowCount = column.length;
@@ -206,7 +227,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                             columnSpan = 1 + spacer;
                         let k = i + 1;
                         while (k < columnCount) {
-                            const row = columns[k++][j] as any;
+                            const row = columns[k++][j];
                             if (row.spacer === 1) {
                                 ++columnSpan;
                                 row.spacer = 2;
@@ -218,7 +239,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         if (columnSpan === 1) {
                             k = j + 1;
                             while (k < rowCount) {
-                                const row = column[k++] as any;
+                                const row = column[k++];
                                 if (row.spacer === 1) {
                                     ++rowSpan;
                                     row.spacer = 2;
@@ -255,7 +276,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         rowData.push(item);
                         assigned.add(item);
                     }
-                    else if (item['spacer'] === 1) {
+                    else if (item.spacer === 1) {
                         ++spacer;
                     }
                 }

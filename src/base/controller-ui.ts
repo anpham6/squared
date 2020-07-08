@@ -7,7 +7,7 @@ const { USER_AGENT, isUserAgent } = squared.lib.client;
 const { CSS_PROPERTIES, formatPX, getStyle, hasCoords, isLength, isPercent } = squared.lib.css;
 const { withinViewport } = squared.lib.dom;
 const { actualClientRect, getElementCache, setElementCache } = squared.lib.session;
-const { capitalize, convertFloat, flatArray, iterateArray, joinArray, safeNestedArray } = squared.lib.util;
+const { capitalize, convertFloat, iterateArray, joinArray, safeNestedArray } = squared.lib.util;
 
 const BORDER_TOP = CSS_PROPERTIES.borderTop.value as string[];
 const BORDER_RIGHT = CSS_PROPERTIES.borderRight.value as string[];
@@ -645,8 +645,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             });
             const length = layers.length;
             if (length > 0) {
-                const children = node.children as T[];
-                for (let i = 0, j = 0, k = 1; i < length; ++i, ++j) {
+                let children: T[] = [];
+                for (let i = 0, j = 1; i < length; ++i) {
                     const order = layers[i];
                     if (order) {
                         order.sort((a, b) => {
@@ -659,19 +659,19 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                 return zA < zB ? -1 : 1;
                             }
                             return 0;
-                        })
-                        .forEach(item => item.containerIndex = maxIndex + k++);
-                        const q = children.length;
-                        for (let l = 0; l < q; ++l) {
-                            if (order.includes(children[l])) {
-                                children[l] = undefined as any;
-                            }
+                        });
+                        for (const item of order) {
+                            item.containerIndex = maxIndex + j++;
                         }
-                        children.splice(j, 0, ...order);
-                        j += order.length;
+                        children = children.concat(order);
                     }
                 }
-                node.retainAs(flatArray(children));
+                node.each((item: T) => {
+                    if (!children.includes(item)) {
+                        children.push(item);
+                    }
+                });
+                node.retainAs(children);
             }
         }
     }

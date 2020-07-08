@@ -33,7 +33,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
 
     public processNode(node: T, parent: T) {
         const children = node.children.filter((item: T) => outsideX(item, node)) as T[];
-        const container = (this.controller as android.base.Controller<T>).createNodeWrapper(node, parent, { children, containerType: CONTAINER_NODE.CONSTRAINT });
+        const container = (this.controller as android.base.Controller<T>).createNodeWrapper(node, parent, { children, containerType: CONTAINER_NODE.CONSTRAINT, alignmentType: NODE_ALIGNMENT.VERTICAL });
         let left = NaN,
             right = NaN,
             firstChild: Undef<T>;
