@@ -157,7 +157,6 @@ squared.settings = {
         'squared.table',
         'squared.column',
         'squared.list',
-        'squared.verticalalign',
         'squared.grid',
         'squared.sprite',
         'squared.whitespace',

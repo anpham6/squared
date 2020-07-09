@@ -2202,8 +2202,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     rowWidth = baseWidth,
                     alignParent: string,
                     rows: T[][],
-                    previous!: T,
                     items!: T[],
+                    previous: Undef<T>,
                     previousRowLeft: Undef<T>;
                 if (leftAlign) {
                     if ((!node.naturalElement && seg[0].actualParent || node).cssAny('textAlign', { initial: true, values: ['right', 'end'] })) {
@@ -2229,13 +2229,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 for (let i = 0; i < length; ++i) {
                     const item = seg[i];
-                    let alignSibling: string;
-                    if (leftAlign && forward) {
-                        alignSibling = 'leftRight';
-                    }
-                    else {
-                        alignSibling = 'rightLeft';
-                    }
+                    let alignSibling = leftAlign && forward ? 'leftRight' : 'rightLeft';
                     if (!item.pageFlow) {
                         if (previous) {
                             const documentId = previous.documentId;
@@ -2250,9 +2244,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         continue;
                     }
                     const anchored = item.autoMargin.horizontal === true;
-                    let bounds = item.bounds,
-                        multiline = item.multiline,
-                        siblings: Undef<Element[]>;
+                    let { bounds, multiline } = item;
+                    let siblings: Undef<Element[]>;
                     if (item.styleText && !item.hasPX('width')) {
                         const textBounds = item.textBounds;
                         if (textBounds && (textBounds.numberOfLines as number > 1 || Math.ceil(textBounds.width) < item.box.width)) {
@@ -2272,9 +2265,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                     }
                     if (previous) {
-                        siblings = item.naturalChild && item.inlineVertical && previous.naturalChild && previous.inlineVertical && item.previousSibling !== previous ? getElementsBetweenSiblings(previous.element, item.element!) : undefined;
-                        let textNewRow = false,
-                            retainMultiline = false;
+                        let textNewRow: Undef<boolean>,
+                            retainMultiline: Undef<boolean>;
+                        siblings = item.naturalChild && previous.naturalChild && item.inlineVertical && previous.inlineVertical && item.previousSibling !== previous ? getElementsBetweenSiblings(previous.element, item.element!) : undefined;
                         if (item.textElement) {
                             let checkWidth = true;
                             if (previous.textElement) {
@@ -2299,10 +2292,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         if (previous.floating && adjustFloatingNegativeMargin(item, previous)) {
                             alignSibling = '';
                         }
-                        if (
-                            textNewRow ||
+                        if (textNewRow ||
                             item.nodeGroup && !item.hasAlign(NODE_ALIGNMENT.SEGMENTED) ||
-                            Math.ceil(item.bounds.top) >= previous.bounds.bottom && (item.blockStatic || item.floating && previous.float === item.float || node.preserveWhiteSpace) ||
+                            Math.ceil(item.bounds.top) >= Math.floor(previous.bounds.bottom) && (item.blockStatic || item.blockDimension && item.baseline || item.floating && previous.float === item.float || node.preserveWhiteSpace) ||
                             !item.textElement && relativeWrapWidth(item, bounds, boxWidth, rows.length, items, multiline, previousRowLeft, textIndent, rowWidth, clearMap) && !relativeFloatWrap(item, previous, multiline, rowWidth, boxWidth) ||
                             !item.floating && (previous.blockStatic || item.siblingsLeading.some(sibling => sibling.excluded && sibling.blockStatic) || siblings?.some(element => causesLineBreak(element))) ||
                             previous.autoMargin.horizontal ||
@@ -2364,7 +2356,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                     if (item.float === 'left' && leftAlign) {
                         if (previousRowLeft) {
-                            if (item.linear.bottom > previousRowLeft.linear.bottom) {
+                            if (item.linear.bottom >= previousRowLeft.linear.bottom) {
                                 previousRowLeft = item;
                             }
                         }
@@ -2421,7 +2413,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         if (item === baseline || item.baselineAltered || item === textBottom) {
                             continue;
                         }
-                        else if (i === 0 && (item.renderChildren.length > 0 && (item.verticalAligned || !item.baselineElement) || item.controlElement)) {
+                        else if (i === 0 && (item.rendering && item.verticalAligned || item.controlElement)) {
                             item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: item.bounds.top - node.box.top });
                             item.anchor('top', 'true');
                             item.baselineAltered = true;
@@ -2515,11 +2507,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 }
                             }
                         }
-                        if (offsetTop !== 0) {
-                            baseline.modifyBox(BOX_STANDARD.MARGIN_TOP, Math.abs(offsetTop));
-                        }
-                        if (offsetBottom !== 0) {
-                            baseline.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, Math.abs(offsetBottom));
+                        if (node.renderParent?.layoutHorizontal === false) {
+                            if (offsetTop !== 0) {
+                                baseline.modifyBox(BOX_STANDARD.MARGIN_TOP, Math.abs(offsetTop));
+                            }
+                            if (offsetBottom !== 0) {
+                                baseline.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, Math.abs(offsetBottom));
+                            }
                         }
                         if (singleRow && baseline.is(CONTAINER_NODE.BUTTON) && baseline.alignSibling('bottom') === '') {
                             baseline.anchor('centerVertical', 'true');

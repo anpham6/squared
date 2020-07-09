@@ -21,6 +21,9 @@ function setContentAltered(node: View, indexing: boolean) {
     if (indexing) {
         node.each((item: View, index: number) => item.containerIndex = index);
     }
+    else {
+        node.hide();
+    }
     node.exclude({ resource: NODE_RESOURCE.VALUE_STRING });
     node.multiline = false;
     node.contentAltered = true;
@@ -54,6 +57,10 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                     return true;
                 }
             }
+            else if (parent.layoutVertical && node.textElement && node.naturalElement && node.textIndent < 0 && node.naturalElements.length === 0) {
+                node.data(this.name, 'mainData', [node]);
+                return true;
+            }
             else {
                 const length = node.length;
                 if (length > 0) {
@@ -86,6 +93,10 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
             }
         }
         return false;
+    }
+
+    public beforeParseDocument() {
+        this.enabled = (this.application as android.base.Application<T>).userSettings.fontMeasureWrap === true;
     }
 
     public processNode(node: T, parent: T) {
@@ -194,16 +205,22 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                     previous = container;
                 }
                 if (items) {
-                    const index = children.findIndex(item => item === seg);
-                    if (index === -1) {
-                        continue;
+                    if (seg === node) {
+                        node.each((item: T) => item.hide());
+                        node.retainAs(items);
                     }
-                    children.splice(index, 1, ...items);
+                    else {
+                        const index = children.findIndex(item => item === seg);
+                        if (index === -1) {
+                            continue;
+                        }
+                        children.splice(index, 1, ...items);
+                        seg.hide();
+                    }
                 }
                 else {
                     setContentAltered(seg, false);
                 }
-                seg.hide();
                 modified = true;
             }
         }

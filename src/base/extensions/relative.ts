@@ -65,7 +65,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
         }
         else {
             let target = node;
-            if ((top !== 0 || bottom !== 0 || verticalAlign !== 0) && renderParent.layoutHorizontal && renderParent.support.positionRelative && node.renderChildren.length === 0) {
+            if ((top !== 0 || bottom !== 0 || verticalAlign !== 0) && renderParent.layoutHorizontal && renderParent.support.positionRelative && !node.rendering) {
                 target = node.clone(this.application.nextId) as T;
                 target.baselineAltered = true;
                 node.hide({ hidden: true });

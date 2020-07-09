@@ -278,7 +278,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 node.setBoxSpacing();
             }
             if (node.documentRoot) {
-                if (node.renderChildren.length === 0 && !node.inlineText && node.naturalElements.length > 0 && node.naturalElements.every(item => item.documentRoot)) {
+                if (!node.rendering && !node.inlineText && node.naturalElements.length > 0 && node.naturalElements.every(item => item.documentRoot)) {
                     continue;
                 }
                 const layoutName = node.innerMostWrapped.data<string>(Application.KEY_NAME, 'layoutName');

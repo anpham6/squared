@@ -1486,7 +1486,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 gravityX = '';
                                 break;
                             case 'center_horizontal':
-                                if (node.renderChildren.length > 0) {
+                                if (node.rendering) {
                                     tileModeY = '';
                                 }
                                 break;

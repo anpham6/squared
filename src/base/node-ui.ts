@@ -5,6 +5,7 @@ import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURC
 type T = NodeUI;
 
 const { CSS_PROPERTIES, isLength, newBoxModel } = squared.lib.css;
+const { equal } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
 const { capitalize, cloneObject, convertWord, hasBit, hasKeys, isArray, iterateArray, safeNestedMap, searchObject, withinRange } = squared.lib.util;
 
@@ -289,13 +290,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 if (a.layoutHorizontal && a.baselineElement) {
                     a = a.max('baselineHeight', { self: true }) as T;
                 }
-                if (a.layoutHorizontal && b.baselineElement) {
+                if (b.layoutHorizontal && b.baselineElement) {
                     b = b.max('baselineHeight', { self: true }) as T;
                 }
                 if (!a.layoutHorizontal && b.layoutHorizontal) {
                     return -1;
                 }
-                if (!b.layoutHorizontal && a.layoutHorizontal) {
+                else if (!b.layoutHorizontal && a.layoutHorizontal) {
                     return 1;
                 }
                 const imageA = a.imageContainer;
@@ -303,36 +304,38 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 if (!imageA && imageB) {
                     return -1;
                 }
-                if (!imageB && imageA) {
+                else if (!imageB && imageA) {
                     return 1;
                 }
                 const heightA = a.baselineHeight;
                 const heightB = b.baselineHeight;
-                if (heightA !== heightB) {
+                if (!equal(heightA, heightB)) {
                     return heightA > heightB ? -1 : 1;
                 }
                 else if (!imageA && !imageB) {
-                    if (a.textElement && b.textElement) {
+                    const textA = a.textElement;
+                    const textB = b.textElement;
+                    if (textA && textB) {
                         if (!a.pseudoElement && b.pseudoElement) {
                             return -1;
                         }
-                        if (a.pseudoElement && !b.pseudoElement) {
+                        else if (a.pseudoElement && !b.pseudoElement) {
                             return 1;
                         }
-                        if (!a.plainText && b.plainText) {
+                        else if (!a.plainText && b.plainText) {
                             return -1;
                         }
-                        if (a.plainText && !b.plainText) {
+                        else if (a.plainText && !b.plainText) {
                             return 1;
                         }
                     }
-                    if (a.inputElement && b.inputElement && a.containerType !== b.containerType) {
+                    else if (a.containerType !== b.containerType && a.inputElement && b.inputElement) {
                         return a.containerType > b.containerType ? -1 : 1;
                     }
-                    if (a.textElement && b.inputElement && a.childIndex < b.childIndex) {
+                    else if (textA && !textB && a.childIndex < b.childIndex) {
                         return -1;
                     }
-                    if (b.textElement && a.inputElement && b.childIndex < a.childIndex) {
+                    else if (textB && !textA && b.childIndex < a.childIndex) {
                         return 1;
                     }
                 }
@@ -1855,6 +1858,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     get onlyChild() {
         return (this.renderParent?.renderChildren.length ?? this.parent?.length) === 1 && !this.documentRoot;
+    }
+
+    get rendering() {
+        return this.renderChildren.length > 0;
     }
 
     get overflowX() {

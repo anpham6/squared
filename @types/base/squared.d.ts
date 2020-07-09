@@ -682,6 +682,7 @@ declare module "base" {
         get firstStaticChild(): Null<NodeUI>;
         get lastStaticChild(): Null<NodeUI>;
         get onlyChild(): boolean;
+        get rendering(): boolean;
         get overflowX(): boolean;
         get overflowY(): boolean;
         get textEmpty(): boolean;
