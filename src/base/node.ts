@@ -1194,7 +1194,14 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public cssAny(attr: string, options: CssAnyOptions) {
-        const value = options.initial ? this.cssInitial(attr, options) : this.css(attr);
+        let value: string;
+        if (options.ascend) {
+            options.startSelf = true;
+            value = this.cssAscend(attr, options);
+        }
+        else {
+            value = options.initial ? this.cssInitial(attr, options) : this.css(attr);
+        }
         return value !== '' && options.values.includes(value);
     }
 

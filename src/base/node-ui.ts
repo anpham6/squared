@@ -270,10 +270,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public static baseline<T extends NodeUI>(list: T[], text = false): Null<T> {
         const length = list.length;
         const result: T[] = new Array(length);
-        let i = 0, j = 0;
-        while (i < length) {
-            const item = list[i++];
-            if (item.baseline && (!text || item.textElement) && !item.baselineAltered) {
+        let j = 0;
+        for (let i = 0; i < length; ++i) {
+            const item = list[i];
+            if (item.baseline && !item.baselineAltered && (!text || item.textElement)) {
                 if (item.naturalElements.length > 0) {
                     if (item.baselineElement) {
                         result[j++] = item;
@@ -1717,7 +1717,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             if (node.baselineElement) {
                                 switch (node.length) {
                                     case 0:
-                                        return true;
+                                        return !(node.positionRelative && (node.top !== 0 || node.bottom !== 0));
                                     case 1:
                                         node = node.children[0] as T;
                                         break;

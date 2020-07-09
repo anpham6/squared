@@ -2393,30 +2393,30 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         else {
                             let previousMultiline = false;
                             const horizontalRows = this.horizontalRows || [renderChildren];
-                            const length = horizontalRows.length;
-                            for (let i = 0; i < length; ++i) {
+                            const q = horizontalRows.length;
+                            for (let i = 0; i < q; ++i) {
                                 const row = horizontalRows[i];
                                 const nextRow = horizontalRows[i + 1];
-                                const nextMultiline = !!nextRow && (nextRow.length === 1 && nextRow[0].multiline || nextRow[0].lineBreakLeading || i < length - 1 && !!nextRow.find(item => item.baselineActive)?.has('lineHeight'));
+                                const nextMultiline = !!nextRow && (nextRow.length === 1 && nextRow[0].multiline || nextRow[0].lineBreakLeading || i < q - 1 && !!nextRow.find(item => item.baselineActive)?.has('lineHeight'));
                                 const first = row[0];
                                 const onlyChild = row.length === 1;
                                 const singleLine = onlyChild && !first.multiline;
                                 const baseline = !onlyChild && row.find(item => item.baselineActive && !item.rendering && !item.imageContainer);
-                                const top = singleLine || !previousMultiline && (i > 0 || length === 1) || first.lineBreakLeading;
-                                const bottom = singleLine || !nextMultiline && (i < length - 1 || length === 1);
-                                const q = row.length;
+                                const top = singleLine || !previousMultiline && (i > 0 || q === 1) || first.lineBreakLeading;
+                                const bottom = singleLine || !nextMultiline && (i < q - 1 || q === 1);
+                                const r = row.length;
                                 let j = 0;
                                 if (baseline) {
                                     let k = 0;
-                                    if (length === 1) {
-                                        while (j < q) {
+                                    if (q === 1) {
+                                        while (j < r) {
                                             const item = row[j++];
                                             if (item === baseline || inheritLineHeight(item) && item.alignSibling('baseline') !== '') {
                                                 ++k;
                                             }
                                         }
                                     }
-                                    if (k === q) {
+                                    if (k === r) {
                                         setMarginOffset(baseline, lineHeight, false, top, bottom, this);
                                     }
                                     else if (!isNaN(baseline.lineHeight) && !baseline.has('lineHeight')) {
@@ -2428,7 +2428,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     }
                                 }
                                 else {
-                                    while (j < q) {
+                                    while (j < r) {
                                         const item = row[j++];
                                         if (inheritLineHeight(item)) {
                                             setMarginOffset(item, lineHeight, onlyChild, top, bottom);
@@ -2535,9 +2535,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                     if (valid) {
                         const renderTemplates = this.renderTemplates as NodeXmlTemplate<View>[];
-                        const length = renderTemplates.length;
+                        const q = renderTemplates.length;
                         let i = 0;
-                        while (i < length) {
+                        while (i < q) {
                             const template = renderTemplates[i++];
                             template.parent = renderParent as View;
                             template.node.renderParent = renderParent as View;

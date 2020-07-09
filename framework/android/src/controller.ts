@@ -14,7 +14,7 @@ const { CSS_UNIT, formatPX, getSrcSet, hasComputedStyle, isPercent } = squared.l
 const { getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;
 const { getElementAsNode, getPseudoElt } = squared.lib.session;
-const { assignEmptyValue, convertWord, hasBit, hasMimeType, isString, iterateArray, parseMimeType, partitionArray, safeNestedArray, withinRange } = squared.lib.util;
+const { assignEmptyValue, convertWord, hasBit, hasMimeType, isString, iterateArray, parseMimeType, partitionArray, plainMap, safeNestedArray, withinRange } = squared.lib.util;
 
 const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
@@ -162,6 +162,7 @@ function adjustFloatingNegativeMargin(node: View, previous: View) {
             const right = Math.abs(previous.marginRight);
             node.modifyBox(BOX_STANDARD.MARGIN_LEFT, previous.actualWidth + (previous.hasWidth ? previous.paddingLeft + previous.borderLeftWidth : 0) - right);
             node.anchor('left', previous.documentId);
+            node.constraint.horizontal = true;
             previous.setBox(BOX_STANDARD.MARGIN_RIGHT, { reset: 1 });
             return true;
         }
@@ -173,6 +174,7 @@ function adjustFloatingNegativeMargin(node: View, previous: View) {
             node.modifyBox(BOX_STANDARD.MARGIN_RIGHT, width - left);
         }
         node.anchor('right', previous.documentId);
+        node.constraint.horizontal = true;
         previous.setBox(BOX_STANDARD.MARGIN_LEFT, { reset: 1 });
         return true;
     }
@@ -311,20 +313,6 @@ function segmentLeftAligned<T extends View>(children: T[]) {
     return partitionArray<T>(children, item => item.float === 'left' || item.autoMargin.right === true);
 }
 
-function relativeWrapWidth(node: View, bounds: BoxRectDimension, boxWidth: number, rowLength: number, items: View[], multiline: boolean, previousRowLeft: Undef<View>, textIndent: number, rowWidth: number, clearMap: Map<View, string>) {
-    let baseWidth = rowWidth;
-    if (previousRowLeft && !items.includes(previousRowLeft)) {
-        baseWidth += previousRowLeft.linear.width;
-    }
-    if (!previousRowLeft || !node.plainText || multiline || items.includes(previousRowLeft) || clearMap.has(node)) {
-        baseWidth += bounds.width;
-    }
-    if (node.inlineStatic && node.styleElement) {
-        baseWidth -= node.contentBoxWidth;
-    }
-    return Math.floor(baseWidth) > Math.ceil(boxWidth + (rowLength === 1 ? -textIndent : 0));
-}
-
 function constraintAlignTop(parent: View, node: View) {
     node.anchorParent('vertical', 0);
     node.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: Math.max(node.bounds.top - parent.box.top, Math.min(-node.verticalAlign, 0)) });
@@ -374,8 +362,8 @@ function setObjectContainer(layout: LayoutUI<View>) {
     }
 }
 
+const relativeWrapWidth = (node: View, bounds: BoxRectDimension, boxWidth: number, rowLength: number, textIndent: number, floatedWidth: number, rowWidth: number) => Math.floor(floatedWidth + rowWidth + bounds.width - (node.inlineStatic && node.styleElement ? node.contentBoxWidth : 0)) > Math.ceil(boxWidth + (rowLength === 1 ? -textIndent : 0));
 const getAnchorDirection = (reverse = false) => reverse ? ['right', 'left', 'rightLeft', 'leftRight'] : ['left', 'right', 'leftRight', 'rightLeft'];
-const relativeFloatWrap = (node: View, previous: View, multiline: boolean, rowWidth: number, boxWidth: number) => previous.floating && previous.alignParent(previous.float) && (multiline || Math.floor(rowWidth + (node.hasWidth ? node.actualWidth : 0)) < boxWidth);
 const isBaselineImage = (node: View) => node.imageContainer && node.baseline;
 const getBaselineAnchor = (node: View) => node.imageContainer ? 'baseline' : 'bottom';
 const hasWidth = (style: CSSStyleDeclaration) => (style.getPropertyValue('width') === '100%' || style.getPropertyValue('minWidth') === '100%') && style.getPropertyValue('max-width') === 'none';
@@ -1300,7 +1288,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             const boxWidth = layout.parent.actualBoxWidth();
             let contentWidth = 0;
             for (const node of layout) {
-                if (!(node.naturalChild && node.isEmpty && !node.inputElement && !node.controlElement && !node.positionRelative && node.baseline && !node.blockVertical && node.zIndex === 0 && node.lineHeight === lineHeight && node.fontSize === fontSize)) {
+                if (!(node.naturalChild && node.isEmpty && !node.inputElement && !node.controlElement && !node.positionRelative && node.baseline && !node.verticalAligned && !node.blockVertical && node.zIndex === 0 && node.lineHeight === lineHeight && node.fontSize === fontSize)) {
                     return false;
                 }
                 else {
@@ -2136,9 +2124,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     protected processRelativeHorizontal(node: T, children: T[]) {
-        const rowsLeft: T[][] = [];
-        let rowsRight: Undef<T[][]>,
-            autoPosition = false;
+        let autoPosition = false;
         if (node.hasAlign(NODE_ALIGNMENT.VERTICAL)) {
             let previous: Undef<T>;
             const length = children.length;
@@ -2152,100 +2138,112 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     item.anchor('top', 'true');
                 }
                 if (item.pageFlow) {
-                    rowsLeft.push([item]);
+                    if (item.rightAligned) {
+                        item.anchor('right');
+                    }
+                    else if (item.centerAligned) {
+                        item.anchorParent('horizontal');
+                    }
+                    else {
+                        item.anchor('left');
+                    }
                     previous = item;
                 }
                 else {
+                    item.anchor('left');
                     autoPosition = true;
                 }
             }
         }
         else {
-            const boxParent = node.nodeGroup ? node.documentParent : node;
-            const clearMap = this.application.clearMap;
-            const lineWrap = node.css('whiteSpace') !== 'nowrap';
-            let boxWidth = boxParent.actualBoxWidth(getBoxWidth.call(this, node, children)),
+            const rowsAll: [Undef<T>, T[][]][] = [];
+            const actualParent = !node.naturalElement && children[0].actualParent || node;
+            const rightAligned = actualParent.cssAny('textAlign', { initial: true, ascend: true, values: ['right', 'end'] });
+            const centerAligned = !rightAligned && actualParent.cssAscend('textAlign', { initial: true, startSelf: true }) === 'center';
+            let rowCount = 0,
                 textIndent = 0;
-            if (node.naturalElement) {
-                if (node.blockDimension) {
-                    textIndent = node.parseUnit(node.css('textIndent'));
-                    if (textIndent < 0) {
-                        node.setCacheValue('paddingLeft', Math.max(0, node.paddingLeft + textIndent));
+            {
+                const clearMap = this.application.clearMap;
+                const boxParent = node.nodeGroup ? node.documentParent : node;
+                const baseWidth = node.marginLeft + node.marginRight < 0 ? node.marginRight : 0;
+                const lineWrap = node.css('whiteSpace') !== 'nowrap';
+                let boxWidth = boxParent.actualBoxWidth(getBoxWidth.call(this, node, children)),
+                    rowWidth = baseWidth,
+                    rows!: T[][],
+                    items!: T[],
+                    previous!: T,
+                    currentFloated: Undef<T>,
+                    currentFloatedWidth = 0,
+                    currentFloatedHeight = 0,
+                    siblings: Undef<Element[]>;
+                if (node.naturalElement) {
+                    if (node.blockDimension) {
+                        textIndent = node.parseUnit(node.css('textIndent'));
+                        if (textIndent < 0) {
+                            node.setCacheValue('paddingLeft', Math.max(0, node.paddingLeft + textIndent));
+                        }
                     }
-                }
-                if (node.floating) {
-                    const nextSibling = node.nextSibling;
-                    if (nextSibling?.floating && nextSibling.float !== node.float && nextSibling.hasWidth) {
-                        boxWidth = Math.max(boxWidth, node.actualParent!.box.width - nextSibling.linear.width);
-                        if (!node.visibleStyle.background && !node.hasPX('maxWidth') && boxWidth > node.width) {
-                            node.css('width', formatPX(boxWidth), true);
+                    if (node.floating) {
+                        const nextSibling = node.nextSibling;
+                        if (nextSibling?.floating && nextSibling.float !== node.float && nextSibling.hasWidth) {
+                            boxWidth = Math.max(boxWidth, node.actualParent!.box.width - nextSibling.linear.width);
+                            if (boxWidth > node.width && !node.visibleStyle.background && !node.hasPX('maxWidth')) {
+                                node.css('width', formatPX(boxWidth), true);
+                            }
                         }
                     }
                 }
-            }
-            else if (boxParent.layoutVertical) {
-                textIndent = boxParent.parseUnit(boxParent.css('textIndent'));
-                if (textIndent < 0 && boxParent.getBox(BOX_STANDARD.PADDING_LEFT)[1] === 0) {
-                    boxParent.modifyBox(BOX_STANDARD.PADDING_LEFT, textIndent, false);
-                }
-            }
-            const partition = segmentRightAligned(children);
-            const baseWidth = node.marginLeft + node.marginRight < 0 ? node.marginRight : 0;
-            for (let j = 0; j < 2; ++j) {
-                const seg = partition[j];
-                const length = seg.length;
-                if (length === 0) {
-                    continue;
-                }
-                const leftAlign = j === 1;
-                let forward = true,
-                    rowWidth = baseWidth,
-                    alignParent: string,
-                    rows: T[][],
-                    items!: T[],
-                    previous: Undef<T>,
-                    previousRowLeft: Undef<T>;
-                if (leftAlign) {
-                    if ((!node.naturalElement && seg[0].actualParent || node).cssAny('textAlign', { initial: true, values: ['right', 'end'] })) {
-                        alignParent = 'right';
-                        forward = false;
-                        textIndent = 0;
-                        seg[length - 1].anchor(alignParent, 'true');
+                else if (boxParent.layoutVertical) {
+                    textIndent = boxParent.parseUnit(boxParent.css('textIndent'));
+                    if (textIndent < 0 && boxParent.getBox(BOX_STANDARD.PADDING_LEFT)[1] === 0) {
+                        boxParent.modifyBox(BOX_STANDARD.PADDING_LEFT, textIndent, false);
                     }
-                    else {
-                        alignParent = 'left';
-                    }
-                    if (seg.some(item => item.floating)) {
-                        sortHorizontalFloat(seg);
-                    }
-                    rows = rowsLeft;
                 }
-                else {
-                    alignParent = 'right';
-                    textIndent = 0;
-                    boxWidth -= boxParent.box.right - Math.min(...seg.map(item => item.linear.left));
-                    rowsRight = [];
-                    rows = rowsRight;
-                }
-                for (let i = 0; i < length; ++i) {
-                    const item = seg[i];
-                    let alignSibling = leftAlign && forward ? 'leftRight' : 'rightLeft';
+                const length = children.length;
+                for (let i = 0, start = true; i < length; ++i) {
+                    const item = children[i];
                     if (!item.pageFlow) {
-                        if (previous) {
-                            const documentId = previous.documentId;
-                            item.anchor(alignSibling, documentId);
-                            item.anchor('top', documentId);
+                        if (start) {
+                            item.anchor('left', 'true');
+                            item.anchor('top', 'true');
                         }
                         else {
-                            item.anchor(alignParent, 'true');
-                            item.anchor('top', 'true');
+                            const documentId = previous.documentId;
+                            if (previous === currentFloated && currentFloated.float === 'right') {
+                                item.anchor('left', 'true');
+                            }
+                            else {
+                                item.anchor(rightAligned ? 'rightLeft' : 'leftRight', previous.documentId);
+                            }
+                            item.anchor('top', documentId);
                         }
                         autoPosition = true;
                         continue;
                     }
-                    const anchored = item.autoMargin.horizontal === true;
+                    const setCurrentFloated = () => {
+                        currentFloated = item;
+                        currentFloatedHeight = Math.floor(item.marginTop + item.bounds.height + Math.max(0, item.marginBottom));
+                    };
+                    const createNewRow = () => {
+                        if (currentFloated) {
+                            items = [item];
+                            rows.push(items);
+                        }
+                        else if (item.floating) {
+                            items = [];
+                            rows = [items];
+                            rowsAll.push([item, rows]);
+                            setCurrentFloated();
+                        }
+                        else {
+                            items = [item];
+                            rows = [items];
+                            rowsAll.push([undefined, rows]);
+                        }
+                        rowWidth = baseWidth;
+                        ++rowCount;
+                    };
                     let { bounds, multiline } = item;
-                    let siblings: Undef<Element[]>;
                     if (item.styleText && !item.hasPX('width')) {
                         const textBounds = item.textBounds;
                         if (textBounds && (textBounds.numberOfLines as number > 1 || Math.ceil(textBounds.width) < item.box.width)) {
@@ -2256,20 +2254,16 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         multiline = false;
                         item.multiline = false;
                     }
-                    if (anchored) {
-                        if (item.autoMargin.leftRight) {
-                            item.anchorParent('horizontal');
-                        }
-                        else {
-                            item.anchor(item.autoMargin.left ? 'right' : 'left', 'true');
-                        }
+                    if (start) {
+                        createNewRow();
+                        start = false;
                     }
-                    if (previous) {
+                    else {
                         let textNewRow: Undef<boolean>,
                             retainMultiline: Undef<boolean>;
                         siblings = item.naturalChild && previous.naturalChild && item.inlineVertical && previous.inlineVertical && item.previousSibling !== previous ? getElementsBetweenSiblings(previous.element, item.element!) : undefined;
                         if (item.textElement) {
-                            let checkWidth = true;
+                            let checkWidth = lineWrap;
                             if (previous.textElement) {
                                 if (i === 1 && item.plainText && item.previousSibling === previous && !/^\s+/.test(item.textContent) && !/\s+$/.test(previous.textContent)) {
                                     retainMultiline = true;
@@ -2280,352 +2274,462 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     checkWidth = false;
                                 }
                             }
-                            if (checkWidth && lineWrap && !relativeFloatWrap(item, previous, multiline, rowWidth, boxWidth)) {
-                                if (relativeWrapWidth(item, bounds, boxWidth, rows.length, items, multiline, previousRowLeft, textIndent, rowWidth, clearMap)) {
-                                    textNewRow = true;
-                                }
-                                else if (item.actualParent!.tagName !== 'CODE') {
-                                    textNewRow = multiline && item.plainText || isMultiline(item);
-                                }
+                            if (checkWidth) {
+                                textNewRow = relativeWrapWidth(item, bounds, boxWidth, rowsAll.length, textIndent, currentFloatedWidth, rowWidth) || item.actualParent!.tagName !== 'CODE' && (multiline && item.plainText || isMultiline(item));
                             }
                         }
-                        if (previous.floating && adjustFloatingNegativeMargin(item, previous)) {
-                            alignSibling = '';
+                        if (previous.floating) {
+                            adjustFloatingNegativeMargin(item, previous);
                         }
                         if (textNewRow ||
                             item.nodeGroup && !item.hasAlign(NODE_ALIGNMENT.SEGMENTED) ||
                             Math.ceil(item.bounds.top) >= Math.floor(previous.bounds.bottom) && (item.blockStatic || item.blockDimension && item.baseline || item.floating && previous.float === item.float || node.preserveWhiteSpace) ||
-                            !item.textElement && relativeWrapWidth(item, bounds, boxWidth, rows.length, items, multiline, previousRowLeft, textIndent, rowWidth, clearMap) && !relativeFloatWrap(item, previous, multiline, rowWidth, boxWidth) ||
+                            !item.textElement && relativeWrapWidth(item, bounds, boxWidth, rowsAll.length, textIndent, currentFloatedWidth, rowWidth) ||
                             !item.floating && (previous.blockStatic || item.siblingsLeading.some(sibling => sibling.excluded && sibling.blockStatic) || siblings?.some(element => causesLineBreak(element))) ||
+                            !currentFloated && item.float === 'right' ||
                             previous.autoMargin.horizontal ||
                             clearMap.has(item) ||
                             Resource.checkPreIndent(previous))
                         {
-                            if (clearMap.has(item) && !previousRowLeft) {
+                            if (clearMap.has(item)) {
                                 item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1 });
+                                currentFloated = undefined;
+                                currentFloatedWidth = 0;
                             }
-                            if (forward) {
-                                if (previousRowLeft && item.bounds.bottom <= previousRowLeft.bounds.bottom) {
-                                    if (!anchored) {
-                                        item.anchor(alignSibling, previousRowLeft.documentId);
-                                    }
+                            else if (currentFloated) {
+                                let height = 0;
+                                let j = 0;
+                                while (j < rows.length) {
+                                    height += Math.max(...plainMap(rows[j++], sibling => Math.max(sibling.lineHeight, sibling.linear.height)));
                                 }
-                                else {
-                                    if (!anchored) {
-                                        item.anchor(alignParent, 'true');
-                                    }
-                                    if (textIndent < 0) {
-                                        item.modifyBox(BOX_STANDARD.MARGIN_LEFT, -textIndent);
-                                    }
-                                    previousRowLeft = undefined;
+                                if (Math.ceil(height) >= currentFloatedHeight) {
+                                    currentFloated = undefined;
+                                    currentFloatedWidth = 0;
                                 }
+                            }
+                            createNewRow();
+                        }
+                        else {
+                            if (!currentFloated && item.float === 'left') {
+                                rowsAll[rowsAll.length - 1][0] = item;
+                                setCurrentFloated();
                             }
                             else {
-                                if (previousRowLeft && item.linear.bottom > previousRowLeft.bounds.bottom) {
-                                    previousRowLeft = undefined;
+                                items.push(item);
+                                if (multiline && !item.hasPX('width') && !previous.floating && !retainMultiline) {
+                                    item.multiline = false;
                                 }
-                                previous.anchor(alignParent, 'true');
-                            }
-                            rowWidth = baseWidth + Math.min(0, textNewRow && !previous.multiline && multiline && !item.preserveWhiteSpace && !clearMap.has(item) ? item.linear.right - node.box.right : 0);
-                            items = [item];
-                            rows.push(items);
-                        }
-                        else {
-                            if (alignSibling !== '') {
-                                if (forward) {
-                                    if (!anchored) {
-                                        item.anchor(alignSibling, previous.documentId);
+                                if (siblings?.some(element => !!getElementAsNode(element, item.sessionId) || causesLineBreak(element)) === false) {
+                                    const betweenStart = getRangeClientRect(siblings[0]);
+                                    if (betweenStart && !betweenStart.numberOfLines) {
+                                        const betweenEnd = siblings.length > 1 && getRangeClientRect(siblings.pop()!);
+                                        if (!betweenEnd || !betweenEnd.numberOfLines) {
+                                            rowWidth += betweenEnd ? betweenStart.left - betweenEnd.right : betweenStart.width;
+                                        }
                                     }
                                 }
-                                else {
-                                    previous.anchor(alignSibling, item.documentId);
-                                }
                             }
-                            if (multiline && !item.hasPX('width') && !previous.floating && !retainMultiline) {
-                                item.multiline = false;
-                            }
-                            items.push(item);
                         }
+                    }
+                    const linearWidth = item.marginLeft + bounds.width + item.marginRight;
+                    if (item !== currentFloated) {
+                        rowWidth += linearWidth;
                     }
                     else {
-                        if (forward && !anchored) {
-                            item.anchor(alignParent, 'true');
-                        }
-                        items = [item];
-                        rows.push(items);
+                        currentFloatedWidth = linearWidth;
                     }
-                    if (item.float === 'left' && leftAlign) {
-                        if (previousRowLeft) {
-                            if (item.linear.bottom >= previousRowLeft.linear.bottom) {
-                                previousRowLeft = item;
-                            }
-                        }
-                        else {
-                            previousRowLeft = item;
-                        }
-                    }
-                    if (siblings?.some(element => !!getElementAsNode(element, item.sessionId) || causesLineBreak(element)) === false) {
-                        const betweenStart = getRangeClientRect(siblings[0]);
-                        if (betweenStart && !betweenStart.numberOfLines) {
-                            const betweenEnd = siblings.length > 1 && getRangeClientRect(siblings.pop()!);
-                            if (!betweenEnd || !betweenEnd.numberOfLines) {
-                                rowWidth += betweenEnd ? betweenStart.left - betweenEnd.right : betweenStart.width;
-                            }
-                        }
-                    }
-                    rowWidth += item.marginLeft + bounds.width + item.marginRight;
                     previous = item;
                 }
             }
-        }
-        const applyLayout = (rows: T[][]) => {
-            let previousBaseline: Null<T> = null;
-            const length = rows.length;
-            const singleRow = length === 1 && !node.hasHeight;
-            for (let i = 0, j = 0; i < length; ++i) {
-                const items = rows[i];
-                const q = items.length;
-                let baseline: Null<T>;
-                if (q > 1) {
-                    const bottomAligned = getTextBottom(items);
-                    let textBottom = bottomAligned[0] as Undef<T>,
-                        offsetTop = 0,
-                        offsetBottom = 0,
-                        requireBottom = false,
-                        textBaseline: UndefNull<T>;
-                    baseline = NodeUI.baseline(bottomAligned.length > 0 ? items.filter(item => !bottomAligned.includes(item)) : items);
-                    if (baseline && textBottom) {
-                        if (baseline !== textBottom && baseline.bounds.height < textBottom.bounds.height) {
-                            baseline.anchor('bottom', textBottom.documentId);
-                        }
-                        else {
-                            baseline = NodeUI.baseline(items);
-                            textBottom = undefined;
-                        }
-                    }
-                    const baselineAlign: T[] = [];
-                    for (j = 0; j < q; ++j) {
-                        const item = items[j];
-                        const verticalAlign = item.verticalAlign;
-                        if (item.textElement) {
-                            item.setSingleLine(j === q - 1 && !item.rightAligned && !item.centerAligned);
-                        }
-                        if (item === baseline || item.baselineAltered || item === textBottom) {
-                            continue;
-                        }
-                        else if (i === 0 && (item.rendering && item.verticalAligned || item.controlElement)) {
-                            item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: item.bounds.top - node.box.top });
-                            item.anchor('top', 'true');
-                            item.baselineAltered = true;
-                            continue;
-                        }
-                        if (item.multiline) {
-                            requireBottom = true;
-                        }
-                        if (item.baseline) {
-                            baselineAlign.push(item);
-                        }
-                        else if (item.inlineVertical) {
-                            switch (item.css('verticalAlign')) {
-                                case 'text-top':
-                                    if (!textBaseline) {
-                                        textBaseline = NodeUI.baseline(items, true);
-                                    }
-                                    if (textBaseline && item !== textBaseline) {
-                                        item.anchor('top', textBaseline.documentId);
-                                        continue;
-                                    }
-                                    else if (baseline) {
-                                        item.anchor('top', baseline.documentId);
-                                        continue;
-                                    }
-                                    break;
-                                case 'top':
-                                    if (i === 0) {
-                                        item.anchor('top', 'true');
-                                        continue;
-                                    }
-                                    break;
-                                case 'middle':
-                                    if (length === 1) {
-                                        item.anchor('centerVertical', 'true');
-                                        continue;
-                                    }
-                                    break;
-                                case 'text-bottom':
-                                    if (!textBaseline) {
-                                        textBaseline = NodeUI.baseline(items, true);
-                                    }
-                                    if (textBaseline && textBaseline !== item) {
-                                        item.anchor('bottom', textBaseline.documentId);
-                                        continue;
-                                    }
-                                    else if (baseline) {
-                                        item.anchor('bottom', baseline.documentId);
-                                        continue;
-                                    }
-                                    break;
-                                case 'bottom':
-                                    if (length === 1 && node.hasHeight) {
-                                        item.anchor('bottom', 'true');
-                                        continue;
-                                    }
-                                    break;
-                            }
-                            if (baseline) {
-                                if (verticalAlign !== 0) {
-                                    item.modifyBox(BOX_STANDARD.MARGIN_TOP, -verticalAlign);
-                                    item.baselineAltered = true;
-                                    if (verticalAlign > 0) {
-                                        offsetTop = Math.max(verticalAlign, offsetTop);
-                                    }
-                                    else {
-                                        offsetBottom = Math.min(verticalAlign, offsetBottom);
-                                    }
-                                }
-                                item.anchor('top', baseline.documentId);
-                            }
-                        }
-                    }
-                    const r = baselineAlign.length;
-                    if (baseline) {
-                        baseline.baselineActive = true;
-                        if (r > 0) {
-                            adjustBaseline(baseline, baselineAlign, singleRow, node.box.top);
-                        }
-                        else if (baseline.multiline) {
-                            const { left, height } = baseline.bounds;
-                            let k = 0;
-                            while (k < q) {
-                                const item = items[k++];
-                                if (item === baseline) {
-                                    break;
-                                }
-                                else if (left < item.bounds.right && height < item.bounds.height) {
-                                    baseline.anchor('bottom', item.documentId);
-                                    break;
-                                }
-                            }
-                        }
-                        if (node.renderParent?.layoutHorizontal === false) {
-                            if (offsetTop !== 0) {
-                                baseline.modifyBox(BOX_STANDARD.MARGIN_TOP, Math.abs(offsetTop));
-                            }
-                            if (offsetBottom !== 0) {
-                                baseline.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, Math.abs(offsetBottom));
-                            }
-                        }
-                        if (singleRow && baseline.is(CONTAINER_NODE.BUTTON) && baseline.alignSibling('bottom') === '') {
-                            baseline.anchor('centerVertical', 'true');
-                            baseline = null;
-                        }
-                    }
-                    else if (r > 0 && r < q) {
-                        textBottom = bottomAligned[0];
-                        if (textBottom) {
-                            let k = 0;
-                            while (k < r) {
-                                const item = baselineAlign[k++];
-                                if (item.baseline && !item.multiline && textBottom.bounds.height > item.bounds.height) {
-                                    item.anchor('bottom', textBottom.documentId);
-                                }
-                            }
-                        }
-                    }
-                    if (node.cssInitial('textAlign') === 'center') {
-                        const application = this.application;
-                        baseline = this.createNodeGroup(items[0], items, node);
-                        baseline.setControlType(CONTAINER_ANDROID.RELATIVE, CONTAINER_NODE.RELATIVE);
-                        baseline.render(node);
-                        baseline.anchorParent('horizontal');
-                        baseline.setLayoutWidth('wrap_content');
-                        baseline.setLayoutHeight('wrap_content');
-                        let renderIndex = -1;
-                        j = 0;
-                        while (j < q) {
-                            const item = items[j++];
-                            const index = children.indexOf(item);
-                            if (index !== -1) {
-                                renderIndex = renderIndex === -1 ? index : Math.min(index, renderIndex);
-                            }
-                            item.removeTry();
-                            item.render(baseline);
-                            application.addLayoutTemplate(
-                                baseline,
-                                item,
-                                {
-                                    type: NODE_TEMPLATE.XML,
-                                    node: item,
-                                    controlName: item.controlName
-                                } as NodeXmlTemplate<T>
-                            );
-                        }
-                        application.addLayoutTemplate(
-                            node,
-                            baseline,
-                            {
-                                type: NODE_TEMPLATE.XML,
-                                node: baseline,
-                                controlName: baseline.controlName
-                            } as NodeXmlTemplate<T>,
-                            renderIndex
-                        );
-                        if (previousBaseline) {
-                            baseline.anchor('topBottom', previousBaseline.documentId);
-                        }
+            {
+                const containerHorizontal = node.renderParent!.layoutHorizontal;
+                const horizontalRows: T[][] = [];
+                const singleRow = rowCount === 1 && !node.hasHeight;
+                let previousBaseline: Null<T> = null;
+                const setLayoutBelow = (item: T) => {
+                    if (previousBaseline) {
+                        item.anchor('topBottom', previousBaseline.documentId);
                     }
                     else {
-                        if (!baseline) {
+                        item.anchor('top', 'true');
+                    }
+                };
+                const length = rowsAll.length;
+                let q: number, r: number;
+                for (let i = 0; i < length; ++i) {
+                    const [currentFloated, rows] = rowsAll[i];
+                    let float: Undef<string>;
+                    if (currentFloated) {
+                        currentFloated.anchor(currentFloated.float, 'true');
+                        setLayoutBelow(currentFloated);
+                        float = currentFloated.float;
+                    }
+                    q = rows.length;
+                    for (let j = 0; j < q; ++j) {
+                        const items = rows[j];
+                        r = items.length;
+                        if (r > 0) {
+                            horizontalRows.push(items);
+                        }
+                        let baseline: Null<T>;
+                        const setTextIndent = (item: T) => {
+                            if (i > 0 && textIndent < 0) {
+                                item.modifyBox(BOX_STANDARD.MARGIN_LEFT, float === 'left' ? Math.max(-(currentFloated!.linear.width + textIndent), 0) : -textIndent);
+                            }
+                        };
+                        if (r > 1) {
+                            const bottomAligned = getTextBottom(items);
+                            let textBottom = bottomAligned[0] as Undef<T>,
+                                offsetTop = 0,
+                                offsetBottom = 0,
+                                checkBottom = false,
+                                maxCenter: Null<T> = null,
+                                maxCenterHeight = 0,
+                                textBaseline: UndefNull<T>;
+                            baseline = NodeUI.baseline(bottomAligned.length > 0 ? items.filter(item => !bottomAligned.includes(item)) : items);
+                            if (baseline && textBottom) {
+                                if (baseline !== textBottom && baseline.bounds.height < textBottom.bounds.height) {
+                                    baseline.anchor('bottom', textBottom.documentId);
+                                }
+                                else {
+                                    baseline = NodeUI.baseline(items);
+                                    textBottom = undefined;
+                                }
+                            }
+                            checkBottom = items.some(item => item.floating);
+                            if (checkBottom) {
+                                sortHorizontalFloat(items);
+                            }
+                            const baselineAlign: T[] = [];
+                            for (let k = 0; k < r; ++k) {
+                                const item = items[k];
+                                if (!item.constraint.horizontal) {
+                                    if (rightAligned) {
+                                        if (k === r - 1) {
+                                            if (float === 'right') {
+                                                item.anchor('rightLeft', currentFloated!.documentId);
+                                            }
+                                            else {
+                                                item.anchor('right', 'true');
+                                            }
+                                        }
+                                        else {
+                                            item.anchor('rightLeft', items[k + 1].documentId);
+                                        }
+                                    }
+                                    else {
+                                        if (k === 0) {
+                                            if (float === 'left') {
+                                                item.anchor('leftRight', currentFloated!.documentId);
+                                            }
+                                            else {
+                                                item.anchor('left', 'true');
+                                            }
+                                            setTextIndent(item);
+                                        }
+                                        else {
+                                            item.anchor('leftRight', items[k - 1].documentId);
+                                        }
+                                    }
+                                }
+                                if (item.textElement) {
+                                    item.setSingleLine(k === r - 1 && !item.rightAligned && !item.centerAligned);
+                                }
+                                if (item === baseline || item.baselineAltered || item === textBottom) {
+                                    continue;
+                                }
+                                else if (i === 0 && (item.rendering && (item.verticalAligned || !item.baselineElement) || item.controlElement)) {
+                                    item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: (item.contentBoxHeight === 0 && !item.controlElement ? Math.min(...item.map(child => child.bounds.top)) : item.bounds.top) - node.box.top });
+                                    item.anchor('top', 'true');
+                                    item.baselineAltered = true;
+                                    continue;
+                                }
+                                const verticalAlign = item.verticalAlign;
+                                if (item.multiline) {
+                                    checkBottom = true;
+                                }
+                                if (item.baseline) {
+                                    baselineAlign.push(item);
+                                }
+                                else if (item.inlineVertical) {
+                                    switch (item.css('verticalAlign')) {
+                                        case 'text-top':
+                                            if (!textBaseline) {
+                                                textBaseline = NodeUI.baseline(items, true);
+                                            }
+                                            if (textBaseline && item !== textBaseline) {
+                                                item.anchor('top', textBaseline.documentId);
+                                                continue;
+                                            }
+                                            else if (baseline) {
+                                                item.anchor('top', baseline.documentId);
+                                                continue;
+                                            }
+                                            break;
+                                        case 'top':
+                                            if (i === 0) {
+                                                item.anchor('top', 'true');
+                                                continue;
+                                            }
+                                            break;
+                                        case 'middle': {
+                                            const height = Math.max(item.actualHeight, item.lineHeight);
+                                            if (height > maxCenterHeight) {
+                                                maxCenter = item;
+                                                maxCenterHeight = height;
+                                            }
+                                            if (length === 1) {
+                                                item.anchor('centerVertical', 'true');
+                                                continue;
+                                            }
+                                            else if (baseline) {
+                                                const heightParent = Math.max(baseline.actualHeight, baseline.lineHeight);
+                                                if (height < heightParent) {
+                                                    item.anchor('top', baseline.documentId);
+                                                    item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: Math.round((heightParent - height) / 2) });
+                                                    item.baselineAltered = true;
+                                                    continue;
+                                                }
+                                            }
+                                            break;
+                                        }
+                                        case 'text-bottom':
+                                            if (!textBaseline) {
+                                                textBaseline = NodeUI.baseline(items, true);
+                                            }
+                                            if (textBaseline && textBaseline !== item) {
+                                                item.anchor('bottom', textBaseline.documentId);
+                                                continue;
+                                            }
+                                            else if (baseline) {
+                                                item.anchor('bottom', baseline.documentId);
+                                                continue;
+                                            }
+                                            break;
+                                        case 'bottom':
+                                            if (length === 1 && node.hasHeight) {
+                                                item.anchor('bottom', 'true');
+                                                continue;
+                                            }
+                                            break;
+                                    }
+                                    if (baseline) {
+                                        if (verticalAlign !== 0) {
+                                            item.modifyBox(BOX_STANDARD.MARGIN_TOP, -verticalAlign);
+                                            item.baselineAltered = true;
+                                        }
+                                        item.anchor('top', baseline.documentId);
+                                    }
+                                }
+                                if (verticalAlign > 0) {
+                                    offsetTop = Math.max(verticalAlign, offsetTop);
+                                }
+                                else {
+                                    offsetBottom = Math.min(verticalAlign, offsetBottom);
+                                }
+                            }
+                            const s = baselineAlign.length;
+                            if (baseline) {
+                                baseline.baselineActive = true;
+                                if (s > 0) {
+                                    adjustBaseline(baseline, baselineAlign, singleRow, node.box.top);
+                                }
+                                else if (baseline.multiline) {
+                                    const { left, height } = baseline.bounds;
+                                    let l = 0;
+                                    while (l < r) {
+                                        const item = items[l++];
+                                        if (item === baseline) {
+                                            break;
+                                        }
+                                        else if (left < item.bounds.right && height < item.bounds.height) {
+                                            baseline.anchor('bottom', item.documentId);
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (baseline.alignSibling('bottom') === '') {
+                                    if (maxCenterHeight > Math.max(baseline.actualHeight, baseline.lineHeight)) {
+                                        if (length === 1) {
+                                            baseline.anchor('centerVertical', 'true');
+                                        }
+                                        else {
+                                            baseline.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: baseline.bounds.top - maxCenter!.bounds.top });
+                                        }
+                                        maxCenter!.anchorDelete('top');
+                                        baseline = maxCenter;
+                                    }
+                                    else {
+                                        if (!containerHorizontal) {
+                                            if (offsetTop !== 0) {
+                                                baseline.modifyBox(BOX_STANDARD.MARGIN_TOP, Math.abs(offsetTop));
+                                            }
+                                            if (offsetBottom !== 0) {
+                                                baseline.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, Math.abs(offsetBottom));
+                                            }
+                                        }
+                                        if (singleRow && baseline.is(CONTAINER_NODE.BUTTON) && baseline.alignSibling('bottom') === '') {
+                                            baseline.anchor('centerVertical', 'true');
+                                            baseline = null;
+                                        }
+                                    }
+                                }
+                            }
+                            else if (s > 0 && s < r) {
+                                textBottom = bottomAligned[0];
+                                if (textBottom) {
+                                    let l = 0;
+                                    while (l < s) {
+                                        const item = baselineAlign[l++];
+                                        if (item.baseline && !item.multiline && textBottom.bounds.height > item.bounds.height) {
+                                            item.anchor('bottom', textBottom.documentId);
+                                        }
+                                    }
+                                }
+                            }
+                            if (centerAligned) {
+                                const application = this.application;
+                                baseline = this.createNodeGroup(items[0], items, node);
+                                baseline.setControlType(CONTAINER_ANDROID.RELATIVE, CONTAINER_NODE.RELATIVE);
+                                baseline.render(node);
+                                baseline.anchorParent('horizontal');
+                                baseline.setLayoutWidth('wrap_content');
+                                baseline.setLayoutHeight('wrap_content');
+                                let renderIndex = -1;
+                                let l = 0;
+                                while (l < r) {
+                                    const item = items[l++];
+                                    const index = children.indexOf(item);
+                                    if (index !== -1) {
+                                        renderIndex = renderIndex === -1 ? index : Math.min(index, renderIndex);
+                                    }
+                                    item.removeTry();
+                                    item.render(baseline);
+                                    application.addLayoutTemplate(
+                                        baseline,
+                                        item,
+                                        {
+                                            type: NODE_TEMPLATE.XML,
+                                            node: item,
+                                            controlName: item.controlName
+                                        } as NodeXmlTemplate<T>
+                                    );
+                                }
+                                application.addLayoutTemplate(
+                                    node,
+                                    baseline,
+                                    {
+                                        type: NODE_TEMPLATE.XML,
+                                        node: baseline,
+                                        controlName: baseline.controlName
+                                    } as NodeXmlTemplate<T>,
+                                    renderIndex
+                                );
+                                if (previousBaseline) {
+                                    baseline.anchor('topBottom', previousBaseline.documentId);
+                                }
+                            }
+                            else {
+                                let leftIndent = NaN;
+                                if (!baseline) {
+                                    baseline = items[0];
+                                    checkBottom = true;
+                                }
+                                if (textIndent < 0 && i === 0 && !rightAligned && !currentFloated) {
+                                    leftIndent = 0;
+                                    checkBottom = false;
+                                }
+                                for (let k = 0; k < r; ++k) {
+                                    const item = items[k];
+                                    if (previousBaseline && item.alignSibling('baseline') === '' && item.alignSibling('top') === '' && item.alignSibling('bottom') === '') {
+                                        item.anchor('topBottom', previousBaseline.documentId);
+                                    }
+                                    if (!isNaN(leftIndent)) {
+                                        if (Math.ceil(leftIndent) >= Math.abs(textIndent)) {
+                                            baseline = item;
+                                            leftIndent = NaN;
+                                        }
+                                        leftIndent += item.linear.width;
+                                    }
+                                    else if (checkBottom && item.linear.bottom >= baseline.linear.bottom) {
+                                        baseline = item;
+                                    }
+                                    if (k === 0) {
+                                        if (rightAligned) {
+                                            item.horizontalRowEnd = true;
+                                        }
+                                        else {
+                                            item.horizontalRowStart = true;
+                                        }
+                                    }
+                                    else if (k === r - 1) {
+                                        if (rightAligned) {
+                                            item.horizontalRowStart = true;
+                                        }
+                                        else {
+                                            item.horizontalRowEnd = true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        else {
                             baseline = items[0];
-                            requireBottom = true;
-                        }
-                        for (j = 0; j < q; ++j) {
-                            const item = items[j];
-                            if (previousBaseline && item.alignSibling('baseline') === '' && item.alignSibling('top') === '' && item.alignSibling('bottom') === '') {
-                                item.anchor('topBottom', previousBaseline.documentId);
-                            }
-                            if (requireBottom && item.linear.bottom >= baseline.linear.bottom) {
-                                baseline = item;
-                            }
-                            if (j === 0) {
-                                if (rows === rowsRight) {
-                                    item.horizontalRowEnd = true;
+                            if (baseline) {
+                                if (currentFloated) {
+                                    if (currentFloated.float === 'left') {
+                                        if (rightAligned || baseline.rightAligned) {
+                                            baseline.anchor('right', 'true');
+                                        }
+                                        else {
+                                            baseline.anchor('leftRight', currentFloated.documentId);
+                                        }
+                                        baseline.horizontalRowEnd = true;
+                                    }
+                                    else {
+                                        if (rightAligned || baseline.rightAligned) {
+                                            baseline.anchor('rightLeft', currentFloated.documentId);
+                                        }
+                                        else {
+                                            baseline.anchor('left', 'true');
+                                        }
+                                        baseline.horizontalRowStart = true;
+                                    }
                                 }
                                 else {
-                                    item.horizontalRowStart = true;
+                                    if (baseline.floating) {
+                                        baseline.anchor(baseline.float, 'true');
+                                    }
+                                    else if (rightAligned || baseline.rightAligned) {
+                                        baseline.anchor('right', 'true');
+                                    }
+                                    else if (centerAligned || baseline.centerAligned) {
+                                        baseline.anchorParent('horizontal');
+                                    }
+                                    else {
+                                        baseline.anchor('left', 'true');
+                                    }
+                                    baseline.horizontalRowStart = true;
+                                    baseline.horizontalRowEnd = true;
+                                }
+                                setLayoutBelow(baseline);
+                                if (!rightAligned) {
+                                    setTextIndent(baseline);
                                 }
                             }
-                            else if (j === q - 1) {
-                                if (rows === rowsRight) {
-                                    item.horizontalRowStart = true;
-                                }
-                                else {
-                                    item.horizontalRowEnd = true;
-                                }
+                            else if (currentFloated) {
+                                baseline = currentFloated;
+                            }
+                            else {
+                                continue;
                             }
                         }
+                        previousBaseline = baseline;
                     }
                 }
-                else {
-                    baseline = items[0];
-                    if (baseline.centerAligned || node.cssInitial('textAlign') === 'center') {
-                        baseline.anchorParent('horizontal');
-                        baseline.anchorDelete('left', 'right');
-                    }
-                    baseline.horizontalRowStart = true;
-                    baseline.horizontalRowEnd = true;
-                    if (previousBaseline) {
-                        baseline.anchor('topBottom', previousBaseline.documentId);
-                    }
-                }
-                previousBaseline = baseline;
+                node.horizontalRows = horizontalRows;
             }
-        };
-        applyLayout(rowsLeft);
-        if (rowsRight) {
-            applyLayout(rowsRight);
         }
-        node.horizontalRows = rowsRight ? rowsLeft.concat(rowsRight) : rowsLeft;
         if (autoPosition) {
             node.renderChildren.sort((a, b) => {
                 if (!a.pageFlow && b.pageFlow) {
@@ -2637,12 +2741,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 return 0;
             });
             node.renderTemplates!.sort((a, b) => {
-                const pageFlowA = a.node.pageFlow;
-                const pageFlowB = b.node.pageFlow;
-                if (!pageFlowA && pageFlowB) {
+                const flowA = a.node.pageFlow;
+                const flowB = b.node.pageFlow;
+                if (!flowA && flowB) {
                     return 1;
                 }
-                else if (!pageFlowB && pageFlowA) {
+                else if (!flowB && flowA) {
                     return -1;
                 }
                 return 0;

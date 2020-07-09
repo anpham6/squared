@@ -700,13 +700,17 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             }
                             [offset, below] = getMarginOffset(below, above, lineHeight, aboveLineBreak);
                             if (offset >= 1) {
-                                if (below.visible) {
-                                    below.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
+                                const top = !below.visible ? below.registerBox(BOX_STANDARD.MARGIN_TOP) : below;
+                                if (top) {
+                                    top.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
                                     valid = true;
                                 }
-                                else if (above.visible) {
-                                    above.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, offset);
-                                    valid = true;
+                                else {
+                                    const bottom = !above.visible ? above.registerBox(BOX_STANDARD.MARGIN_BOTTOM) : above;
+                                    if (bottom) {
+                                        bottom.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, offset);
+                                        valid = true;
+                                    }
                                 }
                             }
                         }

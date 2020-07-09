@@ -165,33 +165,30 @@ interface CssPXOptions {
 }
 
 interface CssInitialOptions {
+    initial?: boolean;
     modified?: boolean;
     computed?: boolean;
 }
 
 interface HasOptions extends CssInitialOptions {
-    initial?: boolean;
     not?: string | string[];
     type?: number;
 }
 
 interface HasPXOptions extends CssInitialOptions {
-    initial?: boolean;
     percent?: boolean;
 }
 
 interface CssAscendOptions extends CssInitialOptions {
-    initial?: boolean;
     startSelf?: boolean;
 }
 
-interface CssAnyOptions extends CssInitialOptions {
-    initial?: boolean
+interface CssAnyOptions extends CssInitialOptions, CssAscendOptions {
+    ascend?: boolean;
     values: string[];
 }
 
 interface MinMaxOptions extends CssInitialOptions {
-    initial?: boolean;
     self?: boolean;
     last?: boolean;
 }
