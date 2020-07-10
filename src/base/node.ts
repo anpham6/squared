@@ -2457,9 +2457,12 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     get baseline() {
         const result = this._cached.baseline;
         if (result === undefined) {
-            if (this.pageFlow && !this.floating) {
-                const value = this.css('verticalAlign');
-                return this._cached.baseline = value === 'baseline' || value === 'initial' || this.naturalElements.length === 0 && isLength(value, true);
+            if (this.pageFlow && !this.floating && !this.tableElement) {
+                const display = this.display;
+                if (display.startsWith('inline') || display === 'list-item') {
+                    const verticalAlign = this.css('verticalAlign');
+                    return this._cached.baseline = verticalAlign === 'baseline' || isLength(verticalAlign, true) || verticalAlign === 'initial';
+                }
             }
             return this._cached.baseline = false;
         }
@@ -2732,6 +2735,22 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             return this._cached.actualParent = parentElement && getElementAsNode<T>(parentElement, this.sessionId) || null;
         }
         return result;
+    }
+
+    get wrapperOf() {
+        let node = this as T;
+        do {
+            switch (node.length) {
+                case 0:
+                    return node === this ? null : node;
+                case 1:
+                    node = node.children[0];
+                    break;
+                default:
+                    return null;
+            }
+        }
+        while (true);
     }
 
     get actualWidth() {

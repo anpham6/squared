@@ -270,9 +270,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public static baseline<T extends NodeUI>(list: T[], text = false): Null<T> {
         const length = list.length;
         const result: T[] = new Array(length);
-        let j = 0;
-        for (let i = 0; i < length; ++i) {
-            const item = list[i];
+        let i = 0, j = 0;
+        while (i < length) {
+            const item = list[i++];
             if (item.baseline && !item.baselineAltered && (!text || item.textElement)) {
                 if (item.naturalElements.length > 0) {
                     if (item.baselineElement) {
@@ -287,17 +287,19 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (j > 1) {
             result.length = j;
             result.sort((a, b) => {
-                if (a.layoutHorizontal && a.baselineElement) {
-                    a = a.max('baselineHeight', { self: true }) as T;
-                }
-                if (b.layoutHorizontal && b.baselineElement) {
-                    b = b.max('baselineHeight', { self: true }) as T;
-                }
-                if (!a.layoutHorizontal && b.layoutHorizontal) {
+                const layoutA = a.layoutHorizontal;
+                const layoutB = b.layoutHorizontal;
+                if (!layoutA && b.layoutHorizontal && b.some(item => item.css('verticalAlign') !== 'baseline')) {
                     return -1;
                 }
-                else if (!b.layoutHorizontal && a.layoutHorizontal) {
+                else if (!layoutB && layoutA && a.some(item => item.css('verticalAlign') !== 'baseline')) {
                     return 1;
+                }
+                if (layoutA && a.baselineElement) {
+                    a = a.max('baselineHeight', { self: true }) as T;
+                }
+                if (layoutB && b.baselineElement) {
+                    b = b.max('baselineHeight', { self: true }) as T;
                 }
                 const imageA = a.imageContainer;
                 const imageB = b.imageContainer;
@@ -1155,35 +1157,24 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return options ? traverseElementSibling(node.element?.nextSibling as Element, 'nextSibling', this.sessionId, options) : node.siblingsTrailing;
     }
 
-    public modifyBox(region: number, offset?: number, negative = true) {
-        if (offset !== 0) {
+    public modifyBox(region: number, value: number, negative = true) {
+        if (value !== 0) {
             const attr = CSS_SPACING.get(region);
             if (attr) {
                 const node = this._boxRegister?.[region];
-                if (offset === undefined) {
-                    if (node) {
-                        const value: number = this[attr] || node.getBox(region)[1];
-                        if (value > 0) {
-                            node.modifyBox(region, -value, negative);
-                        }
-                    }
-                    else {
-                        this._boxReset[attr] = 1;
-                    }
-                }
-                else if (node) {
-                    node.modifyBox(region, offset, negative);
+                if (node) {
+                    node.modifyBox(region, value, negative);
                 }
                 else {
                     const boxAdjustment = this._boxAdjustment;
-                    if (!negative && (this._boxReset[attr] === 0 ? this[attr] : 0) + boxAdjustment[attr] + offset <= 0) {
+                    if (!negative && (this._boxReset[attr] === 0 ? this[attr] : 0) + boxAdjustment[attr] + value <= 0) {
                         boxAdjustment[attr] = 0;
-                        if (this[attr] >= 0 && offset < 0) {
+                        if (this[attr] >= 0 && value < 0) {
                             this._boxReset[attr] = 1;
                         }
                     }
                     else {
-                        boxAdjustment[attr] += offset;
+                        boxAdjustment[attr] += value;
                     }
                 }
             }
@@ -1640,7 +1631,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     get inlineFlow() {
         const result = this._cached.inlineFlow;
-        return result === undefined ? this._cached.inlineFlow = this.pageFlow && (this.inline || this.inlineDimension || this.inlineVertical || this.imageElement || this.svgElement && this.hasPX('width', { percent: false }) || this.tableElement && this.previousSibling?.floating === true) : result;
+        return result === undefined ? this._cached.inlineFlow = (this.inline || this.inlineDimension || this.inlineVertical || this.floating || this.imageElement || this.svgElement && this.hasPX('width', { percent: false }) || this.tableElement && this.previousSibling?.floating === true) && this.pageFlow : result;
     }
 
     get blockStatic() {

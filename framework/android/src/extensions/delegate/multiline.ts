@@ -47,7 +47,7 @@ function isTextElement(node: View) {
     while (true);
 }
 
-const isUnstyled = (node: View) => node.baseline && node.contentBoxWidth === 0 && node.contentBoxHeight === 0 && !node.visibleStyle.background;
+const isUnstyled = (node: View) => node.baseline && node.contentBoxWidth === 0 && node.contentBoxHeight === 0 && !node.visibleStyle.background && !node.positionRelative;
 const isMultiline = (node: View): boolean => node.plainText || node.naturalChild && node.naturalElements.length === 0 && isUnstyled(node);
 
 export default class Multiline<T extends View> extends squared.base.ExtensionUI<T> {

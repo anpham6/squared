@@ -508,6 +508,7 @@ declare module "base" {
         get fontSize(): number;
         get verticalAlign(): number;
         get absoluteParent(): Null<Node>;
+        get wrapperOf(): Null<Node>;
         get actualWidth(): number;
         get actualHeight(): number;
         get actualDimension(): Dimension;
@@ -604,7 +605,7 @@ declare module "base" {
         alignedVertically(siblings?: Node[], cleared?: Map<Node, string>, horizontal?: boolean): number;
         previousSiblings(options?: SiblingOptions): NodeUI[];
         nextSiblings(options?: SiblingOptions): NodeUI[];
-        modifyBox(region: number, offset?: number, negative?: boolean): void;
+        modifyBox(region: number, value: number, negative?: boolean): void;
         setBox(region: number, options: BoxOptions): void;
         getBox(region: number): [number, number];
         resetBox(region: number, node?: NodeUI): void;

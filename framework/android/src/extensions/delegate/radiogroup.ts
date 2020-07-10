@@ -87,7 +87,6 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
             if (!setBaselineIndex(radiogroup, container, this.name)) {
                 container.css('verticalAlign', 'middle');
                 container.setCacheValue('baseline', false);
-                container.setCacheValue('verticalAlign', 'middle');
             }
             length = removeable.length;
             let i = 0;

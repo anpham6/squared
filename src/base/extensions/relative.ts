@@ -4,8 +4,6 @@ import NodeUI from '../node-ui';
 
 import { BOX_STANDARD } from '../lib/enumeration';
 
-const { withinRange } = squared.lib.util;
-
 export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> {
     public is(node: T) {
         return node.positionRelative && !node.autoPosition || node.verticalAligned;
@@ -77,50 +75,16 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                 }
                 this.application.addLayout(layout);
                 rendered.push(target);
-                if (node.baselineActive) {
-                    if (node.childIndex === 0 && (top > 0 || verticalAlign < 0)) {
-                        const documentId = node.documentId;
-                        renderParent.renderEach(item => {
-                            if (item.alignSibling('topBottom') === documentId) {
-                                item.alignSibling('topBottom', target.documentId);
-                            }
-                            else if (item.alignSibling('bottomTop') === documentId) {
-                                item.alignSibling('bottomTop', target.documentId);
-                            }
-                        });
-                    }
-                    if (!node.baselineAltered) {
-                        for (const children of renderParent.horizontalRows || [renderParent.renderChildren]) {
-                            if (children.includes(node)) {
-                                const unaligned = children.filter(item => item.positionRelative && item.length > 0 && node.verticalAligned);
-                                const length = unaligned.length;
-                                if (length > 0) {
-                                    unaligned.sort((a, b) => {
-                                        const topA = a.linear.top;
-                                        const topB = b.linear.top;
-                                        if (withinRange(topA, topB)) {
-                                            return 0;
-                                        }
-                                        return topA < topB ? -1 : 1;
-                                    });
-                                    let first = true;
-                                    let i = 0;
-                                    while (i < length) {
-                                        const item = unaligned[i++];
-                                        if (first) {
-                                            node.modifyBox(BOX_STANDARD.MARGIN_TOP, item.verticalAlign);
-                                            first = false;
-                                        }
-                                        else {
-                                            item.modifyBox(BOX_STANDARD.MARGIN_TOP, item.linear.top - unaligned[0].linear.top);
-                                        }
-                                        item.setCacheValue('verticalAlign', '0px');
-                                    }
-                                }
-                                break;
-                            }
+                if (node.baselineActive && node.childIndex === 0 && (top > 0 || verticalAlign < 0)) {
+                    const documentId = node.documentId;
+                    renderParent.renderEach(item => {
+                        if (item.alignSibling('topBottom') === documentId) {
+                            item.alignSibling('topBottom', target.documentId);
                         }
-                    }
+                        else if (item.alignSibling('bottomTop') === documentId) {
+                            item.alignSibling('bottomTop', target.documentId);
+                        }
+                    });
                 }
             }
             else if (node.positionRelative && node.naturalElement) {

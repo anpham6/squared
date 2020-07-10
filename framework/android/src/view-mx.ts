@@ -1133,7 +1133,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                     else if (
                         containsWidth && (
-                            this.nodeGroup && (renderParent.layoutFrame && (this.hasAlign(NODE_ALIGNMENT.FLOAT) || this.hasAlign(NODE_ALIGNMENT.RIGHT)) || this.hasAlign(NODE_ALIGNMENT.PERCENT)) ||
+                            this.nodeGroup && (this.hasAlign(NODE_ALIGNMENT.FLOAT) && (this.hasAlign(NODE_ALIGNMENT.BLOCK) || this.hasAlign(NODE_ALIGNMENT.RIGHT)) || this.hasAlign(NODE_ALIGNMENT.PERCENT)) ||
                             actualParent.flexElement && this.some(item => item.multiline, { cascade: true }) ||
                             this.layoutGrid && this.some((node: T) => node.flexibleWidth)
                         ))
