@@ -7,11 +7,11 @@ f860ac8ac7ec4e1036138fb22c62454f  ./app/src/main/res/drawable-xhdpi/__300x150.pn
 cd2f1c35e9634a47aaff93885807478f  ./app/src/main/res/drawable-xxhdpi/__300x150.png
 b80b5b3b2ab058c07ff2e70724a9beea  ./app/src/main/res/drawable-xxhdpi/__400x200.webp
 c68f05ad1d998cc1c3ea7af544de56b2  ./app/src/main/res/drawable-xxxhdpi/__300x150.png
-79cc3fa86327a0e61131ddcefc347361  ./app/src/main/res/drawable/li_linearlayout_3.xml
-d413b342acc81b13d39e5ea06c57d7b4  ./app/src/main/res/drawable/section_framelayout_14.xml
-8e61fb858c46091cd23ecf86dae427fb  ./app/src/main/res/layout/activity_main.xml
+79cc3fa86327a0e61131ddcefc347361  ./app/src/main/res/drawable/li_framelayout_3.xml
+d413b342acc81b13d39e5ea06c57d7b4  ./app/src/main/res/drawable/section_framelayout_20.xml
+2f4602f0cf5c331888fdbc6a68e3d446  ./app/src/main/res/layout/activity_main.xml
 74db3e41c909832910aa192af148da9e  ./app/src/main/res/values/colors.xml
 602944b290b2c00d3bbb18671c090ba3  ./app/src/main/res/values/dimens.xml
 1340b5dfc1ebaf5d1f38664fb4ecd823  ./app/src/main/res/values/strings.xml
-7d0ca3340f90c264356c957133478985  ./app/src/main/res/values/styles.xml
+14b53b04711e7afafeccc6154811c5ed  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml

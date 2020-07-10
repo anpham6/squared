@@ -1,3 +1,4 @@
+3fca97234757cb10b7c4a4fe60f27ec5  ./app/src/main/res/drawable/button_button_1.xml
 b4fe8caa4304116eefdaa4c36f16bb05  ./app/src/main/res/drawable/color_gradient_1.xml
 850ebdc557407f8949069e7eecc9c86b  ./app/src/main/res/drawable/color_gradient_2.xml
 a60411dfce18480a914f3ba1977f42c2  ./app/src/main/res/drawable/color_gradient_3.xml
@@ -7,13 +8,12 @@ a60411dfce18480a914f3ba1977f42c2  ./app/src/main/res/drawable/color_gradient_3.x
 084c5166290af904d136eb755fb0b4c4  ./app/src/main/res/drawable/input_range_howyourateit.xml
 23bf176230f41b69a533a3bb2dfc8281  ./app/src/main/res/drawable/input_text_film.xml
 77708a9da387fabe6d907a150af0383b  ./app/src/main/res/drawable/legend_relativelayout_7.xml
-43ac12c147349096d8d2a257f4f03c8c  ./app/src/main/res/drawable/legend_relativelayout_8.xml
+c41feff6aa09e049add69ff1982cae54  ./app/src/main/res/drawable/legend_relativelayout_8.xml
 fb222c1a1815f87a4775605f66b78d60  ./app/src/main/res/drawable/legend_relativelayout_9.xml
 44e8d4b47c5371e66a15b8503d5ebe3c  ./app/src/main/res/drawable/span_range.xml
-a44328ee33ccf2253812e2aeacbc505d  ./app/src/main/res/drawable/span_textview_29.xml
-4f29c25cad22425efc226f318beabaf1  ./app/src/main/res/layout/activity_main.xml
-132275c6c4d99cd26f925d9ae594bad1  ./app/src/main/res/values/colors.xml
-293c088061f6407780792f3c66dfc523  ./app/src/main/res/values/dimens.xml
-d8465decfded98bf38ca30083a6d3dbe  ./app/src/main/res/values/strings.xml
-f9f2013efeb80ecb0edfc1355af3ee81  ./app/src/main/res/values/styles.xml
+9def7e23812a80f7d600f95bc82f3237  ./app/src/main/res/layout/activity_main.xml
+287eceb9734fda4f327ccb9b003798da  ./app/src/main/res/values/colors.xml
+414bb0a57b15d465f2d04f06c76791f4  ./app/src/main/res/values/dimens.xml
+a691faaabe055d03de78a415bb8ba354  ./app/src/main/res/values/strings.xml
+73dfc439b156b193f5040be28fef019d  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml
