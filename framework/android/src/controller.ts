@@ -120,9 +120,9 @@ function setBaselineItems(parent: View, baseline: View, items: View[], index: nu
                     });
                 }
                 else {
-                    imageElement = item.imageContainer;
+                    imageElement = item.imageContainer && !baseline.textElement;
                 }
-                if (imageElement) {
+                if (imageElement || item.imageContainer) {
                     if (height > baselineHeight) {
                         if (!imageBaseline || height >= imageHeight) {
                             if (imageBaseline) {
@@ -419,6 +419,7 @@ const hasCleared = (layout: LayoutUI<View>, clearMap: Map<View, string>, ignoreF
 const isMultiline = (node: View) => node.plainText && Resource.hasLineBreak(node, false, true) || node.preserveWhiteSpace && /^\s*\n+/.test(node.textContent);
 const getMaxHeight = (node: View) => Math.max(node.actualHeight, node.lineHeight);
 const isUnknownParent = (parent: View, value: number, length: number) => parent.containerType === value && parent.length === length && (parent.alignmentType === 0 || parent.hasAlign(NODE_ALIGNMENT.UNKNOWN));
+const isMultilineGroup = (node: View) => node.contentAltered && !node.naturalChild && node.inlineText;
 
 function getBoxWidth(this: Controller<View>, node: View, children: View[]) {
     const renderParent = node.renderParent as View;
@@ -2261,7 +2262,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 item.anchor('left', 'true');
                             }
                             else {
-                                item.anchor(rightAligned ? 'rightLeft' : 'leftRight', previous.documentId);
+                                item.anchor(rightAligned ? 'rightLeft' : 'leftRight', documentId);
                             }
                             item.anchor('top', documentId);
                         }
@@ -2411,6 +2412,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         setLayoutBelow(currentFloated);
                         float = currentFloated.float;
                     }
+                    const setTextIndent = (item: T) => {
+                        if (i > 0 && textIndent < 0) {
+                            item.modifyBox(BOX_STANDARD.MARGIN_LEFT, float === 'left' ? Math.max(-(currentFloated!.linear.width + textIndent), 0) : -textIndent);
+                        }
+                    };
                     q = rows.length;
                     for (let j = 0; j < q; ++j) {
                         const items = rows[j];
@@ -2419,12 +2425,42 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             horizontalRows.push(items);
                         }
                         let baseline: Null<T>;
-                        const setTextIndent = (item: T) => {
-                            if (i > 0 && textIndent < 0) {
-                                item.modifyBox(BOX_STANDARD.MARGIN_LEFT, float === 'left' ? Math.max(-(currentFloated!.linear.width + textIndent), 0) : -textIndent);
-                            }
-                        };
                         if (r > 1) {
+                            for (let k = 0; k < r - 1; ++k) {
+                                const item = items[k];
+                                if (isMultilineGroup(item)) {
+                                    const element = item.element;
+                                    if (element) {
+                                        let textContent = '',
+                                            width = 0,
+                                            index: Undef<number>;
+                                        const start = k + 1;
+                                        for (let l = start; l < r; ++l) {
+                                            const next = items[l];
+                                            if (isMultilineGroup(next) && next.element === element) {
+                                                textContent += next.textContent;
+                                                width += next.bounds.width;
+                                                next.hide({ remove: true });
+                                                index = l;
+                                            }
+                                            else {
+                                                break;
+                                            }
+                                        }
+                                        if (index) {
+                                            item.textContent = item.textContent + textContent;
+                                            item.bounds.width += width;
+                                            const last = items[index];
+                                            item.setCacheValue('marginRight', last.marginRight + last.getBox(BOX_STANDARD.MARGIN_RIGHT)[1]);
+                                            item.siblingsTrailing = last.siblingsTrailing;
+                                            item.lineBreakTrailing = last.lineBreakTrailing;
+                                            last.registerBox(BOX_STANDARD.MARGIN_BOTTOM, item);
+                                            items.splice(start, index - k);
+                                            r = items.length;
+                                        }
+                                    }
+                                }
+                            }
                             const bottomAligned = getTextBottom(items);
                             let textBottom = bottomAligned[0] as Undef<T>,
                                 offsetTop = 0,
@@ -2689,7 +2725,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                         item.anchor('topBottom', previousBaseline.documentId);
                                     }
                                     if (!isNaN(leftIndent)) {
-                                        if (Math.ceil(leftIndent) >= Math.abs(textIndent)) {
+                                        if (Math.ceil(leftIndent) >= Math.abs(textIndent) || k === r - 1) {
                                             baseline = item;
                                             leftIndent = NaN;
                                         }

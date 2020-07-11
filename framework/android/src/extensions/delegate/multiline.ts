@@ -151,7 +151,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
             REGEXP_WORD.lastIndex = 0;
             const q = words.length;
             if (q > 1 || outerContainer) {
-                const { depth, textStyle, fontSize, lineHeight } = seg;
+                const { element, depth, textStyle, fontSize, lineHeight } = seg;
                 const bounds = !seg.hasPX('width') && seg.textBounds || seg.bounds;
                 const height = seg.bounds.height / (bounds.numberOfLines || 1);
                 const items: Undef<T[]> = nodes ? new Array(q) : undefined;
@@ -164,7 +164,8 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                     container.inlineText = true;
                     container.multiline = false;
                     container.renderExclude = false;
-                    container.unsafe('element', seg.element);
+                    container.contentAltered = true;
+                    container.unsafe('element', element);
                     container.setCacheValue('tagName', '#text');
                     container.setCacheValue('naturalElement', false);
                     container.setCacheValue('lineHeight', lineHeight);

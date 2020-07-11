@@ -270,7 +270,7 @@ function hasEndingSpace(element: HTMLElement) {
     return length > 0 && textContent.charCodeAt(length - 1) === 32;
 }
 
-const checkPreviousSibling = (node: UndefNull<NodeUI>) => !node || node.multiline && !node.contentAltered || node.lineBreak || node.floating || node.plainText && CHAR_TRAILINGSPACE.test(node.textContent);
+const checkPreviousSibling = (sibling: UndefNull<NodeUI>) => !sibling || sibling.lineBreak || sibling.floating || sibling.plainText && CHAR_TRAILINGSPACE.test(sibling.textContent);
 
 export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> implements squared.base.ResourceUI<T> {
     public static STRING_SPACE = '&#160;';
@@ -964,10 +964,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             .replace(CHAR_TRAILINGSPACE, '');
                     }
                     else if (!node.naturalChild) {
-                        if (checkPreviousSibling(node.siblingsLeading[0])) {
-                            value = value.replace(CHAR_LEADINGSPACE, '');
-                        }
-                        else if (!node.horizontalRowStart) {
+                        if (!node.horizontalRowStart) {
                             const element = node.element;
                             const previousSibling = element?.previousSibling;
                             if (previousSibling && previousSibling instanceof HTMLElement && !hasEndingSpace(previousSibling) && element!.textContent!.trim().startsWith(value.trim())) {
@@ -975,7 +972,9 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                 break;
                             }
                         }
-                        value = value.replace(CHAR_LEADINGSPACE, '');
+                        if (checkPreviousSibling(node.siblingsLeading[0])) {
+                            value = value.replace(CHAR_LEADINGSPACE, '');
+                        }
                     }
                     else {
                         if (node.horizontalRowStart || node.previousSibling?.blockStatic) {
