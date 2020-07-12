@@ -12,7 +12,7 @@ aecd95ad169e96c1294b2670a7f97f20  ./app/src/main/res/drawable/bg_th.png
 927f8d7a81fbf4383989333a346a6075  ./app/src/main/res/drawable/body_constraintlayout_1.xml
 bea89df43919c067a449ae26f9a0e21c  ./app/src/main/res/drawable/div_banner.xml
 34ff8876e30f65d248b6d4c2309d3824  ./app/src/main/res/drawable/div_footer.xml
-ca8b7054dfa8d3058748d37a2ae7ca88  ./app/src/main/res/drawable/div_linearlayout_27.xml
+ca8b7054dfa8d3058748d37a2ae7ca88  ./app/src/main/res/drawable/div_linearlayout_42.xml
 83fd0ed866d4df5e73c40b4a1771b6ce  ./app/src/main/res/drawable/div_mainwrap.xml
 baafb2fe1cbb77fd2a6fb3f5bfd53783  ./app/src/main/res/drawable/div_navwrap.xml
 0de92410e4bed921a37c9a19aafea94a  ./app/src/main/res/drawable/div_sidebar.xml
@@ -34,9 +34,9 @@ f8c5332242cb546eb2eb1251734e7fff  ./app/src/main/res/drawable/th_textview_22.xml
 a87afb9ad54e53a531f0422e334a24c4  ./app/src/main/res/drawable/th_textview_23.xml
 65dd3fc14dee82e3dc74bb81efe122dc  ./app/src/main/res/drawable/ul_relativelayout_1.xml
 cd2ccc1551142042e109e5593fe20e30  ./app/src/main/res/drawable/underline.png
-4cad2f32071b8aa842843247512f77f7  ./app/src/main/res/layout/activity_main.xml
+a188682936bd9f3e1042896bdaa6bbaa  ./app/src/main/res/layout/activity_main.xml
 70ea2a506feb8efed3ba7762835eed1d  ./app/src/main/res/values/colors.xml
 ad4b7f52a618675d87757947c5c804df  ./app/src/main/res/values/dimens.xml
 95024c8b2b60c4b7cd31045ec1f41717  ./app/src/main/res/values/strings.xml
-cbc2acbed02b728f44cb68c63f981531  ./app/src/main/res/values/styles.xml
+e9b1696dbaefc5aa89942f877b04dddb  ./app/src/main/res/values/styles.xml
 0e08f009e4c715bf6c73e1fcc3861fc0  ./app/src/main/res/values/themes.xml

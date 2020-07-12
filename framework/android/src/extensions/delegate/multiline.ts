@@ -11,10 +11,10 @@ const REGEXP_WORD = /(?:&#?[A-Za-z0-9]{2};[^\w]*|[^\w]|\b)*\w+?(?:'[A-Za-z]\s*|[
 
 function getFontMeasureAdjust(node: View) {
     const value = node.dataset.androidFontMeasureAdjust;
-    if (value === 'false') {
-        return Infinity;
+    if (value) {
+        return value === 'false' ? Infinity : parseFloat(value);
     }
-    return value ? parseFloat(value) : NaN;
+    return NaN;
 }
 
 function setContentAltered(node: View, indexing: boolean) {
@@ -30,32 +30,28 @@ function setContentAltered(node: View, indexing: boolean) {
 }
 
 function isTextElement(node: View) {
-    if (!node.visible) {
+    if (!node.visible || node.contentAltered) {
         return false;
     }
-    do {
-        if (node.textElement) {
-            return !(node.tagName === 'LABEL' && node.toElementString('htmlFor') !== '');
-        }
-        else if (node.length === 1) {
-            node = node.children[0] as View;
-        }
-        else {
-            return false;
-        }
+    else if (node.plainText) {
+        return true;
     }
-    while (true);
+    const wrapperOf = node.wrapperOf;
+    if (wrapperOf) {
+        node = wrapperOf as View;
+    }
+    return node.textElement && !(node.tagName === 'LABEL' && node.toElementString('htmlFor') !== '');
 }
 
-const isUnstyled = (node: View) => node.baseline && node.contentBoxWidth === 0 && node.contentBoxHeight === 0 && !node.visibleStyle.background && !node.positionRelative;
-const isMultiline = (node: View): boolean => node.plainText || node.naturalChild && node.naturalElements.length === 0 && isUnstyled(node);
+const isUnstyled = (node: View) => node.baseline && !node.positionRelative && node.contentBoxWidth === 0 && node.contentBoxHeight === 0 && !node.visibleStyle.background;
+const checkBreakable = (node: View): boolean => node.plainText || node.naturalChild && node.naturalElements.length === 0 && node.innerAfter === undefined && node.innerBefore === undefined && isUnstyled(node);
 
 export default class Multiline<T extends View> extends squared.base.ExtensionUI<T> {
     public condition(node: T, parent: T) {
         if (!node.preserveWhiteSpace) {
             if (node.naturalElements.length === 0) {
                 if (parent.layoutHorizontal && parent.layoutRelative) {
-                    if (node.multiline && isMultiline(node)) {
+                    if ((node.multiline || parent.contentAltered) && checkBreakable(node)) {
                         return true;
                     }
                 }
@@ -77,7 +73,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                         return false;
                     }
                     else if (isTextElement(child) && !child.textEmpty && !(child.lineBreakLeading && (i === length - 1 || child.lineBreakTrailing))) {
-                        if (isMultiline(child) && !child.preserveWhiteSpace) {
+                        if (checkBreakable(child) && !child.preserveWhiteSpace) {
                             if (child.multiline) {
                                 ++j;
                             }
@@ -93,7 +89,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                         floatHeight = Math.max(child.linear.height, floatHeight);
                     }
                 }
-                if (j > 1 || j > 0 && k === 0 && (l > 1 || floatHeight > 0 && textHeight > floatHeight) || j + k > 1 && (node.textBounds?.numberOfLines || 0) > 1) {
+                if (j > 0 && (k > 0 || l > 1 || floatHeight > 0 && textHeight > floatHeight) || k > 1 && (node.textBounds?.numberOfLines || 0) > 1) {
                     node.data(this.name, 'mainData', nodes);
                     return true;
                 }
@@ -112,14 +108,13 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
         if (fontAdjust === Infinity) {
             return undefined;
         }
-        const outerContainer = !!nodes && parent.layoutHorizontal && parent.layoutRelative && isUnstyled(node);
+        const outerContainer = !!nodes && parent.layoutHorizontal && parent.layoutRelative && isUnstyled(node) && node.marginTop === 0 && node.marginBottom === 0;
         const parentContainer = !nodes || outerContainer ? parent : node;
         const { children, sessionId } = parentContainer;
         let childIndex = outerContainer ? children.findIndex(item => item === node) : -1;
         if (outerContainer && childIndex === -1) {
             return undefined;
         }
-        const afterAdd = this.application.getProcessingCache(sessionId).afterAdd!;
         if (isNaN(fontAdjust)) {
             fontAdjust = (this.application as android.base.Application<T>).userSettings.fontMeasureAdjust;
         }
@@ -229,7 +224,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                                 container.modifyBox(BOX_STANDARD.MARGIN_RIGHT, node.marginRight);
                             }
                         }
-                        else{
+                        else {
                             container.siblingsTrailing = [];
                         }
                     }
@@ -267,7 +262,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                 }
                 parentContainer.setControlType(View.getControlName(CONTAINER_NODE.RELATIVE), CONTAINER_NODE.RELATIVE);
                 parentContainer.alignmentType = NODE_ALIGNMENT.HORIZONTAL;
-                afterAdd(parentContainer, true, true);
+                this.application.getProcessingCache(sessionId).afterAdd!(parentContainer, true, true);
             }
             else {
                 return { next: true };

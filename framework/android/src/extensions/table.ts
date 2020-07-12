@@ -4,7 +4,7 @@ import { CONTAINER_NODE } from '../lib/enumeration';
 
 import LayoutUI = squared.base.LayoutUI;
 
-const { CSS_UNIT, formatPX } = squared.lib.css;
+const { formatPX } = squared.lib.css;
 const { convertFloat, convertInt, trimEnd } = squared.lib.util;
 
 const { NODE_ALIGNMENT } = squared.base.lib.enumeration;
@@ -19,7 +19,8 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
     public processNode(node: T, parent: T) {
         super.processNode(node, parent);
         const mainData = node.data<TableData>(this.name, 'mainData')!;
-        let requireWidth = false;
+        let requireWidth = false,
+            multiline = false;
         if (mainData.columnCount > 1) {
             requireWidth = mainData.expand;
             node.each((item: T) => {
@@ -65,8 +66,8 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
         }
         else {
             node.each((item: T) => {
-                if (item.has('width', { type: CSS_UNIT.PERCENT })) {
-                    item.setLayoutWidth('wrap_content');
+                if (item.multiline || item.some((child: T) => child.multiline || child.contentAltered), { cascade: true }) {
+                    multiline = true;
                     requireWidth = true;
                 }
                 setLayoutHeight(item);
@@ -86,7 +87,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
             }
         }
         else if (requireWidth) {
-            if ((parent.blockStatic || parent.hasPX('width')) && Math.ceil(node.bounds.width) >= parent.box.width) {
+            if ((parent.blockStatic || parent.hasWidth) && (multiline || Math.ceil(node.bounds.width) >= parent.box.width)) {
                 node.setLayoutWidth('match_parent');
             }
             else {

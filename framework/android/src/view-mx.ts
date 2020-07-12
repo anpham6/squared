@@ -2359,7 +2359,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                     }
                     else {
-                        let baseline = !this.baselineActive;
+                        let baseline = true;
                         if (renderChildren.some(node => node.floating) && !renderChildren.some(node => node.imageElement && node.baseline)) {
                             this.android('baselineAligned', 'false');
                             baseline = false;

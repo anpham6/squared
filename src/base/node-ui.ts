@@ -164,6 +164,22 @@ function getExclusionValue(enumeration: {}, offset: number, value?: string) {
     return offset;
 }
 
+function isBaselineElement(node: T) {
+    switch (node.css('verticalAlign')) {
+        case 'baseline':
+            return true;
+        case 'initial':
+            switch (node.tagName) {
+                case 'SUP':
+                case 'SUB':
+                    return false;
+            }
+            return true;
+        default:
+            return false;
+    }
+}
+
 const hasTextIndent = (node: T) => node.blockDimension || node.display === 'table-cell';
 const canCascadeChildren = (node: T) =>  node.naturalElements.length > 0 && !node.layoutElement && !node.tableElement;
 const checkBlockDimension = (node: T, previous: T) => node.blockDimension && Math.ceil(node.bounds.top) >= previous.bounds.bottom && (node.blockVertical || previous.blockVertical || node.percentWidth > 0 || previous.percentWidth > 0);
@@ -173,8 +189,8 @@ const getLayoutWidth = (node: T) => node.actualWidth + Math.max(node.marginLeft,
 export default abstract class NodeUI extends Node implements squared.base.NodeUI {
     public static justified(node: T) {
         if (node.naturalChild && node.cssAscend('textAlign') === 'justify') {
-            let inlineWidth = 0;
             const { box, naturalChildren } = node.actualParent!;
+            let inlineWidth = 0;
             const length = naturalChildren.length;
             let i = 0;
             while (i < length) {
@@ -195,20 +211,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public static refitScreen(node: T, value: Dimension): Dimension {
-        const { width: screenWidth, height: screenHeight } = node.localSettings.screenDimension;
-        let { width, height } = value;
-        if (width > screenWidth) {
-            height = Math.round(height * screenWidth / width);
-            width = screenWidth;
+        const { width, height } = node.localSettings.screenDimension;
+        if (value.width > width) {
+            return { width, height: Math.round(value.height * width / value.width) };
         }
-        else if (height > screenHeight) {
-            width = Math.round(width * screenHeight / height);
-            height = screenHeight;
+        else if (value.height > height) {
+            return { width: Math.round(value.width * height / value.height), height };
         }
-        else {
-            return value;
-        }
-        return { width, height };
+        return value;
     }
 
     public static outerRegion(node: T): BoxRectDimension {
@@ -287,19 +297,27 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (j > 1) {
             result.length = j;
             result.sort((a, b) => {
-                const layoutA = a.layoutHorizontal;
-                const layoutB = b.layoutHorizontal;
-                if (!layoutA && b.layoutHorizontal && b.some(item => item.css('verticalAlign') !== 'baseline')) {
+                const vA = a.css('verticalAlign') === 'baseline';
+                const vB = b.css('verticalAlign') === 'baseline';
+                if (vA && !vB) {
                     return -1;
                 }
-                else if (!layoutB && layoutA && a.some(item => item.css('verticalAlign') !== 'baseline')) {
+                else if (vB && !vA) {
                     return 1;
                 }
-                if (layoutA && a.baselineElement) {
-                    a = a.max('baselineHeight', { self: true }) as T;
+                const renderA = a.rendering;
+                const renderB = b.rendering;
+                if (!renderA && renderB && b.some(item => item.css('verticalAlign') !== 'baseline')) {
+                    return -1;
                 }
-                if (layoutB && b.baselineElement) {
-                    b = b.max('baselineHeight', { self: true }) as T;
+                else if (!renderB && renderA && a.some(item => item.css('verticalAlign') !== 'baseline')) {
+                    return 1;
+                }
+                if (renderA && a.baselineElement) {
+                    a = a.max('baselineHeight', { self: true, wrapperOf: true }) as T;
+                }
+                if (renderB && b.baselineElement) {
+                    b = b.max('baselineHeight', { self: true, wrapperOf: true }) as T;
                 }
                 const imageA = a.imageContainer;
                 const imageB = b.imageContainer;
@@ -1613,13 +1631,16 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get inlineVertical() {
-        const result = this._cached.inlineVertical;
+        let result = this._cached.inlineVertical;
         if (result === undefined) {
             if ((this.naturalElement || this.pseudoElement) && !this.floating) {
                 const value = this.display;
-                return this._cached.inlineVertical = value.startsWith('inline') || value === 'table-cell';
+                result = value.startsWith('inline') || value === 'table-cell';
             }
-            return this._cached.inlineVertical = false;
+            else {
+                result = false;
+            }
+            this._cached.inlineVertical = result;
         }
         return result;
     }
@@ -1700,15 +1721,15 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get baselineElement(): boolean {
         let result = this._cached.baselineElement;
         if (result === undefined) {
-            if (this.baseline) {
+            if (isBaselineElement(this)) {
                 const children = this.naturalChildren;
                 if (children.length > 0) {
                     result = children.every((node: T) => {
                         do {
-                            if (node.baselineElement) {
+                            if (isBaselineElement(node)) {
                                 switch (node.length) {
                                     case 0:
-                                        return !(node.positionRelative && (node.top !== 0 || node.bottom !== 0));
+                                        return node.baselineElement && !(node.positionRelative && (node.top !== 0 || node.bottom !== 0));
                                     case 1:
                                         node = node.children[0] as T;
                                         break;

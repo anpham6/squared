@@ -168,7 +168,8 @@ export function getElementsBetweenSiblings(elementStart: Null<Element>, elementE
                     if (nodeName[0] !== '#' || nodeName === '#text') {
                         result.push(element);
                     }
-                }, Math.min(startIndex, endIndex), Math.max(startIndex, endIndex) + 1);
+                },
+                Math.min(startIndex, endIndex), Math.max(startIndex, endIndex) + 1);
             }
         }
     }

@@ -171,11 +171,14 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
 }
 
 function getBaseline(nodes: View[]) {
+    const options: CssAnyOptions = { values: ['baseline', 'initial'] };
     const length = nodes.length;
     let i = 0;
     while (i < length) {
         const node = nodes[i++];
-        if (node.textElement && node.baseline) {
+        const wrapperOf = node.wrapperOf;
+        const target = wrapperOf || node;
+        if (target.textElement && target.cssAny('verticalAlign', options)) {
             return node;
         }
     }
@@ -577,6 +580,9 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                             else {
                                                 chain.anchorParent(orientationInverse, 0);
                                             }
+                                        }
+                                        else {
+                                            chain.anchor('top', 'parent');
                                         }
                                     }
                                     break;

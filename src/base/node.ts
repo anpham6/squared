@@ -1482,13 +1482,20 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     public min(attr: string, options?: MinMaxOptions) {
         let self: Undef<boolean>,
             last: Undef<boolean>,
+            wrapperOf: Undef<boolean>,
             initial: Undef<boolean>;
         if (options) {
-            ({ self, last, initial } = options);
+            ({ self, last, wrapperOf, initial } = options);
         }
         let result: Undef<T>,
             min = Infinity;
         this.each(item => {
+            if (wrapperOf) {
+                const child = item.wrapperOf;
+                if (child) {
+                    item = child;
+                }
+            }
             const value = parseFloat(
                 self
                     ? item[attr] as string
@@ -1513,13 +1520,20 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     public max(attr: string, options?: MinMaxOptions) {
         let self: Undef<boolean>,
             last: Undef<boolean>,
+            wrapperOf: Undef<boolean>,
             initial: Undef<boolean>;
         if (options) {
-            ({ self, last, initial } = options);
+            ({ self, last, wrapperOf, initial } = options);
         }
         let result: Undef<T>,
             max = -Infinity;
         this.each(item => {
+            if (wrapperOf) {
+                const child = item.wrapperOf;
+                if (child) {
+                    item = child;
+                }
+            }
             const value = parseFloat(
                 self
                     ? item[attr] as string
@@ -1830,16 +1844,12 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get htmlElement() {
         const result = this._cached.htmlElement;
-        return result === undefined
-            ? this._cached.htmlElement = this._element instanceof HTMLElement
-            : result;
+        return result === undefined ? this._cached.htmlElement = this._element instanceof HTMLElement : result;
     }
 
     get svgElement() {
         const result = this._cached.svgElement;
-        return result === undefined
-            ? this._cached.svgElement = !this.plainText && (!this.htmlElement && this._element instanceof SVGElement || this.imageElement && FILE.SVG.test(this.toElementString('src')))
-            : result;
+        return result === undefined ? this._cached.svgElement = !this.plainText && (!this.htmlElement && this._element instanceof SVGElement || this.imageElement && FILE.SVG.test(this.toElementString('src'))) : result;
     }
 
     get styleElement() {
@@ -1852,9 +1862,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get naturalElement() {
         const result = this._cached.naturalElement;
-        return result === undefined
-            ? this._cached.naturalElement = this.naturalChild && this.styleElement && !this.pseudoElement
-            : result;
+        return result === undefined ? this._cached.naturalElement = this.naturalChild && this.styleElement && !this.pseudoElement : result;
     }
 
     get parentElement() {
@@ -1934,15 +1942,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get dataset(): DOMStringMap {
-        if (this.styleElement) {
-            return (this._element as HTMLElement).dataset;
-        }
-        else {
-            const result = this._dataset;
-            return result === undefined
-                ? this._dataset = {}
-                : result;
-        }
+        return this._dataset ?? (this._dataset = this.styleElement ? (this._element as HTMLElement).dataset : {});
     }
 
     get documentBody() {
@@ -2044,22 +2044,16 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get width() {
         const result = this._cached.width;
-        return result === undefined
-            ? this._cached.width = setDimension(this, this._styleMap, 'width', 'minWidth', 'maxWidth')
-            : result;
+        return result === undefined ? this._cached.width = setDimension(this, this._styleMap, 'width', 'minWidth', 'maxWidth') : result;
     }
     get height() {
         const result = this._cached.height;
-        return result === undefined
-            ? this._cached.height = setDimension(this, this._styleMap, 'height', 'minHeight', 'maxHeight')
-            : result;
+        return result === undefined ? this._cached.height = setDimension(this, this._styleMap, 'height', 'minHeight', 'maxHeight') : result;
     }
 
     get hasWidth() {
         const result = this._cached.hasWidth;
-        return result === undefined
-            ? this._cached.hasWidth = this.width > 0
-            : result;
+        return result === undefined ? this._cached.hasWidth = this.width > 0 : result;
     }
     get hasHeight(): boolean {
         const result = this._cached.hasHeight;
@@ -2168,102 +2162,70 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get top() {
         const result = this._cached.top;
-        return result === undefined
-            ? this._cached.top = convertPosition(this, 'top')
-            : result;
+        return result === undefined ? this._cached.top = convertPosition(this, 'top') : result;
     }
     get right() {
         const result = this._cached.right;
-        return result === undefined
-            ? this._cached.right = convertPosition(this, 'right')
-            : result;
+        return result === undefined ? this._cached.right = convertPosition(this, 'right') : result;
     }
     get bottom() {
         const result = this._cached.bottom;
-        return result === undefined
-            ? this._cached.bottom = convertPosition(this, 'bottom')
-            : result;
+        return result === undefined ? this._cached.bottom = convertPosition(this, 'bottom') : result;
     }
     get left() {
         const result = this._cached.left;
-        return result === undefined
-            ? this._cached.left = convertPosition(this, 'left')
-            : result;
+        return result === undefined ? this._cached.left = convertPosition(this, 'left') : result;
     }
 
     get marginTop() {
         const result = this._cached.marginTop;
-        return result === undefined
-            ? this._cached.marginTop = this.inlineStatic ? 0 : convertBox(this, 'marginTop', true)
-            : result;
+        return result === undefined ? this._cached.marginTop = this.inlineStatic ? 0 : convertBox(this, 'marginTop', true) : result;
     }
     get marginRight() {
         const result = this._cached.marginRight;
-        return result === undefined
-            ? this._cached.marginRight = convertBox(this, 'marginRight', true)
-            : result;
+        return result === undefined ? this._cached.marginRight = convertBox(this, 'marginRight', true) : result;
     }
     get marginBottom() {
         const result = this._cached.marginBottom;
-        return result === undefined
-            ? this._cached.marginBottom = this.inlineStatic ? 0 : convertBox(this, 'marginBottom', true)
-            : result;
+        return result === undefined ? this._cached.marginBottom = this.inlineStatic ? 0 : convertBox(this, 'marginBottom', true) : result;
     }
     get marginLeft() {
         const result = this._cached.marginLeft;
-        return result === undefined
-            ? this._cached.marginLeft = convertBox(this, 'marginLeft', true)
-            : result;
+        return result === undefined ? this._cached.marginLeft = convertBox(this, 'marginLeft', true) : result;
     }
 
     get borderTopWidth() {
         const result = this._cached.borderTopWidth;
-        return result === undefined
-            ? this._cached.borderTopWidth = convertBorderWidth(this, 'height', BORDER_TOP)
-            : result;
+        return result === undefined ? this._cached.borderTopWidth = convertBorderWidth(this, 'height', BORDER_TOP) : result;
     }
     get borderRightWidth() {
         const result = this._cached.borderRightWidth;
-        return result === undefined
-            ? this._cached.borderRightWidth = convertBorderWidth(this, 'height', BORDER_RIGHT)
-            : result;
+        return result === undefined ? this._cached.borderRightWidth = convertBorderWidth(this, 'height', BORDER_RIGHT) : result;
     }
     get borderBottomWidth() {
         const result = this._cached.borderBottomWidth;
-        return result === undefined
-            ? this._cached.borderBottomWidth = convertBorderWidth(this, 'width', BORDER_BOTTOM)
-            : result;
+        return result === undefined ? this._cached.borderBottomWidth = convertBorderWidth(this, 'width', BORDER_BOTTOM) : result;
     }
     get borderLeftWidth() {
         const result = this._cached.borderLeftWidth;
-        return result === undefined
-            ? this._cached.borderLeftWidth = convertBorderWidth(this, 'width', BORDER_LEFT)
-            : result;
+        return result === undefined ? this._cached.borderLeftWidth = convertBorderWidth(this, 'width', BORDER_LEFT) : result;
     }
 
     get paddingTop() {
         const result = this._cached.paddingTop;
-        return result === undefined
-            ? this._cached.paddingTop = convertBox(this, 'paddingTop', false)
-            : result;
+        return result === undefined ? this._cached.paddingTop = convertBox(this, 'paddingTop', false) : result;
     }
     get paddingRight() {
         const result = this._cached.paddingRight;
-        return result === undefined
-            ? this._cached.paddingRight = convertBox(this, 'paddingRight', false)
-            : result;
+        return result === undefined ? this._cached.paddingRight = convertBox(this, 'paddingRight', false) : result;
     }
     get paddingBottom() {
         const result = this._cached.paddingBottom;
-        return result === undefined
-            ? this._cached.paddingBottom = convertBox(this, 'paddingBottom', false)
-            : result;
+        return result === undefined ? this._cached.paddingBottom = convertBox(this, 'paddingBottom', false) : result;
     }
     get paddingLeft() {
         const result = this._cached.paddingLeft;
-        return result === undefined
-            ? this._cached.paddingLeft = convertBox(this, 'paddingLeft', false)
-            : result;
+        return result === undefined ? this._cached.paddingLeft = convertBox(this, 'paddingLeft', false) : result;
     }
 
     get contentBox() {
@@ -2391,18 +2353,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get pageFlow() {
         const result = this._cached.pageFlow;
-        return result === undefined
-            ? this._cached.pageFlow = this.positionStatic || this.positionRelative
-            : result;
+        return result === undefined ? this._cached.pageFlow = this.positionStatic || this.positionRelative : result;
     }
 
     get centerAligned() {
         const result = this._cached.centerAligned;
         if (result === undefined) {
-            return this._cached.centerAligned =
-                !this.pageFlow
-                    ? this.hasPX('left') && this.hasPX('right')
-                    : this.autoMargin.leftRight || canTextAlign(this) && hasTextAlign(this, 'center');
+            return this._cached.centerAligned = !this.pageFlow ? this.hasPX('left') && this.hasPX('right') : this.autoMargin.leftRight || canTextAlign(this) && hasTextAlign(this, 'center');
         }
         return result;
     }
@@ -2410,10 +2367,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     get rightAligned() {
         const result = this._cached.rightAligned;
         if (result === undefined) {
-            return this._cached.rightAligned =
-                !this.pageFlow
-                    ? this.hasPX('right') && !this.hasPX('left')
-                    : this.float === 'right' || this.autoMargin.left || canTextAlign(this) && hasTextAlign(this, 'right', 'end');
+            return this._cached.rightAligned = !this.pageFlow ? this.hasPX('right') && !this.hasPX('left') : this.float === 'right' || this.autoMargin.left || canTextAlign(this) && hasTextAlign(this, 'right', 'end');
         }
         return result;
     }
@@ -2421,10 +2375,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     get bottomAligned() {
         const result = this._cached.bottomAligned;
         if (result === undefined) {
-            return this._cached.bottomAligned =
-                !this.pageFlow
-                    ? this.hasPX('bottom') && !this.hasPX('top')
-                    : this.actualParent?.hasHeight === true && this.autoMargin.top === true;
+            return this._cached.bottomAligned = !this.pageFlow ? this.hasPX('bottom') && !this.hasPX('top') : this.actualParent?.hasHeight === true && this.autoMargin.top === true;
         }
         return result;
     }
@@ -2925,7 +2876,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get textStyle() {
-       let result = this._textStyle;
+        let result = this._textStyle;
         if (result === undefined) {
             result = this.cssAsObject(...Node.TEXT_STYLE);
             result.fontSize = this.fontSize + 'px';

@@ -20,12 +20,12 @@ interface PercentData {
 
 function hasPercentWidth(node: View) {
     const value = node.percentWidth;
-    return value > 0 && value < 1 || isPercent(node.css('maxWidth'));
+    return value > 0 && value < 1 || node.has('maxWidth', { type: CSS_UNIT.PERCENT, not: '100%' });
 }
 
 function hasPercentHeight(node: View, parent: View) {
     const value = node.percentHeight;
-    return value > 0 && value < 1 || isPercent(node.css('maxHeight')) && parent.hasHeight;
+    return value > 0 && value < 1 || node.has('maxHeight', { type: CSS_UNIT.PERCENT, not: '100%' }) && parent.hasHeight;
 }
 
 function hasMarginHorizontal(node: View, parent: View, clearMap: Map<View, string>) {
@@ -72,6 +72,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
             if (mainData.percentWidth) {
                 if (!target.hasWidth) {
                     target.setCacheValue('hasWidth', true);
+                    target.setCacheValue('blockStatic', true);
                     target.css('display', 'block');
                     target.setLayoutWidth('match_parent');
                 }

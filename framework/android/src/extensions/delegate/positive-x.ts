@@ -6,8 +6,8 @@ type View = android.base.View;
 
 interface PositiveXData {
     children: View[];
-    right: boolean;
-    bottom: boolean;
+    right?: boolean;
+    bottom?: boolean;
 }
 
 const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
@@ -25,8 +25,8 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
     public condition(node: T) {
         const { documentBody, lastStaticChild } = node;
         let contentBox = node.contentBoxWidth > 0 || node.contentBoxHeight > 0 || node.marginTop !== 0 || node.marginRight !== 0 || node.marginBottom !== 0 || node.marginLeft !== 0,
-            aboveInvalid = false,
-            belowInvalid = false;
+            aboveInvalid: Undef<boolean>,
+            belowInvalid: Undef<boolean>;
         if (node.firstStaticChild?.lineBreak) {
             contentBox = true;
             aboveInvalid = true;
@@ -45,8 +45,8 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
         const paddingBottom = node.paddingBottom + (documentBody ? node.marginBottom : 0);
         const paddingLeft = node.paddingLeft + (documentBody ? node.marginLeft : 0);
         const children = new Set<View>();
-        let right = false,
-            bottom = false;
+        let right: Undef<boolean>,
+            bottom: Undef<boolean>;
         node.each((item: View) => {
             const fixed = rootElement && item.css('position') === 'fixed';
             if (item.pageFlow || !contentBox && !fixed) {

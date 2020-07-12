@@ -42,7 +42,7 @@ function sortHorizontalFloat(list: View[]) {
     });
 }
 
-function getSortOrderStandard(above: View, below: View): number {
+function doOrderStandard(above: View, below: View): number {
     const parentA = above.actualParent as View;
     const parentB = below.actualParent as View;
     if (above === parentB) {
@@ -65,7 +65,7 @@ function getSortOrderStandard(above: View, below: View): number {
     return zA < zB ? -1 : 1;
 }
 
-function getSortOrderInvalid(above: View, below: View): number {
+function doSortOrderInvalid(above: View, below: View): number {
     const depthA = above.depth;
     const depthB = below.depth;
     if (depthA === depthB) {
@@ -79,10 +79,10 @@ function getSortOrderInvalid(above: View, below: View): number {
         }
         else if (parentA && parentB) {
             if (parentA === parentB) {
-                return getSortOrderStandard(above, below);
+                return doOrderStandard(above, below);
             }
             else if (parentA.actualParent === parentB.actualParent) {
-                return getSortOrderStandard(parentA, parentB);
+                return doOrderStandard(parentA, parentB);
             }
         }
         return above.id < below.id ? -1 : 1;
@@ -157,7 +157,7 @@ function setBaselineItems(parent: View, baseline: View, items: View[], index: nu
                     }
                     item.baselineAltered = true;
                 }
-                else if (height >= baselineHeight && item.renderChildren.some(child => !child.baselineElement) || item.wrapperOf?.verticalAlign) {
+                else if (Math.ceil(height) >= baselineHeight && item.renderChildren.some(child => !child.baselineElement || child.verticalAligned || child.positionRelative && child.top < 0) || item.wrapperOf?.verticalAlign) {
                     item.anchor('top', documentId);
                 }
                 else {
@@ -279,9 +279,7 @@ function checkClearMap(node: View, clearMap: Map<View, string>) {
     else if (node.nodeGroup) {
         return node.some((item: View) => item.naturalChild && clearMap.has(item), { cascade: true });
     }
-    else {
-        return clearMap.has(node.innerMostWrapped as View);
-    }
+    return clearMap.has(node.innerMostWrapped as View);
 }
 
 function isConstraintLayout(layout: LayoutUI<View>, vertical: boolean) {
@@ -299,10 +297,7 @@ function adjustBodyMargin(node: View, position: string) {
         if (parent.documentBody) {
             switch (position) {
                 case 'top':
-                    if (parent.getBox(BOX_STANDARD.MARGIN_TOP)[0] === 0) {
-                        return parent.marginTop;
-                    }
-                    break;
+                    return parent.getBox(BOX_STANDARD.MARGIN_TOP)[0] === 0 ? parent.marginTop : 0;
                 case 'left':
                     return parent.marginLeft;
             }
@@ -413,8 +408,8 @@ const getAnchorDirection = (reverse = false) => reverse ? ['right', 'left', 'rig
 const isBaselineImage = (node: View) => node.imageContainer && node.baseline;
 const getBaselineAnchor = (node: View) => node.imageContainer ? 'baseline' : 'bottom';
 const hasWidth = (style: CSSStyleDeclaration) => (style.getPropertyValue('width') === '100%' || style.getPropertyValue('minWidth') === '100%') && style.getPropertyValue('max-width') === 'none';
-const sortTemplateInvalid = (a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>) => getSortOrderInvalid(a.node.innerMostWrapped as View, b.node.innerMostWrapped as View);
-const sortTemplateStandard = (a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>) => getSortOrderStandard(a.node.innerMostWrapped as View, b.node.innerMostWrapped as View);
+const sortTemplateInvalid = (a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>) => doSortOrderInvalid(a.node.innerMostWrapped as View, b.node.innerMostWrapped as View);
+const sortTemplateStandard = (a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>) => doOrderStandard(a.node.innerMostWrapped as View, b.node.innerMostWrapped as View);
 const hasCleared = (layout: LayoutUI<View>, clearMap: Map<View, string>, ignoreFirst = true) => clearMap.size > 0 && layout.some((node, index) => (index > 0 || !ignoreFirst) && clearMap.has(node));
 const isMultiline = (node: View) => node.plainText && Resource.hasLineBreak(node, false, true) || node.preserveWhiteSpace && /^\s*\n+/.test(node.textContent);
 const getMaxHeight = (node: View) => Math.max(node.actualHeight, node.lineHeight);
@@ -882,16 +877,25 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 else if (child.autoMargin.leftRight || child.autoMargin.left || child.hasPX('maxWidth') && !child.support.maxDimension && !child.inputElement) {
                     layout.setContainerType(CONTAINER_NODE.CONSTRAINT);
                 }
-                else if (child.baselineElement) {
-                    if (layout.parent.flexElement && node.flexbox.alignSelf === 'baseline') {
+                else {
+                    const parent = layout.parent;
+                    if (parent.layoutHorizontal && (parent.layoutRelative || parent.layoutLinear)) {
+                        if (child.positionRelative) {
+                            layout.setContainerType(CONTAINER_NODE.RELATIVE, NODE_ALIGNMENT.VERTICAL);
+                        }
+                        else if (child.baselineElement) {
+                            layout.setContainerType(CONTAINER_NODE.LINEAR, NODE_ALIGNMENT.HORIZONTAL);
+                        }
+                        else {
+                            layout.setContainerType(CONTAINER_NODE.FRAME);
+                        }
+                    }
+                    else if (child.baselineElement && (parent.flexElement && node.flexbox.alignSelf === 'baseline')) {
                         layout.setContainerType(CONTAINER_NODE.LINEAR, NODE_ALIGNMENT.HORIZONTAL);
                     }
                     else {
-                        layout.setContainerType(getVerticalAlignedLayout(layout), NODE_ALIGNMENT.VERTICAL);
+                        layout.setContainerType(CONTAINER_NODE.FRAME);
                     }
-                }
-                else {
-                    layout.setContainerType(CONTAINER_NODE.FRAME);
                 }
                 layout.addAlign(NODE_ALIGNMENT.SINGLE);
             }

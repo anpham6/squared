@@ -191,6 +191,7 @@ interface CssAnyOptions extends CssInitialOptions, CssAscendOptions {
 interface MinMaxOptions extends CssInitialOptions {
     self?: boolean;
     last?: boolean;
+    wrapperOf?: boolean;
 }
 
 interface ParseUnitOptions {
