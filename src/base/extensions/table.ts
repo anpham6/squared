@@ -17,7 +17,7 @@ const enum LAYOUT_TABLE {
 }
 
 function setAutoWidth(node: NodeUI, td: NodeUI, data: StandardMap) {
-    data.percent = Math.round((td.bounds.width / node.box.width) * 100) + '%';
+    data.percent = Math.round(td.bounds.width / node.box.width * 100) + '%';
     data.expand = true;
 }
 
@@ -96,7 +96,6 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         });
         inheritStyles(thead, false);
         inheritStyles(tfoot, true);
-        const hasWidth = node.hasWidth;
         const borderCollapse = mainData.borderCollapse;
         const [horizontal, vertical] =
             borderCollapse
@@ -104,6 +103,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 : replaceMap(node.css('borderSpacing').split(' '), (value: string, index) => index === 0 ? node.parseWidth(value) : node.parseHeight(value));
         const spacingWidth = horizontal > 1 ? Math.round(horizontal / 2) : horizontal;
         const spacingHeight = vertical > 1 ? Math.round(vertical / 2) : vertical;
+        const hasWidth = node.hasWidth;
         const colgroup = node.element!.querySelector('COLGROUP');
         const caption = node.find(item => item.tagName === 'CAPTION');
         const captionBottom = !!caption && node.css('captionSide') === 'bottom';
@@ -112,7 +112,9 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         const tableFilled: T[][] = [];
         const mapWidth: string[] = [];
         const rowCount = table.length;
-        let columnCount = 0;
+        let columnCount = 0,
+            percentAll = false,
+            mapPercent = 0;
         let j: number;
         for (let i = 0; i < rowCount; ++i) {
             const tr = table[i];
@@ -268,8 +270,6 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 return value;
             });
         }
-        let percentAll = false;
-        let mapPercent = 0;
         if (mapWidth.every(value => isPercent(value))) {
             if (mapWidth.reduce((a, b) => a + parseFloat(b), 0) > 1) {
                 let percentTotal = 100;

@@ -15,8 +15,8 @@ type Node = squared.base.Node;
 type Main = squared.base.Application<Node>;
 type Framework = squared.base.AppFramework<Node>;
 type Extension = squared.base.Extension<Node>;
-type FileActionOptions = squared.base.FileActionOptions;
 type ExtensionRequest = Null<Extension | string>;
+type FileActionOptions = squared.base.FileActionOptions;
 
 const extensionsQueue = new Set<Extension>();
 const extensionsExternal = new Set<Extension>();
@@ -371,10 +371,7 @@ export function querySelectorAll(value: string, cache = true) {
 }
 
 export function fromElement(element: HTMLElement, cache = false) {
-    if (main) {
-        return findElement(element, cache);
-    }
-    return Promise.resolve(null);
+    return main ? findElement(element, cache) : Promise.resolve(null);
 }
 
 export function getElementMap() {

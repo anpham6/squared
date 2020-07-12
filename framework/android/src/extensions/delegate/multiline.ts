@@ -7,7 +7,7 @@ const { measureTextWidth } = squared.lib.dom;
 
 const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
-const REGEXP_WORD = /(?:&#?[A-Za-z0-9]{2};[^\w]*|[^\w]|\b)*\w+?(?:'[A-Za-z]\s*|[^\w]*&#?[A-Za-z0-9]{2};|[^\w]+|\b)/g;
+const REGEXP_WORD = /(?:[^\w\s\n]+[\s\n]+|(?:&#?[A-Za-z0-9]{2};[^\w]*|[^\w]+|\b)*\w+?(?:'[A-Za-z]\s*|[^\w]*&#?[A-Za-z0-9]{2};|[^\w]+|\b))/g;
 
 function getFontMeasureAdjust(node: View) {
     const value = node.dataset.androidFontMeasureAdjust;
@@ -45,6 +45,8 @@ function isTextElement(node: View) {
 
 const isUnstyled = (node: View) => node.baseline && !node.positionRelative && node.contentBoxWidth === 0 && node.contentBoxHeight === 0 && !node.visibleStyle.background;
 const checkBreakable = (node: View): boolean => node.plainText || node.naturalChild && node.naturalElements.length === 0 && node.innerAfter === undefined && node.innerBefore === undefined && isUnstyled(node);
+
+export const REGEXP_TRAILINGCHAR = /^[^\w\s\n]+[\s\n]+$/;
 
 export default class Multiline<T extends View> extends squared.base.ExtensionUI<T> {
     public condition(node: T, parent: T) {
@@ -118,8 +120,8 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
         if (isNaN(fontAdjust)) {
             fontAdjust = (this.application as android.base.Application<T>).userSettings.fontMeasureAdjust;
         }
-        const breakable = nodes || [node];
         let modified = false;
+        const breakable = nodes || [node];
         const length = breakable.length;
         for (let i = 0; i < length; ++i) {
             const seg = breakable[i];
@@ -171,9 +173,10 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                     });
                     container.inheritApply('textStyle', textStyle);
                     container.exclude({ resource: NODE_RESOURCE.BOX_STYLE, section: APP_SECTION.DOM_TRAVERSE | APP_SECTION.EXTENSION });
+                    const measuredValue = REGEXP_TRAILINGCHAR.test(value) ? value.trim() + ' ' : value;
                     const textBounds = {
                         ...bounds,
-                        width: measureTextWidth(value, seg.css('fontFamily'), fontSize) + (value.length * adjustment),
+                        width: measureTextWidth(measuredValue, seg.css('fontFamily'), fontSize) + (measuredValue.length * adjustment),
                         height
                     };
                     container.textBounds = textBounds;

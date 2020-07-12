@@ -2,6 +2,8 @@ import Resource from './resource';
 import View from './view';
 import ViewGroup from './viewgroup';
 
+import { REGEXP_TRAILINGCHAR } from './extensions/delegate/multiline';
+
 import { CONTAINER_ANDROID, CONTAINER_ANDROID_X } from './lib/constant';
 import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
 import { adjustAbsolutePaddingOffset, createViewAttribute, getDocumentId, getRootNs, replaceTab } from './lib/util';
@@ -71,14 +73,14 @@ function doSortOrderInvalid(above: View, below: View): number {
     if (depthA === depthB) {
         const parentA = above.actualParent as View;
         const parentB = below.actualParent as View;
-        if (above === parentB) {
-            return -1;
-        }
-        else if (parentA === below) {
-            return 1;
-        }
-        else if (parentA && parentB) {
-            if (parentA === parentB) {
+        if (parentA && parentB) {
+            if (above === parentB) {
+                return -1;
+            }
+            else if (parentA === below) {
+                return 1;
+            }
+            else if (parentA === parentB) {
                 return doOrderStandard(above, below);
             }
             else if (parentA.actualParent === parentB.actualParent) {
@@ -92,7 +94,8 @@ function doSortOrderInvalid(above: View, below: View): number {
 
 function setBaselineItems(parent: View, baseline: View, items: View[], index: number, singleRow: boolean) {
     const { documentId, baselineHeight } = baseline;
-    let imageHeight = 0,
+    let aboveOffset = 0,
+        imageHeight = 0,
         imageBaseline: Undef<View>;
     const length = items.length;
     let i = 0;
@@ -141,12 +144,16 @@ function setBaselineItems(parent: View, baseline: View, items: View[], index: nu
                         continue;
                     }
                 }
-                if (item.renderChildren.length > 0 && item.verticalAlign !== 0) {
+                const verticalAlign = item.verticalAlign;
+                if (verticalAlign !== 0 && item.rendering) {
                     if (index === 0) {
                         let minTop = item.bounds.top;
                         item.each(child => minTop = Math.min(child.bounds.top, minTop));
-                        item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: minTop - parent.box.top });
+                        item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: minTop - parent.box.top + parent.getBox(BOX_STANDARD.MARGIN_TOP)[1] + (verticalAlign < 0 ? -verticalAlign : 0) });
                         item.anchor('top', 'true');
+                        if (verticalAlign > 0) {
+                            aboveOffset = Math.max(verticalAlign, aboveOffset);
+                        }
                     }
                     else {
                         item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: item.linear.top - baseline.bounds.top });
@@ -154,7 +161,7 @@ function setBaselineItems(parent: View, baseline: View, items: View[], index: nu
                     }
                     item.baselineAltered = true;
                 }
-                else if (Math.ceil(height) >= baselineHeight && item.some((child: View) => !child.baselineElement || child.verticalAligned || child.positionRelative && child.top < 0) || item.wrapperOf?.verticalAlign) {
+                else if (Math.ceil(height) >= baselineHeight && item.some((child: View) => (!child.baselineElement || child.verticalAligned || child.positionRelative && (child.top < 0 || !child.hasPX('top') && child.bottom > 0)) && (Math.ceil(child.bounds.top + (child.positionRelative ? child.hasPX('top') ? child.top : child.bottom : 0)) < item.box.top)) || item.wrapperOf?.verticalAlign) {
                     item.anchor('top', documentId);
                 }
                 else {
@@ -170,6 +177,9 @@ function setBaselineItems(parent: View, baseline: View, items: View[], index: nu
                 imageBaseline = item;
             }
         }
+    }
+    if (aboveOffset > 0) {
+        baseline.modifyBox(BOX_STANDARD.MARGIN_TOP, aboveOffset);
     }
     if (imageBaseline) {
         baseline.anchorDelete('baseline', 'top', 'bottom');
@@ -2293,6 +2303,16 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         rowWidth = baseWidth;
                         ++rowCount;
                     };
+                    const setRowWidth = () => {
+                        const linearWidth = item.marginLeft + bounds.width + item.marginRight;
+                        if (item !== currentFloated) {
+                            rowWidth += linearWidth;
+                        }
+                        else {
+                            currentFloatedWidth = linearWidth;
+                        }
+                        previous = item;
+                    };
                     let { bounds, multiline } = item;
                     if (item.styleText && !item.hasPX('width')) {
                         const textBounds = item.textBounds;
@@ -2313,19 +2333,26 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             retainMultiline: Undef<boolean>;
                         siblings = item.naturalChild && previous.naturalChild && item.inlineVertical && previous.inlineVertical && item.previousSibling !== previous ? getElementsBetweenSiblings(previous.element, item.element!) : undefined;
                         if (item.textElement) {
-                            let checkWidth = lineWrap;
-                            if (previous.textElement) {
-                                if (i === 1 && item.plainText && item.previousSibling === previous && !/^\s+/.test(item.textContent) && !/\s+$/.test(previous.textContent)) {
-                                    retainMultiline = true;
-                                    checkWidth = false;
-                                }
-                                else if (lineWrap && previous.multiline && (previous.bounds.width >= boxWidth || item.plainText && Resource.hasLineBreak(previous, false, true))) {
-                                    textNewRow = true;
-                                    checkWidth = false;
-                                }
+                            if (REGEXP_TRAILINGCHAR.test(item.textContent) && !item.floating) {
+                                items.push(item);
+                                setRowWidth();
+                                continue;
                             }
-                            if (checkWidth) {
-                                textNewRow = relativeWrapWidth(item, bounds, boxWidth, rowsAll.length, textIndent, currentFloatedWidth, rowWidth) || item.actualParent!.tagName !== 'CODE' && (multiline && item.plainText || isMultiline(item));
+                            else {
+                                let checkWidth = lineWrap;
+                                if (previous.textElement) {
+                                    if (i === 1 && item.plainText && item.previousSibling === previous && !/^\s+/.test(item.textContent) && !/\s+$/.test(previous.textContent)) {
+                                        retainMultiline = true;
+                                        checkWidth = false;
+                                    }
+                                    else if (lineWrap && previous.multiline && (previous.bounds.width >= boxWidth || item.plainText && Resource.hasLineBreak(previous, false, true))) {
+                                        textNewRow = true;
+                                        checkWidth = false;
+                                    }
+                                }
+                                if (checkWidth) {
+                                    textNewRow = relativeWrapWidth(item, bounds, boxWidth, rowsAll.length, textIndent, currentFloatedWidth, rowWidth) || item.actualParent!.tagName !== 'CODE' && (multiline && item.plainText || isMultiline(item));
+                                }
                             }
                         }
                         if (previous.floating) {
@@ -2381,14 +2408,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                         }
                     }
-                    const linearWidth = item.marginLeft + bounds.width + item.marginRight;
-                    if (item !== currentFloated) {
-                        rowWidth += linearWidth;
-                    }
-                    else {
-                        currentFloatedWidth = linearWidth;
-                    }
-                    previous = item;
+                    setRowWidth();
                 }
             }
             {
@@ -3502,13 +3522,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         if (!node.pageFlow) {
             if (documentParent.outerWrapper && node.parent === documentParent.outerMostWrapper) {
-                location += documentParent[horizontal
-                    ? !opposing
-                        ? 'paddingLeft'
-                        : 'paddingRight'
-                    : !opposing
-                        ? 'paddingTop'
-                        : 'paddingBottom'
+                location += documentParent[
+                    horizontal
+                        ? !opposing
+                            ? 'paddingLeft'
+                            : 'paddingRight'
+                        : !opposing
+                            ? 'paddingTop'
+                            : 'paddingBottom'
                 ];
             }
             else if (absoluteParent === node.documentParent) {
@@ -3541,7 +3562,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         else {
             const guideline = parent.constraint.guideline || {};
-            const anchors = guideline[axis]?.[attr]?.[LT];
+            const anchors = guideline[axis]?.[attr]?.[LT] as Undef<StringSafeMap>;
             if (anchors) {
                 for (const id in anchors) {
                     if (parseInt(anchors[id]) === location) {

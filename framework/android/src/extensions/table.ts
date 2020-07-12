@@ -19,8 +19,8 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
     public processNode(node: T, parent: T) {
         super.processNode(node, parent);
         const mainData = node.data<TableData>(this.name, 'mainData')!;
-        let hasWidth = node.hasWidth,
-            requireWidth = false,
+        const hasWidth = node.hasWidth;
+        let requireWidth = false,
             multiline = false;
         if (mainData.columnCount > 1) {
             requireWidth = mainData.expand;
@@ -78,7 +78,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                 setLayoutHeight(item);
             });
         }
-        if (node.hasWidth) {
+        if (hasWidth) {
             if (node.width < Math.floor(node.bounds.width)) {
                 if (mainData.layoutFixed) {
                     node.android('width', formatPX(node.bounds.width));
