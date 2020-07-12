@@ -1409,10 +1409,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         floatAlign = 'right';
                     }
                     else if (this.nodeGroup) {
-                        if (this.renderChildren.every(item => item.rightAligned)) {
+                        if (this.every(item => item.rightAligned)) {
                             floatAlign = 'right';
                         }
-                        else if (this.hasAlign(NODE_ALIGNMENT.FLOAT) && !this.renderChildren.some(item => item.rightAligned)) {
+                        else if (this.hasAlign(NODE_ALIGNMENT.FLOAT) && !this.some(item => item.rightAligned)) {
                             floatAlign = 'left';
                         }
                     }

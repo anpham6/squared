@@ -157,8 +157,4 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
         }
         return result;
     }
-
-    get unknownAligned() {
-        return this.length > 1 && !this.linearX && !this.linearY;
-    }
 }

@@ -19,7 +19,8 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
     public processNode(node: T, parent: T) {
         super.processNode(node, parent);
         const mainData = node.data<TableData>(this.name, 'mainData')!;
-        let requireWidth = false,
+        let hasWidth = node.hasWidth,
+            requireWidth = false,
             multiline = false;
         if (mainData.columnCount > 1) {
             requireWidth = mainData.expand;
@@ -66,7 +67,11 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
         }
         else {
             node.each((item: T) => {
-                if (item.multiline || item.some((child: T) => child.multiline || child.contentAltered), { cascade: true }) {
+                if (!hasWidth && item.percentWidth > 0) {
+                    item.setLayoutWidth('wrap_content');
+                    requireWidth = true;
+                }
+                if (item.tagName !== 'CAPTION' && (item.multiline || item.some((child: T) => child.multiline || child.contentAltered, { cascade: true }))) {
                     multiline = true;
                     requireWidth = true;
                 }
@@ -152,7 +157,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
             if (width > layoutWidth) {
                 node.setLayoutWidth(formatPX(width));
             }
-            if (node.cssInitial('width') === 'auto' && node.renderChildren.every(item => item.inlineWidth)) {
+            if (node.cssInitial('width') === 'auto' && node.every((item: T) => item.inlineWidth)) {
                 node.renderEach((item: T) => {
                     item.setLayoutWidth('0px');
                     item.android('layout_columnWeight', '1');

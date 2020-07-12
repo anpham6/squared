@@ -106,7 +106,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         const spacingHeight = vertical > 1 ? Math.round(vertical / 2) : vertical;
         const colgroup = node.element!.querySelector('COLGROUP');
         const caption = node.find(item => item.tagName === 'CAPTION');
-        const captionBottom = node.css('captionSide') === 'bottom';
+        const captionBottom = !!caption && node.css('captionSide') === 'bottom';
         const rowWidth: number[] = [];
         const mapBounds: number[] = [];
         const tableFilled: T[][] = [];

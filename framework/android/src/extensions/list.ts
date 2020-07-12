@@ -14,28 +14,25 @@ const { BOX_STANDARD, NODE_ALIGNMENT, NODE_TEMPLATE } = squared.base.lib.enumera
 export default class <T extends View> extends squared.base.extensions.List<T> {
     public processNode(node: T, parent: T) {
         const layout = new LayoutUI(parent, node, 0, 0, node.children as T[]);
-        if (!layout.unknownAligned || layout.singleRowAligned) {
-            super.processNode(node, parent);
-            if (layout.linearY) {
-                layout.rowCount = node.length;
-                layout.columnCount = node.some(item => item.css('listStylePosition') === 'inside') ? 3 : 2;
-                layout.setContainerType(CONTAINER_NODE.GRID, NODE_ALIGNMENT.VERTICAL);
-            }
-            else if (layout.linearX || layout.singleRowAligned) {
-                layout.rowCount = 1;
-                layout.columnCount = layout.length;
-                layout.setContainerType(CONTAINER_NODE.LINEAR, NODE_ALIGNMENT.HORIZONTAL);
-            }
-            else {
-                return undefined;
-            }
-            return {
-                output: this.application.renderNode(layout),
-                complete: true,
-                include: true
-            };
+        if (layout.linearY) {
+            layout.rowCount = node.length;
+            layout.columnCount = node.some(item => item.css('listStylePosition') === 'inside') ? 3 : 2;
+            layout.setContainerType(CONTAINER_NODE.GRID, NODE_ALIGNMENT.VERTICAL);
         }
-        return undefined;
+        else if (layout.linearX || layout.singleRowAligned) {
+            layout.rowCount = 1;
+            layout.columnCount = layout.length;
+            layout.setContainerType(CONTAINER_NODE.LINEAR, NODE_ALIGNMENT.HORIZONTAL);
+        }
+        else {
+            return undefined;
+        }
+        super.processNode(node, parent);
+        return {
+            output: this.application.renderNode(layout),
+            complete: true,
+            include: true
+        };
     }
 
     public processChild(node: T, parent: T) {
@@ -62,12 +59,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 adjustPadding = true;
             }
             if (adjustPadding) {
-                if (parent.paddingLeft > 0) {
-                    minWidth += parent.paddingLeft;
-                }
-                else {
-                    minWidth += parent.marginLeft;
-                }
+                minWidth += parent.paddingLeft > 0 ? parent.paddingLeft : parent.marginLeft;
             }
             if (node.length === 0 && !node.outerWrapper) {
                 container = controller.createNodeWrapper(node, parent, { alignmentType: parent.layoutGrid ? NODE_ALIGNMENT.VERTICAL : 0 });

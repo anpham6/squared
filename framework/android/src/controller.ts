@@ -143,11 +143,8 @@ function setBaselineItems(parent: View, baseline: View, items: View[], index: nu
                 }
                 if (item.renderChildren.length > 0 && item.verticalAlign !== 0) {
                     if (index === 0) {
-                        let minTop = item.linear.top;
-                        item.cascade(child => {
-                            minTop = Math.min(child.linear.top, minTop);
-                            return false;
-                        });
+                        let minTop = item.bounds.top;
+                        item.each(child => minTop = Math.min(child.bounds.top, minTop));
                         item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: minTop - parent.box.top });
                         item.anchor('top', 'true');
                     }
@@ -157,7 +154,7 @@ function setBaselineItems(parent: View, baseline: View, items: View[], index: nu
                     }
                     item.baselineAltered = true;
                 }
-                else if (Math.ceil(height) >= baselineHeight && item.renderChildren.some(child => !child.baselineElement || child.verticalAligned || child.positionRelative && child.top < 0) || item.wrapperOf?.verticalAlign) {
+                else if (Math.ceil(height) >= baselineHeight && item.some((child: View) => !child.baselineElement || child.verticalAligned || child.positionRelative && child.top < 0) || item.wrapperOf?.verticalAlign) {
                     item.anchor('top', documentId);
                 }
                 else {
@@ -890,7 +887,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             layout.setContainerType(CONTAINER_NODE.FRAME);
                         }
                     }
-                    else if (child.baselineElement && (parent.flexElement && node.flexbox.alignSelf === 'baseline')) {
+                    else if (child.baselineElement && (parent.layoutGrid || parent.flexElement && node.flexbox.alignSelf === 'baseline')) {
                         layout.setContainerType(CONTAINER_NODE.LINEAR, NODE_ALIGNMENT.HORIZONTAL);
                     }
                     else {
@@ -2473,7 +2470,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 maxCenter: Null<T> = null,
                                 maxCenterHeight = 0,
                                 textBaseline: UndefNull<T>;
-                            baseline = NodeUI.baseline(bottomAligned.length > 0 ? items.filter(item => !bottomAligned.includes(item)) : items);
+                            baseline = NodeUI.baseline(textBottom ? items.filter(item => !bottomAligned.includes(item)) : items);
                             if (baseline && textBottom) {
                                 if (baseline !== textBottom && baseline.bounds.height < textBottom.bounds.height) {
                                     baseline.anchor('bottom', textBottom.documentId);
@@ -2659,15 +2656,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     }
                                 }
                             }
-                            else if (s > 0 && s < r) {
-                                textBottom = bottomAligned[0];
-                                if (textBottom) {
-                                    let l = 0;
-                                    while (l < s) {
-                                        const item = baselineAlign[l++];
-                                        if (item.baseline && !item.multiline && textBottom.bounds.height > item.bounds.height) {
-                                            item.anchor('bottom', textBottom.documentId);
-                                        }
+                            else if (textBottom && s > 0 && s < r) {
+                                const height = textBottom.bounds.height;
+                                let l = 0;
+                                while (l < s) {
+                                    const item = baselineAlign[l++];
+                                    if (!item.multiline && height > item.bounds.height) {
+                                        item.anchor('bottom', textBottom.documentId);
                                     }
                                 }
                             }

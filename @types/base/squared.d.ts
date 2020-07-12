@@ -362,7 +362,6 @@ declare module "base" {
         get linearY(): boolean;
         get floated(): Undef<Set<string>>;
         get singleRowAligned(): boolean;
-        get unknownAligned(): boolean;
         constructor(parent: T, node: T, containerType?: number, alignmentType?: number, children?: T[]);
     }
 
