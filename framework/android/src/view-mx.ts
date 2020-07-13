@@ -134,7 +134,7 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top:
                             }
                         }
                     }
-                    else {
+                    else if (node.pageFlow) {
                         if (top && (inlineStyle || !node.baselineAltered)) {
                             upper -= node.paddingTop;
                             if (upper > 0) {

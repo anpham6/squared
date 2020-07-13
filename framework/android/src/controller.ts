@@ -341,9 +341,8 @@ function segmentLeftAligned<T extends View>(children: T[]) {
 
 function constraintAlignTop(parent: View, node: View) {
     node.anchorParent('vertical', 0);
-    node.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: Math.max(node.bounds.top - parent.box.top, Math.min(-node.verticalAlign, 0)) });
+    node.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: node.linear.top - parent.box.top });
     node.baselineAltered = true;
-    return false;
 }
 
 function getVerticalLayout(layout: LayoutUI<View>) {
@@ -410,10 +409,17 @@ function setConstraintFloatAligmnment(layout: LayoutUI<View>) {
     return true;
 }
 
+function isBaselineImage(node: View) {
+    const wrapperOf = node.wrapperOf;
+    if (wrapperOf) {
+        node = wrapperOf as View;
+    }
+    return node.imageContainer && node.baseline;
+}
+
 const relativeWrapWidth = (node: View, bounds: BoxRectDimension, boxWidth: number, rowLength: number, textIndent: number, floatedWidth: number, rowWidth: number) => Math.floor(floatedWidth + rowWidth + bounds.width - (node.inlineStatic && node.styleElement ? node.contentBoxWidth : 0)) > Math.ceil(boxWidth + (rowLength === 1 ? -textIndent : 0));
 const getAnchorDirection = (reverse = false) => reverse ? ['right', 'left', 'rightLeft', 'leftRight'] : ['left', 'right', 'leftRight', 'rightLeft'];
-const isBaselineImage = (node: View) => node.imageContainer && node.baseline;
-const getBaselineAnchor = (node: View) => node.imageContainer ? 'baseline' : 'bottom';
+const getBaselineAnchor = (node: View) => (node.wrapperOf as View || node).imageContainer ? 'baseline' : 'bottom';
 const hasWidth = (style: CSSStyleDeclaration) => (style.getPropertyValue('width') === '100%' || style.getPropertyValue('minWidth') === '100%') && style.getPropertyValue('max-width') === 'none';
 const sortTemplateInvalid = (a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>) => doSortOrderInvalid(a.node.innerMostWrapped as View, b.node.innerMostWrapped as View);
 const sortTemplateStandard = (a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>) => doOrderStandard(a.node.innerMostWrapped as View, b.node.innerMostWrapped as View);
@@ -2856,8 +2862,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     protected processConstraintHorizontal(node: T, children: T[]) {
         const reverse = node.hasAlign(NODE_ALIGNMENT.RIGHT);
         const [anchorStart, anchorEnd, chainStart, chainEnd] = getAnchorDirection(reverse);
-        let valid = true,
-            bias = 0,
+        let bias = 0,
             baselineCount = 0,
             textBaseline: UndefNull<T>,
             textBottom: UndefNull<T>,
@@ -2948,7 +2953,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             if (item.pageFlow) {
                 if (item !== baseline) {
                     if (item.controlElement) {
-                        valid = constraintAlignTop(node, item);
+                        constraintAlignTop(node, item);
                     }
                     else if (item.inlineVertical) {
                         if (!tallest || getMaxHeight(item) > getMaxHeight(tallest)) {
@@ -2963,7 +2968,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     item.anchor('top', textBaseline.documentId);
                                 }
                                 else {
-                                    valid = constraintAlignTop(node, item);
+                                    constraintAlignTop(node, item);
                                 }
                                 break;
                             case 'middle':
@@ -2971,7 +2976,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     textBottom = getTextBottom(children)[0] || null;
                                 }
                                 if (textBottom || baseline?.textElement === false) {
-                                    valid = constraintAlignTop(node, item);
+                                    constraintAlignTop(node, item);
                                 }
                                 else {
                                     item.anchorParent('vertical', 0.5);
@@ -2989,7 +2994,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                         item.anchor('bottom', textBaseline.documentId);
                                     }
                                     else if (textBottom) {
-                                        valid = constraintAlignTop(node, item);
+                                        constraintAlignTop(node, item);
                                     }
                                     break;
                                 }
@@ -3004,7 +3009,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     }
                                 }
                                 if (item === bottom) {
-                                    valid = constraintAlignTop(node, item);
+                                    constraintAlignTop(node, item);
                                 }
                                 else {
                                     item.anchor('bottom', 'parent');
@@ -3012,7 +3017,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 break;
                             case 'baseline':
                                 if (!baseline || item.blockVertical || !item.textElement && getMaxHeight(item) > getMaxHeight(baseline)) {
-                                    valid = constraintAlignTop(node, item);
+                                    constraintAlignTop(node, item);
                                 }
                                 else {
                                     item.anchor('baseline', documentId || 'parent');
@@ -3020,7 +3025,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 }
                                 break;
                             default:
-                                valid = constraintAlignTop(node, item);
+                                constraintAlignTop(node, item);
                                 break;
                         }
                     }
@@ -3029,7 +3034,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         ++baselineCount;
                     }
                     else {
-                        valid = constraintAlignTop(node, item);
+                        constraintAlignTop(node, item);
                     }
                     item.anchored = true;
                 }
@@ -3060,37 +3065,49 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 else {
                     item.anchorParent('vertical', 0);
                     item.anchored = true;
-                    valid = false;
                 }
             }
         }
         if (baseline) {
-            if (tallest && baseline.textElement && getMaxHeight(tallest) > getMaxHeight(baseline)) {
+            baseline.anchored = true;
+            baseline.baselineActive = baselineCount > 0;
+            if (tallest?.textElement === false && baseline.textElement && getMaxHeight(tallest) > getMaxHeight(baseline)) {
                 switch (tallest.css('verticalAlign')) {
+                    case 'top':
+                    case 'text-top':
+                        baseline.anchorParent('vertical', 0);
+                        return;
                     case 'middle':
                         baseline.anchorParent('vertical', 0.5, '', true);
-                        break;
+                        return;
                     case 'baseline':
-                        baseline.anchor('baseline', tallest.documentId);
-                        break;
+                        baseline.anchor(getBaselineAnchor(tallest), tallest.documentId);
+                        return;
                     case 'bottom':
                     case 'text-bottom':
                         baseline.anchor('bottom', tallest.documentId);
+                        return;
+                }
+            }
+            if (baseline.baselineElement) {
+                baseline.anchor('baseline', 'parent');
+            }
+            else {
+                switch (baseline.css('verticalAlign')) {
+                    case 'top':
+                        baseline.anchorParent('vertical', 0);
+                        break;
+                    case 'middle':
+                        baseline.anchorParent('vertical', 0.5);
+                        break;
+                    case 'bottom':
+                        baseline.anchorParent('vertical', 1);
                         break;
                     default:
                         constraintAlignTop(node, baseline);
                         break;
                 }
             }
-            else if (valid && baseline.baselineElement && !baseline.imageContainer && node.ascend({ condition: (item: T) => item.layoutHorizontal, error: (item: T) => item.naturalChild && item.layoutVertical || item.layoutGrid, attr: 'renderParent' }).length > 0) {
-                baseline.anchorParent('vertical');
-                baseline.anchor('baseline', 'parent');
-            }
-            else {
-                constraintAlignTop(node, baseline);
-            }
-            baseline.baselineActive = baselineCount > 0;
-            baseline.anchored = true;
         }
     }
 
