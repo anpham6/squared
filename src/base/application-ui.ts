@@ -137,14 +137,6 @@ function getPseudoQuoteValue(element: HTMLElement, pseudoElt: string, outside: s
     return i % 2 === 0 ? outside : inside;
 }
 
-function getRelativeOffset(node: NodeUI, fromRight: boolean) {
-    return node.positionRelative
-        ? node.hasPX('left')
-            ? node.left * (fromRight ? 1 : -1)
-            : node.right * (fromRight ? -1 : 1)
-        : 0;
-}
-
 function setMapDepth(map: Map<number, Set<NodeUI>>, depth: number, node: NodeUI) {
     const data = map.get(depth);
     if (data) {
@@ -1214,9 +1206,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected processFloatHorizontal(layout: LayoutUI<T>) {
-        const controllerHandler = this.controllerHandler;
+        const { clearMap, controllerHandler } = this;
         const { containerType, alignmentType } = controllerHandler.containerTypeVertical;
-        const clearMap = this.session.clearMap;
         const layerIndex: Array<T[] | T[][]> = [];
         const inlineAbove: T[] = [];
         const leftAbove: T[] = [];
@@ -1428,9 +1419,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected processFloatVertical(layout: LayoutUI<T>) {
-        const controllerHandler = this.controllerHandler;
+        const { clearMap, controllerHandler } = this;
         const { containerType, alignmentType } = controllerHandler.containerTypeVertical;
-        const clearMap = this.session.clearMap;
         if (layout.containerType !== 0) {
             const node = layout.node;
             const parent = controllerHandler.createNodeGroup(node, [node], layout.parent);
@@ -1871,17 +1861,25 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         let q = leftAbove.length;
         if (q > 0) {
             let floatPosition = -Infinity,
+                marginOffset = 0,
                 spacing = false;
             i = 0;
             while (i < q) {
                 const child = leftAbove[i++];
                 if (child.bounds.top < bottom) {
-                    const right = child.linear.right + getRelativeOffset(child, false);
+                    const marginRight = child.marginRight;
+                    let right = child.bounds.right;
+                    if (marginRight > 0) {
+                        right += marginRight;
+                    }
                     if (right > floatPosition) {
                         floatPosition = right;
-                        spacing = child.marginRight > 0;
+                        if (marginRight < 0) {
+                            marginOffset = marginRight;
+                        }
+                        spacing = true;
                     }
-                    else if (right === floatPosition && child.marginRight <= 0) {
+                    else if (right === floatPosition && marginRight <= 0) {
                         spacing = false;
                     }
                 }
@@ -1896,14 +1894,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
                 if (marginLeft !== -Infinity) {
-                    const offset = floatPosition - parent.box.left - marginLeft - Math.max(...target.map((child: T) => !paddingNodes.includes(child) ? child.marginLeft : 0));
+                    const offset = floatPosition + marginOffset - (parent.box.left + marginLeft + Math.max(...target.map((child: T) => !paddingNodes.includes(child) ? child.marginLeft : 0)));
                     if (offset > 0 && offset < boxWidth) {
-                        target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (
-                            !spacing && target.find(child => child.multiline, { cascade: true })
-                                ? Math.max(marginLeft, this._controllerSettings.deviations.textMarginBoundarySize)
-                                : 0
-                            )
-                        );
+                        target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (!spacing && target.find(child => child.multiline, { cascade: true }) ? Math.max(marginLeft, this._controllerSettings.deviations.textMarginBoundarySize) : 0));
                         setColumnMaxWidth(leftAbove, offset);
                     }
                 }
@@ -1912,17 +1905,22 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         q = rightAbove.length;
         if (q > 0) {
             let floatPosition = Infinity,
+                marginOffset = 0,
                 spacing = false;
             i = 0;
             while (i < q) {
                 const child = rightAbove[i++];
                 if (child.bounds.top < bottom) {
-                    const left = child.linear.left + getRelativeOffset(child, true);
+                    const marginLeft = child.marginLeft;
+                    const left = child.linear.left;
                     if (left < floatPosition) {
                         floatPosition = left;
-                        spacing = child.marginLeft > 0;
+                        if (marginLeft < 0) {
+                            marginOffset = marginLeft;
+                        }
+                        spacing = marginLeft > 0;
                     }
-                    else if (left === floatPosition && child.marginLeft <= 0) {
+                    else if (left === floatPosition && marginLeft <= 0) {
                         spacing = false;
                     }
                 }
@@ -1937,14 +1935,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
                 if (marginRight !== -Infinity) {
-                    const offset = parent.box.right - floatPosition - marginRight - Math.max(...target.map((child: T) => !paddingNodes.includes(child) ? child.marginRight : 0));
+                    const offset = parent.box.right - (floatPosition - marginOffset + marginRight + Math.max(...target.map((child: T) => !paddingNodes.includes(child) ? child.marginRight : 0)));
                     if (offset > 0 && offset < boxWidth) {
-                        target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (
-                            !spacing && target.find(child => child.multiline, { cascade: true })
-                                ? Math.max(marginRight, this._controllerSettings.deviations.textMarginBoundarySize)
-                                : 0
-                            )
-                        );
+                        target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (!spacing && target.find(child => child.multiline, { cascade: true }) ? Math.max(marginRight, this._controllerSettings.deviations.textMarginBoundarySize) : 0));
                         setColumnMaxWidth(rightAbove, offset);
                     }
                 }

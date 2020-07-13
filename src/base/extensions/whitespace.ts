@@ -318,7 +318,7 @@ const validSibling = (node: NodeUI) => node.pageFlow && node.blockDimension && !
 export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
     public afterBaseLayout(sessionId: string) {
         const { cache, excluded } = this.application.getProcessing(sessionId)!;
-        const clearMap = this.application.session.clearMap;
+        const clearMap = this.application.clearMap;
         const processed = new Set<number>();
         cache.each(node => {
             if (node.naturalElement && !node.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
