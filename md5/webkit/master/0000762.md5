@@ -1,12 +1,12 @@
 d2de8ff20473c20930fd0ecb07dccc1a  ./app/src/main/res/drawable/body_framelayout_1.xml
 cc1918f77c3d747af3b8e59d2f7c0031  ./app/src/main/res/drawable/header_linearlayout_3.xml
-9870e2f7fd6865f36ad214fe01e839df  ./app/src/main/res/drawable/img_imageview_2.xml
+9870e2f7fd6865f36ad214fe01e839df  ./app/src/main/res/drawable/img_imageview_1.xml
 a40124a69306df9b06a262a38048399b  ./app/src/main/res/drawable/scones.jpg
 bb145ff78b34aa3181ae6c5691c440f9  ./app/src/main/res/drawable/section_linearlayout_2.xml
 47003cdf896d8ca4bd3a4e2583310548  ./app/src/main/res/drawable/soc_logo.png
-ef2c3f355caa58e37cf4dd783f6e785c  ./app/src/main/res/layout/activity_main.xml
+b48b29a2fcde6a64588170702c568b81  ./app/src/main/res/layout/activity_main.xml
 fa9268b3f2e14a709b7063f969aa17c6  ./app/src/main/res/values/colors.xml
-7d2564bd5bb6e1ccb1b99f0915f85aaf  ./app/src/main/res/values/dimens.xml
+9a9c20f034b23c1ebc4f2f92deabd75a  ./app/src/main/res/values/dimens.xml
 63b4a931ae9977bdcfb7bff4122c578d  ./app/src/main/res/values/strings.xml
 a137b9162462830ab0163497d5fb0f80  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml

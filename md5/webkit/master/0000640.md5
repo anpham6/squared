@@ -1,8 +1,8 @@
 9cf64696c8a990c68e0c14924c724d22  ./app/src/main/res/drawable/div_linearlayout_1.xml
-d319c3693bdc9f77d7d2d29abb038605  ./app/src/main/res/drawable/span_textview_2.xml
-cdd72038cd0cb369163c16cb962c93c2  ./app/src/main/res/layout/activity_main.xml
+d319c3693bdc9f77d7d2d29abb038605  ./app/src/main/res/drawable/span_textview_1.xml
+f9d8edf019872783bd6c91a3aa95dfd5  ./app/src/main/res/layout/activity_main.xml
 d9155ecd738c4deecaaa3d274c729f76  ./app/src/main/res/values/colors.xml
-b05062c01b98b958432f4e30ff11fc39  ./app/src/main/res/values/dimens.xml
-cb01a7b51a6d46374a26cdead920634a  ./app/src/main/res/values/strings.xml
+f10dd7eeeda41597ed3b9da9e71410a9  ./app/src/main/res/values/dimens.xml
+5b2bc74d3cbd51280a9f481cf533cd45  ./app/src/main/res/values/strings.xml
 701206a29f18eb303c47f5a4a9549b40  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml

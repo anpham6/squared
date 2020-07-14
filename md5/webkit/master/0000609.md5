@@ -4,9 +4,9 @@
 25bcb0c37878965ea9575c44ef198421  ./app/src/main/res/drawable/input_button_message.xml
 da8d9f7c98a04b9f6402f87a7cffb25e  ./app/src/main/res/drawable/input_submit_submit2.xml
 084c5166290af904d136eb755fb0b4c4  ./app/src/main/res/drawable/input_text_search.xml
-c6cbb78f1372590bc1835bad4867e4b1  ./app/src/main/res/layout/activity_main.xml
+ef41375f1bc71419cf4d9f5f8bc5280a  ./app/src/main/res/layout/activity_main.xml
 ca54df50d46960d938af4d5b10911279  ./app/src/main/res/values/colors.xml
-6b9c20a7fe04841643a2ce1093dbc8d1  ./app/src/main/res/values/dimens.xml
+64d79e6dffbb128f494fae25854360e9  ./app/src/main/res/values/dimens.xml
 3cc2820a3fc21729b1c0ff80cff0e5ab  ./app/src/main/res/values/strings.xml
 b3b926b80d7680d15d98843426f6d8b5  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml
