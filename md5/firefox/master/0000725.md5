@@ -1,7 +1,7 @@
 7539473d29891b51d9389e3933357a67  ./app/src/main/res/drawable/android_background.jpg
 d0dc66ccf0c848d6f24399c093ada8e4  ./app/src/main/res/drawable/android_header.jpg
 5f4c198fbbbaa532d48e39ab57fd18f9  ./app/src/main/res/drawable/div_drawer_header.xml
-ebaada97197d460ff494eba71a612d6e  ./app/src/main/res/drawable/div_linearlayout_3.xml
+ebaada97197d460ff494eba71a612d6e  ./app/src/main/res/drawable/div_linearlayout_1.xml
 013e6cb159ef25bfdce75b0fe4fd4eb5  ./app/src/main/res/drawable/div_toolbar_demo.xml
 df444bee0bf9b2051fb72d8cf5ba92ce  ./app/src/main/res/drawable/icons8_browse_page_24.png
 2826fbd3bc687443983081dfd11e265d  ./app/src/main/res/drawable/icons8_chrome.png
@@ -12,9 +12,9 @@ a9a34fe658385bf8349c02b202b93fae  ./app/src/main/res/drawable/icons8_google_news
 0c1dbeb2645294de16d65c5de2776b2d  ./app/src/main/res/drawable/icons8_menu_24.png
 9e20f5dd2f7f4e6db1b3d27e1e8580c6  ./app/src/main/res/drawable/icons8_web_24.png
 74bf088a1f0d4a5c3a5312e7ed1e22df  ./app/src/main/res/drawable/nav_drawer_menu.xml
-8f5efab1adf971cfdc7daedce85c79d5  ./app/src/main/res/layout/activity_main.xml
+c8a2f8cf22ec64e7bef5eea979fe6a34  ./app/src/main/res/layout/activity_main.xml
 faf1a8733b642b2683fbab5177ec2094  ./app/src/main/res/values/colors.xml
 e871ecc5e6f9ca7420ecbbc9af706104  ./app/src/main/res/values/dimens.xml
-8620d62d1c1fa260d8cef5b6a8cfa9f7  ./app/src/main/res/values/strings.xml
-8fd559cae95e34ba9343819865df54fe  ./app/src/main/res/values/styles.xml
+8e2392f4bed9f96b1600e5e0bc9910f6  ./app/src/main/res/values/strings.xml
+d0c492e0099f43cba4409d7a7ed7896c  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml

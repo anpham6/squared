@@ -119,7 +119,7 @@ export function getRangeClientRect(element: Element) {
             if (top < bounds.top) {
                 bounds.top = top;
             }
-            else if (top >= domRect[i - 1].bottom) {
+            else if (Math.ceil(top) >= domRect[i - 1].bottom || Math.floor(right - left) > width) {
                 ++numberOfLines;
             }
             if (bottom > bounds.bottom) {

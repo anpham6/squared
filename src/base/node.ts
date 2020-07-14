@@ -2059,10 +2059,12 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         const result = this._cached.hasHeight;
         if (result === undefined) {
             const value = this.css('height');
-            if (isPercent(value)) {
-                return this._cached.hasHeight = this.pageFlow ? this.actualParent?.hasHeight || this.documentBody : this.css('position') === 'fixed' || this.hasPX('top') || this.hasPX('bottom');
-            }
-            return this._cached.hasHeight = this.height > 0 || this.hasPX('height', { percent: false });
+            return this._cached.hasHeight =
+                isPercent(value)
+                    ? this.pageFlow
+                        ? this.actualParent?.hasHeight || this.documentBody
+                        : this.css('position') === 'fixed' || this.hasPX('top') || this.hasPX('bottom')
+                    : this.height > 0 || this.hasPX('height', { percent: false });
         }
         return result;
     }
@@ -2471,7 +2473,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             if (node.textElement) {
                                 const rect = actualTextRangeRect(node.element as Element, node.sessionId);
                                 if (rect) {
-                                    numberOfLines += rect.numberOfLines || (top === Infinity || rect.top >= bottom ? 1 : 0);
+                                    numberOfLines += rect.numberOfLines || (top === Infinity || rect.top >= bottom || Math.floor(rect.right - rect.left) > Math.ceil(rect.width) ? 1 : 0);
                                     top = Math.min(rect.top, top);
                                     right = Math.max(rect.right, right);
                                     left = Math.min(rect.left, left);

@@ -44,9 +44,7 @@ export default abstract class NodeGroupUI extends NodeUI {
             return false;
         }
         const result = this._cached.inline;
-        return result === undefined
-            ? this._cached.inline = this.every(node => node.inline)
-            : result;
+        return result === undefined ? this._cached.inline = this.every(node => node.inline) : result;
     }
 
     get inlineStatic() {
@@ -54,9 +52,7 @@ export default abstract class NodeGroupUI extends NodeUI {
             return false;
         }
         const result = this._cached.inlineStatic;
-        return result === undefined
-            ? this._cached.inlineStatic = this.every(node => node.inlineStatic)
-            : result;
+        return result === undefined ? this._cached.inlineStatic = this.every(node => node.inlineStatic) : result;
     }
 
     get inlineVertical() {
@@ -64,9 +60,7 @@ export default abstract class NodeGroupUI extends NodeUI {
             return false;
         }
         const result = this._cached.inlineVertical;
-        return result === undefined
-            ? this._cached.inlineVertical = this.every((node: NodeUI) => node.inlineVertical)
-            : result;
+        return result === undefined ? this._cached.inlineVertical = this.every((node: NodeUI) => node.inlineVertical) : result;
     }
 
     get inlineFlow() {
@@ -74,9 +68,7 @@ export default abstract class NodeGroupUI extends NodeUI {
             return false;
         }
         const result = this._cached.inlineFlow;
-        return result === undefined
-            ? this._cached.inlineFlow = this.every((node: NodeUI) => node.inlineFlow)
-            : result;
+        return result === undefined ? this._cached.inlineFlow = this.every((node: NodeUI) => node.inlineFlow) : result;
     }
 
     get inlineDimension() {
@@ -84,9 +76,7 @@ export default abstract class NodeGroupUI extends NodeUI {
             return false;
         }
         const result = this._cached.inlineDimension;
-        return result === undefined
-            ? this._cached.inlineDimension = this.every((node: NodeUI) => node.inlineDimension)
-            : result;
+        return result === undefined ? this._cached.inlineDimension = this.every((node: NodeUI) => node.inlineDimension) : result;
     }
 
     get block() {
@@ -94,9 +84,7 @@ export default abstract class NodeGroupUI extends NodeUI {
             return true;
         }
         const result = this._cached.block;
-        return result === undefined
-            ? this._cached.block = this.some(node => node.block)
-            : result;
+        return result === undefined ? this._cached.block = this.some(node => node.block) : result;
     }
 
     get blockStatic() {
@@ -120,23 +108,17 @@ export default abstract class NodeGroupUI extends NodeUI {
 
     get blockDimension() {
         const result = this._cached.blockDimension;
-        return result === undefined
-            ? this._cached.blockDimension = this.every((node: NodeUI) => node.blockDimension)
-            : result;
+        return result === undefined ? this._cached.blockDimension = this.every((node: NodeUI) => node.blockDimension) : result;
     }
 
     get blockVertical() {
         const result = this._cached.blockVertical;
-        return result === undefined
-            ? this._cached.blockVertical = this.every((node: NodeUI) => node.blockVertical)
-            : result;
+        return result === undefined ? this._cached.blockVertical = this.every((node: NodeUI) => node.blockVertical) : result;
     }
 
     get pageFlow() {
         const result = this._cached.pageFlow;
-        return result === undefined
-            ? this._cached.pageFlow = !hasCoords(this.css('position'))
-            : result;
+        return result === undefined ? this._cached.pageFlow = !hasCoords(this.css('position')) : result;
     }
 
     set baseline(value) {
@@ -178,13 +160,11 @@ export default abstract class NodeGroupUI extends NodeUI {
     }
 
     get display() {
-        return super.display || (
-            this.some(node => node.blockStatic)
-                ? 'block'
-                : this.blockDimension
-                    ? 'inline-block'
-                    : 'inline'
-        );
+        return super.display || this.firstChild?.blockStatic
+            ? 'block'
+            : this.blockDimension
+                ? 'inline-block'
+                : 'inline';
     }
 
     get firstChild() {
@@ -222,9 +202,7 @@ export default abstract class NodeGroupUI extends NodeUI {
 
     get centerAligned() {
         const result = this._cached.centerAligned;
-        return result === undefined
-            ? this._cached.centerAligned = this.every(node => node.centerAligned)
-            : result;
+        return result === undefined ? this._cached.centerAligned = this.every(node => node.centerAligned) : result;
     }
 
     get rightAligned() {
@@ -232,9 +210,7 @@ export default abstract class NodeGroupUI extends NodeUI {
             return true;
         }
         const result = this._cached.rightAligned;
-        return result === undefined
-            ? this._cached.rightAligned = this.every(node => node.rightAligned)
-            : result;
+        return result === undefined ? this._cached.rightAligned = this.every(node => node.rightAligned) : result;
     }
 
     get tagName() {
@@ -246,6 +222,11 @@ export default abstract class NodeGroupUI extends NodeUI {
     }
 
     get styleText() {
+        return false;
+    }
+
+    set inlineText(value) {}
+    get inlineText() {
         return false;
     }
 

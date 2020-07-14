@@ -1,4 +1,4 @@
-9e0af30ac8acc5a5a87bf387c8bc1e68  ./app/src/main/res/drawable/h1_textview_18.xml
+9e0af30ac8acc5a5a87bf387c8bc1e68  ./app/src/main/res/drawable/h1_textview_29.xml
 fcfd0fdc138b72d287f4f64a7b22e00d  ./app/src/main/res/font/alegreyasans.xml
 29b650d647dbf377bd788600ae5a42d7  ./app/src/main/res/font/alegreyasans_italic.otf
 0e3154cf7394be7d0a6b7f2e6267458b  ./app/src/main/res/font/alegreyasans_normal.otf
@@ -8,9 +8,9 @@ ff9c90c1a24a2ca9bc49e97520164b63  ./app/src/main/res/font/alegreyasanssc.xml
 b7d71f20ff222aaaa45c609b2fd66ad7  ./app/src/main/res/font/vollkorn_extra_bold.ttf
 cd1afcafc7cdc6719b23f9774a64a169  ./app/src/main/res/font/vollkorn_medium.ttf
 cd1afcafc7cdc6719b23f9774a64a169  ./app/src/main/res/font/vollkorn_normal.ttf
-c058d1adddfde1fefc063a9127eea3da  ./app/src/main/res/layout/activity_main.xml
+ec9f6b0e8f3bd246cd4ce401471204f9  ./app/src/main/res/layout/activity_main.xml
 9e91d0a3462ae3e3e10045d40c1fe980  ./app/src/main/res/values/colors.xml
-86f37aee8be98bbffc1b01dc20cd7cf2  ./app/src/main/res/values/dimens.xml
-9c71da67396b65935126f0f39b0e42f7  ./app/src/main/res/values/strings.xml
+19b62756aa58d70708189862bd7812ec  ./app/src/main/res/values/dimens.xml
+83efd9585ce173c4fce6b0ea48c8715d  ./app/src/main/res/values/strings.xml
 ff11e17ab252855e7acd71675bfbbd6d  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml

@@ -420,6 +420,12 @@ function isBaselineImage(node: View) {
 }
 
 function canControlAscendItems(node: View) {
+    switch (node.tagName) {
+        case 'CODE':
+        case 'PRE':
+        case 'RUBY':
+            return false;
+    }
     switch (node.controlName) {
         case CONTAINER_ANDROID.HORIZONTAL_SCROLL:
         case CONTAINER_ANDROID.VERTICAL_SCROLL:
@@ -437,7 +443,7 @@ function flattenContainer(node: View) {
     let q = renderChildren.length;
     for (let i = 0; i < q; ++i) {
         const item = renderChildren[i];
-        if (item.rendering && isUnstyled(item) && !item.floating && !item.layoutGrid && !item.layoutElement && canControlAscendItems(item) && item.tagName !== 'RUBY' && item.removeTry()) {
+        if (item.rendering && isUnstyled(item) && !item.inlineDimension && !item.preserveWhiteSpace && item.css('whiteSpace') !== 'nowrap' && !item.layoutGrid && !item.layoutElement && canControlAscendItems(item) && item.removeTry()) {
             item.hide();
             const depth = item.depth;
             const children = flattenContainer(item);

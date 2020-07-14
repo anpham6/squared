@@ -69,7 +69,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                 const nodes: T[] = [];
                 let textHeight = 0,
                     floatHeight = 0;
-                let j = 0, k = 0, l = 0;
+                let j = 0, k = 0, l = 0, m = 0, n = 0;
                 for (let i = 0; i < length; ++i) {
                     const child = children[i];
                     if (!child.inlineFlow) {
@@ -84,6 +84,12 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                                 ++k;
                             }
                             textHeight += child.bounds.height;
+                            if (child.styleElement) {
+                                ++m;
+                            }
+                            else {
+                                ++n;
+                            }
                             nodes.push(child);
                         }
                         ++l;
@@ -92,7 +98,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                         floatHeight = Math.max(child.linear.height, floatHeight);
                     }
                 }
-                if (j > 0 && (k > 0 || l > 1 || floatHeight > 0 && textHeight > floatHeight) || k > 1 && (node.textBounds?.numberOfLines || 0) > 1) {
+                if (j > 0 && (k > 0 || l > 1 || floatHeight > 0 && textHeight > floatHeight) || (k > 1 || m > 0 && n > 1) && (node.textBounds?.numberOfLines || 0) > 1) {
                     node.data(this.name, 'mainData', nodes);
                     return true;
                 }

@@ -37,8 +37,9 @@ function checkAlignment(node: NodeUI) {
         case 'middle':
         case 'bottom':
             return true;
+        default:
+            return false;
     }
-    return false;
 }
 
 export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {

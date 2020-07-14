@@ -967,8 +967,8 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         if (!node.horizontalRowStart) {
                             const element = node.element;
                             const previousSibling = element?.previousSibling;
-                            if (previousSibling && previousSibling instanceof HTMLElement && !hasEndingSpace(previousSibling) && element!.textContent!.trim().startsWith(value.trim())) {
-                                value = value.replace(CHAR_LEADINGSPACE, '&#160;');
+                            if (previousSibling instanceof HTMLElement && !hasEndingSpace(previousSibling) && element!.textContent!.trim().startsWith(value.trim())) {
+                                value = value.replace(CHAR_LEADINGSPACE, ResourceUI.STRING_SPACE);
                                 break;
                             }
                         }
@@ -995,7 +995,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             if (trimming) {
                 if (!node.naturalChild) {
                     if (trimming) {
-                        value = value.replace(CHAR_TRAILINGSPACE, node.horizontalRowEnd ? '' : '&#160;');
+                        value = value.replace(CHAR_TRAILINGSPACE, node.horizontalRowEnd ? '' : ResourceUI.STRING_SPACE);
                     }
                 }
                 else if (node.pageFlow) {
