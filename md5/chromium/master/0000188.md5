@@ -1,6 +1,6 @@
 5d41c5287870930772528867d6b3dc96  ./app/src/main/res/drawable/a_featurelink.xml
 c2885ea8d62195a10083bb45cda42ff7  ./app/src/main/res/drawable/a_homelink.xml
-35beb939b5c99423889d2189a346387b  ./app/src/main/res/drawable/a_linearlayout_11.xml
+35beb939b5c99423889d2189a346387b  ./app/src/main/res/drawable/a_linearlayout_1.xml
 fd86a71e850e138cbaf724d0517aaa45  ./app/src/main/res/drawable/banner_bg.jpg
 e5c1ce7aa0c9567383a16d1e715b8e4a  ./app/src/main/res/drawable/banner_flower.jpg
 119fd6c11e9351bd244798c0d83273e2  ./app/src/main/res/drawable/bg_column.gif
@@ -16,7 +16,7 @@ d469d13bcd12351721824eeee4d268b8  ./app/src/main/res/drawable/img_imageview_1.xm
 d93632de039ee99f65e977fccb069e21  ./app/src/main/res/drawable/logo.gif
 23e212db1c2ae94ff5904e54521b4e6e  ./app/src/main/res/drawable/tub.jpg
 3ef8c9f426c432dc5fcde2c0e9b147aa  ./app/src/main/res/drawable/ul_news.xml
-a995ef090b19aea0ff4c859d57db1964  ./app/src/main/res/layout/activity_main.xml
+b83f4c2fea1fe8f157f4da2b74faab5a  ./app/src/main/res/layout/activity_main.xml
 5067a8274f860cdeee0441c6e196feb1  ./app/src/main/res/values/colors.xml
 efc8902f8940e618d8d6b2825909b9bb  ./app/src/main/res/values/dimens.xml
 83d37b7f2209120cfeb833402ce35e14  ./app/src/main/res/values/strings.xml

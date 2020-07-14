@@ -549,6 +549,7 @@ declare module "base" {
         renderParent?: NodeUI;
         renderExtension?: Extension<NodeUI>[];
         renderTemplates?: NodeTemplate<NodeUI>[];
+        renderedAs?: NodeTemplate<NodeUI>;
         outerWrapper?: NodeUI;
         innerWrapped?: NodeUI;
         innerBefore?: NodeUI;

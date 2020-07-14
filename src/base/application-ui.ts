@@ -419,7 +419,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public addLayoutTemplate(parent: T, node: T, template: NodeTemplate<T>, index?: number) {
         if (!node.renderExclude) {
             if (node.renderParent) {
-                const renderTemplates = safeNestedArray(parent as StandardMap, 'renderTemplates');
+                const renderTemplates = safeNestedArray(parent as StandardMap, 'renderTemplates') as NodeTemplate<T>[];
                 if (index === undefined || !(index >= 0 && index < parent.renderChildren.length)) {
                     parent.renderChildren.push(node);
                     renderTemplates.push(template);
@@ -428,6 +428,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     parent.renderChildren.splice(index, 0, node);
                     renderTemplates.splice(index, 0, template);
                 }
+                node.renderedAs = template;
             }
         }
         else {
@@ -853,8 +854,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             setMapDepth(mapY, getMapIndex(node.depth), node);
             if (cascade && node.length > 0) {
                 node.cascade((item: T) => {
-                    mapY.get(item.depth)?.delete(item);
-                    setMapDepth(mapY, getMapIndex(item.depth), item);
+                    if (item.length) {
+                        const depth = item.depth;
+                        mapY.get(depth)?.delete(item);
+                        setMapDepth(mapY, getMapIndex(depth), item);
+                    }
                     return false;
                 });
             }

@@ -537,6 +537,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public labelFor?: T;
     public renderExtension?: squared.base.ExtensionUI<T>[];
     public renderTemplates?: NodeTemplate<T>[];
+    public renderedAs?: NodeTemplate<T>;
     public horizontalRows?: T[][];
 
     protected _boxAdjustment = newBoxModel();
@@ -1359,6 +1360,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         node.lineBreakTrailing = this.lineBreakTrailing;
         node.documentParent = this.documentParent;
         node.renderParent = this.renderParent;
+        node.renderedAs = this.renderedAs;
         node.rootElement = this.rootElement;
         if (this.length > 0) {
             node.retainAs(this.duplicate());

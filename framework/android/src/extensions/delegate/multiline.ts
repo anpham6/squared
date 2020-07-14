@@ -1,5 +1,7 @@
 import View from '../../view';
 
+import { isUnstyled } from '../../lib/util';
+
 import { CONTAINER_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
@@ -43,7 +45,6 @@ function isTextElement(node: View) {
     return node.textElement && !(node.tagName === 'LABEL' && node.toElementString('htmlFor') !== '');
 }
 
-const isUnstyled = (node: View) => node.baseline && !node.positionRelative && node.contentBoxWidth === 0 && node.contentBoxHeight === 0 && !node.visibleStyle.background;
 const checkBreakable = (node: View): boolean => node.plainText || node.naturalChild && node.naturalElements.length === 0 && node.innerAfter === undefined && node.innerBefore === undefined && isUnstyled(node);
 
 export const REGEXP_TRAILINGCHAR = /^[^\w\s\n]+[\s\n]+$/;
@@ -110,13 +111,8 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
         if (fontAdjust === Infinity) {
             return undefined;
         }
-        const outerContainer = !!nodes && parent.layoutHorizontal && parent.layoutRelative && isUnstyled(node) && node.marginTop === 0 && node.marginBottom === 0;
-        const parentContainer = !nodes || outerContainer ? parent : node;
+        const parentContainer = nodes ? node : parent;
         const { children, sessionId } = parentContainer;
-        let childIndex = outerContainer ? children.findIndex(item => item === node) : -1;
-        if (outerContainer && childIndex === -1) {
-            return undefined;
-        }
         if (isNaN(fontAdjust)) {
             fontAdjust = (this.application as android.base.Application<T>).userSettings.fontMeasureAdjust;
         }
@@ -147,7 +143,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
             }
             REGEXP_WORD.lastIndex = 0;
             const q = words.length;
-            if (q > 1 || outerContainer) {
+            if (q > 1) {
                 const { element, depth, textStyle, fontSize, lineHeight } = seg;
                 const bounds = !seg.hasPX('width') && seg.textBounds || seg.bounds;
                 const height = seg.bounds.height / (bounds.numberOfLines || 1);
@@ -205,9 +201,6 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                             container.lineBreakLeading = seg.lineBreakLeading;
                             container.textIndent = seg.textIndent;
                             seg.registerBox(BOX_STANDARD.MARGIN_TOP, container);
-                            if (outerContainer && i === 0) {
-                                container.modifyBox(BOX_STANDARD.MARGIN_LEFT, node.marginLeft);
-                            }
                         }
                         else{
                             container.siblingsLeading = [];
@@ -219,13 +212,10 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                     }
                     if (j === q - 1) {
                         if (seg !== node || !nodes) {
-                            container.setCacheValue('marginRight', seg.marginRight + (outerContainer ? node.marginRight : 0));
+                            container.setCacheValue('marginRight', seg.marginRight);
                             container.siblingsTrailing = seg.siblingsTrailing;
                             container.lineBreakTrailing = seg.lineBreakTrailing;
                             seg.registerBox(BOX_STANDARD.MARGIN_BOTTOM, container);
-                            if (outerContainer && i === length - 1) {
-                                container.modifyBox(BOX_STANDARD.MARGIN_RIGHT, node.marginRight);
-                            }
                         }
                         else {
                             container.siblingsTrailing = [];
@@ -234,16 +224,12 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                     previous = container;
                 }
                 if (items) {
-                    if (outerContainer) {
-                        children.splice(childIndex, i === 0 ? 1 : 0, ...items);
-                        childIndex += items.length;
-                    }
-                    else if (seg === node) {
+                    if (seg === node) {
                         node.each((item: T) => item.hide());
                         node.retainAs(items);
                     }
                     else {
-                        const index = children.findIndex(item => item === seg);
+                        let index = children.findIndex(item => item === seg);
                         if (index === -1) {
                             continue;
                         }
@@ -260,9 +246,6 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
         if (modified) {
             setContentAltered(parentContainer, true);
             if (nodes) {
-                if (outerContainer) {
-                    node.hide();
-                }
                 parentContainer.setControlType(View.getControlName(CONTAINER_NODE.RELATIVE), CONTAINER_NODE.RELATIVE);
                 parentContainer.alignmentType = NODE_ALIGNMENT.HORIZONTAL;
                 this.application.getProcessingCache(sessionId).afterAdd!(parentContainer, true, true);

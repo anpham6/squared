@@ -2060,10 +2060,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (result === undefined) {
             const value = this.css('height');
             if (isPercent(value)) {
-                return this._cached.hasHeight =
-                    this.pageFlow
-                        ? this.actualParent?.hasHeight || this.documentBody
-                        : this.css('position') === 'fixed' || this.hasPX('top') || this.hasPX('bottom');
+                return this._cached.hasHeight = this.pageFlow ? this.actualParent?.hasHeight || this.documentBody : this.css('position') === 'fixed' || this.hasPX('top') || this.hasPX('bottom');
             }
             return this._cached.hasHeight = this.height > 0 || this.hasPX('height', { percent: false });
         }
@@ -2234,24 +2231,12 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get contentBoxWidth() {
         const result = this._cached.contentBoxWidth;
-        if (result === undefined) {
-            return this._cached.contentBoxWidth =
-                this.tableElement && this.css('borderCollapse') === 'collapse'
-                    ? 0
-                    : this.borderLeftWidth + this.paddingLeft + this.paddingRight + this.borderRightWidth;
-        }
-        return result;
+        return result === undefined ? this._cached.contentBoxWidth = this.tableElement && this.css('borderCollapse') === 'collapse' ? 0 : this.borderLeftWidth + this.paddingLeft + this.paddingRight + this.borderRightWidth : result;
     }
 
     get contentBoxHeight() {
         const result = this._cached.contentBoxHeight;
-        if (result === undefined) {
-            return this._cached.contentBoxHeight =
-                this.tableElement && this.css('borderCollapse') === 'collapse'
-                    ? 0
-                    : this.borderTopWidth + this.paddingTop + this.paddingBottom + this.borderBottomWidth;
-        }
-        return result;
+        return result === undefined ? this._cached.contentBoxHeight = this.tableElement && this.css('borderCollapse') === 'collapse' ? 0 : this.borderTopWidth + this.paddingTop + this.paddingBottom + this.borderBottomWidth : result;
     }
 
     get inline() {
@@ -2265,9 +2250,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get inlineStatic() {
         const result = this._cached.inlineStatic;
-        return result === undefined
-            ? this._cached.inlineStatic = this.inline && this.pageFlow && !this.floating && !this.imageElement
-            : result;
+        return result === undefined ? this._cached.inlineStatic = this.inline && this.pageFlow && !this.floating && !this.imageElement : result;
     }
 
     set inlineText(value) {

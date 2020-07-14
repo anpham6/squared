@@ -416,6 +416,7 @@ declare namespace lib {
         function getDocumentId(value: string): string;
         function isHorizontalAlign(value: string): boolean;
         function isVerticalAlign(value: string): boolean;
+        function isUnstyled(node: View): boolean;
         function getHorizontalBias(node: View): number;
         function getVerticalBias(node: View): number;
         function adjustAbsolutePaddingOffset(parent: View, direction: number, value: number): number;

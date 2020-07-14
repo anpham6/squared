@@ -6,7 +6,7 @@ import { REGEXP_TRAILINGCHAR } from './extensions/delegate/multiline';
 
 import { CONTAINER_ANDROID, CONTAINER_ANDROID_X } from './lib/constant';
 import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
-import { adjustAbsolutePaddingOffset, createViewAttribute, getDocumentId, getRootNs, replaceTab } from './lib/util';
+import { adjustAbsolutePaddingOffset, createViewAttribute, getDocumentId, getRootNs, isUnstyled, replaceTab } from './lib/util';
 
 import LayoutUI = squared.base.LayoutUI;
 
@@ -146,19 +146,21 @@ function setBaselineItems(parent: View, baseline: View, items: View[], index: nu
                 }
                 const verticalAlign = item.verticalAlign;
                 if (verticalAlign !== 0 && item.rendering) {
+                    let adjustment: number;
                     if (index === 0) {
                         let minTop = item.bounds.top;
                         item.each(child => minTop = Math.min(child.bounds.top, minTop));
-                        item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: minTop - parent.box.top + parent.getBox(BOX_STANDARD.MARGIN_TOP)[1] + (verticalAlign < 0 ? -verticalAlign : 0) });
+                        adjustment = minTop - parent.box.top + parent.getBox(BOX_STANDARD.MARGIN_TOP)[1] + (verticalAlign < 0 ? -verticalAlign : 0);
                         item.anchor('top', 'true');
                         if (verticalAlign > 0) {
                             aboveOffset = Math.max(verticalAlign, aboveOffset);
                         }
                     }
                     else {
-                        item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: item.linear.top - baseline.bounds.top });
+                        adjustment = item.linear.top - baseline.bounds.top;
                         item.anchor('top', documentId);
                     }
+                    item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment });
                     item.baselineAltered = true;
                 }
                 else if (Math.ceil(height) >= baselineHeight && item.some((child: View) => (!child.baselineElement || child.verticalAligned || child.positionRelative && (child.top < 0 || !child.hasPX('top') && child.bottom > 0)) && (Math.ceil(child.bounds.top + (child.positionRelative ? child.hasPX('top') ? child.top : child.bottom : 0)) < item.box.top)) || item.wrapperOf?.verticalAlign) {
@@ -417,10 +419,48 @@ function isBaselineImage(node: View) {
     return node.imageContainer && node.baseline;
 }
 
+function canControlAscendItems(node: View) {
+    switch (node.controlName) {
+        case CONTAINER_ANDROID.HORIZONTAL_SCROLL:
+        case CONTAINER_ANDROID.VERTICAL_SCROLL:
+        case CONTAINER_ANDROID_X.VERTICAL_SCROLL:
+        case CONTAINER_ANDROID.RADIOGROUP:
+            return false;
+        default:
+            return true;
+    }
+}
+
+function flattenContainer(node: View) {
+    const renderTempates = node.renderTemplates!;
+    const renderChildren = node.renderChildren as View[];
+    let q = renderChildren.length;
+    for (let i = 0; i < q; ++i) {
+        const item = renderChildren[i];
+        if (item.rendering && isUnstyled(item) && !item.floating && !item.layoutGrid && !item.layoutElement && canControlAscendItems(item) && item.tagName !== 'RUBY' && item.removeTry()) {
+            item.hide();
+            const depth = item.depth;
+            const children = flattenContainer(item);
+            const r = children.length;
+            children[0].modifyBox(BOX_STANDARD.MARGIN_LEFT, item.marginLeft);
+            children[r - 1].modifyBox(BOX_STANDARD.MARGIN_RIGHT, item.marginRight);
+            renderChildren.splice(i, 0, ...children);
+            renderTempates.splice(i, 0, ...plainMap(children, child => {
+                child.init(node, depth);
+                child.renderParent = node;
+                return child.renderedAs!;
+            }));
+            i += r - 1;
+            q = renderChildren.length;
+        }
+    }
+    return renderChildren;
+}
+
 const relativeWrapWidth = (node: View, bounds: BoxRectDimension, boxWidth: number, rowLength: number, textIndent: number, floatedWidth: number, rowWidth: number) => Math.floor(floatedWidth + rowWidth + bounds.width - (node.inlineStatic && node.styleElement ? node.contentBoxWidth : 0)) > Math.ceil(boxWidth + (rowLength === 1 ? -textIndent : 0));
 const getAnchorDirection = (reverse = false) => reverse ? ['right', 'left', 'rightLeft', 'leftRight'] : ['left', 'right', 'leftRight', 'rightLeft'];
 const getBaselineAnchor = (node: View) => (node.wrapperOf as View || node).imageContainer ? 'baseline' : 'bottom';
-const hasWidth = (style: CSSStyleDeclaration) => (style.getPropertyValue('width') === '100%' || style.getPropertyValue('minWidth') === '100%') && style.getPropertyValue('max-width') === 'none';
+const hasWidth = (style: CSSStyleDeclaration) => (style.getPropertyValue('width') === '100%' || style.getPropertyValue('min-width') === '100%') && style.getPropertyValue('max-width') === 'none';
 const sortTemplateInvalid = (a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>) => doSortOrderInvalid(a.node.innerMostWrapped as View, b.node.innerMostWrapped as View);
 const sortTemplateStandard = (a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>) => doOrderStandard(a.node.innerMostWrapped as View, b.node.innerMostWrapped as View);
 const hasCleared = (layout: LayoutUI<View>, clearMap: Map<View, string>, ignoreFirst = true) => clearMap.size > 0 && layout.some((node, index) => (index > 0 || !ignoreFirst) && clearMap.has(node));
@@ -429,7 +469,7 @@ const getMaxHeight = (node: View) => Math.max(node.actualHeight, node.lineHeight
 const isUnknownParent = (parent: View, value: number, length: number) => parent.containerType === value && parent.length === length && (parent.alignmentType === 0 || parent.hasAlign(NODE_ALIGNMENT.UNKNOWN));
 const isMultilineGroup = (node: View) => node.contentAltered && !node.naturalChild && node.inlineText;
 
-function getBoxWidth(this: Controller<View>, node: View, children: View[]) {
+function getBoxWidth(this: Controller<View>, node: View) {
     const renderParent = node.renderParent as View;
     if (renderParent.overflowY) {
         return renderParent.box.width;
@@ -447,6 +487,7 @@ function getBoxWidth(this: Controller<View>, node: View, children: View[]) {
                     const { left, right, width } = node.box;
                     let offsetLeft = 0,
                         offsetRight = 0;
+                    const renderChildren = node.renderChildren;
                     const naturalChildren = parent.naturalChildren;
                     const length = naturalChildren.length;
                     let i = 0;
@@ -454,7 +495,7 @@ function getBoxWidth(this: Controller<View>, node: View, children: View[]) {
                         const item = naturalChildren[i++] as View;
                         if (item.floating) {
                             const linear = item.linear;
-                            if (!children.includes(item) && node.intersectY(linear)) {
+                            if (!renderChildren.includes(item) && node.intersectY(linear)) {
                                 if (item.float === 'left') {
                                     if (Math.floor(linear.right) > left) {
                                         offsetLeft = Math.max(offsetLeft, linear.right - left);
@@ -1371,18 +1412,18 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public setConstraints(cache: squared.base.NodeList<T>) {
         cache.each(node => {
-            const renderChildren = node.renderChildren as T[];
-            const length = renderChildren.length;
-            if (length > 0 && node.hasProcedure(NODE_PROCEDURE.CONSTRAINT)) {
+            if (node.rendering && node.visible && node.hasProcedure(NODE_PROCEDURE.CONSTRAINT)) {
                 if (node.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
                     if (node.layoutConstraint && !node.layoutElement) {
-                        this.evaluateAnchors(renderChildren);
+                        this.evaluateAnchors(node.renderChildren as T[]);
                     }
                 }
                 else if (node.layoutRelative) {
-                    this.processRelativeHorizontal(node, renderChildren);
+                    this.processRelativeHorizontal(node);
                 }
                 else if (node.layoutConstraint) {
+                    const renderChildren = node.renderChildren as T[];
+                    const length = renderChildren.length;
                     const pageFlow: T[] = new Array(length);
                     let i = 0, j = 0;
                     while (i < length) {
@@ -2189,10 +2230,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         return container;
     }
 
-    protected processRelativeHorizontal(node: T, children: T[]) {
+    protected processRelativeHorizontal(node: T) {
         let autoPosition = false;
         if (node.hasAlign(NODE_ALIGNMENT.VERTICAL)) {
             let previous: Undef<T>;
+            const children = node.renderChildren as T[];
             const length = children.length;
             let i = 0;
             while (i < length) {
@@ -2222,6 +2264,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
         }
         else {
+            const children = flattenContainer(node) as T[];
             const rowsAll: [Undef<T>, T[][]][] = [];
             const actualParent = !node.naturalElement && children[0].actualParent || node;
             const rightAligned = actualParent.cssAny('textAlign', { initial: true, ascend: true, values: ['right', 'end'] });
@@ -2233,7 +2276,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const boxParent = node.nodeGroup ? node.documentParent : node;
                 const baseWidth = node.marginLeft + node.marginRight < 0 ? node.marginRight : 0;
                 const lineWrap = node.css('whiteSpace') !== 'nowrap';
-                let boxWidth = boxParent.actualBoxWidth(getBoxWidth.call(this, node, children)),
+                let boxWidth = boxParent.actualBoxWidth(getBoxWidth.call(this, node)),
                     rowWidth = baseWidth,
                     rows!: T[][],
                     items!: T[],
@@ -2365,7 +2408,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             adjustFloatingNegativeMargin(item, previous);
                         }
                         if (textNewRow ||
-                            item.nodeGroup && !item.hasAlign(NODE_ALIGNMENT.SEGMENTED) ||
                             Math.ceil(item.bounds.top) >= Math.floor(previous.bounds.bottom) && (item.blockStatic || item.blockDimension && item.baseline || item.floating && previous.float === item.float || node.preserveWhiteSpace) ||
                             !item.textElement && relativeWrapWidth(item, bounds, boxWidth, rowsAll.length, textIndent, currentFloatedWidth, rowWidth) ||
                             !item.floating && (previous.blockStatic || item.siblingsLeading.some(sibling => sibling.excluded && sibling.blockStatic) || siblings?.some(element => causesLineBreak(element))) ||
@@ -2402,7 +2444,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 if (multiline && !item.hasPX('width') && !previous.floating && !retainMultiline) {
                                     item.multiline = false;
                                 }
-                                if (siblings?.some(element => !!getElementAsNode(element, item.sessionId) || causesLineBreak(element)) === false) {
+                                if (siblings?.some(element => !!getElementAsNode(element, item.sessionId) || causesLineBreak(element)) === true) {
                                     const betweenStart = getRangeClientRect(siblings[0]);
                                     if (betweenStart && !betweenStart.numberOfLines) {
                                         const betweenEnd = siblings.length > 1 && getRangeClientRect(siblings.pop()!);
