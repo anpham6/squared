@@ -3,7 +3,7 @@ import { WIDGET_NAME } from '../lib/constant';
 type View = android.base.View;
 
 const { parseColor } = squared.lib.color;
-const { assignEmptyValue, safeNestedMap } = squared.lib.util;
+const { assignEmptyValue } = squared.lib.util;
 const { adjustAbsolutePaddingOffset, createViewAttribute, getHorizontalBias, getVerticalBias } = android.lib.util;
 
 const { BOX_STANDARD, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
@@ -58,7 +58,7 @@ export default class FloatingActionButton<T extends View> extends squared.base.E
                 break;
         }
         if (src) {
-            assignEmptyValue(safeNestedMap<string>(options, 'app'), 'srcCompat', `@drawable/${src}`);
+            assignEmptyValue(options.app ?? (options.app = {}), 'srcCompat', `@drawable/${src}`);
         }
         const controlName = node.api < BUILD_ANDROID.Q ? SUPPORT_ANDROID.FLOATING_ACTION_BUTTON : SUPPORT_ANDROID_X.FLOATING_ACTION_BUTTON;
         node.setControlType(controlName, CONTAINER_NODE.BUTTON);

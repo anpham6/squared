@@ -16,7 +16,7 @@ interface AttributeData extends NumberValue {
 
 const { getFontSize, getKeyframesRules, isAngle, isCustomProperty, hasCalc, parseAngle, parseVar } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
-const { iterateArray, replaceMap, safeNestedArray, sortNumber, splitPairEnd } = squared.lib.util;
+const { iterateArray, replaceMap, sortNumber, splitPairEnd } = squared.lib.util;
 
 const ANIMATION_DEFAULT = {
     'animation-delay': '0s',
@@ -202,7 +202,8 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                     value = parseVar(element, value);
                                 }
                                 if (value) {
-                                    safeNestedArray(ANIMATION_DEFAULT[attr] ? keyframeMap : attrMap, attr).push({ key, value });
+                                    const map = ANIMATION_DEFAULT[attr] ? keyframeMap : attrMap;
+                                    (map[attr] ?? (map[attr] = [])).push({ key, value });
                                 }
                             }
                         }
@@ -252,7 +253,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                         default:
                                             return;
                                     }
-                                    const attrData = safeNestedArray(attrMap, name);
+                                    const attrData = attrMap[name] ?? (attrMap[name] = []);
                                     const index = attrData.findIndex(previous => previous.key === key);
                                     if (index !== -1) {
                                         const indexData = attrData[index];
@@ -394,7 +395,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                     }
                                     const transformOrigin = item.transformOrigin;
                                     if (transformOrigin && SvgBuild.asAnimateTransform(animate)) {
-                                        safeNestedArray(animate as StandardMap, 'transformOrigin')[j] = transformOrigin;
+                                        (animate.transformOrigin ?? (animate.transformOrigin = []))[j] = transformOrigin;
                                     }
                                 }
                                 if (includeKeySplines && !keySplines.every(value => value === 'linear')) {

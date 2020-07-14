@@ -5,7 +5,7 @@ type Extension = chrome.base.Extension<Node>;
 type BundleIndex = ObjectMap<ChromeAsset[]>;
 
 const { FILE } = squared.lib.regex;
-const { appendSeparator, convertWord, fromLastIndexOf, isString, iterateReverseArray, parseMimeType, partitionLastIndexOf, randomUUID, resolvePath, safeNestedArray, splitPairStart, trimEnd } = squared.lib.util;
+const { appendSeparator, convertWord, fromLastIndexOf, isString, iterateReverseArray, parseMimeType, partitionLastIndexOf, randomUUID, resolvePath, splitPairStart, trimEnd } = squared.lib.util;
 
 const STRING_SERVERROOT = '__serverroot__';
 
@@ -110,7 +110,7 @@ function createBundleAsset(bundles: ChromeAsset[], element: HTMLElement, saveTo:
         const [moveTo, pathname, filename] = getFilePath(saveTo);
         const index = iterateReverseArray(bundles, item => {
             if ((item.moveTo === moveTo || !item.moveTo && !moveTo) && item.pathname === pathname && item.filename === filename) {
-                safeNestedArray(item as StandardMap, 'trailingContent').push({ value: content, format, preserve });
+                (item.trailingContent ?? (item.trailingContent = [])).push({ value: content, format, preserve });
                 return true;
             }
             return;
@@ -128,6 +128,11 @@ function createBundleAsset(bundles: ChromeAsset[], element: HTMLElement, saveTo:
         }
     }
     return undefined;
+}
+
+function setBundleData(bundleIndex: BundleIndex, data: ChromeAsset) {
+    const name = (data.moveTo || '') + data.pathname + data.filename;
+    (bundleIndex[name] ?? (bundleIndex[name] = [])).push(data);
 }
 
 function sortBundle(a: ChromeAsset, b: ChromeAsset) {
@@ -363,7 +368,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     }
                 }
                 if (this.validFile(data)) {
-                    safeNestedArray(bundleIndex, (data.moveTo || '') + data.pathname + data.filename).push(data);
+                    setBundleData(bundleIndex, data);
                     data.mimeType = element.type.trim() || data.uri && parseMimeType(data.uri) || 'text/javascript';
                     if (outerHTML) {
                         data.outerHTML = outerHTML;
@@ -433,7 +438,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     }
                 }
                 if (this.validFile(data)) {
-                    safeNestedArray(bundleIndex, (data.moveTo || '') + data.pathname + data.filename).push(data);
+                    setBundleData(bundleIndex, data);
                     data.mimeType = mimeType || 'text/css';
                     if (outerHTML) {
                         data.outerHTML = outerHTML;

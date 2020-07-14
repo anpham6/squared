@@ -5,7 +5,7 @@ type View = android.base.View;
 const { findColorShade, parseColor } = squared.lib.color;
 const { extractURL, getSrcSet } = squared.lib.css;
 const { FILE } = squared.lib.regex;
-const { fromLastIndexOf, hasMimeType, isNumber, isPlainObject, isString, resolvePath, safeNestedArray, spliceArray, trimString } = squared.lib.util;
+const { fromLastIndexOf, hasMimeType, isNumber, isPlainObject, isString, resolvePath, spliceArray, trimString } = squared.lib.util;
 
 const STORED = squared.base.ResourceUI.STORED as AndroidResourceStoredMap;
 
@@ -305,7 +305,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
     public writeRawImage(mimeType: Undef<string>, options: RawDataOptions) {
         const asset = super.writeRawImage(mimeType, options);
         if (asset && this.userSettings.compressImages && Resource.canCompressImage(options.filename || '', mimeType)) {
-            safeNestedArray(asset as StandardMap, 'compress').unshift({ format: 'png' });
+            (asset.compress ?? (asset.compress = [])).unshift({ format: 'png' });
         }
         return asset;
     }

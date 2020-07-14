@@ -1,7 +1,5 @@
 import Extension from '../../extension';
 
-const { safeNestedArray } = squared.lib.util;
-
 export default class Gzip<T extends squared.base.Node> extends Extension<T> {
     public readonly options: CompressOptions = {
         mimeTypes: ['text/css', 'text/javascript', 'text/plain', 'text/csv', 'text/vtt', 'application/json', 'application/javascript', 'application/ld+json', 'application/xml'],
@@ -20,7 +18,7 @@ export default class Gzip<T extends squared.base.Node> extends Extension<T> {
             }
         }
         if (override) {
-            safeNestedArray(data as StandardMap, 'compress').push({ format: 'gz', level: this.options.level, condition: Extension.getCompressOptions(this.options) });
+            (data.compress ?? (data.compress = [])).push({ format: 'gz', level: this.options.level, condition: Extension.getCompressOptions(this.options) });
             return true;
         }
         return false;

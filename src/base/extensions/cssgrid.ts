@@ -27,7 +27,7 @@ interface RepeatItem {
 }
 
 const { formatPercent, formatPX, isLength, isPercent, isPx } = squared.lib.css;
-const { isNumber, plainMap, safeNestedArray, splitPairEnd, trimString, withinRange } = squared.lib.util;
+const { isNumber, plainMap, splitPairEnd, trimString, withinRange } = squared.lib.util;
 
 const PATTERN_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
 const PATTERN_MINMAX = 'minmax\\(\\s*([^,]+),\\s+([^)]+)\\s*\\)';
@@ -188,7 +188,7 @@ function createDataAttribute(node: NodeUI): CssGridData<NodeUI> {
 function setDataRows(rowData: Undef<NodeUI[]>[][], openCells: number[][], rowA: number, rowB: number, colA: number, colB: number, item: NodeUI, placement: number[], length: number, dense: boolean) {
     if (placement.every(value => value > 0)) {
         for (let i = placement[rowA] - 1; i < placement[rowB] - 1; ++i) {
-            const data = safeNestedArray(rowData, i);
+            const data = rowData[i] ?? (rowData[i] = []);
             let cell = openCells[i],
                 j = placement[colA] - 1;
             if (!cell) {
@@ -202,7 +202,7 @@ function setDataRows(rowData: Undef<NodeUI[]>[][], openCells: number[][], rowA: 
                 openCells[i] = cell;
             }
             while (j < placement[colB] - 1) {
-                safeNestedArray(data as NodeUI[][], j).push(item);
+                (data[j] ?? (data[j] = [])).push(item);
                 cell[j++] = 1;
             }
         }
@@ -339,7 +339,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         case 1:
                             if (command.startsWith('[')) {
                                 for (const attr of match[4].split(/\s+/)) {
-                                    safeNestedArray(name, attr).push(i);
+                                    (name[attr] ?? (name[attr] = [])).push(i);
                                 }
                             }
                             else if (command.startsWith('repeat')) {
@@ -978,7 +978,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     const length = data.length;
                     j = 0;
                     while (j < length) {
-                        safeNestedArray(rowMain, j)[i] = data[j++];
+                        (rowMain[j] ?? (rowMain[j] = []))[i] = data[j++];
                     }
                 }
             }

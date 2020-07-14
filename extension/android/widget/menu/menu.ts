@@ -1,6 +1,6 @@
 type View = android.base.View;
 
-const { appendSeparator, capitalize, sameArray, safeNestedMap } = squared.lib.util;
+const { appendSeparator, capitalize, sameArray } = squared.lib.util;
 const { createViewAttribute } = android.lib.util;
 
 const { NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
@@ -62,7 +62,8 @@ function parseDataSet(validator: ObjectMap<RegExp>, element: HTMLElement, option
             if (value) {
                 const match = pattern.exec(value);
                 if (match) {
-                    safeNestedMap(options, NAMESPACE_APP.includes(attr) ? 'app' : 'android')[attr] = Array.from(new Set(match)).join('|');
+                    const name = NAMESPACE_APP.includes(attr) ? 'app' : 'android';
+                    (options[name] ?? (options[name] = {}))[attr] = Array.from(new Set(match)).join('|');
                 }
             }
         }

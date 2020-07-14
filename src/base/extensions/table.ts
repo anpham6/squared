@@ -6,7 +6,7 @@ type NodeUI = squared.base.NodeUI;
 
 const { formatPercent, formatPX, getInheritedStyle, getStyle, isLength, isPercent } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
-const { isNumber, replaceMap, safeNestedArray, withinRange } = squared.lib.util;
+const { isNumber, replaceMap, withinRange } = squared.lib.util;
 
 const enum LAYOUT_TABLE {
     NONE,
@@ -130,9 +130,8 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     ++j;
                 }
                 const q = i + rowSpan;
-                let k = i;
-                while (k < q) {
-                    const item = safeNestedArray(tableFilled, k++);
+                for (let k = i; k < q; ++k) {
+                    const item = tableFilled[k] ?? (tableFilled[k] = []);
                     const r = j + colSpan;
                     for (let l = j, m = 0; l < r; ++l) {
                         if (!item[l]) {

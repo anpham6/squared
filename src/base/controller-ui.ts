@@ -7,7 +7,7 @@ const { USER_AGENT, isUserAgent } = squared.lib.client;
 const { CSS_PROPERTIES, formatPX, getStyle, hasCoords, isLength, isPercent } = squared.lib.css;
 const { withinViewport } = squared.lib.dom;
 const { actualClientRect, getElementCache, setElementCache } = squared.lib.session;
-const { capitalize, convertFloat, iterateArray, joinArray, safeNestedArray } = squared.lib.util;
+const { capitalize, convertFloat, iterateArray, joinArray } = squared.lib.util;
 
 const BORDER_TOP = CSS_PROPERTIES.borderTop.value as string[];
 const BORDER_RIGHT = CSS_PROPERTIES.borderRight.value as string[];
@@ -244,7 +244,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public addBeforeOutsideTemplate(id: number, value: string, format = true, index = -1) {
-        const template = safeNestedArray(this._beforeOutside, id);
+        const template = this._beforeOutside[id] ?? (this._beforeOutside[id] = []);
         if (index !== -1 && index < template.length) {
             template.splice(index, 0, value);
         }
@@ -257,7 +257,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public addBeforeInsideTemplate(id: number, value: string, format = true, index = -1) {
-        const template = safeNestedArray(this._beforeInside, id);
+        const template = this._beforeInside[id] ?? (this._beforeInside[id] = []);
         if (index !== -1 && index < template.length) {
             template.splice(index, 0, value);
         }
@@ -270,7 +270,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public addAfterInsideTemplate(id: number, value: string, format = true, index = -1) {
-        const template = safeNestedArray(this._afterInside, id);
+        const template = this._afterInside[id] ?? (this._afterInside[id] = []);
         if (index !== -1 && index < template.length) {
             template.splice(index, 0, value);
         }
@@ -283,7 +283,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public addAfterOutsideTemplate(id: number, value: string, format = true, index = -1) {
-        const template = safeNestedArray(this._afterOutside, id);
+        const template = this._afterOutside[id] ?? (this._afterOutside[id] = []);
         if (index !== -1 && index < template.length) {
             template.splice(index, 0, value);
         }
@@ -634,7 +634,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             valid = item.ascend({ condition: child => nested.includes(child) }).length > 0;
                         }
                         if (valid) {
-                            safeNestedArray(layers, adjacent.containerIndex + (item.zIndex >= 0 || adjacent !== item.actualParent ? 1 : 0)).push(item);
+                            const index = adjacent.containerIndex + (item.zIndex >= 0 || adjacent !== item.actualParent ? 1 : 0);
+                            (layers[index] ?? (layers[index] = [])).push(item);
                         }
                         return valid;
                     });

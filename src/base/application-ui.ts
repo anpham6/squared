@@ -13,7 +13,7 @@ type FileActionOptions = squared.base.FileActionOptions;
 const { convertListStyle, formatPX, getStyle, hasComputedStyle, hasCoords, insertStyleSheetRule, resolveURL } = squared.lib.css;
 const { getNamedItem, removeElementsByClassName } = squared.lib.dom;
 const { getElementCache, getPseudoElt, setElementCache } = squared.lib.session;
-const { appendSeparator, capitalize, convertWord, flatArray, hasBit, hasMimeType, isString, iterateArray, partitionArray, safeNestedArray, safeNestedMap, trimBoth, trimString } = squared.lib.util;
+const { appendSeparator, capitalize, convertWord, flatArray, hasBit, hasMimeType, isString, iterateArray, partitionArray, trimBoth, trimString } = squared.lib.util;
 
 const TEXT_STYLE = NodeUI.TEXT_STYLE.concat(['fontSize']);
 
@@ -419,7 +419,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public addLayoutTemplate(parent: T, node: T, template: NodeTemplate<T>, index?: number) {
         if (!node.renderExclude) {
             if (node.renderParent) {
-                const renderTemplates = safeNestedArray(parent as StandardMap, 'renderTemplates') as NodeTemplate<T>[];
+                const renderTemplates = parent.renderTemplates ?? (parent.renderTemplates = []);
                 if (index === undefined || !(index >= 0 && index < parent.renderChildren.length)) {
                     parent.renderChildren.push(node);
                     renderTemplates.push(template);
@@ -494,7 +494,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             case 'center':
                             case 'right':
                             case 'end':
-                                safeNestedMap(preAlignment, item.id)['text-align'] = textAlign;
+                                (preAlignment[item.id] ?? (preAlignment[item.id] = {}))['text-align'] = textAlign;
                                 element.style.setProperty('text-align', 'left');
                                 break;
                         }
@@ -504,7 +504,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         while (i < 4) {
                             const attr = NodeUI.BOX_POSITION[i++];
                             if (item.hasPX(attr)) {
-                                safeNestedMap(preAlignment, item.id)[attr] = item.css(attr);
+                                (preAlignment[item.id] ?? (preAlignment[item.id] = {}))[attr] = item.css(attr);
                                 element.style.setProperty(attr, 'auto');
                                 resetBounds = true;
                             }
@@ -1092,7 +1092,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                 parentY = result.parent;
                                             }
                                             if (result.include) {
-                                                safeNestedArray(nodeY as StandardMap, 'renderExtension').push(ext);
+                                                (nodeY.renderExtension ?? (nodeY.renderExtension = [])).push(ext);
                                                 ext.subscribers.add(nodeY);
                                             }
                                             else if (result.subscribe) {

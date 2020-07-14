@@ -6,7 +6,6 @@ type View = android.base.View;
 const { formatPX } = squared.lib.css;
 const { createElement } = squared.lib.dom;
 const { truncate } = squared.lib.math;
-const { safeNestedArray } = squared.lib.util;
 
 const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
@@ -127,7 +126,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                                     rowReduce = true;
                                 }
                             }
-                            const column = safeNestedArray(columns, k);
+                            const column = columns[k] ?? (columns[k] = []);
                             column.push(item);
                             if (j > 0 && /^H\d/.test(item.tagName)) {
                                 if (column.length === 1 && j === q - 2) {

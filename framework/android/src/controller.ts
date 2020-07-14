@@ -16,7 +16,7 @@ const { CSS_UNIT, formatPX, getSrcSet, hasComputedStyle, isPercent } = squared.l
 const { getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;
 const { getElementAsNode, getPseudoElt } = squared.lib.session;
-const { assignEmptyValue, convertWord, hasBit, hasMimeType, isString, iterateArray, parseMimeType, partitionArray, plainMap, safeNestedArray, withinRange } = squared.lib.util;
+const { assignEmptyValue, convertWord, hasBit, hasMimeType, isString, iterateArray, parseMimeType, partitionArray, plainMap, withinRange } = squared.lib.util;
 
 const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
@@ -879,7 +879,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     const template = node.removeTry({ alignSiblings: true }) as NodeTemplate<T>;
                     if (template) {
                         const renderChildren = parent.renderChildren;
-                        const renderTemplates = safeNestedArray(parent as StandardMap, 'renderTemplates');
+                        const renderTemplates = parent.renderTemplates ?? (parent.renderTemplates = []);
                         const index = parseInt(node.dataset.androidTargetIndex as string);
                         if (!isNaN(index) && index >= 0 && index < renderChildren.length) {
                             renderChildren.splice(index, 0, node);

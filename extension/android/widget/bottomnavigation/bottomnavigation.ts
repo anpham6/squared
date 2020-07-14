@@ -1,6 +1,6 @@
 import { WIDGET_NAME } from '../lib/constant';
 
-const { assignEmptyValue, capitalize, iterateArray, safeNestedMap } = squared.lib.util;
+const { assignEmptyValue, capitalize, iterateArray } = squared.lib.util;
 const { createStyleAttribute, createViewAttribute } = android.lib.util;
 
 const { NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
@@ -60,7 +60,7 @@ export default class BottomNavigation<T extends android.base.View> extends squar
         const menu = BottomNavigation.findNestedElement(node, WIDGET_NAME.MENU)?.dataset['layoutName' + capitalize(this.application.systemName)];
         if (menu) {
             const options = createViewAttribute(this.options[node.elementId]);
-            const app = safeNestedMap<string>(options, 'app');
+            const app = options.app ?? (options.app = {});
             assignEmptyValue(app, 'menu', `@menu/${menu}`);
             node.app('menu', app.menu);
         }

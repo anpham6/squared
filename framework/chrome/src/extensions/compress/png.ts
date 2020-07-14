@@ -1,7 +1,5 @@
 import Extension from '../../extension';
 
-const { safeNestedArray } = squared.lib.util;
-
 export default class Png<T extends squared.base.Node> extends Extension<T> {
     public readonly options: CompressOptions = {
         mimeTypes: ['image/png'],
@@ -19,7 +17,7 @@ export default class Png<T extends squared.base.Node> extends Extension<T> {
             }
         }
         if (override) {
-            safeNestedArray(data as StandardMap, 'compress').push({ format: 'png', condition: Extension.getCompressOptions(this.options) });
+            (data.compress ?? (data.compress = [])).push({ format: 'png', condition: Extension.getCompressOptions(this.options) });
             return true;
         }
         return false;

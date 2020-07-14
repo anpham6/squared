@@ -7,7 +7,7 @@ type T = NodeUI;
 const { CSS_PROPERTIES, isLength, newBoxModel } = squared.lib.css;
 const { equal } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
-const { capitalize, cloneObject, convertWord, hasBit, hasKeys, isArray, iterateArray, safeNestedMap, searchObject, withinRange } = squared.lib.util;
+const { capitalize, cloneObject, convertWord, hasBit, hasKeys, isArray, iterateArray, searchObject, withinRange } = squared.lib.util;
 
 const CSS_SPACING = new Map<number, string>();
 
@@ -655,7 +655,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public lockAttr(name: string, attr: string) {
-        safeNestedMap(this._locked, name)[attr] = true;
+        (this._locked[name] ?? (this._locked[name] = {}))[attr] = true;
     }
 
     public unlockAttr(name: string, attr: string) {

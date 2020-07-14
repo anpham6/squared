@@ -229,7 +229,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                         node.retainAs(items);
                     }
                     else {
-                        let index = children.findIndex(item => item === seg);
+                        const index = children.findIndex(item => item === seg);
                         if (index === -1) {
                             continue;
                         }

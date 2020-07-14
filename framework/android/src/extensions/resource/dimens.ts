@@ -1,8 +1,9 @@
 import Resource from '../../resource';
 
 type View = android.base.View;
+type GroupData = ObjectMap<View[]>;
 
-const { convertUnderscore, fromLastIndexOf, safeNestedArray, safeNestedMap } = squared.lib.util;
+const { convertUnderscore, fromLastIndexOf } = squared.lib.util;
 
 function getResourceName(map: Map<string, string>, name: string, value: string) {
     if (map.get(name) === value) {
@@ -16,13 +17,14 @@ function getResourceName(map: Map<string, string>, name: string, value: string) 
     return Resource.generateId('dimen', name);
 }
 
-function createNamespaceData(namespace: string, node: View, group: ObjectMap<View[]>) {
+function createNamespaceData(namespace: string, node: View, group: GroupData) {
     const obj = node.namespace(namespace);
     for (const attr in obj) {
         if (attr !== 'text') {
             const value = obj[attr]!;
             if (/\dpx$/.test(value)) {
-                safeNestedArray(group, `${namespace},${attr},${value}`).push(node);
+                const name = `${namespace},${attr},${value}`;
+                (group[name] ?? (group[name] = [])).push(node);
             }
         }
     }
@@ -40,7 +42,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
             const node = rendered[i++];
             if (node.visible) {
                 const containerName = node.containerName.toLowerCase();
-                const group = safeNestedMap(groups, containerName);
+                const group: GroupData = groups[containerName] ?? (groups[containerName] = {});
                 createNamespaceData('android', node, group);
                 createNamespaceData('app', node, group);
             }

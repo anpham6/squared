@@ -3,7 +3,7 @@ import { WIDGET_NAME } from '../lib/constant';
 type View = android.base.View;
 
 const { getElementAsNode } = squared.lib.session;
-const { assignEmptyValue, capitalize, cloneObject, safeNestedMap, includes, iterateArray } = squared.lib.util;
+const { assignEmptyValue, capitalize, cloneObject, includes, iterateArray } = squared.lib.util;
 const { createStyleAttribute, createViewAttribute } = android.lib.util;
 
 const { NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
@@ -86,7 +86,7 @@ export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> 
             const options = createViewAttribute(this.options.navigationView);
             const menu = Drawer.findNestedElement(node, WIDGET_NAME.MENU)?.dataset['layoutName' + systemName];
             const headerLayout = Drawer.findNestedElement(node, EXT_ANDROID.EXTERNAL)?.dataset['layoutName' + systemName];
-            const app = safeNestedMap(options, 'app');
+            const app = options.app ?? (options.app = {});
             if (menu) {
                 assignEmptyValue(app, 'menu', `@menu/${menu}`);
             }

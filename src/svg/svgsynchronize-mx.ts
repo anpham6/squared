@@ -26,7 +26,7 @@ interface ForwardValue extends NumberValue<AnimateValue> {
 }
 
 const { clamp, equal, multipleOf } = squared.lib.math;
-const { hasBit, hasKeys, hasValue, isEqual, isNumber, joinArray, plainMap, replaceMap, safeNestedArray, spliceArray, sortNumber } = squared.lib.util;
+const { hasBit, hasKeys, hasValue, isEqual, isNumber, joinArray, plainMap, replaceMap, spliceArray, sortNumber } = squared.lib.util;
 
 function insertAdjacentSplitValue(map: TimelineIndex, attr: string, time: number, intervalMap: SvgAnimationIntervalMap, transforming: boolean) {
     let previousTime = 0,
@@ -869,7 +869,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                 const groupActive = new Set<string>();
                 let setterTotal = 0;
                 const insertSetter = (item: SvgAnimation) => {
-                    safeNestedArray(setterAttributeMap, item.attributeName).push(item);
+                    (setterAttributeMap[item.attributeName] ?? (setterAttributeMap[item.attributeName] = [])).push(item);
                     ++setterTotal;
                 };
                 {
@@ -1119,7 +1119,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                             }
                             const forwardItem = getForwardItem(forwardMap, attr);
                             if (value !== '' && (!forwardItem || time >= forwardItem.time)) {
-                                safeNestedArray(forwardMap, attr).push({ key: type, value, time });
+                                (forwardMap[attr] ?? (forwardMap[attr] = [])).push({ key: type, value, time });
                             }
                             if (item && SvgBuild.isAnimate(item) && !item.fillReplace) {
                                 if (item.fillForwards) {
@@ -2035,7 +2035,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                                 if (animate.type !== SVGTransform.SVG_TRANSFORM_ROTATE) {
                                                     const transformOrigin = transformOriginMap.get(entry[0]);
                                                     if (transformOrigin) {
-                                                        safeNestedArray(animate as StandardMap, 'transformOrigin')[j] = transformOrigin;
+                                                        (animate.transformOrigin ?? (animate.transformOrigin = []))[j] = transformOrigin;
                                                     }
                                                 }
                                                 entry[0] -= delay;

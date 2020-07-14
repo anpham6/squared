@@ -125,8 +125,9 @@ export function isHorizontalAlign(value: string) {
         case 'end':
         case 'center_horizontal':
             return true;
+        default:
+            return false;
     }
-    return false;
 }
 
 export function isVerticalAlign(value: string) {
@@ -135,8 +136,9 @@ export function isVerticalAlign(value: string) {
         case 'bottom':
         case 'center_vertical':
             return true;
+        default:
+            return false;
     }
-    return false;
 }
 
 export function getDataSet(dataset: StringMap | DOMStringMap, prefix: string) {
