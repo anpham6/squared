@@ -271,16 +271,14 @@ export default abstract class Application<T extends Node> implements squared.bas
                     if (!preloadImages) {
                         resourceHandler.addImage(image);
                     }
+                    else if (isSvg(image.src)) {
+                        imageElements.push(image.src);
+                    }
+                    else if (image.complete) {
+                        resourceHandler.addImage(image);
+                    }
                     else {
-                        if (isSvg(image.src)) {
-                            imageElements.push(image.src);
-                        }
-                        else if (image.complete) {
-                            resourceHandler.addImage(image);
-                        }
-                        else {
-                            imageElements.push(image);
-                        }
+                        imageElements.push(image);
                     }
                 });
             }

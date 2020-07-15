@@ -99,13 +99,11 @@ export default abstract class Resource<T extends squared.base.Node> implements s
                 return '';
             }
         }
-        else {
-            if (content) {
-                content = content.replace(/\\(["'])/g, (match, ...capture: string[]) => capture[0]);
-            }
-            else if (!Array.isArray(data)) {
-                return '';
-            }
+        else if (content) {
+            content = content.replace(/\\(["'])/g, (match, ...capture: string[]) => capture[0]);
+        }
+        else if (!Array.isArray(data)) {
+            return '';
         }
         const imageMimeType = this.mimeTypeMap.image;
         if (imageMimeType === '*' || imageMimeType.includes(mimeType)) {

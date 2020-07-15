@@ -648,16 +648,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     result[posB] = node[posB];
                 }
             }
+            else if (modifyAnchor) {
+                node.anchorParent(orientation, 0.5);
+                node.modifyBox(marginA, node[posA]);
+                node.modifyBox(marginB, node[posB]);
+            }
             else {
-                if (modifyAnchor) {
-                    node.anchorParent(orientation, 0.5);
-                    node.modifyBox(marginA, node[posA]);
-                    node.modifyBox(marginB, node[posB]);
-                }
-                else {
-                    result[posA] = node[posA];
-                    result[posB] = node[posB];
-                }
+                result[posA] = node[posA];
+                result[posB] = node[posB];
             }
         }
         else {
@@ -2440,23 +2438,21 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                             createNewRow();
                         }
+                        else if (!currentFloated && item.float === 'left') {
+                            rowsAll[rowsAll.length - 1][0] = item;
+                            setCurrentFloated();
+                        }
                         else {
-                            if (!currentFloated && item.float === 'left') {
-                                rowsAll[rowsAll.length - 1][0] = item;
-                                setCurrentFloated();
+                            items.push(item);
+                            if (multiline && !item.hasPX('width') && !previous.floating && !retainMultiline) {
+                                item.multiline = false;
                             }
-                            else {
-                                items.push(item);
-                                if (multiline && !item.hasPX('width') && !previous.floating && !retainMultiline) {
-                                    item.multiline = false;
-                                }
-                                if (siblings?.some(element => !!getElementAsNode(element, item.sessionId) || causesLineBreak(element)) === true) {
-                                    const betweenStart = getRangeClientRect(siblings[0]);
-                                    if (betweenStart && !betweenStart.numberOfLines) {
-                                        const betweenEnd = siblings.length > 1 && getRangeClientRect(siblings.pop()!);
-                                        if (!betweenEnd || !betweenEnd.numberOfLines) {
-                                            rowWidth += betweenEnd ? betweenStart.left - betweenEnd.right : betweenStart.width;
-                                        }
+                            if (siblings?.some(element => !!getElementAsNode(element, item.sessionId) || causesLineBreak(element)) === true) {
+                                const betweenStart = getRangeClientRect(siblings[0]);
+                                if (betweenStart && !betweenStart.numberOfLines) {
+                                    const betweenEnd = siblings.length > 1 && getRangeClientRect(siblings.pop()!);
+                                    if (!betweenEnd || !betweenEnd.numberOfLines) {
+                                        rowWidth += betweenEnd ? betweenStart.left - betweenEnd.right : betweenStart.width;
                                     }
                                 }
                             }
@@ -2562,20 +2558,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             for (let k = 0; k < r; ++k) {
                                 const item = items[k];
                                 if (!item.constraint.horizontal) {
-                                    if (rightAligned) {
-                                        if (k === r - 1) {
-                                            if (float === 'right') {
-                                                item.anchor('rightLeft', currentFloated!.documentId);
-                                            }
-                                            else {
-                                                item.anchor('right', 'true');
-                                            }
-                                        }
-                                        else {
-                                            item.anchor('rightLeft', items[k + 1].documentId);
-                                        }
-                                    }
-                                    else {
+                                    const setAlignLeft = () => {
                                         if (k === 0) {
                                             if (float === 'left') {
                                                 item.anchor('leftRight', currentFloated!.documentId);
@@ -2588,6 +2571,36 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                         else {
                                             item.anchor('leftRight', items[k - 1].documentId);
                                         }
+                                    };
+                                    const setAlignRight = () => {
+                                        if (float === 'right') {
+                                            item.anchor('rightLeft', currentFloated!.documentId);
+                                        }
+                                        else {
+                                            item.anchor('right', 'true');
+                                        }
+                                    };
+                                    if (item.autoMargin.horizontal) {
+                                        if (item.autoMargin.leftRight) {
+                                            item.anchor('centerHorizontal', 'true');
+                                        }
+                                        else if (item.autoMargin.left) {
+                                            setAlignRight();
+                                        }
+                                        else {
+                                            setAlignLeft();
+                                        }
+                                    }
+                                    else if (rightAligned) {
+                                        if (k === r - 1) {
+                                            setAlignRight();
+                                        }
+                                        else {
+                                            item.anchor('rightLeft', items[k + 1].documentId);
+                                        }
+                                    }
+                                    else { 
+                                        setAlignLeft();
                                     }
                                 }
                                 if (item.textElement) {

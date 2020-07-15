@@ -960,19 +960,17 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                 horizontal.push(item);
                                             }
                                         }
+                                        else if (item.alignedVertically(orientation ? horizontal : vertical, undefined, orientation) > 0) {
+                                            if (horizontal.length > 0) {
+                                                break traverse;
+                                            }
+                                            vertical.push(item);
+                                        }
                                         else {
-                                            if (item.alignedVertically(orientation ? horizontal : vertical, undefined, orientation) > 0) {
-                                                if (horizontal.length > 0) {
-                                                    break traverse;
-                                                }
-                                                vertical.push(item);
+                                            if (vertical.length > 0) {
+                                                break traverse;
                                             }
-                                            else {
-                                                if (vertical.length > 0) {
-                                                    break traverse;
-                                                }
-                                                horizontal.push(item);
-                                            }
+                                            horizontal.push(item);
                                         }
                                     }
                                     else {

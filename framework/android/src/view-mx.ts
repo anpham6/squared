@@ -1692,19 +1692,17 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                     }
                 }
-                else {
-                    if (renderParent.layoutConstraint) {
-                        const attr: Undef<string> = LAYOUT_CONSTRAINT[position];
-                        if (attr) {
-                            const value = node.app(this.localizeString(attr));
-                            return value !== 'parent' && value !== renderParent.documentId ? value : '';
-                        }
+                else if (renderParent.layoutConstraint) {
+                    const attr: Undef<string> = LAYOUT_CONSTRAINT[position];
+                    if (attr) {
+                        const value = node.app(this.localizeString(attr));
+                        return value !== 'parent' && value !== renderParent.documentId ? value : '';
                     }
-                    else if (renderParent.layoutRelative) {
-                        const attr: Undef<string> = LAYOUT_RELATIVE[position];
-                        if (attr) {
-                            return node.android(this.localizeString(attr));
-                        }
+                }
+                else if (renderParent.layoutRelative) {
+                    const attr: Undef<string> = LAYOUT_RELATIVE[position];
+                    if (attr) {
+                        return node.android(this.localizeString(attr));
                     }
                 }
             }

@@ -135,7 +135,7 @@
     "html-minifier-terser": "^5.1.1",
     "js-beautify": "^1.11.0",
     "md5": "^2.2.1",
-    "playwright": "^1.2.0",
+    "playwright": "^1.2.1",
     "prettier": "^2.0.5",
     "readdirp": "^3.4.0",
     "rollup": "^2.21.0",

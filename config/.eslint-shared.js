@@ -81,6 +81,7 @@ module.exports = {
         "no-useless-backreference": "error",
         "no-implicit-globals": "error",
         "no-undef-init": "error",
+        "no-lonely-if": "error",
         "sort-imports": ["error", {
             "ignoreDeclarationSort": true,
             "memberSyntaxSortOrder": ["none", "single", "all", "multiple"]

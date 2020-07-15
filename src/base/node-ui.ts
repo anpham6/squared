@@ -1032,88 +1032,86 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     if (cleared.size > 0 && (cleared.has(this) || this.siblingsLeading.some(item => item.excluded && cleared.has(item)))) {
                         return NODE_TRAVERSE.FLOAT_CLEAR;
                     }
-                    else {
-                        if (floating && previous.floating) {
-                            if (horizontal && this.float === previous.float || Math.floor(this.bounds.top) === Math.floor(previous.bounds.top)) {
-                                return NODE_TRAVERSE.HORIZONTAL;
-                            }
-                            else if (Math.ceil(this.bounds.top) >= previous.bounds.bottom) {
-                                if (siblings.every(item => item.inlineDimension)) {
-                                    const actualParent = this.actualParent;
-                                    if (actualParent && actualParent.ascend({ condition: item => !item.inline && item.hasWidth, error: (item: T) => item.layoutElement, startSelf: true })) {
-                                        const length = siblings.length;
-                                        if (actualParent.naturalChildren.filter((item: T) => item.visible && item.pageFlow).length === length + 1) {
-                                            let width = actualParent.box.width - getLayoutWidth(this);
-                                            let i = 0;
-                                            while (i < length) {
-                                                width -= getLayoutWidth(siblings[i++]);
-                                            }
-                                            if (width >= 0) {
-                                                return NODE_TRAVERSE.HORIZONTAL;
-                                            }
-                                        }
-                                    }
-                                }
-                                return NODE_TRAVERSE.FLOAT_WRAP;
-                            }
+                    else if (floating && previous.floating) {
+                        if (horizontal && this.float === previous.float || Math.floor(this.bounds.top) === Math.floor(previous.bounds.top)) {
+                            return NODE_TRAVERSE.HORIZONTAL;
                         }
-                        else if (this.blockStatic && siblings.reduce((a, b) => a + (b.floating ? b.linear.width : -Infinity), 0) / this.actualParent!.box.width >= 0.8) {
-                            return NODE_TRAVERSE.FLOAT_INTERSECT;
-                        }
-                        else if (siblings.every(item => item.inlineDimension && Math.ceil(this.bounds.top) >= item.bounds.bottom)) {
-                            return NODE_TRAVERSE.FLOAT_BLOCK;
-                        }
-                        else if (horizontal !== undefined) {
-                            if (floating && !horizontal && previous.blockStatic) {
-                                return NODE_TRAVERSE.HORIZONTAL;
-                            }
-                            else if (!this.display.startsWith('inline-')) {
-                                let { top, bottom } = this.bounds;
-                                if (this.textElement && cleared.size > 0 && siblings.some(item => cleared.has(item)) && siblings.some(item => Math.floor(top) < item.bounds.top && Math.ceil(bottom) > item.bounds.bottom)) {
-                                    return NODE_TRAVERSE.FLOAT_INTERSECT;
-                                }
-                                else if (siblings[0].floating) {
+                        else if (Math.ceil(this.bounds.top) >= previous.bounds.bottom) {
+                            if (siblings.every(item => item.inlineDimension)) {
+                                const actualParent = this.actualParent;
+                                if (actualParent && actualParent.ascend({ condition: item => !item.inline && item.hasWidth, error: (item: T) => item.layoutElement, startSelf: true })) {
                                     const length = siblings.length;
-                                    if (length > 1) {
-                                        const float = siblings[0].float;
-                                        let maxBottom = -Infinity,
-                                            contentWidth = 0;
+                                    if (actualParent.naturalChildren.filter((item: T) => item.visible && item.pageFlow).length === length + 1) {
+                                        let width = actualParent.box.width - getLayoutWidth(this);
                                         let i = 0;
                                         while (i < length) {
-                                            const item = siblings[i++];
-                                            if (item.floating) {
-                                                if (item.float === float) {
-                                                    maxBottom = Math.max(item.actualRect('bottom', 'bounds'), maxBottom);
-                                                }
-                                                contentWidth += item.linear.width;
-                                            }
+                                            width -= getLayoutWidth(siblings[i++]);
                                         }
-                                        if (Math.ceil(contentWidth) >= this.actualParent!.box.width) {
-                                            return NODE_TRAVERSE.FLOAT_BLOCK;
-                                        }
-                                        else if (this.multiline) {
-                                            if (this.styleText) {
-                                                const textBounds = this.textBounds;
-                                                if (textBounds) {
-                                                    bottom = textBounds.bottom;
-                                                }
-                                            }
-                                            const offset = bottom - maxBottom;
-                                            top = offset <= 0 || offset / (bottom - top) < 0.5 ? -Infinity : Infinity;
-                                        }
-                                        else {
-                                            top = Math.ceil(top);
-                                        }
-                                        if (top < Math.floor(maxBottom)) {
-                                            return horizontal ? NODE_TRAVERSE.HORIZONTAL : NODE_TRAVERSE.FLOAT_BLOCK;
-                                        }
-                                        else {
-                                            return horizontal ? NODE_TRAVERSE.FLOAT_BLOCK : NODE_TRAVERSE.HORIZONTAL;
+                                        if (width >= 0) {
+                                            return NODE_TRAVERSE.HORIZONTAL;
                                         }
                                     }
-                                    else if (!horizontal) {
+                                }
+                            }
+                            return NODE_TRAVERSE.FLOAT_WRAP;
+                        }
+                    }
+                    else if (this.blockStatic && siblings.reduce((a, b) => a + (b.floating ? b.linear.width : -Infinity), 0) / this.actualParent!.box.width >= 0.8) {
+                        return NODE_TRAVERSE.FLOAT_INTERSECT;
+                    }
+                    else if (siblings.every(item => item.inlineDimension && Math.ceil(this.bounds.top) >= item.bounds.bottom)) {
+                        return NODE_TRAVERSE.FLOAT_BLOCK;
+                    }
+                    else if (horizontal !== undefined) {
+                        if (floating && !horizontal && previous.blockStatic) {
+                            return NODE_TRAVERSE.HORIZONTAL;
+                        }
+                        else if (!this.display.startsWith('inline-')) {
+                            let { top, bottom } = this.bounds;
+                            if (this.textElement && cleared.size > 0 && siblings.some(item => cleared.has(item)) && siblings.some(item => Math.floor(top) < item.bounds.top && Math.ceil(bottom) > item.bounds.bottom)) {
+                                return NODE_TRAVERSE.FLOAT_INTERSECT;
+                            }
+                            else if (siblings[0].floating) {
+                                const length = siblings.length;
+                                if (length > 1) {
+                                    const float = siblings[0].float;
+                                    let maxBottom = -Infinity,
+                                        contentWidth = 0;
+                                    let i = 0;
+                                    while (i < length) {
+                                        const item = siblings[i++];
+                                        if (item.floating) {
+                                            if (item.float === float) {
+                                                maxBottom = Math.max(item.actualRect('bottom', 'bounds'), maxBottom);
+                                            }
+                                            contentWidth += item.linear.width;
+                                        }
+                                    }
+                                    if (Math.ceil(contentWidth) >= this.actualParent!.box.width) {
                                         return NODE_TRAVERSE.FLOAT_BLOCK;
                                     }
+                                    else if (this.multiline) {
+                                        if (this.styleText) {
+                                            const textBounds = this.textBounds;
+                                            if (textBounds) {
+                                                bottom = textBounds.bottom;
+                                            }
+                                        }
+                                        const offset = bottom - maxBottom;
+                                        top = offset <= 0 || offset / (bottom - top) < 0.5 ? -Infinity : Infinity;
+                                    }
+                                    else {
+                                        top = Math.ceil(top);
+                                    }
+                                    if (top < Math.floor(maxBottom)) {
+                                        return horizontal ? NODE_TRAVERSE.HORIZONTAL : NODE_TRAVERSE.FLOAT_BLOCK;
+                                    }
+                                    else {
+                                        return horizontal ? NODE_TRAVERSE.FLOAT_BLOCK : NODE_TRAVERSE.HORIZONTAL;
+                                    }
+                                }
+                                else if (!horizontal) {
+                                    return NODE_TRAVERSE.FLOAT_BLOCK;
                                 }
                             }
                         }

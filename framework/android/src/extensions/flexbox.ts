@@ -374,13 +374,11 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     chainHorizontal.push(segmented);
                 }
             }
+            else if (row) {
+                chainHorizontal[0] = children;
+            }
             else {
-                if (row) {
-                    chainHorizontal[0] = children;
-                }
-                else {
-                    chainVertical[0] = children;
-                }
+                chainVertical[0] = children;
             }
             const applyLayout = (partition: T[][], horizontal: boolean) => {
                 const length = partition.length;
