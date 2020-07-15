@@ -1030,8 +1030,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                     }
                     l = 0;
                 };
-                let length = Math.max(rowData.length, 1);
-                for (let i = 0; i < length; ++i) {
+                for (let i = 0, length = Math.max(rowData.length, 1); i < length; ++i) {
                     if (!emptyRows[i]) {
                         const data = rowData[i];
                         for (let j = 0; j < unitSpan; ++j) {
@@ -1048,12 +1047,10 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                         createSpacer(i, unit, gap);
                     }
                 }
-                length = emptyRows.length;
-                for (let i = 0; i < length; ++i) {
+                for (let i = 0, length = emptyRows.length; i < length; ++i) {
                     const emptyRow = emptyRows[i];
                     if (emptyRow) {
-                        const q = emptyRow.length;
-                        for (let j = 0; j < q; ++j) {
+                        for (let j = 0, q = emptyRow.length; j < q; ++j) {
                             const value = emptyRow[j];
                             if (value > 0) {
                                 k = j;

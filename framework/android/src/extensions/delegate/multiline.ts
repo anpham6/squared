@@ -124,8 +124,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
         }
         let modified = false;
         const breakable = nodes || [node];
-        const length = breakable.length;
-        for (let i = 0; i < length; ++i) {
+        for (let i = 0, length = breakable.length; i < length; ++i) {
             const seg = breakable[i];
             let adjustment = fontAdjust,
                 textContent: string;

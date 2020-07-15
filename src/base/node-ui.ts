@@ -922,8 +922,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public replaceTry(options: ReplaceTryOptions<T>) {
         const { child, replaceWith } = options;
         const children = this.children as T[];
-        const length = children.length;
-        for (let i = 0; i < length; ++i) {
+        for (let i = 0, length = children.length; i < length; ++i) {
             const item = children[i];
             if (item === child || item === child.outerMostWrapper) {
                 replaceWith.parent?.remove(replaceWith);

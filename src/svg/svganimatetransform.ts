@@ -129,8 +129,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                     const values: string[] = [];
                     const keySplines: string[] = [];
                     let previousValues: Undef<number[]>;
-                    const length = keyTimesBase.length;
-                    for (let i = 0; i < iterationCount; ++i) {
+                    for (let i = 0, length = keyTimesBase.length; i < iterationCount; ++i) {
                         if (i > 0 && keySplinesBase) {
                             keySplines.push('');
                         }

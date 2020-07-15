@@ -115,7 +115,6 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         let columnCount = 0,
             percentAll = false,
             mapPercent = 0;
-        let j: number;
         for (let i = 0; i < rowCount; ++i) {
             const tr = table[i];
             rowWidth[i] = horizontal;
@@ -125,15 +124,13 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 const element = td.element as HTMLTableCellElement;
                 const rowSpan = element.rowSpan;
                 let colSpan = element.colSpan;
-                j = 0;
+                let j = 0;
                 while (row[j]) {
                     ++j;
                 }
-                const q = i + rowSpan;
-                for (let k = i; k < q; ++k) {
+                for (let k = i, q = i + rowSpan; k < q; ++k) {
                     const item = tableFilled[k] ?? (tableFilled[k] = []);
-                    const r = j + colSpan;
-                    for (let l = j, m = 0; l < r; ++l) {
+                    for (let l = j, m = 0, r = j + colSpan; l < r; ++l) {
                         if (!item[l]) {
                             item[l] = td;
                             ++m;
@@ -366,11 +363,10 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 caption.parent = node;
             }
         }
-        let i = 0;
-        while (i < rowCount) {
-            const tr = tableFilled[i++];
+        for (let i = 0; i < rowCount; ++i) {
+            const tr = tableFilled[i];
             const length = tr.length;
-            j = 0;
+            let j = 0;
             while (j < length) {
                 const td = tr[j];
                 const cellData = td.data<TableCellData>(this.name, 'cellData')!;
@@ -475,9 +471,9 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 hideRight = false,
                 hideBottom = false,
                 hideLeft = false;
-            for (i = 0; i < rowCount; ++i) {
+            for (let i = 0; i < rowCount; ++i) {
                 const tr = tableFilled[i];
-                for (j = 0; j < columnCount; ++j) {
+                for (let j = 0; j < columnCount; ++j) {
                     const td = tr[j];
                     if (td?.css('visibility') === 'visible') {
                         if (i === 0) {

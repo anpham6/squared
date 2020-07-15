@@ -896,8 +896,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     const transformTargets: SvgAnimation[][] = [];
                     const [companions, animations] = partitionArray(group.animate, child => 'companion' in child);
                     const targetSetTemplate: SetTemplate = { set: [], objectAnimator: [] };
-                    let length = animations.length;
-                    for (let i = 0; i < length; ++i) {
+                    for (let i = 0, length = animations.length; i < length; ++i) {
                         const item = animations[i];
                         if (item.setterType) {
                             if (ATTRIBUTE_ANDROID[item.attributeName] && item.to) {
@@ -993,8 +992,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                         isolatedTargets.push([[isolatedData[i]]]);
                     }
                     const combined = [togetherTargets, transformTargets, ...isolatedTargets];
-                    length = combined.length;
-                    for (let index = 0; index < length; ++index) {
+                    for (let index = 0, length = combined.length; index < length; ++index) {
                         const targets = combined[index];
                         const t = targets.length;
                         if (t === 0) {
@@ -1045,8 +1043,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                 afterAnimator = fillAfter.objectAnimator,
                                 together: PropertyValue[] = [];
                             const targeted = synchronized ? partitionArray(items, (animate: SvgAnimate) => animate.iterationCount !== -1) : [items];
-                            const u = targeted.length;
-                            for (let i = 0; i < u; ++i) {
+                            for (let i = 0, u = targeted.length; i < u; ++i) {
                                 const partition = targeted[i];
                                 const v = partition.length;
                                 if (i === 1 && v > 1) {
@@ -1540,8 +1537,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                     if (clipPathData !== '') {
                                         strokeData['clip-path'] = [{ pathData: clipPathData }];
                                     }
-                                    const q = strokeDash.length;
-                                    for (let i = 0; i < q; ++i) {
+                                    for (let i = 0, q = strokeDash.length; i < q; ++i) {
                                         const strokePath = i === 0 ? path : { ...path };
                                         const dash = strokeDash[i];
                                         strokePath.name = name + '_' + i;

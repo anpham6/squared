@@ -740,8 +740,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         let { x: minX, y: minY } = values[0];
         let maxX = minX,
             maxY = minY;
-        const length = values.length;
-        for (let i = 1; i < length; ++i) {
+        for (let i = 1, length = values.length; i < length; ++i) {
             const { x, y } = values[i];
             if (radius && i > 0) {
                 const { rx, ry } = values[i];

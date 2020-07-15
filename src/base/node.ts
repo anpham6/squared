@@ -2570,8 +2570,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     value = this.css('background');
                     if (pattern.test(value)) {
                         const background = splitEnclosing(value);
-                        const length = background.length;
-                        for (let i = 1; i < length; ++i) {
+                        for (let i = 1, length = background.length; i < length; ++i) {
                             const name = background[i - 1].trim();
                             if (pattern.test(name)) {
                                 result += (result !== '' ? ', ' : '') + name + background[i];

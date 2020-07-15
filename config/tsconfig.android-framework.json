@@ -1,0 +1,13 @@
+{
+    "extends": "../tsconfig.json",
+    "compilerOptions": {
+      "inlineSourceMap": true,
+      "incremental": true
+    },
+    "include": [
+      "../@types/**/object.d.ts",
+      "../@types/index.d.ts",
+      "../@types/android/index.d.ts",
+      "../framework/android/**/*.ts"
+    ]
+  }

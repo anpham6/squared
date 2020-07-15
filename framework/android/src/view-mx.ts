@@ -2391,8 +2391,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         else {
                             let previousMultiline = false;
                             const horizontalRows = this.horizontalRows || [renderChildren];
-                            const q = horizontalRows.length;
-                            for (let i = 0; i < q; ++i) {
+                            for (let i = 0, q = horizontalRows.length; i < q; ++i) {
                                 const row = horizontalRows[i];
                                 const nextRow = horizontalRows[i + 1];
                                 const nextMultiline = !!nextRow && (nextRow.length === 1 && nextRow[0].multiline || nextRow[0].lineBreakLeading || i < q - 1 && !!nextRow.find(item => item.baselineActive)?.has('lineHeight'));
@@ -2593,8 +2592,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     return true;
                 case 'INPUT':
                     return this.toElementString('type') === 'range';
+                default:
+                    return false;
             }
-            return false;
         }
 
         get imageElement() {
@@ -2602,8 +2602,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 case 'IMG':
                 case 'CANVAS':
                     return true;
+                default:
+                    return false;
             }
-            return false;
         }
 
         get imageContainer() {

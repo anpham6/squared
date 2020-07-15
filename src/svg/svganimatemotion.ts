@@ -172,8 +172,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                     const result: SvgOffsetPath[] = [];
                     if (keyPoints.length > 1) {
                         let previous: Undef<SvgOffsetPath>;
-                        const q = keyTimes.length - 1;
-                        for (let i = 0; i < q; ++i) {
+                        for (let i = 0, q = keyTimes.length - 1; i < q; ++i) {
                             const keyTime = keyTimes[i];
                             const baseTime = truncateFraction(keyTime * duration);
                             const offsetDuration = truncateFraction((keyTimes[i + 1] - keyTime) * duration);
@@ -270,8 +269,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                 }
                 if (rotateData) {
                     offsetPath = this._offsetPath;
-                    const q = rotateData.length - 1;
-                    for (let i = 0, j = 0; i < q; ++i) {
+                    for (let i = 0, j = 0, q = rotateData.length - 1; i < q; ++i) {
                         const from = rotateData[i];
                         const to = rotateData[i + 1];
                         const toKey = to.key;
@@ -419,10 +417,9 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                 else {
                     const keyTimesStatic = keyTimesBase.slice(0);
                     const keyPointsStatic = keyPointsBase.slice(0);
-                    let j: number;
                     for (let i = 0; i < iterationCount; ++i) {
                         if (i === 0) {
-                            j = 0;
+                            let j = 0;
                             while (j < length) {
                                 keyTimesBase[j++] /= iterationCount;
                             }
@@ -430,7 +427,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                         else {
                             const baseTime = i * (1 / iterationCount);
                             const keyTimesAppend = i % 2 === 0 ? keyTimesStatic.slice(0) : keyTimes.slice(0);
-                            j = 0;
+                            let j = 0;
                             while (j < length) {
                                 keyTimesAppend[j] = truncateFraction(baseTime + keyTimesAppend[j++] / iterationCount);
                             }

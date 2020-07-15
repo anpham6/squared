@@ -440,8 +440,7 @@ function canControlAscendItems(node: View) {
 function flattenContainer(node: View) {
     const renderTempates = node.renderTemplates!;
     const renderChildren = node.renderChildren as View[];
-    let q = renderChildren.length;
-    for (let i = 0; i < q; ++i) {
+    for (let i = 0, length = renderChildren.length; i < length; ++i) {
         const item = renderChildren[i];
         if (item.rendering && isUnstyled(item) && !item.inlineDimension && !item.preserveWhiteSpace && item.css('whiteSpace') !== 'nowrap' && !item.layoutGrid && !item.layoutElement && canControlAscendItems(item) && item.removeTry()) {
             item.hide();
@@ -457,7 +456,7 @@ function flattenContainer(node: View) {
                 return child.renderedAs!;
             }));
             i += r - 1;
-            q = renderChildren.length;
+            length = renderChildren.length;
         }
     }
     return renderChildren;
@@ -2312,8 +2311,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         boxParent.modifyBox(BOX_STANDARD.PADDING_LEFT, textIndent, false);
                     }
                 }
-                const length = children.length;
-                for (let i = 0, start = true; i < length; ++i) {
+                for (let i = 0, length = children.length, start = true; i < length; ++i) {
                     const item = children[i];
                     if (!item.pageFlow) {
                         if (start) {
@@ -2473,9 +2471,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         item.anchor('top', 'true');
                     }
                 };
-                const length = rowsAll.length;
-                let q: number, r: number;
-                for (let i = 0; i < length; ++i) {
+                for (let i = 0, length = rowsAll.length; i < length; ++i) {
                     const [currentFloated, rows] = rowsAll[i];
                     let float: Undef<string>;
                     if (currentFloated) {
@@ -2488,15 +2484,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             item.modifyBox(BOX_STANDARD.MARGIN_LEFT, float === 'left' ? Math.max(-(currentFloated!.linear.width + textIndent), 0) : -textIndent);
                         }
                     };
-                    q = rows.length;
-                    for (let j = 0; j < q; ++j) {
+                    for (let j = 0, q = rows.length; j < q; ++j) {
                         const items = rows[j];
-                        r = items.length;
-                        if (r > 0) {
-                            horizontalRows.push(items);
-                        }
-                        let baseline: Null<T>;
+                        let r = items.length,
+                            baseline: Null<T>;
                         if (r > 1) {
+                            horizontalRows.push(items);
                             for (let k = 0; k < r - 1; ++k) {
                                 const item = items[k];
                                 if (isMultilineGroup(item)) {
@@ -2599,7 +2592,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                             item.anchor('rightLeft', items[k + 1].documentId);
                                         }
                                     }
-                                    else { 
+                                    else {
                                         setAlignLeft();
                                     }
                                 }
@@ -2815,7 +2808,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                             baseline = item;
                                             leftIndent = NaN;
                                         }
-                                        leftIndent += item.linear.width;
+                                        else {
+                                            leftIndent += item.linear.width;
+                                        }
                                     }
                                     else if (checkBottom && item.linear.bottom >= baseline.linear.bottom) {
                                         baseline = item;
@@ -2842,6 +2837,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         else {
                             baseline = items[0];
                             if (baseline) {
+                                horizontalRows.push(items);
                                 if (currentFloated) {
                                     if (currentFloated.float === 'left') {
                                         if (rightAligned || baseline.rightAligned) {
@@ -2883,10 +2879,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     setTextIndent(baseline);
                                 }
                             }
-                            else if (currentFloated) {
-                                baseline = currentFloated;
-                            }
                             else {
+                                if (currentFloated) {
+                                    previousBaseline = currentFloated;
+                                }
                                 continue;
                             }
                         }
@@ -2978,8 +2974,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         const baseline = NodeUI.baseline(children);
         const documentId = baseline?.documentId;
         let percentWidth = View.availablePercent(children, 'width', node.box.width);
-        const length = children.length;
-        for (let i = 0, start = false; i < length; ++i) {
+        for (let i = 0, length = children.length, start = false; i < length; ++i) {
             const item = children[i];
             if (previous) {
                 if (item.pageFlow) {
@@ -3180,8 +3175,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         let previousSiblings: T[] = [],
             previousRow: Undef<T[]>,
             previousAlignParent = false;
-        const length = horizontal.length;
-        for (let i = 0, start = false; i < length; ++i) {
+        for (let i = 0, length = horizontal.length, start = false; i < length; ++i) {
             const partition = horizontal[i];
             const [floatingRight, floatingLeft] = partitionArray(partition, item => item.float === 'right' || item.autoMargin.left === true);
             let alignParent = false,

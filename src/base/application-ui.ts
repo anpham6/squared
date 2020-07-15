@@ -1490,8 +1490,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (!layoutVertical) {
             const { containerType: containerTypeParent, alignmentType: alignmentTypeParent } = controllerHandler.containerTypeVerticalMargin;
             const node = layout.node;
-            const length = Math.max(floatedRows.length, staticRows.length);
-            for (let i = 0; i < length; ++i) {
+            for (let i = 0, length = Math.max(floatedRows.length, staticRows.length); i < length; ++i) {
                 const pageFlow = staticRows[i];
                 const floating = floatedRows[i];
                 const blockCount = pageFlow.length;

@@ -48,8 +48,7 @@ export default class ExtensionManager<T extends squared.base.Node> implements sq
 
     public exclude(ext: squared.base.Extension<T> | string) {
         const extensions = this.extensions;
-        const length = extensions.length;
-        for (let i = 0; i < length; ++i) {
+        for (let i = 0, length = extensions.length; i < length; ++i) {
             if (extensions[i] === ext || typeof ext === 'string' && this.retrieve(ext)) {
                 extensions.splice(i, 1);
                 return true;

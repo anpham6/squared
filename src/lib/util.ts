@@ -374,8 +374,7 @@ export function formatXml(value: string, closeEmpty?: boolean, startIndent = -1,
             value: match[4]
         });
     }
-    const length = lines.length;
-    for (let i = 0; i < length; ++i) {
+    for (let i = 0, length = lines.length; i < length; ++i) {
         const line = lines[i];
         let previous = indent;
         if (i > 0) {
@@ -403,8 +402,7 @@ export function formatXml(value: string, closeEmpty?: boolean, startIndent = -1,
                 ++previous;
             }
             const tags = line.tag.trim().split('\n');
-            const q = tags.length;
-            for (let j = 0; j < q; ++j) {
+            for (let j = 0, q = tags.length; j < q; ++j) {
                 const partial = tags[j];
                 if (ignoreIndent) {
                     output += partial;

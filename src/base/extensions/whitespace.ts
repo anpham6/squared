@@ -787,12 +787,10 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             if (horizontalRows && horizontalRows.length > 1) {
                                 found: {
                                     let maxBottom = -Infinity;
-                                    const length = horizontalRows.length;
-                                    let j: number;
-                                    for (let i = 0; i < length; ++i) {
+                                    for (let i = 0, length = horizontalRows.length; i < length; ++i) {
                                         const row = horizontalRows[i] as T[];
                                         const q = row.length;
-                                        j = 0;
+                                        let j = 0;
                                         while (j < q) {
                                             if (outerWrapper === row[j++]) {
                                                 if (i > 0) {

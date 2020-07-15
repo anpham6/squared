@@ -70,8 +70,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                 return divider;
             };
             let previousRow!: T;
-            const length = rows.length;
-            for (let i = 0; i < length; ++i) {
+            for (let i = 0, length = rows.length; i < length; ++i) {
                 const row = rows[i];
                 const q = row.length;
                 if (q === 1) {
@@ -149,8 +148,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                     }
                     const r = columns.length;
                     const above: T[] = new Array(r);
-                    let j: number;
-                    for (j = 0; j < r; ++j) {
+                    for (let j = 0; j < r; ++j) {
                         const data = columns[j];
                         for (let k = 0; k < data.length; ++k) {
                             const item = data[k];
@@ -163,7 +161,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                         }
                         above[j] = data[0];
                     }
-                    for (j = 0; j < r; ++j) {
+                    for (let j = 0; j < r; ++j) {
                         const item = columns[j];
                         if (j < r - 1 && item.length > 1) {
                             const columnEnd = item[item.length - 1];
@@ -176,12 +174,11 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                         }
                     }
                     const columnHeight: number[] = new Array(r);
-                    for (j = 0; j < r; ++j) {
+                    for (let j = 0; j < r; ++j) {
                         const seg = columns[j];
                         const elements: Element[] = [];
                         let height = 0;
-                        let s = seg.length;
-                        let k = 0;
+                        let k = 0, s = seg.length;
                         while (k < s) {
                             const column = seg[k++];
                             if (column.naturalChild) {
@@ -224,7 +221,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                     let anchorTop!: T,
                         anchorBottom!: T,
                         maxHeight = 0;
-                    for (j = 0; j < r; ++j) {
+                    for (let j = 0; j < r; ++j) {
                         const value = columnHeight[j];
                         if (value >= maxHeight) {
                             const column = columns[j];
@@ -233,7 +230,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                             maxHeight = value;
                         }
                     }
-                    for (j = 0; j < r; ++j) {
+                    for (let j = 0; j < r; ++j) {
                         const item = above[j];
                         if (j === 0) {
                             item.anchor('left', 'parent');
@@ -252,10 +249,9 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                         }
                     }
                     const dividers: T[] = [];
-                    for (j = 0; j < r; ++j) {
+                    for (let j = 0; j < r; ++j) {
                         const seg = columns[j];
-                        const s = seg.length;
-                        for (let k = 0; k < s; ++k) {
+                        for (let k = 0, s = seg.length; k < s; ++k) {
                             const item = seg[k];
                             if (k === 0) {
                                 if (j > 0) {
@@ -294,7 +290,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                         }
                     }
                     const documentId = i < length - 1 ? anchorBottom.documentId : 'parent';
-                    j = 0;
+                    let j = 0;
                     while (j < dividers.length) {
                         dividers[j++].anchor('bottom', documentId);
                     }

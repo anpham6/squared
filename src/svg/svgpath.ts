@@ -58,12 +58,10 @@ function updatePathLocation(path: SvgPathCommand[], attr: string, x?: number, y?
                 return;
         }
     }
-    const length = path.length;
-    for (let i = 0; i < length; ++i) {
+    for (let i = 0, length = path.length; i < length; ++i) {
         const seg = path[i];
         const { coordinates, value } = seg;
-        const q = coordinates.length;
-        for (let j = 0, k = 0; j < q; j += 2, ++k) {
+        for (let j = 0, k = 0, q = coordinates.length; j < q; j += 2, ++k) {
             if (x !== undefined) {
                 if (!seg.relative) {
                     coordinates[j] += x;
@@ -81,8 +79,7 @@ function updatePathLocation(path: SvgPathCommand[], attr: string, x?: number, y?
 }
 
 function updatePathRadius(path: SvgPathCommand[], rx?: number, ry?: number) {
-    const length = path.length;
-    for (let i = 0; i < length; ++i) {
+    for (let i = 0, length = path.length; i < length; ++i) {
         const seg = path[i];
         if (seg.key.toUpperCase() === 'A') {
             if (rx !== undefined) {
@@ -124,8 +121,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         const transformRefit = !!transforms || !!container?.requireRefit;
         const result: string[] = [];
         let commands: Undef<SvgPathCommand[]>;
-        const length = values.length;
-        for (let i = 0; i < length; ++i) {
+        for (let i = 0, length = values.length; i < length; ++i) {
             if (attr === 'd') {
                 result[i] = values[i];
             }
@@ -837,8 +833,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                     const valuesBase = item.values;
                                     const values: string[] = [];
                                     const keyTimes: number[] = [];
-                                    const length = keyTimesBase.length;
-                                    for (let j = 0; j < length; ++j) {
+                                    for (let j = 0, length = keyTimesBase.length; j < length; ++j) {
                                         const offsetFrom = j === 0 ? valueOffset : parseFloat(valuesBase[j - 1]);
                                         const offsetTo = parseFloat(valuesBase[j]);
                                         const offsetValue = Math.abs(offsetTo - offsetFrom);

@@ -528,8 +528,7 @@ let Node: serve.INode,
             if (html) {
                 let valid = false;
                 const formatters = format.split('+');
-                const length = formatters.length;
-                for (let j = 0; j < length; ++j) {
+                for (let j = 0, length = formatters.length; j < length; ++j) {
                     const name = formatters[j].trim();
                     let [module, options] = this.findExternalPlugin(html, name);
                     if (!module) {
@@ -609,8 +608,7 @@ let Node: serve.INode,
             if (css) {
                 let valid = false;
                 const formatters = format.split('+');
-                const length = formatters.length;
-                for (let j = 0; j < length; ++j) {
+                for (let j = 0, length = formatters.length; j < length; ++j) {
                     const name = formatters[j].trim();
                     let [module, options] = this.findExternalPlugin(css, name);
                     if (!module) {
@@ -685,8 +683,7 @@ let Node: serve.INode,
             if (js) {
                 let valid = false;
                 const formatters = format.split('+');
-                const length = formatters.length;
-                for (let j = 0; j < length; ++j) {
+                for (let j = 0, length = formatters.length; j < length; ++j) {
                     const name = formatters[j].trim();
                     let [module, options] = this.findExternalPlugin(js, name);
                     if (!module) {

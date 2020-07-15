@@ -167,8 +167,7 @@ function calculateColor(element: CSSElement, value: string) {
 
 function calculateGeneric(element: CSSElement, value: string, unitType: number, min: number, boundingBox?: Dimension, dimension: DimensionAttr = 'width') {
     const segments = splitEnclosing(value, 'calc');
-    const length = segments.length;
-    for (let i = 0; i < length; ++i) {
+    for (let i = 0, length = segments.length; i < length; ++i) {
         const seg = segments[i];
         if (isCalc(seg)) {
             const px = REGEXP_LENGTH.test(seg);
@@ -2040,8 +2039,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
                     const color = image[i];
                     if (isColor(color) && hasCalc(color)) {
                         const component = splitEnclosing(trimEnclosing(color));
-                        const q = component.length;
-                        for (let j = 1; j < q; ++j) {
+                        for (let j = 1, q = component.length; j < q; ++j) {
                             if (hasCalc(component[j])) {
                                 const previous = component[j - 1];
                                 if (isColor(previous)) {
@@ -2475,8 +2473,7 @@ export function getKeyframesRules(): ObjectMap<KeyframesData> {
             try {
                 const cssRules = styleSheets[i++].cssRules;
                 if (cssRules) {
-                    const q = cssRules.length;
-                    for (let j = 0; j < q; ++j) {
+                    for (let j = 0, q = cssRules.length; j < q; ++j) {
                         try {
                             const item = cssRules[j] as CSSKeyframesRule;
                             if (item.type === CSSRule.KEYFRAMES_RULE) {

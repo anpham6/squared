@@ -304,8 +304,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 });
             }))
             .then((result: PreloadImage[]) => {
-                const length = result.length;
-                for (let i = 0; i < length; ++i) {
+                for (let i = 0, length = result.length; i < length; ++i) {
                     const value = result[i];
                     if (typeof value === 'string') {
                         const uri = imageElements[i];
@@ -467,8 +466,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         while (i < length) {
             const childMap = elements[i++].queryMap;
             if (childMap) {
-                const q = childMap.length;
-                for (let j = 0; j < q; ++j) {
+                for (let j = 0, q = childMap.length; j < q; ++j) {
                     const k = j + 1;
                     result[k] = result[k]?.concat(childMap[j] as T[]) || childMap[j];
                 }

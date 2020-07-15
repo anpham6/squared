@@ -402,8 +402,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                     const keyTimesData: number[] = [];
                                     const valuesData: string[] = [];
                                     const keySplinesData: string[] = [];
-                                    q = keyTimes.length;
-                                    for (let j = 0; j < q; ++j) {
+                                    for (let j = 0, q = keyTimes.length; j < q; ++j) {
                                         const time = keyTimes[j];
                                         const value = values[j];
                                         if (j < q - 1) {

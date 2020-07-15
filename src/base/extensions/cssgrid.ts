@@ -45,8 +45,7 @@ function repeatUnit(data: CssGridDirectionData, sizes: string[]) {
     const repeat = data.repeat;
     const unitPX: string[] = [];
     const unitRepeat: string[] = [];
-    const length = sizes.length;
-    for (let i = 0; i < length; ++i) {
+    for (let i = 0, length = sizes.length; i < length; ++i) {
         if (repeat[i]) {
             unitRepeat.push(sizes[i]);
         }
@@ -54,12 +53,11 @@ function repeatUnit(data: CssGridDirectionData, sizes: string[]) {
             unitPX.push(sizes[i]);
         }
     }
-    const q = data.length;
-    const r = q - unitPX.length;
-    const result: string[] = new Array(q);
-    for (let i = 0; i < q; ++i) {
+    const length = data.length;
+    const result: string[] = new Array(length);
+    for (let i = 0, q = length - unitPX.length; i < length; ++i) {
         if (repeat[i]) {
-            for (let j = 0, k = 0; j < r; ++i, ++j, ++k) {
+            for (let j = 0, k = 0; j < q; ++i, ++j, ++k) {
                 if (k === unitRepeat.length) {
                     k = 0;
                 }
@@ -158,8 +156,7 @@ function getOpenCellIndex(iteration: number, length: number, available: Undef<nu
 }
 
 function getOpenRowIndex(cells: number[][]) {
-    const length = cells.length;
-    for (let i = 0; i < length; ++i) {
+    for (let i = 0, length = cells.length; i < length; ++i) {
         for (const value of cells[i]) {
             if (value === 0) {
                 return i;
@@ -505,8 +502,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                 }
                             }
                         }
-                        const length = available.length;
-                        for (let i = 0, j = 0, k = 0; i < length; ++i) {
+                        for (let i = 0, j = 0, k = 0, length = available.length; i < length; ++i) {
                             if (available[i]) {
                                 if (j === 0) {
                                     k = i;
@@ -811,8 +807,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             while (placement[0] === 0 || placement[1] === 0) {
                 const PLACEMENT = placement.slice(0);
                 if (PLACEMENT[rowA] === 0) {
-                    let length = rowData.length;
-                    for (let i = dense ? 0 : getOpenRowIndex(openCells), j = 0, k = -1; i < length; ++i) {
+                    for (let i = dense ? 0 : getOpenRowIndex(openCells), j = 0, k = -1, length = rowData.length; i < length; ++i) {
                         const l = getOpenCellIndex(ITERATION, COLUMN_SPAN, openCells[i]);
                         if (l !== -1) {
                             if (j === 0) {
@@ -972,11 +967,10 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             }
             else {
                 rowMain = mainData.rowData;
-                let j: number;
                 for (let i = 0; i < columnCount; ++i) {
                     const data = rowData[i];
                     const length = data.length;
-                    j = 0;
+                    let j = 0;
                     while (j < length) {
                         (rowMain[j] ?? (rowMain[j] = []))[i] = data[j++];
                     }

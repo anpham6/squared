@@ -176,8 +176,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         columnRight[i] = Math.max(right, columnRight[i]);
                     }
                 }
-                const q = columnRight.length;
-                for (let i = 0, j = -1; i < q; ++i) {
+                for (let i = 0, j = -1, q = columnRight.length; i < q; ++i) {
                     if (!columns[i]) {
                         if (j === -1) {
                             j = i - 1;
@@ -199,8 +198,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         columns.splice(i--, 1);
                     }
                 }
-                const maxColumn = columns.reduce((a, b) => Math.max(a, b.length), 0);
-                for (let l = 0; l < maxColumn; ++l) {
+                for (let l = 0, q = columns.reduce((a, b) => Math.max(a, b.length), 0); l < q; ++l) {
                     const r = columns.length;
                     let m = 0;
                     while (m < r) {
