@@ -2284,10 +2284,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     rows!: T[][],
                     items!: T[],
                     previous!: T,
+                    siblings: Undef<Element[]>,
                     currentFloated: Undef<T>,
                     currentFloatedWidth = 0,
-                    currentFloatedHeight = 0,
-                    siblings: Undef<Element[]>;
+                    currentFloatedHeight = 0;
                 if (node.naturalElement) {
                     if (node.blockDimension) {
                         textIndent = node.parseUnit(node.css('textIndent'));
@@ -2512,9 +2512,50 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                             }
                                         }
                                         if (index) {
-                                            item.textContent = item.textContent + textContent;
-                                            item.bounds.width += width;
-                                            const last = items[index];
+                                            let last = items[index],
+                                                textRemainder = '',
+                                                widthRemainder = 0;
+                                            if (k === 0 && index === r - 1 && q === 1 && i < length - 1 && !currentFloated && (i > 0 || textIndent >= 0)) {
+                                                const nodes: T[] = [];
+                                                invalid: {
+                                                    for (let l = i + 1; l < length; ++l) {
+                                                        const [nextFloated, nextRows] = rowsAll[l];
+                                                        if (!nextFloated && nextRows.length === 1) {
+                                                            const row = nextRows[0];
+                                                            for (let m = 0, n = row.length; m < n; ++m) {
+                                                                const next = row[m];
+                                                                if (isMultilineGroup(next) && next.element === element) {
+                                                                    textRemainder += next.textContent;
+                                                                    widthRemainder += next.bounds.width;
+                                                                    nodes.push(next);
+                                                                }
+                                                                else {
+                                                                    textRemainder = '';
+                                                                    widthRemainder = 0;
+                                                                    break invalid;
+                                                                }
+                                                            }
+                                                        }
+                                                        else {
+                                                            textRemainder = '';
+                                                            widthRemainder = 0;
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                                if (textRemainder !== '') {
+                                                    const s = nodes.length;
+                                                    let l = 0;
+                                                    while (l < s) {
+                                                        nodes[l++].hide({ remove: true });
+                                                    }
+                                                    last = nodes[s - 1];
+                                                    item.multiline = true;
+                                                    j = q;
+                                                }
+                                            }
+                                            item.textContent = item.textContent + textContent + textRemainder;
+                                            item.bounds.width += width + widthRemainder;
                                             item.setCacheValue('marginRight', last.marginRight + last.getBox(BOX_STANDARD.MARGIN_RIGHT)[1]);
                                             item.siblingsTrailing = last.siblingsTrailing;
                                             item.lineBreakTrailing = last.lineBreakTrailing;

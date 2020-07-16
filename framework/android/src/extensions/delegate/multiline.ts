@@ -32,7 +32,7 @@ function setContentAltered(node: View, indexing: boolean) {
 }
 
 function isTextElement(node: View) {
-    if (!node.visible || node.contentAltered) {
+    if (!node.visible || node.textEmpty || node.contentAltered) {
         return false;
     }
     else if (node.plainText) {
@@ -117,13 +117,14 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                 if (!child.inlineFlow) {
                     return false;
                 }
-                else if (isTextElement(child) && !child.textEmpty && !(child.lineBreakLeading && (i === length - 1 || child.lineBreakTrailing))) {
+                else if (isTextElement(child) && !(child.lineBreakLeading && (i === length - 1 || child.lineBreakTrailing))) {
                     if (checkBreakable(child) && !child.preserveWhiteSpace) {
                         if (child.multiline) {
                             ++j;
+                            nodes.push([1, child]);
                         }
-                        else {
-                            ++k;
+                        else if (j + k++ > 0) {
+                            nodes.push([1, child]);
                         }
                         textHeight += child.bounds.height;
                         if (child.styleElement) {
@@ -132,7 +133,6 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                         else {
                             ++n;
                         }
-                        nodes.push([1, child]);
                     }
                     ++l;
                 }

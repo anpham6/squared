@@ -192,9 +192,11 @@ function setBorderStyle(node: NodeUI, boxStyle: BoxStyle, attr: string, border: 
                     color = 'rgb(0, 0, 0)';
                     break;
                 case 'inherit':
+                    color = getInheritedStyle(node.element as HTMLElement, 'color');
+                    break;
                 case 'currentcolor':
                 case 'currentColor':
-                    color = getInheritedStyle(node.element as HTMLElement, border[2]);
+                    color = node.css('color');
                     break;
             }
             if (width === '2px' && (style === 'inset' || style === 'outset')) {

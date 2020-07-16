@@ -26,32 +26,32 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
             const application = this.application;
             const { columnCount, columnGap, columnWidth, columnRule, columnSized, boxWidth, rows, multiline } = mainData;
             const { borderLeftWidth, borderLeftColor, borderLeftStyle } = columnRule;
-            let dividerWidth: number;
+            let borderWidth: number;
             switch (borderLeftWidth) {
                 case 'thin':
-                    dividerWidth = 1;
+                    borderWidth = 1;
                     break;
                 case 'medium':
-                    dividerWidth = 3;
+                    borderWidth = 3;
                     break;
                 case 'thick':
-                    dividerWidth = 5;
+                    borderWidth = 5;
                     break;
                 default:
-                    dividerWidth = node.parseUnit(borderLeftWidth);
+                    borderWidth = node.parseWidth(borderLeftWidth);
                     break;
             }
-            const displayBorder = borderLeftStyle !== 'none' && dividerWidth > 0;
+            const borderVisible = borderLeftStyle !== 'none' && borderWidth > 0;
             const createColumnRule = () => {
-                const divider = application.createNode(node.sessionId, { parent: node, append: true });
-                divider.inherit(node, 'base');
-                divider.containerName = node.containerName + '_COLUMNRULE';
-                divider.setControlType(CONTAINER_ANDROID.LINE, CONTAINER_NODE.LINE);
-                divider.exclude({ resource: NODE_RESOURCE.ASSET, procedure: NODE_PROCEDURE.ALL });
+                const rule = application.createNode(node.sessionId, { parent: node, append: true });
+                rule.containerName = node.containerName + '_COLUMNRULE';
+                rule.inherit(node, 'base');
+                rule.setControlType(CONTAINER_ANDROID.LINE, CONTAINER_NODE.LINE);
+                rule.exclude({ resource: NODE_RESOURCE.ASSET, procedure: NODE_PROCEDURE.ALL });
                 let width: string;
-                if (displayBorder) {
-                    width = formatPX(dividerWidth);
-                    divider.cssApply({
+                if (borderVisible) {
+                    width = formatPX(borderWidth);
+                    rule.cssApply({
                         width,
                         paddingLeft: width,
                         borderLeftStyle,
@@ -64,24 +64,24 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                 }
                 else {
                     width = formatPX(columnGap);
-                    divider.cssApply({ width, lineHeight: 'initial', display: 'inline-block' });
+                    rule.cssApply({ width, lineHeight: 'initial', display: 'inline-block' });
                 }
-                divider.saveAsInitial();
-                divider.setLayoutWidth(width);
-                divider.setLayoutHeight('0px');
-                divider.render(node);
-                divider.positioned = true;
-                divider.renderExclude = false;
+                rule.saveAsInitial();
+                rule.setLayoutWidth(width);
+                rule.setLayoutHeight('0px');
+                rule.render(node);
+                rule.positioned = true;
+                rule.renderExclude = false;
                 application.addLayoutTemplate(
                     node,
-                    divider,
+                    rule,
                     {
                         type: NODE_TEMPLATE.XML,
-                        node: divider,
-                        controlName: divider.controlName
+                        node: rule,
+                        controlName: rule.controlName
                     } as NodeXmlTemplate<T>
                 );
-                return divider;
+                return rule;
             };
             let previousRow!: T;
             for (let i = 0, length = rows.length; i < length; ++i) {
@@ -103,11 +103,12 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                     else {
                         previousRow = row[0];
                     }
-                    item.anchorParent('horizontal', item.rightAligned
-                        ? 1
-                        : item.centerAligned
-                            ? 0.5
-                            : 0
+                    item.anchorParent('horizontal',
+                        item.rightAligned
+                            ? 1
+                            : item.centerAligned
+                                ? 0.5
+                                : 0
                     );
                     item.anchored = true;
                     item.positioned = true;
@@ -124,7 +125,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                         for (let j = 0, k = 0, l = 0; j < q; ++j, ++l) {
                             const item = row[j];
                             const iteration = l % perRowCount === 0;
-                            if (k < columnMin - 1 && (iteration || excessCount <= 0 || j > 0 && (row[j - 1].bounds.height >= maxHeight || columns[k].length > 0 && j < q - 2 && (q - j + 1 === columnMin - k) && row[j - 1].bounds.height > row[j + 1].bounds.height))) {
+                            if (k < columnMin - 1 && (iteration || excessCount <= 0 || j > 0 && !item.contentAltered && (row[j - 1].bounds.height >= maxHeight || columns[k].length > 0 && j < q - 2 && (q - j + 1 === columnMin - k) && row[j - 1].bounds.height > row[j + 1].bounds.height))) {
                                 if (j > 0) {
                                     ++k;
                                     if (iteration) {
@@ -262,18 +263,18 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                             item.anchor('rightLeft', above[j + 1].documentId);
                         }
                     }
-                    const dividers: T[] = [];
+                    const rules: T[] = [];
                     for (let j = 0; j < r; ++j) {
                         const seg = columns[j];
                         for (let k = 0, s = seg.length; k < s; ++k) {
                             const item = seg[k];
                             if (k === 0) {
                                 if (j > 0) {
-                                    const divider = createColumnRule();
-                                    divider.anchor('top', anchorTop.documentId);
-                                    divider.anchor('left', columns[j - 1][0].documentId);
-                                    divider.anchor('right', item.documentId);
-                                    dividers.push(divider);
+                                    const rule = createColumnRule();
+                                    rule.anchor('top', anchorTop.documentId);
+                                    rule.anchor('left', columns[j - 1][0].documentId);
+                                    rule.anchor('right', item.documentId);
+                                    rules.push(rule);
                                 }
                                 if (i === 0) {
                                     item.anchor('top', 'parent');
@@ -286,7 +287,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                                     item.anchor('topBottom', previousRow.documentId);
                                 }
                                 item.anchorStyle('vertical', 0, 'packed');
-                                item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1});
+                                item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1 });
                             }
                             else {
                                 const previous = seg[k - 1];
@@ -305,8 +306,8 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                     }
                     const documentId = i < length - 1 ? anchorBottom.documentId : 'parent';
                     let j = 0;
-                    while (j < dividers.length) {
-                        dividers[j++].anchor('bottom', documentId);
+                    while (j < rules.length) {
+                        rules[j++].anchor('bottom', documentId);
                     }
                     previousRow = anchorBottom;
                 }
