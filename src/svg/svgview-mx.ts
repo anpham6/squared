@@ -381,7 +381,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                             else {
                                 attributes.push(name);
                                 const keySplines: string[] = [];
-                                let q = animation.length;
+                                const q = animation.length;
                                 const keyTimes: number[] = new Array(q);
                                 const values: string[] = new Array(q);
                                 for (let j = 0; j < q; ++j) {
@@ -402,10 +402,10 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                     const keyTimesData: number[] = [];
                                     const valuesData: string[] = [];
                                     const keySplinesData: string[] = [];
-                                    for (let j = 0, q = keyTimes.length; j < q; ++j) {
+                                    for (let j = 0, r = keyTimes.length; j < r; ++j) {
                                         const time = keyTimes[j];
                                         const value = values[j];
-                                        if (j < q - 1) {
+                                        if (j < r - 1) {
                                             const keySpline = keySplines[j];
                                             if (value !== '' && keySpline.startsWith('step')) {
                                                 const steps = SvgAnimate.convertStepTimingFunction(name, keySpline, keyTimes, values, j, getFontSize(element));

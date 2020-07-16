@@ -26,7 +26,21 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
             const application = this.application;
             const { columnCount, columnGap, columnWidth, columnRule, columnSized, boxWidth, rows, multiline } = mainData;
             const { borderLeftWidth, borderLeftColor, borderLeftStyle } = columnRule;
-            const dividerWidth = node.parseUnit(borderLeftWidth);
+            let dividerWidth: number;
+            switch (borderLeftWidth) {
+                case 'thin':
+                    dividerWidth = 1;
+                    break;
+                case 'medium':
+                    dividerWidth = 3;
+                    break;
+                case 'thick':
+                    dividerWidth = 5;
+                    break;
+                default:
+                    dividerWidth = node.parseUnit(borderLeftWidth);
+                    break;
+            }
             const displayBorder = borderLeftStyle !== 'none' && dividerWidth > 0;
             const createColumnRule = () => {
                 const divider = application.createNode(node.sessionId, { parent: node, append: true });

@@ -1,15 +1,20 @@
 main {
+	border: thin dotted #999;
 	-webkit-column-gap: 2em;
 	   -moz-column-gap: 2em;
 	        column-gap: 2em;
-	-webkit-column-rule: thin dotted #999;
-	   -moz-column-rule: thin dotted #999;
-	        column-rule: thin dotted #999;
+	-webkit-column-rule: 1px dotted #999;
+	   -moz-column-rule: 1px dotted #999;
+	        column-rule: 1px dotted #999;
 	-webkit-column-width: 12em;
 	   -moz-column-width: 12em;
 	        column-width: 12em;
 }
 
-p {
+/* p {
 	margin: 0;
+} */
+
+b {
+	font-size: 24px;
 }

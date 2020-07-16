@@ -154,7 +154,21 @@ function convertBorderWidth(node: T, dimension: DimensionAttr, border: string[])
                 return 0;
         }
         const width = node.css(border[0]);
-        const result = isLength(width, true) ? node.parseUnit(width, { dimension }) : convertFloat(node.style[border[0]]);
+        let result: number;
+        switch (width) {
+            case 'thin':
+                result = 1;
+                break;
+            case 'medium':
+                result = 3;
+                break;
+            case 'thick':
+                result = 5;
+                break;
+            default:
+                result = isLength(width, true) ? node.parseUnit(width, { dimension }) : convertFloat(node.style[border[0]]);
+                break;
+        }
         if (result > 0) {
             return Math.max(Math.round(result), 1);
         }
