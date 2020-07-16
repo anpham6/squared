@@ -130,7 +130,7 @@ declare module "base" {
 
     class ApplicationUI<T extends NodeUI> extends Application<T> {
         userSettings: UserSettingsUI;
-        readonly fileHandler?: FileUI<T>;
+        readonly fileHandler?: File<T>;
         readonly session: AppSessionUI<T>;
         readonly builtInExtensions: ObjectMap<ExtensionUI<T>>;
         readonly extensions: ExtensionUI<T>[];
@@ -334,12 +334,6 @@ declare module "base" {
         get hostname(): string;
     }
 
-    class FileUI<T extends NodeUI> extends File<T> {
-        resource: ResourceUI<T>;
-        get userSettings(): UserSettingsUI;
-        get directory(): { string: string; image: string; video: string; audio: string; font: string };
-    }
-
     class LayoutUI<T extends NodeUI> extends squared.lib.base.Container<T> implements LayoutType {
         static create<T extends NodeUI>(options: LayoutOptions<T>): LayoutUI<T>;
         parent: T;
@@ -366,7 +360,6 @@ declare module "base" {
     }
 
     class Node extends squared.lib.base.Container<Node> implements BoxModel {
-        static readonly BOX_POSITION: string[];
         static readonly TEXT_STYLE: string[];
         depth: number;
         childIndex: number;

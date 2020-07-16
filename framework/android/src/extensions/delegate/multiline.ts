@@ -48,8 +48,6 @@ function isTextElement(node: View) {
 const checkBreakable = (node: View, checkMargin?: boolean): boolean => node.plainText || node.naturalChild && node.naturalElements.length === 0 && node.innerAfter === undefined && node.innerBefore === undefined && isUnstyled(node, checkMargin);
 const hasTextIndent = (node: View) => node.textElement && node.naturalElement && node.textIndent < 0;
 
-export const REGEXP_TRAILINGCHAR = /^[^\w\s\n]+[\s\n]+$/;
-
 export default class Multiline<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
         return !node.preserveWhiteSpace;
@@ -126,13 +124,13 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                         else if (j + k++ > 0) {
                             nodes.push([1, child]);
                         }
-                        textHeight += child.bounds.height;
                         if (child.styleElement) {
                             ++m;
                         }
                         else {
                             ++n;
                         }
+                        textHeight += child.bounds.height;
                     }
                     ++l;
                 }

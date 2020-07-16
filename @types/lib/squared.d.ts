@@ -242,7 +242,7 @@ declare module "lib" {
         function formatXml(value: string, closeEmpty?: boolean): string;
         function hasKeys(obj: {}): boolean;
         function capitalize(value: string, upper?: boolean): string;
-        function capitalizeString(value: string): string;
+        function upperCaseString(value: string): string;
         function lowerCaseString(value: string): string;
         function spliceString(value: string, index: number, length: number): string;
         function convertUnderscore(value: string): string;

@@ -8,7 +8,7 @@ type View = android.base.View;
 const { isPercent, parseAngle } = squared.lib.css;
 const { measureTextWidth } = squared.lib.dom;
 const { clamp } = squared.lib.math;
-const { capitalizeString, delimitString, lowerCaseString } = squared.lib.util;
+const { delimitString, lowerCaseString, upperCaseString } = squared.lib.util;
 
 const { NODE_RESOURCE } = squared.base.lib.enumeration;
 
@@ -102,7 +102,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                     valueString = lowerCaseString(valueString);
                                     break;
                                 case 'capitalize':
-                                    valueString = capitalizeString(valueString);
+                                    valueString = upperCaseString(valueString);
                                     break;
                             }
                             valueString = replaceCharacterData(valueString, node.preserveWhiteSpace || tagName === 'CODE' ? node.toInt('tabSize', 8) : undefined);

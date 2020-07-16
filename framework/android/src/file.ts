@@ -96,7 +96,7 @@ function getOutputDirectory(value: string) {
     return value + (!value.endsWith('/') ? '/' : '');
 }
 
-export default class File<T extends View> extends squared.base.FileUI<T> implements android.base.File<T> {
+export default class File<T extends View> extends squared.base.File<T> implements android.base.File<T> {
     public readonly resource!: android.base.Resource<T>;
 
     public copyToDisk(directory: string, options?: FileCopyingOptions) {
@@ -554,5 +554,9 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
 
     get userSettings() {
         return this.resource.userSettings;
+    }
+
+    get directory() {
+        return this.resource.controllerSettings.directory;
     }
 }

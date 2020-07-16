@@ -1,7 +1,7 @@
 import Application from './application';
 import ControllerUI from './controller-ui';
 import ExtensionUI from './extension-ui';
-import FileUI from './file-ui';
+import File from './file';
 import LayoutUI from './layout-ui';
 import NodeUI from './node-ui';
 import ResourceUI from './resource-ui';
@@ -208,7 +208,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public readonly controllerHandler!: ControllerUI<T>;
     public readonly resourceHandler!: ResourceUI<T>;
     public readonly extensionManager!: squared.base.ExtensionManager<T>;
-    public readonly fileHandler?: FileUI<T>;
+    public readonly fileHandler?: File<T>;
     public abstract userSettings: UserSettingsUI;
 
     private readonly _layouts: LayoutAsset[] = [];
@@ -500,15 +500,17 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                     }
                     if (item.positionRelative) {
-                        let i = 0;
-                        while (i < 4) {
-                            const attr = NodeUI.BOX_POSITION[i++];
+                        const setPosition = (attr: string) => {
                             if (item.hasPX(attr)) {
                                 (preAlignment[item.id] ?? (preAlignment[item.id] = {}))[attr] = item.css(attr);
                                 element.style.setProperty(attr, 'auto');
                                 resetBounds = true;
                             }
-                        }
+                        };
+                        setPosition('top');
+                        setPosition('right');
+                        setPosition('bottom');
+                        setPosition('left');
                     }
                     if (item.dir === 'rtl') {
                         element.dir = 'ltr';

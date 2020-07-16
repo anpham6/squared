@@ -2,8 +2,6 @@ import Resource from './resource';
 import View from './view';
 import ViewGroup from './viewgroup';
 
-import { REGEXP_TRAILINGCHAR } from './extensions/delegate/multiline';
-
 import { CONTAINER_ANDROID, CONTAINER_ANDROID_X } from './lib/constant';
 import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
 import { adjustAbsolutePaddingOffset, createViewAttribute, getDocumentId, getRootNs, isUnstyled, replaceTab } from './lib/util';
@@ -2384,7 +2382,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             retainMultiline: Undef<boolean>;
                         siblings = item.naturalChild && previous.naturalChild && item.inlineVertical && previous.inlineVertical && item.previousSibling !== previous ? getElementsBetweenSiblings(previous.element, item.element!) : undefined;
                         if (item.textElement) {
-                            if (REGEXP_TRAILINGCHAR.test(item.textContent) && !item.floating) {
+                            if (/^[^\w\s\n]+[\s\n]+$/.test(item.textContent) && !item.floating) {
                                 items.push(item);
                                 setRowWidth();
                                 continue;

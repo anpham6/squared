@@ -290,25 +290,25 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     }
 
     public static generateId(section: string, name: string, start = 1) {
-        const prefix = name;
-        let i = start;
-        if (start === 1) {
-            name += '_' + i;
-        }
         const ids = this.STORED.ids;
-        const previous = ids.get(section) || [];
-        do {
-            if (!previous.includes(name)) {
-                previous.push(name);
-                break;
-            }
-            else {
-                name = prefix + '_' + ++i;
-            }
+        const stored = ids.get(section);
+        let result = name + (start === 1 ? '_1' : '');
+        if (!stored) {
+            ids.set(section, [result]);
         }
-        while (true);
-        ids.set(section, previous);
-        return name;
+        else {
+            do {
+                if (!stored.includes(result)) {
+                    stored.push(result);
+                    break;
+                }
+                else {
+                    result = name + '_' + ++start;
+                }
+            }
+            while (true);
+        }
+        return result;
     }
 
     public static insertStoredAsset(asset: string, name: string, value: any) {
@@ -1029,8 +1029,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                 previousSibling.block ||
                                 previousSibling.lineBreak ||
                                 previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
-                                node.multiline && ResourceUI.hasLineBreak(node)
-                            )
+                                node.multiline && ResourceUI.hasLineBreak(node))
                             ? ''
                             : ResourceUI.STRING_SPACE
                         );
@@ -1057,7 +1056,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         let value: string = element[attr] || '';
         element.childNodes.forEach((item: Element, index: number) => {
             const child = getElementAsNode<NodeUI>(item, sessionId);
-            if (!child || !child.textElement || !child.pageFlow || child.positioned || child.pseudoElement || child.excluded) {
+            if (!child || !child.textElement || child.pseudoElement || !child.pageFlow || child.positioned || child.excluded) {
                 if (child) {
                     if (styled && child.htmlElement) {
                         const outerHTML = child.toElementString('outerHTML');

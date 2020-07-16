@@ -7,10 +7,10 @@ d9b24a25be89434d11826ce901050c69  ./app/src/main/res/drawable/h2_textview_14.xml
 6a61f75b913d38c2fecb55b47a3d467b  ./app/src/main/res/drawable/input_file_picture.xml
 0670c24576040e203d277f09c10ca031  ./app/src/main/res/drawable/input_submit_button_1.xml
 084c5166290af904d136eb755fb0b4c4  ./app/src/main/res/drawable/input_text_first_name.xml
-6ba6d42c3c754a963c0c90b8a12e4abf  ./app/src/main/res/layout/activity_main.xml
+5e5e63f163bba20bd5111e3e0fb61df5  ./app/src/main/res/layout/activity_main.xml
 d48461b5a159f97353e7640ce62e9f45  ./app/src/main/res/values/colors.xml
 ee08ba1f02f0fe194740e8178274deb8  ./app/src/main/res/values/dimens.xml
 719885de2c502922415f5e7405f49f75  ./app/src/main/res/values/string_arrays.xml
-033c70724a1ec2bfc3198f4482d9f023  ./app/src/main/res/values/strings.xml
+fe415602667e32782afab2a767ed079d  ./app/src/main/res/values/strings.xml
 f0aa5d414cda6bf2ec63c909deef0c5b  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml

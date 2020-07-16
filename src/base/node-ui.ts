@@ -634,9 +634,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public namespace(name: string) {
         const result = this._namespaces[name];
-        return result === undefined
-            ? this._namespaces[name] = {}
-            : result;
+        return result === undefined ? this._namespaces[name] = {} : result;
     }
 
     public namespaces(): [string, StringMap][] {
@@ -736,13 +734,15 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 case 'alignment': {
                     this.cssCopy(node, 'position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex');
                     if (!this.positionStatic) {
-                        let j = 0;
-                        while (j < 4) {
-                            const attr = NodeUI.BOX_POSITION[j++];
+                        const setPosition = (attr: string) => {
                             if (node.hasPX(attr)) {
                                 this._styleMap[attr] = node.css(attr);
                             }
-                        }
+                        };
+                        setPosition('top');
+                        setPosition('right');
+                        setPosition('bottom');
+                        setPosition('left');
                     }
                     Object.assign(this.autoMargin, node.autoMargin);
                     this.autoPosition = node.autoPosition;

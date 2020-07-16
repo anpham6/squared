@@ -784,13 +784,6 @@ function getInitialValue(this: T, attr: string, options?: CssInitialOptions) {
 }
 
 export default class Node extends squared.lib.base.Container<T> implements squared.base.Node {
-    public static readonly BOX_POSITION = [
-        'top',
-        'right',
-        'bottom',
-        'left'
-    ];
-
     public static readonly TEXT_STYLE = [
         'fontFamily',
         'fontWeight',

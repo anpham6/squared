@@ -51,9 +51,10 @@ declare namespace base {
         addImageSet(images: StringMap, prefix?: string): string;
     }
 
-    class File<T extends View> extends squared.base.FileUI<T> {
+    class File<T extends View> extends squared.base.File<T> {
         resource: Resource<T>;
         get userSettings(): AndroidUserSettingsUI;
+        get directory(): { string: string; image: string; video: string; audio: string; font: string };
         resourceAllToXml(options?: FileUniversalOptions): {};
         resourceStringToXml(options?: FileUniversalOptions): string[];
         resourceStringArrayToXml(options?: FileUniversalOptions): string[];

@@ -439,9 +439,9 @@ export function capitalize(value: string, upper?: boolean) {
     return upper === false ? value.charAt(0).toLowerCase() + value.substring(1) : value.charAt(0).toUpperCase() + value.substring(1).toLowerCase();
 }
 
-export function capitalizeString(value: string) {
+export function upperCaseString(value: string) {
     let result: Undef<string[]>;
-    const pattern = /\b([a-z].*?)\b/g;
+    const pattern = /\b([a-z])/g;
     let match: Null<RegExpMatchArray>;
     while (match = pattern.exec(value)) {
         if (result === undefined) {
@@ -487,12 +487,7 @@ export function convertUnderscore(value: string) {
     while (i < length) {
         const ch = value.charAt(i++);
         const upper = ch === ch.toUpperCase();
-        if (lower && upper && ch !== '_') {
-            result += '_' + ch.toLowerCase();
-        }
-        else {
-            result += ch;
-        }
+        result += lower && upper && ch !== '_' ? '_' + ch.toLowerCase() : ch;
         lower = !upper;
     }
     CACHE_UNDERSCORE[value] = result;
@@ -514,12 +509,7 @@ export function convertCamelCase(value: string, char = '-') {
     while (i < length) {
         const ch = value.charAt(i++);
         if (ch !== char) {
-            if (previous === char) {
-                result += ch.toUpperCase();
-            }
-            else {
-                result += ch;
-            }
+            result += previous === char ? ch.toUpperCase() : ch;
         }
         previous = ch;
     }
@@ -528,15 +518,7 @@ export function convertCamelCase(value: string, char = '-') {
 }
 
 export function convertWord(value: string, dash?: boolean) {
-    let result = '';
-    const pattern = dash ? /[a-zA-Z\d]/ : /\w/;
-    const length = value.length;
-    let i = 0;
-    while (i < length) {
-        const ch = value.charAt(i++);
-        result += pattern.test(ch) ? ch : '_';
-    }
-    return result;
+    return value.replace(dash ? /[^A-Za-z\d]+/g : /[^\w]+/g, '_');
 }
 
 export function convertInt(value: string) {
