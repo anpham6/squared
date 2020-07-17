@@ -24,7 +24,8 @@
     ],
     "production": [],
     "development": [
-      { "mount": "build", "path": "/build" }
+      { "mount": "build", "path": "/build" },
+      { "mount": "temp", "path": "/temp" }
     ]
   },
   "external": {

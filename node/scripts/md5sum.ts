@@ -197,17 +197,22 @@ if (master) {
                 if (data && host) {
                     parse(fs.readFileSync(path.resolve(__dirname, data)), (err, csv: string[][]) => {
                         if (!err) {
+                            let html = '<html><body><ol>';
                             for (const row of csv) {
                                 const filename = row[1];
                                 const url = row[2];
                                 if (errors.includes(filename)) {
-                                    warnMessage('MD5 not matched -> ' + host + url, filename);
+                                    const href = host + url;
+                                    html += `<li><a href="${href}">${href}</a> (${filename})</li>`;
+                                    warnMessage('MD5 not matched -> ' + href, filename);
                                 }
                                 else if (notFound.includes(filename)) {
                                     warnMessage('MD5 not found', filename);
                                 }
                             }
-                            failMessage((errors.length + notFound.length) + ' errors', snapshot);
+                            html += '</ol></body></html>';
+                            fs.writeFileSync(path.resolve(__dirname, snapshot!, 'errors.html'), html);
+                            failMessage((errors.length + notFound.length) + ' errors', host + snapshot!.replace(/^[.]/, '') + '/errors.html');
                         }
                         else {
                             failMessage("Unable to read CSV data file", data);
@@ -224,13 +229,11 @@ if (master) {
                     failMessage((errors.length + notFound.length) + ' errors', snapshot);
                 }
             }
+            else if (rebase) {
+                successMessage('MD5 rebase', snapshot + ' -> ' + master);
+            }
             else {
-                if (rebase) {
-                    successMessage('MD5 rebase', snapshot + ' -> ' + master);
-                }
-                else {
-                    successMessage('MD5 matched', master + ' -> ' + snapshot);
-                }
+                successMessage('MD5 matched', master + ' -> ' + snapshot);
             }
         }
         else {

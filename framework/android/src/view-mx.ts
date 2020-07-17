@@ -112,7 +112,7 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top:
         }
         else {
             const setBoxPadding = (offset: number, padding = false) => {
-                let upper = Math.round(offset);
+                let upper = Math.floor(offset);
                 if (upper > 0) {
                     const boxPadding = (inlineStyle || height > lineHeight) && (node.styleText || padding) && !node.inline && !(node.inputElement && !isLength(styleValue, true)) || !!parent;
                     if (boxPadding) {

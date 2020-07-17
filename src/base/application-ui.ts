@@ -192,7 +192,6 @@ function isPlainText(value: string) {
 
 const getCounterIncrementValue = (parent: HTMLElement, counterName: string, pseudoElt: string, sessionId: string, fallback?: number) => getCounterValue(getElementCache<CSSStyleDeclaration>(parent, `styleMap${pseudoElt}`, sessionId)?.counterIncrement, counterName, fallback);
 const extractQuote = (value: string) => /^"(.+)"$/.exec(value)?.[1] || value;
-const isHorizontalAligned = (node: NodeUI) => !node.blockStatic && node.autoMargin.horizontal !== true && !(node.blockDimension && node.css('width') === '100%') && (!(node.plainText && node.multiline) || node.floating);
 const requirePadding = (node: NodeUI, depth?: number): boolean => node.textElement && (node.blockStatic || node.multiline || depth === 1);
 const getMapIndex = (value: number) => -(value + 2);
 
@@ -921,7 +920,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     if (m === 0) {
                                         const next = item.siblingsTrailing[0];
                                         if (next) {
-                                            if (!isHorizontalAligned(item) || next.alignedVertically([item]) > 0) {
+                                            if (!item.inlineFlow || next.alignedVertically([item]) > 0) {
                                                 vertical.push(item);
                                             }
                                             else {
@@ -1016,7 +1015,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     if (segEnd === axisY[q - 1]) {
                                         parentY.removeAlign(NODE_ALIGNMENT.UNKNOWN);
                                     }
-                                    else if (isHorizontalAligned(segEnd) && segEnd !== axisY[q - 1]) {
+                                    else if (segEnd.inlineFlow && segEnd !== axisY[q - 1]) {
                                         segEnd.addAlign(NODE_ALIGNMENT.EXTENDABLE);
                                     }
                                     if (this.addLayout(layout)) {

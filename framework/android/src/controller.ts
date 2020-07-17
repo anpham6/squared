@@ -1390,8 +1390,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public checkLinearHorizontal(layout: LayoutUI<T>) {
-        const floated = layout.floated;
-        if ((!floated || floated.size === 1 && floated.has('left')) && layout.node.lineHeight === 0 && layout.singleRowAligned) {
+        if (layout.node.lineHeight === 0 && (!layout.floated || !layout.floated.has('right')) && layout.singleRowAligned) {
             const { fontSize, lineHeight } = layout.item(0) as T;
             const boxWidth = layout.parent.actualBoxWidth();
             let contentWidth = 0;
@@ -2425,9 +2424,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 let height = 0;
                                 let j = 0;
                                 while (j < rows.length) {
-                                    height += Math.max(...plainMap(rows[j++], sibling => Math.max(sibling.lineHeight, sibling.linear.height)));
+                                    height += Math.ceil(Math.max(...plainMap(rows[j++], sibling => Math.max(sibling.lineHeight, sibling.linear.height))));
                                 }
-                                if (Math.ceil(height) >= currentFloatedHeight) {
+                                if (height >= currentFloatedHeight) {
                                     currentFloated = undefined;
                                     currentFloatedWidth = 0;
                                 }

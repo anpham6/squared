@@ -45,8 +45,8 @@ function isTextElement(node: View) {
     return node.textElement && !(node.tagName === 'LABEL' && node.toElementString('htmlFor') !== '');
 }
 
-const checkBreakable = (node: View, checkMargin?: boolean): boolean => node.plainText || node.naturalChild && node.naturalElements.length === 0 && node.innerAfter === undefined && node.innerBefore === undefined && isUnstyled(node, checkMargin);
-const hasTextIndent = (node: View) => node.textElement && node.naturalElement && node.textIndent < 0;
+const checkBreakable = (node: View, checkMargin?: boolean): boolean => node.plainText || node.naturalChild && node.naturalElements.length === 0 && !node.floating && node.innerAfter === undefined && node.innerBefore === undefined && isUnstyled(node, checkMargin);
+const hasTextIndent = (node: View) => node.textElement && node.textIndent < 0 && node.naturalElement && !node.floating;
 
 export default class Multiline<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
@@ -56,7 +56,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
     public condition(node: T, parent: T) {
         if (node.naturalElements.length === 0) {
             if (parent.layoutHorizontal && parent.layoutRelative) {
-                if ((node.multiline || parent.contentAltered) && checkBreakable(node)) {
+                if ((node.multiline || node.textElement && (parent.contentAltered || node.previousSibling?.multiline || node.nextSibling?.multiline)) && checkBreakable(node)) {
                     return true;
                 }
             }
@@ -74,18 +74,25 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                 let length = minCount - node.length;
                 if (length > 0) {
                     const nodes: [number, T][] = [];
-                    for (const item of node.children.filter((child: T) => isTextElement(child) && checkBreakable(child, false) && child.css('columnSpan') !== 'all').sort((a, b) => a.textContent.length >= b.textContent.length ? -1 : 1) as T[]) {
+                    const breakable = node.children.filter((child: T) => isTextElement(child) && checkBreakable(child, false) && child.css('columnSpan') !== 'all').sort((a, b) => a.textContent.length >= b.textContent.length ? -1 : 1) as T[];
+                    const q = breakable.length;
+                    const maxCount = Math.ceil(q / length);
+                    for (let i = 0; i < q; ++i) {
+                        const item = breakable[i];
                         const range = document.createRange();
                         range.selectNodeContents(item.element!);
                         const clientRects = range.getClientRects();
                         let columns = -1,
                             previousLeft = -Infinity;
-                        for (let i = 0, q = clientRects.length; i < q; ++i) {
-                            const { left, right } = clientRects.item(i) as ClientRect;
+                        for (let j = 0, r = clientRects.length; j < r; ++j) {
+                            const { left, right } = clientRects.item(j) as ClientRect;
                             if (Math.floor(left) >= previousLeft) {
                                 ++columns;
                             }
                             previousLeft = Math.ceil(right);
+                        }
+                        if (columns > maxCount) {
+                            columns = maxCount;
                         }
                         if (columns > 0 && length - columns >= 0) {
                             nodes.push([columns + 1, item]);
@@ -113,9 +120,14 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
             for (let i = 0; i < length; ++i) {
                 const child = children[i];
                 if (!child.inlineFlow) {
-                    return false;
+                    if (i < length - 1) {
+                        return false;
+                    }
                 }
-                else if (isTextElement(child) && !(child.lineBreakLeading && (i === length - 1 || child.lineBreakTrailing))) {
+                else if (child.floating) {
+                    floatHeight = Math.max(child.linear.height, floatHeight);
+                }
+                else if (isTextElement(child) && !(child.lineBreakLeading && (i === length - 1 || child.lineBreakTrailing) || i === 0 && child.lineBreakTrailing)) {
                     if (checkBreakable(child) && !child.preserveWhiteSpace) {
                         if (child.multiline) {
                             ++j;
@@ -133,9 +145,6 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                         textHeight += child.bounds.height;
                     }
                     ++l;
-                }
-                else if (child.floating) {
-                    floatHeight = Math.max(child.linear.height, floatHeight);
                 }
             }
             if (j > 0 && (k > 0 || l > 1 || floatHeight > 0 && textHeight > floatHeight) || (k > 1 || m > 0 && n > 1) && (node.textBounds?.numberOfLines || 0) > 1) {
@@ -163,12 +172,13 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
         const breakable = mainData || [[1, node]];
         for (let i = 0, length = breakable.length; i < length; ++i) {
             const [columns, seg] = breakable[i];
+            const element = seg.element!;
             partition = columns > 1;
             let adjustment = fontAdjust,
                 textContent: string,
                 wrapperContainer: Undef<T[]>;
             if (seg.naturalElement) {
-                textContent = this.resource!.removeExcludedFromText(seg, seg.element!);
+                textContent = this.resource!.removeExcludedFromText(seg, element);
                 const value = getFontMeasureAdjust(seg);
                 if (value === Infinity) {
                     continue;
@@ -192,7 +202,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
             else {
                 const q = words.length;
                 if (q > 1) {
-                    const { element, depth, textStyle, fontSize, lineHeight } = seg;
+                    const { depth, textStyle, fontSize, lineHeight } = seg;
                     const fontFamily = seg.css('fontFamily');
                     const bounds = !seg.hasPX('width') && seg.textBounds || seg.bounds;
                     const height = seg.bounds.height / (bounds.numberOfLines || 1);
@@ -203,6 +213,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                         container.inlineText = true;
                         container.renderExclude = false;
                         container.contentAltered = true;
+                        container.textContent = value;
                         container.unsafe('element', element);
                         container.setCacheValue('naturalElement', false);
                         container.setCacheValue('tagName', tagName);
@@ -220,7 +231,6 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                         };
                         container.textBounds = textBounds;
                         container.unsafe('bounds', textBounds);
-                        container.textContent = value;
                         container.setControlType(CONTAINER_ANDROID.TEXT, CONTAINER_NODE.TEXT);
                         container.exclude({ resource: NODE_RESOURCE.BOX_STYLE, section: APP_SECTION.DOM_TRAVERSE | APP_SECTION.EXTENSION });
                         return container;

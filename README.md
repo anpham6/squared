@@ -179,7 +179,7 @@ squared.settings = {
     compressImages: false, // png | jpeg - TinyPNG API Key <https://tinypng.com/developers>
     convertImages: '', // png | jpeg | bmp | squared-apache: gif | tiff
     supportNegativeLeftTop: true,
-    fontMeasureWrap: true, // possibly significant slower rendering performance (alias: android.delegate.multiline)
+    fontMeasureWrap: true, // slower rendering performance (alias: android.delegate.multiline)
     fontMeasureAdjust: 0.75, // 0 < wider | thinner > 0 (element: data-android-font-measure-adjust)
     customizationsOverwritePrivilege: true,
     showAttributes: true,
