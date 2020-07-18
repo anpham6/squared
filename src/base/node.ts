@@ -2252,7 +2252,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         const result = this._cached.inline;
         if (result === undefined) {
             const value = this.display;
-            return this._cached.inline = value === 'inline' || value === 'initial' && !ELEMENT_BLOCK.includes(this.tagName);
+            return this._cached.inline = value === 'inline' || value === 'initial' && !ELEMENT_BLOCK.has(this.tagName);
         }
         return result;
     }
@@ -2299,7 +2299,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     result = true;
                     break;
                 case 'initial':
-                    result = ELEMENT_BLOCK.includes(this.tagName);
+                    result = ELEMENT_BLOCK.has(this.tagName);
                     break;
                 case 'inline':
                     if (this.tagName === 'svg' && this.actualParent!.htmlElement) {

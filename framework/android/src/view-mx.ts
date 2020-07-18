@@ -2637,7 +2637,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         const value = this.elementId?.trim() || getNamedItem(this.element as HTMLElement, 'name');
                         if (value !== '') {
                             name = value.replace(/[^\w$\-_.]/g, '_').toLowerCase();
-                            if (name === 'parent' || RESERVED_JAVA.includes(name)) {
+                            if (name === 'parent' || RESERVED_JAVA.has(name)) {
                                 name = '_' + name;
                             }
                         }

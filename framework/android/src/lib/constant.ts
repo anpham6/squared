@@ -194,7 +194,7 @@ export const LOCALIZE_ANDROID = {
     layout_constraintRight_toLeftOf: 'layout_constraintEnd_toStartOf'
 };
 
-export const RESERVED_JAVA = [
+export const RESERVED_JAVA = new Set([
     'abstract',
     'assert',
     'boolean',
@@ -248,4 +248,4 @@ export const RESERVED_JAVA = [
     'void',
     'volatile',
     'while'
-];
+]);

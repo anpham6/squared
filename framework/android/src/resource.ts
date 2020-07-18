@@ -153,7 +153,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                 if (!name) {
                     name = `__symbol${++Resource.SYMBOL_COUNTER}`;
                 }
-                else if (numeric || /^\d/.test(name) || RESERVED_JAVA.includes(name)) {
+                else if (numeric || /^\d/.test(name) || RESERVED_JAVA.has(name)) {
                     name = `__${name}`;
                 }
                 if (strings.has(name)) {

@@ -888,6 +888,7 @@ const COLOR_CSS3: ColorResult[] = [
     }
 ];
 const CACHE_COLORDATA: ObjectMap<ColorData> = {};
+const CACHE_COLORRESULT = new Map<string, ColorResult>();
 
 function hue2rgb(t: number, p: number, q: number) {
     if (t < 0) {
@@ -908,20 +909,19 @@ function hue2rgb(t: number, p: number, q: number) {
     return p;
 }
 
-const convertOpacity  = (value: string) => parseFloat(value) / (value.includes('%') ? 100 : 1);
+const convertOpacity = (value: string) => parseFloat(value) / (value.includes('%') ? 100 : 1);
 const clampOpacity = (value: number) => clamp(value) * 255;
 
 export function findColorName(value: string) {
-    value = value.toLowerCase();
-    const length = COLOR_CSS3.length;
-    let i = 0;
-    while (i < length) {
-        const color = COLOR_CSS3[i++];
-        if (color.key === value) {
-            return color;
+    if (CACHE_COLORRESULT.size === 0) {
+        const length = COLOR_CSS3.length;
+        let i = 0;
+        while (i < length) {
+            const color = COLOR_CSS3[i++];
+            CACHE_COLORRESULT.set(color.key, color);
         }
     }
-    return undefined;
+    return CACHE_COLORRESULT.get(value.toLowerCase());
 }
 
 export function findColorShade(value: string) {

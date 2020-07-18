@@ -402,7 +402,7 @@ declare namespace lib {
             layout_constraintLeft_toRightOf: string;
             layout_constraintRight_toLeftOf: string;
         };
-        const RESERVED_JAVA: string[];
+        const RESERVED_JAVA: Set<string>;
     }
 
     namespace customizations {

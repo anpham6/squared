@@ -1,6 +1,6 @@
 import { iterateArray, withinRange } from './util';
 
-export const ELEMENT_BLOCK = [
+export const ELEMENT_BLOCK = new Set([
     'ADDRESS',
     'ARTICLE',
     'ASIDE',
@@ -34,7 +34,7 @@ export const ELEMENT_BLOCK = [
     'SECTION',
     'TABLE',
     'UL'
-];
+]);
 
 export function newBoxRect(): BoxRect {
     return {

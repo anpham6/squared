@@ -710,8 +710,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             const item = templates[i++];
             switch (item.type) {
                 case NODE_TEMPLATE.XML: {
-                    const node = item.node;
-                    const { controlName, attributes } = item as NodeXmlTemplate<T>;
+                    const { node, controlName, attributes } = item as NodeXmlTemplate<T>;
                     const { id, renderTemplates } = node;
                     const next = depth + 1;
                     const previous = node.depth < 0 ? depth + node.depth : depth;

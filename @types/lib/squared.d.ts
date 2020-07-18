@@ -146,7 +146,7 @@ declare module "lib" {
     }
 
     namespace dom {
-        const ELEMENT_BLOCK: string[];
+        const ELEMENT_BLOCK: Set<string>;
         function newBoxRect(): BoxRect;
         function newBoxRectDimension(): BoxRectDimension;
         function withinViewport(rect: DOMRect | ClientRect): boolean;
