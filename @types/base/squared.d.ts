@@ -361,6 +361,7 @@ declare module "base" {
 
     class Node extends squared.lib.base.Container<Node> implements BoxModel {
         static readonly TEXT_STYLE: string[];
+        static sanitizeCss(element: HTMLElement, styleMap: StringMap, style?: CSSStyleDeclaration): StringMap;
         depth: number;
         childIndex: number;
         documentRoot: boolean;
@@ -396,6 +397,7 @@ declare module "base" {
         cssApply(values: StringMap, cache?: boolean): this;
         cssCopy(node: Node, ...attrs: string[]): void;
         cssCopyIfEmpty(node: Node, ...attrs: string[]): void;
+        cssPseudoElement(name: string): Null<StringMap>;
         parseUnit(value: string, options?: ParseUnitOptions): number;
         has(attr: string, options?: HasOptions): boolean;
         hasPX(attr: string, options?: HasPXOptions): boolean;
@@ -425,7 +427,6 @@ declare module "base" {
         get inlineText(): boolean;
         set textBounds(value);
         get textBounds(): Null<BoxRectDimension>;
-        get initial(): Undef<InitialData<Node>>;
         get box(): BoxRectDimension;
         get bounds(): BoxRectDimension;
         get linear(): BoxRectDimension;
@@ -513,7 +514,7 @@ declare module "base" {
         get previousElementSibling(): Null<Node>;
         get nextElementSibling(): Null<Node>;
         get attributes(): StringMap;
-        get boundingClientRect(): Undef<DOMRect>;
+        get boundingClientRect(): Null<DOMRect>;
         get cssStyle(): StringMap;
         get textStyle(): StringMap;
         get center(): Point;
@@ -683,6 +684,8 @@ declare module "base" {
         get innerMostWrapped(): NodeUI;
         get outerMostWrapper(): NodeUI;
         get preserveWhiteSpace(): boolean;
+        get firstLineStyle(): Null<StringMap>;
+        get firstLetterStyle(): Null<StringMap>;
         constructor(id: number, sessionId?: string, element?: Element);
     }
 

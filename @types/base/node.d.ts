@@ -94,6 +94,8 @@ interface CachedValueUI<T> extends CachedValue<T> {
     textEmpty?: boolean;
     containerName?: string;
     baselineHeight?: number;
+    firstLineStyle?: Null<StringMap>;
+    firstLetterStyle?: Null<StringMap>;
 }
 
 interface LocalSettingsUI {
@@ -173,6 +175,7 @@ interface CssInitialOptions {
 interface HasOptions extends CssInitialOptions {
     not?: string | string[];
     type?: number;
+    ignoreDefault?: boolean;
 }
 
 interface HasPXOptions extends CssInitialOptions {

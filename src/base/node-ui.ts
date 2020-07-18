@@ -842,7 +842,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public inheritApply(module: string, data: StandardMap) {
         switch (module) {
             case 'initial':
-                cloneObject(data, this.initial);
+                cloneObject(data, this._initial);
                 break;
             case 'textStyle':
                 this.cssApply(data);
@@ -2027,6 +2027,16 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             return this._cached.preserveWhiteSpace = value === 'pre' || value === 'pre-wrap';
         }
         return result;
+    }
+
+    get firstLetterStyle() {
+        const result = this._cached.firstLetterStyle;
+        return result === undefined ? this._cached.firstLetterStyle = this.cssPseudoElement('first-letter') : result;
+    }
+
+    get firstLineStyle() {
+        const result = this._cached.firstLineStyle;
+        return result === undefined ? this._cached.firstLineStyle = this.cssPseudoElement('first-line') : result;
     }
 
     set use(value) {

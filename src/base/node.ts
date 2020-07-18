@@ -56,7 +56,7 @@ function setNaturalChildren(node: T): T[] {
         });
     }
     else {
-        children = (node.initial?.children || node.children).slice(0);
+        children = node.children.slice(0);
     }
     node.naturalChildren = children;
     return children;
@@ -798,6 +798,28 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         'wordSpacing'
     ];
 
+    public static sanitizeCss(element: HTMLElement, styleMap: StringMap, style?: CSSStyleDeclaration) {
+        const result: StringMap = {};
+        const writingMode = style !== undefined ? style.writingMode : '';
+        for (let attr in styleMap) {
+            let value = styleMap[attr]!;
+            const alias = checkWritingMode(attr, writingMode);
+            if (alias !== '') {
+                if (!styleMap[alias]) {
+                    attr = alias;
+                }
+                else {
+                    continue;
+                }
+            }
+            value = checkStyleValue(element, attr, value, style);
+            if (value !== '') {
+                result[attr] = value;
+            }
+        }
+        return result;
+    }
+
     public documentRoot = false;
     public depth = -1;
     public childIndex = Infinity;
@@ -869,9 +891,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             const styleMap: Undef<StringMap> = getElementCache(element, 'styleMap', sessionId);
             if (styleMap) {
                 if (this.styleElement) {
-                    const style = this.style;
-                    const revisedMap: StringMap = {};
-                    const writingMode = style.writingMode;
                     if (!this.pseudoElement) {
                         const items = Array.from(element.style);
                         const length = items.length;
@@ -883,23 +902,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             }
                         }
                     }
-                    for (let attr in styleMap) {
-                        const value = styleMap[attr]!;
-                        const alias = checkWritingMode(attr, writingMode);
-                        if (alias !== '') {
-                            if (!styleMap[alias]) {
-                                attr = alias;
-                            }
-                            else {
-                                continue;
-                            }
-                        }
-                        const result = checkStyleValue(element, attr, value, style);
-                        if (result !== '') {
-                            revisedMap[attr] = result;
-                        }
-                    }
-                    this._styleMap = revisedMap;
+                    this._styleMap = Node.sanitizeCss(element, styleMap, this.style);
                 }
                 else {
                     this._styleMap = styleMap;
@@ -1352,6 +1355,32 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return result;
     }
 
+    public cssPseudoElement(name: string) {
+        if (this.styleElement) {
+            const element = this._element as HTMLElement;
+            const styleMap = getElementCache<StringMap>(element, 'styleMap::' + name, this.sessionId);
+            if (styleMap) {
+                switch (name) {
+                    case 'before':
+                    case 'after':
+                        return Node.sanitizeCss(element, styleMap, getStyle(element, name));
+                    case 'first-letter':
+                    case 'first-line':
+                        switch (this.display) {
+                            case 'block':
+                            case 'inline-block':
+                            case 'list-item':
+                            case 'table-cell':
+                                return Node.sanitizeCss(element, styleMap, this.style);
+                            default:
+                                return null;
+                        }
+                }
+            }
+        }
+        return null;
+    }
+
     public toInt(attr: string, fallback = NaN, initial = false) {
         const value = parseInt((initial && this._initial?.styleMap || this._styleMap)[attr]!);
         return !isNaN(value) ? value : fallback;
@@ -1407,13 +1436,14 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     public has(attr: string, options?: HasOptions) {
         const value = options?.initial ? this.cssInitial(attr, options) : this._styleMap[attr];
         if (value) {
-            if (value === 'initial' || value === CSS_PROPERTIES[attr]?.value) {
-                return false;
-            }
             let not: Undef<string | string[]>,
-                type: Undef<number>;
+                type: Undef<number>,
+                ignoreDefault: Undef<boolean>;
             if (options) {
-                ({ not, type } = options);
+                ({ not, type, ignoreDefault } = options);
+            }
+            if (value === 'initial' || ignoreDefault !== true && value === CSS_PROPERTIES[attr]?.value) {
+                return false;
             }
             if (not) {
                 if (value === not) {
@@ -1954,10 +1984,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get documentBody() {
         return this._element === document.body;
-    }
-
-    get initial() {
-        return this._initial;
     }
 
     get bounds() {
@@ -2830,7 +2856,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get boundingClientRect() {
-        return this.styleElement && this._element!.getBoundingClientRect() || this._bounds as Undef<DOMRect>;
+        return this.styleElement && this._element!.getBoundingClientRect() || this._bounds as DOMRect || null;
     }
 
     get fontSize(): number {

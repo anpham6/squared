@@ -447,7 +447,7 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     borderBottomColor: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
-        value: ''
+        value: 'rgb(0, 0, 0)'
     },
     borderBottomLeftRadius: {
         trait: CSS_TRAITS.CALC,
@@ -518,7 +518,7 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     borderLeftColor: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
-        value: ''
+        value: 'rgb(0, 0, 0)'
     },
     borderLeftStyle: {
         trait: 0,
@@ -547,7 +547,7 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     borderRightColor: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
-        value: ''
+        value: 'rgb(0, 0, 0)'
     },
     borderRightStyle: {
         trait: 0,
@@ -580,7 +580,7 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     borderTopColor: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
-        value: ''
+        value: 'rgb(0, 0, 0)'
     },
     borderTopLeftRadius: {
         trait: CSS_TRAITS.CALC,
@@ -637,7 +637,7 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     color: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
-        value: ''
+        value: 'rgb(0, 0, 0)'
     },
     columnCount: {
         trait: CSS_TRAITS.CALC,
@@ -661,7 +661,7 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     columnRuleColor: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
-        value: ''
+        value: 'rgb(0, 0, 0)'
     },
     columnRuleStyle: {
         trait: 0,
@@ -1064,7 +1064,7 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     outlineColor: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
-        value: ''
+        value: 'rgb(0, 0, 0)'
     },
     outlineOffset: {
         trait: CSS_TRAITS.CALC,
@@ -1259,7 +1259,7 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     textDecorationColor: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
-        value: ''
+        value: 'rgb(0, 0, 0)'
     },
     textDecorationLine: {
         trait: 0,
