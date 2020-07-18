@@ -1,7 +1,7 @@
 {
   "name": "squared",
   "version": "1.13.0",
-  "description": "Converts HTML and SVG into any mobile or desktop UI with the flexibility and accuracy of Chrome. CSS Grid, Flexbox, and CSS/SMIL animations are supported in the Android framework.",
+  "description": "Virtual DOM framework which specializes in recreating user interfaces.",
   "main": "dist/squared.js",
   "scripts": {
     "express": "node ./serve.js",
@@ -77,7 +77,6 @@
     "iPhone",
     "Safari",
     "Flutter",
-    "Xamarin",
     "androme",
     "squared-apache",
     "ktor",

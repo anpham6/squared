@@ -155,16 +155,13 @@ export function getDataSet(dataset: StringMap | DOMStringMap, prefix: string) {
 }
 
 export function isUnstyled(node: View, checkMargin = true) {
-    if (node.contentBoxWidth === 0 && node.contentBoxHeight === 0 && (!checkMargin || !node.blockStatic && node.marginTop === 0 && node.marginBottom === 0) && !node.hasWidth && !node.hasHeight && !node.has('maxWidth') && !node.has('maxHeight') && !node.visibleStyle.background && !node.positionRelative) {
-        switch (node.css('verticalAlign')) {
-            case 'baseline':
-            case 'initial':
-                return true;
-            default:
-                return false;
-        }
+    switch (node.css('verticalAlign')) {
+        case 'baseline':
+        case 'initial':
+            return node.contentBoxWidth === 0 && node.contentBoxHeight === 0 && (!checkMargin || !node.blockStatic && node.marginTop === 0 && node.marginBottom === 0) && !node.visibleStyle.background && !node.positionRelative && !node.hasWidth && !node.hasHeight && !node.has('maxWidth') && !node.has('maxHeight');
+        default:
+            return false;
     }
-    return false;
 }
 
 export function getHorizontalBias(node: View) {

@@ -15,7 +15,6 @@ import Relative from './extensions/relative';
 import Sprite from './extensions/sprite';
 import Substitute from './extensions/substitute';
 import Table from './extensions/table';
-import WhiteSpace from './extensions/whitespace';
 
 import ConstraintGuideline from './extensions/constraint/guideline';
 
@@ -94,7 +93,6 @@ const appBase: squared.base.AppFramework<View> = {
         Sprite,
         Substitute,
         Table,
-        WhiteSpace,
         constraint: {
             Guideline: ConstraintGuideline
         },
@@ -323,7 +321,7 @@ const appBase: squared.base.AppFramework<View> = {
             [EN.SPRITE]: new Sprite(EN.SPRITE, framework),
             [EN.ACCESSIBILITY]: new Accessibility(EN.ACCESSIBILITY, framework),
             [EN.RELATIVE]: new Relative(EN.RELATIVE, framework),
-            [EN.WHITESPACE]: new WhiteSpace(EN.WHITESPACE, framework),
+            [EN.WHITESPACE]: new squared.base.extensions.WhiteSpace(EN.WHITESPACE, framework),
             [EA.EXTERNAL]: new External(EA.EXTERNAL, framework),
             [EA.SUBSTITUTE]: new Substitute(EA.SUBSTITUTE, framework),
             [EA.DELEGATE_BACKGROUND]: new DelegateBackground(EA.DELEGATE_BACKGROUND, framework),

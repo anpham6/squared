@@ -315,7 +315,9 @@ const validAboveChild = (node: NodeUI, children: boolean) => !node.hasHeight && 
 const validBelowChild = (node: NodeUI, children: boolean) => !node.hasHeight && node.borderTopWidth === 0 && node.paddingTop === 0 && canResetChild(node, children);
 const validSibling = (node: NodeUI) => node.pageFlow && node.blockDimension && !node.floating && !node.excluded;
 
-export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
+export default class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
+    public readonly eventOnly = true;
+
     public afterBaseLayout(sessionId: string) {
         const { cache, excluded } = this.application.getProcessing(sessionId)!;
         const clearMap = this.application.clearMap;
