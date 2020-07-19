@@ -1,8 +1,8 @@
 type T = Node;
 
 const { USER_AGENT, isUserAgent } = squared.lib.client;
-const { CSS_PROPERTIES, CSS_TRAITS, CSS_UNIT, checkStyleValue, checkWritingMode, formatPX, getInheritedStyle, getStyle, hasComputedStyle, isAngle, isLength, isPercent, isTime, isPx, parseSelectorText, parseUnit } = squared.lib.css;
-const { ELEMENT_BLOCK, assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
+const { CSS_PROPERTIES, CSS_TRAITS, CSS_UNIT, ELEMENT_BLOCK, checkStyleValue, checkWritingMode, formatPX, getInheritedStyle, getStyle, hasComputedStyle, isAngle, isLength, isPercent, isTime, isPx, parseSelectorText, parseUnit } = squared.lib.css;
+const { assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { CSS, FILE } = squared.lib.regex;
 const { actualClientRect, actualTextRangeRect, deleteElementCache, getElementAsNode, getElementCache, getPseudoElt, setElementCache } = squared.lib.session;
 const { aboveRange, belowRange, convertCamelCase, convertFloat, convertInt, hasBit, hasValue, isNumber, isObject, iterateArray, spliceString, splitEnclosing, splitPair } = squared.lib.util;

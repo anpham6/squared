@@ -55,7 +55,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
         const percentHeight = requireHeight && hasPercentHeight(node, parent) && (node.cssInitial('height') !== '100%' || node.has('maxHeight', { type: CSS_UNIT.PERCENT, not: '100%' })) && (node.rootElement || parent.percentHeight > 0);
         const marginVertical = requireHeight && hasMarginVertical(node);
         if (percentWidth || percentHeight || marginHorizontal || marginVertical) {
-            node.data(this.name, 'mainData', { percentWidth, percentHeight, marginHorizontal, marginVertical } as PercentData);
+            node.data(this.name, 'mainData', { percentWidth, percentHeight, marginHorizontal, marginVertical });
             return true;
         }
         return false;

@@ -5,6 +5,8 @@ import { isUnstyled } from '../../lib/util';
 import { CONTAINER_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
+type MultilineData<T> = [number, T][];
+
 const { measureTextWidth } = squared.lib.dom;
 
 const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
@@ -73,7 +75,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
             if (minCount !== Infinity) {
                 let length = minCount - node.length;
                 if (length > 0) {
-                    const nodes: [number, T][] = [];
+                    const nodes: MultilineData<T> = [];
                     const breakable = node.children.filter((child: T) => isTextElement(child) && checkBreakable(child, false) && child.css('columnSpan') !== 'all').sort((a, b) => a.textContent.length >= b.textContent.length ? -1 : 1) as T[];
                     const q = breakable.length;
                     const maxCount = Math.ceil(q / length);
@@ -113,7 +115,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
         const length = node.length;
         if (length > 0) {
             const children = node.children as T[];
-            const nodes: [number, T][] = [];
+            const nodes: MultilineData<T> = [];
             let textHeight = 0,
                 floatHeight = 0,
                 firstLine: Undef<Null<StringMap>>;
@@ -172,7 +174,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
             return undefined;
         }
         const application = this.application as android.base.Application<T>;
-        const mainData = node.data<[number, T][]>(this.name, 'mainData');
+        const mainData = node.data<MultilineData<T>>(this.name, 'mainData');
         const parentContainer = mainData ? node : parent;
         const { children, sessionId } = parentContainer;
         if (isNaN(fontAdjust)) {
@@ -213,10 +215,11 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
             else {
                 const q = words.length;
                 if (q > 1) {
-                    const { depth, textStyle, fontSize, lineHeight, naturalElement } = seg;
+                    const { textStyle, fontSize, lineHeight, naturalElement } = seg;
+                    const depth = seg.depth + (seg === node ? 1 : 0);
                     const fontFamily = seg.css('fontFamily');
                     const bounds = !seg.hasPX('width') && seg.textBounds || seg.bounds;
-                    const height = seg.bounds.height / (bounds.numberOfLines || 1);
+                    const height = Math.floor(seg.bounds.height / (bounds.numberOfLines || 1));
                     const initialData: InitialData<T> = Object.freeze({ styleMap: { ...seg.unsafe<StringMap>('styleMap') } });
                     const cssData: StringMap = {
                         position: 'static',

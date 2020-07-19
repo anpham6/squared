@@ -14,6 +14,7 @@ const NUMERALS = [
 ];
 
 const CACHE_CAMELCASE: StringMap = {};
+const CACHE_HYPHENATED: StringMap = {};
 const CACHE_UNDERSCORE: StringMap = {};
 const REGEXP_DECIMAL = new RegExp(`^${STRING.DECIMAL}$`);
 
@@ -475,10 +476,22 @@ export function spliceString(value: string, index: number, length: number) {
     return index === 0 ? value.substring(length) : value.substring(0, index) + value.substring(index + length);
 }
 
-export function convertUnderscore(value: string) {
-    const cacheData = CACHE_UNDERSCORE[value];
-    if (cacheData) {
-        return cacheData;
+export function convertHyphenated(value: string, char = '-') {
+    switch (char) {
+        case '-': {
+            const cacheData = CACHE_HYPHENATED[value];
+            if (cacheData) {
+                return cacheData;
+            }
+            break;
+        }
+        case '_': {
+            const cacheData = CACHE_UNDERSCORE[value];
+            if (cacheData) {
+                return cacheData;
+            }
+            break;
+        }
     }
     let result = value[0].toLowerCase(),
         lower = true;
@@ -487,10 +500,17 @@ export function convertUnderscore(value: string) {
     while (i < length) {
         const ch = value.charAt(i++);
         const upper = ch === ch.toUpperCase();
-        result += lower && upper && ch !== '_' ? '_' + ch.toLowerCase() : ch;
+        result += lower && upper && ch !== char ? char + ch.toLowerCase() : ch;
         lower = !upper;
     }
-    CACHE_UNDERSCORE[value] = result;
+    switch (char) {
+        case '-':
+            CACHE_HYPHENATED[value] = result;
+            break;
+        case '_':
+            CACHE_UNDERSCORE[value] = result;
+            break;
+    }
     return result;
 }
 

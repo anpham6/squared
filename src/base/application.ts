@@ -5,12 +5,14 @@ type AppViewModel = squared.base.AppViewModel;
 type FileActionOptions = squared.base.FileActionOptions;
 type PreloadImage = HTMLImageElement | string;
 
-const { CSS_PROPERTIES, checkMediaRule, getSpecificity, hasComputedStyle, insertStyleSheetRule, parseSelectorText } = squared.lib.css;
+const { CSS_PROPERTIES, CSS_TRAITS, checkMediaRule, getSpecificity, hasComputedStyle, insertStyleSheetRule, getPropertiesAsTraits, parseSelectorText } = squared.lib.css;
 const { FILE, STRING } = squared.lib.regex;
 const { frameworkNotInstalled, getElementCache, setElementCache } = squared.lib.session;
 const { capitalize, convertCamelCase, parseMimeType, plainMap, promisify, resolvePath, splitPair, splitPairStart, trimBoth } = squared.lib.util;
 
 const REGEXP_DATAURI = new RegExp(`url\\("?(${STRING.DATAURI})"?\\),?\\s*`, 'g');
+const CSS_SHORTHANDNONE = getPropertiesAsTraits(CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE);
+const CSS_SHORTHANDAUTO = getPropertiesAsTraits(CSS_TRAITS.SHORTHAND | CSS_TRAITS.AUTO);
 
 function addImageSrc(resourceHandler: squared.base.Resource<Node>, uri: string, width = 0, height = 0) {
     if (uri !== '' && (width > 0 && height > 0 || !resourceHandler.getImage(uri))) {
@@ -26,7 +28,7 @@ function parseSrcSet(resourceHandler: squared.base.Resource<Node>, value: string
     }
 }
 
-function setCssImageUrl(baseMap: StringMap, attr: string, styleSheetHref: string, resourceHandler?: squared.base.Resource<Node>) {
+function parseImageUrl(baseMap: StringMap, attr: string, styleSheetHref: string, resourceHandler?: squared.base.Resource<Node>) {
     const value = baseMap[attr];
     if (value && value !== 'initial') {
         let result: Undef<string>,
@@ -57,6 +59,8 @@ function setCssImageUrl(baseMap: StringMap, attr: string, styleSheetHref: string
 
 const isSvg = (value: string) => FILE.SVG.test(value);
 const parseConditionText = (rule: string, value: string) => new RegExp(`\\s*@${rule}([^{]+)`).exec(value)?.[1].trim() || value;
+const hasExactValue = (attr: string, value: string, cssText: string) => new RegExp(`\\b${attr}[\\s\\n]*:[\\s\\n]*(?:${value})[\\s\\n]*;?`).test(cssText);
+const hasPartialValue = (attr: string, value: string, cssText: string) => new RegExp(`\\b${attr}[\\s\\n]*:[^;]*?${value}[^;]*;?`).test(cssText);
 
 export default abstract class Application<T extends Node> implements squared.base.Application<T> {
     public static readonly KEY_NAME = 'squared.application';
@@ -516,16 +520,44 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const baseMap: StringMap = {};
                 const important: ObjectMap<boolean> = {};
                 const cssStyle = item.style;
-                const items = Array.from(cssStyle);
-                const length = items.length;
-                let i = 0;
-                while (i < length) {
-                    const attr = items[i++];
-                    const value = cssStyle[attr];
-                    if (value === 'normal' && !new RegExp(`${attr}\\s*:\\s*${value}\\b`).test(cssText)) {
-                        continue;
+                for (const attr of Array.from(cssStyle)) {
+                    const value: string = cssStyle[attr];
+                    const baseAttr = convertCamelCase(attr);
+                    switch (value) {
+                        case 'initial':
+                        case 'auto':
+                        case 'normal':
+                            valid: {
+                                if (!hasExactValue(attr, value, cssText)) {
+                                    if (value === 'auto') {
+                                        for (const name in CSS_SHORTHANDAUTO) {
+                                            const css = CSS_SHORTHANDAUTO[name];
+                                            if ((css.value as string[]).includes(baseAttr)) {
+                                                const cssName = css.name!;
+                                                if (hasExactValue(cssName, 'auto|initial', cssText) || hasPartialValue(cssName, 'auto', cssText)) {
+                                                    break valid;
+                                                }
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    for (const name in CSS_SHORTHANDNONE) {
+                                        const css = CSS_SHORTHANDNONE[name];
+                                        if ((css.value as string[]).includes(baseAttr)) {
+                                            const cssName = css.name!;
+                                            if (hasExactValue(cssName, 'none|initial', cssText) || value === 'initial' && hasPartialValue(cssName, 'initial', cssText) || css.valueOfNone && hasExactValue(cssName, css.valueOfNone, cssText)) {
+                                                break valid;
+                                            }
+                                            break;
+                                        }
+                                    }
+                                    continue;
+                                }
+                            }
+                        default:
+                            baseMap[baseAttr] = value;
+                            break;
                     }
-                    baseMap[convertCamelCase(attr)] = value;
                 }
                 const pattern = /\s*([a-z-]+):[^!;]+!important;/g;
                 let match: Null<RegExpExecArray>;
@@ -533,7 +565,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     const attr = convertCamelCase(match[1]);
                     const value = CSS_PROPERTIES[attr]?.value;
                     if (Array.isArray(value)) {
-                        i = 0;
+                        let i = 0;
                         while (i < value.length) {
                             important[value[i++]] = true;
                         }
@@ -542,9 +574,9 @@ export default abstract class Application<T extends Node> implements squared.bas
                         important[attr] = true;
                     }
                 }
-                setCssImageUrl(baseMap, 'backgroundImage', styleSheetHref, resourceHandler);
-                setCssImageUrl(baseMap, 'listStyleImage', styleSheetHref, resourceHandler);
-                setCssImageUrl(baseMap, 'content', styleSheetHref, resourceHandler);
+                parseImageUrl(baseMap, 'backgroundImage', styleSheetHref, resourceHandler);
+                parseImageUrl(baseMap, 'listStyleImage', styleSheetHref, resourceHandler);
+                parseImageUrl(baseMap, 'content', styleSheetHref, resourceHandler);
                 for (const selectorText of parseSelectorText(item.selectorText, true)) {
                     const specificity = getSpecificity(selectorText);
                     const [selector, target] = splitPair(selectorText, '::');
@@ -555,7 +587,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         unusedStyles.add(selectorText);
                         continue;
                     }
-                    i = 0;
+                    let i = 0;
                     while (i < q) {
                         const element = elements[i++];
                         const attrStyle = `styleMap${targetElt}`;

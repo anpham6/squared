@@ -92,16 +92,19 @@ declare module "lib" {
             DECIMAL = 1 << 5
         }
         const enum CSS_TRAITS {
-            NONE = 0,
             CALC = 1,
             SHORTHAND = 1 << 1,
             LAYOUT = 1 << 2,
             CONTAIN = 1 << 3,
             COLOR = 1 << 4,
-            DEPRECATED = 1 << 5
+            DEPRECATED = 1 << 5,
+            NONE = 1 << 6,
+            AUTO = 1 << 7
         }
         const CSS_PROPERTIES: CssProperties;
         const SVG_PROPERTIES: CssProperties;
+        const ELEMENT_BLOCK: Set<string>;
+        function getPropertiesAsTraits(value: number, map?: string): ObjectMap<CssPropertyData>;
         function newBoxModel(): BoxModel;
         function getStyle(element: Null<Element>, pseudoElt?: string): CSSStyleDeclaration;
         function getFontSize(element: Element): number;
@@ -146,7 +149,6 @@ declare module "lib" {
     }
 
     namespace dom {
-        const ELEMENT_BLOCK: Set<string>;
         function newBoxRect(): BoxRect;
         function newBoxRectDimension(): BoxRectDimension;
         function withinViewport(rect: DOMRect | ClientRect): boolean;
@@ -245,7 +247,7 @@ declare module "lib" {
         function upperCaseString(value: string): string;
         function lowerCaseString(value: string): string;
         function spliceString(value: string, index: number, length: number): string;
-        function convertUnderscore(value: string): string;
+        function convertHyphenated(value: string, char?: string): string;
         function convertCamelCase(value: string, char?: string): string;
         function convertWord(value: string, dash?: boolean): string;
         function convertInt(value: string): number;

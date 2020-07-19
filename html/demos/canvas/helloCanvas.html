@@ -12,12 +12,20 @@
   <script src="/common/loader.js"></script>
 </head>
 <body>
-    <canvas id="canvas" width="70" height="90"/>
     <script>
-        var canvas = document.getElementById("canvas");
-        var c = canvas.getContext("2d");
-        c.fillStyle = 'blue';
-        c.fillRect(10, 10, 60, 80);
+      let previous = 'white';
+      for (var color of ['red', 'green', 'yellow', 'blue', 'black', 'white']) {
+          var canvas = document.createElement("canvas");
+          canvas.width = "70";
+          canvas.height = "90";
+          var c = canvas.getContext("2d");
+          c.fillStyle = color;
+          c.fillRect(10, 10, 60, 80);
+          c.strokeStyle = previous;
+          c.strokeRect(10, 10, 60, 80);
+          document.body.appendChild(canvas);
+          previous = color;
+      }
     </script>
 </body>
 </html>

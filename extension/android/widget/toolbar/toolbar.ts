@@ -146,7 +146,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
                     appBarOverlay = android.theme;
                 }
                 android.theme = `@style/${settings.manifestThemeName}.AppBarOverlay`;
-                node.data(WIDGET_NAME.TOOLBAR, 'themeData', { appBarOverlay, popupOverlay } as ToolbarThemeData);
+                node.data(WIDGET_NAME.TOOLBAR, 'themeData', { appBarOverlay, popupOverlay });
             }
             else {
                 assignEmptyValue(appBarOptions, 'android', 'theme', '@style/ThemeOverlay.AppCompat.Dark.ActionBar');

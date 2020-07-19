@@ -15,7 +15,8 @@ const { getNamedItem, removeElementsByClassName } = squared.lib.dom;
 const { getElementCache, getPseudoElt, setElementCache } = squared.lib.session;
 const { appendSeparator, capitalize, convertWord, flatArray, hasBit, hasMimeType, isString, iterateArray, partitionArray, trimBoth, trimString } = squared.lib.util;
 
-const TEXT_STYLE = NodeUI.TEXT_STYLE.concat(['fontSize']);
+const TEXT_STYLE = NodeUI.TEXT_STYLE.slice(0);
+TEXT_STYLE.push('fontSize');
 
 function prioritizeExtensions<T extends NodeUI>(value: string, extensions: ExtensionUI<T>[]) {
     const included = value.trim().split(/\s*,\s*/);

@@ -1,41 +1,5 @@
 import { iterateArray, withinRange } from './util';
 
-export const ELEMENT_BLOCK = new Set([
-    'ADDRESS',
-    'ARTICLE',
-    'ASIDE',
-    'BLOCKQUOTE',
-    'DD',
-    'DETAILS',
-    'DIALOG',
-    'DIV',
-    'DL',
-    'DT',
-    'FIELDSET',
-    'FIGCAPTION',
-    'FIGURE',
-    'FOOTER',
-    'FORM',
-    'H1',
-    'H2',
-    'H3',
-    'H4',
-    'H5',
-    'H6',
-    'HEADER',
-    'HGROUP',
-    'HR',
-    'LI',
-    'MAIN',
-    'NAV',
-    'OL',
-    'P',
-    'PRE',
-    'SECTION',
-    'TABLE',
-    'UL'
-]);
-
 export function newBoxRect(): BoxRect {
     return {
         top: 0,

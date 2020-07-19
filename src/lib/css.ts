@@ -2,7 +2,7 @@ import { parseColor } from './color';
 import { USER_AGENT, getDeviceDPI, isUserAgent } from './client';
 import { clamp, truncate, truncateFraction } from './math';
 import { CSS, STRING, TRANSFORM } from './regex';
-import { convertAlpha, convertFloat, convertRoman, hasKeys, isNumber, isString, iterateArray, replaceMap, resolvePath, spliceString, splitEnclosing, splitPair, trimBoth } from './util';
+import { convertAlpha, convertFloat, convertHyphenated, convertRoman, hasBit, hasKeys, isNumber, isString, iterateArray, replaceMap, resolvePath, spliceString, splitEnclosing, splitPair, trimBoth } from './util';
 
 const PATTERN_SIZES = `(\\(\\s*(?:orientation:\\s*(?:portrait|landscape)|(?:max|min)-width:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\))`;
 const REGEXP_LENGTH = new RegExp(`^${STRING.LENGTH}$`);
@@ -292,13 +292,14 @@ export const enum CSS_UNIT {
 }
 
 export const enum CSS_TRAITS {
-    NONE = 0,
     CALC = 1,
     SHORTHAND = 1 << 1,
     LAYOUT = 1 << 2,
     CONTAIN = 1 << 3,
     COLOR = 1 << 4,
-    DEPRECATED = 1 << 5
+    DEPRECATED = 1 << 5,
+    NONE = 1 << 6,
+    AUTO = 1 << 7
 }
 
 export const CSS_PROPERTIES: CssProperties = {
@@ -364,7 +365,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'visible'
     },
     background: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE | CSS_TRAITS.AUTO,
         value: [
             'backgroundImage',
             'backgroundPositionX',
@@ -387,7 +388,7 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     backgroundColor: {
         trait: CSS_TRAITS.CALC,
-        value: 'rgba(0, 0, 0, 0)'
+        value: 'transparent'
     },
     backgroundImage: {
         trait: CSS_TRAITS.CALC,
@@ -406,11 +407,11 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     backgroundPositionX: {
         trait: CSS_TRAITS.CALC,
-        value: '0%'
+        value: 'left'
     },
     backgroundPositionY: {
         trait: CSS_TRAITS.CALC,
-        value: '0%'
+        value: 'top'
     },
     backgroundRepeat: {
         trait: 0,
@@ -421,7 +422,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'auto'
     },
     border: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT | CSS_TRAITS.NONE,
         value: [
             'borderTopWidth',
             'borderTopStyle',
@@ -438,7 +439,7 @@ export const CSS_PROPERTIES: CssProperties = {
         ]
     },
     borderBottom: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE,
         value: [
             'borderBottomWidth',
             'borderBottomStyle',
@@ -447,7 +448,7 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     borderBottomColor: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
-        value: 'rgb(0, 0, 0)'
+        value: 'currentcolor'
     },
     borderBottomLeftRadius: {
         trait: CSS_TRAITS.CALC,
@@ -463,7 +464,7 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     borderBottomWidth: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
-        value: '0'
+        value: 'medium'
     },
     borderCollapse: {
         trait: CSS_TRAITS.LAYOUT,
@@ -479,14 +480,15 @@ export const CSS_PROPERTIES: CssProperties = {
         ]
     },
     borderImage: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE,
         value: [
             'borderImageSource',
             'borderImageSlice',
             'borderImageWidth',
             'borderImageOutset',
             'borderImageRepeat'
-        ]
+        ],
+        valueOfNone: 'none 100% / 1 / 0 stretch'
     },
     borderImageOutset: {
         trait: CSS_TRAITS.CALC,
@@ -509,7 +511,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: '1'
     },
     borderLeft: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE,
         value: [
             'borderLeftWidth',
             'borderLeftStyle',
@@ -518,7 +520,7 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     borderLeftColor: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
-        value: 'rgb(0, 0, 0)'
+        value: 'currentcolor'
     },
     borderLeftStyle: {
         trait: 0,
@@ -526,7 +528,7 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     borderLeftWidth: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
-        value: '0'
+        value: 'medium'
     },
     borderRadius: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
@@ -538,7 +540,7 @@ export const CSS_PROPERTIES: CssProperties = {
         ]
     },
     borderRight: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE,
         value: [
             'borderRightWidth',
             'borderRightStyle',
@@ -547,7 +549,7 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     borderRightColor: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
-        value: 'rgb(0, 0, 0)'
+        value: 'currentcolor'
     },
     borderRightStyle: {
         trait: 0,
@@ -555,14 +557,14 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     borderRightWidth: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
-        value: '0'
+        value: 'medium'
     },
     borderSpacing: {
         trait: CSS_TRAITS.CALC,
         value: '0'
     },
     borderStyle: {
-        trait: CSS_TRAITS.SHORTHAND,
+        trait: CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE,
         value: [
             'borderTopStyle',
             'borderRightStyle',
@@ -571,7 +573,7 @@ export const CSS_PROPERTIES: CssProperties = {
         ]
     },
     borderTop: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE,
         value: [
             'borderTopWidth',
             'borderTopStyle',
@@ -580,7 +582,7 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     borderTopColor: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
-        value: 'rgb(0, 0, 0)'
+        value: 'currentcolor'
     },
     borderTopLeftRadius: {
         trait: CSS_TRAITS.CALC,
@@ -596,7 +598,7 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     borderTopWidth: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
-        value: '0'
+        value: 'medium'
     },
     borderWidth: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
@@ -637,7 +639,7 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     color: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
-        value: 'rgb(0, 0, 0)'
+        value: 'black'
     },
     columnCount: {
         trait: CSS_TRAITS.CALC,
@@ -652,16 +654,16 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'normal'
     },
     columnRule: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE,
         value: [
-            'columRuleWidth',
+            'columnRuleWidth',
             'columnRuleStyle',
             'columnRuleColor'
         ]
     },
     columnRuleColor: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
-        value: 'rgb(0, 0, 0)'
+        value: 'currentcolor'
     },
     columnRuleStyle: {
         trait: 0,
@@ -669,7 +671,7 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     columnRuleWidth: {
         trait: CSS_TRAITS.CALC,
-        value: '0'
+        value: 'medium'
     },
     columnSpan: {
         trait: 0,
@@ -680,7 +682,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'auto'
     },
     columns: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.AUTO,
         value: [
             'columnCount',
             'columnWidth'
@@ -715,7 +717,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'show'
     },
     flex: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.AUTO,
         value: [
             'flexGrow',
             'flexShrink',
@@ -794,13 +796,14 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'normal'
     },
     fontVariant: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT | CSS_TRAITS.NONE,
         value: [
             'fontVariantCaps',
             'fontVariantLigatures',
             'fontVariantNumeric',
             'fontVariantEastAsian'
-        ]
+        ],
+        valueOfNone: 'no-common-ligatures no-discretionary-ligatures no-historical-ligatures no-contextual'
     },
     fontVariantCaps: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
@@ -847,16 +850,17 @@ export const CSS_PROPERTIES: CssProperties = {
         ]
     },
     gridArea: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT | CSS_TRAITS.NONE | CSS_TRAITS.AUTO,
         value: [
             'gridRowStart',
             'gridColumnStart',
             'gridRowEnd',
             'gridColumnEnd'
-        ]
+        ],
+        valueOfNone: 'none / none / none / none'
     },
     gridAutoColumns: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.AUTO,
         value: 'auto'
     },
     gridAutoFlow: {
@@ -864,15 +868,16 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'row'
     },
     gridAutoRows: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.AUTO,
         value: 'auto'
     },
     gridColumn: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT | CSS_TRAITS.NONE,
         value: [
             'gridColumnStart',
             'gridColumnEnd'
-        ]
+        ],
+        valueOfNone: 'none / none'
     },
     gridColumnEnd: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
@@ -894,11 +899,12 @@ export const CSS_PROPERTIES: CssProperties = {
         ]
     },
     gridRow: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT | CSS_TRAITS.NONE,
         value: [
             'gridRowStart',
             'gridRowEnd'
-        ]
+        ],
+        valueOfNone: 'none / none'
     },
     gridRowEnd: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
@@ -940,7 +946,7 @@ export const CSS_PROPERTIES: CssProperties = {
         trait: CSS_TRAITS.CONTAIN,
         value: 'normal'
     },
-    justifyIems: {
+    justifyItems: {
         trait: CSS_TRAITS.CONTAIN,
         value: 'normal'
     },
@@ -981,7 +987,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'disc'
     },
     margin: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT | CSS_TRAITS.AUTO,
         value: [
             'marginTop',
             'marginRight',
@@ -1015,14 +1021,14 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     minHeight: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
-        value: '0'
+        value: 'auto'
     },
     minWidth: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
-        value: '0'
+        value: 'auto'
     },
     offset: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE | CSS_TRAITS.AUTO,
         value: [
             'offsetPath',
             'offsetDistance',
@@ -1055,7 +1061,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: '0'
     },
     outline: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE | CSS_TRAITS.AUTO,
         value: [
             'outlineWidth',
             'outlineStyle',
@@ -1064,7 +1070,7 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     outlineColor: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
-        value: 'rgb(0, 0, 0)'
+        value: 'currentcolor'
     },
     outlineOffset: {
         trait: CSS_TRAITS.CALC,
@@ -1076,7 +1082,7 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     outlineWidth: {
         trait: CSS_TRAITS.CALC,
-        value: '0'
+        value: 'medium'
     },
     overflow: {
         trait: CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
@@ -1094,7 +1100,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'visible'
     },
     padding: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT | CSS_TRAITS.AUTO,
         value: [
             'paddingTop',
             'paddingRight',
@@ -1173,7 +1179,7 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     right: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
-        value: '0'
+        value: 'auto'
     },
     rowGap: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
@@ -1205,7 +1211,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: '0'
     },
     scrollPadding: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT | CSS_TRAITS.AUTO,
         value: [
             'scrollPaddingTop',
             'scrollPaddingRight',
@@ -1215,19 +1221,19 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     scrollPaddingBottom: {
         trait: CSS_TRAITS.LAYOUT,
-        value: '0'
+        value: 'auto'
     },
     scrollPaddingLeft: {
         trait: CSS_TRAITS.LAYOUT,
-        value: '0'
+        value: 'auto'
     },
     scrollPaddingRight: {
         trait: CSS_TRAITS.LAYOUT,
-        value: '0'
+        value: 'auto'
     },
     scrollPaddingTop: {
         trait: CSS_TRAITS.LAYOUT,
-        value: '0'
+        value: 'auto'
     },
     shapeOutside: {
         trait: CSS_TRAITS.CALC,
@@ -1250,7 +1256,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'auto'
     },
     textDecoration: {
-        trait: CSS_TRAITS.SHORTHAND,
+        trait: CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE,
         value: [
             'textDecorationLine',
             'textDecorationStyle',
@@ -1259,7 +1265,7 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     textDecorationColor: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
-        value: 'rgb(0, 0, 0)'
+        value: 'currentcolor'
     },
     textDecorationLine: {
         trait: 0,
@@ -1291,7 +1297,7 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     top: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
-        value: '0'
+        value: 'auto'
     },
     transform: {
         trait: CSS_TRAITS.CALC,
@@ -1306,13 +1312,14 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'flat'
     },
     transition: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE,
         value: [
             'transitionProperty',
             'transitionDuration',
             'transitionTimingFunction',
             'transitionDelay'
-        ]
+        ],
+        valueOfNone: 'one 0s ease 0s'
     },
     transitionDelay: {
         trait: CSS_TRAITS.CALC,
@@ -1462,6 +1469,55 @@ export const SVG_PROPERTIES: CssProperties = {
         value: '0'
     }
 };
+
+export const ELEMENT_BLOCK = new Set([
+    'ADDRESS',
+    'ARTICLE',
+    'ASIDE',
+    'BLOCKQUOTE',
+    'DD',
+    'DETAILS',
+    'DIALOG',
+    'DIV',
+    'DL',
+    'DT',
+    'FIELDSET',
+    'FIGCAPTION',
+    'FIGURE',
+    'FOOTER',
+    'FORM',
+    'H1',
+    'H2',
+    'H3',
+    'H4',
+    'H5',
+    'H6',
+    'HEADER',
+    'HGROUP',
+    'HR',
+    'LI',
+    'MAIN',
+    'NAV',
+    'OL',
+    'P',
+    'PRE',
+    'SECTION',
+    'TABLE',
+    'UL'
+]);
+
+export function getPropertiesAsTraits(value: number, map?: string) {
+    const result: ObjectMap<CssPropertyData> = {};
+    const data = map === 'svg' ? SVG_PROPERTIES : CSS_PROPERTIES;
+    for (const attr in data) {
+        const item = data[attr];
+        if (hasBit(item.trait, value)) {
+            item.name = convertHyphenated(attr);
+            result[attr] = item;
+        }
+    }
+    return result;
+}
 
 export function newBoxModel(): BoxModel {
     return {
@@ -2429,16 +2485,13 @@ export function checkStyleValue(element: HTMLElement, attr: string, value: strin
     if (value === 'initial') {
         switch (attr) {
             case 'position':
+                return 'static';
             case 'display':
-            case 'baseline':
+                return ELEMENT_BLOCK.has(element.tagName) ? 'block' : 'inline';
+            case 'verticalAlign':
+                return 'baseline';
             case 'lineHeight':
-            case 'backgroundColor':
-            case 'backgroundImage':
-            case 'borderTopStyle':
-            case 'borderRightStyle':
-            case 'borderBottomStyle':
-            case 'borderLeftStyle':
-                return value;
+                return 'normal';
             default:
                 return '';
         }

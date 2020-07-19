@@ -3,7 +3,7 @@ import Resource from '../../resource';
 type View = android.base.View;
 type GroupData = ObjectMap<View[]>;
 
-const { convertUnderscore, fromLastIndexOf } = squared.lib.util;
+const { convertHyphenated, fromLastIndexOf } = squared.lib.util;
 
 function getResourceName(map: Map<string, string>, name: string, value: string) {
     if (map.get(name) === value) {
@@ -51,7 +51,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
             const group = groups[containerName] as ObjectMap<T[]>;
             for (const name in group) {
                 const [namespace, attr, value] = name.split(',');
-                const key = getResourceName(dimens, fromLastIndexOf(containerName, '.') + '_' + convertUnderscore(attr), value);
+                const key = getResourceName(dimens, fromLastIndexOf(containerName, '.') + '_' + convertHyphenated(attr, '_'), value);
                 for (const node of group[name]) {
                     node.attr(namespace, attr, `@dimen/${key}`);
                 }
@@ -73,7 +73,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
                 while (match = pattern.exec(layout.content!)) {
                     const [original, name, value] = match;
                     if (name !== 'text') {
-                        const key = getResourceName(dimens, `custom_${convertUnderscore(name)}`, value);
+                        const key = getResourceName(dimens, `custom_${convertHyphenated(name, '_')}`, value);
                         content = content.replace(original, original.replace(value, `@dimen/${key}`));
                         dimens.set(key, value);
                     }

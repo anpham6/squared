@@ -1,8 +1,12 @@
 interface CssProperties {
-    [key: string]: {
-        trait: number;
-        value: string | string[];
-    };
+    [key: string]: CssPropertyData;
+}
+
+interface CssPropertyData {
+    trait: number;
+    value: string | string[];
+    name?: string;
+    valueOfNone?: string;
 }
 
 interface KeyframesData extends ObjectMap<StringMap> {}
