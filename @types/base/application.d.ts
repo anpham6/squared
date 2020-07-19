@@ -33,41 +33,52 @@ interface ControllerSettings {
 }
 
 interface ControllerSettingsUI extends ControllerSettings {
-    layout: {
-        pathName: string;
-        fileExtension: string;
-        baseTemplate: string;
-    };
-    directory: {
-        string: string;
-        font: string;
-        image: string;
-        video: string;
-        audio: string;
-    };
-    style: {
-        inputBorderColor: string;
-        inputBackgroundColor: string;
-        inputColorBorderColor: string;
-        meterForegroundColor?: string;
-        meterBackgroundColor?: string;
-        progressForegroundColor?: string;
-        progressBackgroundColor?: string;
-    };
-    svg: {
-        enabled: boolean;
-    };
-    unsupported: {
-        cascade: Set<string>;
-        excluded: Set<string>;
-        tagName: Set<string>;
-    };
-    precision: {
-        standardFloat: number;
-    };
-    deviations: {
-        textMarginBoundarySize: number;
-    };
+    layout: ControllerSettingsLayoutUI;
+    directory: ControllerSettingsDirectoryUI;
+    style: ControllerSettingsStyleUI;
+    unsupported: ControllerSettingsUnsupportedUI;
+    use: ControllerSettingsUseUI;
+    deviations: ControllerSettingsDeviationsUI;
+    floatPrecision: number;
+}
+
+interface ControllerSettingsLayoutUI {
+    pathName: string;
+    fileExtension: string;
+    baseTemplate: string;
+}
+
+interface ControllerSettingsDirectoryUI {
+    string: string;
+    font: string;
+    image: string;
+    video: string;
+    audio: string;
+}
+
+interface ControllerSettingsStyleUI {
+    anchorFontColor: string;
+    inputBorderColor: string;
+    inputBackgroundColor: string;
+    inputColorBorderColor: string;
+    meterForegroundColor?: string;
+    meterBackgroundColor?: string;
+    progressForegroundColor?: string;
+    progressBackgroundColor?: string;
+}
+
+interface ControllerSettingsUnsupportedUI {
+    cascade: Set<string>;
+    excluded: Set<string>;
+    tagName: Set<string>;
+}
+
+interface ControllerSettingsUseUI {
+    svg: boolean;
+}
+
+interface ControllerSettingsDeviationsUI {
+    textMarginBoundarySize: number;
 }
 
 interface ExtensionDependency {

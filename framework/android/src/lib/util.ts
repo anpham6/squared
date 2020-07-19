@@ -22,14 +22,15 @@ export function applyTemplate(tagName: string, template: StandardMap, children: 
     const tag: StandardMap = template[tagName];
     const nested = tag['>>'] === true;
     let output = '',
-        indent = '',
-        length = children.length;
+        length = children.length,
+        indent: Undef<string>;
     if (depth === undefined) {
         output += '<?xml version="1.0" encoding="utf-8"?>\n';
+        indent = '';
         depth = 0;
     }
     else {
-        indent += '\t'.repeat(depth);
+        indent = '\t'.repeat(depth);
     }
     for (let i = 0; i < length; ++i) {
         const item = children[i];

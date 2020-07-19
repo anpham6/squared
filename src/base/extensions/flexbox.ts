@@ -30,17 +30,19 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
         const mainData = createDataAttribute(node, children);
         if (node.cssTry('align-items', 'start')) {
             if (node.cssTry('justify-items', 'start')) {
+                const options: StringMap = {
+                    'align-self': 'start',
+                    'justify-self': 'start'
+                };
                 const length = children.length;
                 let i = 0;
                 while (i < length) {
                     const item = children[i++];
-                    if (item.cssTry('align-self', 'start')) {
-                        if (item.cssTry('justify-self', 'start')) {
-                            const bounds = item.boundingClientRect;
-                            item.data(this.name, 'boundsData', bounds ? { ...item.bounds, width: bounds.width, height: bounds.height } : item.bounds);
-                            item.cssFinally('justify-self');
-                        }
-                        item.cssFinally('align-self');
+                    const cssData = item.cssTryAll(options);
+                    if (cssData) {
+                        const bounds = item.boundingClientRect;
+                        item.data(this.name, 'boundsData', bounds ? { ...item.bounds, width: bounds.width, height: bounds.height } : item.bounds);
+                        item.cssFinally(cssData);
                     }
                 }
                 node.cssFinally('justify-items');

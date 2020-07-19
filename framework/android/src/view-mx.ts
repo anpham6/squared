@@ -88,7 +88,7 @@ function setMultiline(node: T, lineHeight: number, overwrite: boolean) {
     else {
         return;
     }
-    const upper = Math.round(offset);
+    const upper = Math.floor(offset);
     if (upper > 0) {
         node.modifyBox(node.inline ? BOX_STANDARD.MARGIN_TOP : BOX_STANDARD.PADDING_TOP, upper);
         if (!(node.block && !node.floating)) {
@@ -112,23 +112,24 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top:
         }
         else {
             const setBoxPadding = (offset: number, padding = false) => {
-                let upper = Math.floor(offset);
-                if (upper > 0) {
+                if (offset > 0) {
                     const boxPadding = (inlineStyle || height > lineHeight) && (node.styleText || padding) && !node.inline && !(node.inputElement && !isLength(styleValue, true)) || !!parent;
                     if (boxPadding) {
                         if (top) {
+                            let adjustment = offset;
                             if (parent) {
-                                upper -= parent.paddingTop;
+                                adjustment -= parent.paddingTop;
                             }
-                            if (upper > 0) {
-                                (parent || node).setBox(BOX_STANDARD.PADDING_TOP, { adjustment: upper, max: true });
+                            adjustment = Math.round(adjustment);
+                            if (adjustment > 0) {
+                                (parent || node).setBox(BOX_STANDARD.PADDING_TOP, { adjustment, max: true });
                             }
                         }
                         if (bottom) {
                             if (parent) {
                                 offset -= parent.paddingBottom;
                             }
-                            offset = Math.floor(offset);
+                            offset = Math.round(offset);
                             if (offset > 0) {
                                 (parent || node).setBox(BOX_STANDARD.PADDING_BOTTOM, { adjustment: offset, max: true });
                             }
@@ -136,9 +137,9 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top:
                     }
                     else if (node.pageFlow) {
                         if (top && (inlineStyle || !node.baselineAltered)) {
-                            upper -= node.paddingTop;
-                            if (upper > 0) {
-                                node.setBox(BOX_STANDARD.MARGIN_TOP, { adjustment: upper, max: true });
+                            const adjustment = Math.floor(offset - node.paddingTop);
+                            if (adjustment > 0) {
+                                node.setBox(BOX_STANDARD.MARGIN_TOP, { adjustment, max: true });
                             }
                         }
                         if (bottom) {
@@ -242,11 +243,11 @@ function getLineSpacingExtra(node: T, lineHeight: number) {
                 });
             }
             bounds = actualTextRangeRect(elememt);
-            node.data<BoxRectDimension>(ResourceUI.KEY_NAME, 'textRange', bounds);
             if (collapsed) {
                 for (const [child, value] of collapsed) {
                     child.style.display = value;
                 }
+                node.data<BoxRectDimension>(ResourceUI.KEY_NAME, 'textRange', bounds);
             }
             node.cssFinally(values);
         }
@@ -621,9 +622,7 @@ function setBoxModel(node: T, attrs: string[], boxReset: BoxModel, boxAdjustment
                 }
             }
         }
-        if (boxAdjustment) {
-            value += boxAdjustment[attr];
-        }
+        value += boxAdjustment[attr];
         switch (i) {
             case 0:
                 top = value;
@@ -770,11 +769,15 @@ function setBoxModel(node: T, attrs: string[], boxReset: BoxModel, boxAdjustment
         left += node.borderLeftWidth;
     }
     if (top !== 0 || left !== 0 || bottom !== 0 || right !== 0) {
-        let horizontal = 0,
-            vertical = 0;
+        let horizontal = NaN,
+            vertical = NaN;
+        top = Math.round(top);
+        right = Math.round(right);
+        bottom = Math.round(bottom);
+        left = Math.round(left);
         if ((!margin || !(node.renderParent as T).layoutGrid) && node.api >= BUILD_ANDROID.OREO) {
             if (top === right && right === bottom && bottom === left) {
-                node.android(margin ? STRING_ANDROID.MARGIN : STRING_ANDROID.PADDING, formatPX(top));
+                node.android(margin ? STRING_ANDROID.MARGIN : STRING_ANDROID.PADDING, Math.round(top) + 'px');
                 return;
             }
             else {
@@ -786,26 +789,30 @@ function setBoxModel(node: T, attrs: string[], boxReset: BoxModel, boxAdjustment
                 }
             }
         }
-        if (horizontal !== 0) {
-            node.android(margin ? STRING_ANDROID.MARGIN_HORIZONTAL : STRING_ANDROID.PADDING_HORIZONTAL, formatPX(horizontal));
+        if (!isNaN(horizontal)) {
+            if (horizontal !== 0) {
+                node.android(margin ? STRING_ANDROID.MARGIN_HORIZONTAL : STRING_ANDROID.PADDING_HORIZONTAL, horizontal + 'px');
+            }
         }
         else {
             if (left !== 0) {
-                node.android(node.localizeString(margin ? STRING_ANDROID.MARGIN_LEFT : STRING_ANDROID.PADDING_LEFT), formatPX(left));
+                node.android(node.localizeString(margin ? STRING_ANDROID.MARGIN_LEFT : STRING_ANDROID.PADDING_LEFT), left + 'px');
             }
             if (right !== 0) {
-                node.android(node.localizeString(margin ? STRING_ANDROID.MARGIN_RIGHT : STRING_ANDROID.PADDING_RIGHT), formatPX(right));
+                node.android(node.localizeString(margin ? STRING_ANDROID.MARGIN_RIGHT : STRING_ANDROID.PADDING_RIGHT), right + 'px');
             }
         }
-        if (vertical !== 0) {
-            node.android(margin ? STRING_ANDROID.MARGIN_VERTICAL : STRING_ANDROID.PADDING_VERTICAL, formatPX(vertical));
+        if (!isNaN(vertical)) {
+            if (vertical !== 0) {
+                node.android(margin ? STRING_ANDROID.MARGIN_VERTICAL : STRING_ANDROID.PADDING_VERTICAL, vertical + 'px');
+            }
         }
         else {
             if (top !== 0) {
-                node.android(margin ? STRING_ANDROID.MARGIN_TOP : STRING_ANDROID.PADDING_TOP, formatPX(top));
+                node.android(margin ? STRING_ANDROID.MARGIN_TOP : STRING_ANDROID.PADDING_TOP, top + 'px');
             }
             if (bottom !== 0) {
-                node.android(margin ? STRING_ANDROID.MARGIN_BOTTOM : STRING_ANDROID.PADDING_BOTTOM, formatPX(bottom));
+                node.android(margin ? STRING_ANDROID.MARGIN_BOTTOM : STRING_ANDROID.PADDING_BOTTOM, bottom + 'px');
             }
         }
     }
@@ -2073,7 +2080,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     const adjacent = current.alignSibling(anchorA);
                     if (adjacent !== '') {
                         const sibling = siblings.find(item => item.documentId === adjacent) as T | undefined;
-                        if (sibling?.alignSibling(anchorB) === current.documentId) {
+                        if (sibling && (sibling.alignSibling(anchorB) === current.documentId || sibling.floating && sibling.alignParent(direction))) {
                             result.push(sibling);
                             current = sibling;
                         }
@@ -2393,35 +2400,42 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             const horizontalRows = this.horizontalRows || [renderChildren];
                             for (let i = 0, q = horizontalRows.length; i < q; ++i) {
                                 const row = horizontalRows[i];
-                                const nextRow = horizontalRows[i + 1];
-                                const nextMultiline = !!nextRow && (nextRow.length === 1 && nextRow[0].multiline || nextRow[0].lineBreakLeading || i < q - 1 && !!nextRow.find(item => item.baselineActive)?.has('lineHeight'));
-                                const first = row[0];
                                 const onlyChild = row.length === 1;
-                                const singleLine = onlyChild && !first.multiline;
-                                const baseline = !onlyChild && row.find(item => item.baselineActive && !item.rendering && !item.imageContainer);
-                                const top = singleLine || !previousMultiline && (i > 0 || q === 1) || first.lineBreakLeading;
-                                const bottom = singleLine || !nextMultiline && (i < q - 1 || q === 1);
+                                const baseline = !onlyChild ? row.find(item => item.baselineActive && !item.rendering && !item.imageContainer) : undefined;
+                                let top: boolean,
+                                    bottom: boolean;
+                                if (q === 1) {
+                                    top = true;
+                                    bottom = true;
+                                }
+                                else {
+                                    const nextRow = horizontalRows[i + 1];
+                                    top = i > 0 && !previousMultiline || row[0].lineBreakLeading;
+                                    bottom = i < q - 1 && (
+                                        !(nextRow !== undefined && (nextRow.length === 1 && nextRow[0].multiline || nextRow[0].lineBreakLeading)) ||
+                                        this.floatContainer && baseline !== undefined && (baseline.anchorChain('left').pop()?.floating === true || baseline.anchorChain('right').pop()?.floating === true)
+                                    );
+                                    previousMultiline = onlyChild && row[0].multiline;
+                                }
                                 const r = row.length;
                                 let j = 0;
                                 if (baseline) {
-                                    let k = 0;
                                     if (q === 1) {
+                                        let invalid: Undef<boolean>;
                                         while (j < r) {
                                             const item = row[j++];
-                                            if (item === baseline || inheritLineHeight(item) && item.alignSibling('baseline') !== '') {
-                                                ++k;
+                                            if (!(item === baseline || inheritLineHeight(item) && item.alignSibling('baseline') !== '')) {
+                                                invalid = true;
+                                                break;
                                             }
                                         }
+                                        if (!invalid) {
+                                            setMarginOffset(baseline, lineHeight, false, top, bottom, this);
+                                            continue;
+                                        }
                                     }
-                                    if (k === r) {
-                                        setMarginOffset(baseline, lineHeight, false, top, bottom, this);
-                                    }
-                                    else if (!isNaN(baseline.lineHeight) && !baseline.has('lineHeight')) {
+                                    if (!isNaN(baseline.lineHeight) && !baseline.has('lineHeight')) {
                                         setMarginOffset(baseline, lineHeight, false, top, bottom);
-                                    }
-                                    else {
-                                        previousMultiline = true;
-                                        continue;
                                     }
                                 }
                                 else {
@@ -2432,7 +2446,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                         }
                                     }
                                 }
-                                previousMultiline = onlyChild && first.multiline;
                             }
                         }
                     }

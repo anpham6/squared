@@ -17,10 +17,11 @@ interface AndroidUserSettingsUI extends UserSettingsUI {
 }
 
 interface AndroidControllerSettingsUI extends ControllerSettingsUI {
-    deviations: {
-        textMarginBoundarySize: number;
-        legendBottomOffset: number;
-    };
+    deviations: AndroidControllerSettingsDeviationsUI;
+}
+
+interface AndroidControllerSettingsDeviationsUI extends ControllerSettingsDeviationsUI {
+    legendBottomOffset: number;
 }
 
 interface AndroidResourceStoredMap extends ResourceStoredMap {

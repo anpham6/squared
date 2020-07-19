@@ -28,9 +28,9 @@ System.import('/build/src/main.js').then(result => {
             });
         });
     });
-});*/
+});
 
-/*System.import('/build/src/main.js').then(result => {
+System.import('/build/src/main.js').then(result => {
     squared = result;
     System.import('/build/src/base/main.js').then(result => {
         squared.base = result;

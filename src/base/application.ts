@@ -11,7 +11,6 @@ const { frameworkNotInstalled, getElementCache, setElementCache } = squared.lib.
 const { capitalize, convertCamelCase, parseMimeType, plainMap, promisify, resolvePath, splitPair, splitPairStart, trimBoth } = squared.lib.util;
 
 const REGEXP_DATAURI = new RegExp(`url\\("?(${STRING.DATAURI})"?\\),?\\s*`, 'g');
-const CSS_IMAGEURI = ['backgroundImage', 'listStyleImage', 'content'];
 
 function addImageSrc(resourceHandler: squared.base.Resource<Node>, uri: string, width = 0, height = 0) {
     if (uri !== '' && (width > 0 && height > 0 || !resourceHandler.getImage(uri))) {
@@ -24,6 +23,35 @@ function parseSrcSet(resourceHandler: squared.base.Resource<Node>, value: string
         for (const uri of value.split(',')) {
             addImageSrc(resourceHandler, resolvePath(splitPairStart(uri.trim(), ' ')));
         }
+    }
+}
+
+function setCssImageUrl(baseMap: StringMap, attr: string, styleSheetHref: string, resourceHandler?: squared.base.Resource<Node>) {
+    const value = baseMap[attr];
+    if (value && value !== 'initial') {
+        let result: Undef<string>,
+            match: Null<RegExpExecArray>;
+        while (match = REGEXP_DATAURI.exec(value)) {
+            if (match[2]) {
+                if (resourceHandler) {
+                    const [mimeType, encoding] = match[2].trim().split(/\s*;\s*/);
+                    resourceHandler.addRawData(match[1], mimeType, match[3], { encoding });
+                }
+            }
+            else {
+                const uri = resolvePath(match[3], styleSheetHref);
+                if (uri !== '') {
+                    if (resourceHandler) {
+                        addImageSrc(resourceHandler, uri);
+                    }
+                    result = (result || value).replace(match[0], `url("${uri}")`);
+                }
+            }
+        }
+        if (result) {
+            baseMap[attr] = result;
+        }
+        REGEXP_DATAURI.lastIndex = 0;
     }
 }
 
@@ -493,7 +521,11 @@ export default abstract class Application<T extends Node> implements squared.bas
                 let i = 0;
                 while (i < length) {
                     const attr = items[i++];
-                    baseMap[convertCamelCase(attr)] = cssStyle[attr];
+                    const value = cssStyle[attr];
+                    if (value === 'normal' && !new RegExp(`${attr}\\s*:\\s*${value}\\b`).test(cssText)) {
+                        continue;
+                    }
+                    baseMap[convertCamelCase(attr)] = value;
                 }
                 const pattern = /\s*([a-z-]+):[^!;]+!important;/g;
                 let match: Null<RegExpExecArray>;
@@ -510,35 +542,9 @@ export default abstract class Application<T extends Node> implements squared.bas
                         important[attr] = true;
                     }
                 }
-                i = 0;
-                while (i < 3) {
-                    const attr = CSS_IMAGEURI[i++];
-                    const value = baseMap[attr];
-                    if (value && value !== 'initial') {
-                        let result: Undef<string>;
-                        while (match = REGEXP_DATAURI.exec(value)) {
-                            if (match[2]) {
-                                if (resourceHandler) {
-                                    const [mimeType, encoding] = match[2].trim().split(/\s*;\s*/);
-                                    resourceHandler.addRawData(match[1], mimeType, match[3], { encoding });
-                                }
-                            }
-                            else {
-                                const uri = resolvePath(match[3], styleSheetHref);
-                                if (uri !== '') {
-                                    if (resourceHandler) {
-                                        addImageSrc(resourceHandler, uri);
-                                    }
-                                    result = (result || value).replace(match[0], `url("${uri}")`);
-                                }
-                            }
-                        }
-                        if (result) {
-                            baseMap[attr] = result;
-                        }
-                        REGEXP_DATAURI.lastIndex = 0;
-                    }
-                }
+                setCssImageUrl(baseMap, 'backgroundImage', styleSheetHref, resourceHandler);
+                setCssImageUrl(baseMap, 'listStyleImage', styleSheetHref, resourceHandler);
+                setCssImageUrl(baseMap, 'content', styleSheetHref, resourceHandler);
                 for (const selectorText of parseSelectorText(item.selectorText, true)) {
                     const specificity = getSpecificity(selectorText);
                     const [selector, target] = splitPair(selectorText, '::');

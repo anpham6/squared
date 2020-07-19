@@ -531,7 +531,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
     private _resourceSvgInstance?: ResourceSvg<T>;
 
     public beforeParseDocument() {
-        this._resourceSvgInstance = this.controller.localSettings.svg.enabled ? this.application.builtInExtensions[EXT_ANDROID.RESOURCE_SVG] as ResourceSvg<T> : undefined;
+        this._resourceSvgInstance = this.controller.localSettings.use.svg ? this.application.builtInExtensions[EXT_ANDROID.RESOURCE_SVG] as ResourceSvg<T> : undefined;
     }
 
     public afterResources(sessionId: string) {

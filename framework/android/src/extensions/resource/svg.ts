@@ -739,7 +739,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
     public beforeParseDocument() {
         if (SvgBuild) {
             SvgBuild.resetNameCache();
-            this.controller.localSettings.svg.enabled = true;
+            this.controller.localSettings.use.svg = true;
         }
     }
 
@@ -802,7 +802,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
 
     public afterFinalize() {
         if (SvgBuild) {
-            this.controller.localSettings.svg.enabled = false;
+            this.controller.localSettings.use.svg = false;
         }
     }
 

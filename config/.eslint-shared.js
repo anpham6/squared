@@ -74,7 +74,6 @@ module.exports = {
         "semi": "error",
         "semi-style": "error",
         "semi-spacing": "error",
-        "no-extra-semi": "error",
         "no-shadow": "error",
         "no-extra-boolean-cast": "error",
         "no-loss-of-precision": "error",

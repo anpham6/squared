@@ -1,0 +1,17 @@
+/* This body rule doesn't appear in the chapter. */
+body {
+	font: 100%/1.3 sans-serif;
+	
+	/* The shorthand notation above is the same as these three individually:
+	
+	font-family: sans-serif;
+	font-size: 100%;
+	line-height: 1.3;
+	*/
+}
+
+p:first-letter {
+	color: red;
+	font-size: 1.4em;  /* make letter larger */
+	font-weight: bold;
+}

@@ -115,7 +115,8 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
             const children = node.children as T[];
             const nodes: [number, T][] = [];
             let textHeight = 0,
-                floatHeight = 0;
+                floatHeight = 0,
+                firstLine: Undef<Null<StringMap>>;
             let j = 0, k = 0, l = 0, m = 0, n = 0;
             for (let i = 0; i < length; ++i) {
                 const child = children[i];
@@ -129,11 +130,14 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                 }
                 else if (isTextElement(child) && !(child.lineBreakLeading && (i === length - 1 || child.lineBreakTrailing) || i === 0 && child.lineBreakTrailing)) {
                     if (checkBreakable(child) && !child.preserveWhiteSpace) {
+                        if (firstLine === undefined) {
+                            firstLine = node.firstLineStyle;
+                        }
                         if (child.multiline) {
                             ++j;
                             nodes.push([1, child]);
                         }
-                        else if (j + k++ > 0) {
+                        else if (j + k++ > 0 || firstLine) {
                             nodes.push([1, child]);
                         }
                         if (child.styleElement) {
@@ -147,8 +151,15 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                     ++l;
                 }
             }
-            if (j > 0 && (k > 0 || l > 1 || floatHeight > 0 && textHeight > floatHeight) || (k > 1 || m > 0 && n > 1) && (node.textBounds?.numberOfLines || 0) > 1) {
+            if (j > 0 && (k > 0 || l > 1 || firstLine || floatHeight > 0 && textHeight > floatHeight) || (k > 1 || m > 0 && n > 1) && (firstLine || (node.textBounds?.numberOfLines || 0) > 1)) {
                 node.data(this.name, 'mainData', nodes);
+                return true;
+            }
+        }
+        else if (node.textElement) {
+            const firstLine = node.firstLineStyle;
+            if (firstLine) {
+                node.data(this.name, 'mainData', [[NaN, node]]);
                 return true;
             }
         }
@@ -202,11 +213,17 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
             else {
                 const q = words.length;
                 if (q > 1) {
-                    const { depth, textStyle, fontSize, lineHeight } = seg;
+                    const { depth, textStyle, fontSize, lineHeight, naturalElement } = seg;
                     const fontFamily = seg.css('fontFamily');
                     const bounds = !seg.hasPX('width') && seg.textBounds || seg.bounds;
                     const height = seg.bounds.height / (bounds.numberOfLines || 1);
-                    const createContainer = (tagName: string, value: string, display: string) => {
+                    const initialData: InitialData<T> = Object.freeze({ styleMap: { ...seg.unsafe<StringMap>('styleMap') } });
+                    const cssData: StringMap = {
+                        position: 'static',
+                        display: partition ? seg.display : 'inline',
+                        verticalAlign: 'baseline'
+                    };
+                    const createContainer = (tagName: string, value: string) => {
                         const container = application.createNode(sessionId, { parent: parentContainer });
                         container.init(parentContainer, depth);
                         container.naturalChild = false;
@@ -215,15 +232,13 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                         container.contentAltered = true;
                         container.textContent = value;
                         container.unsafe('element', element);
-                        container.setCacheValue('naturalElement', false);
+                        container.unsafe('initial', initialData);
+                        container.setCacheValue('naturalElement', naturalElement && !isNaN(columns));
                         container.setCacheValue('tagName', tagName);
+                        container.setCacheValue('fontSize', fontSize);
                         container.setCacheValue('lineHeight', lineHeight);
                         container.inheritApply('textStyle', textStyle);
-                        container.cssApply({
-                            position: 'static',
-                            display,
-                            verticalAlign: 'baseline'
-                        });
+                        container.cssApply(cssData);
                         const textBounds = {
                             ...bounds,
                             width: measureTextWidth(value, fontFamily, fontSize) + (value.length * adjustment),
@@ -236,12 +251,12 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                         return container;
                     };
                     let previous!: T;
-                    if (columns > 1) {
+                    if (partition) {
                         const { marginLeft, marginRight } = seg;
                         let r: number;
                         for (let j = 0, k = 0, l = q; j < columns; ++j, l -= r, k += r) {
                             r = j === columns - 1 ? l : Math.floor(q / columns);
-                            const container = createContainer(seg.tagName, words.slice(k, k + r).join(''), seg.display);
+                            const container = createContainer(seg.tagName, words.slice(k, k + r).join(''));
                             container.multiline = true;
                             if (j === 0) {
                                 container.siblingsLeading = seg.siblingsLeading;
@@ -269,7 +284,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                     else {
                         const items: Undef<T[]> = mainData ? new Array(q) : undefined;
                         for (let j = 0; j < q; ++j) {
-                            const container = createContainer('#text', words[j], 'inline');
+                            const container = createContainer('#text', words[j]);
                             if (items) {
                                 items[j] = container;
                             }
@@ -349,7 +364,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                 if (!partition) {
                     parentContainer.setControlType(View.getControlName(CONTAINER_NODE.RELATIVE), CONTAINER_NODE.RELATIVE);
                     parentContainer.alignmentType = NODE_ALIGNMENT.HORIZONTAL;
-                    if (hasTextIndent(node)) {
+                    if (hasTextIndent(node) || node.firstLineStyle) {
                         application.getProcessingCache(sessionId).afterAdd!(parentContainer, true, true);
                     }
                 }

@@ -83,6 +83,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     private _afterOutside: ObjectIndex<string[]> = {};
     private _unsupportedCascade!: Set<string>;
     private _unsupportedTagName!: Set<string>;
+    private _settingsStyle!: ControllerSettingsStyleUI;
 
     public abstract processUnknownParent(layout: squared.base.LayoutUI<T>): squared.base.LayoutResult<T>;
     public abstract processUnknownChild(layout: squared.base.LayoutUI<T>): squared.base.LayoutResult<T>;
@@ -108,6 +109,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         const unsupported = this.localSettings.unsupported;
         this._unsupportedCascade = unsupported.cascade;
         this._unsupportedTagName = unsupported.tagName;
+        this._settingsStyle = this.localSettings.style;
     }
 
     public preventNodeCascade(node: T) {
@@ -164,6 +166,11 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 }
             }
             switch (tagName) {
+                case 'A':
+                    if (!styleMap.color) {
+                        styleMap.color = this._settingsStyle.anchorFontColor;
+                    }
+                    break;
                 case 'INPUT': {
                     const type = (element as HTMLInputElement).type;
                     switch (type) {
@@ -182,14 +189,13 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             styleMap.paddingLeft = formatPX(convertFloat(styleMap.paddingLeft) + 1);
                             break;
                         default: {
-                            const style = this.localSettings.style;
-                            const result = setBorderStyle(styleMap, style.inputBorderColor);
+                            const result = setBorderStyle(styleMap, this._settingsStyle.inputBorderColor);
                             switch (type) {
                                 case 'file':
                                 case 'reset':
                                 case 'submit':
                                 case 'button':
-                                    setButtonStyle(styleMap, result, style.inputBackgroundColor);
+                                    setButtonStyle(styleMap, result, this._settingsStyle.inputBackgroundColor);
                                     break;
                             }
                             break;
@@ -198,13 +204,12 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     break;
                 }
                 case 'BUTTON': {
-                    const style = this.localSettings.style;
-                    setButtonStyle(styleMap, setBorderStyle(styleMap, style.inputBorderColor), style.inputBackgroundColor);
+                    setButtonStyle(styleMap, setBorderStyle(styleMap, this._settingsStyle.inputBorderColor), this._settingsStyle.inputBackgroundColor);
                     break;
                 }
                 case 'TEXTAREA':
                 case 'SELECT':
-                    setBorderStyle(styleMap, this.localSettings.style.inputBorderColor);
+                    setBorderStyle(styleMap, this._settingsStyle.inputBorderColor);
                     break;
                 case 'BODY': {
                     const backgroundColor = styleMap.backgroundColor;
