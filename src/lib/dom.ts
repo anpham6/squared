@@ -54,8 +54,7 @@ export function getRangeClientRect(element: Element) {
     const range = document.createRange();
     range.selectNodeContents(element);
     const clientRects = range.getClientRects();
-    let length = clientRects.length;
-    let i = 0;
+    let i = 0, length = clientRects.length;
     while (i < length) {
         const item = clientRects.item(i++) as ClientRect;
         if (Math.round(item.width) > 0 && !withinRange(item.left, item.right, 0.5)) {

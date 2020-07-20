@@ -397,7 +397,6 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             break;
                         }
                     case 'absolute': {
-                        parent = absoluteParent;
                         if (node.autoPosition) {
                             if (!node.siblingsLeading.some(item => item.multiline || item.excluded && !item.blockStatic)) {
                                 node.cssApply({ display: 'inline-block', verticalAlign: 'top' }, true);
@@ -407,50 +406,47 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             }
                             parent = actualParent;
                         }
-                        else if (this.userSettings.supportNegativeLeftTop) {
-                            let outside = false;
-                            while (parent && parent !== documentRoot && (!parent.rightAligned && !parent.centerAligned || !parent.pageFlow)) {
-                                const linear = parent.linear;
-                                if (!outside) {
-                                    if (node.hasPX('top') && node.hasPX('bottom') || node.hasPX('left') && node.hasPX('right')) {
+                        else {
+                            parent = absoluteParent;
+                            if (this.userSettings.supportNegativeLeftTop && !(node.hasPX('top') && node.hasPX('bottom') || node.hasPX('left') && node.hasPX('right'))) {
+                                let outside = false;
+                                while (parent && parent.bounds.height > 0) {
+                                    if (parent.layoutElement) {
+                                        parent = absoluteParent;
                                         break;
                                     }
+                                    else if (parent !== documentRoot && (!parent.rightAligned && !parent.centerAligned || !parent.pageFlow)) {
+                                        const linear = parent.linear;
+                                        if (!outside) {
+                                            const overflowX = parent.css('overflowX') === 'hidden';
+                                            const overflowY = parent.css('overflowY') === 'hidden';
+                                            if (overflowX && overflowY) {
+                                                break;
+                                            }
+                                            const outsideX = !overflowX && node.outsideX(linear);
+                                            const outsideY = !overflowY && node.outsideY(linear);
+                                            if (outsideX && (node.left < 0 || node.right > 0) ||
+                                                outsideY && (node.top < 0 || node.bottom !== 0) ||
+                                                outsideX && outsideY && (!parent.pageFlow || parent.actualParent!.documentRoot && (node.top > 0 || node.left > 0)) ||
+                                                !overflowX && ((node.left < 0 || node.right > 0) && Math.ceil(node.bounds.right) < linear.left || (node.left > 0 || node.right < 0) && Math.floor(node.bounds.left) > linear.right) && parent.some(item => item.pageFlow) ||
+                                                !overflowY && ((node.top < 0 || node.bottom > 0) && Math.ceil(node.bounds.bottom) < parent.bounds.top || (node.top > 0 || node.bottom < 0) && Math.floor(node.bounds.top) > parent.bounds.bottom) ||
+                                                !overflowX && !overflowY && !node.intersectX(linear) && !node.intersectY(linear))
+                                            {
+                                                outside = true;
+                                            }
+                                            else {
+                                                break;
+                                            }
+                                        }
+                                        else if (node.withinX(linear) && node.withinY(linear)) {
+                                            break;
+                                        }
+                                        parent = parent.actualParent as T;
+                                    }
                                     else {
-                                        const overflowX = parent.css('overflowX') === 'hidden';
-                                        const overflowY = parent.css('overflowY') === 'hidden';
-                                        if (overflowX && overflowY) {
-                                            break;
-                                        }
-                                        const outsideX = !overflowX && node.outsideX(linear);
-                                        const outsideY = !overflowY && node.outsideY(linear);
-                                        if (outsideX && (node.left < 0 || node.right > 0) || outsideY && (node.top < 0 || node.bottom !== 0)) {
-                                            outside = true;
-                                        }
-                                        else if (!overflowX && ((node.left < 0 || node.right > 0) && Math.ceil(node.bounds.right) < linear.left || (node.left > 0 || node.right < 0) && Math.floor(node.bounds.left) > linear.right) && parent.some(item => item.pageFlow)) {
-                                            outside = true;
-                                        }
-                                        else if (!overflowY && ((node.top < 0 || node.bottom > 0) && Math.ceil(node.bounds.bottom) < parent.bounds.top || (node.top > 0 || node.bottom < 0) && Math.floor(node.bounds.top) > parent.bounds.bottom)) {
-                                            outside = true;
-                                        }
-                                        else if (outsideX && outsideY && (!parent.pageFlow || parent.actualParent!.documentRoot && (node.top > 0 || node.left > 0))) {
-                                            outside = true;
-                                        }
-                                        else if (!overflowX && !overflowY && !node.intersectX(linear) && !node.intersectY(linear)) {
-                                            outside = true;
-                                        }
-                                        else {
-                                            break;
-                                        }
+                                        break;
                                     }
                                 }
-                                else if (parent.layoutElement) {
-                                    parent = absoluteParent;
-                                    break;
-                                }
-                                else if (node.withinX(linear) && node.withinY(linear)) {
-                                    break;
-                                }
-                                parent = parent.actualParent as T;
                             }
                         }
                         break;

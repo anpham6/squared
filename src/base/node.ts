@@ -1122,7 +1122,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return false;
     }
 
-    public withinX(rect: BoxRectDimension, dimension: BoxType = 'linear') {
+    public withinX(rect: BoxRectDimension, dimension: BoxType = 'bounds') {
         if (this.pageFlow || rect.width > 0) {
             const { left, right } = this[dimension];
             return aboveRange(left, rect.left) && belowRange(right, rect.right);
@@ -1130,7 +1130,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return true;
     }
 
-    public withinY(rect: BoxRectDimension, dimension: BoxType = 'linear') {
+    public withinY(rect: BoxRectDimension, dimension: BoxType = 'bounds') {
         if (this.pageFlow || rect.height > 0) {
             const { top, bottom } = this[dimension];
             return Math.ceil(top) >= rect.top && Math.floor(bottom) <= rect.bottom;
@@ -1605,8 +1605,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         const queryMap = this.queryMap;
         if (queryMap && resultCount !== 0) {
             const queries = parseSelectorText(value);
-            let length = queries.length;
-            let i = 0;
+            let i = 0, length = queries.length;
             while (i < length) {
                 const query = queries[i++];
                 const selectors: QueryData[] = [];

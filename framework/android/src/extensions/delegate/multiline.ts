@@ -221,6 +221,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                     const bounds = !seg.hasPX('width') && seg.textBounds || seg.bounds;
                     const height = Math.floor(seg.bounds.height / (bounds.numberOfLines || 1));
                     const initialData: InitialData<T> = Object.freeze({ styleMap: { ...seg.unsafe<StringMap>('styleMap') } });
+                    initialData.styleMap!.lineHeight = undefined;
                     const cssData: StringMap = {
                         position: 'static',
                         display: partition ? seg.display : 'inline',
@@ -234,7 +235,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                         container.renderExclude = false;
                         container.contentAltered = true;
                         container.textContent = value;
-                        container.actualParent = seg;
+                        container.actualParent = parentContainer;
                         container.unsafe('element', element);
                         container.unsafe('initial', initialData);
                         container.setCacheValue('naturalElement', naturalElement && !isNaN(columns));

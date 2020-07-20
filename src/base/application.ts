@@ -459,7 +459,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
                 else if (controllerHandler.includeElement(element)) {
                     if (element.childNodes.length === 0) {
-                        child = this.insertNode(element, sessionId);    
+                        child = this.insertNode(element, sessionId);
                     }
                     else {
                         child = this.cascadeParentNode(cache, excluded, rootElements, element, sessionId, childDepth, extensions);

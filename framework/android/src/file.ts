@@ -162,7 +162,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                         break;
                 }
             }
-            options.assets = assets.concat(options.assets || []);
+            options.assets = options.assets ? assets.concat(options.assets) : assets;
             if (options.directory) {
                 this.copying(options);
             }
@@ -425,7 +425,8 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 }
             }
             if (options.directory || options.filename) {
-                options.assets = getImageAssets(getOutputDirectory(this.userSettings.outputDirectory), result, this.userSettings.convertImages, this.userSettings.compressImages).concat(options.assets || []);
+                const assets = getImageAssets(getOutputDirectory(this.userSettings.outputDirectory), result, this.userSettings.convertImages, this.userSettings.compressImages);
+                options.assets = options.assets ? assets.concat(options.assets) : assets;
                 if (options.directory) {
                     this.copying(options);
                 }
@@ -446,7 +447,8 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 result.push(uri, video.mimeType || '', fromLastIndexOf(uri, '/', '\\'));
             }
             if (options.directory || options.filename) {
-                options.assets = getRawAssets(getOutputDirectory(this.userSettings.outputDirectory) + this.directory.video, result).concat(options.assets || []);
+                const assets = getRawAssets(getOutputDirectory(this.userSettings.outputDirectory) + this.directory.video, result);
+                options.assets = options.assets ? assets.concat(options.assets) : assets;
                 if (options.directory) {
                     this.copying(options);
                 }
@@ -467,7 +469,8 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 result.push(uri, video.mimeType || '', fromLastIndexOf(uri, '/', '\\'));
             }
             if (options.directory || options.filename) {
-                options.assets = getRawAssets(getOutputDirectory(this.userSettings.outputDirectory) + this.directory.audio, result).concat(options.assets || []);
+                const assets = getRawAssets(getOutputDirectory(this.userSettings.outputDirectory) + this.directory.audio, result);
+                options.assets = options.assets ? assets.concat(options.assets) : assets;
                 if (options.directory) {
                     this.copying(options);
                 }
@@ -545,7 +548,8 @@ export default class File<T extends View> extends squared.base.File<T> implement
 
     protected checkFileAssets(content: string[], options: FileUniversalOptions) {
         if (options.directory || options.filename) {
-            options.assets = getFileAssets(getOutputDirectory(this.userSettings.outputDirectory), content).concat(options.assets || []);
+            const assets = getFileAssets(getOutputDirectory(this.userSettings.outputDirectory), content);
+            options.assets = options.assets ? assets.concat(options.assets) : assets;
             if (options.directory) {
                 this.copying(options);
             }

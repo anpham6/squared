@@ -65,12 +65,13 @@ function checkMergableGravity(value: string, direction: string[]) {
 
 function setAutoMargin(node: T, autoMargin: AutoMargin) {
     if (autoMargin.horizontal && (!node.blockWidth || node.hasWidth || node.hasPX('maxWidth') || node.innerMostWrapped.has('width', { type: CSS_UNIT.PERCENT, not: '100%' }))) {
-        const attr = (node.blockWidth || !node.pageFlow) && !node.outerWrapper ? 'gravity' : 'layout_gravity';
-        node.mergeGravity(attr, autoMargin.leftRight
-            ? 'center_horizontal'
-            : autoMargin.left
-                ? 'right'
-                : 'left'
+        node.mergeGravity(
+            (node.blockWidth || !node.pageFlow) && !node.outerWrapper ? 'gravity' : 'layout_gravity',
+            autoMargin.leftRight
+                ? 'center_horizontal'
+                : autoMargin.left
+                    ? 'right'
+                    : 'left'
         );
         return true;
     }
@@ -98,8 +99,7 @@ function setMultiline(node: T, lineHeight: number, overwrite: boolean) {
 }
 
 function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top: boolean, bottom: boolean, parent?: T) {
-    const styleValue = node.cssInitial('lineHeight');
-    if (node.imageContainer || node.rendering || node.actualHeight === 0 || styleValue === 'normal') {
+    if (node.imageContainer || node.rendering || node.actualHeight === 0 || node.cssInitial('lineHeight') === 'normal') {
         return;
     }
     if (node.multiline) {
@@ -111,10 +111,9 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top:
             node.mergeGravity('gravity', 'center_vertical', false);
         }
         else {
-            const setBoxPadding = (offset: number, padding = false) => {
+            const setBoxPadding = (offset: number, padding?: boolean) => {
                 if (offset > 0) {
-                    const boxPadding = (inlineStyle || height > lineHeight) && (node.styleText || padding) && !node.inline && !(node.inputElement && !isLength(styleValue, true)) || !!parent;
-                    if (boxPadding) {
+                    if ((inlineStyle || height > lineHeight) && (node.styleText || padding) && !node.inline && !(node.inputElement && !isLength(node.cssInitial('lineHeight'), true)) || parent) {
                         if (top) {
                             let adjustment = offset;
                             if (parent) {
@@ -200,20 +199,19 @@ function isFlexibleDimension(node: T, value: string) {
 }
 
 function getLineSpacingExtra(node: T, lineHeight: number) {
-    let bounds: Undef<BoxRectDimension>,
-        altered: Undef<boolean>;
-    if (node.plainText) {
-        if (node.naturalChild) {
-            bounds = node.bounds;
-        }
-        else {
-            bounds = node.data<BoxRectDimension>(ResourceUI.KEY_NAME, 'textRange');
-            if (!bounds) {
+    let bounds = node.data<BoxRectDimension>(ResourceUI.KEY_NAME, 'textRange'),
+        collapsed: Undef<[HTMLElement, string][]>;
+    if (!bounds) {
+        if (node.plainText) {
+            if (node.naturalChild) {
+                bounds = node.bounds;
+            }
+            else {
                 let parent = node.actualParent;
                 while (parent !== null) {
                     if (parent.naturalElement) {
                         node = parent as T;
-                        altered = true;
+                        collapsed = [];
                         break;
                     }
                     parent = parent.actualParent;
@@ -221,7 +219,7 @@ function getLineSpacingExtra(node: T, lineHeight: number) {
             }
         }
     }
-    if (!bounds && (node.styleText || altered)) {
+    if (!bounds && (node.styleText || collapsed)) {
         const values = node.cssTryAll({
             'display': 'inline-block',
             'height': 'auto',
@@ -232,9 +230,7 @@ function getLineSpacingExtra(node: T, lineHeight: number) {
         });
         if (values) {
             const elememt = node.element!;
-            let collapsed: Undef<[HTMLElement, string][]>;
-            if (altered) {
-                collapsed = [];
+            if (collapsed) {
                 iterateArray(elememt.children, (child: HTMLElement) => {
                     if (child.nodeName !== '#text') {
                         collapsed!.push([child, getStyle(child).display]);
@@ -2416,6 +2412,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                         this.floatContainer && baseline !== undefined && (baseline.anchorChain('left').pop()?.floating === true || baseline.anchorChain('right').pop()?.floating === true)
                                     );
                                     previousMultiline = onlyChild && row[0].multiline;
+                                    if (!top && !bottom) {
+                                        continue;
+                                    }
                                 }
                                 const r = row.length;
                                 let j = 0;
@@ -2700,19 +2699,25 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     return this.bounds.height === 0;
                 }
                 else if (!this.pageFlow) {
-                    this._cached.renderExclude = excludeHorizontal(this) || excludeVertical(this) || /^rect\(0[a-z]*,\s+0[a-z]*,\s+0[a-z]*,\s+0[a-z]*\)$/.test(this.css('clip'));
-                    return this._cached.renderExclude;
+                    return this._cached.renderExclude = this.length === 0 && (excludeHorizontal(this) || excludeVertical(this)) || /^rect\(0[a-z]*,\s+0[a-z]*,\s+0[a-z]*,\s+0[a-z]*\)$/.test(this.css('clip'));
                 }
-                else if (this.styleElement && this.length === 0 && !this.imageElement && !this.pseudoElement) {
+                else {
                     const parent = this.renderParent || this.parent as T;
-                    if (parent.layoutFrame) {
-                        return excludeHorizontal(this) || excludeVertical(this);
+                    if (this.pseudoElement) {
+                        if (parent.layoutConstraint && parent.every((item: T) => !item.pageFlow || item === this || item.pseudoElement && (excludeHorizontal(item) || excludeVertical(item))) || parent.layoutFrame) {
+                            return excludeHorizontal(this) || excludeVertical(this);
+                        }
                     }
-                    else if (parent.layoutVertical) {
-                        return excludeVertical(this);
-                    }
-                    else {
-                        return excludeHorizontal(this) && (parent.layoutHorizontal || excludeVertical(this));
+                    else if (this.length === 0 && this.styleElement && !this.imageElement) {
+                        if (parent.layoutFrame) {
+                            return excludeHorizontal(this) || excludeVertical(this);
+                        }
+                        else if (parent.layoutVertical) {
+                            return excludeVertical(this);
+                        }
+                        else {
+                            return excludeHorizontal(this) && (parent.layoutHorizontal || excludeVertical(this));
+                        }
                     }
                 }
             }

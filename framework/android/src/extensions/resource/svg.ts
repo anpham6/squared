@@ -276,12 +276,11 @@ function getOuterOpacity(target: SvgView) {
 }
 
 function residualHandler(element: SVGGraphicsElement, transforms: SvgTransform[], rx = 1, ry = 1): [SvgTransform[][], SvgTransform[]] {
-    if ((SVG.circle(element) || SVG.ellipse(element)) && transforms.some(item => item.type === SVGTransform.SVG_TRANSFORM_ROTATE)) {
-        if (rx !== ry || transforms.length > 1 && transforms.some(item => item.type === SVGTransform.SVG_TRANSFORM_SCALE && item.matrix.a !== item.matrix.d)) {
-            return groupTransforms(element, transforms);
-        }
-    }
-    return [[], transforms];
+    return (
+        (SVG.circle(element) || SVG.ellipse(element)) && transforms.some(item => item.type === SVGTransform.SVG_TRANSFORM_ROTATE) && (rx !== ry || transforms.length > 1 && transforms.some(item => item.type === SVGTransform.SVG_TRANSFORM_SCALE && item.matrix.a !== item.matrix.d))
+            ? groupTransforms(element, transforms)
+            : [[], transforms]
+    );
 }
 
 function groupTransforms(element: SVGGraphicsElement, transforms: SvgTransform[], ignoreClient = false): [SvgTransform[][], SvgTransform[]] {
@@ -411,10 +410,7 @@ function getValueType(attr: string) {
         case 'points':
             return 'pathType';
         default:
-            if (getTransformInitialValue(attr)) {
-                return 'floatType';
-            }
-            return undefined;
+            return getTransformInitialValue(attr) ? 'floatType' : undefined;
     }
 }
 
@@ -446,8 +442,9 @@ function getTransformPropertyName(type: number) {
             return ['scaleX', 'scaleY', 'pivotX', 'pivotY'];
         case SVGTransform.SVG_TRANSFORM_ROTATE:
             return ['rotation', 'pivotX', 'pivotY'];
+        default:
+            return undefined;
     }
-    return undefined;
 }
 
 function getTransformValues(item: SvgAnimate) {
@@ -458,8 +455,9 @@ function getTransformValues(item: SvgAnimate) {
             return SvgAnimateTransform.toScaleList(item.values);
         case SVGTransform.SVG_TRANSFORM_TRANSLATE:
             return SvgAnimateTransform.toTranslateList(item.values);
+        default:
+            return undefined;
     }
-    return undefined;
 }
 
 function getTransformInitialValue(name: string) {
@@ -473,8 +471,9 @@ function getTransformInitialValue(name: string) {
         case 'scaleX':
         case 'scaleY':
             return '1';
+        default:
+            return undefined;
     }
-    return undefined;
 }
 
 function getColorValue<T>(value: string, asArray?: T) {
@@ -494,8 +493,9 @@ function getTileMode(value: number) {
             return 'mirror';
         case SVGGradientElement.SVG_SPREADMETHOD_REPEAT:
             return 'repeat';
+        default:
+            return '';
     }
-    return '';
 }
 
 function createFillGradient(gradient: Gradient, path: SvgPath, precision?: number) {
@@ -1790,8 +1790,8 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         const pathData = path.value;
         const animations = target.animations;
         let previousPathData = pathData,
-            index = 0;
-        let length = animations.length;
+            index = 0,
+            length = animations.length;
         i = 0;
         while (i < length) {
             const item = animations[i++];
@@ -1819,18 +1819,17 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
             }
         }
         const replaceData = Array.from(fillReplaceMap.values()).sort((a, b) => a.time < b.time ? -1 : 1);
-        length = replaceData.length;
-        for (i = 0; i < length; ++i) {
+        for (i = 0, length = replaceData.length; i < length; ++i) {
             const item = replaceData[i];
             if (!item.reset || item.to !== previousPathData) {
                 let valid = true;
                 if (item.reset) {
                     invalid: {
-                        let j = 0;
+                        let j = 0, k: number;
                         while (j < i) {
                             const previous = replaceData[j++];
                             if (!previous.reset) {
-                                let k = i + 1;
+                                k = i + 1;
                                 while (k < length) {
                                     switch (replaceData[k++].index) {
                                         case previous.index:

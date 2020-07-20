@@ -209,8 +209,8 @@ function setDataRows(rowData: Undef<NodeUI[]>[][], openCells: number[][], rowA: 
 }
 
 function applyLayout(node: NodeUI, data: CssGridDirectionData, dataCount: number, horizontal: boolean) {
-    let unit = data.unit;
-    let length = unit.length;
+    let unit = data.unit,
+        length = unit.length;
     if (length < dataCount) {
         if (data.autoFill || data.autoFit) {
             if (length === 0) {
@@ -777,7 +777,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             });
         }
         {
-            let length = 1,
+            let totalCount = 1,
                 outerCount = 0;
             let i = 0;
             while (i < layout.length) {
@@ -789,14 +789,14 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                             : [item.rowSpan, 0, 2];
                     const placement = item.placement;
                     if (placement.some(value => value > 0)) {
-                        length = Math.max(length, totalSpan, placement[start], placement[end] - 1);
+                        totalCount = Math.max(totalCount, totalSpan, placement[start], placement[end] - 1);
                     }
                     if (withinRange(item.outerCoord, horizontal ? node.box.top : node.box.left)) {
                         outerCount += totalSpan;
                     }
                 }
             }
-            ITERATION = Math.max(length, outerCount, horizontal && !autoWidth ? column.unit.length : 0, !horizontal && !autoHeight ? row.unit.length : 0);
+            ITERATION = Math.max(totalCount, outerCount, horizontal && !autoWidth ? column.unit.length : 0, !horizontal && !autoHeight ? row.unit.length : 0);
         }
         node.each((item: T, index) => {
             const { placement, rowSpan, columnSpan } = layout[index];

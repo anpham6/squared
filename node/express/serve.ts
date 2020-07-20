@@ -862,8 +862,8 @@ let Node: serve.INode,
             }
         }
         rotate(self: jimp, filepath: string, values: number[], manager: FileManager) {
-            let length = values.length;
             const deg = values[0];
+            let length = values.length;
             if (length > 1) {
                 const rotations = values.slice(1);
                 const master = filepath + path.extname(filepath);

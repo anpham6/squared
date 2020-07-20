@@ -11,9 +11,9 @@ import LayoutUI = squared.base.LayoutUI;
 const { PLATFORM, isPlatform } = squared.lib.client;
 const { parseColor } = squared.lib.color;
 const { CSS_UNIT, formatPX, getSrcSet, hasComputedStyle, isPercent } = squared.lib.css;
-const { getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
+const { createElement, getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;
-const { getElementAsNode, getPseudoElt } = squared.lib.session;
+const { actualTextRangeRect, getElementAsNode, getPseudoElt } = squared.lib.session;
 const { assignEmptyValue, convertWord, hasBit, hasMimeType, isString, iterateArray, parseMimeType, partitionArray, plainMap, withinRange } = squared.lib.util;
 
 const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
@@ -433,15 +433,45 @@ function canControlAscendItems(node: View) {
 }
 
 function applyFirstLine(node: View, styleMap: StringMap) {
-    const plainText = node.plainText && !node.naturalElement;
-    for (const attr in styleMap) {
-        if (!plainText) {
-            const value = node.cssInitial(attr);
-            if (value !== '') {
-                continue;
+    if (node.textElement) {
+        const plainText = node.plainText && !node.naturalElement;
+        for (const attr in styleMap) {
+            if (!plainText) {
+                const value = node.cssInitial(attr);
+                if (value !== '') {
+                    continue;
+                }
             }
+            node.css(attr, styleMap[attr]);
         }
-        node.css(attr, styleMap[attr]);
+        node.unset('textStyle');
+        const parent = node.actualParent?.element || document.body;
+        const tagName = node.tagName;
+        const style = node.cssAsObject(
+            'paddingTop',
+            'paddingRight',
+            'paddingBottom',
+            'paddingLeft',
+            'borderTopWidth',
+            'borderRightWidth',
+            'borderBottomWidth',
+            'borderLeftWidth',
+            'borderTopColor',
+            'borderRightColor',
+            'borderBottomColor',
+            'borderLeftColor',
+            'borderTopStyle',
+            'borderRightStyle',
+            'borderBottomStyle',
+            'borderLeftStyle'
+        );
+        Object.assign(style, node.textStyle);
+        style.display = 'inline-block';
+        style.fontSize = node.css('fontSize');
+        const element = createElement(tagName !== '#text' ? tagName : 'span', { attrs: { textContent: 'AgjpqyZ' }, style });
+        parent.appendChild(element);
+        node.data<BoxRectDimension>(Resource.KEY_NAME, 'textRange', actualTextRangeRect(element));
+        parent.removeChild(element);
     }
 }
 
@@ -470,6 +500,29 @@ function flattenContainer(node: View) {
     return renderChildren;
 }
 
+function setLayoutBelow(item: View, previousBaseline: Null<View>) {
+    if (previousBaseline) {
+        item.anchor('topBottom', previousBaseline.documentId);
+    }
+    else {
+        item.anchor('top', 'true');
+    }
+}
+
+function canAlignPosition(node: View, item: View, horizontal: boolean) {
+    if (!item.pageFlow) {
+        if (horizontal) {
+            if (item.has('right') && !item.has('left')) {
+                return !node.has('left') && !node.has('right');
+            }
+        }
+        else if (item.has('bottom') && !item.has('top')) {
+            return !node.has('top') && !node.has('bottom');
+        }
+    }
+    return true;
+};
+
 const relativeWrapWidth = (node: View, bounds: BoxRectDimension, boxWidth: number, rowLength: number, textIndent: number, floatedWidth: number, rowWidth: number) => Math.floor(floatedWidth + rowWidth + bounds.width - (node.inlineStatic && node.styleElement ? node.contentBoxWidth : 0)) > Math.ceil(boxWidth + (rowLength === 1 ? -textIndent : 0));
 const getAnchorDirection = (reverse = false) => reverse ? ['right', 'left', 'rightLeft', 'leftRight'] : ['left', 'right', 'leftRight', 'rightLeft'];
 const getBaselineAnchor = (node: View) => (node.wrapperOf as View || node).imageContainer ? 'baseline' : 'bottom';
@@ -483,45 +536,39 @@ const isUnknownParent = (parent: View, value: number, length: number) => parent.
 const isMultilineGroup = (node: View) => node.contentAltered && !node.naturalChild && node.inlineText;
 
 function getBoxWidth(this: Controller<View>, node: View) {
-    const renderParent = node.renderParent as View;
-    if (renderParent.overflowY) {
-        return renderParent.box.width;
-    }
-    else {
-        const parent = node.actualParent as Null<View>;
-        if (parent) {
-            if (node.naturalElement && node.inlineStatic && parent.blockStatic && parent === renderParent) {
-                return parent.box.width - (node.linear.left - parent.box.left);
-            }
-            else if (parent.floatContainer) {
-                const { containerType, alignmentType } = this.containerTypeVerticalMargin;
-                const container = node.ascend({ condition: (item: View) => item.of(containerType, alignmentType), including: parent, attr: 'renderParent' });
-                if (container.length > 0) {
-                    const { left, right, width } = node.box;
-                    let offsetLeft = 0,
-                        offsetRight = 0;
-                    const renderChildren = node.renderChildren;
-                    const naturalChildren = parent.naturalChildren;
-                    const length = naturalChildren.length;
-                    let i = 0;
-                    while (i < length) {
-                        const item = naturalChildren[i++] as View;
-                        if (item.floating) {
-                            const linear = item.linear;
-                            if (!renderChildren.includes(item) && node.intersectY(linear)) {
-                                if (item.float === 'left') {
-                                    if (Math.floor(linear.right) > left) {
-                                        offsetLeft = Math.max(offsetLeft, linear.right - left);
-                                    }
+    const parent = node.actualParent as Null<View>;
+    if (parent) {
+        if (node.naturalElement && node.inlineStatic && parent.blockStatic && parent === node.renderParent) {
+            return parent.box.width - (node.linear.left - parent.box.left);
+        }
+        else if (parent.floatContainer) {
+            const { containerType, alignmentType } = this.containerTypeVerticalMargin;
+            const container = node.ascend({ condition: (item: View) => item.of(containerType, alignmentType), including: parent, attr: 'renderParent' });
+            if (container.length > 0) {
+                const { left, right, width } = node.box;
+                let offsetLeft = 0,
+                    offsetRight = 0;
+                const renderChildren = node.renderChildren;
+                const naturalChildren = parent.naturalChildren;
+                const length = naturalChildren.length;
+                let i = 0;
+                while (i < length) {
+                    const item = naturalChildren[i++] as View;
+                    if (item.floating) {
+                        const linear = item.linear;
+                        if (!renderChildren.includes(item) && node.intersectY(linear)) {
+                            if (item.float === 'left') {
+                                if (Math.floor(linear.right) > left) {
+                                    offsetLeft = Math.max(offsetLeft, linear.right - left);
                                 }
-                                else if (right > Math.ceil(linear.left)) {
-                                    offsetRight = Math.max(offsetRight, right - linear.left);
-                                }
+                            }
+                            else if (right > Math.ceil(linear.left)) {
+                                offsetRight = Math.max(offsetRight, right - linear.left);
                             }
                         }
                     }
-                    return width - (offsetLeft + offsetRight);
                 }
+                return width - (offsetLeft + offsetRight);
             }
         }
     }
@@ -2027,8 +2074,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public addBarrier(nodes: T[], barrierDirection: string) {
         const unbound: T[] = [];
-        let length = nodes.length;
-        let i = 0;
+        let i = 0, length = nodes.length;
         while (i < length) {
             const node = nodes[i++];
             const barrier = node.constraint.barrier;
@@ -2286,7 +2332,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const clearMap = this.application.clearMap;
                 const boxParent = node.nodeGroup ? node.documentParent : node;
                 const baseWidth = node.marginLeft + node.marginRight < 0 ? node.marginRight : 0;
-                const lineWrap = node.css('whiteSpace') !== 'nowrap';
+                const lineWrap = boxParent.css('whiteSpace') !== 'nowrap';
                 let boxWidth = boxParent.actualBoxWidth(getBoxWidth.call(this, node)),
                     rowWidth = baseWidth,
                     rows!: T[][],
@@ -2296,6 +2342,38 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     currentFloated: Undef<T>,
                     currentFloatedWidth = 0,
                     currentFloatedHeight = 0;
+                const setCurrentFloated = (item: T) => {
+                    currentFloated = item;
+                    currentFloatedHeight = Math.floor(item.marginTop + item.bounds.height + Math.max(0, item.marginBottom) + (item.positionRelative ? item.hasPX('top') ? item.top : -item.bottom : 0));
+                };
+                const createNewRow = (item: T) => {
+                    if (currentFloated) {
+                        items = [item];
+                        rows.push(items);
+                    }
+                    else if (item.floating) {
+                        items = [];
+                        rows = [items];
+                        rowsAll.push([item, rows]);
+                        setCurrentFloated(item);
+                    }
+                    else {
+                        items = [item];
+                        rows = [items];
+                        rowsAll.push([undefined, rows]);
+                    }
+                    rowWidth = baseWidth;
+                };
+                const setRowWidth = (item: T, bounds: BoxRectDimension) => {
+                    const linearWidth = item.marginLeft + bounds.width + item.marginRight;
+                    if (item !== currentFloated) {
+                        rowWidth += linearWidth;
+                    }
+                    else {
+                        currentFloatedWidth = linearWidth;
+                    }
+                    previous = item;
+                };
                 if (node.naturalElement) {
                     if (node.blockDimension) {
                         textIndent = node.parseUnit(node.css('textIndent'));
@@ -2339,38 +2417,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         autoPosition = true;
                         continue;
                     }
-                    const setCurrentFloated = () => {
-                        currentFloated = item;
-                        currentFloatedHeight = Math.floor(item.marginTop + item.bounds.height + Math.max(0, item.marginBottom) + (item.positionRelative ? item.hasPX('top') ? item.top : -item.bottom : 0));
-                    };
-                    const createNewRow = () => {
-                        if (currentFloated) {
-                            items = [item];
-                            rows.push(items);
-                        }
-                        else if (item.floating) {
-                            items = [];
-                            rows = [items];
-                            rowsAll.push([item, rows]);
-                            setCurrentFloated();
-                        }
-                        else {
-                            items = [item];
-                            rows = [items];
-                            rowsAll.push([undefined, rows]);
-                        }
-                        rowWidth = baseWidth;
-                    };
-                    const setRowWidth = () => {
-                        const linearWidth = item.marginLeft + bounds.width + item.marginRight;
-                        if (item !== currentFloated) {
-                            rowWidth += linearWidth;
-                        }
-                        else {
-                            currentFloatedWidth = linearWidth;
-                        }
-                        previous = item;
-                    };
                     let { bounds, multiline } = item;
                     if (item.styleText && !item.hasPX('width')) {
                         const textBounds = item.textBounds;
@@ -2383,7 +2429,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         item.multiline = false;
                     }
                     if (start) {
-                        createNewRow();
+                        createNewRow(item);
                         start = false;
                     }
                     else {
@@ -2393,7 +2439,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         if (item.textElement) {
                             if (/^[^\w\s\n]+[\s\n]+$/.test(item.textContent) && !item.floating) {
                                 items.push(item);
-                                setRowWidth();
+                                setRowWidth(item, bounds);
                                 continue;
                             }
                             else {
@@ -2441,11 +2487,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     currentFloatedWidth = 0;
                                 }
                             }
-                            createNewRow();
+                            createNewRow(item);
                         }
                         else if (!currentFloated && item.float === 'left') {
                             rowsAll[rowsAll.length - 1][0] = item;
-                            setCurrentFloated();
+                            setCurrentFloated(item);
                         }
                         else {
                             items.push(item);
@@ -2463,28 +2509,20 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                         }
                     }
-                    setRowWidth();
+                    setRowWidth(item, bounds);
                 }
             }
             {
                 const horizontalRows: T[][] = [];
                 const firstLineStyle = node.firstLineStyle;
                 let previousBaseline: Null<T> = null;
-                const setLayoutBelow = (item: T) => {
-                    if (previousBaseline) {
-                        item.anchor('topBottom', previousBaseline.documentId);
-                    }
-                    else {
-                        item.anchor('top', 'true');
-                    }
-                };
                 for (let i = 0, length = rowsAll.length; i < length; ++i) {
                     const [currentFloated, rows] = rowsAll[i];
                     let float: Undef<string>;
                     if (currentFloated) {
                         node.floatContainer = true;
                         currentFloated.anchor(currentFloated.float, 'true');
-                        setLayoutBelow(currentFloated);
+                        setLayoutBelow(currentFloated, previousBaseline);
                         float = currentFloated.float;
                     }
                     const setTextIndent = (item: T) => {
@@ -2925,7 +2963,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     baseline.horizontalRowStart = true;
                                     baseline.horizontalRowEnd = true;
                                 }
-                                setLayoutBelow(baseline);
+                                setLayoutBelow(baseline, previousBaseline);
                                 if (!rightAligned) {
                                     setTextIndent(baseline);
                                 }
@@ -3511,26 +3549,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
             }
             if (!node.pageFlow && node.css('position') !== 'fixed' && !parent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
-                const canAlignPosition = (item: T) => {
-                    if (!item.pageFlow) {
-                        if (horizontal) {
-                            if (item.has('right') && !item.has('left')) {
-                                return !node.has('left') && !node.has('right');
-                            }
-                        }
-                        else if (item.has('bottom') && !item.has('top')) {
-                            return !node.has('top') && !node.has('bottom');
-                        }
-                    }
-                    return true;
-                };
                 const bounds = node.innerMostWrapped.bounds;
                 const renderChildren = parent.renderChildren;
                 const length = renderChildren.length;
                 let i = 0;
                 while (i < length) {
                     const item = renderChildren[i++] as T;
-                    if (item === node || item.plainText || item.pseudoElement || item.rootElement || !canAlignPosition(item)) {
+                    if (item === node || item.plainText || item.pseudoElement || item.rootElement || !canAlignPosition(node, item, horizontal)) {
                         continue;
                     }
                     const itemA = item.innerMostWrapped as T;
@@ -3586,12 +3611,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 i = 0;
                 while (i < length) {
                     const item = renderChildren[i++] as T;
-                    if (item === node || item.pageFlow || item.rootElement || !item.constraint[axis] || !canAlignPosition(item)) {
+                    if (item === node || item.pageFlow || item.rootElement || !item.constraint[axis] || !canAlignPosition(node, item, horizontal)) {
                         continue;
                     }
-                    const itemA = item.innerMostWrapped as T;
-                    const boundsA = itemA.bounds;
-                    if (withinRange(bounds[TL], boundsA[TL]) || withinRange(linear[TL], itemA.linear[TL])) {
+                    const wrapped = item.innerMostWrapped as T;
+                    const boundsA = wrapped.bounds;
+                    if (withinRange(bounds[TL], boundsA[TL]) || withinRange(linear[TL], wrapped.linear[TL])) {
                         const offset = bounds[LT] - boundsA[RB];
                         if (offset >= 0) {
                             setAnchorOffset(node, horizontal, axis, item.documentId, horizontal ? 'leftRight' : 'topBottom', offset);
@@ -3600,10 +3625,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                     else if (boundsA[LT] <= bounds[LT]) {
                         if (boundsA[TL] <= bounds[TL]) {
-                            nearest = itemA;
+                            nearest = wrapped;
                         }
                         else {
-                            adjacent = itemA;
+                            adjacent = wrapped;
                         }
                     }
                 }
