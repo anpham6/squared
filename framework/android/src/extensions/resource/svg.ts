@@ -870,7 +870,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 getTemplateFilename(templateName, imageLength),
                 applyTemplate('vector', VECTOR_TMPL, [{
                     'xmlns:android': XMLNS_ANDROID.android,
-                    'xmlns:aapt': this._namespaceAapt ? XMLNS_ANDROID.aapt : '',
+                    'xmlns:aapt': this._namespaceAapt ? 'http://schemas.android.com/aapt' : '',
                     'android:name': animateData.size > 0 ? svg.name : '',
                     'android:width': formatPX(width),
                     'android:height': formatPX(height),

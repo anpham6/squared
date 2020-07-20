@@ -107,13 +107,6 @@ export function applyTemplate(tagName: string, template: StandardMap, children: 
     return output;
 }
 
-export function convertLength(value: NumString, font?: boolean, precision = 3) {
-    if (typeof value === 'string') {
-        value = parseFloat(value);
-    }
-    return !font ? Math.round(value) + 'dp' : truncate(value, precision) + 'sp';
-}
-
 export function getDocumentId(value: string) {
     return value.replace(/^@\+?id\//, '');
 }
@@ -348,7 +341,7 @@ export function getXmlNs(value: string) {
 export function getRootNs(value: string) {
     let output = '';
     for (const namespace in XMLNS_ANDROID) {
-        if (value.includes(namespace + ':')) {
+        if (namespace === 'android' || value.includes(namespace + ':')) {
             output += '\n\t' + getXmlNs(namespace);
         }
     }

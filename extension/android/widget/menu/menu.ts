@@ -139,10 +139,7 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
         node.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
         node.exclude({ resource: NODE_RESOURCE.ALL, procedure: NODE_PROCEDURE.ALL });
         node.render(outerParent);
-        node.cascade((item: T) => {
-            this.addDescendant(item);
-            return false;
-        });
+        node.cascade((item: T) => this.addDescendant(item));
         node.dataset['pathname' + capitalize(this.application.systemName)] = appendSeparator(this.controller.userSettings.outputDirectory, 'res/menu');
         return {
             outerParent,

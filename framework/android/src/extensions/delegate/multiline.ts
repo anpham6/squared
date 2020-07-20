@@ -234,6 +234,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                         container.renderExclude = false;
                         container.contentAltered = true;
                         container.textContent = value;
+                        container.actualParent = seg;
                         container.unsafe('element', element);
                         container.unsafe('initial', initialData);
                         container.setCacheValue('naturalElement', naturalElement && !isNaN(columns));

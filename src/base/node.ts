@@ -957,7 +957,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 switch (attr) {
                     case 'position':
                         if (!this._preferInitial) {
-                            this.cascade(item => !item.pageFlow && item.unsetCache('absoluteParent'));
+                            this.cascade(item => {
+                                if (!item.pageFlow) {
+                                    item.unsetCache('absoluteParent');
+                                }
+                            });
                         }
                     case 'display':
                     case 'float':
@@ -2147,7 +2151,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             const emSize = parseFloat(fontSize);
                             if (emSize !== 1) {
                                 value *= emSize;
-                                this.css('lineHeight', formatPX(value));
+                                this.css('lineHeight', value + 'px');
                                 hasOwnStyle = true;
                             }
                         }

@@ -860,7 +860,7 @@ export const CSS_PROPERTIES: CssProperties = {
         valueOfNone: 'none / none / none / none'
     },
     gridAutoColumns: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.AUTO,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
         value: 'auto'
     },
     gridAutoFlow: {
@@ -868,7 +868,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'row'
     },
     gridAutoRows: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.AUTO,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
         value: 'auto'
     },
     gridColumn: {
@@ -1061,7 +1061,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: '0'
     },
     outline: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE | CSS_TRAITS.AUTO,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE,
         value: [
             'outlineWidth',
             'outlineStyle',
@@ -1100,7 +1100,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'visible'
     },
     padding: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT | CSS_TRAITS.AUTO,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
         value: [
             'paddingTop',
             'paddingRight',
@@ -2490,6 +2490,8 @@ export function checkStyleValue(element: HTMLElement, attr: string, value: strin
                 return ELEMENT_BLOCK.has(element.tagName) ? 'block' : 'inline';
             case 'verticalAlign':
                 return 'baseline';
+            case 'float':
+                return 'none';
             case 'lineHeight':
                 return 'normal';
             default:

@@ -153,9 +153,7 @@ export const LAYOUT_ANDROID = {
 
 export const XMLNS_ANDROID = {
     android: 'http://schemas.android.com/apk/res/android',
-    app: 'http://schemas.android.com/apk/res-auto',
-    aapt: 'http://schemas.android.com/aapt',
-    tools: 'http://schemas.android.com/tools'
+    app: 'http://schemas.android.com/apk/res-auto'
 };
 
 export const STRING_ANDROID = {

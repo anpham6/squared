@@ -1,7 +1,6 @@
 import Resource from '../../resource';
 
 import { BUILD_ANDROID } from '../../lib/enumeration';
-import { convertLength } from '../../lib/util';
 
 type View = android.base.View;
 type StyleList = ObjectMap<number[]>;
@@ -11,6 +10,7 @@ type TagNameMap = ObjectMap<StyleAttribute[]>;
 type NodeStyleMap = ObjectMap<string[]>;
 
 const { capitalize, convertInt, convertWord, hasKeys, plainMap, spliceArray, trimBoth } = squared.lib.util;
+const { truncate } = squared.lib.math;
 
 const { NODE_RESOURCE } = squared.base.lib.enumeration;
 
@@ -106,7 +106,8 @@ function deleteStyleAttribute(sorted: AttributeMap[], attrs: string, ids: number
 
 export default class ResourceFonts<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly options: ResourceFontsOptions = {
-        systemDefaultFont: 'sans-serif',
+        defaultFontFamily: 'sans-serif',
+        floatPrecision: 3,
         disableFontAlias: false
     };
     public readonly eventOnly = true;
@@ -114,7 +115,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
     public afterParseDocument(sessionId: string) {
         const resource = this.resource as android.base.Resource<T>;
         const userSettings = resource.userSettings;
-        const disableFontAlias = this.options.disableFontAlias;
+        const { defaultFontFamily, floatPrecision, disableFontAlias } = this.options;
         const api = userSettings.targetAPI;
         const convertPixels = userSettings.convertPixels === 'dp';
         const { fonts, styles } = resource.mapOfStored;
@@ -146,7 +147,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     let fontName = value,
                         actualFontWeight = '';
                     if (!disableFontAlias && FONTREPLACE_ANDROID[fontName]) {
-                        fontName = this.options.systemDefaultFont;
+                        fontName = defaultFontFamily;
                     }
                     if (api >= FONT_ANDROID[fontName] || !disableFontAlias && api >= FONT_ANDROID[FONTALIAS_ANDROID[fontName]]) {
                         fontFamily = fontName;
@@ -169,7 +170,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                 return false;
                             }
                             else {
-                                fontFamily = this.options.systemDefaultFont;
+                                fontFamily = defaultFontFamily;
                             }
                         }
                         if (createFont) {
@@ -210,7 +211,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     let value: Undef<string> = fontData[key];
                     if (value) {
                         if (j === 3 && convertPixels) {
-                            value = convertLength(value, true);
+                            value = truncate(value, floatPrecision) + 'sp';
                         }
                         const items = sorted[j] ?? (sorted[j] = {});
                         const name = FONT_STYLE[key] + value + '"';

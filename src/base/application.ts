@@ -12,7 +12,6 @@ const { capitalize, convertCamelCase, parseMimeType, plainMap, promisify, resolv
 
 const REGEXP_DATAURI = new RegExp(`url\\("?(${STRING.DATAURI})"?\\),?\\s*`, 'g');
 const CSS_SHORTHANDNONE = getPropertiesAsTraits(CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE);
-const CSS_SHORTHANDAUTO = getPropertiesAsTraits(CSS_TRAITS.SHORTHAND | CSS_TRAITS.AUTO);
 
 function addImageSrc(resourceHandler: squared.base.Resource<Node>, uri: string, width = 0, height = 0) {
     if (uri !== '' && (width > 0 && height > 0 || !resourceHandler.getImage(uri))) {
@@ -459,7 +458,12 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                 }
                 else if (controllerHandler.includeElement(element)) {
-                    child = this.cascadeParentNode(cache, excluded, rootElements, element, sessionId, childDepth, extensions);
+                    if (element.childNodes.length === 0) {
+                        child = this.insertNode(element, sessionId);    
+                    }
+                    else {
+                        child = this.cascadeParentNode(cache, excluded, rootElements, element, sessionId, childDepth, extensions);
+                    }
                     if (child) {
                         elements[k++] = child;
                         inlineText = false;
@@ -512,35 +516,23 @@ export default abstract class Application<T extends Node> implements squared.bas
         const styleSheetHref = item.parentStyleSheet?.href || location.href;
         const cssText = item.cssText;
         switch (item.type) {
-            case CSSRule.SUPPORTS_RULE:
-                this.applyCSSRuleList(((item as unknown) as CSSSupportsRule).cssRules, sessionId);
-                break;
             case CSSRule.STYLE_RULE: {
                 const unusedStyles = this.session.unusedStyles;
                 const baseMap: StringMap = {};
                 const important: ObjectMap<boolean> = {};
                 const cssStyle = item.style;
                 for (const attr of Array.from(cssStyle)) {
-                    const value: string = cssStyle[attr];
+                    let value: string = cssStyle[attr];
                     const baseAttr = convertCamelCase(attr);
                     switch (value) {
                         case 'initial':
-                        case 'auto':
+                            if (CSS_PROPERTIES[baseAttr]?.value === 'auto') {
+                                value = 'auto';
+                                break;
+                            }
                         case 'normal':
                             valid: {
                                 if (!hasExactValue(attr, value, cssText)) {
-                                    if (value === 'auto') {
-                                        for (const name in CSS_SHORTHANDAUTO) {
-                                            const css = CSS_SHORTHANDAUTO[name];
-                                            if ((css.value as string[]).includes(baseAttr)) {
-                                                const cssName = css.name!;
-                                                if (hasExactValue(cssName, 'auto|initial', cssText) || hasPartialValue(cssName, 'auto', cssText)) {
-                                                    break valid;
-                                                }
-                                                break;
-                                            }
-                                        }
-                                    }
                                     for (const name in CSS_SHORTHANDNONE) {
                                         const css = CSS_SHORTHANDNONE[name];
                                         if ((css.value as string[]).includes(baseAttr)) {
@@ -554,10 +546,9 @@ export default abstract class Application<T extends Node> implements squared.bas
                                     continue;
                                 }
                             }
-                        default:
-                            baseMap[baseAttr] = value;
                             break;
                     }
+                    baseMap[baseAttr] = value;
                 }
                 const pattern = /\s*([a-z-]+):[^!;]+!important;/g;
                 let match: Null<RegExpExecArray>;
@@ -652,6 +643,9 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
                 break;
             }
+            case CSSRule.SUPPORTS_RULE:
+                this.applyCSSRuleList(((item as unknown) as CSSSupportsRule).cssRules, sessionId);
+                break;
         }
     }
 

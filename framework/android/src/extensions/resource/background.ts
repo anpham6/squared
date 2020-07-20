@@ -1534,7 +1534,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         `${node.controlId}_gradient_${i + 1}`,
                         applyTemplate('vector', VECTOR_TMPL, [{
                             'xmlns:android': XMLNS_ANDROID.android,
-                            'xmlns:aapt': XMLNS_ANDROID.aapt,
+                            'xmlns:aapt': 'http://schemas.android.com/aapt',
                             'android:width': formatPX(width),
                             'android:height': formatPX(height),
                             'android:viewportWidth': width.toString(),

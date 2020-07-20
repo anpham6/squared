@@ -2,7 +2,7 @@ import Resource from './resource';
 
 import { XMLNS_ANDROID } from './lib/constant';
 import { BUILD_ANDROID } from './lib/enumeration';
-import { applyTemplate, convertLength, replaceTab } from './lib/util';
+import { applyTemplate, replaceTab } from './lib/util';
 
 import COLOR_TMPL from './template/resources/color';
 import DIMEN_TMPL from './template/resources/dimen';
@@ -302,7 +302,9 @@ export default class File<T extends View> extends squared.base.File<T> implement
             );
         }
         if (STORED.themes.size > 0) {
-            const { convertPixels, insertSpaces, manifestThemeName } = this.userSettings;
+            const userSettings = this.userSettings;
+            const { insertSpaces, manifestThemeName } = userSettings;
+            const convertPixels = userSettings.convertPixels === 'dp';
             const appTheme: ObjectMap<boolean> = {};
             for (const [filename, theme] of STORED.themes.entries()) {
                 const match = /^(.+)\/(.+?\.\w+)$/.exec(filename);
@@ -329,7 +331,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     const value = applyTemplate('resources', STYLE_TMPL, [item]);
                     result.push(
                         replaceTab(
-                            convertPixels === 'dp' ? value.replace(/>(-?[\d.]+)px</g, (found, ...capture) => '>' + convertLength(capture[0], false) + '<') : value,
+                            convertPixels ? value.replace(/>(-?[\d.]+)px</g, (found, ...capture) => `>${capture[0]}dp<`) : value,
                             insertSpaces
                         ),
                         match[1],
@@ -343,11 +345,11 @@ export default class File<T extends View> extends squared.base.File<T> implement
 
     public resourceDimenToXml(options: FileUniversalOptions = {}): string[] {
         if (STORED.dimens.size > 0) {
-            const convertPixels = this.userSettings.convertPixels;
+            const convertPixels = this.userSettings.convertPixels === 'dp';
             const item: ObjectMap<ItemValue[]> = { dimen: [] };
             const itemArray = item.dimen;
             for (const [name, value] of Array.from(STORED.dimens.entries()).sort()) {
-                itemArray.push({ name, innerText: convertPixels ? convertLength(value, false) : value });
+                itemArray.push({ name, innerText: convertPixels ? value.replace(/px$/, 'dp') : value });
             }
             return this.checkFileAssets([
                 replaceTab(applyTemplate('resources', DIMEN_TMPL, [item])),
@@ -360,13 +362,15 @@ export default class File<T extends View> extends squared.base.File<T> implement
 
     public resourceDrawableToXml(options: FileUniversalOptions = {}): string[] {
         if (STORED.drawables.size > 0) {
-            const { convertPixels, insertSpaces } = this.userSettings;
+            const userSettings = this.userSettings;
+            const insertSpaces = userSettings.insertSpaces;
+            const convertPixels = userSettings.convertPixels === 'dp';
             const directory = this.directory.image;
             const result: string[] = [];
             for (const [name, value] of STORED.drawables.entries()) {
                 result.push(
                     replaceTab(
-                        convertPixels === 'dp' ? value.replace(/"(-?[\d.]+)px"/g, (match, ...capture) => '"' + convertLength(capture[0], false) + '"') : value,
+                        convertPixels ? value.replace(/"(-?[\d.]+)px"/g, (match, ...capture) => `"${capture[0]}dp"`) : value,
                         insertSpaces
                     ),
                     directory,

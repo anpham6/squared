@@ -80,15 +80,15 @@ function setAutoMargin(node: T, autoMargin: AutoMargin) {
 function setMultiline(node: T, lineHeight: number, overwrite: boolean) {
     const offset = getLineSpacingExtra(node, lineHeight);
     if (node.api >= BUILD_ANDROID.PIE) {
-        node.android('lineHeight', formatPX(lineHeight), overwrite);
+        node.android('lineHeight', truncate(lineHeight, node.localSettings.floatPrecision) + 'px', overwrite);
     }
     else if (offset > 0) {
-        node.android('lineSpacingExtra', formatPX(offset), overwrite);
+        node.android('lineSpacingExtra', truncate(offset, node.localSettings.floatPrecision) + 'px', overwrite);
     }
     else {
         return;
     }
-    const upper = Math.floor(offset);
+    const upper = Math.round(offset);
     if (upper > 0) {
         node.modifyBox(node.inline ? BOX_STANDARD.MARGIN_TOP : BOX_STANDARD.PADDING_TOP, upper);
         if (!(node.block && !node.floating)) {
@@ -99,7 +99,7 @@ function setMultiline(node: T, lineHeight: number, overwrite: boolean) {
 
 function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top: boolean, bottom: boolean, parent?: T) {
     const styleValue = node.cssInitial('lineHeight');
-    if (node.imageContainer || node.rendering || node.actualHeight === 0 || styleValue === 'initial') {
+    if (node.imageContainer || node.rendering || node.actualHeight === 0 || styleValue === 'normal') {
         return;
     }
     if (node.multiline) {
@@ -168,7 +168,7 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top:
                         visibility: 'hidden'
                     }
                 });
-                element.innerText = 'AgjpyZ';
+                element.innerText = 'AgjpqyZ';
                 const rowHeight = actualTextRangeRect(element)?.height;
                 if (rowHeight) {
                     document.body.removeChild(element);
@@ -2758,8 +2758,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 break;
                         }
                     }
+                    result += this.marginBottom + this.getBox(BOX_STANDARD.MARGIN_TOP)[1];
                 }
-                this._cached.baselineHeight = result + this.marginBottom + this.getBox(BOX_STANDARD.MARGIN_TOP)[1];
+                this._cached.baselineHeight = result;
             }
             return result;
         }

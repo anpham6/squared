@@ -90,7 +90,7 @@ function doSortOrderInvalid(above: View, below: View): number {
     return depthA < depthB ? -1 : 1;
 }
 
-function setBaselineItems(parent: View, baseline: View, items: View[], index: number, singleRow: boolean) {
+function setBaselineItems(parent: View, baseline: View, items: View[], index: number) {
     const { documentId, baselineHeight } = baseline;
     let aboveOffset = 0,
         imageHeight = 0,
@@ -106,9 +106,6 @@ function setBaselineItems(parent: View, baseline: View, items: View[], index: nu
         if (height > 0 || item.textElement) {
             if (item.blockVertical && baseline.blockVertical) {
                 item.anchor('bottom', documentId);
-            }
-            else if (singleRow && item.is(CONTAINER_NODE.BUTTON)) {
-                item.anchor('centerVertical', 'true');
             }
             else {
                 let imageElement: Undef<boolean>;
@@ -2284,8 +2281,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             const actualParent = !node.naturalElement && children[0].actualParent || node;
             const rightAligned = actualParent.cssAny('textAlign', { initial: true, ascend: true, values: ['right', 'end'] });
             const centerAligned = !rightAligned && actualParent.cssAscend('textAlign', { initial: true, startSelf: true }) === 'center';
-            let rowCount = 0,
-                textIndent = 0;
+            let textIndent = 0;
             {
                 const clearMap = this.application.clearMap;
                 const boxParent = node.nodeGroup ? node.documentParent : node;
@@ -2364,7 +2360,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             rowsAll.push([undefined, rows]);
                         }
                         rowWidth = baseWidth;
-                        ++rowCount;
                     };
                     const setRowWidth = () => {
                         const linearWidth = item.marginLeft + bounds.width + item.marginRight;
@@ -2473,7 +2468,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
             {
                 const horizontalRows: T[][] = [];
-                const singleRow = rowCount === 1 && !node.hasHeight;
                 const firstLineStyle = node.firstLineStyle;
                 let previousBaseline: Null<T> = null;
                 const setLayoutBelow = (item: T) => {
@@ -2745,7 +2739,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 }
                                 if (verticalAlign !== 0) {
                                     if (verticalAlign > 0)  {
-                                        if (i > 0) {
+                                        if (i > 0 || items.every(sibling => !sibling.rendering) && node.renderParent!.layoutVertical) {
                                             offsetTop = Math.max(verticalAlign, offsetTop);
                                         }
                                     }
@@ -2758,7 +2752,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             if (baseline) {
                                 baseline.baselineActive = true;
                                 if (s > 0) {
-                                    setBaselineItems(node, baseline, baselineAlign, i, singleRow);
+                                    setBaselineItems(node, baseline, baselineAlign, i);
                                 }
                                 else if (baseline.multiline) {
                                     const { left, height } = baseline.bounds;
@@ -2786,10 +2780,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                         }
                                         if (offsetBottom !== 0) {
                                             baseline.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, Math.abs(offsetBottom));
-                                        }
-                                        if (singleRow && baseline.is(CONTAINER_NODE.BUTTON) && baseline.alignSibling('bottom') === '') {
-                                            baseline.anchor('centerVertical', 'true');
-                                            baseline = null;
                                         }
                                     }
                                 }

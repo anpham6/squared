@@ -297,7 +297,6 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     if (!mainData.layoutFixed) {
                         node.cascade((item: T) => {
                             item.css('width', 'auto');
-                            return false;
                         });
                     }
                 }

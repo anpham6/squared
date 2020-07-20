@@ -194,7 +194,6 @@ function isPlainText(value: string) {
 const getCounterIncrementValue = (parent: HTMLElement, counterName: string, pseudoElt: string, sessionId: string, fallback?: number) => getCounterValue(getElementCache<CSSStyleDeclaration>(parent, `styleMap${pseudoElt}`, sessionId)?.counterIncrement, counterName, fallback);
 const extractQuote = (value: string) => /^"(.+)"$/.exec(value)?.[1] || value;
 const requirePadding = (node: NodeUI, depth?: number): boolean => node.textElement && (node.blockStatic || node.multiline || depth === 1);
-const getMapIndex = (value: number) => -(value + 2);
 
 export default abstract class ApplicationUI<T extends NodeUI> extends Application<T> implements squared.base.ApplicationUI<T> {
     public readonly session: squared.base.AppSessionUI<T> = {
@@ -655,7 +654,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             const children: T[] = new Array(length);
             const elements: T[] = new Array(parentElement.childElementCount);
             const childDepth = depth + 1;
-            let inlineText = true;
+            let inlineText = true,
+                plainText = -1,
+                lineBreak = -1;
             let i = 0, j = 0, k = 0;
             while (i < length) {
                 const element = childNodes[i++] as HTMLElement;
@@ -680,6 +681,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (element.nodeName === '#text' && (isPlainText(element.textContent!) || node.preserveWhiteSpace && (parentElement.tagName !== 'PRE' || parentElement.childElementCount === 0))) {
                         child = this.insertNode(element, sessionId);
                         child.cssApply(node.textStyle);
+                        plainText = j;
                     }
                     else {
                         continue;
@@ -693,9 +695,17 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                     }
                     if (!rootElements.has(element)) {
-                        child = this.cascadeParentNode(cache, excluded, rootElements, element, sessionId, childDepth, extensions, cascadeAll);
+                        if (element.childNodes.length === 0) {
+                            child = this.insertNode(element, sessionId, cascadeAll);
+                        }
+                        else {
+                            child = this.cascadeParentNode(cache, excluded, rootElements, element, sessionId, childDepth, extensions, cascadeAll);
+                        }
                         if (!child.excluded) {
                             inlineText = false;
+                        }
+                        else if (inlineText && child.lineBreak && plainText !== -1 && lineBreak === -1) {
+                            lineBreak = j;
                         }
                     }
                     else {
@@ -727,6 +737,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             else {
                 node.inlineText = !node.textEmpty;
+                if (lineBreak !== -1 && lineBreak < plainText) {
+                    node.multiline = true;
+                }
             }
             if (k > 0 && this.userSettings.createQuerySelectorMap) {
                 node.queryMap = this.createQueryMap(elements, k);
@@ -846,22 +859,21 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         });
         for (const depth of Array.from(mapY.keys())) {
             if (depth !== -1) {
-                mapY.set(getMapIndex(depth), new Set<T>());
+                mapY.set((depth + 2) * -1, new Set<T>());
             }
         }
         cache.afterAdd = (node: T, cascade?: boolean, remove?: boolean) => {
             if (remove) {
                 mapY.get(node.depth)?.delete(node);
             }
-            setMapDepth(mapY, getMapIndex(node.depth), node);
+            setMapDepth(mapY, (node.depth + 2) * -1, node);
             if (cascade && node.length > 0) {
                 node.cascade((item: T) => {
-                    if (item.length) {
+                    if (item.length > 0) {
                         const depth = item.depth;
                         mapY.get(depth)?.delete(item);
-                        setMapDepth(mapY, getMapIndex(depth), item);
+                        setMapDepth(mapY, (depth + 2) * -1, item);
                     }
-                    return false;
                 });
             }
         };
