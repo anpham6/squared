@@ -67,58 +67,58 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                 return true;
             }
         }
-        if (node.has('columnWidth') || node.has('columnCount')) {
-            const columnCount = node.toInt('columnCount', Infinity);
-            const columnWidth = node.parseWidth(node.css('columnWidth'));
-            const columnGap = node.parseWidth(node.css('columnGap'));
-            const minCount = columnWidth > 0 ? Math.min(Math.floor(node.box.width / (columnWidth + columnGap)), columnCount) : columnCount;
-            if (minCount !== Infinity) {
-                let length = minCount - node.length;
-                if (length > 0) {
-                    const nodes: MultilineData<T> = [];
-                    const breakable = node.children.filter((child: T) => isTextElement(child) && checkBreakable(child, false) && child.css('columnSpan') !== 'all').sort((a, b) => a.textContent.length >= b.textContent.length ? -1 : 1) as T[];
-                    const q = breakable.length;
-                    const maxCount = Math.ceil(q / length);
-                    for (let i = 0; i < q; ++i) {
-                        const item = breakable[i];
-                        const range = document.createRange();
-                        range.selectNodeContents(item.element!);
-                        const clientRects = range.getClientRects();
-                        let columns = -1,
-                            previousLeft = -Infinity;
-                        for (let j = 0, r = clientRects.length; j < r; ++j) {
-                            const { left, right } = clientRects.item(j) as ClientRect;
-                            if (Math.floor(left) >= previousLeft) {
-                                ++columns;
-                            }
-                            previousLeft = Math.ceil(right);
-                        }
-                        if (columns > maxCount) {
-                            columns = maxCount;
-                        }
-                        if (columns > 0 && length - columns >= 0) {
-                            nodes.push([columns + 1, item]);
-                            length -= columns;
-                            if (length === 0) {
-                                break;
-                            }
-                        }
-                    }
-                    if (nodes.length > 0) {
-                        node.data(this.name, 'mainData', nodes);
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
         const length = node.length;
         if (length > 0) {
             const children = node.children as T[];
+            if (node.has('columnWidth') || node.has('columnCount')) {
+                const columnCount = node.toInt('columnCount', Infinity);
+                const columnWidth = node.parseWidth(node.css('columnWidth'));
+                const columnGap = node.parseWidth(node.css('columnGap'));
+                const minCount = columnWidth > 0 ? Math.min(Math.floor(node.box.width / (columnWidth + columnGap)), columnCount) : columnCount;
+                if (minCount !== Infinity) {
+                    let remaining = minCount - node.length;
+                    if (remaining > 0) {
+                        const nodes: MultilineData<T> = [];
+                        const breakable = children.filter((child: T) => isTextElement(child) && checkBreakable(child, false) && child.css('columnSpan') !== 'all').sort((a, b) => a.textContent.length >= b.textContent.length ? -1 : 1);
+                        const q = breakable.length;
+                        const maxCount = Math.ceil(q / remaining);
+                        for (let i = 0; i < q; ++i) {
+                            const item = breakable[i];
+                            const range = document.createRange();
+                            range.selectNodeContents(item.element!);
+                            const clientRects = range.getClientRects();
+                            let columns = -1,
+                                previousLeft = -Infinity;
+                            for (let j = 0, r = clientRects.length; j < r; ++j) {
+                                const { left, right } = clientRects.item(j) as ClientRect;
+                                if (Math.floor(left) >= previousLeft) {
+                                    ++columns;
+                                }
+                                previousLeft = Math.ceil(right);
+                            }
+                            if (columns > maxCount) {
+                                columns = maxCount;
+                            }
+                            if (columns > 0 && remaining - columns >= 0) {
+                                nodes.push([columns + 1, item]);
+                                remaining -= columns;
+                                if (remaining === 0) {
+                                    break;
+                                }
+                            }
+                        }
+                        if (nodes.length > 0) {
+                            node.data(this.name, 'mainData', nodes);
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
             const nodes: MultilineData<T> = [];
             let textHeight = 0,
                 floatHeight = 0,
-                firstLine: Undef<Null<StringMap>>;
+                valid: Undef<boolean>;
             let j = 0, k = 0, l = 0, m = 0, n = 0;
             for (let i = 0; i < length; ++i) {
                 const child = children[i];
@@ -132,14 +132,14 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                 }
                 else if (isTextElement(child) && !(child.lineBreakLeading && (i === length - 1 || child.lineBreakTrailing) || i === 0 && child.lineBreakTrailing)) {
                     if (checkBreakable(child) && !child.preserveWhiteSpace) {
-                        if (firstLine === undefined) {
-                            firstLine = node.firstLineStyle;
+                        if (valid === undefined) {
+                            valid = !!node.firstLineStyle || node.textAlignLast !== '';
                         }
                         if (child.multiline) {
                             ++j;
                             nodes.push([1, child]);
                         }
-                        else if (j + k++ > 0 || firstLine) {
+                        else if (j + k++ > 0 || valid) {
                             nodes.push([1, child]);
                         }
                         if (child.styleElement) {
@@ -153,17 +153,14 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                     ++l;
                 }
             }
-            if (j > 0 && (k > 0 || l > 1 || firstLine || floatHeight > 0 && textHeight > floatHeight) || (k > 1 || m > 0 && n > 1) && (firstLine || (node.textBounds?.numberOfLines || 0) > 1)) {
+            if (j > 0 && (k > 0 || l > 1 || valid || floatHeight > 0 && textHeight > floatHeight) || (k > 1 || m > 0 && n > 1) && (valid || (node.textBounds?.numberOfLines || 0) > 1)) {
                 node.data(this.name, 'mainData', nodes);
                 return true;
             }
         }
-        else if (node.textElement) {
-            const firstLine = node.firstLineStyle;
-            if (firstLine) {
-                node.data(this.name, 'mainData', [[NaN, node]]);
-                return true;
-            }
+        else if (node.textElement && node.firstLineStyle || node.multiline && node.textAlignLast !== '') {
+            node.data(this.name, 'mainData', [[NaN, node]]);
+            return true;
         }
         return false;
     }
@@ -369,7 +366,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                 if (!partition) {
                     parentContainer.setControlType(View.getControlName(CONTAINER_NODE.RELATIVE), CONTAINER_NODE.RELATIVE);
                     parentContainer.alignmentType = NODE_ALIGNMENT.HORIZONTAL;
-                    if (hasTextIndent(node) || node.firstLineStyle) {
+                    if (hasTextIndent(node) || isNaN(breakable[0][0])) {
                         application.getProcessingCache(sessionId).afterAdd!(parentContainer, true, true);
                     }
                 }

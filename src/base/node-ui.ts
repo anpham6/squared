@@ -5,8 +5,9 @@ import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURC
 type T = NodeUI;
 
 const { CSS_PROPERTIES, isLength, newBoxModel } = squared.lib.css;
+const { createElement } = squared.lib.dom;
 const { equal } = squared.lib.math;
-const { getElementAsNode } = squared.lib.session;
+const { actualTextRangeRect, getElementAsNode } = squared.lib.session;
 const { capitalize, cloneObject, convertWord, hasBit, hasKeys, isArray, iterateArray, searchObject, withinRange } = squared.lib.util;
 
 const CSS_SPACING = new Map<number, string>();
@@ -1340,6 +1341,55 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return value;
     }
 
+    public actualTextHeight(options?: TextHeightOptions) {
+        let tagName: Undef<string>,
+            width: Undef<string>,
+            textWrap: Undef<boolean>,
+            textContent: Undef<string>;
+        if (options) {
+            ({ tagName, width, textContent, textWrap } = options);
+        }
+        if (!tagName) {
+            tagName = this.tagName;
+        }
+        const style: StringMap =
+            tagName === '#text'
+                ? {}
+                : this.cssAsObject(
+                    'paddingTop',
+                    'paddingRight',
+                    'paddingBottom',
+                    'paddingLeft',
+                    'borderTopWidth',
+                    'borderRightWidth',
+                    'borderBottomWidth',
+                    'borderLeftWidth',
+                    'borderTopColor',
+                    'borderRightColor',
+                    'borderBottomColor',
+                    'borderLeftColor',
+                    'borderTopStyle',
+                    'borderRightStyle',
+                    'borderBottomStyle',
+                    'borderLeftStyle'
+                );
+        Object.assign(style, this.textStyle);
+        style.fontSize = this.cssInitial('fontSize') || this.fontSize + 'px';
+        if (width) {
+            style.width = width;
+        }
+        if (textWrap !== true) {
+            style.whiteSpace = 'nowrap';
+        }
+        style.display = 'inline-block';
+        const parent = this.actualParent?.element || document.body;
+        const element = createElement(tagName !== '#text' ? tagName : 'span', { attrs: { textContent: textContent || 'AgjpqyZ' }, style });
+        parent.appendChild(element);
+        const result = actualTextRangeRect(element);
+        parent.removeChild(element);
+        return result ? result.height : NaN;
+    }
+
     public cloneBase(node: T) {
         node.depth = this.depth;
         node.childIndex = this.childIndex;
@@ -2037,6 +2087,43 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get firstLineStyle() {
         const result = this._cached.firstLineStyle;
         return result === undefined ? this._cached.firstLineStyle = this.cssPseudoElement('first-line') : result;
+    }
+
+    get textAlignLast() {
+        if (!this.inlineStatic) {
+            const value = this.cssAscend('textAlignLast', { startSelf: true });
+            if (value === 'auto') {
+                return '';
+            }
+            const rtl = this.dir === 'rtl';
+            let valid: boolean;
+            switch (this.cssAscend('textAlign', { startSelf: true })) {
+                case 'left':
+                    valid = !(value === 'left' || value === (rtl ? 'end' : 'start'));
+                    break;
+                case 'right':
+                    valid = !(value === 'right' || value === (rtl ? 'start' : 'end'));
+                    break;
+                case 'start':
+                    valid = !(value === 'start' || value === (rtl ? 'right' : 'left'));
+                    break;
+                case 'end':
+                    valid = !(value === 'end' || value === (rtl ? 'left' : 'right'));
+                    break;
+                case 'center':
+                    valid = value !== 'center';
+                    break;
+                case 'justify':
+                    valid = value !== 'justify';
+                    break;
+                default:
+                    return '';
+            }
+            if (valid) {
+                return value;
+            }
+        }
+        return '';
     }
 
     set use(value) {

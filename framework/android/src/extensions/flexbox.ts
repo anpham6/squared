@@ -20,7 +20,20 @@ const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
 const NodeUI = squared.base.NodeUI;
 
-const MAP_HORIZONAL = {
+interface OrientationMap {
+    orientation: OrientationAttr;
+    orientationInverse: OrientationAttr;
+    WHL: string;
+    HWL: string;
+    LT: string;
+    TL: string;
+    RB: string;
+    BR: string;
+    LRTB: string;
+    RLBT: string;
+}
+
+const MAP_HORIZONAL: OrientationMap = {
     orientation: 'horizontal',
     orientationInverse: 'vertical',
     WHL: 'width',
@@ -33,7 +46,7 @@ const MAP_HORIZONAL = {
     RLBT: 'rightLeft'
 };
 
-const MAP_VERTICAL = {
+const MAP_VERTICAL: OrientationMap = {
     orientation: 'vertical',
     orientationInverse: 'horizontal',
     WHL: 'height',

@@ -1478,8 +1478,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                     if (tileModeY === 'repeat') {
                         switch (originalX) {
-                            case 'start':
                             case 'left':
+                            case 'start':
                                 if (!isNaN(posLeft)) {
                                     tileModeY = '';
                                 }

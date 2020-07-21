@@ -11,9 +11,9 @@ import LayoutUI = squared.base.LayoutUI;
 const { PLATFORM, isPlatform } = squared.lib.client;
 const { parseColor } = squared.lib.color;
 const { CSS_UNIT, formatPX, getSrcSet, hasComputedStyle, isPercent } = squared.lib.css;
-const { createElement, getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
+const { getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;
-const { actualTextRangeRect, getElementAsNode, getPseudoElt } = squared.lib.session;
+const { getElementAsNode, getPseudoElt } = squared.lib.session;
 const { assignEmptyValue, convertWord, hasBit, hasMimeType, isString, iterateArray, parseMimeType, partitionArray, plainMap, withinRange } = squared.lib.util;
 
 const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
@@ -233,8 +233,9 @@ function causesLineBreak(element: Element) {
                 case 'flex':
                 case 'grid':
                     return !floating || hasWidth(style);
+                default:
+                    return (display.startsWith('inline-') || display === 'table') && hasWidth(style);
             }
-            return (display.startsWith('inline-') || display === 'table') && hasWidth(style);
         }
     }
     return false;
@@ -445,55 +446,27 @@ function applyFirstLine(node: View, styleMap: StringMap) {
             node.css(attr, styleMap[attr]);
         }
         node.unset('textStyle');
-        const parent = node.actualParent?.element || document.body;
-        const tagName = node.tagName;
-        const style = node.cssAsObject(
-            'paddingTop',
-            'paddingRight',
-            'paddingBottom',
-            'paddingLeft',
-            'borderTopWidth',
-            'borderRightWidth',
-            'borderBottomWidth',
-            'borderLeftWidth',
-            'borderTopColor',
-            'borderRightColor',
-            'borderBottomColor',
-            'borderLeftColor',
-            'borderTopStyle',
-            'borderRightStyle',
-            'borderBottomStyle',
-            'borderLeftStyle'
-        );
-        Object.assign(style, node.textStyle);
-        style.display = 'inline-block';
-        style.fontSize = node.css('fontSize');
-        const element = createElement(tagName !== '#text' ? tagName : 'span', { attrs: { textContent: 'AgjpqyZ' }, style });
-        parent.appendChild(element);
-        node.data<BoxRectDimension>(Resource.KEY_NAME, 'textRange', actualTextRangeRect(element));
-        parent.removeChild(element);
     }
 }
 
 function flattenContainer(node: View) {
-    const renderChildren = node.renderChildren as View[];
-    const renderTempates = node.renderTemplates!;
+    const { renderChildren, renderTemplates } = node;
     for (let i = 0, length = renderChildren.length; i < length; ++i) {
-        const item = renderChildren[i];
+        const item = renderChildren[i] as View;
         if (item.rendering && isUnstyled(item) && !item.inlineDimension && !item.preserveWhiteSpace && item.css('whiteSpace') !== 'nowrap' && !item.layoutGrid && !item.layoutElement && canControlAscendItems(item) && item.removeTry()) {
             item.hide();
             const depth = item.depth;
             const children = flattenContainer(item);
-            const r = children.length;
+            const r = children.length - 1;
             children[0].modifyBox(BOX_STANDARD.MARGIN_LEFT, item.marginLeft);
-            children[r - 1].modifyBox(BOX_STANDARD.MARGIN_RIGHT, item.marginRight);
+            children[r].modifyBox(BOX_STANDARD.MARGIN_RIGHT, item.marginRight);
             renderChildren.splice(i, 0, ...children);
-            renderTempates.splice(i, 0, ...plainMap(children, child => {
+            renderTemplates!.splice(i, 0, ...plainMap(children, child => {
                 child.init(node, depth);
                 child.renderParent = node;
                 return child.renderedAs!;
             }));
-            i += r - 1;
+            i += r;
             length = renderChildren.length;
         }
     }
@@ -521,7 +494,7 @@ function canAlignPosition(node: View, item: View, horizontal: boolean) {
         }
     }
     return true;
-};
+}
 
 const relativeWrapWidth = (node: View, bounds: BoxRectDimension, boxWidth: number, rowLength: number, textIndent: number, floatedWidth: number, rowWidth: number) => Math.floor(floatedWidth + rowWidth + bounds.width - (node.inlineStatic && node.styleElement ? node.contentBoxWidth : 0)) > Math.ceil(boxWidth + (rowLength === 1 ? -textIndent : 0));
 const getAnchorDirection = (reverse = false) => reverse ? ['right', 'left', 'rightLeft', 'leftRight'] : ['left', 'right', 'leftRight', 'rightLeft'];
@@ -703,7 +676,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
             }
             else if (modifyAnchor) {
-                node.anchorParent(orientation, 0.5);
+                node.anchorParent(orientation as OrientationAttr, 0.5);
                 node.modifyBox(marginA, node[posA]);
                 node.modifyBox(marginB, node[posB]);
             }
@@ -718,7 +691,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const offsetA = hasA ? adjustAbsolutePaddingOffset(parent, paddingA, node[posA]) : undefined;
                 const offsetB = hasB ? adjustAbsolutePaddingOffset(parent, paddingB, node[posB]) : undefined;
                 if (modifyAnchor) {
-                    node.anchorParent(orientation);
+                    node.anchorParent(orientation as OrientationAttr);
                     if (horizontal) {
                         node.setLayoutWidth(View.horizontalMatchConstraint(node, parent));
                     }
@@ -2324,10 +2297,18 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         else {
             const children = flattenContainer(node) as T[];
             const rowsAll: [Undef<T>, T[][]][] = [];
-            const actualParent = !node.naturalElement && children[0].actualParent || node;
-            const rightAligned = actualParent.cssAny('textAlign', { initial: true, ascend: true, values: ['right', 'end'] });
-            const centerAligned = !rightAligned && actualParent.cssAscend('textAlign', { initial: true, startSelf: true }) === 'center';
-            let textIndent = 0;
+            let textIndent = 0,
+                rightAligned = false,
+                centerAligned = false;
+            switch ((!node.naturalElement && children[0].actualParent || node).cssAscend('textAlign', { initial: true, startSelf: true })) {
+                case 'center':
+                    centerAligned = true;
+                    break;
+                case 'right':
+                case 'end':
+                    rightAligned = true;
+                    break;
+            }
             {
                 const clearMap = this.application.clearMap;
                 const boxParent = node.nodeGroup ? node.documentParent : node;
@@ -2513,10 +2494,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
             }
             {
+                const length = rowsAll.length;
                 const horizontalRows: T[][] = [];
                 const firstLineStyle = node.firstLineStyle;
+                const textAlignLast = length > 1 ? node.textAlignLast : '';
                 let previousBaseline: Null<T> = null;
-                for (let i = 0, length = rowsAll.length; i < length; ++i) {
+                for (let i = 0; i < length; ++i) {
                     const [currentFloated, rows] = rowsAll[i];
                     let float: Undef<string>;
                     if (currentFloated) {
@@ -2534,84 +2517,84 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         const items = rows[j];
                         let r = items.length,
                             baseline: Null<T>;
-                        if (r > 1) {
-                            for (let k = 0; k < r - 1; ++k) {
-                                const item = items[k];
-                                if (isMultilineGroup(item)) {
-                                    const element = item.element;
-                                    if (element) {
-                                        let textContent = '',
-                                            width = 0,
-                                            index: Undef<number>;
-                                        const start = k + 1;
-                                        for (let l = start; l < r; ++l) {
-                                            const next = items[l];
-                                            if (isMultilineGroup(next) && next.element === element) {
-                                                textContent += next.textContent;
-                                                width += next.bounds.width;
-                                                next.hide({ remove: true });
-                                                index = l;
-                                            }
-                                            else {
-                                                break;
-                                            }
+                        for (let k = 0; k < r - 1; ++k) {
+                            const item = items[k];
+                            if (isMultilineGroup(item)) {
+                                const element = item.element;
+                                if (element) {
+                                    let textContent = '',
+                                        width = 0,
+                                        index: Undef<number>;
+                                    const start = k + 1;
+                                    for (let l = start; l < r; ++l) {
+                                        const next = items[l];
+                                        if (isMultilineGroup(next) && next.element === element) {
+                                            textContent += next.textContent;
+                                            width += next.bounds.width;
+                                            next.hide({ remove: true });
+                                            index = l;
                                         }
-                                        if (index) {
-                                            let last = items[index],
-                                                textRemainder = '',
-                                                widthRemainder = 0;
-                                            if (k === 0 && index === r - 1 && q === 1 && i < length - 1 && !currentFloated && (i > 0 || textIndent >= 0 && !firstLineStyle)) {
-                                                const nodes: T[] = [];
-                                                invalid: {
-                                                    for (let l = i + 1; l < length; ++l) {
-                                                        const [nextFloated, nextRows] = rowsAll[l];
-                                                        if (!nextFloated && nextRows.length === 1) {
-                                                            const row = nextRows[0];
-                                                            for (let m = 0, n = row.length; m < n; ++m) {
-                                                                const next = row[m];
-                                                                if (isMultilineGroup(next) && next.element === element) {
-                                                                    textRemainder += next.textContent;
-                                                                    widthRemainder += next.bounds.width;
-                                                                    nodes.push(next);
-                                                                }
-                                                                else {
-                                                                    textRemainder = '';
-                                                                    widthRemainder = 0;
-                                                                    break invalid;
-                                                                }
+                                        else {
+                                            break;
+                                        }
+                                    }
+                                    if (index) {
+                                        let last = items[index],
+                                            textRemainder = '',
+                                            widthRemainder = 0;
+                                        if (k === 0 && index === r - 1 && q === 1 && i < length - 1 && !currentFloated && textAlignLast === '' && (i > 0 || textIndent >= 0 && !firstLineStyle)) {
+                                            const nodes: T[] = [];
+                                            invalid: {
+                                                for (let l = i + 1; l < length; ++l) {
+                                                    const [nextFloated, nextRows] = rowsAll[l];
+                                                    if (!nextFloated && nextRows.length === 1) {
+                                                        const row = nextRows[0];
+                                                        for (let m = 0, n = row.length; m < n; ++m) {
+                                                            const next = row[m];
+                                                            if (isMultilineGroup(next) && next.element === element) {
+                                                                textRemainder += next.textContent;
+                                                                widthRemainder += next.bounds.width;
+                                                                nodes.push(next);
+                                                            }
+                                                            else {
+                                                                textRemainder = '';
+                                                                widthRemainder = 0;
+                                                                break invalid;
                                                             }
                                                         }
-                                                        else {
-                                                            textRemainder = '';
-                                                            widthRemainder = 0;
-                                                            break;
-                                                        }
                                                     }
-                                                }
-                                                if (textRemainder !== '') {
-                                                    const s = nodes.length;
-                                                    let l = 0;
-                                                    while (l < s) {
-                                                        nodes[l++].hide({ remove: true });
+                                                    else {
+                                                        textRemainder = '';
+                                                        widthRemainder = 0;
+                                                        break;
                                                     }
-                                                    last = nodes[s - 1];
-                                                    item.multiline = true;
-                                                    j = q;
-                                                    i = length;
                                                 }
                                             }
-                                            item.textContent = item.textContent + textContent + textRemainder;
-                                            item.bounds.width += width + widthRemainder;
-                                            item.setCacheValue('marginRight', last.marginRight + last.getBox(BOX_STANDARD.MARGIN_RIGHT)[1]);
-                                            item.siblingsTrailing = last.siblingsTrailing;
-                                            item.lineBreakTrailing = last.lineBreakTrailing;
-                                            last.registerBox(BOX_STANDARD.MARGIN_BOTTOM, item);
-                                            items.splice(start, index - k);
-                                            r = items.length;
+                                            if (textRemainder !== '') {
+                                                const s = nodes.length;
+                                                let l = 0;
+                                                while (l < s) {
+                                                    nodes[l++].hide({ remove: true });
+                                                }
+                                                last = nodes[s - 1];
+                                                item.multiline = true;
+                                                j = q;
+                                                i = length;
+                                            }
                                         }
+                                        item.textContent = item.textContent + textContent + textRemainder;
+                                        item.bounds.width += width + widthRemainder;
+                                        item.setCacheValue('marginRight', last.marginRight + last.getBox(BOX_STANDARD.MARGIN_RIGHT)[1]);
+                                        item.siblingsTrailing = last.siblingsTrailing;
+                                        item.lineBreakTrailing = last.lineBreakTrailing;
+                                        last.registerBox(BOX_STANDARD.MARGIN_BOTTOM, item);
+                                        items.splice(start, index - k);
+                                        r = items.length;
                                     }
                                 }
                             }
+                        }
+                        if (r > 1) {
                             const bottomAligned = getTextBottom(items);
                             let textBottom = bottomAligned[0] as Undef<T>,
                                 offsetTop = 0,
@@ -2654,6 +2637,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                         else {
                                             item.anchor('leftRight', items[k - 1].documentId);
                                         }
+                                        if (r === 1 && item.textElement && centerAligned) {
+                                            item.android('textAlignment', 'center');
+                                        }
                                     };
                                     const setAlignRight = () => {
                                         if (float === 'right') {
@@ -2661,6 +2647,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                         }
                                         else {
                                             item.anchor('right', 'true');
+                                        }
+                                        if (r === 1 && item.textElement) {
+                                            item.android('textAlignment', 'textEnd');
                                         }
                                     };
                                     if (item.autoMargin.horizontal) {
@@ -2832,12 +2821,29 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     }
                                 }
                             }
-                            if (centerAligned) {
+                            const lastRowAligned = i === length - 1 && textAlignLast !== '' && textAlignLast !== 'justify';
+                            if (centerAligned || lastRowAligned) {
                                 const application = this.application;
                                 baseline = this.createNodeGroup(items[0], items, node);
                                 baseline.setControlType(CONTAINER_ANDROID.RELATIVE, CONTAINER_NODE.RELATIVE);
                                 baseline.render(node);
-                                baseline.anchorParent('horizontal');
+                                if (lastRowAligned) {
+                                    switch (textAlignLast) {
+                                        case 'center':
+                                            baseline.anchorParent('horizontal');
+                                            break;
+                                        case 'right':
+                                        case 'end':
+                                            baseline.anchor('right', 'true');
+                                            break;
+                                        default:
+                                            baseline.anchor('left', 'true');
+                                            break;
+                                    }
+                                }
+                                else {
+                                    baseline.anchorParent('horizontal');
+                                }
                                 baseline.setLayoutWidth('wrap_content');
                                 baseline.setLayoutHeight('wrap_content');
                                 let renderIndex = -1;
@@ -2935,7 +2941,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                         else {
                                             baseline.anchor('leftRight', currentFloated.documentId);
                                         }
-                                        baseline.horizontalRowEnd = true;
                                     }
                                     else {
                                         if (rightAligned || baseline.rightAligned) {
@@ -2944,29 +2949,47 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                         else {
                                             baseline.anchor('left', 'true');
                                         }
-                                        baseline.horizontalRowStart = true;
                                     }
                                 }
                                 else {
                                     if (baseline.floating) {
                                         baseline.anchor(baseline.float, 'true');
                                     }
-                                    else if (rightAligned || baseline.rightAligned) {
-                                        baseline.anchor('right', 'true');
+                                    else if (textAlignLast !== '' && i === length - 1) {
+                                        switch (textAlignLast) {
+                                            case 'center':
+                                                baseline.anchorParent('horizontal');
+                                                break;
+                                            case 'right':
+                                            case 'end':
+                                                baseline.anchor('right', 'true');
+                                                break;                                                
+                                            case 'justify':
+                                                baseline.android('justificationMode', 'inter_word');
+                                            default:
+                                                baseline.anchor('left', 'true');
+                                                break;
+                                        }
                                     }
                                     else if (centerAligned || baseline.centerAligned) {
                                         baseline.anchorParent('horizontal');
                                     }
+                                    else if (rightAligned || baseline.rightAligned) {
+                                        baseline.anchor('right', 'true');
+                                    }
                                     else {
                                         baseline.anchor('left', 'true');
                                     }
-                                    baseline.horizontalRowStart = true;
-                                    baseline.horizontalRowEnd = true;
                                 }
                                 setLayoutBelow(baseline, previousBaseline);
                                 if (!rightAligned) {
                                     setTextIndent(baseline);
                                 }
+                                if (baseline.textElement) {
+                                    baseline.setSingleLine(true);
+                                }
+                                baseline.horizontalRowStart = true;
+                                baseline.horizontalRowEnd = true;
                                 horizontalRows.push(items);
                             }
                             else {

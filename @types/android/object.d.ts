@@ -7,3 +7,5 @@
 /// <reference path="extension.d.ts" />
 /// <reference path="node.d.ts" />
 /// <reference path="resource.d.ts" />
+
+type OrientationAttr = 'horizontal' | 'vertical';

@@ -22,5 +22,3 @@ interface RawDataOptions {
     encoding?: string;
     filename?: string;
 }
-
-type ResourceAssetType = "image" | "audio" | "video" | "fonts" | "rawData";

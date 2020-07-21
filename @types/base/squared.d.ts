@@ -274,9 +274,9 @@ declare module "base" {
     class ExtensionUI<T extends NodeUI> extends Extension<T> {
         static findNestedElement<T extends NodeUI>(node: T, name: string): Null<HTMLElement>;
         readonly tagNames: string[];
-        readonly documentBase?: boolean;
         readonly eventOnly?: boolean;
         readonly cascadeAll?: boolean;
+        readonly documentBase?: boolean;
         init?(element: HTMLElement, sessionId: string): boolean;
         included(element: HTMLElement): boolean;
         is(node: T): boolean;
@@ -596,6 +596,7 @@ declare module "base" {
         actualRect(direction: string, dimension?: BoxType): number;
         actualPadding(attr: "paddingTop" | "paddingBottom", value: number): number;
         actualBoxWidth(value?: number): number;
+        actualTextHeight(options?: TextHeightOptions): number;
         alignedVertically(siblings?: Node[], cleared?: Map<Node, string>, horizontal?: boolean): number;
         previousSiblings(options?: SiblingOptions): NodeUI[];
         nextSiblings(options?: SiblingOptions): NodeUI[];
@@ -686,6 +687,7 @@ declare module "base" {
         get preserveWhiteSpace(): boolean;
         get firstLineStyle(): Null<StringMap>;
         get firstLetterStyle(): Null<StringMap>;
+        get textAlignLast(): string;
         constructor(id: number, sessionId?: string, element?: Element);
     }
 

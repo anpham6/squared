@@ -2379,26 +2379,17 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get centerAligned() {
         const result = this._cached.centerAligned;
-        if (result === undefined) {
-            return this._cached.centerAligned = !this.pageFlow ? this.hasPX('left') && this.hasPX('right') : this.autoMargin.leftRight || canTextAlign(this) && hasTextAlign(this, 'center');
-        }
-        return result;
+        return result === undefined ? this._cached.centerAligned = !this.pageFlow ? this.hasPX('left') && this.hasPX('right') : this.autoMargin.leftRight || canTextAlign(this) && hasTextAlign(this, 'center') : result;
     }
 
     get rightAligned() {
         const result = this._cached.rightAligned;
-        if (result === undefined) {
-            return this._cached.rightAligned = !this.pageFlow ? this.hasPX('right') && !this.hasPX('left') : this.float === 'right' || this.autoMargin.left || canTextAlign(this) && hasTextAlign(this, 'right', 'end');
-        }
-        return result;
+        return result === undefined ? this._cached.rightAligned = !this.pageFlow ? this.hasPX('right') && !this.hasPX('left') : this.float === 'right' || this.autoMargin.left || canTextAlign(this) && hasTextAlign(this, 'right', this.dir === 'rtl' ? 'start' : 'end') : result;
     }
 
     get bottomAligned() {
         const result = this._cached.bottomAligned;
-        if (result === undefined) {
-            return this._cached.bottomAligned = !this.pageFlow ? this.hasPX('bottom') && !this.hasPX('top') : this.actualParent?.hasHeight === true && this.autoMargin.top === true;
-        }
-        return result;
+        return result === undefined ? this._cached.bottomAligned = !this.pageFlow ? this.hasPX('bottom') && !this.hasPX('top') : this.actualParent?.hasHeight === true && this.autoMargin.top === true : result;
     }
 
     get autoMargin() {

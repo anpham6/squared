@@ -902,20 +902,20 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (q > 1 && i < q - 1 && nodeY.pageFlow && !nodeY.nodeGroup && (parentY.alignmentType === 0 || parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) || nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) && !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
                         const horizontal: T[] = [];
                         const vertical: T[] = [];
-                        let l = i, m = 0;
+                        let j = i, k = 0;
                         if (parentY.layoutVertical && nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) {
                             horizontal.push(nodeY);
-                            ++l;
-                            ++m;
+                            ++j;
+                            ++k;
                         }
                         traverse: {
                             let floatActive = false,
                                 floating: Undef<boolean>;
-                            for ( ; l < q; ++l, ++m) {
-                                const item = axisY[l];
+                            for ( ; j < q; ++j, ++k) {
+                                const item = axisY[j];
                                 if (item.pageFlow) {
                                     if (item.labelFor && !item.visible) {
-                                        --m;
+                                        --k;
                                         continue;
                                     }
                                     if (floatContainer) {
@@ -930,7 +930,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             floatActive = true;
                                         }
                                     }
-                                    if (m === 0) {
+                                    if (k === 0) {
                                         const next = item.siblingsTrailing[0];
                                         if (next) {
                                             if (!item.inlineFlow || next.alignedVertically([item]) > 0) {

@@ -1,5 +1,3 @@
-type BoxType = "bounds" | "box" | "linear";
-
 interface InitialData<T> {
     styleMap?: StringMap;
     children?: T[];
@@ -201,6 +199,13 @@ interface ParseUnitOptions {
     dimension?: DimensionAttr;
     parent?: boolean;
     screenDimension?: Dimension;
+}
+
+interface TextHeightOptions {
+    tagName?: string;
+    width?: string;
+    textContent?: string;
+    textWrap?: boolean;
 }
 
 interface LinearData<T> {

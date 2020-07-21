@@ -187,7 +187,7 @@
     "tabSize": true,
     "tableLayout": true,
     "textAlign": true,
-    "textAlignLast": false,
+    "textAlignLast": true,
     "textDecoration": false,
     "textDecorationColor": false,
     "textDecorationLine": true,

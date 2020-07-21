@@ -5,11 +5,11 @@ import { getDataSet, isHorizontalAlign, isVerticalAlign, localizeString } from '
 
 type T = android.base.View;
 
-const { CSS_PROPERTIES, CSS_UNIT, formatPX, getBackgroundPosition, getStyle, isLength, isPercent, parseTransform } = squared.lib.css;
-const { createElement, getNamedItem } = squared.lib.dom;
+const { CSS_PROPERTIES, CSS_UNIT, formatPX, getBackgroundPosition, isLength, isPercent, parseTransform } = squared.lib.css;
+const { getNamedItem } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
 const { actualTextRangeRect } = squared.lib.session;
-const { capitalize, convertInt, convertWord, fromLastIndexOf, hasKeys, isNumber, isString, iterateArray, replaceMap, splitPair } = squared.lib.util;
+const { capitalize, convertInt, convertWord, fromLastIndexOf, hasKeys, isNumber, isString, replaceMap, splitPair } = squared.lib.util;
 
 const { EXT_NAME } = squared.base.lib.constant;
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE } = squared.base.lib.enumeration;
@@ -149,7 +149,7 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top:
                         }
                     }
                 }
-            };
+            }
             if (node.textElement) {
                 setBoxPadding(getLineSpacingExtra(node, lineHeight));
             }
@@ -160,17 +160,8 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top:
                 }
             }
             else if (node.inputElement) {
-                const element = createElement('div', {
-                    parent: document.body,
-                    style: {
-                        ...node.textStyle,
-                        visibility: 'hidden'
-                    }
-                });
-                element.innerText = 'AgjpqyZ';
-                const rowHeight = actualTextRangeRect(element)?.height;
-                if (rowHeight) {
-                    document.body.removeChild(element);
+                const height = node.actualTextHeight({ tagName: 'span' });
+                if (!isNaN(height)) {
                     let rows = 1;
                     switch (node.tagName)  {
                         case 'SELECT':
@@ -180,7 +171,7 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top:
                             rows = node.toElementInt('rows', 1);
                             break;
                     }
-                    setBoxPadding((lineHeight - rowHeight * Math.max(rows, 1)) / 2, true);
+                    setBoxPadding((lineHeight - height * Math.max(rows, 1)) / 2, true);
                 }
             }
             else {
@@ -199,27 +190,20 @@ function isFlexibleDimension(node: T, value: string) {
 }
 
 function getLineSpacingExtra(node: T, lineHeight: number) {
-    let bounds = node.data<BoxRectDimension>(ResourceUI.KEY_NAME, 'textRange'),
-        collapsed: Undef<[HTMLElement, string][]>;
-    if (!bounds) {
+    let height = node.data<number>(ResourceUI.KEY_NAME, 'textRange');
+    if (!height) {
         if (node.plainText) {
             if (node.naturalChild) {
-                bounds = node.bounds;
+                height = node.bounds.height / (node.bounds.numberOfLines || 1);
             }
             else {
-                let parent = node.actualParent;
-                while (parent !== null) {
-                    if (parent.naturalElement) {
-                        node = parent as T;
-                        collapsed = [];
-                        break;
-                    }
-                    parent = parent.actualParent;
-                }
+                height = node.actualTextHeight();
+                node.data<number>(ResourceUI.KEY_NAME, 'textRange', height);
+                console.log(node.multiline, node.textContent, height, lineHeight);
             }
         }
     }
-    if (!bounds && (node.styleText || collapsed)) {
+    if (!height && node.styleText) {
         const values = node.cssTryAll({
             'display': 'inline-block',
             'height': 'auto',
@@ -229,26 +213,11 @@ function getLineSpacingExtra(node: T, lineHeight: number) {
             'white-space': 'nowrap'
         });
         if (values) {
-            const elememt = node.element!;
-            if (collapsed) {
-                iterateArray(elememt.children, (child: HTMLElement) => {
-                    if (child.nodeName !== '#text') {
-                        collapsed!.push([child, getStyle(child).display]);
-                        child.style.display = 'none';
-                    }
-                });
-            }
-            bounds = actualTextRangeRect(elememt);
-            if (collapsed) {
-                for (const [child, value] of collapsed) {
-                    child.style.display = value;
-                }
-                node.data<BoxRectDimension>(ResourceUI.KEY_NAME, 'textRange', bounds);
-            }
+            height = actualTextRangeRect(node.element!)?.height;
             node.cssFinally(values);
         }
     }
-    return (lineHeight - (bounds ? bounds.height / (bounds.numberOfLines || 1) : node.boundingClientRect?.height ?? lineHeight)) / 2;
+    return (lineHeight - (height || (node.boundingClientRect?.height ?? lineHeight))) / 2;
 }
 
 function constraintMinMax(node: T, horizontal: boolean) {
@@ -671,7 +640,7 @@ function setBoxModel(node: T, attrs: string[], boxReset: BoxModel, boxAdjustment
                     }
                     break;
                 case 'right':
-                case 'end':
+                case node.dir === 'rtl' ? 'start' : 'end':
                     if (left < 0) {
                         left = 0;
                     }
@@ -1998,7 +1967,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return false;
         }
 
-        public anchorParent(orientation: string, bias?: number, style = '', overwrite?: boolean) {
+        public anchorParent(orientation: OrientationAttr, bias?: number, style = '', overwrite?: boolean) {
             const node = this.anchorTarget;
             const renderParent = node.renderParent as T;
             if (renderParent) {
@@ -2302,7 +2271,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                         break;
                     default:
-                        if (this.controlElement || this.is(CONTAINER_NODE.TEXT) && this.textEmpty || this.length > 0 && (this.layoutFrame || this.layoutConstraint || this.layoutGrid)) {
+                        if (this.length > 0 && (this.layoutFrame || this.layoutConstraint || this.layoutRelative && this.layoutHorizontal || this.layoutGrid) || this.is(CONTAINER_NODE.TEXT) && this.textEmpty || this.controlElement) {
                             return;
                         }
                         break;
