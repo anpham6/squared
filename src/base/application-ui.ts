@@ -273,8 +273,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     continue;
                 }
                 const layoutName = node.innerMostWrapped.data<string>(Application.KEY_NAME, 'layoutName');
-                if (layoutName) {
-                    documentRoot.push({ node, layoutName });
+                const renderTemplates = node.renderParent?.renderTemplates as Undef<NodeTemplate<T>[]>;
+                if (layoutName && renderTemplates) {
+                    documentRoot.push({ node, layoutName, renderTemplates });
                 }
             }
         }
@@ -287,16 +288,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const systemName = capitalize(this.systemName);
         i = 0;
         while (i < documentRoot.length) {
-            const { node, layoutName } = documentRoot[i++];
-            const renderTemplates = node.renderParent!.renderTemplates;
-            if (renderTemplates) {
-                this.saveDocument(
-                    layoutName,
-                    baseTemplate + controllerHandler.cascadeDocument(renderTemplates as NodeTemplate<T>[], Math.abs(node.depth), showAttributes),
-                    node.dataset['pathname' + systemName],
-                    node.renderExtension?.some(item => item.documentBase) ? 0 : undefined
-                );
-            }
+            const { node, layoutName, renderTemplates } = documentRoot[i++];
+            this.saveDocument(
+                layoutName,
+                baseTemplate + controllerHandler.cascadeDocument(renderTemplates, Math.abs(node.depth), showAttributes),
+                node.dataset['pathname' + systemName],
+                node.renderExtension?.some(item => item.documentBase) ? 0 : undefined
+            );
         }
         this.resourceHandler.finalize(this._layouts);
         controllerHandler.finalize(this._layouts);

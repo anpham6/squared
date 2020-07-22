@@ -76,6 +76,7 @@ declare module "base" {
     interface LayoutRoot<T extends NodeUI> {
         node: T;
         layoutName: string;
+        renderTemplates: NodeTemplate<T>[];
     }
 
     class Application<T extends Node> implements FileActionAsync {

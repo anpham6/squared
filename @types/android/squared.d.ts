@@ -89,7 +89,7 @@ declare namespace base {
         anchor(position: string, documentId?: string, overwrite?: boolean): boolean;
         anchorChain(direction: PositionAttr): View[];
         anchorParent(orientation: OrientationAttr, bias?: number, style?: string, overwrite?: boolean): boolean;
-        anchorStyle(orientation: string, bias: number, style?: string, overwrite?: boolean): void;
+        anchorStyle(orientation: OrientationAttr, bias: number, style?: string, overwrite?: boolean): void;
         anchorDelete(...position: string[]): void;
         anchorClear(update?: View | true): void;
         supported(obj: string, attr: string, result?: {}): boolean;

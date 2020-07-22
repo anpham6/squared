@@ -35,7 +35,7 @@ interface AndroidResourceStoredMap extends ResourceStoredMap {
 interface FileUniversalOptions extends squared.base.FileCopyingOptions, squared.base.FileArchivingOptions {}
 
 interface GuidelineOptions {
-    orientation?: string;
+    orientation?: OrientationAttr;
     percent?: boolean;
     opposing?: boolean;
 }
@@ -68,4 +68,4 @@ interface StyleAttribute {
     ids?: number[];
 }
 
-type CustomizationResult<T> = (result: {}, api?: number, node?: T) => boolean;
+type CustomizationResult<T> = (this: T, result: {}, api?: number) => boolean;
