@@ -119,37 +119,37 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top:
                             if (parent) {
                                 adjustment -= parent.paddingTop;
                             }
-                            adjustment = Math.round(adjustment);
+                            adjustment = Math.round(adjustment - node.paddingTop);
                             if (adjustment > 0) {
-                                (parent || node).setBox(BOX_STANDARD.PADDING_TOP, { adjustment, max: true });
+                                (parent || node).setBox(BOX_STANDARD.PADDING_TOP, { adjustment });
                             }
                         }
                         if (bottom) {
                             if (parent) {
                                 offset -= parent.paddingBottom;
                             }
-                            offset = Math.round(offset);
+                            offset = Math.round(offset - node.paddingBottom);
                             if (offset > 0) {
-                                (parent || node).setBox(BOX_STANDARD.PADDING_BOTTOM, { adjustment: offset, max: true });
+                                (parent || node).setBox(BOX_STANDARD.PADDING_BOTTOM, { adjustment: offset });
                             }
                         }
                     }
                     else if (node.pageFlow) {
                         if (top && (inlineStyle || !node.baselineAltered)) {
-                            const adjustment = Math.floor(offset - node.paddingTop);
+                            const adjustment = Math.floor(offset - node.paddingTop - Math.max(0, node.marginTop + node.getBox(BOX_STANDARD.MARGIN_TOP)[1]));
                             if (adjustment > 0) {
-                                node.setBox(BOX_STANDARD.MARGIN_TOP, { adjustment, max: true });
+                                node.setBox(BOX_STANDARD.MARGIN_TOP, { adjustment });
                             }
                         }
                         if (bottom) {
-                            offset = Math.floor(offset - node.paddingBottom);
+                            offset = Math.floor(offset - node.paddingBottom - Math.max(0, node.marginBottom + node.getBox(BOX_STANDARD.MARGIN_BOTTOM)[1]));
                             if (offset > 0) {
-                                node.setBox(BOX_STANDARD.MARGIN_BOTTOM, { adjustment: offset, max: true });
+                                node.setBox(BOX_STANDARD.MARGIN_BOTTOM, { adjustment: offset });
                             }
                         }
                     }
                 }
-            }
+            };
             if (node.textElement) {
                 setBoxPadding(getLineSpacingExtra(node, lineHeight));
             }
@@ -160,8 +160,8 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top:
                 }
             }
             else if (node.inputElement) {
-                const height = node.actualTextHeight({ tagName: 'span' });
-                if (!isNaN(height)) {
+                const textHeight = node.actualTextHeight({ tagName: 'span' });
+                if (!isNaN(textHeight)) {
                     let rows = 1;
                     switch (node.tagName)  {
                         case 'SELECT':
@@ -171,7 +171,7 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top:
                             rows = node.toElementInt('rows', 1);
                             break;
                     }
-                    setBoxPadding((lineHeight - height * Math.max(rows, 1)) / 2, true);
+                    setBoxPadding((lineHeight - textHeight * Math.max(rows, 1)) / 2, true);
                 }
             }
             else {
@@ -199,7 +199,6 @@ function getLineSpacingExtra(node: T, lineHeight: number) {
             else {
                 height = node.actualTextHeight();
                 node.data<number>(ResourceUI.KEY_NAME, 'textRange', height);
-                console.log(node.multiline, node.textContent, height, lineHeight);
             }
         }
     }

@@ -10,9 +10,9 @@ d8264fd798a98c4198f6c3a274984884  ./app/src/main/res/drawable/mack.jpg
 4c68e38b80815fcd1abf551cd2abb5bc  ./app/src/main/res/drawable/redbubbles.jpg
 3b61827df0b4a9fe0124a98992bfa984  ./app/src/main/res/drawable/tilepieces.jpg
 c845252793330db582c24c386370028b  ./app/src/main/res/drawable/towers.jpg
-1c7df2745370934fc57d905f1ad59d07  ./app/src/main/res/layout/activity_main.xml
+61a2a93e4563f303948eb2c0759b595e  ./app/src/main/res/layout/activity_main.xml
 5b398385c14b5836640f25d72589a48c  ./app/src/main/res/values/colors.xml
-41b9e732bc19bd8d79f1ee941ccf1add  ./app/src/main/res/values/dimens.xml
-1eec89c8668f1cb11fe6e957c85ce1a6  ./app/src/main/res/values/strings.xml
+099df5877a2f4ebc97d3c1dc71d604b8  ./app/src/main/res/values/dimens.xml
+89a19b4228ed4ce17fdabc8afd40f2db  ./app/src/main/res/values/strings.xml
 9ddd77147d1bdc898a842cb02157b719  ./app/src/main/res/values/styles.xml
 cecfe0793b9aa331de2273efa5215a62  ./app/src/main/res/values/themes.xml

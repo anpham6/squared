@@ -278,12 +278,15 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         };
     }
 
-    public static baseline<T extends NodeUI>(list: T[], text = false): Null<T> {
+    public static baseline<T extends NodeUI>(list: T[], text = false, image = false): Null<T> {
         const length = list.length;
         const result: T[] = new Array(length);
         let i = 0, j = 0;
         while (i < length) {
             const item = list[i++];
+            if (image && item.imageContainer) {
+                continue;
+            }
             if (item.baseline && !item.baselineAltered && (!text || item.textElement)) {
                 if (item.naturalElements.length > 0) {
                     if (item.baselineElement) {
@@ -1220,10 +1223,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 if (adjustment !== undefined) {
                     let value = adjustment;
                     if (options.max) {
-                        value = Math.max(value, boxAdjustment[attr]);
+                        boxAdjustment[attr] = Math.max(value, boxAdjustment[attr]);
                     }
                     else if (options.min) {
-                        value = Math.min(value, boxAdjustment[attr] || Infinity);
+                        boxAdjustment[attr] = Math.min(value, boxAdjustment[attr] || Infinity);
                     }
                     else {
                         if (options.accumulate) {
@@ -1235,8 +1238,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                 boxReset[attr] = 1;
                             }
                         }
+                        boxAdjustment[attr] = value;
                     }
-                    boxAdjustment[attr] = value;
                 }
                 else if (reset === 1 && !this.naturalChild) {
                     boxAdjustment[attr] = 0;

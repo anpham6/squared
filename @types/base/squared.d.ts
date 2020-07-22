@@ -526,7 +526,7 @@ declare module "base" {
         static refitScreen<T>(node: T, value: Dimension): Dimension;
         static linearData<T>(list: T[], cleared?: Map<T, string>): LinearData<T>;
         static outerRegion<T>(node: T): BoxRectDimension;
-        static baseline<T>(list: T[], text?: boolean): Null<T>;
+        static baseline<T>(list: T[], text?: boolean, image?: boolean): Null<T>;
         static partitionRows<T>(list: T[], cleared?: Map<T, string>): T[][];
         alignmentType: number;
         contentAltered: boolean;
