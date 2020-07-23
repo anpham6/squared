@@ -770,6 +770,24 @@ export function isPlainObject(value: any): value is {} {
     return isObject(value) && (value.constructor === Object || Object.getPrototypeOf(Object(value)) === null);
 }
 
+export function isEmptyString(value: string) {
+    const length = value.length;
+    let i = 0;
+    while (i < length) {
+        switch (value.charCodeAt(i++)) {
+            case 32:
+            case 9:
+            case 10:
+            case 11:
+            case 13:
+                continue;
+            default:
+                return false;
+        }
+    }
+    return true;
+}
+
 export function isEqual(source: any, other: any) {
     if (source === other) {
         return true;

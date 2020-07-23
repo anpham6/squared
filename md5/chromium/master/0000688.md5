@@ -1,10 +1,10 @@
-0bb6876f06b1a3495dc54f038c003e63  ./app/src/main/res/drawable/div_framelayout_5.xml
-fc7c28ef71979611c34c5d93764938de  ./app/src/main/res/drawable/div_framelayout_6.xml
+0bb6876f06b1a3495dc54f038c003e63  ./app/src/main/res/drawable/div_framelayout_3.xml
+fc7c28ef71979611c34c5d93764938de  ./app/src/main/res/drawable/div_framelayout_4.xml
 4ca76254ef15df27fc091157c506d693  ./app/src/main/res/font/chunkfiveregular.xml
 0581c2774b56b41da7622c25ea3c5f2b  ./app/src/main/res/font/chunkfiveregular_normal.ttf
-1e1adc0c7b612c9c7aa1b6d86d56f3df  ./app/src/main/res/layout/activity_main.xml
+3512ba5a0533e9583aa36175d8440de3  ./app/src/main/res/layout/activity_main.xml
 f4420f9cc38637cd774869719526c249  ./app/src/main/res/values/colors.xml
-578d0be8198663427f928aa35f4efcbc  ./app/src/main/res/values/dimens.xml
-5308105ed5fe066e3fa353613d0da2f4  ./app/src/main/res/values/strings.xml
-28bbc750995584c7a559d9c9497f1462  ./app/src/main/res/values/styles.xml
+b68019879a84d43d138abbd6004fc6a9  ./app/src/main/res/values/dimens.xml
+f09df5b304b4546de601edf16e2f42b7  ./app/src/main/res/values/strings.xml
+722624641a50976cd3337f3056fd3c1f  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml

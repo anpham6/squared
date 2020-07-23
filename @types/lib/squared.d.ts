@@ -267,6 +267,7 @@ declare module "lib" {
         function isArray<T>(value: any): value is Array<T>;
         function isObject(value: any): value is {};
         function isPlainObject(value: any): value is {};
+        function isEmptyString(value: string): boolean;
         function isEqual(source: any, other: any): boolean;
         function includes(source: Undef<string>, value: string, delimiter?: RegExp): boolean;
         function cloneInstance<T>(value: T): T;

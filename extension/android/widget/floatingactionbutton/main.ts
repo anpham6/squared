@@ -2,7 +2,7 @@ import FloatingActionButton from './floatingactionbutton';
 
 import { WIDGET_NAME } from '../lib/constant';
 
-const fab = new FloatingActionButton(WIDGET_NAME.FAB, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID, ['BUTTON', 'INPUT', 'IMG']);
+const fab = new FloatingActionButton(WIDGET_NAME.FAB, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID, { tagNames: ['BUTTON', 'INPUT', 'IMG'] });
 
 if (squared) {
     squared.include(fab);

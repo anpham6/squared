@@ -13,7 +13,7 @@ type FileActionOptions = squared.base.FileActionOptions;
 const { convertListStyle, formatPX, getStyle, hasComputedStyle, hasCoords, insertStyleSheetRule, resolveURL } = squared.lib.css;
 const { getNamedItem, removeElementsByClassName } = squared.lib.dom;
 const { getElementCache, getPseudoElt, setElementCache } = squared.lib.session;
-const { appendSeparator, capitalize, convertWord, flatArray, hasBit, hasMimeType, isString, iterateArray, partitionArray, trimBoth, trimString } = squared.lib.util;
+const { appendSeparator, capitalize, convertWord, flatArray, hasBit, hasMimeType, isEmptyString, isString, iterateArray, partitionArray, trimBoth, trimString } = squared.lib.util;
 
 const TEXT_STYLE = NodeUI.TEXT_STYLE.slice(0);
 TEXT_STYLE.push('fontSize');
@@ -171,24 +171,6 @@ function setColumnMaxWidth(nodes: NodeUI[], offset: number) {
             child.css('maxWidth', formatPX(offset));
         }
     }
-}
-
-function isPlainText(value: string) {
-    const length = value.length;
-    let i = 0;
-    while (i < length) {
-        switch (value.charCodeAt(i++)) {
-            case 32:
-            case 9:
-            case 10:
-            case 11:
-            case 13:
-                continue;
-            default:
-                return true;
-        }
-    }
-    return false;
 }
 
 const getCounterIncrementValue = (parent: HTMLElement, counterName: string, pseudoElt: string, sessionId: string, fallback?: number) => getCounterValue(getElementCache<CSSStyleDeclaration>(parent, `styleMap${pseudoElt}`, sessionId)?.counterIncrement, counterName, fallback);
@@ -676,7 +658,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     inlineText = false;
                 }
                 else if (element.nodeName.charAt(0) === '#') {
-                    if (element.nodeName === '#text' && (isPlainText(element.textContent!) || node.preserveWhiteSpace && (parentElement.tagName !== 'PRE' || parentElement.childElementCount === 0))) {
+                    if (element.nodeName === '#text' && (!isEmptyString(element.textContent!) || node.preserveWhiteSpace && (parentElement.tagName !== 'PRE' || parentElement.childElementCount === 0))) {
                         child = this.insertNode(element, sessionId);
                         child.cssApply(node.textStyle);
                         plainText = j;

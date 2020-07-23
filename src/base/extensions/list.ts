@@ -7,8 +7,20 @@ type NodeUI = squared.base.NodeUI;
 const { convertListStyle } = squared.lib.css;
 const { isNumber } = squared.lib.util;
 
+function isListItem(node: NodeUI) {
+    if (node.display === 'list-item') {
+        return true;
+    }
+    switch (node.tagName) {
+        case 'DT':
+        case 'DD':
+            return true;
+        default:
+            return false;
+    }
+}
+
 const hasSingleImage = (visibleStyle: VisibleStyle) => visibleStyle.backgroundImage && !visibleStyle.backgroundRepeat;
-const createDataAttribute = (): ListData => ({ ordinal: '', imageSrc: '', imagePosition: '' });
 
 export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
     public condition(node: T) {
@@ -23,8 +35,8 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                 floated: Undef<Set<string>>;
             for (let i = 0; i < length; ++i) {
                 const item = children[i] as T;
-                const type = item.css('listStyleType');
-                if (item.display === 'list-item' && (type !== 'none' || item.innerBefore) || item.marginLeft < 0 && type === 'none' && hasSingleImage(item.visibleStyle)) {
+                const type = item.css('listStyleType') !== 'none';
+                if (isListItem(item) && (type || item.innerBefore) || !type && item.marginLeft < 0 && hasSingleImage(item.visibleStyle)) {
                     bulletVisible = true;
                 }
                 if (floating || blockAlternate) {
@@ -35,15 +47,17 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                         floated.add(item.float);
                         blockAlternate = false;
                     }
-                    else if (i === 0 || i === length - 1 || item.blockStatic || children[i - 1]!.blockStatic && children[i + 1]!.blockStatic) {
-                        floating = false;
-                    }
                     else {
                         floating = false;
-                        blockAlternate = false;
+                        if (i > 0 && i < length - 1 && !item.blockStatic && !(children[i - 1]!.blockStatic && children[i + 1]!.blockStatic)) {
+                            blockAlternate = false;
+                        }
                     }
                 }
-                if (!item.blockStatic) {
+                if (item.blockStatic) {
+                    floating = false;
+                }
+                else {
                     blockStatic = false;
                 }
                 if (!item.inlineVertical) {
@@ -62,15 +76,15 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
         const ordered = node.tagName === 'OL';
         let i = ordered && node.toElementInt('start') || 1;
         node.each((item: T) => {
-            const mainData = createDataAttribute();
-            const type = item.css('listStyleType');
-            const enabled = item.display === 'list-item';
-            if (enabled || type !== '' && type !== 'none' || hasSingleImage(item.visibleStyle)) {
+            const mainData: ListData = {};
+            if (isListItem(item) || hasSingleImage(item.visibleStyle)) {
+                const listItem = item.display === 'list-item';
+                const type = listItem ? item.css('listStyleType') : 'none';
                 if (item.has('listStyleImage')) {
                     mainData.imageSrc = item.css('listStyleImage');
                 }
                 else {
-                    if (ordered && enabled && item.tagName === 'LI') {
+                    if (ordered && item.tagName === 'LI') {
                         const value = item.attributes['value'];
                         if (value && isNumber(value)) {
                             i = Math.floor(parseFloat(value));
@@ -109,9 +123,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                     }
                     mainData.ordinal = ordinal;
                 }
-                if (enabled) {
-                    ++i;
-                }
+                ++i;
             }
             item.data(this.name, 'mainData', mainData);
         });

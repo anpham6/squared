@@ -64,9 +64,9 @@ interface GridCellData<T> extends ObjectMap<any> {
 }
 
 interface ListData {
-    ordinal: string;
-    imageSrc: string;
-    imagePosition: string;
+    ordinal?: string;
+    imageSrc?: string;
+    imagePosition?: string;
 }
 
 interface TableData {

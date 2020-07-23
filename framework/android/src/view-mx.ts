@@ -1385,11 +1385,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         floatAlign = 'right';
                     }
                     else if (this.nodeGroup) {
-                        if (this.hasAlign(NODE_ALIGNMENT.RIGHT) || this.every(item => item.rightAligned)) {
-                            floatAlign = 'right';
+                        if (this.hasAlign(NODE_ALIGNMENT.FLOAT)) {
+                            floatAlign = this.hasAlign(NODE_ALIGNMENT.RIGHT) ? 'right' : 'left';
                         }
-                        else if (this.hasAlign(NODE_ALIGNMENT.FLOAT) && !this.some(item => item.rightAligned)) {
-                            floatAlign = 'left';
+                        else if (this.every(item => item.rightAligned)) {
+                            floatAlign = 'right';
                         }
                     }
                 }

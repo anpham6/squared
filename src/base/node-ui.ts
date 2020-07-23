@@ -8,7 +8,7 @@ const { CSS_PROPERTIES, isLength, newBoxModel } = squared.lib.css;
 const { createElement } = squared.lib.dom;
 const { equal } = squared.lib.math;
 const { actualTextRangeRect, getElementAsNode } = squared.lib.session;
-const { capitalize, cloneObject, convertWord, hasBit, hasKeys, isArray, iterateArray, searchObject, withinRange } = squared.lib.util;
+const { capitalize, cloneObject, convertWord, hasBit, hasKeys, isArray, isEmptyString, iterateArray, searchObject, withinRange } = squared.lib.util;
 
 const CSS_SPACING = new Map<number, string>();
 
@@ -1946,13 +1946,16 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get textEmpty() {
-        const result = this._cached.textEmpty;
+        let result = this._cached.textEmpty;
         if (result === undefined) {
             if (this.styleElement && !this.imageElement && !this.svgElement && !this.inputElement) {
                 const value = this.textContent;
-                return this._cached.textEmpty = value === '' || !this.preserveWhiteSpace && value.trim() === '';
+                result = value === '' || !this.preserveWhiteSpace && isEmptyString(value);
             }
-            return this._cached.textEmpty = false;
+            else {
+                result = false;
+            }
+            this._cached.textEmpty = result;
         }
         return result;
     }
