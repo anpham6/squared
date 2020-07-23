@@ -24,10 +24,9 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
     constructor(
         name: string,
         framework: number,
-        options?: StandardMap,
-        tagNames?: string[])
+        options?: ExtensionUIOptions)
     {
-        super(name, framework, options, tagNames);
+        super(name, framework, options);
         this.require(WIDGET_NAME.MENU);
     }
 

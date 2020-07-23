@@ -37,12 +37,11 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
     constructor(
         name: string,
         framework: number,
-        options?: StandardMap,
-        tagNames: string[] = [])
+        options?: ExtensionUIOptions)
     {
         super(name, framework, options);
-        this.tagNames = tagNames;
-        this._isAll = tagNames.length === 0;
+        this.tagNames = options?.tagNames || [];
+        this._isAll = this.tagNames.length === 0;
     }
 
     public is(node: T) {

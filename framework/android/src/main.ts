@@ -312,9 +312,9 @@ const appBase: squared.base.AppFramework<View> = {
         file = new File();
         application.resourceHandler.fileHandler = file;
         Object.assign(application.builtInExtensions, {
-            [EN.TABLE]: new Table(EN.TABLE, framework, undefined, ['TABLE']),
-            [EN.LIST]: new List(EN.LIST, framework, undefined, ['DIV', 'UL', 'OL', 'DL']),
-            [EN.GRID]: new Grid(EN.GRID, framework, undefined, ['DIV', 'FORM', 'UL', 'OL', 'DL', 'NAV', 'SECTION', 'ASIDE', 'MAIN', 'HEADER', 'FOOTER', 'P', 'ARTICLE', 'FIELDSET']),
+            [EN.TABLE]: new Table(EN.TABLE, framework, { tagNames: ['TABLE'] }),
+            [EN.LIST]: new List(EN.LIST, framework),
+            [EN.GRID]: new Grid(EN.GRID, framework, { tagNames: ['DIV', 'FORM', 'UL', 'OL', 'DL', 'NAV', 'SECTION', 'ASIDE', 'MAIN', 'HEADER', 'FOOTER', 'P', 'ARTICLE', 'FIELDSET'] }),
             [EN.CSS_GRID]: new CssGrid(EN.CSS_GRID, framework),
             [EN.FLEXBOX]: new Flexbox(EN.FLEXBOX, framework),
             [EN.COLUMN]: new Column(EN.COLUMN, framework),

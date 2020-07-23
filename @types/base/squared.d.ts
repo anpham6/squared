@@ -298,7 +298,7 @@ declare module "base" {
         get application(): ApplicationUI<T>;
         get controller(): ControllerUI<T>;
         get resource(): Undef<ResourceUI<T>>;
-        constructor(name: string, framework: number, options?: StandardMap, tagNames?: string[]);
+        constructor(name: string, framework: number, options?: ExtensionUIOptions);
     }
 
     class ExtensionManager<T extends Node> {

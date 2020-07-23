@@ -523,7 +523,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     else {
                         const filename = item.filename;
                         if (!filename.endsWith('.xml')) {
-                            item.filename =  `${filename}.xml`;
+                            item.filename = `${filename}.xml`;
                         }
                     }
                 }

@@ -13,10 +13,9 @@ export default class BottomNavigation<T extends android.base.View> extends squar
     constructor(
         name: string,
         framework: number,
-        options?: StandardMap,
-        tagNames?: string[])
+        options?: ExtensionUIOptions)
     {
-        super(name, framework, options, tagNames);
+        super(name, framework, options);
         this.require(WIDGET_NAME.MENU);
     }
 

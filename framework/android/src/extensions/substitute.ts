@@ -14,10 +14,9 @@ export default class Substitute<T extends View> extends squared.base.ExtensionUI
     constructor(
         name: string,
         framework: number,
-        options?: StandardMap,
-        tagNames?: string[])
+        options?: ExtensionUIOptions)
     {
-        super(name, framework, options, tagNames);
+        super(name, framework, options);
         this.require(EXT_ANDROID.EXTERNAL, true);
     }
 

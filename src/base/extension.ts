@@ -10,10 +10,16 @@ export default abstract class Extension<T extends squared.base.Node> implements 
     protected constructor(
         public readonly name: string,
         public readonly framework: number,
-        options?: StandardMap)
+        options?: ExtensionOptions)
     {
         if (options) {
             Object.assign(this.options, options);
+            const dependencies = options.dependencies;
+            if (dependencies) {
+                for (const item of dependencies) {
+                    this.dependencies.push(item);
+                }
+            }
         }
     }
 
