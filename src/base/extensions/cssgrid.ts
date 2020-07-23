@@ -319,8 +319,8 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             horizontal
                 ? [0, 1, 2, 3]
                 : [1, 0, 3, 2];
-        let autoWidth = false,
-            autoHeight = false,
+        let autoWidth: Undef<boolean>,
+            autoHeight: Undef<boolean>,
             ITERATION: number;
         for (let index = 0; index < 4; ++index) {
             const value = gridTemplates[index];
@@ -491,7 +491,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     columnSpan = parseInt(gridColumnEnd) - columnIndex;
                 }
                 if (columnIndex === 1 && columnMax > 0) {
-                    let valid = false;
+                    let valid: Undef<boolean>;
                     do {
                         const available: number[] = new Array(columnMax - 1).fill(1);
                         for (const cell of layout) {

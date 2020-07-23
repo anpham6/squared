@@ -113,8 +113,8 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         const mapWidth: string[] = [];
         const rowCount = table.length;
         let columnCount = 0,
-            percentAll = false,
-            mapPercent = 0;
+            mapPercent = 0,
+            percentAll: Undef<boolean>;
         for (let i = 0; i < rowCount; ++i) {
             const tr = table[i];
             rowWidth[i] = horizontal;
@@ -466,10 +466,10 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             const borderRightWidth = parseInt(borderRight.borderRightWidth!);
             const borderBottomWidth = parseInt(borderBottom.borderBottomWidth!);
             const borderLeftWidth = parseInt(borderLeft.borderLeftWidth!);
-            let hideTop = false,
-                hideRight = false,
-                hideBottom = false,
-                hideLeft = false;
+            let hideTop: Undef<boolean>,
+                hideRight: Undef<boolean>,
+                hideBottom: Undef<boolean>,
+                hideLeft: Undef<boolean>;
             for (let i = 0; i < rowCount; ++i) {
                 const tr = tableFilled[i];
                 for (let j = 0; j < columnCount; ++j) {

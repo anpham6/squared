@@ -409,7 +409,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         else {
                             parent = absoluteParent;
                             if (this.userSettings.supportNegativeLeftTop && !(node.hasPX('top') && node.hasPX('bottom') || node.hasPX('left') && node.hasPX('right'))) {
-                                let outside = false;
+                                let outside: Undef<boolean>;
                                 while (parent && parent.bounds.height > 0) {
                                     if (parent.layoutElement) {
                                         parent = absoluteParent;
@@ -610,7 +610,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     }
                 }
                 for (const item of actualParent) {
-                    let floating = false;
+                    let floating: Undef<boolean>;
                     item.each((child: T, index) => {
                         if (child.floating) {
                             floating = true;

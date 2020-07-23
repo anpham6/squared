@@ -51,7 +51,7 @@ function findElement(element: HTMLElement, cache: boolean) {
 }
 
 async function findElementAll(query: NodeListOf<Element>, length: number) {
-    let incomplete = false;
+    let incomplete: Undef<boolean>;
     const elementMap = main!.elementMap;
     const result: Node[] = new Array(length);
     for (let i = 0; i < length; ++i) {

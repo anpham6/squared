@@ -24,9 +24,9 @@ function setAspectRatio(parent: Undef<Svg | SvgUseSymbol>, group: SvgGroup, view
                 const ratio = width / height;
                 let parentWidth = parentAspectRatio.width || parent.viewBox.width,
                     parentHeight = parentAspectRatio.height || parent.viewBox.height,
-                    parentUnknown = false,
                     boxWidth = NaN,
-                    boxHeight = NaN;
+                    boxHeight = NaN,
+                    parentUnknown: Undef<boolean>;
                 if (parentWidth === 0 && parentHeight === 0) {
                     ({ width: parentWidth, height: parentHeight } = getDOMRect(parent.element));
                     parentAspectRatio.width = parentWidth;
@@ -239,7 +239,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
         }
         const parent = getNearestViewBox(this);
         const aspectRatio = this.aspectRatio;
-        let requireClip = false;
+        let requireClip: Undef<boolean>;
         this.clear();
         iterateArray(element.children, (item: SVGElement) => {
             let svg: Undef<SvgView>;

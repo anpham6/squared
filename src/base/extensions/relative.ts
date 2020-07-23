@@ -92,7 +92,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                 const hasVertical = top !== 0 || bottom !== 0;
                 const hasHorizontal = left !== 0 || right !== 0;
                 const children = node.actualParent!.naturalChildren as T[];
-                let preceding = false,
+                let preceding: Undef<boolean>,
                     previous: Undef<T>;
                 const length = children.length;
                 let i = 0;

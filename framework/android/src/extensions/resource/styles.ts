@@ -23,7 +23,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                     while (j < q) {
                         const item = renderChildren[j++] as T;
                         const combined = item.combine('_', 'android');
-                        let found = false;
+                        let found: Undef<boolean>;
                         const r = combined.length;
                         k = 0;
                         while (k < r) {

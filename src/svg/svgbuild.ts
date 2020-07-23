@@ -242,13 +242,13 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         if (totalLength) {
             const keyPoints: Point[] = [];
             const rotatingPoints: boolean[] = [];
-            let rotating = false,
-                rotateFixed = 0,
+            let rotateFixed = 0,
                 rotateInitial = 0,
                 rotatePrevious = 0,
                 overflow = 0,
-                center: Undef<SvgPoint>,
-                key = -1;
+                key = -1,
+                rotating: Undef<boolean>,
+                center: Undef<SvgPoint>;
             if (isAngle(rotation)) {
                 rotateFixed = parseAngle(rotation, 0);
             }

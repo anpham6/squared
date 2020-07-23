@@ -438,7 +438,7 @@ function appendPartialKeyTimes(map: SvgAnimationIntervalMap, forwardMap: Forward
                     setStartItemValues(map, forwardMap, baseValueMap, sub, baseValue, subKeyTimes, subValues, subKeySplines);
                     let nextStartTime = intervalEndTime;
                     partialEnd: {
-                        let joined = false,
+                        let joined: Undef<boolean>,
                             j = getStartIteration(maxTime, sub.delay, sub.duration) - 1;
                         const insertSubstituteTimeValue = (subTime: number, splitTime: number, index: number) => {
                             let resultTime = evaluateStart
@@ -1391,7 +1391,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                             item.addState(SYNCHRONIZE_STATE.INTERRUPTED);
                                         }
                                     }
-                                    let complete = false,
+                                    let complete: Undef<boolean>,
                                         lastValue: Undef<AnimateValue>;
                                     if (maxThreadTime > maxTime) {
                                         if (transforming) {
@@ -1789,7 +1789,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                         const length = keyTimesBase.length;
                                         let i = Math.floor((maxTime - delay) / item.duration);
                                         do {
-                                            let joined = false;
+                                            let joined: Undef<boolean>;
                                             for (let j = 0; j < length; ++j) {
                                                 let time = getItemTime(delay, item.duration, keyTimesBase, i, j);
                                                 if (!joined && time >= maxTime) {
@@ -1819,7 +1819,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                         }
                         const keyTimes = sortNumber(Array.from(keyTimesRepeating));
                         if (path || transforming) {
-                            let modified = false;
+                            let modified: Undef<boolean>;
                             for (const attr in repeatingMap) {
                                 const baseMap = repeatingMap[attr];
                                 if (!baseMap.has(0)) {

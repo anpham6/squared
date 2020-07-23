@@ -211,7 +211,7 @@ function getBorderRadius(radius?: string[]): Undef<StringMap> {
 function getCornerRadius(corners: string[]) {
     const [topLeft, topRight, bottomRight, bottomLeft] = corners;
     const result: StringMap = {};
-    let valid = false;
+    let valid: Undef<boolean>;
     if (topLeft !== '0px') {
         result.topLeftRadius = topLeft;
         valid = true;
@@ -537,7 +537,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
     public afterResources(sessionId: string) {
         const settings = (this.application as android.base.Application<T>).userSettings;
         const drawOutline = this.options.drawOutlineAsInsetBorder;
-        let themeBackground = false;
+        let themeBackground: Undef<boolean>;
         const setBodyBackground = (name: string, parent: string, value: string) => {
             Resource.addTheme({
                 name,
@@ -766,7 +766,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 const q = backgroundImage.length;
                 backgroundRepeat = fillBackgroundAttribute(backgroundRepeat, q);
                 backgroundSize = fillBackgroundAttribute(backgroundSize, q);
-                let modified = false;
+                let modified: Undef<boolean>;
                 for (let i = 0; i < q; ++i) {
                     let value = backgroundImage[i],
                         valid = false;
@@ -948,8 +948,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     gravityX = '',
                     gravityY = '',
                     gravityAlign = '',
-                    offsetX = false,
-                    offsetY = false;
+                    offsetX: Undef<boolean>,
+                    offsetY: Undef<boolean>;
                 if (dimension) {
                     if (!dimension.width || !dimension.height) {
                         dimension = undefined;
@@ -1114,11 +1114,11 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                         break;
                 }
-                let resizedWidth = false,
-                    resizedHeight = false,
-                    unsizedWidth = false,
-                    unsizedHeight = false,
-                    recalibrate = true;
+                let recalibrate = true,
+                    resizedWidth: Undef<boolean>,
+                    resizedHeight: Undef<boolean>,
+                    unsizedWidth: Undef<boolean>,
+                    unsizedHeight: Undef<boolean>;
                 if (dimension) {
                     let fittedWidth = boundsWidth,
                         fittedHeight = boundsHeight;

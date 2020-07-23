@@ -179,7 +179,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                             }
                         }
                         else if (itemA.fillMode === FILL_MODE.FORWARDS || itemA.infinite) {
-                            let forwarded = false;
+                            let forwarded: Undef<boolean>;
                             const group = animationA.group;
                             const ordering = group.ordering;
                             if (ordering) {

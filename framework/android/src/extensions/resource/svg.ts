@@ -589,7 +589,7 @@ function insertTargetAnimation(data: AnimatedVectorTemplate[], name: string, tar
     const templateSet = targetSetTemplate.set;
     const length = templateSet.length;
     if (length > 0) {
-        let modified = false;
+        let modified: Undef<boolean>;
         if (length > 1 && templateSet.every(item => item.ordering === '')) {
             const setData: SetTemplate = {
                 set: [],
@@ -652,7 +652,7 @@ function resetBeforeValue(propertyName: string, valueType: string, valueTo: Unde
     }
 }
 
-function insertFillAfter(propertyName: string, valueType: string, item: SvgAnimation, synchronized: boolean, transforming: boolean, precision: number, afterAnimator: PropertyValue[], transformOrigin?: Point[], propertyValues?: PropertyValue[], startOffset?: number) {
+function insertFillAfter(propertyName: string, valueType: string, item: SvgAnimation, synchronized: Undef<boolean>, transforming: Undef<boolean>, precision: number, afterAnimator: PropertyValue[], transformOrigin?: Point[], propertyValues?: PropertyValue[], startOffset?: number) {
     if (!synchronized && item.fillReplace) {
         let valueTo = item.replaceValue;
         if (!valueTo) {
@@ -1007,8 +1007,8 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                         while (y < t) {
                             const items = targets[y++];
                             let ordering = '',
-                                synchronized = false,
-                                checkBefore = false,
+                                synchronized: Undef<boolean>,
+                                checkBefore: Undef<boolean>,
                                 useKeyFrames = true;
                             if (index <= 1 && items.some((item: SvgAnimate) => !!item.synchronized && item.synchronized.value !== '')) {
                                 if (!SvgBuild.isAnimateTransform(items[0])) {
@@ -1057,7 +1057,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                         continue;
                                     }
                                     const requireBefore = item.delay > 0;
-                                    let transforming = false,
+                                    let transforming: Undef<boolean>,
                                         transformOrigin: Undef<Point[]>;
                                     if (item.setterType) {
                                         const propertyNames = getAttributePropertyName(item.attributeName);

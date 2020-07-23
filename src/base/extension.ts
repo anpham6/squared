@@ -13,13 +13,14 @@ export default abstract class Extension<T extends squared.base.Node> implements 
         options?: ExtensionOptions)
     {
         if (options) {
-            Object.assign(this.options, options);
             const dependencies = options.dependencies;
             if (dependencies) {
                 for (const item of dependencies) {
                     this.dependencies.push(item);
                 }
+                delete options.dependencies;
             }
+            Object.assign(this.options, options);
         }
     }
 

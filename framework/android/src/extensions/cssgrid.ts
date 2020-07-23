@@ -443,8 +443,8 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                     minSize = 0,
                     minUnitSize = 0,
                     sizeWeight = 0,
-                    fitContent = false,
-                    autoSize = false;
+                    fitContent: Undef<boolean>,
+                    autoSize: Undef<boolean>;
                 let i = 0, j = 0;
                 while (i < cellSpan) {
                     const k = cellStart + i++;

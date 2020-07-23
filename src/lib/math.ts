@@ -143,7 +143,7 @@ export function multipleOf(values: number[], min = 0, offset?: number[]) {
             value += increment;
         }
         const start = offset?.[0] || 0;
-        let valid = false;
+        let valid: Undef<boolean>;
         while (!valid) {
             const total = start + value;
             let i = 1;

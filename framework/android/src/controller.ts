@@ -381,8 +381,8 @@ function setObjectContainer(layout: LayoutUI<View>) {
 }
 
 function setConstraintFloatAligmnment(layout: LayoutUI<View>) {
-    let left = false,
-        right = false;
+    let left: Undef<boolean>,
+        right: Undef<boolean>;
     for (const node of layout) {
         switch (node.float) {
             case 'left':
@@ -1388,8 +1388,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         return false;
                     }
                     else {
-                        let left = false,
-                            right = false;
+                        let left: Undef<boolean>,
+                            right: Undef<boolean>;
                         for (const node of layout) {
                             const { float, autoMargin } = node;
                             if (float === 'left' || autoMargin.right) {
@@ -2256,7 +2256,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     protected processRelativeHorizontal(node: T) {
-        let autoPosition = false;
+        let autoPosition: Undef<boolean>;
         if (node.hasAlign(NODE_ALIGNMENT.VERTICAL)) {
             let previous: Undef<T>;
             const children = node.renderChildren as T[];
@@ -2292,8 +2292,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             const children = flattenContainer(node) as T[];
             const rowsAll: [Undef<T>, T[][]][] = [];
             let textIndent = 0,
-                rightAligned = false,
-                centerAligned = false;
+                rightAligned: Undef<boolean>,
+                centerAligned: Undef<boolean>;
             switch ((!node.naturalElement && children[0].actualParent || node).cssAscend('textAlign', { initial: true, startSelf: true })) {
                 case 'center':
                     centerAligned = true;
@@ -2593,9 +2593,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             let textBottom = bottomAligned[0] as Undef<T>,
                                 offsetTop = 0,
                                 offsetBottom = 0,
-                                checkBottom = false,
                                 maxCenter: Null<T> = null,
                                 maxCenterHeight = 0,
+                                checkBottom: Undef<boolean>,
                                 textBaseline: UndefNull<T>;
                             baseline = NodeUI.baseline(textBottom ? items.filter(item => !bottomAligned.includes(item)) : items);
                             if (baseline && textBottom) {
@@ -3323,7 +3323,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         for (let i = 0, length = horizontal.length, start = false; i < length; ++i) {
             const partition = horizontal[i];
             const [floatingRight, floatingLeft] = partitionArray(partition, item => item.float === 'right' || item.autoMargin.left === true);
-            let alignParent = false,
+            let alignParent: Undef<boolean>,
                 aboveRowEnd: Undef<T>,
                 currentRowTop: Undef<T>,
                 tallest: Undef<T>;
@@ -3414,7 +3414,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             chain.modifyBox(BOX_STANDARD.MARGIN_TOP, -previousRow[previousRow.length - 1].bounds.height, false);
                         }
                         if (floating) {
-                            let checkBottom = false;
+                            let checkBottom: Undef<boolean>;
                             let k = 0;
                             while (k < previousSiblings.length) {
                                 if (chain.bounds.top < Math.floor(previousSiblings[k++].bounds.bottom)) {

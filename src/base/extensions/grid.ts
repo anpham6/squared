@@ -63,8 +63,8 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
             }
             else if (node.percentWidth === 0) {
                 const children = node.children;
-                let minLength = false,
-                    itemCount = 0;
+                let itemCount = 0,
+                    minLength: Undef<boolean>;
                 let i = 0;
                 while (i < length) {
                     const item = children[i++];
@@ -80,7 +80,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         return false;
                     }
                 }
-                return itemCount === length || minLength && node.every(item => item.length > 0 && NodeUI.linearData(item.children as T[]).linearX);
+                return itemCount === length || minLength === true && node.every(item => item.length > 0 && NodeUI.linearData(item.children as T[]).linearX);
             }
         }
         return false;

@@ -365,7 +365,7 @@ export function formatXml(value: string, closeEmpty?: boolean, startIndent = -1,
     const pattern = /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g;
     let output = '',
         indent = startIndent,
-        ignoreIndent = false,
+        ignoreIndent: Undef<boolean>,
         match: Null<RegExpExecArray>;
     while (match = pattern.exec(value)) {
         lines.push({
@@ -379,7 +379,7 @@ export function formatXml(value: string, closeEmpty?: boolean, startIndent = -1,
         const line = lines[i];
         let previous = indent;
         if (i > 0) {
-            let single = false;
+            let single: Undef<boolean>;
             if (line.closing) {
                 --indent;
             }
@@ -696,7 +696,7 @@ export function splitEnclosing(value: string, prefix?: string, separator = '', o
                 result.push(segment);
             }
         }
-        let found = false;
+        let found: Undef<boolean>;
         for (let i = index + (prefixed ? prefix.length : 0) + 1, open = 1, close = 0; i < length; ++i) {
             switch (value.charAt(i)) {
                 case opening:

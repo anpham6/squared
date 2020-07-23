@@ -29,10 +29,10 @@ const CHAR_TRAILINGSPACE = /\s+$/;
 function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
     const { width, height } = gradient.dimension as Dimension;
     const result: ColorStop[] = [];
-    let repeat = false,
-        horizontal = true,
+    let horizontal = true,
         extent = 1,
-        size: number;
+        size: number,
+        repeat: Undef<boolean>;
     switch (gradient.type) {
        case 'linear': {
             const { repeating, angle } = gradient as LinearGradient;
@@ -1003,7 +1003,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 else if (node.pageFlow) {
                     const previousSibling = node.siblingsLeading[0];
                     const nextSibling = node.siblingsTrailing.find(item => !item.excluded || item.lineBreak);
-                    let previousSpaceEnd = false;
+                    let previousSpaceEnd: Undef<boolean>;
                     if (value.length > 1) {
                         if (checkPreviousSibling(previousSibling)) {
                             value = value.replace(CHAR_LEADINGSPACE, '');

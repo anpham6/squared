@@ -177,8 +177,8 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
         if (isNaN(fontAdjust)) {
             fontAdjust = application.userSettings.fontMeasureAdjust;
         }
-        let modified = false,
-            partition = false;
+        let modified: Undef<boolean>,
+            partition: Undef<boolean>;
         const breakable = mainData || [[1, node]];
         for (let i = 0, length = breakable.length; i < length; ++i) {
             const [columns, seg] = breakable[i];

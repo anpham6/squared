@@ -279,7 +279,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                 break;
                             }
                             const found: AttributeMap = {};
-                            let merged = false;
+                            let merged: Undef<boolean>;
                             for (let j = 0; j < length; ++j) {
                                 if (i !== j) {
                                     const dataB = sorted[j];

@@ -439,7 +439,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                         const pathEndPoint = pathEnd.end;
                         const name = pathEnd.key.toUpperCase();
                         const { leading, trailing } = data;
-                        let modified = false;
+                        let modified: Undef<boolean>;
                         if (name !== 'Z' && (pathStartPoint.x !== pathEndPoint.x || pathStartPoint.y !== pathEndPoint.y)) {
                             if (leading > 0) {
                                 let afterStartPoint: Undef<SvgPoint>;
@@ -679,24 +679,24 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                     });
                     const intervalMap = new SvgAnimationIntervalMap(sorted, 'stroke-dasharray', 'stroke-dashoffset');
                     let extracted: SvgAnimation[] = [],
-                        modified = false,
-                        setDashLength: Undef<(index: number) => void> = (index: number) => {
-                            let offset = valueOffset;
-                            const length = sorted.length;
-                            let j = index;
-                            while (j < length) {
-                                const item = sorted[j++];
-                                if (item.attributeName === 'stroke-dasharray') {
-                                    const value = intervalMap.get('stroke-dashoffset', item.delay);
-                                    if (value) {
-                                        offset = parseFloat(value);
-                                    }
-                                    for (const array of SvgBuild.asAnimate(item) ? intervalMap.evaluateStart(item) : [item.to]) {
-                                        dashTotal = Math.max(dashTotal, this.flattenStrokeDash(SvgBuild.parseCoordinates(array), offset, totalLength, pathLength).items.length);
-                                    }
+                        modified: Undef<boolean>;
+                    let setDashLength: Undef<(index: number) => void> = (index: number) => {
+                        let offset = valueOffset;
+                        const length = sorted.length;
+                        let j = index;
+                        while (j < length) {
+                            const item = sorted[j++];
+                            if (item.attributeName === 'stroke-dasharray') {
+                                const value = intervalMap.get('stroke-dashoffset', item.delay);
+                                if (value) {
+                                    offset = parseFloat(value);
+                                }
+                                for (const array of SvgBuild.asAnimate(item) ? intervalMap.evaluateStart(item) : [item.to]) {
+                                    dashTotal = Math.max(dashTotal, this.flattenStrokeDash(SvgBuild.parseCoordinates(array), offset, totalLength, pathLength).items.length);
                                 }
                             }
-                        };
+                        }
+                    };
                     if (sorted.length > 1) {
                         for (let i = 0; i < sorted.length; ++i) {
                             const item = sorted[i];

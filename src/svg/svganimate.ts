@@ -281,7 +281,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         this.group.ordering = value;
         if (this.fillBackwards) {
             const name = this.group.name;
-            let found = false;
+            let found: Undef<boolean>;
             let i = value.length - 1;
             while (i >= 0) {
                 const item = value[i--];

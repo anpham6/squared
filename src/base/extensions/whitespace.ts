@@ -82,7 +82,7 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
                 const offsetChild: number = target[marginName];
                 if (offsetParent >= 0 && offsetChild >= 0) {
                     const height = target.bounds.height;
-                    let resetChild = false;
+                    let resetChild: Undef<boolean>;
                     if (!DOCTYPE_HTML && offsetParent === 0 && offsetChild > 0 && target.cssInitial(marginName) === '') {
                         resetChild = true;
                     }
@@ -357,7 +357,7 @@ export default class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
                                 const previousSiblings = current.previousSiblings({ floating: false });
                                 const q = previousSiblings.length;
                                 if (q > 0) {
-                                    let inheritedTop = false;
+                                    let inheritedTop: Undef<boolean>;
                                     const previous = previousSiblings[q - 1];
                                     if (isBlockElement(previous, false)) {
                                         let marginBottom = previous.marginBottom,
@@ -390,8 +390,8 @@ export default class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
                                                 continue;
                                             }
                                         }
-                                        let inheritedBottom = false,
-                                            inherit = previous;
+                                        let inherit = previous,
+                                            inheritedBottom: Undef<boolean>;
                                         while (validAboveChild(inherit, true)) {
                                             let bottomChild = getBottomChild(inherit);
                                             if (bottomChild?.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] === 0) {
@@ -519,7 +519,7 @@ export default class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
                                             }
                                         }
                                         if (marginTop > 0 && previous.floatContainer && current.getBox(BOX_STANDARD.MARGIN_TOP)[1] === 0 && !isVerticalOverflow(previous)) {
-                                            let valid = false;
+                                            let valid: Undef<boolean>;
                                             if (previous.bounds.height === 0) {
                                                 valid = true;
                                             }
@@ -620,7 +620,7 @@ export default class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
         });
         excluded.each(node => {
             if (node.lineBreak && !node.lineBreakTrailing && !clearMap.has(node) && !processed.has(node.id)) {
-                let valid = false;
+                let valid: Undef<boolean>;
                 const previousSiblings = node.previousSiblings({ floating: false });
                 const q = previousSiblings.length;
                 if (q > 0) {

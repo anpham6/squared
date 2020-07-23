@@ -20,8 +20,8 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
         super.processNode(node, parent);
         const mainData = node.data<TableData>(this.name, 'mainData')!;
         const hasWidth = node.hasWidth;
-        let requireWidth = false,
-            multiline = false;
+        let requireWidth: Undef<boolean>,
+            multiline: Undef<boolean>;
         if (mainData.columnCount > 1) {
             requireWidth = mainData.expand;
             node.each((item: T) => {

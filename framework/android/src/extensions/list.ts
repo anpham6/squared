@@ -45,8 +45,8 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 minWidth = node.marginLeft,
                 marginLeft = 0,
                 columnCount = 0,
-                adjustPadding = false,
-                wrapped = false,
+                adjustPadding: Undef<boolean>,
+                wrapped: Undef<boolean>,
                 container: Undef<T>;
             if (parent.layoutGrid) {
                 columnCount = parseInt(parent.android('columnCount')) || 1;
@@ -58,7 +58,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             if (adjustPadding) {
                 minWidth += parent.paddingLeft > 0 ? parent.paddingLeft : parent.marginLeft;
             }
-            let ordinal = value === '' ? node.find((item: T) => item.float === 'left' && item.marginLeft < 0 && Math.abs(item.marginLeft) <= item.documentParent.marginLeft) as Undef<T> : undefined;
+            let ordinal = !value ? node.find((item: T) => item.float === 'left' && item.marginLeft < 0 && Math.abs(item.marginLeft) <= item.documentParent.marginLeft) as Undef<T> : undefined;
             if (ordinal) {
                 if (columnCount === 3) {
                     node.android('layout_columnSpan', '2');

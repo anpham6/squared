@@ -1563,7 +1563,7 @@ export function parseSelectorText(value: string, document?: boolean) {
     value = document ? value.trim() : trimSelector(value.trim());
     if (value.includes(',')) {
         let normalized = value,
-            found = false,
+            found: Undef<boolean>,
             match: Null<RegExpExecArray>;
         while (match = CSS.SELECTOR_ATTR.exec(normalized)) {
             const index = match.index;
@@ -2605,7 +2605,7 @@ export function checkMediaRule(value: string, fontSize?: number) {
             while (match = pattern.exec(value)) {
                 const patternCondition = /\(([a-z-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?:\s+and\s+)?/g;
                 const negate = match[1] === 'not';
-                let valid = false,
+                let valid: Undef<boolean>,
                     condition: Null<RegExpExecArray>;
                 while (condition = patternCondition.exec(match[2])) {
                     const attr = condition[1];
@@ -3463,7 +3463,7 @@ export function calculate(value: string, options?: CalculateOptions) {
         let index = 0;
         while (true) {
             for (let i = 0; i < closing.length; ++i) {
-                let valid = false,
+                let valid: Undef<boolean>,
                     j = closing[i] - 1;
                 for ( ; j >= 0; j--) {
                     if (opening[j]) {
@@ -3484,7 +3484,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                     if (options) {
                         ({ boundingSize, min, max, unitType, fontSize } = options);
                     }
-                    let found = false,
+                    let found: Undef<boolean>,
                         operand: Undef<string>,
                         operator: Undef<string>;
                     const seg: number[] = [];

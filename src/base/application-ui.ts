@@ -463,7 +463,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             const preAlignment: ObjectIndex<StringMap> = {};
             const direction = new Set<HTMLElement>();
             const pseudoElements: T[] = [];
-            let resetBounds = false;
+            let resetBounds: Undef<boolean>;
             cache.each(item => {
                 if (item.styleElement) {
                     const element = item.element as HTMLElement;
@@ -889,7 +889,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             ++k;
                         }
                         traverse: {
-                            let floatActive = false,
+                            let floatActive: Undef<boolean>,
                                 floating: Undef<boolean>;
                             for ( ; j < q; ++j, ++k) {
                                 const item = axisY[j];
@@ -1034,7 +1034,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         let combined = descendant
                             ? renderExtension?.concat(descendant as ExtensionUI<T>[]) || descendant
                             : renderExtension;
-                        let next = false;
+                        let next: Undef<boolean>;
                         if (combined) {
                             const r = combined.length;
                             let j = 0;
@@ -1213,9 +1213,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             leftSub: Undef<T[] | T[][]>,
             rightSub: Undef<T[] | T[][]>,
             inlineBelow: Undef<T[]>,
-            inheritStyle = false,
-            clearing = false,
-            clearedFloat = false,
+            inheritStyle: Undef<boolean>,
+            clearing: Undef<boolean>,
+            clearedFloat: Undef<boolean>,
             boxStyle: Undef<StandardMap>;
         layout.each((node, index) => {
             const float = node.float;
@@ -1436,8 +1436,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const floatedRows: Null<T[]>[] = [];
         const current: T[] = [];
         const floated: T[] = [];
-        let clearReset = false,
-            blockArea = false,
+        let clearReset: Undef<boolean>,
+            blockArea: Undef<boolean>,
             layoutVertical = true;
         layout.each(node => {
             if (node.blockStatic && floated.length === 0) {
@@ -1656,7 +1656,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                         else {
                             const pattern = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s+([a-z-]+))?\)|(counters)\(([^,]+),\s+"([^"]*)"(?:,\s+([a-z-]+))?\)|"([^"]+)")\s*/g;
-                            let found = false,
+                            let found: Undef<boolean>,
                                 match: Null<RegExpExecArray>;
                             while (match = pattern.exec(value)) {
                                 const attr = match[1];
@@ -1673,7 +1673,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     const subcounter: number[] = [];
                                     let current: Null<HTMLElement> = element,
                                         counter = initialValue,
-                                        ascending = false,
+                                        ascending: Undef<boolean>,
                                         lastResetElement: Undef<Element>;
                                     const incrementCounter = (increment: number, pseudo: boolean) => {
                                         if (subcounter.length === 0) {

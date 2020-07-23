@@ -33,7 +33,7 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                             const id = node.elementId;
                             [node.nextSibling, node.previousSibling].some((sibling: Null<T>) => {
                                 if (sibling?.pageFlow && !sibling.visibleStyle.backgroundImage && sibling.visible) {
-                                    let valid = false;
+                                    let valid: Undef<boolean>;
                                     if (id && id === sibling.toElementString('htmlFor')) {
                                         valid = true;
                                     }
@@ -68,7 +68,7 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                     case 'BUTTON':
                         if (node.length > 0) {
                             let { width, height } = node.bounds;
-                            let modified = false;
+                            let modified: Undef<boolean>;
                             node.cascade((item: T) => {
                                 if (item.width >= width && item.height >= height) {
                                     ({ width, height } = item);

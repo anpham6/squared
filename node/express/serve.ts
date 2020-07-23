@@ -526,7 +526,7 @@ let Node: serve.INode,
         minifyHtml(format: string, value: string) {
             const html = this.external?.html;
             if (html) {
-                let valid = false;
+                let valid: Undef<boolean>;
                 const formatters = format.split('+');
                 for (let j = 0, length = formatters.length; j < length; ++j) {
                     const name = formatters[j].trim();
@@ -606,7 +606,7 @@ let Node: serve.INode,
         minifyCss(format: string, value: string) {
             const css = this.external?.css;
             if (css) {
-                let valid = false;
+                let valid: Undef<boolean>;
                 const formatters = format.split('+');
                 for (let j = 0, length = formatters.length; j < length; ++j) {
                     const name = formatters[j].trim();
@@ -681,7 +681,7 @@ let Node: serve.INode,
         minifyJs(format: string, value: string) {
             const js = this.external?.js;
             if (js) {
-                let valid = false;
+                let valid: Undef<boolean>;
                 const formatters = format.split('+');
                 for (let j = 0, length = formatters.length; j < length; ++j) {
                     const name = formatters[j].trim();
@@ -766,7 +766,7 @@ let Node: serve.INode,
             return undefined;
         }
         removeCss(source: string, styles: string[]) {
-            let found = false,
+            let found: Undef<boolean>,
                 output: Undef<string>,
                 pattern: Undef<RegExp>,
                 match: Null<RegExpExecArray>;
@@ -1223,7 +1223,7 @@ class FileManager implements serve.IFileManager {
                     const segment = match[0];
                     const script = match[2].toLowerCase() === 'script';
                     const location = Express.getAbsoluteUrl(match[5].split('::')[0].trim(), baseUri);
-                    let appending = false;
+                    let appending: Undef<boolean>;
                     if (match[4] === 'export') {
                         appending = new RegExp(`<${script ? 'script' : 'link'}[^>]+?(?:${script ? 'src' : 'href'}=(["'])${location}\\1|data-chrome-file="saveAs:${location}[:"])[^>]*>`, 'i').test(html);
                     }
@@ -2151,7 +2151,7 @@ app.post('/api/assets/copy', (req, res) => {
         if (!Node.checkPermissions(res, dirname)) {
             return;
         }
-        let cleared = false;
+        let cleared: Undef<boolean>;
         const manager = new FileManager(dirname, req.body as ExpressAsset[], function(this: FileManager, filepath?: string) {
             if (this.delayed === Infinity) {
                 return;
@@ -2205,8 +2205,8 @@ app.post('/api/assets/archive', (req, res) => {
     let append_to = req.query.append_to as string,
         zipname = '',
         format: archiver.Format,
-        cleared = false,
-        formatGzip = false;
+        cleared: Undef<boolean>,
+        formatGzip: Undef<boolean>;
     if (path.isAbsolute(append_to)) {
         append_to = path.normalize(append_to);
     }

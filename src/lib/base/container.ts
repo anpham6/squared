@@ -198,7 +198,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
                 }
             }
         }
-        let invalid = false;
+        let invalid: Undef<boolean>;
         const recurse = (container: Container<T>): Undef<T> => {
             const children = container.children;
             const length = end ?? children.length;
@@ -242,7 +242,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         if (options) {
             ({ also, error } = options);
         }
-        let invalid = false;
+        let invalid: Undef<boolean>;
         const recurse = (container: Container<T>) => {
             let result: T[] = [];
             const children = container.children;

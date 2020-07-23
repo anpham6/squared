@@ -379,7 +379,7 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
                         case 'BUTTON': {
                             const form = child.ascend({ condition: item => item.tagName === 'FORM' })[0];
                             if (form) {
-                                let valid = false;
+                                let valid: Undef<boolean>;
                                 const element = child.element as HTMLElement;
                                 iterateArray(form.element!.querySelectorAll('*'), (item: HTMLInputElement) => {
                                     switch (item.tagName) {
@@ -2441,7 +2441,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     result = isPx(value) ? parseFloat(value) : this.parseUnit(value);
                 }
                 else if (this.styleElement) {
-                    let valid = false;
+                    let valid: Undef<boolean>;
                     switch (value) {
                         case 'baseline':
                             break;

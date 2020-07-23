@@ -31,7 +31,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                 inlineVertical = true,
                 floating = true,
                 blockAlternate = true,
-                bulletVisible = false,
+                bulletVisible: Undef<boolean>,
                 floated: Undef<Set<string>>;
             for (let i = 0; i < length; ++i) {
                 const item = children[i] as T;
@@ -67,7 +67,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                     return false;
                 }
             }
-            return bulletVisible && (blockStatic || inlineVertical || floated?.size === 1 || blockAlternate);
+            return bulletVisible === true && (blockStatic || inlineVertical || floated?.size === 1 || blockAlternate);
         }
         return false;
     }
@@ -77,9 +77,9 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
         let i = ordered && node.toElementInt('start') || 1;
         node.each((item: T) => {
             const mainData: ListData = {};
+            item.data(this.name, 'mainData', mainData);
             if (isListItem(item) || hasSingleImage(item.visibleStyle)) {
-                const listItem = item.display === 'list-item';
-                const type = listItem ? item.css('listStyleType') : 'none';
+                const type = item.display === 'list-item' ? item.css('listStyleType') : 'none';
                 if (item.has('listStyleImage')) {
                     mainData.imageSrc = item.css('listStyleImage');
                 }
@@ -111,7 +111,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                                     mainData.imagePosition = position;
                                     item.exclude({ resource: NODE_RESOURCE.IMAGE_SOURCE });
                                 }
-                                break;
+                                return;
                             }
                             default:
                                 ordinal = '○';
@@ -125,7 +125,6 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 ++i;
             }
-            item.data(this.name, 'mainData', mainData);
         });
         return undefined;
     }

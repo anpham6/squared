@@ -95,11 +95,11 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
             const item = items[i++];
             const { alignSelf, basis, shrink, grow } = item.flexbox;
             const dimension = item.bounds[attr];
-            let growPercent = false;
+            let growPercent: Undef<boolean>;
             if (grow > 0 || shrink !== 1) {
                 const value = item.parseUnit(basis === 'auto' ? item.css(attr) : basis, { dimension: attr });
                 if (value > 0) {
-                    let largest = false;
+                    let largest: Undef<boolean>;
                     if (dimension < value) {
                         if (isNaN(maxRatio) || shrink < maxRatio) {
                             maxRatio = shrink;
@@ -749,7 +749,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, marginBottom);
                     }
                     if (horizontal || column) {
-                        let centered = false;
+                        let centered: Undef<boolean>;
                         if (justified) {
                             switch (justifyContent) {
                                 case 'normal':

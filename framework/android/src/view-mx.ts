@@ -486,7 +486,7 @@ function transferLayoutAlignment(node: T, replaceWith: T) {
 function finalizeGravity(node: T, attr: string) {
     const direction = getGravityValues(node, attr);
     if (direction && direction.length > 1) {
-        let modified = false;
+        let modified: Undef<boolean>;
         if (checkMergableGravity('center', direction)) {
             modified = true;
         }
@@ -836,7 +836,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 setConstraintPercent(node, parseFloat(basis) / 100, horizontal, NaN);
             }
             else {
-                let flexible = false;
+                let flexible: Undef<boolean>;
                 if (node.hasFlex(horizontal ? 'row' : 'column')) {
                     flexible = setFlexGrow(
                         node,
@@ -2148,8 +2148,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public combine(...objs: string[]) {
             const all = objs.length === 0;
             const result: string[] = [];
-            let requireId = false,
-                id = '';
+            let id = '',
+                requireId: Undef<boolean>;
             for (const name in this._namespaces) {
                 if (all || objs.includes(name)) {
                     const obj = this._namespaces[name];
@@ -2365,7 +2365,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             });
                         }
                         else {
-                            let previousMultiline = false;
+                            let previousMultiline: Undef<boolean>;
                             const horizontalRows = this.horizontalRows || [renderChildren];
                             for (let i = 0, q = horizontalRows.length; i < q; ++i) {
                                 const row = horizontalRows[i];
@@ -2441,9 +2441,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 if (this.has('transform')) {
                     const transforms = parseTransform(this.css('transform'), { accumulate: true, boundingBox: this.bounds, fontSize: this.fontSize });
-                    let pivoted = false,
-                        offsetX = 0,
-                        offsetY = 0;
+                    let offsetX = 0,
+                        offsetY = 0,
+                        pivoted: Undef<boolean>;
                     let i = 0;
                     while (i < transforms.length) {
                         const item = transforms[i++];
