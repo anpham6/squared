@@ -121,32 +121,19 @@ interface LayoutType {
     renderType?: number;
 }
 
-interface LayoutOptions<T> extends Partial<LayoutType> {
-    parent: T;
-    node: T;
-    containerType?: number;
-    alignmentType?: number;
-    children?: T[];
-    itemCount?: number;
-    rowCount?: number;
-    columnCount?: number;
+interface ResourceAssetMap {
+    fonts: Map<string, FontFaceData[]>;
+    image: Map<string, ImageAsset>;
+    video: Map<string, Asset>;
+    audio: Map<string, Asset>;
+    rawData: Map<string, RawAsset>;
 }
 
-interface CreateNodeOptions {
-    element: Element;
-}
-
-interface CreateNodeUIOptions<T> {
-    parent?: T;
-    element?: Null<Element>;
-    children?: T[];
-    innerWrap?: T;
-    append?: boolean;
-    delegate?: boolean;
-    cascade?: boolean;
-}
-
-interface CreateNodeGroupUIOptions<T> {
-    delegate?: boolean;
-    cascade?: boolean;
+interface ResourceStoredMap {
+    ids: Map<string, string[]>;
+    strings: Map<string, string>;
+    arrays: Map<string, string[]>;
+    fonts: Map<string, ObjectMap<string>>;
+    colors: Map<string, string>;
+    images: Map<string, StringMap>;
 }

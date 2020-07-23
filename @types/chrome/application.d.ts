@@ -9,8 +9,9 @@ interface FileUniversalAttribute {
     removeUnusedStyles?: boolean;
 }
 
-interface ChromeFileActionOptions extends squared.base.FileActionOptions, FileActionAttribute, FileUniversalAttribute {}
-
-interface ChromeFileCopyingOptions extends squared.base.FileCopyingOptions, ChromeFileActionOptions {}
-
-interface ChromeFileArchivingOptions extends squared.base.FileArchivingOptions, ChromeFileActionOptions {}
+interface FileActionAttribute {
+    name?: string;
+    rel?: string;
+    saveAs?: { html?: SaveAsOptions; script?: SaveAsOptions; link?: SaveAsOptions; base64?: SaveAsOptions };
+    preserveCrossOrigin?: boolean;
+}

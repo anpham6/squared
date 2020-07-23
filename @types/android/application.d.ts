@@ -32,14 +32,6 @@ interface AndroidResourceStoredMap extends ResourceStoredMap {
     animators: Map<string, string>;
 }
 
-interface FileUniversalOptions extends squared.base.FileCopyingOptions, squared.base.FileArchivingOptions {}
-
-interface GuidelineOptions {
-    orientation?: OrientationAttr;
-    percent?: boolean;
-    opposing?: boolean;
-}
-
 interface RenderSpaceAttribute extends ViewAttribute {
     width?: string;
     height?: string;

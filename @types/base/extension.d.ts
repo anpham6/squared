@@ -1,11 +1,3 @@
-interface ExtensionOptions {
-    dependencies?: ExtensionDependency[];
-}
-
-interface ExtensionUIOptions extends ExtensionOptions {
-    tagNames?: string[];
-}
-
 interface CssGridData<T> {
     children: T[];
     row: CssGridDirectionData;

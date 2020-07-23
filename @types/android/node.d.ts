@@ -12,21 +12,6 @@ interface AndroidSupportUI extends SupportUI {
     maxDimension: boolean;
 }
 
-interface AndroidCloneOptions {
-    position?: boolean;
-    attributes?: boolean;
-}
-
-interface CreateNodeWrapperUIOptions<T> extends ExcludeOptions {
-    children?: T[];
-    containerType?: number;
-    alignmentType?: number;
-    cascade?: boolean;
-    resetMargin?: boolean;
-    inheritDataset?: boolean;
-    inheritContentBox?: boolean;
-}
-
 interface ViewAttribute extends ObjectMap<any> {
     android: StringMap;
     app?: StringMap;
