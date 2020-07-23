@@ -166,19 +166,20 @@ function getExclusionValue(enumeration: {}, offset: number, value?: string) {
 }
 
 function isBaselineElement(node: T) {
-    switch (node.css('verticalAlign')) {
-        case 'baseline':
-            return true;
-        case 'initial':
-            switch (node.tagName) {
-                case 'SUP':
-                case 'SUB':
-                    return false;
-            }
-            return true;
-        default:
-            return false;
+    if (!node.floating) {
+        switch (node.css('verticalAlign')) {
+            case 'baseline':
+                return true;
+            case 'initial':
+                switch (node.tagName) {
+                    case 'SUP':
+                    case 'SUB':
+                        return false;
+                }
+                return true;
+        }
     }
+    return false;
 }
 
 const hasTextIndent = (node: T) => node.blockDimension || node.display === 'table-cell';

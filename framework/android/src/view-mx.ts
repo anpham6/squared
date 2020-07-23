@@ -2328,21 +2328,24 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 const length = renderChildren.length;
                 if (this.layoutLinear) {
                     if (this.layoutVertical) {
-                        if (!renderParent.layoutFrame && !this.documentRoot && length > 0 && (this.baselineElement || !renderChildren[0].multiline && renderChildren.every(node => node.textElement))) {
-                            this.android('baselineAlignedChildIndex', '0');
+                        if ((renderParent.layoutHorizontal || renderParent.layoutGrid || this.alignSibling('baseline') !== '' || this.baselineActive) && (this.baselineElement || renderChildren[0].baselineElement) && !this.documentRoot) {
+                            this.android('baselineAlignedChildIndex', '0', false);
                         }
                     }
                     else {
-                        let baseline = true;
-                        if (renderChildren.some(node => node.floating) && !renderChildren.some(node => node.imageElement && node.baseline)) {
+                        let baseline: Undef<boolean>;
+                        if ((this.floatContainer || this.nodeGroup && (this.hasAlign(NODE_ALIGNMENT.FLOAT) || renderChildren.some(node => node.floating))) && !renderChildren.some(node => node.imageElement && node.baseline)) {
                             this.android('baselineAligned', 'false');
                             baseline = false;
+                        }
+                        else {
+                            baseline = true;
                         }
                         for (let i = 0; i < length; ++i) {
                             const item = renderChildren[i];
                             item.setSingleLine(i > 0 && i === length - 1);
                             if (baseline && item.baselineElement) {
-                                this.android('baselineAlignedChildIndex', i.toString());
+                                this.android('baselineAlignedChildIndex', i.toString(), false);
                                 baseline = false;
                             }
                         }
@@ -2497,7 +2500,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                     }
                 }
-                if (this.onlyChild && length > 0 && this.controlName ===  renderParent.controlName && !this.visibleStyle.borderWidth && this.elementId === '') {
+                if (length > 0 && this.onlyChild && this.controlName ===  renderParent.controlName && !this.visibleStyle.borderWidth && this.elementId === '') {
                     let valid = true;
                     for (const name in this._namespaces) {
                         const parentObj = renderParent.unsafe<StringMap>('namespaces')![name];
