@@ -92,7 +92,7 @@
   },
   "homepage": "https://github.com/anpham6/squared#readme",
   "dependencies": {
-    "archiver": "^4.0.2",
+    "archiver": "^5.0.0",
     "chalk": "^4.1.0",
     "cors": "^2.8.5",
     "decompress": "^4.2.1",

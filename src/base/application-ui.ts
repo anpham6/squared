@@ -1111,13 +1111,17 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                     }
                     if (!nodeY.rendered && nodeY.hasSection(APP_SECTION.RENDER)) {
-                        let layout = this.createLayoutControl(parentY, nodeY);
+                        const layout = this.createLayoutControl(parentY, nodeY);
                         if (layout.containerType === 0) {
-                            const result: squared.base.LayoutResult<T> = nodeY.length > 0 ? controllerHandler.processUnknownParent(layout) : controllerHandler.processUnknownChild(layout);
-                            if (result.next) {
+                            if (nodeY.length > 0) {
+                                controllerHandler.processUnknownParent(layout);
+                            }
+                            else {
+                                controllerHandler.processUnknownChild(layout);
+                            }
+                            if (layout.next) {
                                 continue;
                             }
-                            layout = result.layout;
                         }
                         this.addLayout(layout);
                     }

@@ -500,7 +500,7 @@ const sortTemplateStandard = (a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>
 const hasCleared = (layout: LayoutUI<View>, clearMap: Map<View, string>, ignoreFirst = true) => clearMap.size > 0 && layout.some((node, index) => (index > 0 || !ignoreFirst) && clearMap.has(node));
 const isMultiline = (node: View) => node.plainText && Resource.hasLineBreak(node, false, true) || node.preserveWhiteSpace && /^\s*\n+/.test(node.textContent);
 const getMaxHeight = (node: View) => Math.max(node.actualHeight, node.lineHeight);
-const isUnknownParent = (parent: View, value: number, length: number) => parent.containerType === value && parent.length === length && (parent.alignmentType === 0 || parent.hasAlign(NODE_ALIGNMENT.UNKNOWN));
+const isUnknownParent = (node: View, containerType: number, length: number) => node.containerType === containerType && node.length === length && (node.alignmentType === 0 || node.hasAlign(NODE_ALIGNMENT.UNKNOWN));
 const isMultilineGroup = (node: View) => node.contentAltered && !node.naturalChild && node.inlineText;
 
 function getBoxWidth(this: Controller<View>, node: View) {
@@ -933,11 +933,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public processUnknownParent(layout: LayoutUI<T>) {
         const node = layout.node;
-        const tagName = node.tagName;
-        if (tagName === 'OBJECT' || tagName === 'EMBED') {
-            setObjectContainer(layout);
+        switch (node.tagName) {
+            case 'OBJECT':
+            case 'EMBED':
+                setObjectContainer(layout);
+                return;
         }
-        else if (layout.some(item => !item.pageFlow && !item.autoPosition)) {
+        if (layout.some(item => !item.pageFlow && !item.autoPosition)) {
             layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.ABSOLUTE | NODE_ALIGNMENT.UNKNOWN);
         }
         else if (layout.length <= 1) {
@@ -979,7 +981,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 layout.addAlign(NODE_ALIGNMENT.SINGLE);
             }
             else {
-                return this.processUnknownChild(layout);
+                this.processUnknownChild(layout);
             }
         }
         else if (Resource.hasLineBreak(node, true)) {
@@ -1041,7 +1043,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.UNKNOWN);
             }
         }
-        return { layout };
     }
 
     public processUnknownChild(layout: LayoutUI<T>) {
@@ -1070,7 +1071,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             !node.use)
         {
             node.hide();
-            return { layout, next: true };
+            layout.next = true;
         }
         else {
             switch (node.tagName)  {
@@ -1078,7 +1079,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 case 'OUTPUT':
                     layout.setContainerType(CONTAINER_NODE.TEXT);
                     break;
-                default: {
+                default:
                     if (node.textContent !== '' && (background || !node.pageFlow || node.pseudoElement && getPseudoElt(node.element as Element, node.sessionId) === '::after')) {
                         layout.setContainerType(CONTAINER_NODE.TEXT);
                         node.inlineText = true;
@@ -1087,10 +1088,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         layout.setContainerType(CONTAINER_NODE.FRAME);
                         node.exclude({ resource: NODE_RESOURCE.VALUE_STRING });
                     }
-                }
+                    break;
             }
         }
-        return { layout };
     }
 
     public processTraverseHorizontal(layout: LayoutUI<T>, siblings: T[]) {
@@ -2165,15 +2165,24 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public createNodeGroup(node: T, children: T[], parent?: T, options?: CreateNodeGroupUIOptions<T>) {
-        const group = new ViewGroup(this.application.nextId, node, children) as T;
+        let delegate: Undef<boolean>,
+            cascade: Undef<boolean>;
+        if (options) {
+            ({ delegate, cascade } = options);
+        }
+        const group = new ViewGroup(this.application.nextId, node, children, parent) as T;
         this.afterInsertNode(group);
         if (parent) {
-            parent.replaceTry({ child: node, replaceWith: group, notFoundAppend: true });
+            if (!parent.contains(group)) {
+                parent.add(group);
+                group.init(parent, node.depth);
+                group.containerIndex = parent.length - 1;
+            }
         }
         else {
             group.containerIndex = node.containerIndex;
         }
-        this.application.getProcessingCache(node.sessionId).add(group, options?.delegate === true, options?.cascade === true);
+        this.application.getProcessingCache(node.sessionId).add(group, delegate === true, cascade === true);
         return group;
     }
 

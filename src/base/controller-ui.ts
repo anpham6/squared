@@ -85,8 +85,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     private _unsupportedTagName!: Set<string>;
     private _settingsStyle!: ControllerSettingsStyleUI;
 
-    public abstract processUnknownParent(layout: squared.base.LayoutUI<T>): squared.base.LayoutResult<T>;
-    public abstract processUnknownChild(layout: squared.base.LayoutUI<T>): squared.base.LayoutResult<T>;
+    public abstract processUnknownParent(layout: squared.base.LayoutUI<T>): squared.base.LayoutUI<T>;
+    public abstract processUnknownChild(layout: squared.base.LayoutUI<T>): squared.base.LayoutUI<T>;
     public abstract processTraverseHorizontal(layout: squared.base.LayoutUI<T>, siblings: T[]): Undef<squared.base.LayoutUI<T>>;
     public abstract processTraverseVertical(layout: squared.base.LayoutUI<T>, siblings: T[]): Undef<squared.base.LayoutUI<T>>;
     public abstract processLayoutHorizontal(layout: squared.base.LayoutUI<T>): squared.base.LayoutUI<T>;

@@ -120,7 +120,10 @@ declare namespace base {
         get support(): AndroidSupportUI;
     }
 
-    class ViewGroup extends View {}
+    class ViewGroup extends View {
+        retainAs(children: View[], node?: View, parent?: View): this;
+        constructor(id: number, node: View, children: View[], parent?: View);
+    }
 }
 
 declare namespace extensions {

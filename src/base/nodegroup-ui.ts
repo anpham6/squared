@@ -5,14 +5,6 @@ import { NODE_ALIGNMENT } from './lib/enumeration';
 const { hasCoords, isLength } = squared.lib.css;
 
 export default abstract class NodeGroupUI extends NodeUI {
-    public init() {
-        if (this.length > 0) {
-            this.setBounds();
-            this.saveAsInitial();
-        }
-        this.dir = this.actualParent?.dir || '';
-    }
-
     public setBounds() {
         if (this.length > 0) {
             this._bounds = NodeUI.outerRegion(this);

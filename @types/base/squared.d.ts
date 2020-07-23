@@ -67,12 +67,6 @@ declare module "base" {
 
     interface AppViewModel extends StandardMap {}
 
-    interface LayoutResult<T extends NodeUI> {
-        layout: LayoutUI<T>;
-        next?: boolean;
-        renderAs?: T;
-    }
-
     interface LayoutRoot<T extends NodeUI> {
         node: T;
         layoutName: string;
@@ -178,8 +172,8 @@ declare module "base" {
         finalize(layouts: FileAsset[]): void;
         evaluateNonStatic(documentRoot: T, cache: NodeList<T>): void;
         visibleElement(element: HTMLElement, sessionId: string, pseudoElt?: string): boolean;
-        processUnknownParent(layout: LayoutUI<T>): LayoutResult<T>;
-        processUnknownChild(layout: LayoutUI<T>): LayoutResult<T>;
+        processUnknownParent(layout: LayoutUI<T>): void;
+        processUnknownChild(layout: LayoutUI<T>): void;
         processTraverseHorizontal(layout: LayoutUI<T>, siblings: T[]): Undef<LayoutUI<T>>;
         processTraverseVertical(layout: LayoutUI<T>, siblings: T[]): Undef<LayoutUI<T>>;
         processLayoutHorizontal(layout: LayoutUI<T>): LayoutUI<T>;
@@ -345,6 +339,7 @@ declare module "base" {
         columnCount?: number;
         renderType?: number;
         renderIndex?: number;
+        next?: boolean;
         init(): void;
         setContainerType(containerType: number, alignmentType?: number): void;
         addAlign(value: number): number;

@@ -22,6 +22,7 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
     public columnCount?: number;
     public renderType?: number;
     public renderIndex?: number;
+    public next?: boolean;
 
     private _initialized?: boolean;
     private _itemCount?: number;
