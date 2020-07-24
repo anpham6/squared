@@ -9,4 +9,4 @@
 /// <reference path="options.d.ts" />
 /// <reference path="resource.d.ts" />
 
-type OrientationAttr = 'horizontal' | 'vertical';
+type OrientationAttr = "horizontal" | "vertical";

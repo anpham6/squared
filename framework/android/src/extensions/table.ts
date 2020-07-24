@@ -59,8 +59,8 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                         }
                     }
                 }
-                if (item.tagName === 'TD') {
-                    item.setSingleLine(true);
+                if (item.tagName === 'TD' && item.textElement && !item.multiline && !/[\s\n-]/.test(item.textContent.trim())) {
+                    item.android('maxLines', '1');
                 }
                 setLayoutHeight(item);
             });

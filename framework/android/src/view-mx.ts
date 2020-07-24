@@ -546,7 +546,7 @@ function setBoxModel(node: T, attrs: string[], boxReset: BoxModel, boxAdjustment
                             const inner = node.bounds.right;
                             if (Math.floor(inner) > outer) {
                                 if (!node.onlyChild && !node.alignParent('left')) {
-                                    node.setSingleLine(true);
+                                    node.setSingleLine(true, true);
                                 }
                                 continue;
                             }
@@ -2343,7 +2343,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                         for (let i = 0; i < length; ++i) {
                             const item = renderChildren[i];
-                            item.setSingleLine(i > 0 && i === length - 1);
+                            if (item.textElement && item.textContent.length > 1) {
+                                item.android('maxLines', '1');
+                                if (i === length - 1) {
+                                    item.android('ellipsize', 'end');
+                                }
+                            }
                             if (baseline && item.baselineElement) {
                                 this.android('baselineAlignedChildIndex', i.toString(), false);
                                 baseline = false;
@@ -2553,13 +2558,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
         }
 
-        public setSingleLine(ellipsize?: boolean) {
-            if (this.textElement && (this.naturalChild || this.plainText) && (ellipsize || !this.hasPX('width'))) {
-                const parent = this.actualParent;
-                if (parent?.preserveWhiteSpace === false && parent.tagName !== 'CODE' && (!this.multiline || parent.css('whiteSpace') === 'nowrap')) {
+        public setSingleLine(maxLines: boolean, ellipsize?: boolean) {
+            if (this.textElement && (this.plainText || !this.hasPX('width')) && this.textContent.length > 1) {
+                if (maxLines) {
                     this.android('maxLines', '1');
                 }
-                if (ellipsize && this.textContent.trim().length > 1) {
+                if (ellipsize) {
                     this.android('ellipsize', 'end');
                 }
             }

@@ -497,7 +497,7 @@ function canAlignPosition(node: View, item: View, horizontal: boolean) {
     return true;
 }
 
-const relativeWrapWidth = (node: View, bounds: BoxRectDimension, boxWidth: number, rowLength: number, textIndent: number, floatedWidth: number, rowWidth: number) => Math.floor(floatedWidth + rowWidth + bounds.width - (node.inlineStatic && node.styleElement ? node.contentBoxWidth : 0)) > Math.ceil(boxWidth + (rowLength === 1 ? -textIndent : 0));
+const relativeWrapWidth = (node: View, boundsWidth: number, boxWidth: number, rowLength: number, textIndent: number, floatedWidth: number, rowWidth: number) => Math.floor(floatedWidth + rowWidth + boundsWidth - (node.inlineStatic && node.styleElement ? node.contentBoxWidth : 0)) > Math.ceil(boxWidth + (rowLength === 1 ? -textIndent : 0));
 const getAnchorDirection = (reverse = false) => reverse ? ['right', 'left', 'rightLeft', 'leftRight'] : ['left', 'right', 'leftRight', 'rightLeft'];
 const getBaselineAnchor = (node: View) => isBottomAligned(node) ? 'baseline' : 'bottom';
 const hasWidth = (style: CSSStyleDeclaration) => (style.getPropertyValue('width') === '100%' || style.getPropertyValue('min-width') === '100%') && style.getPropertyValue('max-width') === 'none';
@@ -1499,7 +1499,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             const boxWidth = layout.parent.actualBoxWidth();
             let contentWidth = 0;
             for (const node of layout) {
-                if (!(node.naturalChild && node.isEmpty && !node.inputElement && !node.controlElement && !node.positionRelative && node.baseline && !node.verticalAligned && !node.blockVertical && node.zIndex === 0 && node.lineHeight === lineHeight && node.fontSize === fontSize)) {
+                if (!(node.naturalChild && node.isEmpty && !node.positionRelative && node.css('verticalAlign') === 'baseline' && !node.multiline && !node.blockVertical && node.lineHeight === lineHeight && node.fontSize === fontSize && node.zIndex === 0 && !node.inputElement && !node.controlElement)) {
                     return false;
                 }
                 else {
@@ -2377,7 +2377,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         else {
             const children = flattenContainer(node) as T[];
-            const rowsAll: [Undef<T>, T[][]][] = [];
+            const rowsAll: [Undef<T>, T[][], boolean][] = [];
+            const boxParent = node.nodeGroup ? node.documentParent : node;
             let textIndent = 0,
                 rightAligned: Undef<boolean>,
                 centerAligned: Undef<boolean>;
@@ -2392,7 +2393,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
             {
                 const clearMap = this.application.clearMap;
-                const boxParent = node.nodeGroup ? node.documentParent : node;
                 const baseWidth = node.marginLeft + node.marginRight < 0 ? node.marginRight : 0;
                 const lineWrap = node.css('whiteSpace') !== 'nowrap';
                 let boxWidth = boxParent.actualBoxWidth(getBoxWidth.call(this, node)),
@@ -2408,26 +2408,26 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     currentFloated = item;
                     currentFloatedHeight = Math.floor(item.marginTop + item.bounds.height + Math.max(0, item.marginBottom) + (item.positionRelative ? item.hasPX('top') ? item.top : -item.bottom : 0));
                 };
-                const createNewRow = (item: T) => {
+                const createNewRow = (item: T, floating: boolean) => {
                     if (currentFloated) {
                         items = [item];
                         rows.push(items);
                     }
-                    else if (item.floating) {
+                    else if (floating) {
                         items = [];
                         rows = [items];
-                        rowsAll.push([item, rows]);
+                        rowsAll.push([item, rows, true]);
                         setCurrentFloated(item);
                     }
                     else {
                         items = [item];
                         rows = [items];
-                        rowsAll.push([undefined, rows]);
+                        rowsAll.push([undefined, rows, false]);
                     }
                     rowWidth = baseWidth;
                 };
-                const setRowWidth = (item: T, bounds: BoxRectDimension) => {
-                    const linearWidth = item.marginLeft + bounds.width + item.marginRight;
+                const setRowWidth = (item: T, boundsWidth: number) => {
+                    const linearWidth = item.marginLeft + boundsWidth + item.marginRight;
                     if (item !== currentFloated) {
                         rowWidth += linearWidth;
                     }
@@ -2479,36 +2479,41 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         autoPosition = true;
                         continue;
                     }
-                    let { bounds, multiline } = item;
+                    const floating = item.floating;
+                    let boundsWidth: Undef<number>;
                     if (item.styleText && !item.hasPX('width')) {
                         const textBounds = item.textBounds;
                         if (textBounds && (textBounds.numberOfLines as number > 1 || Math.ceil(textBounds.width) < item.box.width)) {
-                            bounds = textBounds;
+                            boundsWidth = textBounds.width;
                         }
                     }
-                    if (multiline && Math.floor(bounds.width) <= boxWidth && !item.hasPX('width') && !isMultiline(item)) {
-                        multiline = false;
-                        item.multiline = false;
+                    if (boundsWidth === undefined) {
+                        boundsWidth = item.bounds.width;
                     }
                     if (start) {
-                        createNewRow(item);
+                        createNewRow(item, floating);
                         start = false;
                     }
                     else {
-                        let textNewRow: Undef<boolean>,
-                            retainMultiline: Undef<boolean>;
+                        let multiline = item.multiline,
+                            textNewRow: Undef<boolean>;
+                        if (multiline && Math.floor(boundsWidth) <= boxWidth && !isMultiline(item)) {
+                            multiline = false;
+                            if (!item.hasPX('width')) {
+                                item.multiline = false;
+                            }
+                        }
                         siblings = item.naturalChild && previous.naturalChild && item.inlineVertical && previous.inlineVertical && item.previousSibling !== previous ? getElementsBetweenSiblings(previous.element, item.element!) : undefined;
                         if (item.textElement) {
-                            if (/^[^\w\s\n]+[\s\n]+$/.test(item.textContent) && !item.floating) {
+                            if (/^[^\w\s\n]+[\s\n]+$/.test(item.textContent) && !floating) {
                                 items.push(item);
-                                setRowWidth(item, bounds);
+                                setRowWidth(item, boundsWidth);
                                 continue;
                             }
                             else {
                                 let checkWidth = lineWrap;
                                 if (previous.textElement) {
                                     if (i === 1 && item.plainText && item.previousSibling === previous && !/^\s+/.test(item.textContent) && !/\s+$/.test(previous.textContent)) {
-                                        retainMultiline = true;
                                         checkWidth = false;
                                     }
                                     else if (lineWrap && previous.multiline && (previous.bounds.width >= boxWidth || item.plainText && Resource.hasLineBreak(previous, false, true))) {
@@ -2517,20 +2522,20 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     }
                                 }
                                 if (checkWidth) {
-                                    textNewRow = relativeWrapWidth(item, bounds, boxWidth, rowsAll.length, textIndent, currentFloatedWidth, rowWidth) || item.actualParent!.tagName !== 'CODE' && (multiline && item.plainText || isMultiline(item));
+                                    textNewRow = relativeWrapWidth(item, boundsWidth, boxWidth, rowsAll.length, textIndent, currentFloatedWidth, rowWidth) || item.actualParent!.tagName !== 'CODE' && (multiline && item.plainText || isMultiline(item));
                                 }
                             }
                         }
                         else {
-                            textNewRow = relativeWrapWidth(item, bounds, boxWidth, rowsAll.length, textIndent, currentFloatedWidth, rowWidth);
+                            textNewRow = relativeWrapWidth(item, boundsWidth, boxWidth, rowsAll.length, textIndent, currentFloatedWidth, rowWidth);
                         }
                         if (previous.floating) {
                             adjustFloatingNegativeMargin(item, previous);
                         }
                         if (textNewRow ||
-                            Math.ceil(item.bounds.top) >= Math.floor(previous.bounds.bottom) && (item.blockStatic || item.blockDimension && item.baseline || item.floating && previous.float === item.float || node.preserveWhiteSpace) ||
-                            !item.floating && (previous.blockStatic || item.siblingsLeading.some(sibling => sibling.excluded && sibling.blockStatic) || siblings?.some(element => causesLineBreak(element))) ||
-                            !currentFloated && item.float === 'right' ||
+                            Math.ceil(item.bounds.top) >= Math.floor(previous.bounds.bottom) && (item.blockStatic || item.blockDimension && item.baseline || floating && previous.float === item.float || node.preserveWhiteSpace) ||
+                            !floating && (previous.blockStatic || item.siblingsLeading.some(sibling => sibling.excluded && sibling.blockStatic) || siblings?.some(element => causesLineBreak(element))) ||
+                            floating && !currentFloated && item.float === 'right' ||
                             previous.autoMargin.horizontal ||
                             clearMap.has(item) ||
                             Resource.checkPreIndent(previous))
@@ -2551,17 +2556,20 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     currentFloatedWidth = 0;
                                 }
                             }
-                            createNewRow(item);
+                            createNewRow(item, floating);
                         }
-                        else if (!currentFloated && item.float === 'left') {
+                        else if (floating && !currentFloated && item.float === 'left') {
                             rowsAll[rowsAll.length - 1][0] = item;
                             setCurrentFloated(item);
                         }
                         else {
-                            items.push(item);
-                            if (multiline && !item.hasPX('width') && !previous.floating && !retainMultiline) {
-                                item.multiline = false;
+                            if (currentFloated !== previous && !previous.hasPX('width')) {
+                                previous.multiline = false;
                             }
+                            if (floating) {
+                                rowsAll[rowsAll.length - 1][2] = true;
+                            }
+                            items.push(item);
                             if (siblings?.some(element => !!getElementAsNode(element, item.sessionId) || causesLineBreak(element)) === true) {
                                 const betweenStart = getRangeClientRect(siblings[0]);
                                 if (betweenStart && !betweenStart.numberOfLines) {
@@ -2573,7 +2581,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                         }
                     }
-                    setRowWidth(item, bounds);
+                    setRowWidth(item, boundsWidth);
                 }
             }
             {
@@ -2581,9 +2589,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const horizontalRows: T[][] = [];
                 const firstLineStyle = node.firstLineStyle;
                 const textAlignLast = length > 1 ? node.textAlignLast : '';
+                const singleLine = !boxParent.preserveWhiteSpace && boxParent.tagName !== 'CODE';
                 let previousBaseline: Null<T> = null;
                 for (let i = 0; i < length; ++i) {
-                    const [currentFloated, rows] = rowsAll[i];
+                    const [currentFloated, rows, floating] = rowsAll[i];
                     let float: Undef<string>;
                     if (currentFloated) {
                         node.floatContainer = true;
@@ -2696,9 +2705,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     textBottom = undefined;
                                 }
                             }
-                            checkBottom = items.some(item => item.floating);
-                            if (checkBottom) {
+                            if (floating) {
                                 sortHorizontalFloat(items);
+                                checkBottom = true;
                             }
                             const baselineAlign: T[] = [];
                             for (let k = 0; k < r; ++k) {
@@ -2758,8 +2767,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                         setAlignLeft();
                                     }
                                 }
-                                if (item.textElement) {
-                                    item.setSingleLine(k === r - 1 && !item.rightAligned && !item.centerAligned);
+                                if (singleLine) {
+                                    item.setSingleLine(true, k === r - 1);
                                 }
                                 if (item === baseline || item.baselineAltered || item === textBottom) {
                                     continue;
@@ -3064,8 +3073,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 if (!rightAligned) {
                                     setTextIndent(baseline);
                                 }
-                                if (baseline.textElement) {
-                                    baseline.setSingleLine(true);
+                                if (singleLine && i < length - 1 && !baseline.lineBreakTrailing && !baseline.multiline) {
+                                    baseline.setSingleLine(true, true);
                                 }
                                 baseline.horizontalRowStart = true;
                                 baseline.horizontalRowEnd = true;
@@ -3472,12 +3481,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 let found: Undef<T>;
                                 let k = j - 2;
                                 while (k >= 0) {
-                                    found = seg[k--];
-                                    if (found.pageFlow) {
+                                    const item = seg[k--];
+                                    if (item.pageFlow) {
+                                        found = item;
                                         break;
-                                    }
-                                    else {
-                                        found = undefined;
                                     }
                                 }
                                 if (found) {

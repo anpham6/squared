@@ -216,7 +216,7 @@ function setBorderStyle(node: NodeUI, boxStyle: BoxStyle, attr: string, border: 
     return false;
 }
 
-function setBackgroundOffset(node: NodeUI, boxStyle: BoxStyle, attr: 'backgroundClip' | 'backgroundOrigin') {
+function setBackgroundOffset(node: NodeUI, boxStyle: BoxStyle, attr: "backgroundClip" | "backgroundOrigin") {
     let value = node.css(attr);
     if (value === 'initial') {
         value = attr === 'backgroundClip' ? 'border-box' : 'padding-box';
