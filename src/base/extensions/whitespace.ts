@@ -635,17 +635,20 @@ export default class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
                             offset: number;
                         if (above.rendered && below.rendered) {
                             const inline = above.inlineStatic && below.inlineStatic;
-                            if (inline && previousSiblings.length === 0) {
-                                processed.add(node.id);
-                                return;
-                            }
                             if (inline) {
-                                aboveLineBreak = previousSiblings[0] as T;
-                                if (previousSiblings.length === 1) {
-                                    aboveLineBreak = aboveLineBreak.lineBreak ? node : undefined;
+                                if (q === 1) {
+                                    processed.add(node.id);
+                                    return;
                                 }
-                                if (aboveLineBreak) {
-                                    aboveLineBreak.setBounds(false);
+                                else if (q > 1) {
+                                    aboveLineBreak = previousSiblings[0] as T;
+                                    if (aboveLineBreak.lineBreak) {
+                                        aboveLineBreak = node;
+                                        aboveLineBreak.setBounds(false);
+                                    }
+                                    else {
+                                        aboveLineBreak = undefined;
+                                    }
                                 }
                             }
                             let aboveParent = above.renderParent,

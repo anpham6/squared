@@ -2394,7 +2394,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const clearMap = this.application.clearMap;
                 const boxParent = node.nodeGroup ? node.documentParent : node;
                 const baseWidth = node.marginLeft + node.marginRight < 0 ? node.marginRight : 0;
-                const lineWrap = boxParent.css('whiteSpace') !== 'nowrap';
+                const lineWrap = node.css('whiteSpace') !== 'nowrap';
                 let boxWidth = boxParent.actualBoxWidth(getBoxWidth.call(this, node)),
                     rowWidth = baseWidth,
                     rows!: T[][],
@@ -2521,12 +2521,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 }
                             }
                         }
+                        else {
+                            textNewRow = relativeWrapWidth(item, bounds, boxWidth, rowsAll.length, textIndent, currentFloatedWidth, rowWidth);
+                        }
                         if (previous.floating) {
                             adjustFloatingNegativeMargin(item, previous);
                         }
                         if (textNewRow ||
                             Math.ceil(item.bounds.top) >= Math.floor(previous.bounds.bottom) && (item.blockStatic || item.blockDimension && item.baseline || item.floating && previous.float === item.float || node.preserveWhiteSpace) ||
-                            !item.textElement && relativeWrapWidth(item, bounds, boxWidth, rowsAll.length, textIndent, currentFloatedWidth, rowWidth) ||
                             !item.floating && (previous.blockStatic || item.siblingsLeading.some(sibling => sibling.excluded && sibling.blockStatic) || siblings?.some(element => causesLineBreak(element))) ||
                             !currentFloated && item.float === 'right' ||
                             previous.autoMargin.horizontal ||
@@ -3159,10 +3161,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if (!node.hasPX('width') && children.some(item => item.percentWidth > 0)) {
             node.setLayoutWidth('match_parent');
         }
-        const boxTop = node.box.top;
+        const { top: boxTop, width: boxWidth } = node.box;
         const baseline = NodeUI.baseline(children, false, true);
         const [baselineActive, documentId] = baseline ? [baseline.baselineElement && !baseline.imageElement, baseline.documentId] : [false, 'parent'];
-        let percentWidth = View.availablePercent(children, 'width', node.box.width);
+        let percentWidth = View.availablePercent(children, 'width', boxWidth);
         for (let i = 0, length = children.length, start = false; i < length; ++i) {
             const item = children[i];
             if (previous) {
