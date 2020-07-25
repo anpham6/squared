@@ -180,7 +180,8 @@ squared.settings = {
     convertImages: '', // png | jpeg | bmp | squared-apache: gif | tiff
     supportNegativeLeftTop: true,
     fontMeasureWrap: true, // slower rendering performance (alias: android.delegate.multiline)
-    fontMeasureAdjust: 0.75, // 0 < wider | thinner > 0 (element: data-android-font-measure-adjust)
+    fontMeasureAdjust: 0.75, // wider < 0 | thinner > 0 (element: data-android-font-measure-adjust)
+    lineHeightAdjust: 1.1, // shorter < 1 | taller > 1 (element: data-android-line-height-adjust)
     customizationsOverwritePrivilege: true,
     showAttributes: true,
     createElementMap: false,

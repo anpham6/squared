@@ -1,7 +1,7 @@
 type T = Node;
 
 const { USER_AGENT, isUserAgent } = squared.lib.client;
-const { CSS_PROPERTIES, CSS_TRAITS, CSS_UNIT, ELEMENT_BLOCK, checkStyleValue, checkWritingMode, formatPX, getInheritedStyle, getStyle, hasComputedStyle, isAngle, isLength, isPercent, isTime, isPx, parseSelectorText, parseUnit } = squared.lib.css;
+const { CSS_PROPERTIES, CSS_TRAITS, CSS_UNIT, checkStyleValue, checkWritingMode, formatPX, getStyle, hasComputedStyle, isAngle, isLength, isPercent, isTime, isPx, parseSelectorText, parseUnit } = squared.lib.css;
 const { assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { CSS, FILE } = squared.lib.regex;
 const { actualClientRect, actualTextRangeRect, deleteElementCache, getElementAsNode, getElementCache, getPseudoElt, setElementCache } = squared.lib.session;
@@ -35,10 +35,19 @@ function deleteStyleCache(element: HTMLElement, attr: string, sessionId: string)
     }
 }
 
+function parseLineHeight(lineHeight: string, fontSize: number) {
+    if (isPercent(lineHeight)) {
+        return parseFloat(lineHeight) / 100 * fontSize;
+    }
+    else if (isNumber(lineHeight)) {
+        return parseFloat(lineHeight) * fontSize;
+    }
+    return parseUnit(lineHeight, fontSize);
+}
+
 const validateCssSet = (value: string, actualValue: string) => value === actualValue || isLength(value, true) && isPx(actualValue);
 const sortById = (a: T, b: T) => a.id < b.id ? -1 : 1;
 const getFontSize = (style: CSSStyleDeclaration) => parseFloat(style.getPropertyValue('font-size'));
-const isEm = (value: string) => /\dem$/.test(value);
 const isInlineVertical = (value: string) => /^(inline|table-cell)/.test(value);
 
 function setNaturalChildren(node: T): T[] {
@@ -70,13 +79,7 @@ function setNaturalElements(node: T): T[] {
 
 function getFlexValue(node: T, attr: string, fallback: number, parent?: Null<Node>): number {
     const value = (parent || node).css(attr);
-    if (isNumber(value)) {
-        return parseFloat(value);
-    }
-    else if (value === 'inherit' && !parent) {
-        return getFlexValue(node, attr, fallback, node.actualParent);
-    }
-    return fallback;
+    return isNumber(value) ? parseFloat(value) : fallback;
 }
 
 function hasTextAlign(node: T, ...values: string[]) {
@@ -149,7 +152,6 @@ function convertBorderWidth(node: T, dimension: DimensionAttr, border: string[])
     if (!node.plainText) {
         switch (node.css(border[1])) {
             case 'none':
-            case 'initial':
             case 'hidden':
                 return 0;
         }
@@ -219,7 +221,7 @@ function convertBox(node: T, attr: string, margin: boolean) {
 
 function convertPosition(node: T, attr: string) {
     if (!node.positionStatic) {
-        const unit = getInitialValue.call(node, attr, { modified: true });
+        const unit = node.valueOf(attr, { modified: true });
         if (isLength(unit)) {
             return node.parseUnit(unit, { dimension: attr === 'left' || attr === 'right' ? 'width' : 'height' });
         }
@@ -779,10 +781,6 @@ function ascendQuerySelector(node: T, selectors: QueryData[], i: number, index: 
 
 const canTextAlign = (node: T) => node.naturalChild && (node.length === 0 || isInlineVertical(node.display)) && !node.floating && node.autoMargin.horizontal !== true;
 
-function getInitialValue(this: T, attr: string, options?: CssInitialOptions) {
-    return !this._preferInitial && this._styleMap[attr] || this.cssInitial(attr, options);
-}
-
 export default class Node extends squared.lib.base.Container<T> implements squared.base.Node {
     public static readonly TEXT_STYLE = [
         'fontFamily',
@@ -1196,11 +1194,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             value: string;
         while (parent !== null) {
             value = initial ? parent.cssInitial(attr, options) : parent.css(attr);
-            if (value !== '') {
+            if (value !== '' && value !== 'inherit') {
                 return value;
-            }
-            if (parent.documentBody) {
-                break;
             }
             parent = parent.actualParent;
         }
@@ -1274,10 +1269,45 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return 0;
     }
 
-    public cssTry(attr: string, value: string) {
+    public cssTry(attr: string, value: string, callback?: FunctionSelf<this>) {
         if (this.styleElement) {
             const element = this._element as HTMLElement;
-            return setStyleCache(element, attr, this.sessionId, value, getStyle(element).getPropertyValue(attr));
+            if (setStyleCache(element, attr, this.sessionId, value, getStyle(element).getPropertyValue(attr))) {
+                if (callback) {
+                    callback.call(this);
+                    this.cssFinally(attr);
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public cssTryAll(values: StringMap, callback?: FunctionSelf<this>) {
+        if (this.styleElement) {
+            const success: string[] = [];
+            const element = this._element as HTMLElement;
+            const style = getStyle(element);
+            for (const attr in values) {
+                if (setStyleCache(element, attr, this.sessionId, values[attr]!, style.getPropertyValue(attr))) {
+                    success.push(attr);
+                }
+                else {
+                    let i = 0;
+                    while (i < success.length) {
+                        this.cssFinally(success[i++]);
+                    }
+                    return false;
+                }
+            }
+            if (callback) {
+                callback.call(this);
+                this.cssFinally(values);
+                return true;
+            }
+            else {
+                return values;
+            }
         }
         return false;
     }
@@ -1294,28 +1324,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 }
             }
         }
-    }
-
-    public cssTryAll(values: StringMap) {
-        if (this.styleElement) {
-            const success: string[] = [];
-            const element = this._element as HTMLElement;
-            const style = getStyle(element);
-            for (const attr in values) {
-                if (setStyleCache(element, attr, this.sessionId, values[attr]!, style.getPropertyValue(attr))) {
-                    success.push(attr);
-                }
-                else {
-                    let i = 0;
-                    while (i < success.length) {
-                        this.cssFinally(success[i++]);
-                    }
-                    return undefined;
-                }
-            }
-            return values;
-        }
-        return undefined;
     }
 
     public cssCopy(node: T, ...attrs: string[]) {
@@ -1446,7 +1454,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             if (options) {
                 ({ not, type, ignoreDefault } = options);
             }
-            if (value === 'initial' || ignoreDefault !== true && value === CSS_PROPERTIES[attr]?.value) {
+            if (ignoreDefault !== true && value === CSS_PROPERTIES[attr]?.value) {
                 return false;
             }
             if (not) {
@@ -1839,6 +1847,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return result.sort(sortById);
     }
 
+    public valueOf(attr: string, options?: CssInitialOptions) {
+        return !this._preferInitial && this._styleMap[attr] || this.cssInitial(attr, options);
+    }
+
     set parent(value) {
         if (value) {
             const parent = this._parent;
@@ -2112,29 +2124,20 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 let hasOwnStyle = this.has('lineHeight'),
                     value = 0;
                 if (hasOwnStyle) {
-                    const lineHeight = this.css('lineHeight');
-                    if (isPercent(lineHeight)) {
-                        value = convertFloat(this.style.lineHeight);
+                    let lineHeight = this.css('lineHeight');
+                    if (lineHeight === 'inherit') {
+                        lineHeight = this.cssAscend('lineHeight', { initial: true });
                     }
-                    else if (isNumber(lineHeight)) {
-                        value = parseFloat(lineHeight) * this.fontSize;
-                    }
-                    else {
-                        value = parseUnit(lineHeight, this.fontSize);
-                        if (isPx(lineHeight) && this._cssStyle?.lineHeight !== 'inherit') {
-                            const fontSize = getInitialValue.call(this, 'fontSize');
-                            if (isEm(fontSize)) {
-                                value *= parseFloat(fontSize);
-                            }
-                        }
-                    }
+                    value = parseLineHeight(lineHeight, this.fontSize);
                 }
                 else {
-                    let parent = this.ascend({ condition: item => item.has('lineHeight') })[0];
+                    let parent = this.ascend({ condition: item => item.has('lineHeight', { initial: true, not: 'inherit' }) })[0];
                     if (parent) {
-                        const lineHeight = parent.css('lineHeight');
-                        if (isNumber(lineHeight)) {
-                            value = parseFloat(lineHeight) * this.fontSize;
+                        value = parseLineHeight(parent.css('lineHeight'), this.fontSize);
+                        if (value > 0) {
+                            if (parent !== this.actualParent || /\dem$/.test(this.valueOf('fontSize')) || this.multiline) {
+                                this.css('lineHeight', value + 'px');
+                            }
                             hasOwnStyle = true;
                         }
                     }
@@ -2142,17 +2145,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         parent = this.ascend({ condition: item => item.lineHeight > 0 })[0];
                         if (parent) {
                             value = parent.lineHeight;
-                        }
-                    }
-                    if (this.styleElement) {
-                        const fontSize = getInitialValue.call(this, 'fontSize');
-                        if (isEm(fontSize)) {
-                            const emSize = parseFloat(fontSize);
-                            if (emSize !== 1) {
-                                value *= emSize;
-                                this.css('lineHeight', value + 'px');
-                                hasOwnStyle = true;
-                            }
                         }
                     }
                 }
@@ -2178,14 +2170,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     result = !this.documentBody && this.toFloat('top', 0) === 0 && this.toFloat('right', 0) === 0 && this.toFloat('bottom', 0) === 0 && this.toFloat('left', 0) === 0;
                     this._cached.positionRelative = !result;
                     break;
-                case 'inherit': {
-                    const parentElement = this._element?.parentElement;
-                    if (parentElement) {
-                        const position = getInheritedStyle(parentElement, 'position');
-                        result = position === 'static' || position === 'initial';
-                        break;
-                    }
-                }
                 default:
                     result = true;
                     break;
@@ -2279,11 +2263,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get inline() {
         const result = this._cached.inline;
-        if (result === undefined) {
-            const value = this.display;
-            return this._cached.inline = value === 'inline' || value === 'initial' && !ELEMENT_BLOCK.has(this.tagName);
-        }
-        return result;
+        return result === undefined ? this._cached.inline = this.display === 'inline' : result;
     }
 
     get inlineStatic() {
@@ -2327,9 +2307,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 case 'list-item':
                     result = true;
                     break;
-                case 'initial':
-                    result = ELEMENT_BLOCK.has(this.tagName);
-                    break;
                 case 'inline':
                     if (this.tagName === 'svg' && this.actualParent!.htmlElement) {
                         result = !this.hasPX('width') && convertFloat(getNamedItem(this._element as SVGSVGElement, 'width')) === 0;
@@ -2352,8 +2329,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 return this._cached.blockStatic = true;
             }
             else if (!pageFlow || !this.inline && !this.display.startsWith('table-') && !this.hasPX('maxWidth')) {
-                const width = getInitialValue.call(this, 'width');
-                const minWidth = getInitialValue.call(this, 'minWidth');
+                const width = this.valueOf('width');
+                const minWidth = this.valueOf('minWidth');
                 let percent = 0;
                 if (isPercent(width)) {
                     percent = parseFloat(width);
@@ -2362,8 +2339,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     percent = Math.max(parseFloat(minWidth), percent);
                 }
                 if (percent > 0) {
-                    const marginLeft = getInitialValue.call(this, 'marginLeft');
-                    const marginRight = getInitialValue.call(this, 'marginRight');
+                    const marginLeft = this.valueOf('marginLeft');
+                    const marginRight = this.valueOf('marginRight');
                     return this._cached.blockStatic = percent + (isPercent(marginLeft) ? parseFloat(marginLeft) : 0) + (isPercent(marginRight) ? parseFloat(marginRight) : 0) >= 100;
                 }
             }
@@ -2424,7 +2401,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 const display = this.display;
                 if (display.startsWith('inline') || display === 'list-item') {
                     const verticalAlign = this.css('verticalAlign');
-                    return this._cached.baseline = verticalAlign === 'baseline' || isLength(verticalAlign, true) || verticalAlign === 'initial';
+                    return this._cached.baseline = verticalAlign === 'baseline' || isLength(verticalAlign, true);
                 }
             }
             return this._cached.baseline = false;
@@ -2538,7 +2515,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             if (!this.plainText) {
                 result = this.css('backgroundColor');
                 switch (result) {
-                    case 'initial':
                     case 'transparent':
                     case 'rgba(0, 0, 0, 0)':
                         result = '';
@@ -2559,10 +2535,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         }
                         break;
                     default:
-                        if (result !== '' && this.styleElement && !this.inputElement && (this._initial === undefined || getInitialValue.call(this, 'backgroundColor') === result)) {
+                        if (result !== '' && this.styleElement && !this.inputElement && (this._initial === undefined || this.valueOf('backgroundColor') === result)) {
                             let parent = this.actualParent;
                             while (parent !== null) {
-                                const color = getInitialValue.call(parent, 'backgroundColor', { modified: true });
+                                const color = parent.valueOf('backgroundColor', { modified: true });
                                 if (color !== '') {
                                     if (color === result && parent.backgroundColor === '') {
                                         result = '';
@@ -2588,7 +2564,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (result === undefined) {
             if (!this.plainText) {
                 let value = this.css('backgroundImage');
-                if (value !== '' && value !== 'none' && value !== 'initial') {
+                if (value !== '' && value !== 'none') {
                     result = value;
                 }
                 else {
@@ -2617,7 +2593,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     get percentWidth() {
         const result = this._cached.percentWidth;
         if (result === undefined) {
-            const value = getInitialValue.call(this, 'width');
+            const value = this.valueOf('width');
             return this._cached.percentWidth = isPercent(value) ? parseFloat(value) / 100 : 0;
         }
         return result;
@@ -2625,7 +2601,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     get percentHeight() {
         const result = this._cached.percentHeight;
         if (result === undefined) {
-            const value = getInitialValue.call(this, 'height');
+            const value = this.valueOf('height');
             return this._cached.percentHeight = isPercent(value) && (this.actualParent?.hasHeight || this.css('position') === 'fixed') ? parseFloat(value) / 100 : 0;
         }
         return result;
@@ -2671,15 +2647,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (result === undefined) {
             result = this.actualParent;
             if (!this.pageFlow && !this.documentBody) {
-                while (result && !result.documentBody) {
-                    switch (getInitialValue.call(result, 'position', { computed: true })) {
-                        case 'static':
-                        case 'initial':
-                        case 'unset':
-                            result = result.actualParent;
-                            continue;
-                    }
-                    break;
+                while (result && !result.documentBody && result.valueOf('position', { computed: true }) === 'static') {
+                    result = result.actualParent;
                 }
             }
             this._cached.absoluteParent = result;
@@ -2857,7 +2826,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         let result = this._fontSize;
         if (result === undefined) {
             if (this.naturalChild && this.styleElement) {
-                const value = getInitialValue.call(this, 'fontSize');
+                const value = this.valueOf('fontSize');
                 if (isPx(value)) {
                     result = parseFloat(value);
                 }

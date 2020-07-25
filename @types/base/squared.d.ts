@@ -384,8 +384,8 @@ declare module "base" {
         cssSort(attr: string, options?: CssSortOptions): Node[];
         cssPX(attr: string, value: number, cache?: boolean, options?: CssPXOptions): string;
         cssSpecificity(attr: string): number;
-        cssTry(attr: string, value: string): boolean;
-        cssTryAll(attrs: StringMap): Undef<StringMap>;
+        cssTry(attr: string, value: string, callback?: FunctionSelf<this>): boolean;
+        cssTryAll(attrs: StringMap, callback?: FunctionSelf<this>): StringMap | boolean;
         cssFinally(attrs: string | StringMap): void;
         cssParent(attr: string, value?: string, cache?: boolean): string;
         cssAsTuple(...attrs: string[]): string[];
@@ -409,6 +409,7 @@ declare module "base" {
         max(attr: string, options?: MinMaxOptions): Node;
         querySelector(value: string): Null<Node>;
         querySelectorAll(value: string, resultCount?: number): Node[];
+        valueOf(attr: string, options?: CssInitialOptions): string;
         set parent(value);
         get parent(): Null<Node>;
         set actualParent(value);
@@ -678,6 +679,7 @@ declare module "base" {
         get overflowX(): boolean;
         get overflowY(): boolean;
         get textEmpty(): boolean;
+        get textWidth(): number;
         get innerMostWrapped(): NodeUI;
         get outerMostWrapper(): NodeUI;
         get preserveWhiteSpace(): boolean;

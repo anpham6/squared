@@ -2482,34 +2482,59 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
 }
 
 export function checkStyleValue(element: HTMLElement, attr: string, value: string, style?: CSSStyleDeclaration) {
-    if (value === 'initial') {
-        switch (attr) {
-            case 'position':
-                return 'static';
-            case 'display':
-                return ELEMENT_BLOCK.has(element.tagName) ? 'block' : 'inline';
-            case 'verticalAlign':
-                return 'baseline';
-            case 'float':
-                return 'none';
-            case 'lineHeight':
-                return 'normal';
-            default:
-                return '';
-        }
+    switch (value) {
+        case 'unset':
+            if (style) {
+                return style[attr] as string;
+            }
+        case 'initial':
+            switch (attr) {
+                case 'position':
+                    return 'static';
+                case 'display':
+                    return ELEMENT_BLOCK.has(element.tagName) ? 'block' : 'inline';
+                case 'verticalAlign':
+                    switch (element.tagName) {
+                        case 'SUP':
+                            return 'super';
+                        case 'SUB':
+                            return 'sub';
+                        default:
+                            return 'baseline';
+                    }
+                case 'backgroundColor':
+                    return 'transparent';
+                case 'backgroundRepeat':
+                    return 'repeat-x repeat-y';
+                case 'backgroundImage':
+                case 'borderTopStyle':
+                case 'borderRightStyle':
+                case 'borderBottomStyle':
+                case 'borderLeftStyle':
+                case 'float':
+                    return 'none';
+                case 'lineHeight':
+                    return 'normal';
+                case 'boxSizing':
+                    return 'content-box';
+                case 'borderCollapse':
+                    return 'separate';
+                default:
+                    return '';
+            }
+        case 'inherit':
+            switch (attr) {
+                case 'lineHeight':
+                    return 'inherit';
+                case 'fontSize':
+                    if (style) {
+                        return style[attr];
+                    }
+                default:
+                    return getInheritedStyle(element, attr);
+            }
     }
-    else if (value === 'inherit') {
-        switch (attr) {
-            case 'fontSize':
-            case 'lineHeight':
-                if (style) {
-                    return style[attr];
-                }
-            default:
-                return getInheritedStyle(element, attr);
-        }
-    }
-    else if (hasCalc(value)) {
+    if (hasCalc(value)) {
         value = calculateStyle(element, attr, value);
     }
     else if (isCustomProperty(value)) {
@@ -2887,14 +2912,12 @@ export function calculateVar(element: CSSElement, value: string, options: Calcul
                                         if (boundingElement === document.body) {
                                             break;
                                         }
-                                        switch (style.position) {
-                                            case 'static':
-                                            case 'initial':
-                                            case 'unset':
-                                                boundingElement = boundingElement.parentElement;
-                                                continue;
+                                        if (style.position === 'static') {
+                                            boundingElement = boundingElement.parentElement;
                                         }
-                                        break;
+                                        else {
+                                            break;
+                                        }
                                     }
                                     while (boundingElement !== null);
                                 }

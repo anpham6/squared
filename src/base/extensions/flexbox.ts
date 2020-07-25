@@ -7,6 +7,11 @@ type NodeIntersectXY = "intersectY" | "intersectX";
 
 const { withinRange } = squared.lib.util;
 
+const OPTIONS_BOUNDSDATA: StringMap = {
+    'align-self': 'start',
+    'justify-self': 'start'
+};
+
 function createDataAttribute(node: NodeUI, children: NodeUI[]): FlexboxData<NodeUI> {
     return {
         ...(node.flexdata as Required<FlexData>),
@@ -31,20 +36,15 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
         const mainData = createDataAttribute(node, children);
         if (node.cssTry('align-items', 'start')) {
             if (node.cssTry('justify-items', 'start')) {
-                const options: StringMap = {
-                    'align-self': 'start',
-                    'justify-self': 'start'
-                };
+                const dataName = this.name;
                 const length = children.length;
                 let i = 0;
                 while (i < length) {
                     const item = children[i++];
-                    const cssData = item.cssTryAll(options);
-                    if (cssData) {
-                        const bounds = item.boundingClientRect;
-                        item.data(this.name, 'boundsData', bounds ? { ...item.bounds, width: bounds.width, height: bounds.height } : item.bounds);
-                        item.cssFinally(cssData);
-                    }
+                    item.cssTryAll(OPTIONS_BOUNDSDATA, function(this: T) {
+                        const bounds = this.boundingClientRect;
+                        this.data(dataName, 'boundsData', bounds ? { ...this.bounds, width: bounds.width, height: bounds.height } : this.bounds);
+                    });
                 }
                 node.cssFinally('justify-items');
             }

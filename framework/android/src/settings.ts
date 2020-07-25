@@ -39,6 +39,7 @@ const settings: AndroidUserSettingsUI = {
     supportNegativeLeftTop: true,
     fontMeasureWrap: true,
     fontMeasureAdjust: 0.75,
+    lineHeightAdjust: 1.1,
     customizationsOverwritePrivilege: true,
     showAttributes: true,
     createElementMap: false,

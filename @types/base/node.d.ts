@@ -89,6 +89,7 @@ interface CachedValueUI<T> extends CachedValue<T> {
     verticalAligned?: boolean;
     overflow?: number;
     textIndent?: number;
+    textWidth?: number;
     textEmpty?: boolean;
     containerName?: string;
     baselineHeight?: number;

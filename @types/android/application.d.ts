@@ -10,6 +10,7 @@ interface AndroidUserSettingsUI extends UserSettingsUI {
     convertPixels: string;
     fontMeasureWrap: boolean;
     fontMeasureAdjust: number;
+    lineHeightAdjust: number;
     manifestLabelAppName: string;
     manifestThemeName: string;
     manifestParentThemeName: string;

@@ -165,23 +165,6 @@ function getExclusionValue(enumeration: {}, offset: number, value?: string) {
     return offset;
 }
 
-function isBaselineElement(node: T) {
-    if (!node.floating) {
-        switch (node.css('verticalAlign')) {
-            case 'baseline':
-                return true;
-            case 'initial':
-                switch (node.tagName) {
-                    case 'SUP':
-                    case 'SUB':
-                        return false;
-                }
-                return true;
-        }
-    }
-    return false;
-}
-
 const hasTextIndent = (node: T) => node.blockDimension || node.display === 'table-cell';
 const canCascadeChildren = (node: T) =>  node.naturalElements.length > 0 && !node.layoutElement && !node.tableElement;
 const checkBlockDimension = (node: T, previous: T) => node.blockDimension && Math.ceil(node.bounds.top) >= previous.bounds.bottom && (node.blockVertical || previous.blockVertical || node.percentWidth > 0 || previous.percentWidth > 0);
@@ -762,7 +745,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     break;
                 case 'boxStyle': {
                     if (this.naturalChild) {
-                        const options = { values: ['initial', 'inherit', 'none', '0px', 'transparent', 'rgba(0, 0, 0, 0)'] };
+                        const options = { values: ['none', '0px', 'transparent', 'rgba(0, 0, 0, 0)'] };
                         let properties: string[] = [];
                         if (this.css('backgroundImage') === 'none') {
                             properties = properties.concat(CSS_PROPERTIES.background.value as string[]);
@@ -1379,7 +1362,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     'borderLeftStyle'
                 );
         Object.assign(style, this.textStyle);
-        style.fontSize = this.cssInitial('fontSize') || this.fontSize + 'px';
+        if (this.naturalElement) {
+            style.fontSize = this.cssInitial('fontSize') || this.fontSize + 'px';
+        }
+        else {
+            style.fontSize = this.fontSize + 'px';
+        }
         if (width) {
             style.width = width;
         }
@@ -1775,12 +1763,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get baselineElement(): boolean {
         let result = this._cached.baselineElement;
         if (result === undefined) {
-            if (isBaselineElement(this)) {
+            if (this.css('verticalAlign') === 'baseline' && !this.floating) {
                 const children = this.naturalChildren;
                 if (children.length > 0) {
                     result = children.every((node: T) => {
                         do {
-                            if (isBaselineElement(node)) {
+                            if (node.css('verticalAlign') === 'baseline' && !node.floating) {
                                 switch (node.length) {
                                     case 0:
                                         return node.baselineElement && !(node.positionRelative && (node.top !== 0 || node.bottom !== 0));
@@ -1984,6 +1972,20 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 }
             }
             return this._cached.textIndent = result || 0;
+        }
+        return result;
+    }
+
+    get textWidth() {
+        const result = this._cached.textWidth;
+        if (result === undefined) {
+            if (this.styleText && !this.hasPX('width')) {
+                const textBounds = this.textBounds;
+                if (textBounds && (textBounds.numberOfLines as number > 1 || Math.ceil(textBounds.width) < this.box.width)) {
+                    return this._cached.textWidth = textBounds.width;
+                }
+            }
+            return this._cached.textWidth = this.bounds.width;
         }
         return result;
     }

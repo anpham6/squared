@@ -10,6 +10,7 @@ type BindGeneric<T, U> = (item: T, ...args: any[]) => U;
 
 type FunctionType<T> = (...args: any[]) => T;
 type FunctionMap<T> = ObjectMap<FunctionType<T>>;
+type FunctionSelf<T> = (this: T, ...args: any[]) => void;
 type FunctionVoid = () => void;
 
 type ObjectKeyed<T> = ObjectMap<T> | ObjectIndex<T>;

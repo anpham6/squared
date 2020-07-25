@@ -201,10 +201,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     });
                     ordinal.apply(options);
                     ordinal.modifyBox(BOX_STANDARD.PADDING_LEFT, 2);
-                    if (ordinal.cssTry('display', 'inline-block')) {
-                        ordinal.setBounds();
-                        ordinal.cssFinally('display');
-                    }
+                    ordinal.cssTry('display', 'inline-block', function (this: T) { this.setBounds(); });
                     ordinal.saveAsInitial();
                     if (gravity !== '') {
                         ordinal.mergeGravity('gravity', node.localizeString(gravity));

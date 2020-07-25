@@ -1,5 +1,6 @@
 interface AndroidLocalSettingsUI extends LocalSettingsUI {
     supportRTL: boolean;
+    lineHeightAdjust: number;
     floatPrecision: number;
 }
 
