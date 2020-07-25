@@ -1,10 +1,10 @@
 6a61f75b913d38c2fecb55b47a3d467b  ./app/src/main/res/drawable/input_submit_submit1.xml
 084c5166290af904d136eb755fb0b4c4  ./app/src/main/res/drawable/input_text_inputtext.xml
 f8f0e46ddf9acaea0ae87e6ba419842d  ./app/src/main/res/drawable/left_right.gif
-fa261ef0d5dd931f06a456c10a43233a  ./app/src/main/res/layout/activity_main.xml
-961b6d529af1c2cce26e1e6bd313372f  ./app/src/main/res/values/colors.xml
-646456cfec5da5ce69128ffa77ef6140  ./app/src/main/res/values/dimens.xml
+653910810e8bfaae5efd82a754cd6235  ./app/src/main/res/layout/activity_main.xml
+17aae5697dc67014392ab73ffc9d013d  ./app/src/main/res/values/colors.xml
+0175dc36c62db13e2db13f289d5fc391  ./app/src/main/res/values/dimens.xml
 b9d73b2b7053a992ed8285d32a75bd00  ./app/src/main/res/values/string_arrays.xml
 3028941767fe074744a5039061e441ef  ./app/src/main/res/values/strings.xml
-c61abcb7a61c0db1244684198b2aa0ee  ./app/src/main/res/values/styles.xml
+b082c3be273478e8fcf579900c3fad82  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml

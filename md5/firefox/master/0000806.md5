@@ -1,6 +1,12 @@
-0562b599ff471f24c584a5f09f93d65c  ./app/src/main/res/drawable/canvas_canvas.png
-f8d6360067876b2861752925e0d94740  ./app/src/main/res/layout/activity_main.xml
+453c9104713e8319e6ff6738e2395916  ./app/src/main/res/drawable/canvas_imageview_1.png
+9a4867ccfe04e9fffff6ba2001e60a77  ./app/src/main/res/drawable/canvas_imageview_2.png
+835ccf6a4f78622911a02219139a25a8  ./app/src/main/res/drawable/canvas_imageview_3.png
+9d3b549b318c4b122a1d8b40fa00631f  ./app/src/main/res/drawable/canvas_imageview_4.png
+64d811b399c7f1e17d92366f294955d8  ./app/src/main/res/drawable/canvas_imageview_5.png
+6b6cda02c5f7bde36f4bd39e3bd70464  ./app/src/main/res/drawable/canvas_imageview_6.png
+eb7268d34f6dec96a545cdaa888c1975  ./app/src/main/res/layout/activity_main.xml
 5bf1411fb8e56d4066dabb7c1c5ceaaf  ./app/src/main/res/values/colors.xml
 05a0c9ec13dc19e548c2f750d083621f  ./app/src/main/res/values/dimens.xml
 96bb312f9ecc291325557a1443e56a1a  ./app/src/main/res/values/strings.xml
+ef59a1e9fe42ca1d704efb3134f536a3  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml
