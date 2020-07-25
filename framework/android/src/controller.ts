@@ -3430,10 +3430,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 aboveRowEnd: Undef<T>,
                 currentRowTop: Undef<T>,
                 tallest: Undef<T>;
-            const applyLayout = (seg: T[], reverse: boolean) => {
+            let j = 0;
+            while (j < 2) {
+                const reverse = j++ === 1;
+                const seg = !reverse ? floatingLeft : floatingRight;
                 const q = seg.length;
                 if (q === 0) {
-                    return;
+                    continue;
                 }
                 const [anchorStart, anchorEnd, chainStart, chainEnd] = getAnchorDirection(reverse);
                 const rowStart = seg[0];
@@ -3462,8 +3465,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     previousAlignParent = alignParent;
                 }
                 tallest = undefined;
-                for (let j = 0; j < q; ++j) {
-                    const chain = seg[j];
+                for (let k = 0; k < q; ++k) {
+                    const chain = seg[k];
                     if (i === 0 || alignParent) {
                         if (length === 1) {
                             chain.anchorParent('vertical');
@@ -3481,14 +3484,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         chain.anchorParent('horizontal');
                     }
                     else if (q > 1) {
-                        const previous = seg[j - 1];
-                        const next = seg[j + 1];
+                        const previous = seg[k - 1];
+                        const next = seg[k + 1];
                         if (previous) {
                             if (!previous.pageFlow && previous.autoPosition) {
                                 let found: Undef<T>;
-                                let k = j - 2;
-                                while (k >= 0) {
-                                    const item = seg[k--];
+                                let l = k - 2;
+                                while (l >= 0) {
+                                    const item = seg[l--];
                                     if (item.pageFlow) {
                                         found = item;
                                         break;
@@ -3510,24 +3513,24 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                     }
                     percentWidth = View.setConstraintDimension(chain, percentWidth);
-                    if (previousRow && j === 0) {
+                    if (previousRow && k === 0) {
                         if (clearMap.has(chain) && !chain.floating) {
                             chain.modifyBox(BOX_STANDARD.MARGIN_TOP, -previousRow[previousRow.length - 1].bounds.height, false);
                         }
                         if (floating) {
                             let checkBottom: Undef<boolean>;
-                            let k = 0;
-                            while (k < previousSiblings.length) {
-                                if (chain.bounds.top < Math.floor(previousSiblings[k++].bounds.bottom)) {
+                            let l = 0;
+                            while (l < previousSiblings.length) {
+                                if (chain.bounds.top < Math.floor(previousSiblings[l++].bounds.bottom)) {
                                     checkBottom = true;
                                     break;
                                 }
                             }
                             if (checkBottom) {
                                 aboveRowEnd = previousRow[previousRow.length - 1];
-                                k = previousSiblings.length - 2;
-                                while (k >= 0) {
-                                    const aboveBefore = previousSiblings[k--];
+                                l = previousSiblings.length - 2;
+                                while (l >= 0) {
+                                    const aboveBefore = previousSiblings[l--];
                                     if (aboveBefore.linear.bottom > aboveRowEnd.linear.bottom) {
                                         if (reverse && Math.ceil(aboveBefore.linear[anchorEnd]) - Math.floor(parent.box[anchorEnd]) < chain.linear.width) {
                                             continue;
@@ -3562,7 +3565,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                             start = true;
                         }
-                        if (j === length - 1) {
+                        if (k === q - 1) {
                             if (reverse) {
                                 chain.horizontalRowStart = true;
                             }
@@ -3575,9 +3578,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         tallest = chain;
                     }
                 }
-            };
-            applyLayout(floatingLeft, false);
-            applyLayout(floatingRight, true);
+            }
             if (floating) {
                 previousSiblings = previousSiblings.concat(floatingLeft, floatingRight);
             }
@@ -3621,9 +3622,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         currentRowTop.anchor('topBottom', aboveRowEnd.documentId);
                         setVerticalAlignment(currentRowTop, q === 1, true);
                         const marginTop = currentRowTop.marginTop;
-                        let j = 0;
-                        while (j < r) {
-                            const chain = partition[j++];
+                        let k = 0;
+                        while (k < r) {
+                            const chain = partition[k++];
                             if (chain !== currentRowTop) {
                                 setVerticalAlignment(chain, r === 1);
                                 chain.anchor('top', documentId);

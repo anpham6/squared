@@ -315,6 +315,231 @@ function requireDirectionSpacer(data: CssGridDirectionData, dimension: number) {
     return 0;
 }
 
+function applyLayout(node: View, parent: View, item: View, mainData: CssGridData<View>, cellData: CssGridCellData, dimension: string) {
+    const horizontal = dimension === 'width';
+    const { column, row } = mainData;
+    const [data, cellStart, cellSpan, minDimension] =
+        horizontal
+            ? [column, cellData.columnStart, cellData.columnSpan, 'minWidth']
+            : [row, cellData.rowStart, cellData.rowSpan, 'minHeight'];
+    const { unit, unitMin } = data;
+    let size = 0,
+        minSize = 0,
+        minUnitSize = 0,
+        sizeWeight = 0,
+        fitContent: Undef<boolean>,
+        autoSize: Undef<boolean>;
+    let i = 0, j = 0;
+    while (i < cellSpan) {
+        const k = cellStart + i++;
+        const min = unitMin[k];
+        if (min !== '') {
+            minUnitSize += horizontal ? parent.parseUnit(min) : parent.parseUnit(min, { dimension: 'height' });
+        }
+        let value = unit[k];
+        if (!value) {
+            const auto = data.auto;
+            if (auto[j]) {
+                value = auto[j];
+                if (auto[j + 1]) {
+                    ++j;
+                }
+            }
+            else {
+                continue;
+            }
+        }
+        if (value === 'auto' || value === 'max-content') {
+            autoSize = true;
+            if (cellSpan < unit.length && (!parent.hasPX(dimension) || unit.some(px => isLength(px)) || value === 'max-content')) {
+                size = node.bounds[dimension];
+                minSize = 0;
+                sizeWeight = 0;
+                break;
+            }
+            else if (horizontal) {
+                size = 0;
+                minSize = 0;
+                sizeWeight = -1;
+                break;
+            }
+        }
+        else if (value === 'min-content') {
+            if (!item.hasPX(dimension)) {
+                if (horizontal) {
+                    item.setLayoutWidth('wrap_content', false);
+                }
+                else {
+                    item.setLayoutHeight('wrap_content', false);
+                }
+                break;
+            }
+        }
+        else if (CssGrid.isFr(value)) {
+            if (horizontal || parent.hasHeight) {
+                if (sizeWeight === -1) {
+                    sizeWeight = 0;
+                }
+                sizeWeight += parseFloat(value);
+                minSize = size;
+            }
+            else {
+                sizeWeight = 0;
+                minSize += mainData.minCellHeight * parseFloat(value);
+            }
+            size = 0;
+        }
+        else if (isPercent(value)) {
+            if (sizeWeight === -1) {
+                sizeWeight = 0;
+            }
+            sizeWeight += parseFloat(value) / 100;
+            minSize = size;
+            size = 0;
+        }
+        else {
+            const cellSize = horizontal ? item.parseUnit(value) : item.parseUnit(value, { dimension:  'height' });
+            if (minSize === 0) {
+                size += cellSize;
+            }
+            else {
+                minSize += cellSize;
+            }
+        }
+        if (node.textElement && /^\s*0[a-z]*\s*$/.test(min)) {
+            fitContent = true;
+        }
+    }
+    if (cellSpan > 1) {
+        const value = (cellSpan - 1) * data.gap;
+        if (size > 0 && minSize === 0) {
+            size += value;
+        }
+        else if (minSize > 0) {
+            minSize += value;
+        }
+        if (minUnitSize > 0) {
+            minUnitSize += value;
+        }
+    }
+    if (minUnitSize > 0) {
+        if (data.autoFill && size === 0 && (horizontal ? row.length : column.length) === 1) {
+            size = Math.max(node.actualWidth, minUnitSize);
+            sizeWeight = 0;
+        }
+        else {
+            minSize = minUnitSize;
+        }
+    }
+    if (minSize > 0 && !item.hasPX(minDimension)) {
+        item.css(minDimension, formatPX(minSize), true);
+    }
+    if (parent.layoutConstraint) {
+        if (horizontal) {
+            if (!item.hasPX('width', { percent: false })) {
+                item.app('layout_constraintWidth_percent', truncate(sizeWeight / column.frTotal, item.localSettings.floatPrecision));
+                item.setLayoutWidth('0px');
+            }
+            if (cellStart === 0) {
+                item.anchor('left', 'parent');
+                item.anchorStyle('horizontal', 0, 'spread');
+            }
+            else {
+                const previousSibling = item.innerMostWrapped.previousSibling as Null<View>;
+                if (previousSibling) {
+                    previousSibling.anchor('rightLeft', item.documentId);
+                    item.anchor('leftRight', previousSibling.anchorTarget.documentId);
+                }
+            }
+            if (cellStart + cellSpan === column.length) {
+                item.anchor('right', 'parent');
+            }
+            item.positioned = true;
+        }
+        else if (!item.hasPX('height', { percent: false })) {
+            if (sizeWeight > 0) {
+                if (row.length === 1) {
+                    item.setLayoutHeight('match_parent');
+                }
+                else {
+                    item.app('layout_constraintHeight_percent', truncate(sizeWeight / row.frTotal, item.localSettings.floatPrecision));
+                    item.setLayoutHeight('0px');
+                }
+            }
+            else if (size > 0) {
+                if (item.contentBox) {
+                    size -= item.contentBoxHeight;
+                }
+                item.css(autoSize ? 'minHeight' : 'height', formatPX(size), true);
+            }
+        }
+    }
+    else {
+        item.android(horizontal ? 'layout_column' : 'layout_row', cellStart.toString());
+        item.android(horizontal ? 'layout_columnSpan' : 'layout_rowSpan', cellSpan.toString());
+        let columnWeight = horizontal && column.flexible;
+        if (sizeWeight !== 0) {
+            if (!item.hasPX(dimension)) {
+                if (horizontal) {
+                    if (cellData.columnSpan === column.length) {
+                        item.setLayoutWidth('match_parent');
+                    }
+                    else {
+                        item.setLayoutWidth('0px');
+                        item.android('layout_columnWeight', sizeWeight === -1 ? '0.01' : truncate(sizeWeight, node.localSettings.floatPrecision));
+                        item.mergeGravity('layout_gravity', 'fill_horizontal');
+                    }
+                    columnWeight = false;
+                }
+                else if (cellData.rowSpan === row.length) {
+                    item.setLayoutHeight('match_parent');
+                }
+                else {
+                    item.setLayoutHeight('0px');
+                    item.android('layout_rowWeight', truncate(sizeWeight, node.localSettings.floatPrecision));
+                    item.mergeGravity('layout_gravity', 'fill_vertical');
+                }
+            }
+        }
+        else if (size > 0) {
+            const maxDimension = horizontal ? 'maxWidth' : 'maxHeight';
+            if (fitContent && !item.hasPX(maxDimension)) {
+                item.css(maxDimension, formatPX(size), true);
+                item.mergeGravity('layout_gravity', horizontal ? 'fill_horizontal' : 'fill_vertical');
+            }
+            else if (!item.hasPX(dimension)) {
+                if (item.contentBox) {
+                    size -= horizontal ? item.contentBoxWidth : item.contentBoxHeight;
+                }
+                if (autoSize && !parent.hasPX(maxDimension)) {
+                    item.css(minDimension, formatPX(size), true);
+                    if (horizontal) {
+                        item.setLayoutWidth('wrap_content');
+                    }
+                    else {
+                        item.setLayoutHeight('wrap_content');
+                    }
+                }
+                else {
+                    item.css(dimension, formatPX(size), true);
+                }
+            }
+        }
+        else if (unit.length === 0 && !item.hasPX(dimension)) {
+            if (horizontal) {
+                item.setLayoutWidth('match_parent', false);
+            }
+            else {
+                item.setLayoutHeight('wrap_content', false);
+            }
+        }
+        if (columnWeight) {
+            item.android('layout_columnWeight', '0');
+        }
+    }
+    return [cellStart, cellSpan];
+}
+
 const getLayoutDimension = (value: string) => value === 'space-between' ? 'match_parent' : 'wrap_content';
 const hasAlignment = (value: string) => /start|end|center|baseline/.test(value);
 
@@ -429,233 +654,10 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
         let renderAs: Undef<T>,
             outputAs: Undef<NodeXmlTemplate<T>>;
         if (mainData && cellData) {
-            const { column, row } = mainData;
+            const row = mainData.row;
             const alignSelf = node.has('alignSelf') ? node.css('alignSelf') : mainData.alignItems;
             const justifySelf = node.has('justifySelf') ? node.css('justifySelf') : mainData.justifyItems;
-            const layoutConstraint = parent.layoutConstraint;
-            const applyLayout = (item: T, horizontal: boolean, dimension: string) => {
-                const [data, cellStart, cellSpan, minDimension] =
-                    horizontal
-                        ? [column, cellData.columnStart, cellData.columnSpan, 'minWidth']
-                        : [row, cellData.rowStart, cellData.rowSpan, 'minHeight'];
-                const { unit, unitMin } = data;
-                let size = 0,
-                    minSize = 0,
-                    minUnitSize = 0,
-                    sizeWeight = 0,
-                    fitContent: Undef<boolean>,
-                    autoSize: Undef<boolean>;
-                let i = 0, j = 0;
-                while (i < cellSpan) {
-                    const k = cellStart + i++;
-                    const min = unitMin[k];
-                    if (min !== '') {
-                        minUnitSize += horizontal ? parent.parseUnit(min) : parent.parseUnit(min, { dimension: 'height' });
-                    }
-                    let value = unit[k];
-                    if (!value) {
-                        const auto = data.auto;
-                        if (auto[j]) {
-                            value = auto[j];
-                            if (auto[j + 1]) {
-                                ++j;
-                            }
-                        }
-                        else {
-                            continue;
-                        }
-                    }
-                    if (value === 'auto' || value === 'max-content') {
-                        autoSize = true;
-                        if (cellSpan < unit.length && (!parent.hasPX(dimension) || unit.some(px => isLength(px)) || value === 'max-content')) {
-                            size = node.bounds[dimension];
-                            minSize = 0;
-                            sizeWeight = 0;
-                            break;
-                        }
-                        else if (horizontal) {
-                            size = 0;
-                            minSize = 0;
-                            sizeWeight = -1;
-                            break;
-                        }
-                    }
-                    else if (value === 'min-content') {
-                        if (!item.hasPX(dimension)) {
-                            if (horizontal) {
-                                item.setLayoutWidth('wrap_content', false);
-                            }
-                            else {
-                                item.setLayoutHeight('wrap_content', false);
-                            }
-                            break;
-                        }
-                    }
-                    else if (CssGrid.isFr(value)) {
-                        if (horizontal || parent.hasHeight) {
-                            if (sizeWeight === -1) {
-                                sizeWeight = 0;
-                            }
-                            sizeWeight += parseFloat(value);
-                            minSize = size;
-                        }
-                        else {
-                            sizeWeight = 0;
-                            minSize += mainData.minCellHeight * parseFloat(value);
-                        }
-                        size = 0;
-                    }
-                    else if (isPercent(value)) {
-                        if (sizeWeight === -1) {
-                            sizeWeight = 0;
-                        }
-                        sizeWeight += parseFloat(value) / 100;
-                        minSize = size;
-                        size = 0;
-                    }
-                    else {
-                        const cellSize = horizontal ? item.parseUnit(value) : item.parseUnit(value, { dimension:  'height' });
-                        if (minSize === 0) {
-                            size += cellSize;
-                        }
-                        else {
-                            minSize += cellSize;
-                        }
-                    }
-                    if (node.textElement && /^\s*0[a-z]*\s*$/.test(min)) {
-                        fitContent = true;
-                    }
-                }
-                if (cellSpan > 1) {
-                    const value = (cellSpan - 1) * data.gap;
-                    if (size > 0 && minSize === 0) {
-                        size += value;
-                    }
-                    else if (minSize > 0) {
-                        minSize += value;
-                    }
-                    if (minUnitSize > 0) {
-                        minUnitSize += value;
-                    }
-                }
-                if (minUnitSize > 0) {
-                    if (data.autoFill && size === 0 && (horizontal ? row.length : column.length) === 1) {
-                        size = Math.max(node.actualWidth, minUnitSize);
-                        sizeWeight = 0;
-                    }
-                    else {
-                        minSize = minUnitSize;
-                    }
-                }
-                if (minSize > 0 && !item.hasPX(minDimension)) {
-                    item.css(minDimension, formatPX(minSize), true);
-                }
-                if (layoutConstraint) {
-                    if (horizontal) {
-                        if (!item.hasPX('width', { percent: false })) {
-                            item.app('layout_constraintWidth_percent', truncate(sizeWeight / column.frTotal, item.localSettings.floatPrecision));
-                            item.setLayoutWidth('0px');
-                        }
-                        if (cellStart === 0) {
-                            item.anchor('left', 'parent');
-                            item.anchorStyle('horizontal', 0, 'spread');
-                        }
-                        else {
-                            const previousSibling = item.innerMostWrapped.previousSibling as Null<T>;
-                            if (previousSibling) {
-                                previousSibling.anchor('rightLeft', item.documentId);
-                                item.anchor('leftRight', previousSibling.anchorTarget.documentId);
-                            }
-                        }
-                        if (cellStart + cellSpan === column.length) {
-                            item.anchor('right', 'parent');
-                        }
-                        item.positioned = true;
-                    }
-                    else if (!item.hasPX('height', { percent: false })) {
-                        if (sizeWeight > 0) {
-                            if (row.length === 1) {
-                                item.setLayoutHeight('match_parent');
-                            }
-                            else {
-                                item.app('layout_constraintHeight_percent', truncate(sizeWeight / row.frTotal, item.localSettings.floatPrecision));
-                                item.setLayoutHeight('0px');
-                            }
-                        }
-                        else if (size > 0) {
-                            if (item.contentBox) {
-                                size -= item.contentBoxHeight;
-                            }
-                            item.css(autoSize ? 'minHeight' : 'height', formatPX(size), true);
-                        }
-                    }
-                }
-                else {
-                    item.android(horizontal ? 'layout_column' : 'layout_row', cellStart.toString());
-                    item.android(horizontal ? 'layout_columnSpan' : 'layout_rowSpan', cellSpan.toString());
-                    let columnWeight = horizontal && column.flexible;
-                    if (sizeWeight !== 0) {
-                        if (!item.hasPX(dimension)) {
-                            if (horizontal) {
-                                if (cellData.columnSpan === column.length) {
-                                    item.setLayoutWidth('match_parent');
-                                }
-                                else {
-                                    item.setLayoutWidth('0px');
-                                    item.android('layout_columnWeight', sizeWeight === -1 ? '0.01' : truncate(sizeWeight, node.localSettings.floatPrecision));
-                                    item.mergeGravity('layout_gravity', 'fill_horizontal');
-                                }
-                                columnWeight = false;
-                            }
-                            else if (cellData.rowSpan === row.length) {
-                                item.setLayoutHeight('match_parent');
-                            }
-                            else {
-                                item.setLayoutHeight('0px');
-                                item.android('layout_rowWeight', truncate(sizeWeight, node.localSettings.floatPrecision));
-                                item.mergeGravity('layout_gravity', 'fill_vertical');
-                            }
-                        }
-                    }
-                    else if (size > 0) {
-                        const maxDimension = horizontal ? 'maxWidth' : 'maxHeight';
-                        if (fitContent && !item.hasPX(maxDimension)) {
-                            item.css(maxDimension, formatPX(size), true);
-                            item.mergeGravity('layout_gravity', horizontal ? 'fill_horizontal' : 'fill_vertical');
-                        }
-                        else if (!item.hasPX(dimension)) {
-                            if (item.contentBox) {
-                                size -= horizontal ? item.contentBoxWidth : item.contentBoxHeight;
-                            }
-                            if (autoSize && !parent.hasPX(maxDimension)) {
-                                item.css(minDimension, formatPX(size), true);
-                                if (horizontal) {
-                                    item.setLayoutWidth('wrap_content');
-                                }
-                                else {
-                                    item.setLayoutHeight('wrap_content');
-                                }
-                            }
-                            else {
-                                item.css(dimension, formatPX(size), true);
-                            }
-                        }
-                    }
-                    else if (unit.length === 0 && !item.hasPX(dimension)) {
-                        if (horizontal) {
-                            item.setLayoutWidth('match_parent', false);
-                        }
-                        else {
-                            item.setLayoutHeight('wrap_content', false);
-                        }
-                    }
-                    if (columnWeight) {
-                        item.android('layout_columnWeight', '0');
-                    }
-                }
-                return [cellStart, cellSpan];
-            };
-            if (hasAlignment(alignSelf) || /start|center|end|baseline|right|left/.test(justifySelf) || layoutConstraint) {
+            if (hasAlignment(alignSelf) || /start|center|end|baseline|right|left/.test(justifySelf) || parent.layoutConstraint) {
                 renderAs = this.application.createNode(node.sessionId, { parent, innerWrap: node });
                 renderAs.containerName = node.containerName;
                 renderAs.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
@@ -729,14 +731,14 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 node.mergeGravity('layout_gravity', 'top');
             }
             const target = renderAs || node;
-            applyLayout(target, true, 'width');
+            applyLayout(node, parent, target, mainData, cellData, 'width');
             if (target !== node || node.hasPX('maxHeight')) {
                 target.mergeGravity('layout_gravity', 'fill');
             }
             else if (!target.hasPX('width')) {
                 target.mergeGravity('layout_gravity', 'fill_horizontal');
             }
-            const [rowStart, rowSpan] = applyLayout(target, false, 'height');
+            const [rowStart, rowSpan] = applyLayout(node, parent, target, mainData, cellData, 'height');
             if (mainData.alignContent === 'normal' && !parent.hasPX('height') && !node.hasPX('minHeight') && (!row.unit[rowStart] || row.unit[rowStart] === 'auto') && Math.floor(node.bounds.height) > (node.data<BoxRectDimension>(this.name, 'boundsData')?.height || Infinity) && checkRowSpan(node, rowSpan, rowStart, mainData, this.name)) {
                 target.css('minHeight', formatPX(node.box.height));
             }

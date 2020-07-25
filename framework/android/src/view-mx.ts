@@ -1307,7 +1307,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             }
                         }
                         else {
-                            switch (i) {
+                            switch (j) {
                                 case 0:
                                     value = this.actualPadding(attr as 'paddingTop', value);
                                     break;
@@ -1487,7 +1487,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     if ((!margin || !(this.renderParent as T).layoutGrid) && this.api >= BUILD_ANDROID.OREO) {
                         if (top === right && right === bottom && bottom === left) {
                             this.android(margin ? STRING_ANDROID.MARGIN : STRING_ANDROID.PADDING, Math.round(top) + 'px');
-                            return;
+                            continue;
                         }
                         else {
                             if (left === right) {
