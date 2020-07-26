@@ -5,7 +5,7 @@ const { CSS_PROPERTIES, CSS_TRAITS, CSS_UNIT, PROXY_INLINESTYLE, checkFontSizeVa
 const { assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { CSS, FILE } = squared.lib.regex;
 const { getElementData, getElementAsNode, getElementCache, setElementCache } = squared.lib.session;
-const { aboveRange, belowRange, convertCamelCase, convertFloat, convertInt, hasBit, hasValue, isNumber, isObject, iterateArray, spliceString, splitEnclosing, splitPair } = squared.lib.util;
+const { convertCamelCase, convertFloat, convertInt, hasBit, hasValue, isNumber, isObject, iterateArray, spliceString, splitEnclosing, splitPair } = squared.lib.util;
 
 const { SELECTOR_ATTR, SELECTOR_G, SELECTOR_LABEL, SELECTOR_PSEUDO_CLASS } = CSS;
 
@@ -44,6 +44,8 @@ function getFontSizeOptions(node: T) {
     return undefined;
 }
 
+const aboveRange = (a: number, b: number, offset = 1) => a + offset > b;
+const belowRange = (a: number, b: number, offset = 1) => a - offset < b;
 const validateCssSet = (value: string, actualValue: string) => value === actualValue || isLength(value, true) && isPx(actualValue);
 const sortById = (a: T, b: T) => a.id < b.id ? -1 : 1;
 const isInlineVertical = (value: string) => /^(inline|table-cell)/.test(value);
@@ -1093,9 +1095,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return result;
     }
 
-    public intersectX(rect: BoxRectDimension, dimension: BoxType = 'linear') {
+    public intersectX(rect: BoxRectDimension, options?: CoordsXYOptions) {
         if (rect.width > 0) {
-            const { left, right } = this[dimension];
+            const { left, right } = this[options?.dimension || 'linear'];
             const { left: leftA, right: rightA } = rect;
             return (
                 Math.ceil(left) >= leftA && left < Math.floor(rightA) ||
@@ -1107,9 +1109,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return false;
     }
 
-    public intersectY(rect: BoxRectDimension, dimension: BoxType = 'linear') {
+    public intersectY(rect: BoxRectDimension, options?: CoordsXYOptions) {
         if (rect.height > 0) {
-            const { top, bottom } = this[dimension];
+            const { top, bottom } = this[options?.dimension || 'linear'];
             const { top: topA, bottom: bottomA } = rect;
             return (
                 Math.ceil(top) >= topA && top < Math.floor(bottomA) ||
@@ -1121,34 +1123,60 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return false;
     }
 
-    public withinX(rect: BoxRectDimension, dimension: BoxType = 'bounds') {
+    public withinX(rect: BoxRectDimension, options?: OffsetXYOptions) {
         if (this.pageFlow || rect.width > 0) {
-            const { left, right } = this[dimension];
-            return aboveRange(left, rect.left) && belowRange(right, rect.right);
+            let dimension: Undef<BoxType>,
+                offset: Undef<number>;
+            if (options) {
+                ({ dimension, offset } = options);
+            }
+            const { left, right } = this[dimension || 'bounds'];
+            return aboveRange(left, rect.left, offset) && belowRange(right, rect.right, offset);
         }
         return true;
     }
 
-    public withinY(rect: BoxRectDimension, dimension: BoxType = 'bounds') {
+    public withinY(rect: BoxRectDimension, options?: OffsetXYOptions) {
         if (this.pageFlow || rect.height > 0) {
-            const { top, bottom } = this[dimension];
-            return Math.ceil(top) >= rect.top && Math.floor(bottom) <= rect.bottom;
+            let dimension: Undef<BoxType>,
+                offset: Undef<number>;
+            if (options) {
+                ({ dimension, offset } = options);
+            }
+            const { top, bottom } = this[dimension || 'bounds'];
+            return aboveRange(top, rect.top, offset) && belowRange(bottom, rect.bottom, offset);
         }
         return true;
     }
 
-    public outsideX(rect: BoxRectDimension, dimension: BoxType = 'linear') {
+    public outsideX(rect: BoxRectDimension, options?: OffsetXYOptions) {
         if (this.pageFlow || rect.width > 0) {
-            const { left, right } = this[dimension];
-            return left < Math.floor(rect.left) || right > Math.ceil(rect.right);
+            let dimension: Undef<BoxType>,
+                offset: Undef<number>;
+            if (options) {
+                ({ dimension, offset } = options);
+            }
+            const { left, right } = this[dimension || 'linear'];
+            if (offset === undefined) {
+                return left < Math.floor(rect.left) || right > Math.ceil(rect.right);
+            }
+            return left < rect.left - offset || right > rect.right + offset;
         }
         return false;
     }
 
-    public outsideY(rect: BoxRectDimension, dimension: BoxType = 'linear') {
+    public outsideY(rect: BoxRectDimension, options?: OffsetXYOptions) {
         if (this.pageFlow || rect.height > 0) {
-            const { top, bottom } = this[dimension];
-            return top < Math.floor(rect.top) || bottom > Math.ceil(rect.bottom);
+            let dimension: Undef<BoxType>,
+                offset: Undef<number>;
+            if (options) {
+                ({ dimension, offset } = options);
+            }
+            const { top, bottom } = this[dimension || 'linear'];
+            if (offset === undefined) {
+                return top < Math.floor(rect.top) || bottom > Math.ceil(rect.bottom);
+            }
+            return top < rect.top - offset || bottom > rect.bottom + offset;
         }
         return false;
     }

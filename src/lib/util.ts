@@ -1004,14 +1004,6 @@ export function withinRange(a: number, b: number, offset = 1) {
     return b >= (a - offset) && b <= (a + offset);
 }
 
-export function aboveRange(a: number, b: number, offset = 1) {
-    return a + offset > b;
-}
-
-export function belowRange(a: number, b: number, offset = 1) {
-    return a - offset < b;
-}
-
 export function assignEmptyProperty(dest: {}, source: {}) {
     for (const attr in source) {
         if (!Object.prototype.hasOwnProperty.call(dest, attr)) {

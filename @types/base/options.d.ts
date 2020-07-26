@@ -154,3 +154,11 @@ interface TranslateOptions {
     oppose?: boolean;
     relative?: boolean;
 }
+
+interface CoordsXYOptions {
+    dimension?: BoxType;
+}
+
+interface OffsetXYOptions extends CoordsXYOptions {
+    offset?: number;
+}

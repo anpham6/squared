@@ -55,10 +55,11 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                 mainData.row
                     ? ['top', 'left', 'right', 'intersectY']
                     : ['left', 'top', 'bottom', 'intersectX'];
+            const options: CoordsXYOptions = { dimension: 'bounds' };
             children.sort((a, b) => {
                 const linearA = a.linear;
                 const linearB = b.linear;
-                if (!a[method as NodeIntersectXY](b.bounds, 'bounds')) {
+                if (!a[method as NodeIntersectXY](b.bounds, options)) {
                     return linearA[align] < linearB[align] ? -1 : 1;
                 }
                 else {
@@ -79,7 +80,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
             let i = 1;
             while (i < length) {
                 const item = children[i++];
-                if (rowStart[method as NodeIntersectXY](item.bounds, 'bounds')) {
+                if (rowStart[method as NodeIntersectXY](item.bounds, options)) {
                     row.push(item);
                 }
                 else {

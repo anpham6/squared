@@ -287,8 +287,6 @@ declare module "lib" {
         function searchObject(obj: StringMap, value: string | StringMap): [string, string][];
         function hasValue<T>(value: any): value is T;
         function withinRange(a: number, b: number, offset?: number): boolean;
-        function aboveRange(a: number, b: number, offset?: number): boolean;
-        function belowRange(a: number, b: number, offset?: number): boolean;
         function assignEmptyProperty(dest: {}, source: {}): {};
         function assignEmptyValue(dest: {}, ...attrs: string[]): void;
         function sortNumber(values: number[], ascending?: boolean): number[];

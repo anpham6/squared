@@ -139,7 +139,7 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
                             let i = 0;
                             while (i < length) {
                                 const item = children[i++];
-                                if (item.floating && item !== target && item.intersectY(target.bounds, 'bounds')) {
+                                if (item.floating && item !== target && item.intersectY(target.bounds, { dimension: 'bounds' })) {
                                     resetBox(item as NodeUI, region);
                                 }
                             }

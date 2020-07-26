@@ -372,12 +372,12 @@ declare module "base" {
         data<T = unknown>(name: string, attr: string, value?: any, overwrite?: boolean): Undef<T>;
         unsetCache(...attrs: string[]): void;
         ascend(options: AscendOptions<Node>): Node[];
-        intersectX(rect: BoxRectDimension, dimension?: BoxType): boolean;
-        intersectY(rect: BoxRectDimension, dimension?: BoxType): boolean;
-        withinX(rect: BoxRectDimension, dimension?: BoxType): boolean;
-        withinY(rect: BoxRectDimension, dimension?: BoxType): boolean;
-        outsideX(rect: BoxRectDimension, dimension?: BoxType): boolean;
-        outsideY(rect: BoxRectDimension, dimension?: BoxType): boolean;
+        intersectX(rect: BoxRectDimension, options?: CoordsXYOptions): boolean;
+        intersectY(rect: BoxRectDimension, options?: CoordsXYOptions): boolean;
+        withinX(rect: BoxRectDimension, options?: OffsetXYOptions): boolean;
+        withinY(rect: BoxRectDimension, options?: OffsetXYOptions): boolean;
+        outsideX(rect: BoxRectDimension, options?: OffsetXYOptions): boolean;
+        outsideY(rect: BoxRectDimension, options?: OffsetXYOptions): boolean;
         css(attr: string, value?: string, cache?: boolean): string;
         cssInitial(attr: string, options?: CssInitialOptions): string;
         cssAny(attr: string, options: CssAnyOptions): boolean;

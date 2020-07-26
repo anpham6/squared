@@ -7,7 +7,7 @@ interface Node extends NodeUI {
     spacer?: number;
 }
 
-const { aboveRange, belowRange, withinRange } = squared.lib.util;
+const { withinRange } = squared.lib.util;
 
 function getRowIndex(columns: NodeUI[][], target: NodeUI) {
     const topA = target.bounds.top;
@@ -128,7 +128,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                     for (let j = 0; j < q; ++j) {
                         const nextX = nextAxisX[j];
                         const { left, right } = nextX.linear;
-                        if (i === 0 || aboveRange(left, columnRight[i - 1])) {
+                        if (i === 0 || Math.ceil(left) >= Math.floor(columnRight[i - 1])) {
                             const row = columns[i] ?? (columns[i] = []);
                             if (i === 0 || columns[0].length === q) {
                                 row[j] = nextX;
@@ -255,8 +255,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                             while (k < q) {
                                 const sibling = children[k++];
                                 if (!assigned.has(sibling) && sibling.visible && !sibling.rendered) {
-                                    const { left, right } = sibling.linear;
-                                    if (aboveRange(left, item.linear.right) && belowRange(right, columnEnd[l])) {
+                                    if (sibling.withinX({ left: item.linear.right, right: columnEnd[l] } as BoxRectDimension, { dimension: 'linear' })) {
                                         (data.siblings ?? (data.siblings = [])).push(sibling);
                                     }
                                 }
