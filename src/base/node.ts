@@ -18,7 +18,7 @@ function setStyleCache(element: HTMLElement, attr: string, sessionId: string, va
     if (current !== value) {
         element.style.setProperty(attr, value);
         if (validateCssSet(value, element.style.getPropertyValue(attr))) {
-            setElementCache(element, attr, sessionId, value !== 'auto' ? current : '');
+            setElementCache(element, attr, sessionId, current);
             return true;
         }
         return false;
@@ -1286,18 +1286,16 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     public cssTryAll(values: StringMap, callback?: FunctionSelf<this>) {
         if (this.styleElement) {
-            const success: string[] = [];
+            const succeeded: StringMap = {};
+            const sessionId = this.sessionId;
             const element = this._element as HTMLElement;
             const style = getStyle(element);
             for (const attr in values) {
-                if (setStyleCache(element, attr, this.sessionId, values[attr]!, style.getPropertyValue(attr))) {
-                    success.push(attr);
+                if (setStyleCache(element, attr, sessionId, values[attr]!, style.getPropertyValue(attr))) {
+                    succeeded[attr] = '';
                 }
                 else {
-                    let i = 0;
-                    while (i < success.length) {
-                        this.cssFinally(success[i++]);
-                    }
+                    this.cssFinally(succeeded);
                     return false;
                 }
             }

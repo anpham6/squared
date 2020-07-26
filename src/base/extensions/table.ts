@@ -165,9 +165,9 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 if (!td.visibleStyle.backgroundImage && !td.visibleStyle.backgroundColor) {
                     const exclude = /rgba\(0, 0, 0, 0\)|transparent/;
                     if (colgroup) {
-                        const element = colgroup.children[index + 1];
-                        if (element) {
-                            const { backgroundImage, backgroundColor } = getStyle(element);
+                        const group = colgroup.children[index + 1];
+                        if (group) {
+                            const { backgroundImage, backgroundColor } = getStyle(group);
                             if (backgroundImage !== 'none') {
                                 td.css('backgroundImage', backgroundImage, true);
                             }

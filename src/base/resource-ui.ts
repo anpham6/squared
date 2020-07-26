@@ -6,7 +6,7 @@ import { NODE_ALIGNMENT, NODE_RESOURCE } from './lib/enumeration';
 
 const { USER_AGENT, isUserAgent } = squared.lib.client;
 const { parseColor } = squared.lib.color;
-const { CSS_PROPERTIES, calculate, convertAngle, formatPX, getBackgroundPosition, hasComputedStyle, hasCoords, isCalc, isLength, isParentStyle, isPercent, parseAngle } = squared.lib.css;
+const { CSS_PROPERTIES, calculate, convertAngle, formatPX, getBackgroundPosition, hasComputedStyle, hasCoords, isCalc, isLength, isPercent, parseAngle } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = squared.lib.math;
 const { STRING } = squared.lib.regex;
@@ -613,7 +613,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             if (trim) {
                 value = value.trim();
             }
-            return value.includes('\n') && (node.plainText && isParentStyle(element, 'whiteSpace', 'pre', 'pre-wrap') || node.css('whiteSpace').startsWith('pre'));
+            return value.includes('\n') && (node.preserveWhiteSpace || node.plainText && node.actualParent!.preserveWhiteSpace || node.css('whiteSpace') === 'pre-line');
         }
         return false;
     }
@@ -938,23 +938,24 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         }
                         value = value.replace(REGEXP_TRAILINGINDENT, '');
                     }
+                }
+                case 'break-spaces':
                     value = value
                         .replace(/\n/g, '\\n')
                         .replace(/\t/g, ResourceUI.STRING_SPACE.repeat(node.toInt('tabSize', 8)))
                         .replace(/\s/g, ResourceUI.STRING_SPACE);
-                    inlined = true;
                     trimming = false;
                     break;
-                }
                 case 'pre-line':
-                    value
+                    value = value
                         .replace(/\n/g, '\\n')
-                        .replace(/\s+/g, ' ');
-                    inlined = true;
+                        .replace(/\s{2,}/g, ' ');
                     trimming = false;
                     break;
                 case 'nowrap':
-                    value = value.replace(/\n+/g, ' ');
+                    value = value
+                        .replace(/\n+/g, ' ')
+                        .replace(/\s{2,}/g, ' ');
                     inlined = true;
                 default: {
                     if (node.onlyChild && node.htmlElement) {
@@ -993,9 +994,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         if (value) {
             if (trimming) {
                 if (!node.naturalChild) {
-                    if (trimming) {
-                        value = value.replace(CHAR_TRAILINGSPACE, node.horizontalRowEnd ? '' : ResourceUI.STRING_SPACE);
-                    }
+                    value = value.replace(CHAR_TRAILINGSPACE, node.horizontalRowEnd ? '' : ResourceUI.STRING_SPACE);
                 }
                 else if (node.pageFlow) {
                     const previousSibling = node.siblingsLeading[0];

@@ -327,7 +327,7 @@ export const PROXY_INLINESTYLE = Object.freeze(new Proxy(
         borderLeftStyle: 'none'
     } as CSSStyleDeclaration,
     {
-        get: (target, attr) => target[attr] || ''
+        get: (target, attr) => target[attr] as string || ''
     }
 ));
 

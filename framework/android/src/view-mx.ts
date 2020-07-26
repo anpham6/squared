@@ -2459,7 +2459,19 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 finalizeGravity(this, 'layout_gravity');
                 finalizeGravity(this, 'gravity');
-                if (this.imageElement) {
+                if (this.textElement) {
+                    if (this.multiline) {
+                        switch (this.css('whiteSpace')) {
+                            case 'nowrap':
+                            case 'pre':
+                                break;
+                            default:
+                                this.android('hyphenationFrequency', 'full');
+                                break;
+                        }
+                    }
+                }
+                else if (this.imageElement) {
                     const { layoutWidth, layoutHeight } = this;
                     if (layoutWidth === 'wrap_content' && layoutHeight !== 'wrap_content' ||
                         layoutWidth !== 'wrap_content' && layoutHeight === 'wrap_content' ||

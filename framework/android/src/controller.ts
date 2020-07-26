@@ -14,7 +14,7 @@ const { CSS_UNIT, formatPX, getSrcSet, hasCoords, hasComputedStyle, isPercent } 
 const { getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
-const { aboveRange, assignEmptyValue, convertWord, hasBit, hasMimeType, isString, iterateArray, parseMimeType, partitionArray, plainMap, withinRange } = squared.lib.util;
+const { assignEmptyValue, convertWord, hasBit, hasMimeType, isString, iterateArray, parseMimeType, partitionArray, plainMap, withinRange } = squared.lib.util;
 
 const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
@@ -1987,11 +1987,16 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                     }
                 }
-                if (node.css('whiteSpace') === 'nowrap') {
-                    node.android('maxLines', '1');
-                    if (node.css('textOverflow') === 'ellipsis' && node.css('overflow') === 'hidden') {
-                        node.android('ellipsize', 'end');
-                    }
+                switch (node.css('whiteSpace')) {
+                    case 'nowrap':
+                        node.android('singleLine', 'true');
+                        if (node.css('textOverflow') === 'ellipsis' && node.css('overflow') === 'hidden') {
+                            node.android('ellipsize', 'end');
+                        }
+                        break;
+                    case 'pre':
+                        node.android('breakStrategy', 'simple');
+                        break;
                 }
                 break;
             }
@@ -3260,7 +3265,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 if (textBottom === undefined) {
                                     textBottom = getTextBottom(children)[0] || null;
                                 }
-                                if (aboveRange(item.linear.bottom, node.box.bottom)) {
+                                if (Math.ceil(item.linear.bottom) >= Math.floor(node.box.bottom)) {
                                     item.anchor('bottom', 'parent');
                                 }
                                 else if (textBottom || baseline?.textElement === false) {

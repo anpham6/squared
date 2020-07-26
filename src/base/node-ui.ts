@@ -2091,8 +2091,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get preserveWhiteSpace() {
         const result = this._cached.preserveWhiteSpace;
         if (result === undefined) {
-            const value = this.css('whiteSpace');
-            return this._cached.preserveWhiteSpace = value === 'pre' || value === 'pre-wrap';
+            switch (this.css('whiteSpace')) {
+                case 'pre':
+                case 'pre-wrap':
+                case 'break-spaces':
+                    return this._cached.preserveWhiteSpace = true;
+                default:
+                    return this._cached.preserveWhiteSpace = false;
+            }
         }
         return result;
     }
