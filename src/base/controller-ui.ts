@@ -6,7 +6,7 @@ import { NODE_TEMPLATE } from './lib/enumeration';
 const { USER_AGENT, isUserAgent } = squared.lib.client;
 const { CSS_PROPERTIES, formatPX, getStyle, hasCoords, isLength, isPercent } = squared.lib.css;
 const { withinViewport } = squared.lib.dom;
-const { actualClientRect, getElementCache, setElementCache } = squared.lib.session;
+const { getElementCache, setElementCache } = squared.lib.session;
 const { capitalize, convertFloat, iterateArray, joinArray } = squared.lib.util;
 
 const BORDER_TOP = CSS_PROPERTIES.borderTop.value as string[];
@@ -404,11 +404,12 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         else {
             style = getStyle(element);
             if (style.getPropertyValue('display') !== 'none') {
-                const rect = actualClientRect(element, sessionId);
+                const rect = element.getBoundingClientRect();
                 if (!withinViewport(rect)) {
                     return false;
                 }
                 ({ width, height } = rect);
+                setElementCache(element, 'clientRect', sessionId, rect);
             }
             else {
                 return false;

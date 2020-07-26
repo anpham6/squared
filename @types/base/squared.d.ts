@@ -54,6 +54,7 @@ declare module "base" {
         excluded: NodeList<T>;
         rootElements: Set<HTMLElement>;
         initializing: boolean;
+        elementMap: Map<Element, ElementData>;
         node?: T;
         documentElement?: T;
     }
@@ -357,6 +358,7 @@ declare module "base" {
 
     class Node extends squared.lib.base.Container<Node> implements BoxModel {
         static readonly TEXT_STYLE: string[];
+        static getPseudoElt(element: Element, sessionId: string): string;
         static sanitizeCss(element: HTMLElement, styleMap: StringMap, style?: CSSStyleDeclaration): StringMap;
         depth: number;
         childIndex: number;

@@ -157,7 +157,7 @@ declare module "lib" {
         function newBoxRectDimension(): BoxRectDimension;
         function withinViewport(rect: DOMRect | ClientRect): boolean;
         function assignRect(rect: Undef<DOMRect | ClientRect | BoxRectDimension>, scrollPosition?: boolean): BoxRectDimension;
-        function getRangeClientRect(element: Element): Undef<BoxRectDimension>;
+        function getRangeClientRect(element: Element, textOnly?: boolean): Undef<BoxRectDimension>;
         function removeElementsByClassName(className: string): void;
         function getElementsBetweenSiblings(elementStart: Null<Element>, elementEnd: Element): Undef<Element[]>;
         function getNamedItem(element: Element, attr: string): string;
@@ -229,15 +229,13 @@ declare module "lib" {
     }
 
     namespace session {
-        function actualClientRect(element: Element, sessionId?: string): ClientRect;
-        function actualTextRangeRect(element: Element, sessionId?: string): Undef<BoxRectDimension>;
-        function getPseudoElt(element: Element, sessionId?: string): string;
-        function getStyleValue(element: Element, attr: string, sessionId?: string): string;
-        function getElementAsNode<T>(element: Element, sessionId?: string): Null<T>;
+        function newSessionInit(value: string): Map<Element, ElementData>;
+        function resetSessionAll(): void;
+        function frameworkNotInstalled<T = void>(): Promise<T>;
         function setElementCache(element: Element, attr: string, sessionId: string, data: any): void;
         function getElementCache<T = unknown>(element: Element, attr: string, sessionId?: string): Undef<T>;
-        function deleteElementCache(element: Element, attr: string, sessionId: string): void;
-        function frameworkNotInstalled<T = void>(): Promise<T>;
+        function getElementData(element: Element, sessionId?: string): Undef<ElementData>;
+        function getElementAsNode<T>(element: Element, sessionId?: string): Null<T>;
     }
 
     namespace util {

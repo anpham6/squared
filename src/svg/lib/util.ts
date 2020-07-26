@@ -2,7 +2,7 @@ const { CSS_UNIT, calculateStyle: calculateCssStyle, calculateVar, calculateVarA
 const { getNamedItem } = squared.lib.dom;
 const { clamp, convertRadian, hypotenuse } = squared.lib.math;
 const { TRANSFORM: REGEXP_TRANSFORM } = squared.lib.regex;
-const { getStyleValue } = squared.lib.session;
+const { getElementCache } = squared.lib.session;
 const { convertCamelCase, convertFloat, resolvePath, splitPair } = squared.lib.util;
 
 function setOriginPosition(element: Element, point: Point, attr: string, value: string, dimension: number) {
@@ -27,6 +27,11 @@ function getDataSetValue(element: SVGElement, attr: string) {
         }
     }
     return '';
+}
+
+function getStyleValue(element: Element, attr: string) {
+    const styleMap = getElementCache<StringMap>(element, 'styleMap');
+    return styleMap && styleMap[convertCamelCase(attr)] || '';
 }
 
 const getViewportArea = (viewBox: DOMRect, min?: boolean) => min ? Math.min(viewBox.width, viewBox.height) : hypotenuse(viewBox.width, viewBox.height);

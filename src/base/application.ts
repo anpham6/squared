@@ -7,7 +7,7 @@ type PreloadImage = HTMLImageElement | string;
 
 const { CSS_PROPERTIES, CSS_TRAITS, checkMediaRule, getSpecificity, hasComputedStyle, insertStyleSheetRule, getPropertiesAsTraits, parseSelectorText } = squared.lib.css;
 const { FILE, STRING } = squared.lib.regex;
-const { frameworkNotInstalled, getElementCache, setElementCache } = squared.lib.session;
+const { frameworkNotInstalled, getElementCache, newSessionInit, resetSessionAll, setElementCache } = squared.lib.session;
 const { capitalize, convertCamelCase, parseMimeType, plainMap, promisify, resolvePath, splitPair, splitPairStart, trimBoth } = squared.lib.util;
 
 const REGEXP_DATAURI = new RegExp(`url\\("?(${STRING.DATAURI})"?\\),?\\s*`, 'g');
@@ -146,6 +146,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     public reset() {
         this._nextId = 0;
         this.elementMap.clear();
+        resetSessionAll();
         this.session.active.clear();
         this.session.unusedStyles.clear();
         this._controllerHandler.reset();
@@ -166,14 +167,15 @@ export default abstract class Application<T extends Node> implements squared.bas
             cache: new NodeList<T>(undefined, sessionId),
             excluded: new NodeList<T>(undefined, sessionId),
             rootElements,
+            elementMap: newSessionInit(sessionId),
             initializing: false
         };
-        let documentRoot: Undef<HTMLElement>,
-            preloaded: Undef<HTMLImageElement[]>;
         this.session.active.set(sessionId, processing);
         this._controllerHandler.init();
         this.setStyleMap(sessionId);
         const styleElement = insertStyleSheetRule('html > body { overflow: hidden !important; }');
+        let documentRoot: Undef<HTMLElement>,
+            preloaded: Undef<HTMLImageElement[]>;
         if (elements.length === 0) {
             documentRoot = this.mainElement;
             rootElements.add(documentRoot);

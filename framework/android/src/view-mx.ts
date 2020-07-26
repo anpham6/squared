@@ -6,9 +6,8 @@ import { getDataSet, isHorizontalAlign, isVerticalAlign, localizeString } from '
 type T = android.base.View;
 
 const { CSS_PROPERTIES, CSS_UNIT, formatPX, getBackgroundPosition, isLength, isPercent, parseTransform } = squared.lib.css;
-const { getNamedItem } = squared.lib.dom;
+const { getNamedItem, getRangeClientRect } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
-const { actualTextRangeRect } = squared.lib.session;
 const { capitalize, convertInt, convertWord, fromLastIndexOf, hasKeys, isNumber, isString, replaceMap, splitPair } = squared.lib.util;
 
 const { EXT_NAME } = squared.base.lib.constant;
@@ -233,7 +232,7 @@ function getLineSpacingExtra(node: T, lineHeight: number) {
         }
     }
     if (!height && node.styleText) {
-        node.cssTryAll(OPTIONS_LINEHEIGHT, function(this: T) { height = actualTextRangeRect(this.element!)?.height; });
+        node.cssTryAll(OPTIONS_LINEHEIGHT, function(this: T) { height = getRangeClientRect(this.element!)?.height; });
     }
     return height ? (lineHeight - height) / 2 : 0;
 }
@@ -887,7 +886,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     return;
                                 }
                                 else if (this.cssTry('display', 'inline-block')) {
-                                    const width = Math.ceil(actualTextRangeRect(this.element!)?.width || 0);
+                                    const width = Math.ceil(getRangeClientRect(this.element!)?.width || 0);
                                     layoutWidth = width >= actualParent.box.width ? 'wrap_content' : 'match_parent';
                                     this.cssFinally('display');
                                     return;

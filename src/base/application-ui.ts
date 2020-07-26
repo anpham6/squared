@@ -12,7 +12,7 @@ type FileActionOptions = squared.base.FileActionOptions;
 
 const { convertListStyle, formatPX, getStyle, hasComputedStyle, hasCoords, insertStyleSheetRule, resolveURL } = squared.lib.css;
 const { getNamedItem, removeElementsByClassName } = squared.lib.dom;
-const { getElementCache, getPseudoElt, setElementCache } = squared.lib.session;
+const { getElementCache, setElementCache } = squared.lib.session;
 const { appendSeparator, capitalize, convertWord, flatArray, hasBit, hasMimeType, isEmptyString, isString, iterateArray, partitionArray, trimBoth, trimString } = squared.lib.util;
 
 const TEXT_STYLE = NodeUI.TEXT_STYLE.slice(0);
@@ -525,7 +525,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             id = '__squared_' + Math.round(Math.random() * new Date().getTime());
                             parentElement.id = id;
                         }
-                        styleElement = insertStyleSheetRule(`#${id + getPseudoElt(item.element as Element, item.sessionId)} { display: none !important; }`);
+                        styleElement = insertStyleSheetRule(`#${id + NodeUI.getPseudoElt(item.element as Element, sessionId)} { display: none !important; }`);
                     }
                     if (item.cssTry('display', item.display)) {
                         pseudoMap.push({ item, id, parentElement, styleElement });
@@ -1820,8 +1820,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             pseudoElement.style[attr] = styleMap[attr];
                         }
                     }
-                    setElementCache(pseudoElement, 'pseudoElement', sessionId, pseudoElt);
                     setElementCache(pseudoElement, 'styleMap', sessionId, styleMap);
+                    setElementCache(pseudoElement, 'pseudoElt', sessionId, pseudoElt);
                     return pseudoElement;
                 }
             }

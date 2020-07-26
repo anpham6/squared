@@ -4,7 +4,7 @@ const { USER_AGENT, isUserAgent } = squared.lib.client;
 const { CSS_PROPERTIES, CSS_TRAITS, CSS_UNIT, checkFontSizeValue, checkStyleValue, checkWritingMode, formatPX, getRemSize, getStyle, hasComputedStyle, isAngle, isEm, isLength, isPercent, isTime, isPx, parseSelectorText, parseUnit } = squared.lib.css;
 const { assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { CSS, FILE } = squared.lib.regex;
-const { actualClientRect, actualTextRangeRect, deleteElementCache, getElementAsNode, getElementCache, getPseudoElt, setElementCache } = squared.lib.session;
+const { getElementData, getElementAsNode, getElementCache, setElementCache } = squared.lib.session;
 const { aboveRange, belowRange, convertCamelCase, convertFloat, convertInt, hasBit, hasValue, isNumber, isObject, iterateArray, spliceString, splitEnclosing, splitPair } = squared.lib.util;
 
 const { SELECTOR_ATTR, SELECTOR_G, SELECTOR_LABEL, SELECTOR_PSEUDO_CLASS } = CSS;
@@ -25,14 +25,6 @@ function setStyleCache(element: HTMLElement, attr: string, sessionId: string, va
         }
     }
     return true;
-}
-
-function deleteStyleCache(element: HTMLElement, attr: string, sessionId: string) {
-    const value = getElementCache<string>(element, attr, sessionId);
-    if (value !== undefined) {
-        element.style.setProperty(attr, value);
-        deleteElementCache(element, attr, sessionId);
-    }
 }
 
 function parseLineHeight(lineHeight: string, fontSize: number) {
@@ -803,6 +795,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         'wordSpacing'
     ];
 
+    public static getPseudoElt(element: Element, sessionId: string) {
+        return getElementCache<string>(element, 'pseudoElt', sessionId) || '';
+    }
+
     public static sanitizeCss(element: HTMLElement, styleMap: StringMap, style?: CSSStyleDeclaration) {
         const result: StringMap = {};
         const writingMode = style !== undefined ? style.writingMode : '';
@@ -862,7 +858,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         super();
         if (element) {
             this._element = element;
-            this.style = !this.pseudoElement ? getStyle(element) : getStyle(element.parentElement, getPseudoElt(element, sessionId));
+            this.style = !this.pseudoElement ? getStyle(element) : getStyle(element.parentElement, Node.getPseudoElt(element, sessionId));
             if (!this.syncWith(sessionId)) {
                 this._styleMap = {};
             }
@@ -1270,7 +1266,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             const element = this._element as Element;
             return (
                 this.pseudoElement
-                    ? getElementCache<ObjectMap<number>>(element.parentElement as Element, `styleSpecificity${getPseudoElt(element, this.sessionId)}`, this.sessionId)?.[attr]
+                    ? getElementCache<ObjectMap<number>>(element.parentElement as Element, `styleSpecificity${Node.getPseudoElt(element, this.sessionId)}`, this.sessionId)?.[attr]
                     : getElementCache<ObjectMap<number>>(element, 'styleSpecificity', this.sessionId)?.[attr]
             ) || 0;
         }
@@ -1323,12 +1319,23 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     public cssFinally(attrs: string | StringMap) {
         if (this.styleElement) {
             const element = this._element as HTMLElement;
-            if (typeof attrs === 'string') {
-                deleteStyleCache(element, attrs, this.sessionId);
-            }
-            else {
-                for (const attr in attrs) {
-                    deleteStyleCache(element, attr, this.sessionId);
+            const elementData = getElementData(element, this.sessionId);
+            if (elementData) {
+                if (typeof attrs === 'string') {
+                    const value = elementData[attrs] as Undef<string>;
+                    if (value !== undefined) {
+                        element.style.setProperty(attrs, value);
+                    }
+                    elementData[attrs] = undefined;
+                }
+                else {
+                    for (const attr in attrs) {
+                        const value = elementData[attr] as Undef<string>;
+                        if (value !== undefined) {
+                            element.style.setProperty(attr, value);
+                        }
+                        elementData[attr] = undefined;
+                    }
                 }
             }
         }
@@ -1506,14 +1513,20 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     public setBounds(cache = true) {
         let bounds: Undef<BoxRectDimension>;
         if (this.styleElement) {
-            if (!cache) {
-                deleteElementCache(this._element!, 'clientRect', this.sessionId);
+            const elementData = getElementData(this._element!, this.sessionId);
+            if (elementData) {
+                if (!cache || !elementData.clientRect) {
+                    elementData.clientRect = this._element!.getBoundingClientRect();
+                }
+                bounds = assignRect(elementData.clientRect);
             }
-            bounds = assignRect(actualClientRect(this._element!, this.sessionId));
+            else {
+                bounds = assignRect(this._element!.getBoundingClientRect());
+            }
             this._bounds = bounds;
         }
         else if (this.plainText) {
-            const rect = getRangeClientRect(this._element!);
+            const rect = getRangeClientRect(this._element!, true);
             if (rect) {
                 const lines = rect.numberOfLines || 1;
                 rect.numberOfLines = lines;
@@ -2469,7 +2482,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (result === undefined) {
             if (this.naturalChild) {
                 if (this.textElement) {
-                    return this._textBounds = actualTextRangeRect(this._element as Element, this.sessionId) || null;
+                    return this._textBounds = getRangeClientRect(this._element as Element) || null;
                 }
                 else {
                     const children = this.naturalChildren;
@@ -2484,7 +2497,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         while (i < length) {
                             const node = children[i++];
                             if (node.textElement) {
-                                const rect = actualTextRangeRect(node.element as Element, node.sessionId);
+                                const rect = node.textBounds;
                                 if (rect) {
                                     numberOfLines += rect.numberOfLines || (top === Infinity || rect.top >= bottom || Math.floor(rect.right - rect.left) > Math.ceil(rect.width) ? 1 : 0);
                                     top = Math.min(rect.top, top);

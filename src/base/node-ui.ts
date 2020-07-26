@@ -5,9 +5,9 @@ import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURC
 type T = NodeUI;
 
 const { CSS_PROPERTIES, isLength, newBoxModel } = squared.lib.css;
-const { createElement } = squared.lib.dom;
+const { createElement, getRangeClientRect } = squared.lib.dom;
 const { equal } = squared.lib.math;
-const { actualTextRangeRect, getElementAsNode } = squared.lib.session;
+const { getElementAsNode } = squared.lib.session;
 const { capitalize, cloneObject, convertWord, hasBit, hasKeys, isArray, isEmptyString, iterateArray, searchObject, withinRange } = squared.lib.util;
 
 const CSS_SPACING = new Map<number, string>();
@@ -1386,7 +1386,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         const parent = this.actualParent?.element || document.body;
         const element = createElement(tagName !== '#text' ? tagName : 'span', { attrs: { textContent: textContent || 'AgjpqyZ' }, style });
         parent.appendChild(element);
-        const result = actualTextRangeRect(element);
+        const result = getRangeClientRect(element);
         parent.removeChild(element);
         return result ? result.height : NaN;
     }

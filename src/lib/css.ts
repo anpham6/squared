@@ -2,6 +2,7 @@ import { parseColor } from './color';
 import { USER_AGENT, getDeviceDPI, isUserAgent } from './client';
 import { clamp, truncate, truncateFraction } from './math';
 import { CSS, STRING, TRANSFORM } from './regex';
+import { getElementCache, setElementCache  } from './session';
 import { convertAlpha, convertFloat, convertHyphenated, convertRoman, hasBit, hasKeys, isNumber, isString, iterateArray, replaceMap, resolvePath, spliceString, splitEnclosing, splitPair, trimBoth } from './util';
 
 const DOCUMENT_ELEMENT = document.documentElement;
@@ -1544,13 +1545,13 @@ export function newBoxModel(): BoxModel {
 
 export function getStyle(element: Null<Element>, pseudoElt = '') {
     if (element) {
-        const cached = element['__style' + pseudoElt];
-        if (cached) {
-            return cached as CSSStyleDeclaration;
+        let style = getElementCache<CSSStyleDeclaration>(element, 'style' + pseudoElt, '0');
+        if (style) {
+            return style;
         }
         if (hasComputedStyle(element)) {
-            const style = getComputedStyle(element, pseudoElt);
-            element['__style' + pseudoElt] = style;
+            style = getComputedStyle(element, pseudoElt);
+            setElementCache(element, 'style' + pseudoElt, '0', style);
             return style;
         }
         return { position: 'static', display: 'inline' } as CSSStyleDeclaration;

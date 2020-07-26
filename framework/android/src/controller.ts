@@ -13,7 +13,7 @@ const { parseColor } = squared.lib.color;
 const { CSS_UNIT, formatPX, getSrcSet, hasCoords, hasComputedStyle, isPercent } = squared.lib.css;
 const { getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;
-const { getElementAsNode, getPseudoElt } = squared.lib.session;
+const { getElementAsNode } = squared.lib.session;
 const { aboveRange, assignEmptyValue, convertWord, hasBit, hasMimeType, isString, iterateArray, parseMimeType, partitionArray, plainMap, withinRange } = squared.lib.util;
 
 const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
@@ -1160,7 +1160,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     layout.setContainerType(CONTAINER_NODE.TEXT);
                     break;
                 default:
-                    if (node.textContent !== '' && (background || !node.pageFlow || node.pseudoElement && getPseudoElt(node.element as Element, node.sessionId) === '::after')) {
+                    if (node.textContent !== '' && (background || !node.pageFlow || node.pseudoElement && NodeUI.getPseudoElt(node.element as Element, node.sessionId) === '::after')) {
                         layout.setContainerType(CONTAINER_NODE.TEXT);
                         node.inlineText = true;
                     }
