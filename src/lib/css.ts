@@ -2585,20 +2585,20 @@ export function checkStyleValue(element: CSSElement, attr: string, value: string
             }
         case 'inherit':
             switch (attr) {
-                case 'lineHeight':
                 case 'fontSize':
+                case 'lineHeight':
                     return 'inherit';
                 default:
-                    return getInheritedStyle(element, attr);
+                    return style ? style[attr] : getStyle(element, attr);
             }
     }
     if (hasCalc(value)) {
-        value = calculateStyle(element, attr, value);
+        return calculateStyle(element, attr, value) || (style ? style[attr] : '');
     }
     else if (isCustomProperty(value)) {
-        value = parseVar(element, value);
+        return parseVar(element, value) || (style ? style[attr] : '');
     }
-    return value === '' && style?.[attr] as string || value;
+    return value;
 }
 
 export function checkFontSizeValue(value: string, fixedWidth?: boolean) {
@@ -2817,10 +2817,11 @@ export function isParentStyle(element: Element, attr: string, ...styles: string[
     return !!parentElement && styles.includes(getStyle(parentElement)[attr]);
 }
 
-export function getInheritedStyle(element: Element, attr: string, exclude?: RegExp, ...tagNames: string[]) {
+export function getInheritedStyle(element: Element, attr: string, options: InheritedStyleOptions) {
+    const { exclude, tagNames } = options;
     let value = '',
         current = element.parentElement;
-    while (current && !tagNames.includes(current.tagName)) {
+    while (current && (tagNames === undefined || !tagNames.includes(current.tagName))) {
         value = getStyle(current)[attr];
         if (value === 'inherit' || exclude?.test(value)) {
             value = '';

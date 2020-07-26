@@ -40,8 +40,6 @@ function checkTextAlign(value: string, ignoreStart?: boolean) {
         case 'justify':
         case 'initial':
             return !ignoreStart ? 'start' : undefined;
-        case 'inherit':
-            return '';
         default:
             return value;
     }

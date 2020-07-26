@@ -6,7 +6,7 @@ import { NODE_ALIGNMENT, NODE_RESOURCE } from './lib/enumeration';
 
 const { USER_AGENT, isUserAgent } = squared.lib.client;
 const { parseColor } = squared.lib.color;
-const { CSS_PROPERTIES, calculate, convertAngle, formatPX, getBackgroundPosition, getInheritedStyle, hasComputedStyle, hasCoords, isCalc, isLength, isParentStyle, isPercent, parseAngle } = squared.lib.css;
+const { CSS_PROPERTIES, calculate, convertAngle, formatPX, getBackgroundPosition, hasComputedStyle, hasCoords, isCalc, isLength, isParentStyle, isPercent, parseAngle } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = squared.lib.math;
 const { STRING } = squared.lib.regex;
@@ -190,9 +190,6 @@ function setBorderStyle(node: NodeUI, boxStyle: BoxStyle, attr: string, border: 
             switch (color) {
                 case 'initial':
                     color = 'rgb(0, 0, 0)';
-                    break;
-                case 'inherit':
-                    color = getInheritedStyle(node.element as HTMLElement, 'color');
                     break;
                 case 'currentcolor':
                 case 'currentColor':

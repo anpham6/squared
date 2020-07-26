@@ -163,23 +163,23 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     td.css('verticalAlign', 'middle', true);
                 }
                 if (!td.visibleStyle.backgroundImage && !td.visibleStyle.backgroundColor) {
-                    const pattern = /rgba\(0, 0, 0, 0\)|transparent/;
+                    const exclude = /rgba\(0, 0, 0, 0\)|transparent/;
                     if (colgroup) {
                         const { backgroundImage, backgroundColor } = getStyle(colgroup.children[index + 1]);
-                        if (backgroundImage && backgroundImage !== 'none') {
+                        if (backgroundImage !== 'none') {
                             td.css('backgroundImage', backgroundImage, true);
                         }
-                        if (backgroundColor && !pattern.test(backgroundColor)) {
+                        if (!exclude.test(backgroundColor)) {
                             td.css('backgroundColor', backgroundColor);
                             td.setCacheValue('backgroundColor', backgroundColor);
                         }
                     }
                     else {
-                        let value = getInheritedStyle(element, 'backgroundImage', /none/, 'TABLE');
+                        let value = getInheritedStyle(element, 'backgroundImage', { exclude: /none/, tagNames: ['TABLE'] });
                         if (value !== '') {
                             td.css('backgroundImage', value, true);
                         }
-                        value = getInheritedStyle(element, 'backgroundColor', pattern, 'TABLE');
+                        value = getInheritedStyle(element, 'backgroundColor', { exclude, tagNames: ['TABLE'] });
                         if (value !== '') {
                             td.css('backgroundColor', value);
                             td.setCacheValue('backgroundColor', value);

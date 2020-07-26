@@ -56,6 +56,11 @@ interface TransformOptions {
     fontSize?: number;
 }
 
+interface InheritedStyleOptions {
+    exclude?: RegExp;
+    tagNames?: string[];
+}
+
 interface DelimitStringOptions {
     value: string;
     delimiter?: string;

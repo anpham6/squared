@@ -119,7 +119,7 @@ declare module "lib" {
         function getKeyframesRules(): ObjectMap<KeyframesData>;
         function parseKeyframes(rules: CSSRuleList): KeyframesData;
         function isParentStyle(element: Element, attr: string, ...styles: string[]): boolean;
-        function getInheritedStyle(element: Element, attr: string, exclude?: RegExp, ...tagNames: string[]): string;
+        function getInheritedStyle(element: Element, attr: string, options: InheritedStyleOptions): string;
         function calculate(value: string, options?: CalculateOptions): number;
         function calculateVar(element: CSSElement, value: string, options?: CalculateVarOptions): number;
         function calculateVarAsString(element: CSSElement, value: string, options?: CalculateVarAsStringOptions): string;
