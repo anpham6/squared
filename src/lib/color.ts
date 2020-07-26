@@ -980,7 +980,7 @@ export function parseColor(value: string, opacity = 1, transparency?: boolean) {
         }
         let key = '',
             rgba: Undef<RGBA>;
-        if (value.charAt(0) === '#') {
+        if (value.startsWith('#')) {
             rgba = parseRGBA(value);
         }
         else {

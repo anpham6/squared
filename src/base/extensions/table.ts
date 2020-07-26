@@ -165,13 +165,16 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 if (!td.visibleStyle.backgroundImage && !td.visibleStyle.backgroundColor) {
                     const exclude = /rgba\(0, 0, 0, 0\)|transparent/;
                     if (colgroup) {
-                        const { backgroundImage, backgroundColor } = getStyle(colgroup.children[index + 1]);
-                        if (backgroundImage !== 'none') {
-                            td.css('backgroundImage', backgroundImage, true);
-                        }
-                        if (!exclude.test(backgroundColor)) {
-                            td.css('backgroundColor', backgroundColor);
-                            td.setCacheValue('backgroundColor', backgroundColor);
+                        const element = colgroup.children[index + 1];
+                        if (element) {
+                            const { backgroundImage, backgroundColor } = getStyle(element);
+                            if (backgroundImage !== 'none') {
+                                td.css('backgroundImage', backgroundImage, true);
+                            }
+                            if (!exclude.test(backgroundColor)) {
+                                td.css('backgroundColor', backgroundColor);
+                                td.setCacheValue('backgroundColor', backgroundColor);
+                            }
                         }
                     }
                     else {

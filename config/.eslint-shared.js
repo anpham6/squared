@@ -148,7 +148,7 @@ module.exports = {
         "@typescript-eslint/no-use-before-define": "off",
         "@typescript-eslint/quotes": "off",
         "@typescript-eslint/explicit-function-return-type": "off",
-        "@typescript-eslint/prefer-string-starts-ends-with": "off",
+        "@typescript-eslint/prefer-string-starts-ends-with": "error",
         "@typescript-eslint/camelcase": "off",
         "@typescript-eslint/no-unused-vars": "off",
         "@typescript-eslint/explicit-module-boundary-types": "off",

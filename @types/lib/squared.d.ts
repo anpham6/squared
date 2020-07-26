@@ -101,17 +101,18 @@ declare module "lib" {
             NONE = 1 << 6,
             AUTO = 1 << 7
         }
+        const PROXY_INLINESTYLE: Readonly<CSSStyleDeclaration>;
         const CSS_PROPERTIES: CssProperties;
         const SVG_PROPERTIES: CssProperties;
         const ELEMENT_BLOCK: Set<string>;
         function getPropertiesAsTraits(value: number, map?: string): ObjectMap<CssPropertyData>;
         function newBoxModel(): BoxModel;
-        function getStyle(element: Null<Element>, pseudoElt?: string): CSSStyleDeclaration;
+        function getStyle(element: Element, pseudoElt?: string): CSSStyleDeclaration;
         function getRemSize(fixedWidth?: boolean): number;
         function getFontSize(element: Element): number;
         function hasComputedStyle(element: Element): element is HTMLElement;
         function checkWritingMode(attr: string, value: string): string;
-        function checkStyleValue(element: CSSElement, attr: string, value: string, style?: CSSStyleDeclaration): string;
+        function checkStyleValue(element: CSSElement, attr: string, value: string): string;
         function checkFontSizeValue(value: string): string;
         function checkMediaRule(value: string, fontSize?: number): boolean;
         function parseSelectorText(value: string, document?: boolean): string[];
@@ -125,7 +126,7 @@ declare module "lib" {
         function calculateVarAsString(element: CSSElement, value: string, options?: CalculateVarAsStringOptions): string;
         function calculateStyle(element: CSSElement, attr: string, value: string, boundingBox?: Dimension): string;
         function parseVar(element: CSSElement, value: string): string;
-        function getContentBoxDimension(element: Null<HTMLElement>): Dimension;
+        function getContentBoxDimension(element: Null<CSSElement>): Dimension;
         function getBackgroundPosition(value: string, dimension: Dimension, options?: BackgroundPositionOptions): BoxRectPosition;
         function getSrcSet(element: HTMLImageElement, mimeType?: string[]): Undef<ImageSrcSet[]>;
         function convertListStyle(name: string, value: number, valueAsDefault?: boolean): string;

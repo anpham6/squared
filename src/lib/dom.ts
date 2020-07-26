@@ -153,7 +153,7 @@ export function getElementsBetweenSiblings(elementStart: Null<Element>, elementE
             if (startIndex !== -1 && endIndex !== -1) {
                 iterateArray(parent.childNodes, (element: Element) => {
                     const nodeName = element.nodeName;
-                    if (nodeName[0] !== '#' || nodeName === '#text') {
+                    if (!nodeName.startsWith('#') || nodeName === '#text') {
                         result.push(element);
                     }
                 },

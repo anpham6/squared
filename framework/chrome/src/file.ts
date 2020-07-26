@@ -23,7 +23,7 @@ function parseFileAs(attr: string, value: Undef<string>): [string, Undef<string>
 function getFilePath(value: string, saveTo?: boolean): [Undef<string>, string, string] {
     value = value.replace(/\\/g, '/');
     let moveTo: Undef<string>;
-    if (value.charAt(0) === '/') {
+    if (value.startsWith('/')) {
         moveTo = STRING_SERVERROOT;
     }
     else if (value.startsWith('../')) {

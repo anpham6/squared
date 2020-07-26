@@ -313,6 +313,24 @@ export const enum CSS_TRAITS {
     AUTO = 1 << 7
 }
 
+export const PROXY_INLINESTYLE = Object.freeze(new Proxy(
+    {
+        position: 'static',
+        display: 'inline',
+        verticalAlign: 'baseline',
+        float: 'none',
+        backgroundColor: 'transparent',
+        backgroundImage: 'none',
+        borderTopStyle: 'none',
+        borderRightStyle: 'none',
+        borderBottomStyle: 'none',
+        borderLeftStyle: 'none'
+    } as CSSStyleDeclaration,
+    {
+        get: (target, attr) => target[attr] || ''
+    }
+));
+
 export const CSS_PROPERTIES: CssProperties = {
     alignContent: {
         trait: CSS_TRAITS.CONTAIN,
@@ -1543,20 +1561,17 @@ export function newBoxModel(): BoxModel {
     };
 }
 
-export function getStyle(element: Null<Element>, pseudoElt = '') {
-    if (element) {
-        let style = getElementCache<CSSStyleDeclaration>(element, 'style' + pseudoElt, '0');
-        if (style) {
-            return style;
-        }
-        if (hasComputedStyle(element)) {
-            style = getComputedStyle(element, pseudoElt);
-            setElementCache(element, 'style' + pseudoElt, '0', style);
-            return style;
-        }
-        return { position: 'static', display: 'inline' } as CSSStyleDeclaration;
+export function getStyle(element: Element, pseudoElt = '') {
+    let style = getElementCache<CSSStyleDeclaration>(element, 'style' + pseudoElt, '0');
+    if (style) {
+        return style;
     }
-    return { position: 'static', display: 'none' } as CSSStyleDeclaration;
+    if (hasComputedStyle(element)) {
+        style = getComputedStyle(element, pseudoElt);
+        setElementCache(element, 'style' + pseudoElt, '0', style);
+        return style;
+    }
+    return PROXY_INLINESTYLE;
 }
 
 export function updateDocumentFont() {
@@ -1606,14 +1621,14 @@ export function getRemSize(fixedWidth?: boolean) {
 }
 
 export function getFontSize(element: Element) {
-    if (element.nodeName.charAt(0) === '#') {
+    if (element.nodeName.startsWith('#')) {
         element = element.parentElement || DOCUMENT_ELEMENT;
     }
     return parseFloat(getStyle(element).getPropertyValue('font-size'));
 }
 
 export function hasComputedStyle(element: Element): element is HTMLElement {
-    return element.nodeName.charAt(0) !== '#' && (element instanceof HTMLElement || element instanceof SVGElement);
+    return !element.nodeName.startsWith('#') && (element instanceof HTMLElement || element instanceof SVGElement);
 }
 
 export function parseSelectorText(value: string, document?: boolean) {
@@ -2538,7 +2553,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
     return '';
 }
 
-export function checkStyleValue(element: CSSElement, attr: string, value: string, style?: CSSStyleDeclaration) {
+export function checkStyleValue(element: CSSElement, attr: string, value: string) {
     switch (value) {
         case 'unset':
             switch (attr) {
@@ -2589,14 +2604,14 @@ export function checkStyleValue(element: CSSElement, attr: string, value: string
                 case 'lineHeight':
                     return 'inherit';
                 default:
-                    return style ? style[attr] : getStyle(element, attr);
+                    return getStyle(element)[attr] as string;
             }
     }
     if (hasCalc(value)) {
-        return calculateStyle(element, attr, value) || (style ? style[attr] : '');
+        return calculateStyle(element, attr, value) || getStyle(element)[attr] as string;
     }
     else if (isCustomProperty(value)) {
-        return parseVar(element, value) || (style ? style[attr] : '');
+        return parseVar(element, value) || getStyle(element)[attr] as string;
     }
     return value;
 }
@@ -2810,7 +2825,7 @@ export function checkMediaRule(value: string, fontSize?: number) {
 }
 
 export function isParentStyle(element: Element, attr: string, ...styles: string[]) {
-    if (element.nodeName.charAt(0) !== '#' && styles.includes(getStyle(element)[attr])) {
+    if (!element.nodeName.startsWith('#') && styles.includes(getStyle(element)[attr])) {
         return true;
     }
     const parentElement = element.parentElement;
@@ -3552,7 +3567,7 @@ export function calculate(value: string, options?: CalculateOptions) {
         return NaN;
     }
     let length = value.length;
-    if (value.charAt(0) !== '(' || value.charAt(length - 1) !== ')') {
+    if (!value.startsWith('(') || !value.endsWith(')')) {
         value = `(${value})`;
         length += 2;
     }

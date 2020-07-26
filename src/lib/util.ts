@@ -885,7 +885,7 @@ export function resolvePath(value: string, href?: string) {
         const pathname = (href?.replace(location.origin, '') || location.pathname).replace(/\\/g, '/').split('/');
         pathname.pop();
         value = value.replace(/\\/g, '/');
-        if (value.charAt(0) === '/') {
+        if (value.startsWith('/')) {
             return location.origin + value;
         }
         else if (value.startsWith('../')) {

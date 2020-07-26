@@ -523,7 +523,7 @@ export function getParentAttribute(element: SVGElement, attr: string, computed?:
 
 export function getTargetElement(element: Element, rootElement?: Null<Element>, contentMap?: StringMap) {
     const value = getNamedItem(element, 'href') || getNamedItem(element, 'xlink:href');
-    if (value.charAt(0) === '#') {
+    if (value.startsWith('#')) {
         const id = value.substring(1);
         if (!rootElement) {
             let parent = element.parentElement;

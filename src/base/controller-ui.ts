@@ -136,8 +136,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 position: 'static',
                 display: 'inline',
                 verticalAlign: 'baseline',
-                float: 'none',
-                clear: 'none'
+                float: 'none'
             };
         }
         else {

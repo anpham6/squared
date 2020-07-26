@@ -359,14 +359,13 @@ declare module "base" {
     class Node extends squared.lib.base.Container<Node> implements BoxModel {
         static readonly TEXT_STYLE: string[];
         static getPseudoElt(element: Element, sessionId: string): string;
-        static sanitizeCss(element: HTMLElement, styleMap: StringMap, style?: CSSStyleDeclaration): StringMap;
+        static sanitizeCss(element: HTMLElement, styleMap: StringMap, writingMode?: string): StringMap;
         depth: number;
         childIndex: number;
         documentRoot: boolean;
         sessionId: string;
         queryMap?: Node[][];
         readonly id: number;
-        readonly style: CSSStyleDeclaration;
         init(parent: Node, depth: number, index?: number): void;
         syncWith(sessionId?: string, cache?: boolean): boolean;
         saveAsInitial(): void;
@@ -517,6 +516,7 @@ declare module "base" {
         get cssStyle(): StringMap;
         get textStyle(): StringMap;
         get center(): Point;
+        get style(): CSSStyleDeclaration;
         constructor(id: number, sessionId?: string, element?: Element);
     }
 

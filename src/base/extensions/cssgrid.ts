@@ -552,7 +552,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             node.css('gridTemplateAreas').split(/"[\s\n]+"/).forEach((template, rowStart) => {
                 if (template !== 'none') {
                     trimString(template.trim(), '"').split(/\s+/).forEach((area, columnStart) => {
-                        if (area.charAt(0) !== '.') {
+                        if (!area.startsWith('.')) {
                             const templateArea = templateAreas[area];
                             if (templateArea) {
                                 templateArea.rowSpan = (rowStart - templateArea.rowStart) + 1;

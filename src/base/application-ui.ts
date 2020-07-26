@@ -661,7 +661,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                     inlineText = false;
                 }
-                else if (element.nodeName.charAt(0) === '#') {
+                else if (element.nodeName.startsWith('#')) {
                     if (element.nodeName === '#text' && (!isEmptyString(element.textContent!) || node.preserveWhiteSpace && (parentElement.tagName !== 'PRE' || parentElement.childElementCount === 0))) {
                         child = this.insertNode(element, sessionId);
                         child.cssApply(node.textStyle);

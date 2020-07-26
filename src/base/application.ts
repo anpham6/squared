@@ -452,7 +452,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             while (i < length) {
                 const element = childNodes[i++] as HTMLElement;
                 let child: Undef<T>;
-                if (element.nodeName.charAt(0) === '#') {
+                if (element.nodeName.startsWith('#')) {
                     if (element.nodeName === '#text') {
                         child = this.insertNode(element, sessionId);
                         if (child) {

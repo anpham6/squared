@@ -11,8 +11,7 @@ export default class Controller<T extends squared.base.Node> extends squared.bas
                 position: 'static',
                 display: 'inline',
                 verticalAlign: 'baseline',
-                float: 'none',
-                clear: 'none'
+                float: 'none'
             });
         }
     }

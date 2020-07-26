@@ -1908,7 +1908,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
             const keyTimeMode = this._synchronizeMode;
             const { transformExclude: exclude, floatPrecisionValue: precision } = this.options;
             clipPath.split(';').forEach((value, index, array) => {
-                if (value.charAt(0) === '#') {
+                if (value.startsWith('#')) {
                     const element = (definitions.clipPath.get(value) as unknown) as SVGGElement;
                     if (element) {
                         const g = new SvgG(element);
