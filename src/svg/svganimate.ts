@@ -4,7 +4,7 @@ import SvgBuild from './svgbuild';
 import { INSTANCE_TYPE, KEYSPLINE_NAME } from './lib/constant';
 
 const { getHexCode, parseColor } = squared.lib.color;
-const { getFontSize, isLength, parseUnit } = squared.lib.css;
+const { getFontSize, isEmBased, isLength, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { isNumber, replaceMap, sortNumber, trimEnd } = squared.lib.util;
 
@@ -32,7 +32,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         }
     }
 
-    public static convertStepTimingFunction(attributeName: string, timingFunction: string, keyTimes: number[], values: string[], index: number, fontSize?: number): Undef<[number[], string[]]> {
+    public static convertStepTimingFunction(element: SVGElement, attributeName: string, timingFunction: string, keyTimes: number[], values: string[], index: number): Undef<[number[], string[]]> {
         const valueA = values[index];
         const valueB = values[index + 1];
         let currentValue: Undef<any[]>,
@@ -58,20 +58,22 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 currentValue = replaceMap(valueA.trim().split(/\s+/), (value: string) => parseFloat(value));
                 nextValue = replaceMap(valueB.trim().split(/\s+/), (value: string) => parseFloat(value));
                 break;
-            default:
+            default: {
+                const options: Undef<ParseUnitOptions> = isEmBased(valueA) || isEmBased(valueB) ? { fontSize: getFontSize(element) } : undefined;
                 if (isNumber(valueA)) {
                     currentValue = [parseFloat(valueA)];
                 }
                 else if (isLength(valueA)) {
-                    currentValue = [parseUnit(valueA, fontSize)];
+                    currentValue = [parseUnit(valueA, options)];
                 }
                 if (isNumber(valueB)) {
                     nextValue = [parseFloat(valueB)];
                 }
                 else if (isLength(valueB)) {
-                    nextValue = [parseUnit(valueB, fontSize)];
+                    nextValue = [parseUnit(valueB, options)];
                 }
                 break;
+            }
         }
         if (currentValue && nextValue) {
             const length = currentValue.length;
@@ -228,7 +230,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                         const length = keyTimesBase.length - 1;
                         let i = 0;
                         while (i < length) {
-                            const result = SvgAnimate.convertStepTimingFunction(attributeName || this.attributeName, 'step-end', keyTimesBase, valuesBase, i++, getFontSize(animationElement));
+                            const result = SvgAnimate.convertStepTimingFunction(animationElement, attributeName || this.attributeName, 'step-end', keyTimesBase, valuesBase, i++);
                             if (result) {
                                 keyTimes = keyTimes.concat(result[0]);
                                 values = values.concat(result[1]);

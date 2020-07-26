@@ -58,6 +58,7 @@ interface ControllerSettingsDirectoryUI {
 
 interface ControllerSettingsStyleUI {
     anchorFontColor: string;
+    formFontSize: string;
     inputBorderColor: string;
     inputBackgroundColor: string;
     inputColorBorderColor: string;

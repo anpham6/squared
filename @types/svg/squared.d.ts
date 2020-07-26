@@ -598,7 +598,7 @@ declare module "svg" {
         static PATTERN_CUBICBEZIER: string;
         static getSplitValue(value: number, next: number, percent: number): number;
         static convertTimingFunction(value: string): string;
-        static convertStepTimingFunction(attributeName: string, keyTimes: number[], values: string[], keySpline: string, index: number, fontSize?: number): Undef<[number[], string[]]>;
+        static convertStepTimingFunction(element: SVGElement, attributeName: string, keyTimes: number[], values: string[], keySpline: string, index: number): Undef<[number[], string[]]>;
         static toFractionList(value: string, delimiter?: string, ordered?: boolean): number[];
         type: number;
         from: string;

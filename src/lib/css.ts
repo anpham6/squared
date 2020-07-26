@@ -4,6 +4,13 @@ import { clamp, truncate, truncateFraction } from './math';
 import { CSS, STRING, TRANSFORM } from './regex';
 import { convertAlpha, convertFloat, convertHyphenated, convertRoman, hasBit, hasKeys, isNumber, isString, iterateArray, replaceMap, resolvePath, spliceString, splitEnclosing, splitPair, trimBoth } from './util';
 
+const DOCUMENT_ELEMENT = document.documentElement;
+const DOCUMENT_FIXEDMAP = [9/13, 10/13, 12/13, 16/13, 20/13, 2, 3];
+const DOCUMENT_FIXEDSIZE = 13;
+let DOCUMENT_FONTMAP!: number[];
+let DOCUMENT_FONTBASE!: number;
+let DOCUMENT_FONTSIZE!: number;
+
 const PATTERN_SIZES = `(\\(\\s*(?:orientation:\\s*(?:portrait|landscape)|(?:max|min)-width:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\))`;
 const REGEXP_LENGTH = new RegExp(`^${STRING.LENGTH}$`);
 const REGEXP_PERCENT = new RegExp(`^${STRING.PERCENT}$`);
@@ -16,6 +23,8 @@ const REGEXP_SOURCESIZES = new RegExp(`\\s*(?:(\\(\\s*)?${PATTERN_SIZES}|(\\(\\s
 const CHAR_SPACE = /\s+/;
 const CHAR_SEPARATOR = /\s*,\s*/;
 const CHAR_DIVIDER = /\s*\/\s*/;
+
+updateDocumentFont();
 
 function compareRange(operation: string, unit: number, range: number) {
     switch (operation) {
@@ -271,10 +280,11 @@ function checkCalculateOperator(operand: Undef<string>, operator: Undef<string>)
     return true;
 }
 
+const fromFontNamedValue = (index: number, fixedWidth?: boolean) => (!fixedWidth ? DOCUMENT_FONTMAP[index] * DOCUMENT_FONTBASE : DOCUMENT_FIXEDMAP[index] * DOCUMENT_FIXEDSIZE) + 'px';
 const getInnerWidth = (dimension: Undef<Dimension>) => dimension?.width || window.innerWidth;
 const getInnerHeight = (dimension: Undef<Dimension>) => dimension?.height || window.innerHeight;
-const convertLength = (value: string, dimension: number, fontSize?: number, screenDimension?: Dimension) => isPercent(value) ? Math.round(convertFloat(value) / 100 * dimension) : parseUnit(value, fontSize, screenDimension);
-const convertPercent = (value: string, dimension: number, fontSize?: number, screenDimension?: Dimension) => isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, fontSize, screenDimension) / dimension;
+const convertLength = (value: string, dimension: number, options?: ParseUnitOptions) => isPercent(value) ? Math.round(convertFloat(value) / 100 * dimension) : parseUnit(value, options);
+const convertPercent = (value: string, dimension: number, options?: ParseUnitOptions) => isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, options) / dimension;
 const isColor = (value: string) => /(rgb|hsl)a?/.test(value);
 const formatVar = (value: number) => !isNaN(value) ? value + 'px' : '';
 const formatDecimal = (value: number) => !isNaN(value) ? value.toString() : '';
@@ -1548,9 +1558,55 @@ export function getStyle(element: Null<Element>, pseudoElt = '') {
     return { position: 'static', display: 'none' } as CSSStyleDeclaration;
 }
 
+export function updateDocumentFont() {
+    const computedStyle = getComputedStyle(DOCUMENT_ELEMENT);
+    DOCUMENT_FONTSIZE = parseFloat(computedStyle.fontSize) || 16;
+    const style = DOCUMENT_ELEMENT.style;
+    const fontSize = style.fontSize;
+    style.fontSize = 'initial';
+    DOCUMENT_FONTBASE = parseFloat(computedStyle.fontSize) || 16;
+    style.fontSize = fontSize;
+    const index = 16 - Math.floor(DOCUMENT_FONTBASE);
+    if (index < 0) {
+        DOCUMENT_FONTMAP = [0.6, 0.75, 0.89, 1.2, 1.5, 2, 3];
+    }
+    else {
+        switch (index) {
+            case 0:
+                DOCUMENT_FONTMAP = [9/16, 10/16, 13/16, 18/16, 24/16, 2, 3];
+                break;
+            case 1:
+                DOCUMENT_FONTMAP = [9/15, 10/15, 13/15, 18/15, 23/15, 2, 3];
+                break;
+            case 2:
+                DOCUMENT_FONTMAP = [9/14, 10/14, 12/14, 17/14, 21/14, 2, 3];
+                break;
+            case 3:
+                DOCUMENT_FONTMAP = DOCUMENT_FIXEDMAP;
+                break;
+            case 4:
+                DOCUMENT_FONTMAP = [9/12,  9/12, 10/12, 14/12, 18/12, 2, 3];
+                break;
+            case 5:
+                DOCUMENT_FONTMAP = [9/11,  9/11, 10/11, 13/11, 17/11, 2, 3];
+                break;
+            case 6:
+                DOCUMENT_FONTMAP = [9/10,  9/10,  9/10, 12/10, 15/10, 2, 3];
+                break;
+            default:
+                DOCUMENT_FONTMAP = [   1,     1,     1,  11/9,  14/9, 2, 3];
+                break;
+        }
+    }
+}
+
+export function getRemSize(fixedWidth?: boolean) {
+    return !fixedWidth ? DOCUMENT_FONTSIZE : DOCUMENT_FIXEDSIZE;
+}
+
 export function getFontSize(element: Element) {
     if (element.nodeName.charAt(0) === '#') {
-        element = element.parentElement || document.documentElement;
+        element = element.parentElement || DOCUMENT_ELEMENT;
     }
     return parseFloat(getStyle(element).getPropertyValue('font-size'));
 }
@@ -1919,9 +1975,9 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
             return formatVar(calculateVar(element, value, { boundingSize }));
         }
         case 'lineHeight':
-            return formatVar(calculateVar(element, value, { boundingSize: getFontSize(element), min: 0 }));
+            return formatVar(calculateVar(element, value, { boundingSize: isEmBased(value) ? getFontSize(element) : undefined, min: 0 }));
         case 'fontSize':
-            return formatVar(calculateVar(element, value, { boundingSize: getFontSize(element.parentElement || document.documentElement), min: 0 }));
+            return formatVar(calculateVar(element, value, { boundingSize: isEmBased(value) ? getFontSize(element.parentElement || DOCUMENT_ELEMENT) : undefined, min: 0 }));
         case 'margin':
             return calculateVarAsString(element, value, { dimension: 'width', boundingBox });
         case 'borderBottomLeftRadius':
@@ -2481,11 +2537,13 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
     return '';
 }
 
-export function checkStyleValue(element: HTMLElement, attr: string, value: string, style?: CSSStyleDeclaration) {
+export function checkStyleValue(element: CSSElement, attr: string, value: string, style?: CSSStyleDeclaration) {
     switch (value) {
         case 'unset':
-            if (style) {
-                return style[attr] as string;
+            switch (attr) {
+                case 'lineHeight':
+                case 'fontSize':
+                    return 'inherit';
             }
         case 'initial':
             switch (attr) {
@@ -2493,6 +2551,8 @@ export function checkStyleValue(element: HTMLElement, attr: string, value: strin
                     return 'static';
                 case 'display':
                     return ELEMENT_BLOCK.has(element.tagName) ? 'block' : 'inline';
+                case 'fontSize':
+                    return 'inherit';
                 case 'verticalAlign':
                     switch (element.tagName) {
                         case 'SUP':
@@ -2525,11 +2585,8 @@ export function checkStyleValue(element: HTMLElement, attr: string, value: strin
         case 'inherit':
             switch (attr) {
                 case 'lineHeight':
-                    return 'inherit';
                 case 'fontSize':
-                    if (style) {
-                        return style[attr];
-                    }
+                    return 'inherit';
                 default:
                     return getInheritedStyle(element, attr);
             }
@@ -2541,6 +2598,36 @@ export function checkStyleValue(element: HTMLElement, attr: string, value: strin
         value = parseVar(element, value);
     }
     return value === '' && style?.[attr] as string || value;
+}
+
+export function checkFontSizeValue(value: string, fixedWidth?: boolean) {
+    if (value === '') {
+        return 'inherit';
+    }
+    switch (value) {
+        case 'medium':
+            return (!fixedWidth ? DOCUMENT_FONTBASE : 13) + 'px';
+        case 'smaller':
+            return '0.833333em';
+        case 'larger':
+            return '1.2em';
+        case 'xxx-large':
+            return fromFontNamedValue(6, fixedWidth);
+        case 'xx-large':
+            return fromFontNamedValue(5, fixedWidth);
+        case 'x-large':
+            return fromFontNamedValue(4, fixedWidth);
+        case 'large':
+            return fromFontNamedValue(3, fixedWidth);
+        case 'small':
+            return fromFontNamedValue(2, fixedWidth);
+        case 'x-small':
+            return fromFontNamedValue(1, fixedWidth);
+        case 'xx-small':
+            return fromFontNamedValue(0, fixedWidth);
+        default:
+            return value;
+    }
 }
 
 export function getKeyframesRules(): ObjectMap<KeyframesData> {
@@ -2660,7 +2747,7 @@ export function checkMediaRule(value: string, fontSize?: number) {
                         case 'height':
                         case 'min-height':
                         case 'max-height':
-                            valid = compareRange(operation, attr.endsWith('width') ? window.innerWidth : window.innerHeight, parseUnit(rule, fontSize));
+                            valid = compareRange(operation, attr.endsWith('width') ? window.innerWidth : window.innerHeight, parseUnit(rule, { fontSize }));
                             break;
                         case 'orientation':
                             valid = rule === 'portrait' && window.innerWidth <= window.innerHeight || rule === 'landscape' && window.innerWidth > window.innerHeight;
@@ -2947,7 +3034,7 @@ export function calculateVar(element: CSSElement, value: string, options: Calcul
         else if (options.supportPercent) {
             return NaN;
         }
-        if ((!options.unitType || options.unitType === CSS_UNIT.LENGTH) && /\d(em|ch)/.test(value) && options.fontSize === undefined) {
+        if ((!options.unitType || options.unitType === CSS_UNIT.LENGTH) && isEmBased(value) && options.fontSize === undefined) {
             options.fontSize = getFontSize(element);
         }
         let result = calculate(output, options);
@@ -2997,7 +3084,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, optio
                                 imageWidth *= parseFloat(sizeW) / 100;
                             }
                             else {
-                                const unit = parseUnit(sizeW, fontSize, screenDimension);
+                                const unit = parseUnit(sizeW, { fontSize, screenDimension });
                                 if (unit) {
                                     imageWidth = unit;
                                 }
@@ -3009,7 +3096,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, optio
                                 percent = (parseFloat(sizeH) / 100 * height) / imageDimension.height;
                             }
                             else if (isLength(sizeH)) {
-                                const unit = parseUnit(sizeH, fontSize, screenDimension);
+                                const unit = parseUnit(sizeH, { fontSize, screenDimension });
                                 if (unit) {
                                     percent = unit / imageDimension.height;
                                 }
@@ -3025,7 +3112,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, optio
                                 imageHeight *= parseFloat(sizeH) / 100;
                             }
                             else {
-                                const unit = parseUnit(sizeH, fontSize, screenDimension);
+                                const unit = parseUnit(sizeH, { fontSize, screenDimension });
                                 if (unit) {
                                     imageHeight = unit;
                                 }
@@ -3037,7 +3124,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, optio
                                 percent = (parseFloat(sizeW) / 100 * width) / imageDimension.width;
                             }
                             else if (isLength(sizeW)) {
-                                const unit = parseUnit(sizeW, fontSize, screenDimension);
+                                const unit = parseUnit(sizeW, { fontSize, screenDimension });
                                 if (unit) {
                                     percent = unit / imageDimension.width;
                                 }
@@ -3111,14 +3198,14 @@ export function getBackgroundPosition(value: string, dimension: Dimension, optio
                         result[directionAsPercent] = 0.5;
                         break;
                     default: {
-                        const percent = convertPercent(position, offsetParent, fontSize, screenDimension);
+                        const percent = convertPercent(position, offsetParent, { fontSize, screenDimension });
                         if (percent > 1) {
                             orientation[i] = '100%';
                             position = horizontal ? 'right' : 'bottom';
-                            result[position] = convertLength(formatPercent(percent - 1), offsetParent, fontSize, screenDimension) * -1;
+                            result[position] = convertLength(formatPercent(percent - 1), offsetParent, { fontSize, screenDimension }) * -1;
                         }
                         else {
-                            result[direction] = convertLength(position, offsetParent, fontSize, screenDimension);
+                            result[direction] = convertLength(position, offsetParent, { fontSize, screenDimension });
                         }
                         result[directionAsPercent] = percent;
                         break;
@@ -3202,8 +3289,8 @@ export function getBackgroundPosition(value: string, dimension: Dimension, optio
                     switch (alignment) {
                         case 'left':
                         case 'right': {
-                            const location = convertLength(position, width, fontSize, screenDimension);
-                            const locationAsPercent = convertPercent(position, width, fontSize, screenDimension);
+                            const location = convertLength(position, width, { fontSize, screenDimension });
+                            const locationAsPercent = convertPercent(position, width, { fontSize, screenDimension });
                             if (alignment === 'right') {
                                 result.right = location;
                                 result.rightAsPercent = locationAsPercent;
@@ -3215,7 +3302,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, optio
                                 if (locationAsPercent > 1) {
                                     const percent = 1 - locationAsPercent;
                                     result.horizontal = 'right';
-                                    result.right = convertLength(formatPercent(percent), width, fontSize, screenDimension);
+                                    result.right = convertLength(formatPercent(percent), width, { fontSize, screenDimension });
                                     result.rightAsPercent = percent;
                                     setImageOffset(position, true, 'right', 'rightAsPercent');
                                 }
@@ -3227,8 +3314,8 @@ export function getBackgroundPosition(value: string, dimension: Dimension, optio
                         }
                         case 'top':
                         case 'bottom': {
-                            const location = convertLength(position, height, fontSize, screenDimension);
-                            const locationAsPercent = convertPercent(position, height, fontSize, screenDimension);
+                            const location = convertLength(position, height, { fontSize, screenDimension });
+                            const locationAsPercent = convertPercent(position, height, { fontSize, screenDimension });
                             if (alignment === 'bottom') {
                                 result.bottom = location;
                                 result.bottomAsPercent = locationAsPercent;
@@ -3240,7 +3327,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, optio
                                 if (locationAsPercent > 1) {
                                     const percent = 1 - locationAsPercent;
                                     result.horizontal = 'bottom';
-                                    result.bottom = convertLength(formatPercent(percent), height, fontSize, screenDimension);
+                                    result.bottom = convertLength(formatPercent(percent), height, { fontSize, screenDimension });
                                     result.bottomAsPercent = percent;
                                     setImageOffset(position, false, 'bottom', 'bottomAsPercent');
                                 }
@@ -3637,7 +3724,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                                                 if (!checkCalculateNumber(operand, operator)) {
                                                     return NaN;
                                                 }
-                                                seg.push(parseUnit(partial, fontSize));
+                                                seg.push(parseUnit(partial, { fontSize }));
                                                 found = true;
                                             }
                                             else if (isPercent(partial) && boundingSize !== undefined && !isNaN(boundingSize)) {
@@ -3708,7 +3795,7 @@ export function calculate(value: string, options?: CalculateOptions) {
     return NaN;
 }
 
-export function parseUnit(value: string, fontSize?: number, screenDimension?: Dimension) {
+export function parseUnit(value: string, options?: ParseUnitOptions) {
     const match = REGEXP_LENGTH.exec(value);
     if (match) {
         let result = parseFloat(match[1]);
@@ -3718,10 +3805,14 @@ export function parseUnit(value: string, fontSize?: number, screenDimension?: Di
             case 'ex':
                 result /= 2;
             case 'em':
-            case 'ch':
-                return result * (fontSize ?? getFontSize(document.documentElement));
+            case 'ch': {
+                const fontSize = options?.fontSize;
+                if (fontSize !== undefined) {
+                    return result * fontSize;
+                }
+            }
             case 'rem':
-                return result * getFontSize(document.documentElement);
+                return result * (options?.fixedWidth ? DOCUMENT_FIXEDSIZE : DOCUMENT_FONTSIZE);
             case 'pc':
                 result *= 12;
             case 'pt':
@@ -3735,13 +3826,17 @@ export function parseUnit(value: string, fontSize?: number, screenDimension?: Di
             case 'in':
                 return result * getDeviceDPI();
             case 'vw':
-                return result * getInnerWidth(screenDimension) / 100;
+                return result * getInnerWidth(options?.screenDimension) / 100;
             case 'vh':
-                return result * getInnerHeight(screenDimension) / 100;
-            case 'vmin':
+                return result * getInnerHeight(options?.screenDimension) / 100;
+            case 'vmin': {
+                const screenDimension = options?.screenDimension;
                 return result * Math.min(getInnerWidth(screenDimension), getInnerHeight(screenDimension)) / 100;
-            case 'vmax':
+            }
+            case 'vmax': {
+                const screenDimension = options?.screenDimension;
                 return result * Math.max(getInnerWidth(screenDimension), getInnerHeight(screenDimension)) / 100;
+            }
         }
     }
     return 0;
@@ -3776,7 +3871,7 @@ export function parseTransform(value: string, options?: TransformOptions) {
                                 }
                             }
                             else {
-                                x = parseUnit(tX, fontSize);
+                                x = parseUnit(tX, { fontSize });
                             }
                             if (tY) {
                                 if (isPercent(tY)) {
@@ -3785,7 +3880,7 @@ export function parseTransform(value: string, options?: TransformOptions) {
                                     }
                                 }
                                 else {
-                                    y = parseUnit(tY, fontSize);
+                                    y = parseUnit(tY, { fontSize });
                                 }
                             }
                             break;
@@ -3796,7 +3891,7 @@ export function parseTransform(value: string, options?: TransformOptions) {
                                 }
                             }
                             else {
-                                x = parseUnit(tX, fontSize);
+                                x = parseUnit(tX, { fontSize });
                             }
                             break;
                         case 'translateY':
@@ -3806,11 +3901,11 @@ export function parseTransform(value: string, options?: TransformOptions) {
                                 }
                             }
                             else {
-                                y = parseUnit(tY, fontSize);
+                                y = parseUnit(tY, { fontSize });
                             }
                             break;
                         case 'translateZ':
-                            z = parseUnit(tX, fontSize);
+                            z = parseUnit(tX, { fontSize });
                             break;
                     }
                     const values = result.find(item => item.method === 'translate')?.values;
@@ -3824,9 +3919,9 @@ export function parseTransform(value: string, options?: TransformOptions) {
                     }
                 }
                 else {
-                    const values: number[] = [parseUnit(tX, fontSize)];
+                    const values: number[] = [parseUnit(tX, { fontSize })];
                     if (method === 'translate' && tY) {
-                        values.push(parseUnit(tY, fontSize));
+                        values.push(parseUnit(tY, { fontSize }));
                     }
                     result.push({ method, values });
                 }
@@ -4027,6 +4122,14 @@ export function isLength(value: string, percent?: boolean) {
 
 export function isPx(value: string) {
     return /\dpx$/.test(value);
+}
+
+export function isEm(value: string) {
+    return /\dem$/.test(value);
+}
+
+export function isEmBased(value: string) {
+    return /\d(?:em|ch|ex)\b/.test(value);
 }
 
 export function isCalc(value: string) {

@@ -136,6 +136,7 @@ module.exports = {
         "@typescript-eslint/no-unsafe-return": "error",
         "@typescript-eslint/consistent-type-definitions": "error",
         "@typescript-eslint/prefer-for-of": "off",
+        "@typescript-eslint/no-this-alias": "off",
         "@typescript-eslint/triple-slash-reference": "off",
         "@typescript-eslint/no-non-null-assertion": "off",
         "@typescript-eslint/array-type": "off",

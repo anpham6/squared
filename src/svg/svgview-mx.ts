@@ -14,7 +14,7 @@ interface AttributeData extends NumberValue {
     transformOrigin?: Point;
 }
 
-const { getFontSize, getKeyframesRules, isAngle, isCustomProperty, hasCalc, parseAngle, parseVar } = squared.lib.css;
+const { getKeyframesRules, isAngle, isCustomProperty, hasCalc, parseAngle, parseVar } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { iterateArray, replaceMap, sortNumber, splitPairEnd } = squared.lib.util;
 
@@ -408,7 +408,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                         if (j < r - 1) {
                                             const keySpline = keySplines[j];
                                             if (value !== '' && keySpline.startsWith('step')) {
-                                                const steps = SvgAnimate.convertStepTimingFunction(name, keySpline, keyTimes, values, j, getFontSize(element));
+                                                const steps = SvgAnimate.convertStepTimingFunction(element, name, keySpline, keyTimes, values, j);
                                                 if (steps) {
                                                     const [stepTime, stepValue] = steps;
                                                     const stepDuration = (keyTimes[j + 1] - time) * duration;

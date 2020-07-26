@@ -394,7 +394,7 @@ declare module "base" {
         cssCopy(node: Node, ...attrs: string[]): void;
         cssCopyIfEmpty(node: Node, ...attrs: string[]): void;
         cssPseudoElement(name: string): Null<StringMap>;
-        parseUnit(value: string, options?: ParseUnitOptions): number;
+        parseUnit(value: string, options?: ParseUnitBaseOptions): number;
         has(attr: string, options?: HasOptions): boolean;
         hasPX(attr: string, options?: HasPXOptions): boolean;
         toInt(attr: string, fallback?: number, initial?: boolean): number;

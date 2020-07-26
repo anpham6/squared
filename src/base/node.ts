@@ -1,7 +1,7 @@
 type T = Node;
 
 const { USER_AGENT, isUserAgent } = squared.lib.client;
-const { CSS_PROPERTIES, CSS_TRAITS, CSS_UNIT, checkStyleValue, checkWritingMode, formatPX, getStyle, hasComputedStyle, isAngle, isLength, isPercent, isTime, isPx, parseSelectorText, parseUnit } = squared.lib.css;
+const { CSS_PROPERTIES, CSS_TRAITS, CSS_UNIT, checkFontSizeValue, checkStyleValue, checkWritingMode, formatPX, getRemSize, getStyle, hasComputedStyle, isAngle, isEm, isLength, isPercent, isTime, isPx, parseSelectorText, parseUnit } = squared.lib.css;
 const { assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { CSS, FILE } = squared.lib.regex;
 const { actualClientRect, actualTextRangeRect, deleteElementCache, getElementAsNode, getElementCache, getPseudoElt, setElementCache } = squared.lib.session;
@@ -42,13 +42,21 @@ function parseLineHeight(lineHeight: string, fontSize: number) {
     else if (isNumber(lineHeight)) {
         return parseFloat(lineHeight) * fontSize;
     }
-    return parseUnit(lineHeight, fontSize);
+    return parseUnit(lineHeight, { fontSize });
+}
+
+function getFontSizeOptions(node: T) {
+    const [fontFirst, fontSecond] = splitPair(node.css('fontFamily'), ',', true);
+    if (fontFirst.toLowerCase() === 'monospace' && !(fontSecond !== '' && fontSecond.toLowerCase() === 'monospace')) {
+        return { fixedWidth: true } as ParseUnitOptions;
+    }
+    return undefined;
 }
 
 const validateCssSet = (value: string, actualValue: string) => value === actualValue || isLength(value, true) && isPx(actualValue);
 const sortById = (a: T, b: T) => a.id < b.id ? -1 : 1;
-const getFontSize = (style: CSSStyleDeclaration) => parseFloat(style.getPropertyValue('font-size'));
 const isInlineVertical = (value: string) => /^(inline|table-cell)/.test(value);
+const getFontSize = (style: CSSStyleDeclaration) => parseFloat(style.getPropertyValue('font-size'));
 
 function setNaturalChildren(node: T): T[] {
     let children: T[];
@@ -236,17 +244,16 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
     if (selector.all) {
         return true;
     }
-    let tagName = selector.tagName;
-    if (tagName && tagName !== child.tagName.toUpperCase()) {
+    else if (selector.tagName && selector.tagName !== child.tagName.toUpperCase()) {
         return false;
     }
-    if (selector.id && selector.id !== child.elementId) {
+    else if (selector.id && selector.id !== child.elementId) {
         return false;
     }
     const { attrList, classList, notList, pseudoList } = selector;
     if (pseudoList) {
         const parent = child.actualParent as T;
-        tagName = child.tagName;
+        const tagName = child.tagName;
         let i = 0;
         while (i < pseudoList.length) {
             const pseudo = pseudoList[i++];
@@ -772,8 +779,8 @@ function ascendQuerySelector(node: T, selectors: QueryData[], i: number, index: 
             while (parent !== null);
         }
     }
-    return next.length
-        ? ++index === length
+    return next.length > 0
+    ? ++index === length
             ? true
             : ascendQuerySelector(node, selectors, i, index, selector.adjacent, next)
         : false;
@@ -1000,6 +1007,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             cached.autoMargin = undefined;
                             cached.rightAligned = undefined;
                             cached.centerAligned = undefined;
+                            cached.bottomAligned = undefined;
                         }
                         else if (attr.startsWith('padding')) {
                             cached.contentBoxWidth = undefined;
@@ -1066,7 +1074,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         else if (!/[pP]arent$/.test(attr)) {
             return [];
         }
-        const { condition, including, error, every, excluding } = options;
+        const { condition, error, every, including, excluding } = options;
         const result: T[] = [];
         let parent = options.startSelf ? this : this[attr];
         while (parent && parent !== excluding) {
@@ -1243,7 +1251,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     public cssPX(attr: string, value: number, cache?: boolean, options?: CssPXOptions) {
         const current = this._styleMap[attr];
         if (current && isLength(current)) {
-            value += parseUnit(current, this.fontSize);
+            value += parseUnit(current, { fontSize: this.fontSize });
             if (value < 0 && options?.negative !== true) {
                 value = 0;
             }
@@ -1340,8 +1348,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         let i = 0;
         while (i < attrs.length) {
             const attr = attrs[i++];
-            const value = styleMap[attr];
-            if (!hasValue(value) || value === 'initial') {
+            if (!hasValue(styleMap[attr])) {
                 styleMap[attr] = node.css(attr);
             }
         }
@@ -1422,14 +1429,16 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return (this._element?.[attr] as Undef<string> ?? fallback).toString();
     }
 
-    public parseUnit(value: string, options?: ParseUnitOptions) {
-        let parent: Undef<boolean>,
-            dimension: Undef<DimensionAttr>,
-            screenDimension: Undef<Dimension>;
-        if (options) {
-            ({ parent, dimension, screenDimension } = options);
+    public parseUnit(value: string, options?: ParseUnitBaseOptions) {
+        if (isPx(value)) {
+            return parseFloat(value);
         }
-        if (isPercent(value)) {
+        else if (isPercent(value)) {
+            let parent: Undef<boolean>,
+            dimension: Undef<DimensionAttr>;
+            if (options) {
+                ({ parent, dimension } = options);
+            }
             const bounds = parent !== false && this.absoluteParent?.box || this.bounds;
             let result = parseFloat(value) / 100;
             switch (dimension) {
@@ -1442,7 +1451,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             }
             return result;
         }
-        return parseUnit(value, this.fontSize, screenDimension);
+        (options ?? (options = {})).fontSize = this.fontSize;
+        return parseUnit(value, options);
     }
 
     public has(attr: string, options?: HasOptions) {
@@ -2107,12 +2117,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         const result = this._cached.hasHeight;
         if (result === undefined) {
             const value = this.css('height');
-            return this._cached.hasHeight =
-                isPercent(value)
-                    ? this.pageFlow
-                        ? this.actualParent?.hasHeight || this.documentBody
-                        : this.css('position') === 'fixed' || this.hasPX('top') || this.hasPX('bottom')
-                    : this.height > 0 || this.hasPX('height', { percent: false });
+            return this._cached.hasHeight = isPercent(value)
+                ? this.pageFlow
+                    ? this.actualParent?.hasHeight || this.documentBody
+                    : this.css('position') === 'fixed' || this.hasPX('top') || this.hasPX('bottom')
+                : this.height > 0 || this.hasPX('height', { percent: false });
         }
         return result;
     }
@@ -2825,26 +2834,63 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     get fontSize(): number {
         let result = this._fontSize;
         if (result === undefined) {
-            if (this.naturalChild && this.styleElement) {
-                const value = this.valueOf('fontSize');
-                if (isPx(value)) {
-                    result = parseFloat(value);
-                }
-                else if (isPercent(value) && this._element !== document.documentElement) {
-                    result = (this.actualParent?.fontSize ?? getFontSize(getStyle((this._element as Element).parentElement || document.documentElement))) * parseFloat(value) / 100;
+            if (this.naturalChild) {
+                if (this.styleElement) {
+                    let value = checkFontSizeValue(this.valueOf('fontSize')),
+                        emRatio = 1;
+                    if (isEm(value)) {
+                        emRatio *= parseFloat(value);
+                        value = 'inherit';
+                    }
+                    if (value === 'inherit') {
+                        let parent: Undef<T> = this;
+                        do {
+                            parent = parent.ascend({ condition: item => item.has('fontSize', { initial: true, not: 'inherit' }) })[0] as Undef<T>;
+                            if (parent && parent.actualParent !== null) {
+                                value = checkFontSizeValue(parent.valueOf('fontSize'));
+                                if (isPercent(value)) {
+                                    emRatio *= parseFloat(value) / 100;
+                                }
+                                else if (isEm(value)) {
+                                    emRatio *= parseFloat(value);
+                                }
+                                else {
+                                    break;
+                                }
+                            }
+                            else {
+                                value = '1rem';
+                                break;
+                            }
+                        }
+                        while (true);
+                    }
+                    if (isPx(value)) {
+                        result = parseFloat(value);
+                    }
+                    else if (value === '1rem') {
+                        result = getRemSize(!!getFontSizeOptions(this));
+                    }
+                    else if (isPercent(value)) {
+                        result = this._element !== document.documentElement ? parseFloat(value) / 100 * (this.actualParent?.fontSize ?? getFontSize(getStyle((this._element as Element).parentElement))) : getRemSize();
+                    }
+                    else {
+                        result = parseUnit(value, getFontSizeOptions(this));
+                    }
+                    result *= emRatio;
                 }
                 else {
-                    result = getFontSize(this.style);
+                    result = this.plainText ? this.actualParent!.fontSize : getRemSize();
                 }
             }
             else {
                 result = parseUnit(this.css('fontSize'));
-            }
-            if (result === 0 && !this.naturalChild) {
-                const element = this.element;
-                result = element && hasComputedStyle(element)
-                    ? getElementAsNode<T>(element, this.sessionId)?.fontSize || getFontSize(getStyle(element))
-                    : this.ascend({ condition: item => item.fontSize > 0 })[0]?.fontSize || getFontSize(getStyle(document.documentElement));
+                if (result === 0) {
+                    const element = this.element;
+                    result = element && hasComputedStyle(element)
+                        ? getElementAsNode<T>(element, this.sessionId)?.fontSize ?? getFontSize(getStyle(element))
+                        : this.ascend({ condition: item => item.fontSize > 0 })[0]?.fontSize ?? parseUnit('1rem', getFontSizeOptions(this));
+                }
             }
             this._fontSize = result;
         }
@@ -2856,13 +2902,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get textStyle() {
-        let result = this._textStyle;
-        if (result === undefined) {
-            result = this.cssAsObject(...Node.TEXT_STYLE);
-            result.fontSize = this.fontSize + 'px';
-            this._textStyle = result;
-        }
-        return result;
+        const result = this._textStyle;
+        return result === undefined ? this._textStyle = this.cssAsObject(...Node.TEXT_STYLE) : result;
     }
 
     set dir(value) {

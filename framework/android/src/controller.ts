@@ -10,7 +10,7 @@ import LayoutUI = squared.base.LayoutUI;
 
 const { PLATFORM, isPlatform } = squared.lib.client;
 const { parseColor } = squared.lib.color;
-const { CSS_UNIT, formatPX, getSrcSet, hasComputedStyle, isPercent } = squared.lib.css;
+const { CSS_UNIT, formatPX, getSrcSet, hasCoords, hasComputedStyle, isPercent } = squared.lib.css;
 const { getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;
 const { getElementAsNode, getPseudoElt } = squared.lib.session;
@@ -230,15 +230,13 @@ function causesLineBreak(element: Element) {
     }
     else if (hasComputedStyle(element)) {
         const style = getComputedStyle(element);
-        const position = style.getPropertyValue('position');
-        if (!(position === 'absolute' || position === 'fixed')) {
+        if (!hasCoords(style.getPropertyValue('position'))) {
             const display = style.getPropertyValue('display');
-            const floating = style.getPropertyValue('float') !== 'none';
             switch (display) {
                 case 'block':
                 case 'flex':
                 case 'grid':
-                    return !floating || hasWidth(style);
+                    return style.getPropertyValue('float') === 'none' || hasWidth(style);
                 default:
                     return (display.startsWith('inline-') || display === 'table') && hasWidth(style);
             }
@@ -807,6 +805,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         },
         style: {
             anchorFontColor: 'rgb(0, 0, 238)',
+            formFontSize: '13.3333px',
             inputBorderColor: 'rgb(0, 0, 0)',
             inputBackgroundColor: isPlatform(PLATFORM.MAC) ? 'rgb(255, 255, 255)' : 'rgb(221, 221, 221)',
             inputColorBorderColor: 'rgb(119, 119, 199)',
@@ -1113,14 +1112,16 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
         }
         else {
-            const children = layout.children;
+            const siblings: T[] = [];
             const clearMap = layout.parent.floatContainer ? this.application.clearMap : undefined;
-            if (layout.some((item, index) => item.alignedVertically(index > 0 ? children.slice(0, index) : undefined, clearMap) > 0)) {
-                layout.setContainerType(getVerticalLayout(layout), NODE_ALIGNMENT.VERTICAL | NODE_ALIGNMENT.UNKNOWN);
+            for (const item of layout) {
+                if (item.alignedVertically(siblings, clearMap) > 0) {
+                    layout.setContainerType(getVerticalLayout(layout), NODE_ALIGNMENT.VERTICAL | NODE_ALIGNMENT.UNKNOWN);
+                    return;
+                }
+                siblings.push(item);
             }
-            else {
-                layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.UNKNOWN);
-            }
+            layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.UNKNOWN);
         }
     }
 
@@ -2574,7 +2575,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 rowsAll[rowsAll.length - 1][2] = true;
                             }
                             items.push(item);
-                            if (siblings?.some(element => !!getElementAsNode(element, item.sessionId) || causesLineBreak(element)) === true) {
+                            if (siblings?.some(element => !!getElementAsNode(element, item.sessionId) || causesLineBreak(element))) {
                                 const betweenStart = getRangeClientRect(siblings[0]);
                                 if (betweenStart && !betweenStart.numberOfLines) {
                                     const betweenEnd = siblings.length > 1 && getRangeClientRect(siblings.pop()!);
@@ -3174,13 +3175,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
             sortHorizontalFloat(children);
         }
-        if (!node.hasPX('width') && children.some(item => item.percentWidth > 0)) {
-            node.setLayoutWidth('match_parent');
-        }
         const { top: boxTop, width: boxWidth } = node.box;
         const baseline = NodeUI.baseline(children, false, true);
         const [baselineActive, documentId] = baseline ? [baseline.baselineElement && !baseline.imageElement, baseline.documentId] : [false, 'parent'];
-        let percentWidth = View.availablePercent(children, 'width', boxWidth);
+        let percentWidth = View.availablePercent(children, 'width', boxWidth),
+            checkPercent = !node.hasPX('width');
         for (let i = 0, length = children.length, start = false; i < length; ++i) {
             const item = children[i];
             if (previous) {
@@ -3353,6 +3352,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     item.anchorParent('vertical', 0);
                     item.anchored = true;
                 }
+            }
+            if (checkPercent && item.percentWidth > 0) {
+                node.setLayoutWidth('match_parent');
+                checkPercent = false;
             }
         }
         if (baseline) {

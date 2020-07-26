@@ -107,7 +107,7 @@ function deleteStyleAttribute(sorted: AttributeMap[], attrs: string, ids: number
 export default class ResourceFonts<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly options: ResourceFontsOptions = {
         defaultFontFamily: 'sans-serif',
-        floatPrecision: 3,
+        floatPrecision: 2,
         disableFontAlias: false
     };
     public readonly eventOnly = true;

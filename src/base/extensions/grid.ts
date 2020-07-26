@@ -29,16 +29,14 @@ function getRowIndex(columns: NodeUI[][], target: NodeUI) {
 }
 
 function checkAlignment(node: NodeUI) {
-    if (node.baseline || node.floating) {
-        return true;
-    }
     switch (node.css('verticalAlign')) {
+        case 'baseline':
         case 'top':
         case 'middle':
         case 'bottom':
             return true;
         default:
-            return false;
+            return node.floating;
     }
 }
 
@@ -61,7 +59,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
             if (node.display === 'table') {
                 return node.every(item => item.display === 'table-row' && item.every(child => child.display === 'table-cell')) || node.every(item => item.display === 'table-cell');
             }
-            else if (node.percentWidth === 0) {
+            else if (node.percentWidth === 0 || node.documentParent.hasWidth) {
                 const children = node.children;
                 let itemCount = 0,
                     minLength: Undef<boolean>;

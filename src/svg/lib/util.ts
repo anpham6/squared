@@ -1,4 +1,4 @@
-const { CSS_UNIT, calculateStyle: calculateCssStyle, calculateVar, calculateVarAsString, convertAngle, getFontSize, isLength, isPercent, parseUnit } = squared.lib.css;
+const { CSS_UNIT, calculateStyle: calculateCssStyle, calculateVar, calculateVarAsString, convertAngle, getFontSize, isEmBased, isLength, isPercent, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { clamp, convertRadian, hypotenuse } = squared.lib.math;
 const { TRANSFORM: REGEXP_TRANSFORM } = squared.lib.regex;
@@ -7,7 +7,7 @@ const { convertCamelCase, convertFloat, resolvePath, splitPair } = squared.lib.u
 
 function setOriginPosition(element: Element, point: Point, attr: string, value: string, dimension: number) {
     if (isLength(value)) {
-        point[attr] = parseUnit(value, getFontSize(element));
+        point[attr] = parseUnit(value, createParseUnitOptions(element, value));
     }
     else if (isPercent(value)) {
         point[attr] = parseFloat(value) / 100 * dimension;
@@ -30,6 +30,7 @@ function getDataSetValue(element: SVGElement, attr: string) {
 }
 
 const getViewportArea = (viewBox: DOMRect, min?: boolean) => min ? Math.min(viewBox.width, viewBox.height) : hypotenuse(viewBox.width, viewBox.height);
+const createParseUnitOptions = (element: Element, value: string): Undef<ParseUnitOptions> => isEmBased(value) ? { fontSize: getFontSize(element) } : undefined;
 
 export const SVG = {
     svg: (element: Element): element is SVGSVGElement => {
@@ -182,9 +183,8 @@ export const TRANSFORM = {
                 if (method.startsWith('translate')) {
                     const translate = REGEXP_TRANSFORM.TRANSLATE.exec(match[0]);
                     if (translate) {
-                        const fontSize = getFontSize(element);
-                        const arg1 = parseUnit(translate[2], fontSize);
-                        const arg2 = !isX && translate[3] ? parseUnit(translate[3], fontSize) : 0;
+                        const arg1 = parseUnit(translate[2], createParseUnitOptions(element, translate[2]));
+                        const arg2 = !isX && translate[3] ? parseUnit(translate[3], createParseUnitOptions(element, translate[3])) : 0;
                         const x = isY ? 0 : arg1;
                         const y = isY ? arg1 : arg2;
                         result.push(TRANSFORM.create(SVGTransform.SVG_TRANSFORM_TRANSLATE, MATRIX.translate(x, y), 0));

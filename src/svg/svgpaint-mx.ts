@@ -7,7 +7,7 @@ type SvgUse = squared.svg.SvgUse;
 type SvgShapePattern = squared.svg.SvgShapePattern;
 
 const { parseColor } = squared.lib.color;
-const { extractURL, getFontSize, hasCalc, isCustomProperty, isLength, isPercent, parseUnit, parseVar } = squared.lib.css;
+const { extractURL, getFontSize, hasCalc, isCustomProperty, isEmBased, isLength, isPercent, parseUnit, parseVar } = squared.lib.css;
 const { truncate } = squared.lib.math;
 const { STRING } = squared.lib.regex;
 const { convertCamelCase, isNumber, joinArray, plainMap } = squared.lib.util;
@@ -247,7 +247,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                 return parseFloat(value);
             }
             else if (isLength(value)) {
-                return parseUnit(value, getFontSize(this.element));
+                return parseUnit(value, isEmBased(value) ? { fontSize: getFontSize(this.element) } : undefined);
             }
             else if (isPercent(value)) {
                 return Math.round((typeof dimension === 'number' ? dimension : this.element.getBoundingClientRect()[dimension || 'width']) * parseFloat(value) / 100);

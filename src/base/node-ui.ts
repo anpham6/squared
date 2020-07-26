@@ -33,6 +33,8 @@ for (let i = 0; i < 4; ++i) {
     CSS_SPACING.set(SPACING_PADDING[i], BOX_PADDING[i]);
 }
 
+const REGEXP_PARSEUNIT = /(?:%|vw|vh|vmin|vmax)$/;
+
 function cascadeActualPadding(children: T[], attr: string, value: number) {
     let valid = false;
     const length = children.length;
@@ -660,19 +662,24 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         this.rendered = true;
     }
 
-    public parseUnit(value: string, options: ParseUnitOptions = {}) {
-        if (!options.screenDimension) {
-            options.screenDimension = this.localSettings.screenDimension;
+    public parseUnit(value: string, options?: ParseUnitBaseOptions) {
+        if (REGEXP_PARSEUNIT.test(value)) {
+            if (!options) {
+                options = {};
+            }
+            if (!options.screenDimension) {
+                options.screenDimension = this.localSettings.screenDimension;
+            }
         }
         return super.parseUnit(value, options);
     }
 
     public parseWidth(value: string, parent = true) {
-        return super.parseUnit(value, { parent, screenDimension: this.localSettings.screenDimension });
+        return super.parseUnit(value, REGEXP_PARSEUNIT.test(value) ? { parent, screenDimension: this.localSettings.screenDimension } : undefined);
     }
 
     public parseHeight(value: string, parent = true) {
-        return super.parseUnit(value, { dimension: 'height', parent, screenDimension: this.localSettings.screenDimension });
+        return super.parseUnit(value, REGEXP_PARSEUNIT.test(value) ? { dimension: 'height', parent, screenDimension: this.localSettings.screenDimension } : undefined);
     }
 
     public renderEach(predicate: IteratorPredicate<T, void>) {
@@ -741,6 +748,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     break;
                 case 'textStyle':
                     result = node.textStyle;
+                    result.fontSize = node.fontSize + 'px';
                     this.inheritApply('textStyle', result);
                     break;
                 case 'boxStyle': {

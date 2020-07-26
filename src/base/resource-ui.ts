@@ -771,7 +771,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 }
             }
             node.data(ResourceUI.KEY_NAME, 'fontStyle', {
-                fontFamily: node.css('fontFamily').trim(),
+                fontFamily: node.css('fontFamily'),
                 fontStyle: node.css('fontStyle'),
                 fontSize: node.fontSize,
                 fontWeight,

@@ -107,10 +107,12 @@ declare module "lib" {
         function getPropertiesAsTraits(value: number, map?: string): ObjectMap<CssPropertyData>;
         function newBoxModel(): BoxModel;
         function getStyle(element: Null<Element>, pseudoElt?: string): CSSStyleDeclaration;
+        function getRemSize(fixedWidth?: boolean): number;
         function getFontSize(element: Element): number;
         function hasComputedStyle(element: Element): element is HTMLElement;
         function checkWritingMode(attr: string, value: string): string;
-        function checkStyleValue(element: HTMLElement, attr: string, value: string, style?: CSSStyleDeclaration): string;
+        function checkStyleValue(element: CSSElement, attr: string, value: string, style?: CSSStyleDeclaration): string;
+        function checkFontSizeValue(value: string): string;
         function checkMediaRule(value: string, fontSize?: number): boolean;
         function parseSelectorText(value: string, document?: boolean): string[];
         function getSpecificity(value: string): number;
@@ -130,7 +132,7 @@ declare module "lib" {
         function extractURL(value: string): Undef<string>;
         function resolveURL(value: string): Undef<string>;
         function insertStyleSheetRule(value: string, index?: number): HTMLStyleElement;
-        function parseUnit(value: string, fontSize?: number, screenDimension?: Dimension): number;
+        function parseUnit(value: string, options?: ParseUnitOptions): number;
         function parseTransform(value: string, options?: TransformOptions): TransformData[];
         function parseAngle(value: string, fallback?: number): number;
         function convertAngle(value: string, unit?: string, fallback?: number): number;
@@ -139,6 +141,8 @@ declare module "lib" {
         function formatPercent(value: NumString, round?: boolean): string;
         function isLength(value: string, percent?: boolean): boolean;
         function isPx(value: string): boolean;
+        function isEm(value: string): boolean;
+        function isEmBased(value: string): boolean;
         function isPercent(value: string): boolean;
         function isCalc(value: string): boolean;
         function isCustomProperty(value: string): boolean;
@@ -257,9 +261,9 @@ declare module "lib" {
         function randomUUID(separator?: string): string;
         function formatString(value: string, ...params: string[]): string;
         function delimitString(options: DelimitStringOptions, ...appending: string[]): string;
-        function splitPair(value: string, char: string): [string, string];
-        function splitPairStart(value: string, char: string): string;
-        function splitPairEnd(value: string, char: string): string;
+        function splitPair(value: string, char: string, trim?: boolean): [string, string];
+        function splitPairStart(value: string, char: string, trim?: boolean): string;
+        function splitPairEnd(value: string, char: string, trim?: boolean): string;
         function splitEnclosing(value: string, prefix?: string, separator?: string, opening?: string, closing?: string): string[];
         function hasBit(value: number, offset: number): boolean;
         function isNumber(value: string): boolean;

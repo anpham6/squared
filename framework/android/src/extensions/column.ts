@@ -200,13 +200,15 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                             if (column.naturalChild) {
                                 const element = column.element!.cloneNode(true) as HTMLElement;
                                 if (column.styleElement) {
+                                    const style = element.style;
                                     if (column.imageContainer || column.some((item: T) => item.imageContainer, { cascade: true })) {
-                                        element.style.height = formatPX(column.bounds.height);
+                                        style.height = formatPX(column.bounds.height);
                                     }
                                     else {
                                         const textStyle = column.textStyle;
+                                        style.fontSize = column.fontSize + 'px';
                                         for (const attr in textStyle) {
-                                            element.style[attr] = textStyle[attr];
+                                            style[attr] = textStyle[attr];
                                         }
                                     }
                                 }

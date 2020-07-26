@@ -639,19 +639,29 @@ export function delimitString(options: DelimitStringOptions, ...appending: strin
     return values.join(delimiter);
 }
 
-export function splitPair(value: string, char: string): [string, string] {
+export function splitPair(value: string, char: string, trim?: boolean): [string, string] {
     const index = value.indexOf(char);
-    return index !== -1 ? [value.substring(0, index), value.substring(index + char.length) ] : [value, ''];
+    if (index !== -1) {
+        const start = value.substring(0, index);
+        const end = value.substring(index + char.length);
+        return !trim ? [start, end] : [start.trim(), end.trim()];
+    }
+    return !trim ? [value, ''] : [value.trim(), ''];
 }
 
-export function splitPairStart(value: string, char: string) {
+export function splitPairStart(value: string, char: string, trim?: boolean) {
     const index = value.indexOf(char);
-    return index !== -1 ? value.substring(0, index) : value;
+    const result = index !== -1 ? value.substring(0, index) : value;
+    return !trim ? result : result.trim();
 }
 
-export function splitPairEnd(value: string, char: string) {
+export function splitPairEnd(value: string, char: string, trim?: boolean) {
     const index = value.indexOf(char);
-    return index !== -1 ? value.substring(index + char.length) : '';
+    if (index !== -1) {
+        const result = value.substring(index + char.length);
+        return !trim ? result : result.trim();
+    }
+    return '';
 }
 
 export function splitEnclosing(value: string, prefix?: string, separator = '', opening = '(', closing = ')') {

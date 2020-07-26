@@ -112,10 +112,9 @@ interface MinMaxOptions extends CssInitialOptions {
     wrapperOf?: boolean;
 }
 
-interface ParseUnitOptions {
+interface ParseUnitBaseOptions extends ParseUnitOptions {
     dimension?: DimensionAttr;
     parent?: boolean;
-    screenDimension?: Dimension;
 }
 
 interface TextHeightOptions {

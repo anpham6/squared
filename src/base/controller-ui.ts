@@ -172,6 +172,9 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     }
                     break;
                 case 'INPUT': {
+                    if (!styleMap.fontSize) {
+                        styleMap.fontSize = this._settingsStyle.formFontSize;
+                    }
                     const type = (element as HTMLInputElement).type;
                     switch (type) {
                         case 'radio':
@@ -203,12 +206,17 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     }
                     break;
                 }
-                case 'BUTTON': {
+                case 'BUTTON':
+                    if (!styleMap.fontSize) {
+                        styleMap.fontSize = this._settingsStyle.formFontSize;
+                    }
                     setButtonStyle(styleMap, setBorderStyle(styleMap, this._settingsStyle.inputBorderColor), this._settingsStyle.inputBackgroundColor);
                     break;
-                }
                 case 'TEXTAREA':
                 case 'SELECT':
+                    if (!styleMap.fontSize) {
+                        styleMap.fontSize = this._settingsStyle.formFontSize;
+                    }
                     setBorderStyle(styleMap, this._settingsStyle.inputBorderColor);
                     break;
                 case 'BODY': {
@@ -218,6 +226,52 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     }
                     break;
                 }
+                case 'H1':
+                    if (!styleMap.fontSize) {
+                        let parent = element.parentElement;
+                        found: {
+                            while (parent) {
+                                switch (parent.tagName) {
+                                    case 'ARTICLE':
+                                    case 'ASIDE':
+                                    case 'NAV':
+                                    case 'SECTION':
+                                        styleMap.fontSize = '1.5em';
+                                        break found;
+                                    default:
+                                        parent = parent.parentElement;
+                                        break;
+                                }
+                            }
+                            styleMap.fontSize = '2em';
+                        }
+                    }
+                    break;
+                case 'H2':
+                    if (!styleMap.fontSize) {
+                        styleMap.fontSize = '1.5em';
+                    }
+                    break;
+                case 'H3':
+                    if (!styleMap.fontSize) {
+                        styleMap.fontSize = '1.17em';
+                    }
+                    break;
+                case 'H4':
+                    if (!styleMap.fontSize) {
+                        styleMap.fontSize = '1em';
+                    }
+                    break;
+                case 'H5':
+                    if (!styleMap.fontSize) {
+                        styleMap.fontSize = '0.83em';
+                    }
+                    break;
+                case 'H6':
+                    if (!styleMap.fontSize) {
+                        styleMap.fontSize = '0.67em';
+                    }
+                    break;
                 case 'FORM':
                     if (!styleMap.marginTop) {
                         styleMap.marginTop = '0px';
@@ -225,8 +279,19 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     break;
                 case 'LI':
                     if (!styleMap.listStyleImage) {
-                        const style = getStyle(element);
-                        styleMap.listStyleImage = style.getPropertyValue('list-style-image');
+                        styleMap.listStyleImage = 'inherit';
+                    }
+                    break;
+                case 'SUP':
+                case 'SUB':
+                case 'SMALL':
+                    if (!styleMap.fontSize) {
+                        styleMap.fontSize = 'smaller';
+                    }
+                    break;
+                case 'RT':
+                    if (!styleMap.fontSize && element.parentElement!.tagName === 'RUBY') {
+                        styleMap.fontSize = '50%';
                     }
                     break;
                 case 'IFRAME':
