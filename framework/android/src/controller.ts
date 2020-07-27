@@ -3294,7 +3294,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     break;
                                 }
                             case 'bottom':
-                                if (bottom === undefined) {
+                                if (!bottom) {
                                     bottom = children[0];
                                     let j = 1;
                                     while (j < length) {

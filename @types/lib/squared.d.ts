@@ -113,7 +113,7 @@ declare module "lib" {
         function hasComputedStyle(element: Element): element is HTMLElement;
         function checkWritingMode(attr: string, value?: string): string;
         function checkStyleValue(element: CSSElement, attr: string, value: string): string;
-        function checkFontSizeValue(value: string): string;
+        function checkFontSizeValue(value: string, fixedWidth?: boolean): string;
         function checkMediaRule(value: string, fontSize?: number): boolean;
         function parseSelectorText(value: string, document?: boolean): string[];
         function getSpecificity(value: string): number;

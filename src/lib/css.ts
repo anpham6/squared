@@ -295,7 +295,7 @@ function checkCalculateOperator(operand: Undef<string>, operator: Undef<string>)
     return true;
 }
 
-const fromFontNamedValue = (index: number, fixedWidth?: boolean) => (!fixedWidth ? DOCUMENT_FONTMAP[index] * DOCUMENT_FONTBASE : DOCUMENT_FIXEDMAP[index] * DOCUMENT_FIXEDSIZE) + 'px';
+const fromFontNamedValue = (index: number, fixedWidth?: boolean) => (!fixedWidth ? DOCUMENT_FONTMAP[index] : DOCUMENT_FIXEDMAP[index]).toPrecision(8) + 'rem';
 const getInnerWidth = (dimension: Undef<Dimension>) => dimension?.width || window.innerWidth;
 const getInnerHeight = (dimension: Undef<Dimension>) => dimension?.height || window.innerHeight;
 const convertLength = (value: string, dimension: number, options?: ParseUnitOptions) => isPercent(value) ? Math.round(convertFloat(value) / 100 * dimension) : parseUnit(value, options);
@@ -2636,7 +2636,7 @@ export function checkFontSizeValue(value: string, fixedWidth?: boolean) {
     }
     switch (value) {
         case 'medium':
-            return (!fixedWidth ? DOCUMENT_FONTBASE : 13) + 'px';
+            return '1rem';
         case 'smaller':
             return '0.833333em';
         case 'larger':
@@ -2802,7 +2802,7 @@ export function checkMediaRule(value: string, fontSize?: number) {
                             valid = rule === '0';
                             break;
                         case 'color':
-                            valid = rule === undefined || parseInt(rule) > 0;
+                            valid = parseInt(rule) > 0;
                             break;
                         case 'min-color':
                             valid = parseInt(rule) <= screen.colorDepth / 3;

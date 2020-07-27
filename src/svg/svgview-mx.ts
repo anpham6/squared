@@ -85,7 +85,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
         public transformed?: SvgTransform[];
 
         protected _transforms?: SvgTransform[];
-        protected _animations?: SvgAnimation[];
+        protected _animations?: squared.svg.SvgAnimation[];
 
         private _name?: string;
 
@@ -97,7 +97,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
         }
 
         public getAnimations(element?: SVGGraphicsElement) {
-            const result: SvgAnimation[] = [];
+            const result: squared.svg.SvgAnimation[] = [];
             if (!element) {
                 element = this.element;
             }
@@ -480,23 +480,17 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
         }
         get name() {
             const result = this._name;
-            return result === undefined
-                ? this._name = SvgBuild.setName(this.element)
-                : result;
+            return result === undefined ? this._name = SvgBuild.setName(this.element) : result;
         }
 
         get transforms() {
             const result = this._transforms;
-            return result === undefined
-                ? this._transforms = this.getTransforms()
-                : result;
+            return result === undefined ? this._transforms = this.getTransforms() : result;
         }
 
         get animations() {
             const result = this._animations;
-            return result === undefined
-                ? this._animations = this.getAnimations()
-                : result;
+            return result === undefined ? this._animations = this.getAnimations() : result;
         }
 
         get visible() {

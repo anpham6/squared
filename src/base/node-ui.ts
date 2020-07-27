@@ -1260,7 +1260,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public registerBox(region: number, node?: T): Undef<T> {
-        if (this._boxRegister === undefined) {
+        if (!this._boxRegister) {
             this._boxRegister = {};
         }
         if (node) {

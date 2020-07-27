@@ -40,12 +40,9 @@ function parseLineHeight(lineHeight: string, fontSize: number) {
     return parseUnit(lineHeight, { fontSize });
 }
 
-function getFontSizeOptions(node: T) {
+function isFontFixedWidth(node: T) {
     const [fontFirst, fontSecond] = splitPair(node.css('fontFamily'), ',', true);
-    if (fontFirst.toLowerCase() === 'monospace' && !(fontSecond !== '' && fontSecond.toLowerCase() === 'monospace')) {
-        return { fixedWidth: true } as ParseUnitOptions;
-    }
-    return undefined;
+    return fontFirst.toLowerCase() === 'monospace' && !(fontSecond !== '' && fontSecond.toLowerCase() === 'monospace');
 }
 
 const aboveRange = (a: number, b: number, offset = 1) => a + offset > b;
@@ -53,7 +50,6 @@ const belowRange = (a: number, b: number, offset = 1) => a - offset < b;
 const validateCssSet = (value: string, actualValue: string) => value === actualValue || isLength(value, true) && actualValue.endsWith('px');
 const sortById = (a: T, b: T) => a.id < b.id ? -1 : 1;
 const isInlineVertical = (value: string) => value.startsWith('inline') || value === 'table-cell';
-const getFontSize = (style: CSSStyleDeclaration) => parseFloat(style.getPropertyValue('font-size'));
 
 function setNaturalChildren(node: T): T[] {
     let children: T[];
@@ -945,7 +941,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 obj = {};
                 data[name] = obj;
             }
-            if (overwrite || obj[attr] === undefined) {
+            if (overwrite || !hasValue(obj[attr])) {
                 obj[attr] = value;
             }
         }
@@ -1216,7 +1212,14 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public cssInitial(attr: string, options?: CssInitialOptions) {
-        return (this._initial?.styleMap || this._styleMap)[attr] as string || options?.modified && this._styleMap[attr] as string || options?.computed && this.style[attr] as string || '';
+        const value = (this._initial?.styleMap || this._styleMap)[attr];
+        if (value) {
+            return value;
+        }
+        else if (options) {
+            return options.modified && this._styleMap[attr] as string || options.computed && this.style[attr] as string || '';
+        }
+        return '';
     }
 
     public cssAscend(attr: string, options?: CssAscendOptions) {
@@ -2057,7 +2060,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get linear() {
-        if (this._linear === undefined) {
+        if (!this._linear) {
             const bounds = this.bounds;
             if (bounds) {
                 if (this.styleElement) {
@@ -2081,7 +2084,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get box() {
-        if (this._box === undefined) {
+        if (!this._box) {
             const bounds = this.bounds;
             if (bounds) {
                 if (this.styleElement && this.naturalChildren.length > 0) {
@@ -2879,46 +2882,56 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (result === undefined) {
             if (this.naturalChild) {
                 if (this.styleElement) {
-                    let value = checkFontSizeValue(this.valueOf('fontSize')),
+                    const fixedWidth = isFontFixedWidth(this);
+                    let value = checkFontSizeValue(this.valueOf('fontSize'), fixedWidth),
                         emRatio = 1;
                     if (isEm(value)) {
                         emRatio *= parseFloat(value);
                         value = 'inherit';
                     }
                     if (value === 'inherit') {
-                        let parent: Undef<T> = this;
-                        do {
-                            parent = parent.ascend({ condition: item => item.has('fontSize', { initial: true, not: 'inherit' }) })[0] as Undef<T>;
-                            if (parent && parent.actualParent !== null) {
-                                value = checkFontSizeValue(parent.valueOf('fontSize'));
-                                if (isPercent(value)) {
-                                    emRatio *= parseFloat(value) / 100;
-                                }
-                                else if (isEm(value)) {
-                                    emRatio *= parseFloat(value);
-                                }
-                                else {
+                        let parent: Null<T> = this.actualParent;
+                        if (parent !== null) {
+                            do {
+                                if (parent.tagName === 'HTML') {
+                                    value = '1rem';
                                     break;
                                 }
+                                else {
+                                    const fontSize = parent.valueOf('fontSize');
+                                    if (fontSize !== '' && fontSize !== 'inherit') {
+                                        value = checkFontSizeValue(fontSize);
+                                        if (value.endsWith('%')) {
+                                            emRatio *= parseFloat(value) / 100;
+                                        }
+                                        else if (isEm(value)) {
+                                            emRatio *= parseFloat(value);
+                                        }
+                                        else {
+                                            break;
+                                        }
+                                    }
+                                    parent = parent.actualParent;
+                                }
                             }
-                            else {
-                                value = '1rem';
-                                break;
-                            }
+                            while (parent !== null);
                         }
-                        while (true);
+                        else {
+                            value = '1rem';
+                        }
                     }
-                    if (value.endsWith('px')) {
+                    if (value === '1rem') {
+                        result = getRemSize(fixedWidth);
+                    }
+                    else if (value.endsWith('px')) {
                         result = parseFloat(value);
                     }
-                    else if (value === '1rem') {
-                        result = getRemSize(!!getFontSizeOptions(this));
-                    }
                     else if (value.endsWith('%')) {
-                        result = this._element !== document.documentElement ? parseFloat(value) / 100 * (this.actualParent?.fontSize ?? getFontSize(getStyle((this._element as Element).parentElement!))) : getRemSize();
+                        const parent = this.actualParent;
+                        result = parent ? parseFloat(value) / 100 * parent.fontSize : getRemSize();
                     }
                     else {
-                        result = parseUnit(value, getFontSizeOptions(this));
+                        result = parseUnit(value, fixedWidth ? { fixedWidth: true } : undefined);
                     }
                     result *= emRatio;
                 }
@@ -2931,8 +2944,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 if (result === 0) {
                     const element = this.element;
                     result = element && hasComputedStyle(element)
-                        ? getElementAsNode<T>(element, this.sessionId)?.fontSize ?? getFontSize(getStyle(element))
-                        : this.ascend({ condition: item => item.fontSize > 0 })[0]?.fontSize ?? parseUnit('1rem', getFontSizeOptions(this));
+                        ? getElementAsNode<T>(element, this.sessionId)?.fontSize ?? parseFloat(getStyle(element).getPropertyValue('font-size'))
+                        : this.ascend({ condition: item => item.fontSize > 0 })[0]?.fontSize ?? parseUnit('1rem', isFontFixedWidth(this) ? { fixedWidth: true } : undefined);
                 }
             }
             this._fontSize = result;

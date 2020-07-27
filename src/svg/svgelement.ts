@@ -1,8 +1,7 @@
-import SvgContainer from './svgcontainer';
-
 import { INSTANCE_TYPE } from './lib/constant';
 
 type Svg = squared.svg.Svg;
+type SvgContainer = squared.svg.SvgContainer;
 
 export default class SvgElement implements squared.svg.SvgElement {
     public parent?: SvgContainer;

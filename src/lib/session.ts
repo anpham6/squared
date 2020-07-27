@@ -34,7 +34,7 @@ export function getElementCache<T = unknown>(element: Element, attr: string, ses
 export function getElementData(element: Element, sessionId?: string) {
     if (!sessionId) {
         sessionId = SESSION_MAP['0'].get(element)?.sessionId;
-        if (sessionId === undefined) {
+        if (!sessionId) {
             return undefined;
         }
     }

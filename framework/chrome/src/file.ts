@@ -676,9 +676,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
 
     get outputFileExclusions() {
         const result = this._outputFileExclusions;
-        return result === undefined
-            ? this._outputFileExclusions = this.userSettings.outputFileExclusions.map(value => convertFileMatch(value))
-            : result;
+        return result === undefined ? this._outputFileExclusions = this.userSettings.outputFileExclusions.map(value => convertFileMatch(value)) : result;
     }
 
     get userSettings() {

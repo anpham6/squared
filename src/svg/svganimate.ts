@@ -375,7 +375,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         return this._from;
     }
     set from(value) {
-        if (this._values === undefined) {
+        if (!this._values) {
             const animationElement = this.animationElement;
             if (animationElement) {
                 if (this.to === '') {

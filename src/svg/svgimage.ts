@@ -144,27 +144,11 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
     }
 
     get transforms() {
-        const result = this._transforms;
-        if (result === undefined) {
-            this._transforms = super.transforms;
-            if (this.imageElement) {
-                this._transforms = this._transforms.concat(this.getTransforms(this.imageElement));
-            }
-            return this._transforms;
-        }
-        return result;
+        return !this._transforms ? this._transforms = this.imageElement ? super.transforms.concat(this.getTransforms(this.imageElement)) : super.transforms : this._transforms;
     }
 
     get animations() {
-        const result = this._animations;
-        if (result === undefined) {
-            this._animations = super.animations;
-            if (this.imageElement) {
-                this._animations = this._animations.concat(this.getAnimations(this.imageElement));
-            }
-            return this._animations;
-        }
-        return result;
+        return !this._animations ? this._animations = this.imageElement ? super.animations.concat(this.getAnimations(this.imageElement)) : super.animations : this._animations;
     }
 
     get instanceType() {

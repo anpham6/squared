@@ -1947,7 +1947,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const renderParent = node.renderParent as Undef<T>;
             if (renderParent && node.documentId !== documentId) {
                 if (renderParent.layoutConstraint) {
-                    if (documentId === '' || node.constraint.current[position] === undefined || overwrite) {
+                    if (documentId === '' || !node.constraint.current[position] || overwrite) {
                         const anchored = documentId === 'parent';
                         if (overwrite === undefined && documentId !== '') {
                             overwrite = anchored;
