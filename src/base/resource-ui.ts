@@ -23,6 +23,7 @@ const PATTERN_COLORSTOP = `((?:rgb|hsl)a?\\(\\d+,\\s+\\d+%?,\\s+\\d+%?(?:,\\s+[\
 const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\([^)]+\\)|(repeating-)?(linear|radial|conic)-gradient\\(((?:to\\s+[a-z\\s]+|(?:from\\s+)?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*(?:(?:-?[\\d.]+(?:[a-z%]+)?\\s*)+)?(?:at\\s+[\\w %]+)?)?),?\\s*((?:${PATTERN_COLORSTOP})+)\\))`, 'g');
 const REGEXP_COLORSTOP = new RegExp(PATTERN_COLORSTOP, 'g');
 const REGEXP_TRAILINGINDENT = /\n([^\S\n]*)?$/;
+const CHAR_EMPTYSTRING = /^[\s\n]+$/;
 const CHAR_LEADINGSPACE = /^\s+/;
 const CHAR_TRAILINGSPACE = /\s+$/;
 
@@ -85,16 +86,18 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
             }
             else {
                 const unit = match[2];
-                if (isPercent(unit)) {
-                    offset = parseFloat(unit) / 100;
-                }
-                else if (isLength(unit)) {
-                    offset = (horizontal ? node.parseWidth(unit, false) : node.parseHeight(unit, false)) / size;
-                }
-                else if (isCalc(unit)) {
-                    offset = calculate(match[6], { boundingSize: size, fontSize: node.fontSize }) / size;
-                    if (isNaN(offset)) {
-                        offset = -1;
+                if (unit) {
+                    if (isPercent(unit)) {
+                        offset = parseFloat(unit) / 100;
+                    }
+                    else if (isLength(unit)) {
+                        offset = (horizontal ? node.parseWidth(unit, false) : node.parseHeight(unit, false)) / size;
+                    }
+                    else if (isCalc(unit)) {
+                        offset = calculate(match[6], { boundingSize: size, fontSize: node.fontSize }) / size;
+                        if (isNaN(offset)) {
+                            offset = -1;
+                        }
                     }
                 }
                 if (repeat && offset !== -1) {
@@ -1020,7 +1023,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             value += ResourceUI.STRING_SPACE;
                         }
                     }
-                    else if (!/^[\s\n]+$/.test(value)) {
+                    else if (!CHAR_EMPTYSTRING.test(value)) {
                         value =
                             value.replace(CHAR_LEADINGSPACE, previousSibling && (
                                 previousSibling.block ||
@@ -1094,7 +1097,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         if (!styled) {
             return value;
         }
-        else if (!preserveWhiteSpace && /^[\s\n]+$/.test(value)) {
+        else if (!preserveWhiteSpace && CHAR_EMPTYSTRING.test(value)) {
             return node.blockStatic ? ResourceUI.STRING_SPACE : '';
         }
         return value.replace(/&#(\d+);/g, (match, capture) => String.fromCharCode(parseInt(capture)));

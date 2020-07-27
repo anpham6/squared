@@ -6,7 +6,7 @@ import LayoutUI = squared.base.LayoutUI;
 
 type View = android.base.View;
 
-const { formatPX, getBackgroundPosition, isPercent } = squared.lib.css;
+const { formatPX, getBackgroundPosition } = squared.lib.css;
 
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
@@ -247,7 +247,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         outputAs: application.renderNode(new LayoutUI(
                             parent,
                             container,
-                            node.baselineElement && node.percentWidth === 0 && !isPercent(node.css('maxWidth')) ? CONTAINER_NODE.LINEAR : CONTAINER_NODE.CONSTRAINT,
+                            node.baselineElement && node.percentWidth === 0 && !node.css('maxWidth').endsWith('%') ? CONTAINER_NODE.LINEAR : CONTAINER_NODE.CONSTRAINT,
                             NODE_ALIGNMENT.VERTICAL | NODE_ALIGNMENT.UNKNOWN,
                             container.children as T[]
                         ))

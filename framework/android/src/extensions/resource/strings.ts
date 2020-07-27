@@ -5,18 +5,20 @@ import { replaceCharacterData } from '../../lib/util';
 
 type View = android.base.View;
 
-const { isPercent, parseAngle } = squared.lib.css;
+const { parseAngle } = squared.lib.css;
 const { measureTextWidth } = squared.lib.dom;
 const { clamp } = squared.lib.math;
 const { delimitString, lowerCaseString, upperCaseString } = squared.lib.util;
 
 const { NODE_RESOURCE } = squared.base.lib.enumeration;
 
+const REGEXP_FONTVARIATION = /oblique(?:\s+(-?[\d.]+[a-z]+))?/;
+
 function getFontVariationStyle(value: string) {
     if (value === 'italic') {
         return "'ital' 1";
     }
-    const match = /oblique(?:\s+(-?[\d.]+[a-z]+))?/.exec(value);
+    const match = REGEXP_FONTVARIATION.exec(value);
     if (match) {
         let angle: Undef<number>;
         if (match[1]) {
@@ -159,7 +161,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                         percent = '200%';
                                         break;
                                 }
-                                if (isPercent(percent)) {
+                                if (percent.endsWith('%')) {
                                     fontVariation = delimitString({ value: fontVariation }, `'wdth' ${parseFloat(percent)}`);
                                 }
                             }

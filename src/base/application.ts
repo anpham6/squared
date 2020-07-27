@@ -10,6 +10,13 @@ const { FILE, STRING } = squared.lib.regex;
 const { frameworkNotInstalled, getElementCache, newSessionInit, resetSessionAll, setElementCache } = squared.lib.session;
 const { capitalize, convertCamelCase, parseMimeType, plainMap, promisify, resolvePath, splitPair, splitPairStart, trimBoth } = squared.lib.util;
 
+const REGEXP_IMPORTANT = /\s*([a-z-]+):[^!;]+!important;/g;
+const REGEXP_FONTFACE = /\s*@font-face\s*{([^}]+)}\s*/;
+const REGEXP_FONTSRC = /\s*src:\s*([^;]+);/;
+const REGEXP_FONTFAMILY = /\s*font-family:([^;]+);/;
+const REGEXP_FONTSTYLE = /\s*font-style:\s*(\w+)\s*;/;
+const REGEXP_FONTWEIGHT = /\s*font-weight:\s*(\d+)\s*;/;
+const REGEXP_FONTURL = /\s*(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*format\("?([\w-]+)"?\))?\s*/;
 const REGEXP_DATAURI = new RegExp(`url\\("?(${STRING.DATAURI})"?\\),?\\s*`, 'g');
 const CSS_SHORTHANDNONE = getPropertiesAsTraits(CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE);
 
@@ -535,8 +542,11 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const important: ObjectMap<boolean> = {};
                 const cssStyle = item.style;
                 for (const attr of Array.from(cssStyle)) {
-                    let value: string = cssStyle[attr];
+                    if (attr.startsWith('-')) {
+                        continue;
+                    }
                     const baseAttr = convertCamelCase(attr);
+                    let value: string = cssStyle[attr];
                     switch (value) {
                         case 'initial':
                             if (CSS_PROPERTIES[baseAttr]?.value === 'auto') {
@@ -563,9 +573,8 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                     baseMap[baseAttr] = value;
                 }
-                const pattern = /\s*([a-z-]+):[^!;]+!important;/g;
                 let match: Null<RegExpExecArray>;
-                while (match = pattern.exec(cssText)) {
+                while (match = REGEXP_IMPORTANT.exec(cssText)) {
                     const attr = convertCamelCase(match[1]);
                     const value = CSS_PROPERTIES[attr]?.value;
                     if (Array.isArray(value)) {
@@ -578,6 +587,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         important[attr] = true;
                     }
                 }
+                REGEXP_IMPORTANT.lastIndex = 0;
                 parseImageUrl(baseMap, 'backgroundImage', styleSheetHref, resourceHandler);
                 parseImageUrl(baseMap, 'listStyleImage', styleSheetHref, resourceHandler);
                 parseImageUrl(baseMap, 'content', styleSheetHref, resourceHandler);
@@ -624,16 +634,16 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
             case CSSRule.FONT_FACE_RULE: {
                 if (resourceHandler) {
-                    const attr = /\s*@font-face\s*{([^}]+)}\s*/.exec(cssText)?.[1];
+                    const attr = REGEXP_FONTFACE.exec(cssText)?.[1];
                     if (attr) {
-                        const src = /\s*src:\s*([^;]+);/.exec(attr)?.[1];
-                        let fontFamily = /\s*font-family:([^;]+);/.exec(attr)?.[1].trim();
+                        const src = REGEXP_FONTSRC.exec(attr)?.[1];
+                        let fontFamily = REGEXP_FONTFAMILY.exec(attr)?.[1].trim();
                         if (src && fontFamily) {
                             fontFamily = trimBoth(fontFamily, '"');
-                            const fontStyle = /\s*font-style:\s*(\w+)\s*;/.exec(attr)?.[1].toLowerCase() || 'normal';
-                            const fontWeight = parseInt(/\s*font-weight:\s*(\d+)\s*;/.exec(attr)?.[1] || '400');
+                            const fontStyle = REGEXP_FONTSTYLE.exec(attr)?.[1].toLowerCase() || 'normal';
+                            const fontWeight = parseInt(REGEXP_FONTWEIGHT.exec(attr)?.[1] || '400');
                             for (const value of src.split(',')) {
-                                const urlMatch = /\s*(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*format\("?([\w-]+)"?\))?\s*/.exec(value);
+                                const urlMatch = REGEXP_FONTURL.exec(value);
                                 if (urlMatch) {
                                     const data: FontFaceData = {
                                         fontFamily,

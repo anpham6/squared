@@ -515,6 +515,7 @@ declare module "base" {
         get boundingClientRect(): Null<DOMRect>;
         get cssStyle(): StringMap;
         get textStyle(): StringMap;
+        get elementData(): Undef<ElementData>;
         get center(): Point;
         get style(): CSSStyleDeclaration;
         constructor(id: number, sessionId?: string, element?: Element);
@@ -705,7 +706,6 @@ declare module "base" {
         class Accessibility<T extends NodeUI> extends ExtensionUI<T> {}
         class Column<T extends NodeUI> extends ExtensionUI<T> {}
         class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
-            static isFr(value: string): boolean;
             static isAligned(node: NodeUI): boolean;
             static isJustified(node: NodeUI): boolean;
             static createDataRowAttribute(): CssGridDirectionData;

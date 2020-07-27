@@ -1,7 +1,10 @@
 const REGEXP_TRUNCATECACHE: ObjectMap<RegExp> = {};
+const REGEXP_DECIMALNOTAION = /^(-?\d+\.\d+)e(-?\d+)$/;
+const REGEXP_FRACTION = /^(-?\d+)\.(\d*?)(0{5,}|9{5,})\d*$/;
+const REGEXP_TRAILINGZERO = /\.(\d*?)(0+)$/;
 
 function convertDecimalNotation(value: number) {
-    const match = /^(-?\d+\.\d+)e(-?\d+)$/.exec(value.toString());
+    const match = REGEXP_DECIMALNOTAION.exec(value.toString());
     return match ?
         parseInt(match[2]) > 0
             ? Number.MAX_SAFE_INTEGER.toString()
@@ -43,7 +46,7 @@ export function truncate(value: NumString, precision = 3) {
 
 export function truncateFraction(value: number) {
     if (value !== Math.floor(value)) {
-        const match = /^(-?\d+)\.(\d*?)(0{5,}|9{5,})\d*$/.exec(convertDecimalNotation(value));
+        const match = REGEXP_FRACTION.exec(convertDecimalNotation(value));
         if (match) {
             const trailing = match[2];
             if (trailing === '') {
@@ -57,7 +60,7 @@ export function truncateFraction(value: number) {
 }
 
 export function truncateTrailingZero(value: string) {
-    const match = /\.(\d*?)(0+)$/.exec(value);
+    const match = REGEXP_TRAILINGZERO.exec(value);
     return match ? value.substring(0, value.length - match[match[1] ? 2 : 0].length) : value;
 }
 

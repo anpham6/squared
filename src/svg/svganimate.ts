@@ -10,6 +10,8 @@ const { isNumber, replaceMap, sortNumber, trimEnd } = squared.lib.util;
 
 const invertControlPoint = (value: number) => parseFloat((1 - value).toPrecision(5));
 
+const REGEXP_CUBICBEZIER = /\s*[\d.]+\s+[\d.]+\s+[\d.]+\s+[\d.]+\s*/;
+
 export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgAnimate {
     public static PATTERN_CUBICBEZIER = 'cubic-bezier\\(([01](?:\\.\\d+)?),\\s+(-?\\d+(?:\\.\\d+)?),\\s+([01](?:\\.\\d+)?),\\s+(-?\\d+(?:\\.\\d+)?)\\)';
 
@@ -20,7 +22,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         if (keySpline) {
             return keySpline as string;
         }
-        else if (/\s*[\d.]+\s+[\d.]+\s+[\d.]+\s+[\d.]+\s*/.test(value)) {
+        else if (REGEXP_CUBICBEZIER.test(value)) {
             return value.trim();
         }
         else if (value.startsWith('step')) {

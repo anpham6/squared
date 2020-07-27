@@ -15,6 +15,10 @@ const { getNamedItem, removeElementsByClassName } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;
 const { appendSeparator, capitalize, convertWord, flatArray, hasBit, hasMimeType, isEmptyString, isString, iterateArray, partitionArray, trimBoth, trimString } = squared.lib.util;
 
+const REGEXP_PSEUDOCOUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s+([a-z-]+))?\)|(counters)\(([^,]+),\s+"([^"]*)"(?:,\s+([a-z-]+))?\)|"([^"]+)")\s*/g;
+const REGEXP_PSEUDOCOUNTERVALUE = /\b([^\-\d][^\-\d]?[^\s]*)\s+(-?\d+)\b/g;
+const REGEXP_PSEUDOQUOTE = /("(?:[^"]|\\")+"|[^\s]+)\s+("(?:[^"]|\\")+"|[^\s]+)(?:\s+("(?:[^"]|\\")+"|[^\s]+)\s+("(?:[^"]|\\")+"|[^\s]+))?/;
+
 const TEXT_STYLE = NodeUI.TEXT_STYLE.slice(0);
 TEXT_STYLE.push('fontSize');
 
@@ -98,7 +102,7 @@ function getPseudoQuoteValue(element: HTMLElement, pseudoElt: string, outside: s
     while (current?.tagName === 'Q') {
         const quotes = getElementCache<CSSStyleDeclaration>(current, `styleMap`, sessionId)?.quotes || getComputedStyle(current).quotes;
         if (quotes) {
-            const match = /("(?:[^"]|\\")+"|[^\s]+)\s+("(?:[^"]|\\")+"|[^\s]+)(?:\s+("(?:[^"]|\\")+"|[^\s]+)\s+("(?:[^"]|\\")+"|[^\s]+))?/.exec(quotes);
+            const match = REGEXP_PSEUDOQUOTE.exec(quotes);
             if (match) {
                 if (pseudoElt === '::before') {
                     if (found === 0) {
@@ -150,9 +154,9 @@ function setMapDepth(map: Map<number, Set<NodeUI>>, depth: number, node: NodeUI)
 
 function getCounterValue(value: Undef<string>, counterName: string, fallback = 1) {
     if (value && value !== 'none') {
-        const pattern = /\b([^\-\d][^\-\d]?[^\s]*)\s+(-?\d+)\b/g;
+        REGEXP_PSEUDOCOUNTERVALUE.lastIndex = 0;
         let match: Null<RegExpExecArray>;
-        while (match = pattern.exec(value)) {
+        while (match = REGEXP_PSEUDOCOUNTERVALUE.exec(value)) {
             if (match[1] === counterName) {
                 return parseInt(match[2]);
             }
@@ -1659,10 +1663,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             }
                         }
                         else {
-                            const pattern = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s+([a-z-]+))?\)|(counters)\(([^,]+),\s+"([^"]*)"(?:,\s+([a-z-]+))?\)|"([^"]+)")\s*/g;
                             let found: Undef<boolean>,
                                 match: Null<RegExpExecArray>;
-                            while (match = pattern.exec(value)) {
+                            while (match = REGEXP_PSEUDOCOUNTER.exec(value)) {
                                 const attr = match[1];
                                 if (attr) {
                                     content += getNamedItem(element, attr.trim());
@@ -1773,6 +1776,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 }
                                 found = true;
                             }
+                            REGEXP_PSEUDOCOUNTER.lastIndex = 0;
                             if (!found) {
                                 content = value;
                             }

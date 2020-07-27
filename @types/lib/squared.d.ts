@@ -141,7 +141,6 @@ declare module "lib" {
         function formatPX(value: number): string;
         function formatPercent(value: NumString, round?: boolean): string;
         function isLength(value: string, percent?: boolean): boolean;
-        function isPx(value: string): boolean;
         function isEm(value: string): boolean;
         function isEmBased(value: string): boolean;
         function isPercent(value: string): boolean;
@@ -172,9 +171,9 @@ declare module "lib" {
         function moreEqual(a: number, b: number, precision?: number): boolean;
         function lessEqual(a: number, b: number, precision?: number): boolean;
         function truncate(value: NumString, precision?: number): string;
-        function truncateTrailingZero(value: string): string;
         function truncateFraction(value: number): number;
         function truncateString(value: string, precision?: number): string;
+        function truncateTrailingZero(value: string): string;
         function triangulate(a: number, b: number, clen: number): [number, number];
         function absoluteAngle(start: Point, end: Point): number;
         function relativeAngle(start: Point, end: Point, orientation?: number): number;

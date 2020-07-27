@@ -6,7 +6,7 @@ import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import LayoutUI = squared.base.LayoutUI;
 
-const { CSS_UNIT, formatPX, isPercent } = squared.lib.css;
+const { CSS_UNIT, formatPX } = squared.lib.css;
 const { truncate } = squared.lib.math;
 
 const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
@@ -39,7 +39,7 @@ function hasMarginHorizontal(node: View, parent: View, clearMap: Map<View, strin
 }
 
 const hasMarginVertical = (node: View) => (validPercent(node.css('marginTop')) || validPercent(node.css('marginBottom'))) && node.documentParent.percentHeight > 0 && !node.inlineStatic && (node.documentParent.length === 1 || !node.pageFlow);
-const validPercent = (value: string) => isPercent(value) && parseFloat(value) > 0;
+const validPercent = (value: string) => value.endsWith('%') && parseFloat(value) > 0;
 
 export default class Percent<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {

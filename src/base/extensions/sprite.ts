@@ -2,6 +2,8 @@ import ExtensionUI from '../extension-ui';
 
 const { getBackgroundPosition, resolveURL } = squared.lib.css;
 
+const REGEXP_POSITION = /^0[a-z%]+|left|start|top/;
+
 export default abstract class Sprite<T extends squared.base.NodeUI> extends ExtensionUI<T> {
     public is(node: T) {
         return node.length === 0 && node.hasWidth && node.hasHeight;
@@ -16,9 +18,8 @@ export default abstract class Sprite<T extends squared.base.NodeUI> extends Exte
                 const dimension = node.actualDimension;
                 const [backgroundPositionX, backgroundPositionY] = node.cssAsTuple('backgroundPositionX', 'backgroundPositionY');
                 const position = getBackgroundPosition(backgroundPositionX + ' ' + backgroundPositionY, dimension, { fontSize: node.fontSize, screenDimension: node.localSettings.screenDimension });
-                const pattern = /^0[a-z%]+|left|start|top/;
-                const x = (position.left < 0 || pattern.test(backgroundPositionX)) && image.width > dimension.width;
-                const y = (position.top < 0 || pattern.test(backgroundPositionY)) && image.height > dimension.height;
+                const x = (position.left < 0 || REGEXP_POSITION.test(backgroundPositionX)) && image.width > dimension.width;
+                const y = (position.top < 0 || REGEXP_POSITION.test(backgroundPositionY)) && image.height > dimension.height;
                 if ((x || y) && (x || position.left === 0) && (y || position.top === 0)) {
                     node.data(this.name, 'mainData', { image, position });
                     return true;

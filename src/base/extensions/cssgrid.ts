@@ -26,7 +26,7 @@ interface RepeatItem {
     unitMin?: string;
 }
 
-const { formatPercent, formatPX, isLength, isPercent, isPx } = squared.lib.css;
+const { formatPercent, formatPX, isLength } = squared.lib.css;
 const { isNumber, plainMap, splitPairEnd, trimString, withinRange } = squared.lib.util;
 
 const PATTERN_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
@@ -78,7 +78,7 @@ function setAutoFill(data: CssGridDirectionData, dimension: number) {
         const unitMin = data.unitMin;
         let sizeMin = 0;
         for (const value of [unit[0], unitMin[0]]) {
-            if (isPercent(value)) {
+            if (value.endsWith('%')) {
                 sizeMin = Math.max(parseFloat(value) / 100 * dimension, sizeMin);
             }
             else if (isLength(value)) {
@@ -103,13 +103,13 @@ function setFlexibleDimension(dimension: number, gap: number, count: number, uni
     let i = 0;
     while (i < length) {
         const value = unit[i++];
-        if (isPx(value)) {
+        if (value.endsWith('px')) {
             filled += parseFloat(value);
         }
-        else if (CssGrid.isFr(value)) {
+        else if (value.endsWith('fr')) {
             fractional += parseFloat(value);
         }
-        else if (isPercent(value)) {
+        else if (value.endsWith('%')) {
             percent -= parseFloat(value) / 100;
         }
     }
@@ -118,7 +118,7 @@ function setFlexibleDimension(dimension: number, gap: number, count: number, uni
         if (ratio > 0) {
             for (i = 0; i < length; ++i) {
                 const value = unit[i];
-                if (CssGrid.isFr(value)) {
+                if (value.endsWith('fr')) {
                     unit[i] = formatPX(parseFloat(value) * ratio);
                 }
             }
@@ -246,10 +246,10 @@ function applyLayout(node: NodeUI, data: CssGridDirectionData, dataCount: number
     let i = 0;
     while (i < length) {
         const value = unit[i++];
-        if (isPercent(value)) {
+        if (value.endsWith('%')) {
             percent -= parseFloat(value) / 100;
         }
-        else if (CssGrid.isFr(value)) {
+        else if (value.endsWith('fr')) {
             fr += parseFloat(value);
         }
         else if (value === 'auto') {
@@ -261,7 +261,7 @@ function applyLayout(node: NodeUI, data: CssGridDirectionData, dataCount: number
         if (fr > 0) {
             for (i = 0; i < length; ++i) {
                 const value = unit[i];
-                if (CssGrid.isFr(value)) {
+                if (value.endsWith('fr')) {
                     unit[i] = percent * (parseFloat(value) / fr) + 'fr';
                 }
             }
@@ -278,7 +278,6 @@ function applyLayout(node: NodeUI, data: CssGridDirectionData, dataCount: number
 const convertLength = (node: NodeUI, value: string, index: number) => isLength(value) ? formatPX(node.parseUnit(value, { dimension: index !== 0 ? 'width' : 'height' })) : value;
 
 export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
-    public static isFr = (value: string) => /\dfr$/.test(value);
     public static isAligned = (node: NodeUI) => node.hasHeight && /^space-|center|flex-end|end/.test(node.css('alignContent'));
     public static isJustified = (node: NodeUI) => (node.blockStatic || node.hasWidth) && /^space-|center|flex-end|end|right/.test(node.css('justifyContent'));
 

@@ -56,7 +56,7 @@ interface AscendOptions<T> {
     error?: (item: T) => boolean;
     including?: T;
     excluding?: T;
-    attr?: string;
+    attr?: 'actualParent' | 'absoluteParent' | 'parent' | 'renderParent' | 'documentParent' | 'outerWrapper';
     startSelf?: boolean;
     every?: boolean;
 }

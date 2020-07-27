@@ -4,7 +4,7 @@ import { BOX_STANDARD, NODE_RESOURCE } from '../lib/enumeration';
 
 type NodeUI = squared.base.NodeUI;
 
-const { formatPercent, formatPX, getInheritedStyle, getStyle, isLength, isPercent } = squared.lib.css;
+const { formatPercent, formatPX, getInheritedStyle, getStyle, isLength } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { isNumber, replaceMap, withinRange } = squared.lib.util;
 
@@ -143,7 +143,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 if (!td.hasPX('width')) {
                     const value = getNamedItem(element, 'width');
-                    if (isPercent(value)) {
+                    if (value.endsWith('%')) {
                         td.css('width', value, true);
                     }
                     else if (isNumber(value)) {
@@ -152,7 +152,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 if (!td.hasPX('height')) {
                     const value = getNamedItem(element, 'height');
-                    if (isPercent(value)) {
+                    if (value.endsWith('%')) {
                         td.css('height', value);
                     }
                     else if (isNumber(value)) {
@@ -232,9 +232,9 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         }
                     }
                     else {
-                        const percent = isPercent(columnWidth);
+                        const percent = columnWidth.endsWith('%');
                         const length = isLength(mapWidth[j]);
-                        if (reevaluate || width < mapBounds[j] || width === mapBounds[j] && (length && percent || percent && isPercent(mapWidth[j]) && td.parseWidth(columnWidth) >= td.parseWidth(mapWidth[j]) || length && isLength(columnWidth) && td.parseWidth(columnWidth) > td.parseWidth(mapWidth[j]))) {
+                        if (reevaluate || width < mapBounds[j] || width === mapBounds[j] && (length && percent || percent && mapWidth[j].endsWith('%') && td.parseWidth(columnWidth) >= td.parseWidth(mapWidth[j]) || length && isLength(columnWidth) && td.parseWidth(columnWidth) > td.parseWidth(mapWidth[j]))) {
                             mapWidth[j] = columnWidth;
                         }
                         if (reevaluate || element.colSpan === 1) {
@@ -258,7 +258,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             hideCell(tr);
             columnCount = Math.max(columnCount, row.length);
         }
-        if (node.hasPX('width', { percent: false }) && mapWidth.some(value => isPercent(value))) {
+        if (node.hasPX('width', { percent: false }) && mapWidth.some(value => value.endsWith('%'))) {
             replaceMap(mapWidth, (value: string, index) => {
                 if (value === 'auto') {
                     const dimension = mapBounds[index];
@@ -269,7 +269,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 return value;
             });
         }
-        if (mapWidth.every(value => isPercent(value))) {
+        if (mapWidth.every(value => value.endsWith('%'))) {
             if (mapWidth.reduce((a, b) => a + parseFloat(b), 0) > 1) {
                 let percentTotal = 100;
                 replaceMap(mapWidth, (value: string) => {
@@ -310,11 +310,11 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         }
         mainData.layoutType = (() => {
             if (mapWidth.length > 1) {
-                mapPercent = mapWidth.reduce((a, b) => a + (isPercent(b) ? parseFloat(b) : 0), 0);
+                mapPercent = mapWidth.reduce((a, b) => a + (b.endsWith('%') ? parseFloat(b) : 0), 0);
                 if (mainData.layoutFixed && mapWidth.reduce((a, b) => a + (isLength(b) ? parseFloat(b) : 0), 0) >= node.actualWidth) {
                     return LAYOUT_TABLE.COMPRESS;
                 }
-                else if (mapWidth.length > 1 && mapWidth.some(value => isPercent(value)) || mapWidth.every(value => isLength(value) && value !== '0px')) {
+                else if (mapWidth.length > 1 && mapWidth.some(value => value.endsWith('%')) || mapWidth.every(value => isLength(value) && value !== '0px')) {
                     return LAYOUT_TABLE.VARIABLE;
                 }
                 else if (mapWidth.every(value => value === mapWidth[0])) {
@@ -392,7 +392,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                                     setAutoWidth(node, td, cellData);
                                 }
                             }
-                            else if (isPercent(columnWidth)) {
+                            else if (columnWidth.endsWith('%')) {
                                 if (percentAll) {
                                     cellData.percent = columnWidth;
                                     cellData.expand = true;

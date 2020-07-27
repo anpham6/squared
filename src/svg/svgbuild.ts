@@ -28,6 +28,7 @@ const { STRING } = squared.lib.regex;
 const { convertWord, hasBit, isArray, plainMap, splitPair } = squared.lib.util;
 
 const REGEXP_DECIMAL = new RegExp(STRING.DECIMAL, 'g');
+const REGEXP_PATHCOMMAND = /([A-Za-z])([^A-Za-z]+)?/g;
 const NAME_GRAPHICS = new Map<string, number>();
 
 export default class SvgBuild implements squared.svg.SvgBuild {
@@ -331,10 +332,9 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static getPathCommands(value: string) {
         const result: SvgPathCommand[] = [];
-        const pattern = /([A-Za-z])([^A-Za-z]+)?/g;
         let first = true,
             match: Null<RegExpExecArray>;
-        while (match = pattern.exec(value.trim())) {
+        while (match = REGEXP_PATHCOMMAND.exec(value.trim())) {
             let key = match[1];
             if (first && key.toUpperCase() !== 'M') {
                 break;
@@ -465,6 +465,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 first = false;
             }
         }
+        REGEXP_PATHCOMMAND.lastIndex = 0;
         return result;
     }
 

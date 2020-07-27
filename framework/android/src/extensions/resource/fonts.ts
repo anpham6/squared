@@ -14,6 +14,9 @@ const { truncate } = squared.lib.math;
 
 const { NODE_RESOURCE } = squared.base.lib.enumeration;
 
+const REGEXP_FONTATTRIBUTE = /([^\s]+)="((?:[^"]|\\")+)"/;
+const REGEXP_FONTNAME = /^(\w*?)(?:_(\d+))?$/;
+
 const FONT_ANDROID = {
     'sans-serif': BUILD_ANDROID.ICE_CREAM_SANDWICH,
     'sans-serif-thin': BUILD_ANDROID.JELLYBEAN,
@@ -372,7 +375,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             for (const attrs in styleTag) {
                 const items: StringValue[] = [];
                 for (const value of attrs.split(';')) {
-                    const match = /([^\s]+)="((?:[^"]|\\")+)"/.exec(value);
+                    const match = REGEXP_FONTATTRIBUTE.exec(value);
                     if (match) {
                         items.push({ key: match[1], value: match[2] });
                     }
@@ -439,7 +442,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             const q = values.length;
             for (i = 0; i < q; ++i) {
                 const name = values[i];
-                const match = /^(\w*?)(?:_(\d+))?$/.exec(name);
+                const match = REGEXP_FONTNAME.exec(name);
                 if (match) {
                     const styleData = resourceMap[match[1].toUpperCase()][convertInt(match[2])];
                     if (styleData) {

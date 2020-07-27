@@ -4,7 +4,7 @@ import NodeUI from './node-ui';
 import { NODE_TEMPLATE } from './lib/enumeration';
 
 const { USER_AGENT, isUserAgent } = squared.lib.client;
-const { CSS_PROPERTIES, formatPX, getStyle, hasCoords, isLength, isPercent } = squared.lib.css;
+const { CSS_PROPERTIES, formatPX, getStyle, hasCoords, isLength } = squared.lib.css;
 const { withinViewport } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;
 const { capitalize, convertFloat, iterateArray, joinArray } = squared.lib.util;
@@ -303,8 +303,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 case 'VIDEO':
                 case 'OBJECT':
                 case 'EMBED': {
-                    this.setElementDimension(element, tagName, styleMap, 'width', 'height');
-                    this.setElementDimension(element, tagName, styleMap, 'height', 'width');
+                    this.setElementDimension(element, styleMap, 'width', 'height');
+                    this.setElementDimension(element, styleMap, 'height', 'width');
                     break;
                 }
             }
@@ -816,17 +816,17 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         return '<' + controlName + attributes + (content ? `>\n${content}</${controlName}>\n` : ' />\n');
     }
 
-    private setElementDimension(element: Element, tagName: string, styleMap: StringMap, attr: string, opposing: string) {
+    private setElementDimension(element: Element, styleMap: StringMap, attr: string, opposing: string) {
         const dimension = styleMap[attr];
         if (!dimension || dimension === 'auto') {
             const match = new RegExp(`\\s+${attr}="([^"]+)"`).exec(element.outerHTML);
             if (match) {
                 const value = match[1];
-                if (isLength(value)) {
-                    styleMap[attr] = value + 'px';
-                }
-                else if (isPercent(value)) {
+                if (value.endsWith('%')) {
                     styleMap[attr] = value;
+                }
+                else if (isLength(value)) {
+                    styleMap[attr] = value + 'px';
                 }
             }
             else if (element.clientWidth === 300 && element.clientHeight === 150) {
@@ -843,7 +843,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     const value = styleMap[opposing];
                     if (value && isLength(value)) {
                         const attrMax = `max${capitalize(attr)}`;
-                        if (!styleMap[attrMax] || !isPercent(attrMax)) {
+                        if (!styleMap[attrMax] || !attrMax.endsWith('%')) {
                             styleMap[attr] = formatPX(image[attr] * parseFloat(value) / image[opposing]);
                         }
                     }

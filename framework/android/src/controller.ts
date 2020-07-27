@@ -10,7 +10,7 @@ import LayoutUI = squared.base.LayoutUI;
 
 const { PLATFORM, isPlatform } = squared.lib.client;
 const { parseColor } = squared.lib.color;
-const { CSS_UNIT, formatPX, getSrcSet, hasCoords, hasComputedStyle, isPercent } = squared.lib.css;
+const { CSS_UNIT, formatPX, getSrcSet, hasCoords, hasComputedStyle } = squared.lib.css;
 const { getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
@@ -19,6 +19,8 @@ const { assignEmptyValue, convertWord, hasBit, hasMimeType, isString, iterateArr
 const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
 const NodeUI = squared.base.NodeUI;
+
+const REGEXP_TEXTSYMBOL = /^[^\w\s\n]+[\s\n]+$/;
 
 function sortHorizontalFloat(list: View[]) {
     list.sort((a, b) => {
@@ -2084,7 +2086,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         const android = options.android;
         let { width, height } = options;
         if (width) {
-            if (isPercent(width)) {
+            if (width.endsWith('%')) {
                 android.layout_columnWeight = truncate(parseFloat(width) / 100, this.localSettings.floatPrecision);
                 width = '0px';
             }
@@ -2093,7 +2095,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             width = 'wrap_content';
         }
         if (height) {
-            if (isPercent(height)) {
+            if (height.endsWith('%')) {
                 android.layout_rowWeight = truncate(parseFloat(height) / 100, this.localSettings.floatPrecision);
                 height = '0px';
             }
@@ -2502,7 +2504,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                         siblings = item.naturalChild && previous.naturalChild && item.inlineVertical && previous.inlineVertical && item.previousSibling !== previous ? getElementsBetweenSiblings(previous.element, item.element!) : undefined;
                         if (item.textElement) {
-                            if (!floating && /^[^\w\s\n]+[\s\n]+$/.test(item.textContent)) {
+                            if (!floating && REGEXP_TEXTSYMBOL.test(item.textContent)) {
                                 items.push(item);
                                 setRowWidth(item, textWidth);
                                 continue;

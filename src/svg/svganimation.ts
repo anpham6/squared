@@ -11,6 +11,9 @@ const { getFontSize, isEmBased, isLength, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { capitalize, hasBit, isString } = squared.lib.util;
 
+const REGEXP_TIME = /^(-)?(\d+(?:\.\d+)?)(ms|s|min|h)?$/;
+const REGGXP_TIMEDELIMITED = /^(-)?(?:(\d+):)?(?:([0-5][0-9]):)?([0-5][0-9])(?:\.(\d{1,3}))?$/;
+
 function setFillMode(this: SvgAnimation, mode: boolean, value: number) {
     const valid = hasBit(this.fillMode, value);
     if (mode) {
@@ -26,7 +29,7 @@ function setFillMode(this: SvgAnimation, mode: boolean, value: number) {
 export default class SvgAnimation implements squared.svg.SvgAnimation {
     public static convertClockTime(value: string) {
         value = value.trim();
-        let match = /^(-)?(\d+(?:\.\d+)?)(ms|s|min|h)?$/.exec(value);
+        let match = REGEXP_TIME.exec(value);
         if (match) {
             let time = parseFloat(match[2]) * (match[1] ? -1 : 1);
             switch (match[3]) {
@@ -43,7 +46,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
             return Math.round(time);
         }
         else {
-            match = /^(-)?(?:(\d+):)?(?:([0-5][0-9]):)?([0-5][0-9])(?:\.(\d{1,3}))?$/.exec(value);
+            match = REGGXP_TIMEDELIMITED.exec(value);
             if (match) {
                 const ms = match[5];
                 let time = parseInt(match[4]) * (match[1] ? -1 : 1);

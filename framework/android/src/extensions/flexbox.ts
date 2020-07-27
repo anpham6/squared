@@ -92,7 +92,7 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
             maxBasis: Undef<View>;
         i = 0;
         while (i < length) {
-            const item = items[i++];
+            const item = items[i++].innerMostWrapped as View;
             const { alignSelf, basis, shrink, grow } = item.flexbox;
             const dimension = item.bounds[attr];
             let growPercent: Undef<boolean>;

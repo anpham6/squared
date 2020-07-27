@@ -21,6 +21,17 @@ const REGEXP_TIME = new RegExp(`^${STRING.CSS_TIME}$`);
 const REGEXP_CALC = new RegExp(`^${STRING.CSS_CALC}$`);
 const REGEXP_CALCWITHIN = new RegExp(STRING.CSS_CALC);
 const REGEXP_SOURCESIZES = new RegExp(`\\s*(?:(\\(\\s*)?${PATTERN_SIZES}|(\\(\\s*))?\\s*(and|or|not)?\\s*(?:${PATTERN_SIZES}(\\s*\\))?)?\\s*(.+)`);
+const REGEXP_KEYFRAMES = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
+const REGEXP_MEDIARULE = /(?:(not|only)?\s*(?:all|screen)\s+and\s+)?((?:\([^)]+\)(?:\s+and\s+)?)+),?\s*/g;
+const REGEXP_MEDIARULECONDITION = /\(([a-z-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?:\s+and\s+)?/g;
+const REGEXP_VAR = /var\((--[A-Za-z\d-]+)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)/;
+const REGEXP_CUSTOMPROPERTY = /^\s*var\(--.+\)$/;
+const REGEXP_IMGSRCSET = /^(.*?)(?:\s+([\d.]+)([xw]))?$/;
+const REGEXP_CALCOPERATION = /\s+([+-]\s+|\s*[*/])\s*/;
+const REGEXP_CALCUNIT = /\s*{(\d+)}\s*/;
+const REGEXP_TRANSFORM = /(\w+)\([^)]+\)/g;
+const REGEXP_EM = /\dem$/;
+const REGEXP_EMBASED = /\d(?:em|ch|ex)\b/;
 const CHAR_SPACE = /\s+/;
 const CHAR_SEPARATOR = /\s*,\s*/;
 const CHAR_DIVIDER = /\s*\/\s*/;
@@ -2694,7 +2705,7 @@ export function parseKeyframes(rules: CSSRuleList) {
     let i = 0;
     while (i < length) {
         const item = rules[i++];
-        const match = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/.exec(item.cssText);
+        const match = REGEXP_KEYFRAMES.exec(item.cssText);
         if (match) {
             const keyframes = (item['keyText'] as string || match[1]).trim().split(CHAR_SEPARATOR);
             const q = keyframes.length;
@@ -2731,14 +2742,13 @@ export function checkMediaRule(value: string, fontSize?: number) {
         case 'only screen':
             return true;
         default: {
-            const pattern = /(?:(not|only)?\s*(?:all|screen)\s+and\s+)?((?:\([^)]+\)(?:\s+and\s+)?)+),?\s*/g;
+            REGEXP_MEDIARULE.lastIndex = 0;
             let match: Null<RegExpExecArray>;
-            while (match = pattern.exec(value)) {
-                const patternCondition = /\(([a-z-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?:\s+and\s+)?/g;
+            while (match = REGEXP_MEDIARULE.exec(value)) {
                 const negate = match[1] === 'not';
                 let valid: Undef<boolean>,
                     condition: Null<RegExpExecArray>;
-                while (condition = patternCondition.exec(match[2])) {
+                while (condition = REGEXP_MEDIARULECONDITION.exec(match[2])) {
                     const attr = condition[1];
                     let operation = condition[2];
                     const rule = condition[3];
@@ -2818,6 +2828,7 @@ export function checkMediaRule(value: string, fontSize?: number) {
                         break;
                     }
                 }
+                REGEXP_MEDIARULECONDITION.lastIndex = 0;
                 if (!negate && valid || negate && !valid) {
                     return true;
                 }
@@ -2854,9 +2865,8 @@ export function getInheritedStyle(element: Element, attr: string, options: Inher
 
 export function parseVar(element: CSSElement, value: string) {
     const style = getStyle(element);
-    const pattern = /var\((--[A-Za-z\d-]+)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)/;
     let match: Null<RegExpMatchArray>;
-    while (match = pattern.exec(value)) {
+    while (match = REGEXP_VAR.exec(value)) {
         let customValue = style.getPropertyValue(match[1]).trim();
         const fallback = match[2];
         if (fallback && (customValue === '' || isLength(fallback, true) && !isLength(customValue, true) || isNumber(fallback) && !isNumber(customValue) || parseColor(fallback) && !parseColor(customValue))) {
@@ -3389,7 +3399,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
     }
     if (srcset !== '') {
         for (const value of srcset.trim().split(CHAR_SEPARATOR)) {
-            const match = /^(.*?)(?:\s+([\d.]+)([xw]))?$/.exec(value);
+            const match = REGEXP_IMGSRCSET.exec(value);
             if (match) {
                 let width = 0,
                     pixelRatio = 0;
@@ -3619,7 +3629,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                         operator: Undef<string>;
                     const seg: number[] = [];
                     const evaluate: string[] = [];
-                    const operation = value.substring(j + 1, closing[i]).split(/\s+([+-]\s+|\s*[*/])\s*/);
+                    const operation = value.substring(j + 1, closing[i]).split(REGEXP_CALCOPERATION);
                     const q = operation.length;
                     let k = 0;
                     while (k < q) {
@@ -3633,7 +3643,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                                 operator = partial;
                                 break;
                             default: {
-                                const match = /\s*{(\d+)}\s*/.exec(partial);
+                                const match = REGEXP_CALCUNIT.exec(partial);
                                 if (match) {
                                     switch (unitType) {
                                         case CSS_UNIT.INTEGER:
@@ -3870,9 +3880,8 @@ export function parseTransform(value: string, options?: TransformOptions) {
         ({ accumulate, fontSize, boundingBox } = options);
     }
     const result: TransformData[] = [];
-    const pattern = /(\w+)\([^)]+\)/g;
     let match: Null<RegExpExecArray>;
-    while (match = pattern.exec(value)) {
+    while (match = REGEXP_TRANSFORM.exec(value)) {
         const method = match[1];
         if (method.startsWith('translate')) {
             const translate = TRANSFORM.TRANSLATE.exec(match[0]);
@@ -4082,6 +4091,7 @@ export function parseTransform(value: string, options?: TransformOptions) {
             }
         }
     }
+    REGEXP_TRANSFORM.lastIndex = 0;
     return result;
 }
 
@@ -4140,16 +4150,12 @@ export function isLength(value: string, percent?: boolean) {
     return !percent ? REGEXP_LENGTH.test(value) : REGEXP_LENGTHPERCENTAGE.test(value);
 }
 
-export function isPx(value: string) {
-    return /\dpx$/.test(value);
-}
-
 export function isEm(value: string) {
-    return /\dem$/.test(value);
+    return REGEXP_EM.test(value);
 }
 
 export function isEmBased(value: string) {
-    return /\d(?:em|ch|ex)\b/.test(value);
+    return REGEXP_EMBASED.test(value);
 }
 
 export function isCalc(value: string) {
@@ -4157,7 +4163,7 @@ export function isCalc(value: string) {
 }
 
 export function isCustomProperty(value: string) {
-    return /^\s*var\(.+\)\s*$/.test(value);
+    return REGEXP_CUSTOMPROPERTY.test(value);
 }
 
 export function isAngle(value: string) {

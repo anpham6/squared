@@ -63,11 +63,11 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
     public afterFinalize() {
         if (this.controller.hasAppendProcessing()) {
             const dimens = (Resource.STORED as AndroidResourceStoredMap).dimens;
+            const pattern = /:(\w+)="(-?[\d.]+px)"/g;
             const layouts = this.application.layouts;
             let i = 0;
             while (i < layouts.length) {
                 const layout = layouts[i++];
-                const pattern = /:(\w+)="(-?[\d.]+px)"/g;
                 let content = layout.content!,
                     match: Null<RegExpExecArray>;
                 while (match = pattern.exec(layout.content!)) {
@@ -78,6 +78,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
                         dimens.set(key, value);
                     }
                 }
+                pattern.lastIndex = 0;
                 layout.content = content;
             }
         }

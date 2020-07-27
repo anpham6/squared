@@ -30,7 +30,7 @@ type SvgGroup = squared.svg.SvgGroup;
 type SvgImage = squared.svg.SvgImage;
 type SvgView = squared.svg.SvgView;
 
-const { extractURL, formatPX, isPercent } = squared.lib.css;
+const { extractURL, formatPX } = squared.lib.css;
 const { truncate } = squared.lib.math;
 const { FILE } = squared.lib.regex;
 const { convertCamelCase, convertInt, convertWord, formatString, hasKeys, isArray, isNumber, partitionArray, plainMap, replaceMap } = squared.lib.util;
@@ -555,7 +555,7 @@ function createFillGradient(gradient: Gradient, path: SvgPath, precision?: numbe
             }
             result.centerX = (cx + cxDiameter * getRadiusPercent(cxAsString)).toString();
             result.centerY = (cy + cyDiameter * getRadiusPercent(cyAsString)).toString();
-            result.gradientRadius = (((cxDiameter + cyDiameter) / 2) * (isPercent(rAsString) ? parseFloat(rAsString) / 100 : 1)).toString();
+            result.gradientRadius = (((cxDiameter + cyDiameter) / 2) * (rAsString.endsWith('%') ? parseFloat(rAsString) / 100 : 1)).toString();
             if (spreadMethod) {
                 result.tileMode = getTileMode(spreadMethod);
             }
@@ -711,7 +711,7 @@ function insertFillAfter(propertyName: string, valueType: string, item: SvgAnima
 const getTemplateFilename = (templateName: string, length: number, prefix?: string, suffix?: string) => templateName + (prefix ? '_' + prefix : '') + (length ? '_vector' : '') + (suffix ? '_' + suffix.toLowerCase() : '');
 const isColorType = (attr: string) => attr === 'fill' || attr === 'stroke';
 const getVectorName = (target: SvgView, section: string, index = -1) => target.name + '_' + section + (index !== -1 ? '_' + (index + 1) : '');
-const getRadiusPercent = (value: string) => isPercent(value) ? parseFloat(value) / 100 : 0.5;
+const getRadiusPercent = (value: string) => value.endsWith('%') ? parseFloat(value) / 100 : 0.5;
 const getDrawableSrc = (name: string) => `@drawable/${name}`;
 const getFillData = (ordering = ''): FillData => ({ ordering, objectAnimator: [] });
 

@@ -8,6 +8,7 @@ const { FILE } = squared.lib.regex;
 const { appendSeparator, convertWord, fromLastIndexOf, isString, iterateReverseArray, parseMimeType, partitionLastIndexOf, randomUUID, resolvePath, splitPairStart, trimEnd } = squared.lib.util;
 
 const STRING_SERVERROOT = '__serverroot__';
+const REGEXP_IMGSRCSET = /[\s\n]*(.+?\.[^\s,]+)(\s+[\d.]+[wx]\s*)?,?/g;
 
 function parseFileAs(attr: string, value: Undef<string>): [string, Undef<string>, boolean] | undefined {
     if (value) {
@@ -508,11 +509,11 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             }
         });
         document.querySelectorAll('img[srcset], picture > source[srcset]').forEach((element: HTMLImageElement) => {
-            const pattern = /[\s\n]*(.+?\.[^\s,]+)(\s+[\d.]+[wx]\s*)?,?/g;
             let match: Null<RegExpExecArray>;
-            while (match = pattern.exec(element.srcset.trim())) {
+            while (match = REGEXP_IMGSRCSET.exec(element.srcset.trim())) {
                 processUri(element, resolvePath(match[1]));
             }
+            REGEXP_IMGSRCSET.lastIndex = 0;
         });
         document.querySelectorAll('object, embed').forEach((element: HTMLObjectElement & HTMLEmbedElement) => {
             const src = element.data || element.src;

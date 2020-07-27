@@ -4,6 +4,8 @@ type View = android.base.View;
 
 const { capitalize } = squared.lib.util;
 
+const REGEXP_STYLEATTR = /(\w+:(\w+))="([^"]+)"/;
+
 export default class ResourceStyles<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
 
@@ -60,7 +62,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                         const attrs: string[] = [];
                         j = 0;
                         while (j < r) {
-                            const match = /(\w+:(\w+))="([^"]+)"/.exec(keys[j++]);
+                            const match = REGEXP_STYLEATTR.exec(keys[j++]);
                             if (match) {
                                 items.push({ key: match[1], value: match[3] });
                                 attrs.push(match[2]);

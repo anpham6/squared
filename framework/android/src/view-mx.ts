@@ -5,7 +5,7 @@ import { getDataSet, isHorizontalAlign, isVerticalAlign, localizeString } from '
 
 type T = android.base.View;
 
-const { CSS_PROPERTIES, CSS_UNIT, formatPX, getBackgroundPosition, isLength, isPercent, parseTransform } = squared.lib.css;
+const { CSS_PROPERTIES, CSS_UNIT, formatPX, getBackgroundPosition, isLength, parseTransform } = squared.lib.css;
 const { getNamedItem, getRangeClientRect } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
 const { capitalize, convertInt, convertWord, fromLastIndexOf, hasKeys, isNumber, isString, replaceMap, splitPair } = squared.lib.util;
@@ -591,7 +591,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 setFlexGrow(node, horizontal, grow, node.parseUnit(basis, { dimension }), shrink);
                 setLayoutDimension(node, '0px', horizontal, true);
             }
-            else if (basis !== '0%' && isPercent(basis)) {
+            else if (basis !== '0%' && basis.endsWith('%')) {
                 setFlexGrow(node, horizontal, grow);
                 setConstraintPercent(node, parseFloat(basis) / 100, horizontal, NaN);
             }
@@ -648,7 +648,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     valid = true;
                     if (sibling.hasPX(dimension, { initial: true })) {
                         const value = sibling.cssInitial(dimension);
-                        if (isPercent(value)) {
+                        if (value.endsWith('%')) {
                             percent -= parseFloat(value) / 100;
                             continue;
                         }
@@ -740,7 +740,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 if (this.hasPX('width') && (!this.inlineStatic || this.cssInitial('width') === '')) {
                     const width = this.css('width');
                     let value = -1;
-                    if (isPercent(width)) {
+                    if (width.endsWith('%')) {
                         const expandable = () => width === '100%' && containsWidth && (maxDimension || !this.hasPX('maxWidth'));
                         if (this.inputElement) {
                             if (expandable()) {
@@ -927,7 +927,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 if (this.hasPX('height') && (!this.inlineStatic || this.cssInitial('height') === '')) {
                     const height = this.css('height');
                     let value = -1;
-                    if (isPercent(height)) {
+                    if (height.endsWith('%')) {
                         if (this.inputElement) {
                             value = this.bounds.height;
                         }
@@ -1597,10 +1597,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (this.styleElement || this.hasAlign(NODE_ALIGNMENT.WRAPPER)) {
                 const dataset = getDataSet(this.dataset, 'android');
                 if (dataset) {
+                    const pattern = /^attr[A-Z]/;
                     for (const namespace in dataset) {
                         const name = namespace === 'attr'
                              ? 'android'
-                             : /^attr[A-Z]/.test(namespace)
+                             : pattern.test(namespace)
                                 ? capitalize(namespace.substring(4), false)
                                 : undefined;
                         if (name) {

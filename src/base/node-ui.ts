@@ -1849,6 +1849,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return this.pageFlow && (!this.excluded || this.lineBreak);
     }
 
+    get flexbox(): FlexBox {
+        return this.naturalChild ? super.flexbox : this.innerMostWrapped.flexbox;
+    }
+
     get previousSibling() {
         const parent = this.actualParent;
         if (parent) {
