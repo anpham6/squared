@@ -414,16 +414,30 @@ export default abstract class Application<T extends Node> implements squared.bas
         const extensions = this.extensionsCascade;
         const node = this.cascadeParentNode(processing.cache, processing.excluded, processing.rootElements, element, sessionId, 0, extensions.length > 0 ? extensions : undefined);
         if (node) {
-            node.depth = 0;
-            node.childIndex = 0;
+            let previousNode = node,
+                currentElement = element.parentElement,
+                depth = 0;
+            while (currentElement) {
+                const parent = new this.Node(depth, sessionId, currentElement);
+                this._afterInsertNode(parent);
+                previousNode.parent = parent;
+                previousNode.actualParent = parent;
+                previousNode.depth = depth--;
+                previousNode.childIndex = 0;
+                if (parent.tagName === 'HTML') {
+                    processing.documentElement = parent;
+                    break;
+                }
+                else {
+                    currentElement = currentElement.parentElement;
+                    previousNode = parent;
+                }
+            }
             node.documentRoot = true;
+            processing.node = node;
             if (node.tagName === 'HTML') {
                 processing.documentElement = node;
             }
-            else if (node.parent!.tagName === 'HTML') {
-                processing.documentElement = node.parent as T;
-            }
-            processing.node = node;
         }
         return node;
     }
@@ -433,10 +447,6 @@ export default abstract class Application<T extends Node> implements squared.bas
         if (node) {
             const controllerHandler = this.controllerHandler;
             if (depth === 0) {
-                const parent = new this.Node(0, sessionId, parentElement.parentElement);
-                node.parent = parent;
-                node.actualParent = parent;
-                this._afterInsertNode(parent);
                 cache.add(node);
             }
             if (controllerHandler.preventNodeCascade(node)) {

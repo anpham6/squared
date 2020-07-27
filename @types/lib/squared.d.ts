@@ -111,7 +111,7 @@ declare module "lib" {
         function getRemSize(fixedWidth?: boolean): number;
         function getFontSize(element: Element): number;
         function hasComputedStyle(element: Element): element is HTMLElement;
-        function checkWritingMode(attr: string, value: string): string;
+        function checkWritingMode(attr: string, value?: string): string;
         function checkStyleValue(element: CSSElement, attr: string, value: string): string;
         function checkFontSizeValue(value: string): string;
         function checkMediaRule(value: string, fontSize?: number): boolean;

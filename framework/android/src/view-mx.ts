@@ -2672,11 +2672,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                     return this._controlId = convertWord(ResourceUI.generateId('android', name || fromLastIndexOf(controlName, '.').toLowerCase(), name ? 0 : 1));
                 }
-                else if (this.id === 0) {
-                    return 'baseroot';
-                }
                 else {
-                    return '';
+                    const id = this.id;
+                    return id <= 0 ? 'baseroot' + (id === 0 ? '' : '_' + Math.abs(id)) : '';
                 }
             }
             return result;

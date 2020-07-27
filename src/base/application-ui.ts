@@ -614,10 +614,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     protected cascadeParentNode(cache: squared.base.NodeList<T>, excluded: squared.base.NodeList<T>, rootElements: Set<HTMLElement>, parentElement: HTMLElement, sessionId: string, depth: number, extensions?: ExtensionUI<T>[], cascadeAll?: boolean) {
         const node = this.insertNode(parentElement, sessionId, cascadeAll);
         if (depth === 0) {
-            const parent = new this.Node(0, sessionId, parentElement.parentElement);
-            this._afterInsertNode(parent);
-            node.parent = parent;
-            node.actualParent = parent;
             cache.add(node);
             for (const name of node.extensions) {
                 if ((this.extensionManager.retrieve(name) as ExtensionUI<T>)?.cascadeAll) {

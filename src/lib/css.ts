@@ -193,7 +193,10 @@ function calculateGeneric(element: CSSElement, value: string, unitType: number, 
     return segments.join('').trim();
 }
 
-function getWritingMode(value: string) {
+function getWritingMode(value?: string) {
+    if (!value) {
+        return 0;
+    }
     switch (value) {
         case 'vertical-lr':
             return 1;
@@ -1749,7 +1752,7 @@ export function getSpecificity(value: string) {
     return result;
 }
 
-export function checkWritingMode(attr: string, value: string) {
+export function checkWritingMode(attr: string, value?: string) {
     switch (attr) {
         case 'inlineSize':
             return getWritingMode(value) === 0 ? 'width': 'height';

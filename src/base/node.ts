@@ -802,7 +802,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return getElementCache<string>(element, 'pseudoElt', sessionId) || '';
     }
 
-    public static sanitizeCss(element: HTMLElement, styleMap: StringMap, writingMode = '') {
+    public static sanitizeCss(element: HTMLElement, styleMap: StringMap, writingMode?: string) {
         const result: StringMap = {};
         for (let attr in styleMap) {
             let value = styleMap[attr]!;
