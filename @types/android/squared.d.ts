@@ -140,10 +140,6 @@ declare namespace extensions {
     class Table<T extends View> extends squared.base.extensions.Table<T> {}
     class WhiteSpace<T extends View> extends squared.base.extensions.WhiteSpace<T> {}
 
-    namespace constraint {
-        class Guideline<T extends View> extends squared.base.ExtensionUI<T> {}
-    }
-
     namespace delegate {
         class Background<T extends View> extends squared.base.ExtensionUI<T> {}
         class MaxWidthHeight<T extends View> extends squared.base.ExtensionUI<T> {}

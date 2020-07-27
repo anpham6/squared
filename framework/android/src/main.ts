@@ -16,8 +16,6 @@ import Sprite from './extensions/sprite';
 import Substitute from './extensions/substitute';
 import Table from './extensions/table';
 
-import ConstraintGuideline from './extensions/constraint/guideline';
-
 import DelegateBackground from './extensions/delegate/background';
 import DelegateMaxWidthHeight from './extensions/delegate/max-width-height';
 import DelegateMultiline from './extensions/delegate/multiline';
@@ -93,9 +91,6 @@ const appBase: squared.base.AppFramework<View> = {
         Sprite,
         Substitute,
         Table,
-        constraint: {
-            Guideline: ConstraintGuideline
-        },
         delegate: {
             Background: DelegateBackground,
             MaxWidthHeight: DelegateMaxWidthHeight,
@@ -339,8 +334,7 @@ const appBase: squared.base.AppFramework<View> = {
             [EA.RESOURCE_INCLUDES]: new ResourceIncludes(EA.RESOURCE_INCLUDES, framework),
             [EA.RESOURCE_STRINGS]: new ResourceStrings(EA.RESOURCE_STRINGS, framework),
             [EA.RESOURCE_STYLES]: new ResourceStyles(EA.RESOURCE_STYLES, framework),
-            [EA.RESOURCE_SVG]: new ResourceSvg(EA.RESOURCE_SVG, framework),
-            [EA.CONSTRAINT_GUIDELINE]: new ConstraintGuideline(EA.CONSTRAINT_GUIDELINE, framework)
+            [EA.RESOURCE_SVG]: new ResourceSvg(EA.RESOURCE_SVG, framework)
         });
         initialized = true;
         return {

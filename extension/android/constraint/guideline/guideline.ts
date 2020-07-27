@@ -1,14 +1,17 @@
-import { CONTAINER_NODE } from '../../lib/enumeration';
-
 import LayoutUI = squared.base.LayoutUI;
 
 type View = android.base.View;
+
+interface ConstraintGuidelineOptions {
+    circlePosition: boolean;
+}
 
 const { formatPX } = squared.lib.css;
 const { hypotenuse } = squared.lib.math;
 const { withinRange } = squared.lib.util;
 
 const { NODE_ALIGNMENT } = squared.base.lib.enumeration;
+const { CONTAINER_NODE } = android.lib.enumeration;
 
 export default class Guideline<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly options: ConstraintGuidelineOptions = {

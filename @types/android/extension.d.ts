@@ -2,10 +2,6 @@ interface AccessibilityOptions {
     displayLabel: boolean;
 }
 
-interface ConstraintGuidelineOptions {
-    circlePosition: boolean;
-}
-
 interface ResourceSvgOptions {
     transformExclude: SvgTransformExclude;
     floatPrecisionKeyTime: number;
