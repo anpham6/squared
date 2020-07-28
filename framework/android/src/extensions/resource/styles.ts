@@ -1,3 +1,5 @@
+import Resource from '../../resource';
+
 import { createStyleAttribute } from '../../lib/util';
 
 type View = android.base.View;
@@ -9,8 +11,9 @@ const REGEXP_STYLEATTR = /(\w+:(\w+))="([^"]+)"/;
 export default class ResourceStyles<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
 
-    public beforeCascade(rendered: T[]) {
-        const STORED = (this.resource as android.base.Resource<T>).mapOfStored;
+    public beforeDocumentWrite(options: WriteDocumentExtensionUIOptions<T>) {
+        const styles = (Resource.STORED as AndroidResourceStoredMap).styles;
+        const rendered = options.rendered;
         const length = rendered.length;
         let i = 0;
         while (i < length) {
@@ -69,9 +72,9 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                             }
                         }
                         const name = (style !== '' ? style + '.' : '') + capitalize(node.controlId);
-                        if (!STORED.styles.has(name)) {
+                        if (!styles.has(name)) {
                             items.sort((a, b) => a.key < b.key ? -1 : 1);
-                            STORED.styles.set(name, Object.assign(createStyleAttribute(), { name, items }));
+                            styles.set(name, Object.assign(createStyleAttribute(), { name, items }));
                         }
                         j = 0;
                         while (j < q) {

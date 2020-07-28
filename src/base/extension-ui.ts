@@ -87,7 +87,7 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
 
     public beforeBaseLayout(sessionId: string) {}
 
-    public beforeCascade(rendered: T[], documentRoot: squared.base.LayoutRoot<T>[]) {}
+    public beforeDocumentWrite(options: WriteDocumentExtensionUIOptions<T>) {}
     public afterFinalize() {}
 
     set application(value) {

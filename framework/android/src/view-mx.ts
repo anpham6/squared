@@ -2321,7 +2321,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         z += (z !== '' ? '|' : '') + value;
                     }
                 }
-                result = x !== '' && y !== '' ? x + '|' + y : x || y;
+                result = x !== '' && y !== '' ? `${x}|${y}` : x || y;
                 if (z !== '') {
                     result += (result !== '' ? '|' : '') + z;
                 }

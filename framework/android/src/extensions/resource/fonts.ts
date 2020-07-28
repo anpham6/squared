@@ -179,7 +179,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         if (createFont) {
                             fontName = convertWord(fontName);
                             const font = fonts.get(fontName) || {};
-                            font[value + '|' + fontStyle + '|' + fontWeight] = FONTWEIGHT_ANDROID[fontWeight] || fontWeight;
+                            font[`${value}|${fontStyle}|${fontWeight}`] = FONTWEIGHT_ANDROID[fontWeight] || fontWeight;
                             fonts.set(fontName, font);
                             fontFamily = `@font/${fontName}`;
                         }

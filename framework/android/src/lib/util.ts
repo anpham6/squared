@@ -39,7 +39,7 @@ export function applyTemplate(tagName: string, template: StandardMap, children: 
         const attrs: Undef<string[]> = tag['@'];
         const descend: Undef<StringMap> = tag['>'];
         let valid: Undef<boolean>;
-        output += indent + '<' + tagName;
+        output += `${indent}<${tagName}`;
         if (attrs) {
             const q = attrs.length;
             let j = 0;

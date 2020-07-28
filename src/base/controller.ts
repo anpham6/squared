@@ -25,7 +25,7 @@ export default class Controller<T extends squared.base.Node> implements squared.
     }
 
     get generateSessionId() {
-        return Date.now().toString() + '-' + this.application.session.active.size;
+        return `${Date.now().toString()}-${this.application.session.active.size}`;
     }
 
     get afterInsertNode(): BindGeneric<T, void> {

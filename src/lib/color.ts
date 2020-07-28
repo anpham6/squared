@@ -1101,7 +1101,7 @@ export function getHexCode(...values: number[]) {
 }
 
 export function convertHex(value: RGBA) {
-    return '#' + getHexCode(value.r, value.g, value.b) + (value.a < 255 ? getHexCode(value.a) : '');
+    return `#${getHexCode(value.r, value.g, value.b) + (value.a < 255 ? getHexCode(value.a) : '')}`;
 }
 
 export function parseRGBA(value: string) {
@@ -1201,9 +1201,9 @@ export function convertRGBA(value: HSLA): RGBA {
 }
 
 export function formatRGBA(value: RGBA) {
-    return `rgb${value.a < 255 ? 'a' : ''}(${value.r}, ${value.g}, ${value.b}` + (value.a < 255 ? ', ' + (value.a / 255).toPrecision(2) : '') + ')';
+    return `rgb${value.a < 255 ? 'a' : ''}(${value.r}, ${value.g}, ${value.b + (value.a < 255 ? ', ' + (value.a / 255).toPrecision(2) : '')})`;
 }
 
 export function formatHSLA(value: HSLA) {
-    return `hsl${value.a < 255 ? 'a' : ''}(${value.h}, ${value.s}%, ${value.l}%` + (value.a < 255 ? ', ' + (value.a / 255).toPrecision(2) : '') + ')';
+    return `hsl${value.a < 255 ? 'a' : ''}(${value.h}, ${value.s}%, ${value.l}%${value.a < 255 ? ', ' + (value.a / 255).toPrecision(2) : ''})`;
 }

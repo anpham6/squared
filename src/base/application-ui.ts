@@ -177,7 +177,7 @@ function setColumnMaxWidth(nodes: NodeUI[], offset: number) {
     }
 }
 
-const getCounterIncrementValue = (parent: HTMLElement, counterName: string, pseudoElt: string, sessionId: string, fallback?: number) => getCounterValue(getElementCache<CSSStyleDeclaration>(parent, `styleMap${pseudoElt}`, sessionId)?.counterIncrement, counterName, fallback);
+const getCounterIncrementValue = (parent: HTMLElement, counterName: string, pseudoElt: string, sessionId: string, fallback?: number) => getCounterValue(getElementCache<CSSStyleDeclaration>(parent, 'styleMap' + pseudoElt, sessionId)?.counterIncrement, counterName, fallback);
 const extractQuote = (value: string) => /^"(.+)"$/.exec(value)?.[1] || value;
 const requirePadding = (node: NodeUI, depth?: number): boolean => node.textElement && (node.blockStatic || node.multiline || depth === 1);
 
@@ -220,13 +220,16 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             return false;
         }
         const controllerHandler = this.controllerHandler;
-        const children = this.childrenAll;
-        let length = children.length;
+        const baseTemplate = this._controllerSettings.layout.baseTemplate;
+        const showAttributes = this.userSettings.showAttributes;
+        const { childrenAll, extensions } = this;
+        const systemName = capitalize(this.systemName);
+        let length = childrenAll.length;
         const rendered: T[] = new Array(length);
         let i = 0, j = 0;
         while (i < length) {
-            const node = children[i++];
-            if (node.renderParent && node.visible) {
+            const node = childrenAll[i++];
+            if (node.visible && node.renderParent) {
                 if (node.hasProcedure(NODE_PROCEDURE.LAYOUT)) {
                     node.setLayout();
                 }
@@ -238,7 +241,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         rendered.length = j;
         controllerHandler.optimize(rendered);
-        const extensions = this.extensions;
         length = extensions.length;
         i = 0;
         while (i < length) {
@@ -265,19 +267,17 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
         }
+        const documentWriteOptions: WriteDocumentExtensionUIOptions<T> = { rendered, documentRoot };
         i = 0;
         while (i < length) {
-            extensions[i++].beforeCascade(rendered, documentRoot);
+            extensions[i++].beforeDocumentWrite(documentWriteOptions);
         }
-        const baseTemplate = this._controllerSettings.layout.baseTemplate;
-        const showAttributes = this.userSettings.showAttributes;
-        const systemName = capitalize(this.systemName);
         i = 0;
         while (i < documentRoot.length) {
             const { node, layoutName, renderTemplates } = documentRoot[i++];
             this.saveDocument(
                 layoutName,
-                baseTemplate + controllerHandler.cascadeDocument(renderTemplates, Math.abs(node.depth), showAttributes),
+                baseTemplate + controllerHandler.writeDocument(renderTemplates, Math.abs(node.depth), showAttributes),
                 node.dataset['pathname' + systemName],
                 node.renderExtension?.some(item => item.documentBase) ? 0 : undefined
             );
@@ -596,7 +596,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const iteration = dataset['iteration' + systemName];
         const prefix = isString(filename) && filename.replace(this._layoutFileExtension, '') || node.elementId || `document_${this.length}`;
         const suffix = (iteration ? parseInt(iteration) : -1) + 1;
-        const layoutName = convertWord(suffix > 0 ? prefix + '_' + suffix : prefix, true);
+        const layoutName = convertWord(suffix > 0 ? `${prefix}_${suffix}` : prefix, true);
         dataset['iteration' + systemName] = suffix.toString();
         dataset['layoutName' + systemName] = layoutName;
         node.data(Application.KEY_NAME, 'layoutName', layoutName);
@@ -1561,11 +1561,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected createPseduoElement(element: HTMLElement, pseudoElt: string, sessionId: string) {
-        let styleMap = getElementCache<StringSafeMap>(element, `styleMap${pseudoElt}`, sessionId);
+        let styleMap = getElementCache<StringSafeMap>(element, 'styleMap' + pseudoElt, sessionId);
         if (element.tagName === 'Q') {
             if (!styleMap) {
                 styleMap = {};
-                setElementCache(element, `styleMap${pseudoElt}`, sessionId, styleMap);
+                setElementCache(element, 'styleMap' + pseudoElt, sessionId, styleMap);
             }
             let content = styleMap.content;
             if (!content) {

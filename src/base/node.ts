@@ -1286,7 +1286,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             const element = this._element as Element;
             return (
                 this.pseudoElement
-                    ? getElementCache<ObjectMap<number>>(element.parentElement as Element, `styleSpecificity${Node.getPseudoElt(element, this.sessionId)}`, this.sessionId)?.[attr]
+                    ? getElementCache<ObjectMap<number>>(element.parentElement as Element, 'styleSpecificity' + Node.getPseudoElt(element, this.sessionId), this.sessionId)?.[attr]
                     : getElementCache<ObjectMap<number>>(element, 'styleSpecificity', this.sessionId)?.[attr]) || 0;
         }
         return 0;

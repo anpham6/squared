@@ -192,7 +192,7 @@ declare module "base" {
         getAfterInsideTemplate(id: number, depth: number): string;
         getAfterOutsideTemplate(id: number, depth: number): string;
         hasAppendProcessing(id?: number): boolean;
-        cascadeDocument(templates: NodeTemplate<T>[], depth: number, showAttributes: boolean): string;
+        writeDocument(templates: NodeTemplate<T>[], depth: number, showAttributes: boolean): string;
         getEnclosingXmlTag(controlName: string, attributes?: string, content?: string): string;
         get userSettings(): UserSettingsUI;
         get screenDimension(): Dimension;
@@ -287,7 +287,7 @@ declare module "base" {
         afterConstraints(sessionId: string): void;
         afterResources(sessionId: string): void;
         beforeBaseLayout(sessionId: string): void;
-        beforeCascade(rendered: T[], documentRoot: LayoutRoot<T>[]): void;
+        beforeDocumentWrite(options: WriteDocumentExtensionUIOptions<T>): void;
         afterFinalize(): void;
         set application(value);
         get application(): ApplicationUI<T>;

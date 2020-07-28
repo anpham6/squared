@@ -563,7 +563,7 @@ export function getTargetElement(element: Element, rootElement?: Null<Element>, 
                 element = document.body.lastElementChild as Element;
                 if (element instanceof SVGGraphicsElement) {
                     element.style.display = 'none';
-                    return element.querySelector('#' + id);
+                    return element.querySelector(`#${id}`);
                 }
                 else if (element) {
                     document.body.removeChild(element);

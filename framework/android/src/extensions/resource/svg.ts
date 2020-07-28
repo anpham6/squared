@@ -219,10 +219,10 @@ function createPathInterpolator(value: string) {
     if (interpolator) {
         return interpolator;
     }
-    const STORED = Resource.STORED as AndroidResourceStoredMap;
-    const name = `path_interpolator_${convertWord(value)}`;
-    if (!STORED.animators.has(name)) {
-        STORED.animators.set(name, formatString(INTERPOLATOR_XML, ...value.split(/\s+/)));
+    const animators = (Resource.STORED as AndroidResourceStoredMap).animators;
+    const name = 'path_interpolator_' + convertWord(value);
+    if (!animators.has(name)) {
+        animators.set(name, formatString(INTERPOLATOR_XML, ...value.split(/\s+/)));
     }
     return `@anim/${name}`;
 }
@@ -477,7 +477,7 @@ function getTransformInitialValue(name: string) {
 }
 
 function getColorValue<T>(value: string, asArray?: T) {
-    const colorName = '@color/' + Resource.addColor(value);
+    const colorName = `@color/${Resource.addColor(value)}`;
     return (asArray ? [colorName] : colorName) as T extends boolean ? string[] : string;
 }
 
@@ -710,7 +710,7 @@ function insertFillAfter(propertyName: string, valueType: string, item: SvgAnima
 
 const getTemplateFilename = (templateName: string, length: number, prefix?: string, suffix?: string) => templateName + (prefix ? '_' + prefix : '') + (length ? '_vector' : '') + (suffix ? '_' + suffix.toLowerCase() : '');
 const isColorType = (attr: string) => attr === 'fill' || attr === 'stroke';
-const getVectorName = (target: SvgView, section: string, index = -1) => target.name + '_' + section + (index !== -1 ? '_' + (index + 1) : '');
+const getVectorName = (target: SvgView, section: string, index = -1) => `${target.name}_${section + (index !== -1 ? '_' + (index + 1) : '')}`;
 const getRadiusPercent = (value: string) => value.endsWith('%') ? parseFloat(value) / 100 : 0.5;
 const getDrawableSrc = (name: string) => `@drawable/${name}`;
 const getFillData = (ordering = ''): FillData => ({ ordering, objectAnimator: [] });
@@ -847,7 +847,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         imageData.length = 0;
         this._namespaceAapt = false;
         this._synchronizeMode = keyTimeMode;
-        const templateName = (node.tagName + '_' + convertWord(node.controlId, true) + '_viewbox').toLowerCase();
+        const templateName = `${node.tagName}_${convertWord(node.controlId, true)}_viewbox`.toLowerCase();
         svg.build({
             contentMap,
             exclude,
@@ -929,7 +929,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                     }
                                 }
                                 sequentially.push(item);
-                                sequentialMap.set(`sequentially_companion_${i}`, sequentially.concat(after) as SvgAnimate[]);
+                                sequentialMap.set('sequentially_companion_' + i, sequentially.concat(after) as SvgAnimate[]);
                             }
                             else {
                                 const synchronized = item.synchronized;
@@ -1540,7 +1540,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                     for (let i = 0, q = strokeDash.length; i < q; ++i) {
                                         const strokePath = i === 0 ? path : { ...path };
                                         const dash = strokeDash[i];
-                                        strokePath.name = name + '_' + i;
+                                        strokePath.name = `${name}_${i}`;
                                         if (animateData) {
                                             this._animateData.set(strokePath.name, {
                                                 element: animateData.element,

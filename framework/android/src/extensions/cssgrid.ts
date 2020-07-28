@@ -1015,11 +1015,11 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                                 android: {
                                     [horizontal ? node.localizeString(STRING_ANDROID.MARGIN_RIGHT) : 'bottom']:
                                         gapSize > 0 && (k + l) < unitData.length
-                                            ? '@dimen/' + Resource.insertStoredAsset('dimens', `${node.controlId}_cssgrid_${horizontal ? 'column' : 'row'}_gap`, formatPX(gapSize))
+                                            ? `@dimen/${Resource.insertStoredAsset('dimens', `${node.controlId}_cssgrid_${horizontal ? 'column' : 'row'}_gap`, formatPX(gapSize))}`
                                             : '',
                                     [horizontal ? 'bottom' : node.localizeString(STRING_ANDROID.MARGIN_RIGHT)]:
                                         opposingMargin > 0
-                                            ? '@dimen/' + Resource.insertStoredAsset('dimens', `${node.controlId}_cssgrid_${horizontal ? 'row' : 'column'}_gap`, formatPX(opposingMargin))
+                                            ? `@dimen/${Resource.insertStoredAsset('dimens', `${node.controlId}_cssgrid_${horizontal ? 'row' : 'column'}_gap`, formatPX(opposingMargin))}`
                                             : '',
                                     layout_row,
                                     layout_column,

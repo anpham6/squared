@@ -908,7 +908,7 @@ export function resolvePath(value: string, href?: string) {
         else if (value.startsWith('./')) {
             value = value.substring(2);
         }
-        return location.origin + pathname.join('/') + '/' + value;
+        return `${location.origin + pathname.join('/')}/${value}`;
     }
     return value;
 }

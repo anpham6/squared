@@ -33,8 +33,9 @@ function createNamespaceData(namespace: string, node: View, group: GroupData) {
 export default class ResourceDimens<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
 
-    public beforeCascade(rendered: T[]) {
+    public beforeDocumentWrite(options: WriteDocumentExtensionUIOptions<T>) {
         const dimens = (Resource.STORED as AndroidResourceStoredMap).dimens;
+        const rendered = options.rendered;
         const groups: ObjectMapNested<T[]> = {};
         const length = rendered.length;
         let i = 0;
@@ -51,7 +52,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
             const group = groups[containerName] as ObjectMap<T[]>;
             for (const name in group) {
                 const [namespace, attr, value] = name.split(',');
-                const key = getResourceName(dimens, fromLastIndexOf(containerName, '.') + '_' + convertHyphenated(attr, '_'), value);
+                const key = getResourceName(dimens, `${fromLastIndexOf(containerName, '.')}_${convertHyphenated(attr, '_')}`, value);
                 for (const node of group[name]) {
                     node.attr(namespace, attr, `@dimen/${key}`);
                 }
@@ -73,7 +74,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
                 while (match = pattern.exec(layout.content!)) {
                     const [original, name, value] = match;
                     if (name !== 'text') {
-                        const key = getResourceName(dimens, `custom_${convertHyphenated(name, '_')}`, value);
+                        const key = getResourceName(dimens, 'custom_' + convertHyphenated(name, '_'), value);
                         content = content.replace(original, original.replace(value, `@dimen/${key}`));
                         dimens.set(key, value);
                     }

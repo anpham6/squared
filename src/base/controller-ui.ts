@@ -18,7 +18,7 @@ const BOX_BORDER = [BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM, BORDER_LEFT];
 
 function setBorderStyle(styleMap: StringMap, defaultColor: string) {
     if (!styleMap.border && !(BORDER_TOP[0] in styleMap || BORDER_RIGHT[0] in styleMap || BORDER_BOTTOM[0] in styleMap || BORDER_LEFT[0] in styleMap)) {
-        styleMap.border = `1px outset ${defaultColor}`;
+        styleMap.border = '1px outset ' + defaultColor;
         let i = 0;
         while (i < 4) {
             const border = BOX_BORDER[i++];
@@ -118,7 +118,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
 
     public includeElement(element: HTMLElement) {
         const tagName = element.tagName;
-        return !(this._unsupportedTagName.has(tagName) || tagName === 'INPUT' && this._unsupportedTagName.has(tagName + ':' + (element as HTMLInputElement).type)) || element.contentEditable === 'true';
+        return !(this._unsupportedTagName.has(tagName) || tagName === 'INPUT' && this._unsupportedTagName.has(`${tagName}:${(element as HTMLInputElement).type}`)) || element.contentEditable === 'true';
     }
 
     public reset() {
@@ -767,7 +767,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         });
     }
 
-    public cascadeDocument(templates: NodeTemplate<T>[], depth: number, showAttributes: boolean) {
+    public writeDocument(templates: NodeTemplate<T>[], depth: number, showAttributes: boolean) {
         const indent = '\t'.repeat(depth);
         let output = '';
         const length = templates.length;
@@ -794,7 +794,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     if (renderTemplates || beforeInside !== '' || afterInside !== '') {
                         template += '>\n' +
                                     beforeInside +
-                                    (renderTemplates ? this.cascadeDocument(this.sortRenderPosition(node, renderTemplates as NodeTemplate<T>[]), next, showAttributes) : '') +
+                                    (renderTemplates ? this.writeDocument(this.sortRenderPosition(node, renderTemplates as NodeTemplate<T>[]), next, showAttributes) : '') +
                                     afterInside +
                                     indent + `</${controlName}>\n`;
                     }
@@ -842,7 +842,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 if (image && image.width > 0 && image.height > 0) {
                     const value = styleMap[opposing];
                     if (value && isLength(value)) {
-                        const attrMax = `max${capitalize(attr)}`;
+                        const attrMax = 'max' + capitalize(attr);
                         if (!styleMap[attrMax] || !attrMax.endsWith('%')) {
                             styleMap[attr] = formatPX(image[attr] * parseFloat(value) / image[opposing]);
                         }

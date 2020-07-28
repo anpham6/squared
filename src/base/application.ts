@@ -291,7 +291,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const mimeType = data.mimeType;
                 if (mimeType?.startsWith('image/') && !mimeType.endsWith('svg+xml')) {
                     const element = document.createElement('img');
-                    element.src = `data:${mimeType};${data.base64 ? `base64,${data.base64}` : data.content}`;
+                    element.src = `data:${mimeType};${data.base64 ? 'base64,' + data.base64 : data.content}`;
                     const { naturalWidth: width, naturalHeight: height } = element;
                     if (width > 0 && height > 0) {
                         data.width = width;
@@ -612,8 +612,8 @@ export default abstract class Application<T extends Node> implements squared.bas
                     let i = 0;
                     while (i < q) {
                         const element = elements[i++];
-                        const attrStyle = `styleMap${targetElt}`;
-                        const attrSpecificity = `styleSpecificity${targetElt}`;
+                        const attrStyle = 'styleMap' + targetElt;
+                        const attrSpecificity = 'styleSpecificity' + targetElt;
                         const styleData = getElementCache<StringMap>(element, attrStyle, sessionId);
                         if (styleData) {
                             const specificityData = getElementCache<ObjectMap<number>>(element, attrSpecificity, sessionId)!;

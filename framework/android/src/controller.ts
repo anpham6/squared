@@ -1889,8 +1889,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (!node.hasHeight) {
                     node.css('height', formatPX(node.bounds.height));
                 }
-                node.android('progressTint', '@color/' + Resource.addColor(foregroundColor));
-                node.android('progressBackgroundTint', '@color/' + Resource.addColor(backgroundColor));
+                node.android('progressTint', `@color/${Resource.addColor(foregroundColor)}`);
+                node.android('progressBackgroundTint', `@color/${Resource.addColor(backgroundColor)}`);
                 node.attr('_', 'style', '@android:style/Widget.ProgressBar.Horizontal');
                 node.exclude({ resource: NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.FONT_STYLE });
                 break;
@@ -3893,7 +3893,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     orientation: horizontal ? 'vertical' : 'horizontal'
                 },
                 app: {
-                    [attr]: percent ? location.toString() : '@dimen/' + Resource.insertStoredAsset('dimens', `constraint_guideline_${!opposing ? LT : RB}`, formatPX(location))
+                    [attr]: percent ? location.toString() : `@dimen/${Resource.insertStoredAsset('dimens', 'constraint_guideline_' + (!opposing ? LT : RB), formatPX(location))}`
                 }
             };
             this.addAfterOutsideTemplate(node.id, this.renderNodeStatic({ controlName: node.api < BUILD_ANDROID.Q ? CONTAINER_ANDROID.GUIDELINE : CONTAINER_ANDROID_X.GUIDELINE }, templateOptions), false);

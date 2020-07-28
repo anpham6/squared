@@ -693,7 +693,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                 }
                                                 else {
                                                     setLayoutWeightOpposing(chain, 'wrap_content', horizontal);
-                                                    chain.lockAttr('android', `layout_${HWL}`);
+                                                    chain.lockAttr('android', 'layout_' + HWL);
                                                 }
                                             }
                                             break;

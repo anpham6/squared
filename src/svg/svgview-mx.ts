@@ -60,7 +60,7 @@ function convertRotate(value: string) {
     }
     else if (/^reverse\s+/.test(value)) {
         const angle = splitPairEnd(value, ' ');
-        return 'auto ' + (isAngle(angle) ? 180 + parseAngle(angle, 0) : '0') + 'deg';
+        return `auto ${isAngle(angle) ? 180 + parseAngle(angle, 0) : '0'}deg`;
     }
     return value;
 }
@@ -178,7 +178,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                         const delay = SvgAnimation.convertClockTime(cssData['animation-delay'][i]) || 0;
                         const iterationCount = cssData['animation-iteration-count'][i];
                         const fillMode = cssData['animation-fill-mode'][i];
-                        const keyframeIndex = animationName[i] + '_' + i;
+                        const keyframeIndex = `${animationName[i]}_${i}`;
                         const attributes: string[] = [];
                         let includeKeySplines = true;
                         groupOrdering.push({

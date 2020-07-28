@@ -24,7 +24,7 @@ function getFontVariationStyle(value: string) {
         if (match[1]) {
             angle = parseAngle(match[1]);
         }
-        return`'slnt' ${angle !== undefined && !isNaN(angle) ? clamp(angle, -90, 90) : '14'}`;
+        return "'slnt' " + (angle !== undefined && !isNaN(angle) ? clamp(angle, -90, 90) : '14');
     }
     return '';
 }

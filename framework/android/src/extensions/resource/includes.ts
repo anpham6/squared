@@ -15,7 +15,8 @@ const { NODE_TEMPLATE } = squared.base.lib.enumeration;
 export default class ResourceIncludes<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
 
-    public beforeCascade(rendered: T[]) {
+    public beforeDocumentWrite(options: WriteDocumentExtensionUIOptions<T>) {
+        const rendered = options.rendered;
         const length = rendered.length;
         let i = 0;
         while (i < length) {
@@ -79,7 +80,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                                     content: controller.renderNodeStatic({ controlName: 'include', width: 'match_parent' }, { layout: `@layout/${name}`, android: {} }),
                                     indent: true
                                 } as NodeIncludeTemplate<T>);
-                                let content = controller.cascadeDocument(templates, depth, this.application.userSettings.showAttributes);
+                                let content = controller.writeDocument(templates, depth, this.application.userSettings.showAttributes);
                                 if (merge) {
                                     content = controller.getEnclosingXmlTag('merge', getRootNs(content), content);
                                 }

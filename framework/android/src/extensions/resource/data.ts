@@ -7,7 +7,8 @@ const { capitalize } = squared.lib.util;
 export default class ResourceData<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
 
-    public beforeCascade(rendered: T[], documentRoot: squared.base.LayoutRoot<T>[]) {
+    public beforeDocumentWrite(options: WriteDocumentExtensionUIOptions<T>) {
+        const { rendered, documentRoot } = options;
         const viewModel = this.application.viewModel as android.base.AppViewModel;
         if (viewModel) {
             const controller = this.controller;
@@ -18,7 +19,7 @@ export default class ResourceData<T extends View> extends squared.base.Extension
                 const node = rendered[i++];
                 if (node.styleElement && node.visible) {
                     for (const [name] of node.namespaces()) {
-                        const dataset = getDataSet(node.dataset, `viewmodel${capitalize(name)}`);
+                        const dataset = getDataSet(node.dataset, 'viewmodel' + capitalize(name));
                         if (dataset) {
                             for (const attr in dataset) {
                                 node.attr(name, attr, `@{${dataset[attr]}}`, true);

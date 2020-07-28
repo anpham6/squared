@@ -85,7 +85,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                 file = trimString(output.file.trim().replace(/\\/g, '/'), '/');
             }
         }
-        const filename = path + '/' + file;
+        const filename = `${path}/${file}`;
         const storedFile = themes.get(filename) || new Map<string, StyleAttribute>();
         if (name === '' || name.startsWith('.')) {
             found: {
@@ -129,7 +129,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                 const strings = STORED.strings;
                 for (const [resourceName, resourceValue] of strings.entries()) {
                     if (resourceValue === value) {
-                        return '@string/' + resourceName;
+                        return `@string/${resourceName}`;
                     }
                 }
                 const partial =
@@ -151,16 +151,16 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                 }
                 name = name.toLowerCase();
                 if (!name) {
-                    name = `__symbol${++Resource.SYMBOL_COUNTER}`;
+                    name = '__symbol' + ++Resource.SYMBOL_COUNTER;
                 }
                 else if (numeric || /^\d/.test(name) || RESERVED_JAVA.has(name)) {
-                    name = `__${name}`;
+                    name = '__' + name;
                 }
                 if (strings.has(name)) {
                     name = Resource.generateId('string', name);
                 }
                 strings.set(name, value);
-                return '@string/' + name;
+                return `@string/${name}`;
             }
         }
         return value;

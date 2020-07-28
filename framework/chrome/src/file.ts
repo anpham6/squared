@@ -39,7 +39,7 @@ function getFilePath(value: string, saveTo?: boolean): [Undef<string>, string, s
                 break;
             }
         }
-        value = pathname.join('/') + '/' + value.split('../').pop();
+        value = `${pathname.join('/')}/${value.split('../').pop()}`;
     }
     else if (value.startsWith('./')) {
         value = value.substring(2);
@@ -195,7 +195,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 moveTo: Undef<string>;
             if (!local) {
                 if (saveTo && relocate) {
-                    [moveTo, pathname, filename] = getFilePath(relocate + '/' + randomUUID() + (extension ? '.' + extension : ''));
+                    [moveTo, pathname, filename] = getFilePath(`${relocate}/${randomUUID() + (extension ? '.' + extension : '')}`);
                 }
                 else {
                     pathname = convertWord(host) + (port ? '/' + port.substring(1) : '') + '/';
@@ -487,7 +487,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 const data = File.parseUri(uri, { preserveCrossOrigin, saveAs: file, saveTo });
                 if (this.validFile(data) && !result.find(item => item.uri === uri)) {
                     if (mimeType) {
-                        data.mimeType = file ? mimeType + ':' + data.mimeType : mimeType;
+                        data.mimeType = file ? `${mimeType}:${data.mimeType}` : mimeType;
                     }
                     processExtensions.call(this, data, getExtensions(element));
                     result.push(data);
@@ -660,7 +660,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     case 'text/html':
                     case 'application/xhtml+xml':
                     case 'text/css':
-                        item.mimeType = '@' + mimeType;
+                        item.mimeType = `@${mimeType}`;
                         break;
                 }
             }

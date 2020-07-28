@@ -153,7 +153,7 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
     protected setDefinitions(item: SVGSVGElement | SVGDefsElement) {
         const definitions = this.definitions;
         item.querySelectorAll('clipPath, pattern, linearGradient, radialGradient').forEach((element: SVGElement) => {
-            const id = '#' + element.id.trim();
+            const id = `#${element.id.trim()}`;
             if (id !== '#') {
                 if (SVG.clipPath(element)) {
                     if (!definitions.clipPath.has(id)) {
