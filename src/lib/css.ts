@@ -327,24 +327,6 @@ export const enum CSS_TRAITS {
     AUTO = 1 << 7
 }
 
-export const PROXY_INLINESTYLE = Object.freeze(new Proxy(
-    {
-        position: 'static',
-        display: 'inline',
-        verticalAlign: 'baseline',
-        float: 'none',
-        backgroundColor: 'transparent',
-        backgroundImage: 'none',
-        borderTopStyle: 'none',
-        borderRightStyle: 'none',
-        borderBottomStyle: 'none',
-        borderLeftStyle: 'none'
-    } as CSSStyleDeclaration,
-    {
-        get: (target, attr) => target[attr] as string || ''
-    }
-));
-
 export const CSS_PROPERTIES: CssProperties = {
     alignContent: {
         trait: CSS_TRAITS.CONTAIN,
@@ -1512,6 +1494,26 @@ export const SVG_PROPERTIES: CssProperties = {
         value: '0'
     }
 };
+
+export const PROXY_INLINESTYLE = Object.freeze(
+    new Proxy({
+        lineHeight: 'inherit',
+        fontSize: 'inherit'
+    } as CSSStyleDeclaration,
+    {
+        get: (target, attr) => {
+            let value: Undef<string | string[]> = target[attr];
+            if (value) {
+                return value as string;
+            }
+            value = CSS_PROPERTIES[attr.toString()]?.value;
+            if (value) {
+                return typeof value === 'string' ? value : '';
+            }
+            return undefined;
+        }
+    })
+);
 
 export const ELEMENT_BLOCK = new Set([
     'ADDRESS',
@@ -2838,14 +2840,6 @@ export function checkMediaRule(value: string, fontSize?: number) {
     return false;
 }
 
-export function isParentStyle(element: Element, attr: string, ...styles: string[]) {
-    if (!element.nodeName.startsWith('#') && styles.includes(getStyle(element)[attr])) {
-        return true;
-    }
-    const parentElement = element.parentElement;
-    return !!parentElement && styles.includes(getStyle(parentElement)[attr]);
-}
-
 export function getInheritedStyle(element: Element, attr: string, options: InheritedStyleOptions) {
     const { exclude, tagNames } = options;
     let value = '',
@@ -3080,15 +3074,12 @@ export function calculateVar(element: CSSElement, value: string, options: Calcul
 }
 
 export function getContentBoxDimension(element: Null<CSSElement>) {
-    let width = 0,
-        height = 0;
     if (element) {
         const style = getStyle(element);
-        ({ width, height } = element.getBoundingClientRect());
-        width = Math.max(0, width - getContentBoxWidth(style));
-        height = Math.max(0, height - getContentBoxHeight(style));
+        const { width, height } = element.getBoundingClientRect();
+        return { width: Math.max(0, width - getContentBoxWidth(style)), height: Math.max(0, height - getContentBoxHeight(style)) };
     }
-    return { width, height };
+    return { width: 0, height: 0 };
 }
 
 export function getBackgroundPosition(value: string, dimension: Dimension, options?: BackgroundPositionOptions) {

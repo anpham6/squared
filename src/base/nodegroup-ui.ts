@@ -2,7 +2,7 @@ import NodeUI from './node-ui';
 
 import { NODE_ALIGNMENT } from './lib/enumeration';
 
-const { hasCoords, isLength } = squared.lib.css;
+const { hasCoords } = squared.lib.css;
 
 export default abstract class NodeGroupUI extends NodeUI {
     public setBounds() {
@@ -87,10 +87,10 @@ export default abstract class NodeGroupUI extends NodeUI {
         if (result === undefined) {
             const documentParent = this.actualParent || this.documentParent;
             result =
-                this.some(node => node.blockStatic || node.percentWidth > 0) ||
+                documentParent.blockStatic && (documentParent.layoutVertical || this.hasAlign(NODE_ALIGNMENT.COLUMN)) ||
                 this.layoutVertical && (documentParent.hasWidth || this.some(node => node.centerAligned || node.rightAligned)) ||
-                documentParent.percentWidth > 0 ||
-                documentParent.blockStatic && (documentParent.layoutVertical || this.hasAlign(NODE_ALIGNMENT.COLUMN));
+                this.some(node => node.blockStatic || node.percentWidth > 0) ||
+                documentParent.percentWidth > 0;
             if (result || this.containerType !== 0) {
                 this._cached.blockStatic = result;
             }
@@ -117,20 +117,8 @@ export default abstract class NodeGroupUI extends NodeUI {
         this._cached.baseline = value;
     }
     get baseline() {
-        let result = this._cached.baseline;
-        if (result === undefined) {
-            if (this.some((node: NodeUI) => node.floating || node.hasAlign(NODE_ALIGNMENT.FLOAT))) {
-                result = false;
-            }
-            else {
-                const value = this.css('verticalAlign');
-                result = value === ''
-                    ? this.every((node: NodeUI) => node.baseline)
-                    : value === 'baseline' || isLength(value, true);
-            }
-            this._cached.baseline = result;
-        }
-        return result;
+        const result = this._cached.baseline;
+        return result === undefined ? this._cached.baseline = this.every((node: NodeUI) => node.baselineElement) : result;
     }
 
     get float() {
@@ -152,11 +140,7 @@ export default abstract class NodeGroupUI extends NodeUI {
     }
 
     get display() {
-        return super.display || this.firstChild?.blockStatic
-            ? 'block'
-            : this.blockDimension
-                ? 'inline-block'
-                : 'inline';
+        return super.display || this.firstChild?.blockStatic ? 'block' : this.blockDimension ? 'inline-block' : 'inline';
     }
 
     get firstChild() {
@@ -184,12 +168,8 @@ export default abstract class NodeGroupUI extends NodeUI {
         super.containerIndex = value;
     }
     get containerIndex() {
-        let result = super.containerIndex;
-        if (result === Infinity) {
-            this.each((node: NodeUI) => result = Math.min(node.containerIndex, result));
-            super.containerIndex = result;
-        }
-        return result;
+        const result = super.containerIndex;
+        return result === Infinity ? super.containerIndex = (this.min('containerIndex') as NodeUI).containerIndex : result;
     }
 
     get centerAligned() {

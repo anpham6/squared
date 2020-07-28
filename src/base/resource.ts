@@ -42,7 +42,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
                     this.addRawData(uri, mimeType[0], match[2], { encoding: mimeType[1] || 'base64', width: element.naturalWidth, height: element.naturalHeight });
                 }
             }
-            if (uri !== '') {
+            if (uri) {
                 Resource.ASSETS.image.set(uri, { width: element.naturalWidth, height: element.naturalHeight, uri });
             }
         }

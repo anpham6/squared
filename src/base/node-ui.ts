@@ -1468,7 +1468,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 this.unsetCache(attr);
             }
         }
-        return this._styleMap[attr] as string || this.styleElement && this.style[attr] as string || '';
+        return this._styleMap[attr] as string || this.naturalChild && this.style[attr] as string || '';
     }
 
     public cssApply(values: StringMap, cache?: boolean) {

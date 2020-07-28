@@ -774,11 +774,10 @@ function ascendQuerySelector(node: T, selectors: QueryData[], i: number, index: 
             while (parent !== null);
         }
     }
-    return next.length > 0
-    ? ++index === length
-            ? true
-            : ascendQuerySelector(node, selectors, i, index, selector.adjacent, next)
-        : false;
+    if (next.length > 0) {
+        return ++index === length ? true : ascendQuerySelector(node, selectors, i, index, selector.adjacent, next);
+    }
+    return false;
 }
 
 const canTextAlign = (node: T) => node.naturalChild && (node.length === 0 || isInlineVertical(node.display)) && !node.floating && node.autoMargin.horizontal !== true;
@@ -1126,7 +1125,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public withinX(rect: BoxRectDimension, options?: OffsetXYOptions) {
-        if (this.pageFlow || rect.width > 0) {
+        if (rect.width > 0 || this.pageFlow) {
             let dimension: Undef<BoxType>,
                 offset: Undef<number>;
             if (options) {
@@ -1139,7 +1138,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public withinY(rect: BoxRectDimension, options?: OffsetXYOptions) {
-        if (this.pageFlow || rect.height > 0) {
+        if (rect.height > 0 || this.pageFlow) {
             let dimension: Undef<BoxType>,
                 offset: Undef<number>;
             if (options) {
@@ -1152,7 +1151,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public outsideX(rect: BoxRectDimension, options?: OffsetXYOptions) {
-        if (this.pageFlow || rect.width > 0) {
+        if (rect.width > 0 || this.pageFlow) {
             let dimension: Undef<BoxType>,
                 offset: Undef<number>;
             if (options) {
@@ -1168,7 +1167,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public outsideY(rect: BoxRectDimension, options?: OffsetXYOptions) {
-        if (this.pageFlow || rect.height > 0) {
+        if (rect.height > 0 || this.pageFlow) {
             let dimension: Undef<BoxType>,
                 offset: Undef<number>;
             if (options) {
@@ -1194,7 +1193,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 return value;
             }
         }
-        return this._styleMap[attr] as string || this.styleElement && this.style[attr] as string || '';
+        return this._styleMap[attr] as string || this.naturalChild && this.style[attr] as string || '';
     }
 
     public cssApply(values: StringMap, cache = true) {
@@ -1473,7 +1472,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         }
         else if (value.endsWith('%')) {
             let parent: Undef<boolean>,
-            dimension: Undef<DimensionAttr>;
+                dimension: Undef<DimensionAttr>;
             if (options) {
                 ({ parent, dimension } = options);
             }
@@ -1532,10 +1531,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public hasPX(attr: string, options?: HasPXOptions) {
-        let initial: Undef<boolean>,
-            percent: Undef<boolean>;
+        let percent: Undef<boolean>,
+            initial: Undef<boolean>;
         if (options) {
-            ({ initial, percent } = options);
+            ({ percent, initial } = options);
         }
         const value = initial ? this.cssInitial(attr, options) : this._styleMap[attr];
         return !!value && isLength(value, percent !== false);

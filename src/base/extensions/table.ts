@@ -160,7 +160,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     }
                 }
                 if (td.cssInitial('verticalAlign') === '') {
-                    td.css('verticalAlign', 'middle', true);
+                    td.css('verticalAlign', 'middle');
                 }
                 if (!td.visibleStyle.backgroundImage && !td.visibleStyle.backgroundColor) {
                     const exclude = /rgba\(0, 0, 0, 0\)|transparent/;
