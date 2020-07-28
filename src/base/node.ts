@@ -47,7 +47,7 @@ function isFontFixedWidth(node: T) {
 
 const aboveRange = (a: number, b: number, offset = 1) => a + offset > b;
 const belowRange = (a: number, b: number, offset = 1) => a - offset < b;
-const validateCssSet = (value: string, actualValue: string) => value === actualValue || isLength(value, true) && actualValue.endsWith('px');
+const validateCssSet = (value: string, actualValue: string) => value === actualValue || actualValue.endsWith('px') && isLength(value, true);
 const sortById = (a: T, b: T) => a.id < b.id ? -1 : 1;
 const isInlineVertical = (value: string) => value.startsWith('inline') || value === 'table-cell';
 
@@ -239,10 +239,7 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
     if (selector.all) {
         return true;
     }
-    else if (selector.tagName && selector.tagName !== child.tagName.toUpperCase()) {
-        return false;
-    }
-    else if (selector.id && selector.id !== child.elementId) {
+    else if (selector.tagName && selector.tagName !== child.tagName.toUpperCase() || selector.id && selector.id !== child.elementId) {
         return false;
     }
     const { attrList, classList, notList, pseudoList } = selector;
@@ -508,9 +505,7 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
                         if (match[1]) {
                             children = children.slice(0).reverse();
                         }
-                        const j = match[2] === 'child'
-                            ? children.indexOf(child) + 1
-                            : children.filter((item: T) => item.tagName === tagName).indexOf(child) + 1;
+                        const j = match[2] === 'child' ? children.indexOf(child) + 1 : children.filter((item: T) => item.tagName === tagName).indexOf(child) + 1;
                         if (j > 0) {
                             if (isNumber(placement)) {
                                 if (parseInt(placement) !== j) {
@@ -580,10 +575,8 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
                     }
                     else if (child.attributes['lang']) {
                         match = /^:lang\((.+)\)$/.exec(pseudo);
-                        if (match) {
-                            if (child.attributes['lang'].trim().toLowerCase() === match[1].trim().toLowerCase()) {
-                                continue;
-                            }
+                        if (match && child.attributes['lang'].trim().toLowerCase() === match[1].trim().toLowerCase()) {
+                            continue;
                         }
                     }
                     return false;
@@ -1158,10 +1151,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 ({ dimension, offset } = options);
             }
             const { left, right } = this[dimension || 'linear'];
-            if (offset === undefined) {
-                return left < Math.floor(rect.left) || right > Math.ceil(rect.right);
-            }
-            return left < rect.left - offset || right > rect.right + offset;
+            return offset === undefined ? left < Math.floor(rect.left) || right > Math.ceil(rect.right) : left < rect.left - offset || right > rect.right + offset;
         }
         return false;
     }
@@ -1174,10 +1164,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 ({ dimension, offset } = options);
             }
             const { top, bottom } = this[dimension || 'linear'];
-            if (offset === undefined) {
-                return top < Math.floor(rect.top) || bottom > Math.ceil(rect.bottom);
-            }
-            return top < rect.top - offset || bottom > rect.bottom + offset;
+            return offset === undefined ? top < Math.floor(rect.top) || bottom > Math.ceil(rect.bottom) : top < rect.top - offset || bottom > rect.bottom + offset;
         }
         return false;
     }
@@ -1300,8 +1287,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             return (
                 this.pseudoElement
                     ? getElementCache<ObjectMap<number>>(element.parentElement as Element, `styleSpecificity${Node.getPseudoElt(element, this.sessionId)}`, this.sessionId)?.[attr]
-                    : getElementCache<ObjectMap<number>>(element, 'styleSpecificity', this.sessionId)?.[attr]
-            ) || 0;
+                    : getElementCache<ObjectMap<number>>(element, 'styleSpecificity', this.sessionId)?.[attr]) || 0;
         }
         return 0;
     }
@@ -1413,7 +1399,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public cssPseudoElement(name: string) {
-        if (this.naturalChild && this.styleElement) {
+        if (this.naturalElement) {
             const styleMap = getElementCache<StringMap>(this._element!, 'styleMap::' + name, this.sessionId);
             if (styleMap) {
                 switch (name) {
@@ -2874,6 +2860,21 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get boundingClientRect() {
         return this.styleElement && this._element!.getBoundingClientRect() || this._bounds as DOMRect || null;
+    }
+
+    get preserveWhiteSpace() {
+        const result = this._cached.preserveWhiteSpace;
+        if (result === undefined) {
+            switch (this.css('whiteSpace')) {
+                case 'pre':
+                case 'pre-wrap':
+                case 'break-spaces':
+                    return this._cached.preserveWhiteSpace = true;
+                default:
+                    return this._cached.preserveWhiteSpace = false;
+            }
+        }
+        return result;
     }
 
     get fontSize(): number {

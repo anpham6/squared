@@ -513,6 +513,7 @@ declare module "base" {
         get nextElementSibling(): Null<Node>;
         get attributes(): StringMap;
         get boundingClientRect(): Null<DOMRect>;
+        get preserveWhiteSpace(): boolean;
         get cssStyle(): StringMap;
         get textStyle(): StringMap;
         get elementData(): Undef<ElementData>;
@@ -594,7 +595,7 @@ declare module "base" {
         parseWidth(value: string, parent?: boolean): number;
         parseHeight(value: string, parent?: boolean): number;
         actualRect(direction: string, dimension?: BoxType): number;
-        actualPadding(attr: "paddingTop" | "paddingBottom", value: number): number;
+        actualPadding(attr: 'paddingTop' | 'paddingBottom', value: number): number;
         actualBoxWidth(value?: number): number;
         actualTextHeight(options?: TextHeightOptions): number;
         alignedVertically(siblings?: Node[], cleared?: Map<Node, string>, horizontal?: boolean): number;
@@ -685,7 +686,6 @@ declare module "base" {
         get textWidth(): number;
         get innerMostWrapped(): NodeUI;
         get outerMostWrapper(): NodeUI;
-        get preserveWhiteSpace(): boolean;
         get firstLineStyle(): Null<StringMap>;
         get firstLetterStyle(): Null<StringMap>;
         get textAlignLast(): string;

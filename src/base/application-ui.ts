@@ -13,7 +13,7 @@ type FileActionOptions = squared.base.FileActionOptions;
 const { convertListStyle, formatPX, getStyle, hasComputedStyle, hasCoords, insertStyleSheetRule, resolveURL } = squared.lib.css;
 const { getNamedItem, removeElementsByClassName } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;
-const { appendSeparator, capitalize, convertWord, flatArray, hasBit, hasMimeType, isEmptyString, isString, iterateArray, partitionArray, trimBoth, trimString } = squared.lib.util;
+const { appendSeparator, capitalize, convertWord, flatArray, hasBit, hasMimeType, isString, iterateArray, partitionArray, trimBoth, trimString } = squared.lib.util;
 
 const REGEXP_PSEUDOCOUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s+([a-z-]+))?\)|(counters)\(([^,]+),\s+"([^"]*)"(?:,\s+([a-z-]+))?\)|"([^"]+)")\s*/g;
 const REGEXP_PSEUDOCOUNTERVALUE = /\b([^\-\d][^\-\d]?[^\s]*)\s+(-?\d+)\b/g;
@@ -662,7 +662,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     inlineText = false;
                 }
                 else if (element.nodeName.startsWith('#')) {
-                    if (element.nodeName === '#text' && (!isEmptyString(element.textContent!) || node.preserveWhiteSpace && (parentElement.tagName !== 'PRE' || parentElement.childElementCount === 0))) {
+                    if (this.visibleText(node, element)) {
                         child = this.insertNode(element, sessionId);
                         child.cssApply(node.textStyle);
                         plainText = j;
@@ -718,10 +718,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (j > 0) {
                     this.cacheNodeChildren(cache, excluded, node, children);
                 }
-                node.inlineText = inlineText;
             }
             else {
-                node.inlineText = !node.textEmpty;
+                if (plainText !== -1) {
+                    node.inlineText = true;
+                }
                 if (lineBreak !== -1 && lineBreak < plainText) {
                     node.multiline = true;
                 }

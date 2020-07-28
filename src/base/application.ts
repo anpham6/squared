@@ -8,7 +8,7 @@ type PreloadImage = HTMLImageElement | string;
 const { CSS_PROPERTIES, CSS_TRAITS, checkMediaRule, getSpecificity, hasComputedStyle, insertStyleSheetRule, getPropertiesAsTraits, parseSelectorText } = squared.lib.css;
 const { FILE, STRING } = squared.lib.regex;
 const { frameworkNotInstalled, getElementCache, newSessionInit, resetSessionAll, setElementCache } = squared.lib.session;
-const { capitalize, convertCamelCase, parseMimeType, plainMap, promisify, resolvePath, splitPair, splitPairStart, trimBoth } = squared.lib.util;
+const { capitalize, convertCamelCase, isEmptyString, parseMimeType, plainMap, promisify, resolvePath, splitPair, splitPairStart, trimBoth } = squared.lib.util;
 
 const REGEXP_IMPORTANT = /\s*([a-z-]+):[^!;]+!important;/g;
 const REGEXP_FONTFACE = /\s*@font-face\s*{([^}]+)}\s*/;
@@ -464,17 +464,19 @@ export default abstract class Application<T extends Node> implements squared.bas
             const length = childNodes.length;
             const children: T[] = new Array(length);
             const elements: T[] = new Array(parentElement.childElementCount);
-            let inlineText = true;
+            let inlineText = true,
+                plainText = false;
             let i = 0, j = 0, k = 0;
             while (i < length) {
                 const element = childNodes[i++] as HTMLElement;
                 let child: Undef<T>;
                 if (element.nodeName.startsWith('#')) {
-                    if (element.nodeName === '#text') {
+                    if (this.visibleText(node, element)) {
                         child = this.insertNode(element, sessionId);
                         if (child) {
                             child.cssApply(node.textStyle);
                         }
+                        plainText = true;
                     }
                 }
                 else if (controllerHandler.includeElement(element)) {
@@ -507,13 +509,19 @@ export default abstract class Application<T extends Node> implements squared.bas
             elements.length = k;
             node.naturalChildren = children;
             node.naturalElements = elements;
-            node.inlineText = inlineText;
+            if (inlineText && plainText) {
+                node.inlineText = inlineText;
+            }
             node.retainAs(children);
             if (k > 0 && this.userSettings.createQuerySelectorMap) {
                 node.queryMap = this.createQueryMap(elements, k);
             }
         }
         return node;
+    }
+
+    protected visibleText(node: T, element: Element) {
+        return element.nodeName === '#text' && (!isEmptyString(element.textContent!) || node.preserveWhiteSpace && (node.tagName !== 'PRE' || node.element!.childElementCount === 0));
     }
 
     protected createQueryMap(elements: T[], length: number) {

@@ -96,10 +96,12 @@
     <script src="/common/babel-transform.js"></script>
     <script>
         const query = 'form[name=entry].form2#form1:nth-child(2):nth-child(1n+1):nth-child(even):nth-child(n+1):nth-child(-n+5):nth-child(0n+2):nth-of-type(1n+1) > ul:last-child:not(:first-child) li div label > input[type=Radio i][title="c2,birth"], label + input[type=checkbox]';
-        let time;
-        async function searchQuery(node) {
-            console.log(node.querySelectorAll(query));
-            console.log(performance.now() - time);
+        let time = 0;
+        async function searchQuery(node, description) {
+            if (time > 0) {
+                console.log(node.querySelectorAll(query));
+                console.log(description + ': ' + (performance.now() - time));
+            }
         }
         System.import('/build/src/main.js').then(result => {
             squared = result;
@@ -113,26 +115,28 @@
                         console.log(document.getElementById('squared_ui').querySelectorAll(query));
 
                         squared.setFramework(chrome);
-                        time = performance.now();
                         searchQuery(await squared.fromElement(document.documentElement));
 
                         time = performance.now();
-                        console.log(await squared.querySelectorAll(query, false));
-                        console.log(performance.now() - time);
+                        searchQuery(await squared.fromElement(document.documentElement), 'chrome #1');
 
                         time = performance.now();
-                        searchQuery(await squared.parseDocument());
+                        console.log(await squared.querySelectorAll(query, false));
+                        console.log('chrome #2 :' + (performance.now() - time));
+
+                        time = performance.now();
+                        searchQuery(await squared.parseDocument(), 'chrome #3');
 
                         squared.setFramework(vdom);
                         time = performance.now();
-                        searchQuery(await squared.fromElement(document.documentElement));
+                        searchQuery(await squared.fromElement(document.documentElement), 'vdom #1');
 
                         time = performance.now();
                         console.log(await squared.querySelectorAll(query, false));
-                        console.log(performance.now() - time);
+                        console.log('vdom #2: ' + (performance.now() - time));
 
                         time = performance.now();
-                        searchQuery(await squared.parseDocument());
+                        searchQuery(await squared.parseDocument(), 'vdom #3');
                     });
                 });
             });

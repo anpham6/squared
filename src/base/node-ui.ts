@@ -1281,7 +1281,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return node;
     }
 
-    public actualPadding(attr: "paddingTop" | "paddingBottom", value: number) {
+    public actualPadding(attr: 'paddingTop' | 'paddingBottom', value: number) {
         if (value > 0) {
             if (!this.layoutElement) {
                 const node = this.innerMostWrapped;
@@ -2090,21 +2090,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             }
         }
         return result || this;
-    }
-
-    get preserveWhiteSpace() {
-        const result = this._cached.preserveWhiteSpace;
-        if (result === undefined) {
-            switch (this.css('whiteSpace')) {
-                case 'pre':
-                case 'pre-wrap':
-                case 'break-spaces':
-                    return this._cached.preserveWhiteSpace = true;
-                default:
-                    return this._cached.preserveWhiteSpace = false;
-            }
-        }
-        return result;
     }
 
     get firstLetterStyle() {
