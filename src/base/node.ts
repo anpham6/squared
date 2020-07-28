@@ -23,11 +23,11 @@ function setStyleCache(element: HTMLElement, attr: string, sessionId: string, va
         element.style.setProperty(attr, value);
         if (validateCssSet(value, element.style.getPropertyValue(attr))) {
             setElementCache(element, attr, sessionId, current);
-            return true;
+            return 2;
         }
-        return false;
+        return 0;
     }
-    return true;
+    return 1;
 }
 
 function parseLineHeight(lineHeight: string, fontSize: number) {
@@ -1295,7 +1295,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     public cssTry(attr: string, value: string, callback?: FunctionSelf<this>) {
         if (this.styleElement) {
             const element = this._element as HTMLElement;
-            if (setStyleCache(element, attr, this.sessionId, value, getStyle(element).getPropertyValue(attr))) {
+            if (setStyleCache(element, attr, this.sessionId, value, getStyle(element).getPropertyValue(attr)) > 0) {
                 if (callback) {
                     callback.call(this);
                     this.cssFinally(attr);
@@ -1313,21 +1313,25 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             const element = this._element as HTMLElement;
             const style = getStyle(element);
             for (const attr in values) {
-                if (setStyleCache(element, attr, sessionId, values[attr]!, style.getPropertyValue(attr))) {
-                    succeeded[attr] = '';
-                }
-                else {
-                    this.cssFinally(succeeded);
-                    return false;
+                const value = values[attr]!;
+                switch (setStyleCache(element, attr, sessionId, value, style.getPropertyValue(attr))) {
+                    case 0:
+                        this.cssFinally(succeeded);
+                        return false;
+                    case 1:
+                        continue;
+                    case 2:
+                       succeeded[attr] = value;
+                       break;
                 }
             }
             if (callback) {
                 callback.call(this);
-                this.cssFinally(values);
+                this.cssFinally(succeeded);
                 return true;
             }
             else {
-                return values;
+                return succeeded;
             }
         }
         return false;

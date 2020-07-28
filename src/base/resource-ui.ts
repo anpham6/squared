@@ -292,7 +292,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     public static generateId(section: string, name: string, start = 1) {
         const ids = this.STORED.ids;
         const stored = ids.get(section);
-        let result = name + (start === 1 ? '_1' : '');
+        let result = name + (start >= 1 ? '_' + start : '');
         if (!stored) {
             ids.set(section, [result]);
         }
@@ -303,7 +303,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     break;
                 }
                 else {
-                    result = name + '_' + ++start;
+                    result = `${name}_${++start}`;
                 }
             }
             while (true);
@@ -329,7 +329,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 }
                 let i = 0;
                 do {
-                    result = i === 0 ? name : name + '_' + i;
+                    result = i === 0 ? name : `${name}_${i}`;
                     if (!stored.has(result)) {
                         stored.set(result, value);
                         break;
@@ -868,10 +868,10 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             if (boxStyle) {
                                 const backgroundImageA = boxStyle.backgroundImage;
                                 if (backgroundImageA) {
-                                    boxStyle.backgroundSize = backgroundSize + ', ' + boxStyle.backgroundSize;
-                                    boxStyle.backgroundRepeat = backgroundRepeat + ', ' + boxStyle.backgroundRepeat;
-                                    boxStyle.backgroundPositionX = backgroundPositionX + ', ' + boxStyle.backgroundPositionX;
-                                    boxStyle.backgroundPositionY = backgroundPositionY + ', ' + boxStyle.backgroundPositionY;
+                                    boxStyle.backgroundSize = `${backgroundSize}, ${boxStyle.backgroundSize}`;
+                                    boxStyle.backgroundRepeat = `${backgroundRepeat}, ${boxStyle.backgroundRepeat}`;
+                                    boxStyle.backgroundPositionX = `${backgroundPositionX}, ${boxStyle.backgroundPositionX}`;
+                                    boxStyle.backgroundPositionY = `${backgroundPositionY}, ${boxStyle.backgroundPositionY}`;
                                     backgroundImageA.unshift(...backgroundImage);
                                     break;
                                 }

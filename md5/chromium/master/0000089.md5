@@ -1,10 +1,11 @@
 7d141339faf60e1dafbcfae509e4485c  ./app/src/main/res/drawable/clubs.png
 94aa2da271ff69526668ab14909ff1a3  ./app/src/main/res/drawable/diamonds.png
-b356a43cab2722cf5c250af9ff7bde1d  ./app/src/main/res/drawable/div_framelayout_1.xml
+b356a43cab2722cf5c250af9ff7bde1d  ./app/src/main/res/drawable/div_textview_1.xml
 3f7996e7e35593820492ccbe756fc0e6  ./app/src/main/res/drawable/hearts.png
 00835dcc4037e581aeeedfb95426ac57  ./app/src/main/res/drawable/spades.png
-ca2270f566ba880bbea4fc91944027b2  ./app/src/main/res/layout/activity_main.xml
-9632e0c3454a1a2d01419b55c0467697  ./app/src/main/res/values/colors.xml
-2b9e09c111b984116359a9eef8fbb283  ./app/src/main/res/values/dimens.xml
-96bb312f9ecc291325557a1443e56a1a  ./app/src/main/res/values/strings.xml
+2e6ba69f66e281e8cea7696d02936280  ./app/src/main/res/layout/activity_main.xml
+ce66335e1d9ddc68c9f480cbe6a24173  ./app/src/main/res/values/colors.xml
+d9b5d87f74115ea28d4f53b9a5dea01d  ./app/src/main/res/values/dimens.xml
+b0f7f71e621b67db86ce6ef1209c5bcb  ./app/src/main/res/values/strings.xml
+0fbae393e756500dc6bbf9dd0fbfe8fe  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml

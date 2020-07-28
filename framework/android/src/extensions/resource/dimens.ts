@@ -14,7 +14,7 @@ function getResourceName(map: Map<string, string>, name: string, value: string) 
             return storedName;
         }
     }
-    return Resource.generateId('dimen', name);
+    return Resource.generateId('dimen', name, 0);
 }
 
 function createNamespaceData(namespace: string, node: View, group: GroupData) {

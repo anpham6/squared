@@ -116,7 +116,9 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                 return false;
             }
             const nodes: MultilineData<T> = [];
-            let textHeight = 0,
+            const checkWidth = node.blockStatic && !node.hasPX('width', { percent: false }) && node.tagName !== 'LEGEND';
+            let textWidth = 0,
+                textHeight = 0,
                 floatHeight = 0,
                 leading: Undef<T>,
                 valid: Undef<boolean>;
@@ -128,36 +130,42 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                         return false;
                     }
                 }
-                else if (child.floating) {
-                    floatHeight = Math.max(child.linear.height, floatHeight);
-                }
-                else if (isTextElement(child) && !(child.lineBreakLeading && (i === length - 1 || child.lineBreakTrailing) || i === 0 && child.lineBreakTrailing)) {
-                    if (checkBreakable(child) && !child.preserveWhiteSpace) {
-                        if (valid === undefined) {
-                            valid = !!node.firstLineStyle || node.textAlignLast !== '';
-                        }
-                        if (child.multiline) {
-                            ++j;
-                            nodes.push([1, child]);
-                        }
-                        else if (j + k++ > 0 || valid) {
-                            nodes.push([1, child]);
-                        }
-                        else {
-                            leading = child;
-                        }
-                        if (child.styleElement) {
-                            ++m;
-                        }
-                        else {
-                            ++n;
-                        }
-                        textHeight += child.bounds.height;
+                else {
+                    const bounds = child.bounds;
+                    if (child.floating) {
+                        floatHeight = Math.max(child.linear.height, floatHeight);
                     }
-                    ++l;
+                    else if (isTextElement(child) && !(child.lineBreakLeading && (i === length - 1 || child.lineBreakTrailing) || i === 0 && child.lineBreakTrailing)) {
+                        if (checkBreakable(child) && !child.preserveWhiteSpace) {
+                            if (valid === undefined) {
+                                valid = !!node.firstLineStyle || node.textAlignLast !== '';
+                            }
+                            if (child.multiline) {
+                                ++j;
+                                nodes.push([1, child]);
+                            }
+                            else if (j + k++ > 0 || valid) {
+                                nodes.push([1, child]);
+                            }
+                            else {
+                                leading = child;
+                            }
+                            if (child.styleElement) {
+                                ++m;
+                            }
+                            else {
+                                ++n;
+                            }
+                            textHeight += bounds.height;
+                        }
+                        ++l;
+                    }
+                    if (checkWidth) {
+                        textWidth += Math.max(bounds.width, child.textBounds?.width ?? -Infinity);
+                    }
                 }
             }
-            if (j > 0 && (k > 0 || l > 1 || valid || floatHeight > 0 && textHeight > floatHeight) || (k > 1 || m > 0 && n > 1) && (valid || (node.textBounds?.numberOfLines || 0) > 1)) {
+            if (j > 0 && (k > 0 || l > 1 || valid || floatHeight > 0 && textHeight > floatHeight) || checkWidth && j + k > 1 && Math.floor(textWidth) > Math.ceil(node.actualBoxWidth()) || (k > 1 || m > 0 && n > 1) && (valid || (node.textBounds?.numberOfLines || 0) > 1)) {
                 if (leading) {
                     nodes.unshift([1, leading]);
                 }

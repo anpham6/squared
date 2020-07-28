@@ -104,6 +104,9 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                     else {
                         previousRow = row[0];
                     }
+                    if (item.length > 0) {
+                        item.box.width = Math.max(boxWidth, item.box.width);
+                    }
                     item.anchorParent('horizontal',
                         item.rightAligned
                             ? 1
@@ -166,12 +169,16 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                     const above: T[] = new Array(r);
                     for (let j = 0; j < r; ++j) {
                         const data = columns[j];
-                        for (let k = 0; k < data.length; ++k) {
-                            const item = data[k];
-                            item.app('layout_constraintWidth_percent', truncate((1 / columnMin) - percentGap, node.localSettings.floatPrecision));
+                        const s = data.length;
+                        let k = 0;
+                        while (k < s) {
+                            const item = data[k++];
+                            const percent = (1 / columnMin) - percentGap;
+                            item.app('layout_constraintWidth_percent', truncate(percent, node.localSettings.floatPrecision));
                             item.setLayoutWidth('0px');
                             item.setBox(BOX_STANDARD.MARGIN_RIGHT, { reset: 1 });
                             item.exclude({ section: APP_SECTION.EXTENSION });
+                            item.box.width = percent * boxWidth;
                             item.anchored = true;
                             item.positioned = true;
                         }
