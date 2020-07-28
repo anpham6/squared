@@ -19,13 +19,16 @@ const BORDER_BOTTOM = CSS_PROPERTIES.borderBottom.value as string[];
 const BORDER_LEFT = CSS_PROPERTIES.borderLeft.value as string[];
 const BORDER_OUTLINE = CSS_PROPERTIES.outline.value as string[];
 
-const PATTERN_COLORSTOP = `((?:rgb|hsl)a?\\(\\d+,\\s+\\d+%?,\\s+\\d+%?(?:,\\s+[\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]+)\\s*(${STRING.LENGTH_PERCENTAGE}|${STRING.CSS_ANGLE}|(?:${STRING.CSS_CALC}(?=,)|${STRING.CSS_CALC}))?,?\\s*`;
+const PATTERN_COLOR = '((?:rgb|hsl)a?\\(\\d+,\\s+\\d+%?,\\s+\\d+%?(?:,\\s+[\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]{3,})';
+const PATTERN_COLORLENGTH = `${STRING.LENGTH_PERCENTAGE}|${STRING.CSS_ANGLE}|(?:${STRING.CSS_CALC}(?=,)|${STRING.CSS_CALC})`;
+const PATTERN_COLORSTOP = `${PATTERN_COLOR}(?:\\s*(${PATTERN_COLORLENGTH})\\s*,?\\s*)*\\s*,?\\s*`;
 const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\([^)]+\\)|(repeating-)?(linear|radial|conic)-gradient\\(((?:to\\s+[a-z\\s]+|(?:from\\s+)?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*(?:(?:-?[\\d.]+(?:[a-z%]+)?\\s*)+)?(?:at\\s+[\\w %]+)?)?),?\\s*((?:${PATTERN_COLORSTOP})+)\\))`, 'g');
 const REGEXP_COLORSTOP = new RegExp(PATTERN_COLORSTOP, 'g');
 const REGEXP_TRAILINGINDENT = /\n([^\S\n]*)?$/;
 const CHAR_EMPTYSTRING = /^[\s\n]+$/;
 const CHAR_LEADINGSPACE = /^\s+/;
 const CHAR_TRAILINGSPACE = /\s+$/;
+const CHAR_SEPARATOR = /\s*,\s*/;
 
 function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
     const { width, height } = gradient.dimension as Dimension;
@@ -73,6 +76,31 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
     }
     let previousOffset = 0,
         match: Null<RegExpExecArray>;
+    if (isUserAgent(USER_AGENT.SAFARI)) {
+        const length = value.length;
+        const colorPattern = new RegExp(PATTERN_COLOR, 'g');
+        const colors: [string, number, number][] = [];
+        while (match = colorPattern.exec(value)) {
+            const color = match[1];
+            const lastIndex = colorPattern.lastIndex;
+            const index = lastIndex - color.length;
+            if (/[a-z]/.test(color.charAt(0)) && /\d/.test(value.charAt(index - 1))) {
+                continue;
+            }
+            if (colors.length > 0) {
+                colors[colors.length - 1][2] = index;
+            }
+            colors.push([color, lastIndex, length]);
+        }
+        let expanded = '';
+        for (const item of colors) {
+            const color = item[0];
+            for (const unit of value.substring(item[1], item[2]).replace(/\s*,\s*$/, '').trim().split(CHAR_SEPARATOR)) {
+                expanded += (expanded !== '' ? ', ' : '') + color + ' ' + unit;
+            }
+        }
+        value = expanded;
+    }
     while (match = REGEXP_COLORSTOP.exec(value)) {
         const color = parseColor(match[1], 1, true);
         if (color) {
@@ -99,9 +127,9 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
                             offset = -1;
                         }
                     }
-                }
-                if (repeat && offset !== -1) {
-                    offset *= extent;
+                    if (repeat && offset !== -1) {
+                        offset *= extent;
+                    }
                 }
             }
             if (isNaN(offset)) {
@@ -178,7 +206,7 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
 
 function getBackgroundSize(node: NodeUI, index: number, value: string, screenDimension?: Dimension) {
     if (value !== '') {
-        const sizes = value.split(/\s*,\s*/);
+        const sizes = value.split(CHAR_SEPARATOR);
         return ResourceUI.getBackgroundSize(node, sizes[index % sizes.length], screenDimension);
     }
     return undefined;

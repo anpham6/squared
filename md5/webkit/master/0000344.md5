@@ -1,13 +1,13 @@
 e7fe02590977008f657840a877d2f1e9  ./app/src/main/res/drawable/baseroot_gradient_1.xml
 d368dcf5e5f6a15df7490c425752dbed  ./app/src/main/res/drawable/body_linearlayout_4.xml
-3e8b9a57eea51c57465a794a10e4e1e3  ./app/src/main/res/drawable/figcaption_textview_24.xml
+3e8b9a57eea51c57465a794a10e4e1e3  ./app/src/main/res/drawable/figcaption_textview_12.xml
 95433c81c2417fa89176d04ea7e66adf  ./app/src/main/res/drawable/footer_framelayout_6.xml
 093ff1266a850494ee79701e7474dedd  ./app/src/main/res/drawable/html_baseroot.xml
 119feca2fc82ccc0bb84eeeb209ef23c  ./app/src/main/res/drawable/logo.gif
 200a0d331ec7987bf52bfb9c7eb3a57a  ./app/src/main/res/drawable/sampson_dinosaur.jpg
-bf0495147c717e3b7e5f008aac481455  ./app/src/main/res/layout/activity_main.xml
+bf2bfa0f1f327a2ecc2602055bc65475  ./app/src/main/res/layout/activity_main.xml
 8ebee137cc815bcbdf66efff1efc8831  ./app/src/main/res/values/colors.xml
-70c79e3e5eabeb92998b1c9886e565b9  ./app/src/main/res/values/dimens.xml
-4a53e9f8fa1f4f17c58bc5a89ab00791  ./app/src/main/res/values/strings.xml
+3f394cd202580842438587704387ae2c  ./app/src/main/res/values/dimens.xml
+a12387a435630035dbfd2ae09c8d4500  ./app/src/main/res/values/strings.xml
 403a9482da4121696ee10e092f95afcb  ./app/src/main/res/values/styles.xml
 47ddaed34aafdefd41b74e966b115290  ./app/src/main/res/values/themes.xml

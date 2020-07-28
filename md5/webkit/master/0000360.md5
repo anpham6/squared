@@ -3,9 +3,9 @@ ab49e2bd7befd5335f14e4204bcca115  ./app/src/main/res/drawable/aside_sidebarb.xml
 d368dcf5e5f6a15df7490c425752dbed  ./app/src/main/res/drawable/body_linearlayout_1.xml
 d13b032690946fb52e326f775180556c  ./app/src/main/res/drawable/footer_framelayout_3.xml
 ba9a1343ad18177236cb903d64cbab18  ./app/src/main/res/drawable/header_framelayout_2.xml
-70550d849fc77b8c2fc61e00a3957f54  ./app/src/main/res/layout/activity_main.xml
+bd561cd3ac043d337c02138466cdeed8  ./app/src/main/res/layout/activity_main.xml
 76407212ae3f8caf886203624efd1c31  ./app/src/main/res/values/colors.xml
-7dbe6d7a23edd46d18d26dc67e42b8d2  ./app/src/main/res/values/dimens.xml
+f668f845d9e747d84836561c5e705ca6  ./app/src/main/res/values/dimens.xml
 29d569804614a1e219570349bdbcb349  ./app/src/main/res/values/strings.xml
 e939469c2e2da729f1a3699bde2a6923  ./app/src/main/res/values/styles.xml
 0e2f06c08dc54f8d2888531a04fbef0a  ./app/src/main/res/values/themes.xml

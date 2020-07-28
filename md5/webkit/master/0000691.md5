@@ -1,6 +1,7 @@
-030fe2e0b3b541acbcedde1ce36c89a8  ./app/src/main/res/drawable/div_framelayout_8.xml
-21a9ba79658177cab7eed039b89a2979  ./app/src/main/res/layout/activity_main.xml
-1bd55e7148a769eb4d00f41a3cf9afac  ./app/src/main/res/values/colors.xml
-eb53e8bab05a319ed2f1acd24142a7fc  ./app/src/main/res/values/dimens.xml
-96bb312f9ecc291325557a1443e56a1a  ./app/src/main/res/values/strings.xml
+030fe2e0b3b541acbcedde1ce36c89a8  ./app/src/main/res/drawable/div_framelayout_6.xml
+ec1f488e90634f5886d7e70e0c0bdb94  ./app/src/main/res/layout/activity_main.xml
+b420432bd574d516a7af12d698938415  ./app/src/main/res/values/colors.xml
+6743d6e76cce72004128f014a5e23dc8  ./app/src/main/res/values/dimens.xml
+0ca9038076888ecf303129cc8c620a98  ./app/src/main/res/values/strings.xml
+a53794d7ab17cb73ff0f77c7407905ab  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml
