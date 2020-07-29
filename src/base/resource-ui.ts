@@ -77,9 +77,9 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
     let previousOffset = 0,
         match: Null<RegExpExecArray>;
     if (isUserAgent(USER_AGENT.SAFARI)) {
+        const colors: [string, number, number][] = [];
         const length = value.length;
         const colorPattern = new RegExp(PATTERN_COLOR, 'g');
-        const colors: [string, number, number][] = [];
         while (match = colorPattern.exec(value)) {
             const color = match[1];
             const lastIndex = colorPattern.lastIndex;

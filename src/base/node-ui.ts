@@ -2044,18 +2044,23 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     set containerIndex(value) {
         this._containerIndex = value;
     }
-    get containerIndex() {
-        let result = this._containerIndex;
+    get containerIndex(): number {
+        const result = this._containerIndex;
         if (result === Infinity) {
             let wrapped = this.innerWrapped;
-            while (wrapped !== undefined) {
-                const index = wrapped.containerIndex;
-                if (index !== Infinity) {
-                    result = index;
-                    this._containerIndex = result;
-                    break;
+            if (wrapped !== undefined) {
+                do {
+                    const index = wrapped.containerIndex;
+                    if (index !== Infinity) {
+                        return this._containerIndex = index;
+                        break;
+                    }
+                    wrapped = wrapped.innerWrapped;
                 }
-                wrapped = wrapped.innerWrapped;
+                while (wrapped !== undefined);
+            }
+            else if (this.length > 0 && !this.naturalChild) {
+                return this._containerIndex = (this.min('containerIndex', { self:  true }) as NodeUI).containerIndex;
             }
         }
         return result;

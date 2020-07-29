@@ -122,21 +122,26 @@ export default abstract class NodeGroupUI extends NodeUI {
     }
 
     get float() {
-        if (!this.floating) {
-            return 'none';
+        let result = this._cached.float;
+        if (result === undefined) {
+            if (!this.floating) {
+                result = 'none';
+            }
+            else if (this.hasAlign(NODE_ALIGNMENT.RIGHT)) {
+                result = 'right';
+            }
+            else if (this.every(node => node.float === 'right')) {
+                this.addAlign(NODE_ALIGNMENT.RIGHT);
+                result = 'right';
+            }
+            return this._cached.float = result || 'left';
         }
-        else if (this.hasAlign(NODE_ALIGNMENT.RIGHT)) {
-            return 'right';
-        }
-        else if (this.every(node => node.float === 'right')) {
-            this.addAlign(NODE_ALIGNMENT.RIGHT);
-            return 'right';
-        }
-        return 'left';
+        return result;
     }
 
     get floating() {
-        return this.every((node: NodeUI) => node.floating || node.hasAlign(NODE_ALIGNMENT.FLOAT));
+        const result = this._cached.floating;
+        return result === undefined ? this._cached.floating = this.hasAlign(NODE_ALIGNMENT.FLOAT) || this.every((node: NodeUI) => node.floating || node.hasAlign(NODE_ALIGNMENT.FLOAT)) : result;
     }
 
     get display() {
@@ -162,14 +167,6 @@ export default abstract class NodeGroupUI extends NodeUI {
             super.childIndex = result;
         }
         return result;
-    }
-
-    set containerIndex(value) {
-        super.containerIndex = value;
-    }
-    get containerIndex() {
-        const result = super.containerIndex;
-        return result === Infinity ? super.containerIndex = (this.min('containerIndex') as NodeUI).containerIndex : result;
     }
 
     get centerAligned() {

@@ -225,12 +225,13 @@ function convertBox(node: T, attr: string, margin: boolean) {
 function convertPosition(node: T, attr: string) {
     if (!node.positionStatic) {
         const unit = node.valueOf(attr, { modified: true });
-        if (unit.endsWith('%')) {
+        if (unit.endsWith('px')) {
+            return parseFloat(unit);
+        }
+        else if (unit.endsWith('%')) {
             return node.styleElement ? convertFloat(node.style[attr]) : 0;
         }
-        else if (isLength(unit)) {
-            return node.parseUnit(unit, { dimension: attr === 'left' || attr === 'right' ? 'width' : 'height' });
-        }
+        return node.parseUnit(unit, attr === 'top' || attr === 'bottom' ? { dimension:  'height' } : undefined);
     }
     return 0;
 }
@@ -2393,7 +2394,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get pageFlow() {
         const result = this._cached.pageFlow;
-        return result === undefined ? this._cached.pageFlow = this.positionStatic || this.positionRelative : result;
+        return result === undefined ? this._cached.pageFlow = this.positionStatic || this.positionRelative || this.lineBreak : result;
     }
 
     get centerAligned() {
@@ -2691,7 +2692,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (result === undefined) {
             result = this.actualParent;
             if (!this.pageFlow && !this.documentBody) {
-                while (result && !result.documentBody && result.valueOf('position', { computed: true }) === 'static') {
+                while (result?.documentBody === false && result.valueOf('position', { computed: true }) === 'static') {
                     result = result.actualParent;
                 }
             }

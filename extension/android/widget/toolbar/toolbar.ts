@@ -152,9 +152,8 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
             }
             appBarNode = this.createPlaceholder(node, appBarChildren, node.target);
             appBarNode.parent = parent;
-            let id = android.id;
-            if (id) {
-                appBarNode.controlId = getDocumentId(id);
+            if (android.id) {
+                appBarNode.controlId = getDocumentId(android.id);
                 delete android.id;
             }
             appBarNode.setControlType(appBarName, CONTAINER_NODE.BLOCK);
@@ -171,9 +170,8 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
                 if (collapsingToolbarNode) {
                     collapsingToolbarNode.parent = appBarNode;
                     android = collapsingToolbarOptions.android;
-                    id = android.id;
-                    if (id) {
-                        appBarNode.controlId = getDocumentId(id);
+                    if (android.id) {
+                        appBarNode.controlId = getDocumentId(android.id);
                         delete android.id;
                     }
                     collapsingToolbarNode.setControlType(collapsingToolbarName, CONTAINER_NODE.BLOCK);
@@ -333,14 +331,6 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
         const delegate = children.length > 0;
         const container = this.application.createNode(node.sessionId, { parent: node, children, delegate, cascade: true });
         container.inherit(node, 'base');
-        if (delegate) {
-            let containerIndex = Infinity;
-            let i = 0;
-            while (i < children.length) {
-                containerIndex = Math.min(containerIndex, children[i++].containerIndex);
-            }
-            container.containerIndex = containerIndex;
-        }
         if (target) {
             container.dataset.androidTarget = target.id;
             container.innerWrapped = node;
