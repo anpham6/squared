@@ -13,7 +13,7 @@ const { conditionArray, flatArray, isArray } = squared.lib.util;
 
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.enumeration;
 
-const REGEXP_ALGINSELF = /start|end|center|baseline/;
+const REGEXP_ALIGNSELF = /start|end|center|baseline/;
 const REGEXP_JUSTIFYSELF = /start|center|end|baseline|right|left/;
 
 function getRowData(mainData: CssGridData<View>, horizontal: boolean) {
@@ -659,8 +659,8 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
             const row = mainData.row;
             const alignSelf = node.has('alignSelf') ? node.css('alignSelf') : mainData.alignItems;
             const justifySelf = node.has('justifySelf') ? node.css('justifySelf') : mainData.justifyItems;
-            if (REGEXP_ALGINSELF.test(alignSelf) || REGEXP_JUSTIFYSELF.test(justifySelf) || parent.layoutConstraint) {
-                renderAs = this.application.createNode(node.sessionId, { parent, innerWrap: node });
+            if (REGEXP_ALIGNSELF.test(alignSelf) || REGEXP_JUSTIFYSELF.test(justifySelf) || parent.layoutConstraint) {
+                renderAs = this.application.createNode(node.sessionId, { parent, innerWrapped: node });
                 renderAs.containerName = node.containerName;
                 renderAs.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                 renderAs.inherit(node, 'base', 'initial');
@@ -744,7 +744,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
             if (mainData.alignContent === 'normal' && !parent.hasPX('height') && !node.hasPX('minHeight') && (!row.unit[rowStart] || row.unit[rowStart] === 'auto') && Math.floor(node.bounds.height) > (node.data<BoxRectDimension>(this.name, 'boundsData')?.height || Infinity) && checkRowSpan(node, rowSpan, rowStart, mainData, this.name)) {
                 target.css('minHeight', formatPX(node.box.height));
             }
-            else if (!target.hasPX('height') && !target.hasPX('maxHeight') && !(row.length === 1 && mainData.alignContent.startsWith('space') && !REGEXP_ALGINSELF.test(mainData.alignItems))) {
+            else if (!target.hasPX('height') && !target.hasPX('maxHeight') && !(row.length === 1 && mainData.alignContent.startsWith('space') && !REGEXP_ALIGNSELF.test(mainData.alignItems))) {
                 target.mergeGravity('layout_gravity', 'fill_vertical');
             }
         }

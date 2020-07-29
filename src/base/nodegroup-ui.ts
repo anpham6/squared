@@ -122,26 +122,13 @@ export default abstract class NodeGroupUI extends NodeUI {
     }
 
     get float() {
-        let result = this._cached.float;
-        if (result === undefined) {
-            if (!this.floating) {
-                result = 'none';
-            }
-            else if (this.hasAlign(NODE_ALIGNMENT.RIGHT)) {
-                result = 'right';
-            }
-            else if (this.every(node => node.float === 'right')) {
-                this.addAlign(NODE_ALIGNMENT.RIGHT);
-                result = 'right';
-            }
-            return this._cached.float = result || 'left';
-        }
-        return result;
+        const result = this._cached.float;
+        return result === undefined ? this._cached.float = !this.floating ? 'none' : this.hasAlign(NODE_ALIGNMENT.RIGHT) ? 'right' : 'left' : result;
     }
 
     get floating() {
         const result = this._cached.floating;
-        return result === undefined ? this._cached.floating = this.hasAlign(NODE_ALIGNMENT.FLOAT) || this.every((node: NodeUI) => node.floating || node.hasAlign(NODE_ALIGNMENT.FLOAT)) : result;
+        return result === undefined ? this._cached.floating = this.hasAlign(NODE_ALIGNMENT.FLOAT) || this.every((node: NodeUI) => node.floating) : result;
     }
 
     get display() {

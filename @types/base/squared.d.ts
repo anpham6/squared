@@ -90,7 +90,7 @@ declare module "base" {
         parseDocument(...elements: (string | HTMLElement)[]): Promise<T | T[]>;
         createCache(documentRoot: HTMLElement, sessionId: string): Undef<T>;
         setStyleMap(sessionId: string): void;
-        createNode(sessionId: string, options: {}): T;
+        createNode(sessionId: string, options: CreateNodeOptions): T;
         insertNode(element: Element, sessionId: string): Undef<T>;
         afterCreateCache(node: T): void;
         getProcessing(sessionId: string): Undef<AppProcessing<T>>;
@@ -178,10 +178,10 @@ declare module "base" {
         processTraverseHorizontal(layout: LayoutUI<T>, siblings: T[]): Undef<LayoutUI<T>>;
         processTraverseVertical(layout: LayoutUI<T>, siblings: T[]): Undef<LayoutUI<T>>;
         processLayoutHorizontal(layout: LayoutUI<T>): LayoutUI<T>;
-        setConstraints(cache: NodeList<T>): void;
+        setConstraints(rendering: NodeList<T>): void;
         renderNode(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
         renderNodeGroup(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
-        createNodeGroup(node: T, children: T[], parent?: T, options?: CreateNodeGroupUIOptions<T>): T;
+        createNodeGroup(node: T, children: T[], parent?: T, options?: CreateNodeGroupUIOptions): T;
         sortRenderPosition(parent: T, templates: NodeTemplate<T>[]): NodeTemplate<T>[];
         addBeforeOutsideTemplate(id: number, value: string, format?: boolean, index?: number): void;
         addBeforeInsideTemplate(id: number, value: string, format?: boolean, index?: number): void;
@@ -395,7 +395,7 @@ declare module "base" {
         cssCopy(node: Node, ...attrs: string[]): void;
         cssCopyIfEmpty(node: Node, ...attrs: string[]): void;
         cssPseudoElement(name: string): Null<StringMap>;
-        parseUnit(value: string, options?: ParseUnitBaseOptions): number;
+        parseUnit(value: string, options?: NodeParseUnitOptions): number;
         has(attr: string, options?: HasOptions): boolean;
         hasPX(attr: string, options?: HasPXOptions): boolean;
         toInt(attr: string, fallback?: number, initial?: boolean): number;
@@ -680,6 +680,8 @@ declare module "base" {
         get lastStaticChild(): Null<NodeUI>;
         get onlyChild(): boolean;
         get rendering(): boolean;
+        get boxReset(): BoxModel;
+        get boxAdjustment(): BoxModel;
         get overflowX(): boolean;
         get overflowY(): boolean;
         get textEmpty(): boolean;

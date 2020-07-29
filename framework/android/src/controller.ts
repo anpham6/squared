@@ -912,7 +912,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     const template = node.removeTry({ alignSiblings: true }) as NodeTemplate<T>;
                     if (template) {
                         const renderChildren = parent.renderChildren;
-                        const renderTemplates = parent.renderTemplates ?? (parent.renderTemplates = []);
+                        const renderTemplates = parent.renderTemplates!;
                         const index = parseInt(node.dataset.androidTargetIndex as string);
                         if (!isNaN(index) && index >= 0 && index < renderChildren.length) {
                             renderChildren.splice(index, 0, node);
@@ -1518,8 +1518,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         return false;
     }
 
-    public setConstraints(cache: squared.base.NodeList<T>) {
-        cache.each(node => {
+    public setConstraints(rendering: squared.base.NodeList<T>) {
+        rendering.each(node => {
             if (node.rendering && node.visible && node.hasProcedure(NODE_PROCEDURE.CONSTRAINT)) {
                 if (node.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
                     if (node.layoutConstraint && !node.layoutElement) {
@@ -1705,7 +1705,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                 }
                 if (!node.pageFlow && parent === node.absoluteParent && (node.left < 0 && parent.css('overflowX') === 'hidden' || node.top < 0 && parent.css('overflowY') === 'hidden')) {
-                    const container = this.application.createNode(node.sessionId, { parent, innerWrap: node });
+                    const container = this.application.createNode(node.sessionId, { parent, innerWrapped: node });
                     container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                     container.inherit(node, 'base');
                     container.cssCopy(node, 'position', 'zIndex');
@@ -2251,7 +2251,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
     }
 
-    public createNodeGroup(node: T, children: T[], parent?: T, options?: CreateNodeGroupUIOptions<T>) {
+    public createNodeGroup(node: T, children: T[], parent?: T, options?: CreateNodeGroupUIOptions) {
         let delegate: Undef<boolean>,
             cascade: Undef<boolean>;
         if (options) {
@@ -2279,7 +2279,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             parent,
             children,
             append: true,
-            innerWrap: node,
+            innerWrapped: node,
             delegate: true,
             cascade: options.cascade === true || !!children && children.length > 0 && !node.rootElement
         });
@@ -2355,11 +2355,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         let autoPosition: Undef<boolean>;
         if (node.hasAlign(NODE_ALIGNMENT.VERTICAL)) {
             let previous: Undef<T>;
-            const children = node.renderChildren as T[];
-            const length = children.length;
-            let i = 0;
-            while (i < length) {
-                const item = children[i++];
+            node.renderEach((item: T) => {
                 if (previous) {
                     item.anchor('topBottom', previous.documentId);
                 }
@@ -2382,7 +2378,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     item.anchor('left');
                     autoPosition = true;
                 }
-            }
+            });
         }
         else {
             const children = flattenContainer(node) as T[];

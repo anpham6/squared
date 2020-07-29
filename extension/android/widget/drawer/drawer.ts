@@ -79,35 +79,37 @@ export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> 
         };
     }
 
-    public afterParseDocument() {
+    public afterParseDocument(sessionId: string) {
         const systemName = capitalize(this.application.systemName);
         for (const node of this.subscribers) {
-            const options = createViewAttribute(this.options.navigationView);
-            const menu = Drawer.findNestedElement(node, WIDGET_NAME.MENU)?.dataset['layoutName' + systemName];
-            const headerLayout = Drawer.findNestedElement(node, EXT_ANDROID.EXTERNAL)?.dataset['layoutName' + systemName];
-            const app = options.app ?? (options.app = {});
-            if (menu) {
-                assignEmptyValue(app, 'menu', `@menu/${menu}`);
-            }
-            if (headerLayout) {
-                assignEmptyValue(app, 'headerLayout', `@layout/${headerLayout}`);
-            }
-            if (menu || headerLayout) {
-                const controller = this.controller as android.base.Controller<T>;
-                assignEmptyValue(options, 'android', 'id', `@+id/${node.controlId}_navigation`);
-                assignEmptyValue(options, 'android', 'fitsSystemWindows', 'true');
-                assignEmptyValue(options, 'android', 'layout_gravity', node.localizeString('left'));
-                controller.addAfterInsideTemplate(
-                    node.id,
-                    controller.renderNodeStatic(
-                        {
-                            controlName: node.api < BUILD_ANDROID.Q ? SUPPORT_ANDROID.NAVIGATION_VIEW : SUPPORT_ANDROID_X.NAVIGATION_VIEW,
-                            width: 'wrap_content',
-                            height: 'match_parent'
-                        },
-                        Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'))
-                    )
-                );
+            if (node.sessionId === sessionId) {
+                const options = createViewAttribute(this.options.navigationView);
+                const menu = Drawer.findNestedElement(node, WIDGET_NAME.MENU)?.dataset['layoutName' + systemName];
+                const headerLayout = Drawer.findNestedElement(node, EXT_ANDROID.EXTERNAL)?.dataset['layoutName' + systemName];
+                const app = options.app ?? (options.app = {});
+                if (menu) {
+                    assignEmptyValue(app, 'menu', `@menu/${menu}`);
+                }
+                if (headerLayout) {
+                    assignEmptyValue(app, 'headerLayout', `@layout/${headerLayout}`);
+                }
+                if (menu || headerLayout) {
+                    const controller = this.controller as android.base.Controller<T>;
+                    assignEmptyValue(options, 'android', 'id', `@+id/${node.controlId}_navigation`);
+                    assignEmptyValue(options, 'android', 'fitsSystemWindows', 'true');
+                    assignEmptyValue(options, 'android', 'layout_gravity', node.localizeString('left'));
+                    controller.addAfterInsideTemplate(
+                        node.id,
+                        controller.renderNodeStatic(
+                            {
+                                controlName: node.api < BUILD_ANDROID.Q ? SUPPORT_ANDROID.NAVIGATION_VIEW : SUPPORT_ANDROID_X.NAVIGATION_VIEW,
+                                width: 'wrap_content',
+                                height: 'match_parent'
+                            },
+                            Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'))
+                        )
+                    );
+                }
             }
         }
     }
@@ -129,14 +131,14 @@ export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> 
         assignEmptyValue(options, 'parent', settings.manifestParentThemeName);
         assignEmptyValue(options.items, 'android:windowTranslucentStatus', 'true');
         Resource.addTheme(options);
-        if (api >= 21) {
-            const lollipop = createStyleAttribute(cloneObject(options));
-            const items = {};
-            assignEmptyValue(lollipop.output, 'path', 'res/values-v21');
+        if (api >= BUILD_ANDROID.LOLLIPOP) {
+            const themeOptions = createStyleAttribute(cloneObject(options));
+            const items: StringMap = {};
+            assignEmptyValue(themeOptions.output, 'path', 'res/values-v21');
             assignEmptyValue(items, 'android:windowDrawsSystemBarBackgrounds', 'true');
             assignEmptyValue(items, 'android:statusBarColor', '@android:color/transparent');
-            lollipop.items = items;
-            Resource.addTheme(lollipop);
+            themeOptions.items = items;
+            Resource.addTheme(themeOptions);
         }
     }
 }

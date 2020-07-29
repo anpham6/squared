@@ -290,16 +290,15 @@ function getBottomChild(node: NodeUI) {
     return bottomChild;
 }
 
-function isVerticalOverflow(node: NodeUI) {
-    for (const value of [node.cssInitial('overflow'), node.cssInitial('overflowX'), node.cssInitial('overflowY')]) {
-        switch (value) {
-            case 'auto':
-            case 'hidden':
-            case 'overlay':
-                return true;
-        }
+function checkOverflowValue(value: string) {
+    switch (value) {
+        case 'auto':
+        case 'hidden':
+        case 'overlay':
+            return false;
+        default:
+            return true;
     }
-    return false;
 }
 
 function resetBox(node: NodeUI, region: number, register?: NodeUI) {
@@ -309,11 +308,10 @@ function resetBox(node: NodeUI, region: number, register?: NodeUI) {
     }
 }
 
-const setMinHeight = (node: NodeUI, offset: number) => node.css('minHeight', formatPX(Math.max(offset, node.hasPX('minHeight', { percent: false }) ? node.parseHeight(node.css('minHeight')) : 0)));
 const canResetChild = (node: NodeUI, children = true) => (!children && node.blockStatic || children && node.length > 0 && !node.floating) && !node.layoutElement && !node.tableElement && node.tagName !== 'FIELDSET';
 const validAboveChild = (node: NodeUI, children: boolean) => !node.hasHeight && node.borderBottomWidth === 0 && node.paddingBottom === 0 && canResetChild(node, children);
 const validBelowChild = (node: NodeUI, children: boolean) => !node.hasHeight && node.borderTopWidth === 0 && node.paddingTop === 0 && canResetChild(node, children);
-const validSibling = (node: NodeUI) => node.pageFlow && node.blockDimension && !node.floating && !node.excluded;
+const hasOverflowXY = (node: NodeUI) => checkOverflowValue(node.cssInitial('overflowY')) || checkOverflowValue(node.cssInitial('overflowX'));
 
 export default class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
     public readonly eventOnly = true;
@@ -357,8 +355,8 @@ export default class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
                                 const previousSiblings = current.previousSiblings({ floating: false });
                                 const q = previousSiblings.length;
                                 if (q > 0) {
-                                    let inheritedTop: Undef<boolean>;
                                     const previous = previousSiblings[q - 1];
+                                    let inheritedTop: Undef<boolean>;
                                     if (isBlockElement(previous, false)) {
                                         let marginBottom = previous.marginBottom,
                                             marginTop = current.marginTop;
@@ -494,7 +492,7 @@ export default class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
                                         if (marginBottom > 0) {
                                             if (marginTop > 0) {
                                                 if (marginTop <= marginBottom) {
-                                                    if (!inheritedTop || !isVerticalOverflow(current)) {
+                                                    if (!inheritedTop || hasOverflowXY(current)) {
                                                         resetBox(current, BOX_STANDARD.MARGIN_TOP);
                                                         if (current.bounds.height === 0 && marginBottom >= current.marginBottom) {
                                                             resetBox(current, BOX_STANDARD.MARGIN_BOTTOM);
@@ -502,7 +500,7 @@ export default class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
                                                         inheritedTop = false;
                                                     }
                                                 }
-                                                else if (!inheritedBottom || !isVerticalOverflow(previous)) {
+                                                else if (!inheritedBottom || hasOverflowXY(previous)) {
                                                     resetBox(previous, BOX_STANDARD.MARGIN_BOTTOM);
                                                     if (previous.bounds.height === 0 && marginTop >= previous.marginTop) {
                                                         resetBox(previous, BOX_STANDARD.MARGIN_TOP);
@@ -518,7 +516,7 @@ export default class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
                                                 }
                                             }
                                         }
-                                        if (marginTop > 0 && previous.floatContainer && current.getBox(BOX_STANDARD.MARGIN_TOP)[1] === 0 && !isVerticalOverflow(previous)) {
+                                        if (marginTop > 0 && previous.floatContainer && current.getBox(BOX_STANDARD.MARGIN_TOP)[1] === 0 && hasOverflowXY(previous)) {
                                             let valid: Undef<boolean>;
                                             if (previous.bounds.height === 0) {
                                                 valid = true;
@@ -602,7 +600,7 @@ export default class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
                         }
                     }
                 }
-                if (pageFlow && !isVerticalOverflow(node) && node.tagName !== 'FIELDSET') {
+                if (pageFlow && hasOverflowXY(node) && node.tagName !== 'FIELDSET') {
                     if (firstChild?.naturalElement) {
                         applyMarginCollapse(node, firstChild, true);
                     }
@@ -742,7 +740,7 @@ export default class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
                                 actualParent.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset);
                             }
                             else if (!actualParent.hasHeight) {
-                                setMinHeight(actualParent, offset);
+                                actualParent.css('minHeight', formatPX(Math.max(offset, actualParent.hasPX('minHeight', { percent: false }) ? actualParent.parseHeight(actualParent.css('minHeight')) : 0)));
                             }
                         }
                     }
@@ -769,17 +767,17 @@ export default class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
                 if (renderParent?.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) === false) {
                     if (node.blockDimension && !node.floating) {
                         if (renderParent.layoutVertical) {
-                            const children = renderParent.renderChildren;
-                            const index = children.findIndex(item => item === outerWrapper);
+                            const renderChildren = renderParent.renderChildren;
+                            const index = renderChildren.findIndex(item => item === outerWrapper);
                             if (index !== -1) {
                                 if (!node.lineBreakLeading && !node.baselineAltered) {
-                                    const previous = children[index - 1];
+                                    const previous = renderChildren[index - 1];
                                     if (previous?.pageFlow) {
                                         setSpacingOffset(outerWrapper, BOX_STANDARD.MARGIN_TOP, previous.actualRect('bottom'), previous.getBox(BOX_STANDARD.MARGIN_BOTTOM)[1]);
                                     }
                                 }
                                 if (!node.lineBreakTrailing) {
-                                    const next = children[index + 1];
+                                    const next = renderChildren[index + 1];
                                     if (next?.pageFlow && next.styleElement && !next.inlineVertical) {
                                         setSpacingOffset(outerWrapper, BOX_STANDARD.MARGIN_BOTTOM, next.actualRect('top'), next.getBox(BOX_STANDARD.MARGIN_TOP)[1]);
                                     }
@@ -788,6 +786,7 @@ export default class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
                         }
                         else if (!node.baselineAltered) {
                             const horizontalRows = renderParent.horizontalRows;
+                            const validSibling = (item: NodeUI) => item.pageFlow && item.blockDimension && !item.floating && !item.excluded;
                             let horizontal: Undef<T[]>;
                             if (horizontalRows && horizontalRows.length > 1) {
                                 found: {

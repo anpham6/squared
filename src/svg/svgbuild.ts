@@ -32,27 +32,88 @@ const REGEXP_PATHCOMMAND = /([A-Za-z])([^A-Za-z]+)?/g;
 const NAME_GRAPHICS = new Map<string, number>();
 
 export default class SvgBuild implements squared.svg.SvgBuild {
-    public static isUse = (object: SvgElement): object is SvgUse => hasBit(object.instanceType, INSTANCE_TYPE.SVG_USE);
-    public static isContainer = (object: SvgElement): object is SvgGroup => hasBit(object.instanceType, INSTANCE_TYPE.SVG_CONTAINER);
-    public static isElement = (object: SvgElement): object is SvgElement => hasBit(object.instanceType, INSTANCE_TYPE.SVG_ELEMENT);
-    public static isShape = (object: SvgElement): object is SvgShape => hasBit(object.instanceType, INSTANCE_TYPE.SVG_SHAPE);
-    public static isAnimate = (object: SvgAnimation): object is SvgAnimate => hasBit(object.instanceType, INSTANCE_TYPE.SVG_ANIMATE);
-    public static isAnimateTransform = (object: SvgAnimation): object is SvgAnimateTransform => hasBit(object.instanceType, INSTANCE_TYPE.SVG_ANIMATE_TRANSFORM);
-    public static asSvg = (object: SvgElement): object is Svg => object.instanceType === INSTANCE_TYPE.SVG;
-    public static asG = (object: SvgElement): object is SvgG => object.instanceType === INSTANCE_TYPE.SVG_G;
-    public static asPattern = (object: SvgElement): object is SvgPattern => object.instanceType === INSTANCE_TYPE.SVG_PATTERN;
-    public static asShapePattern = (object: SvgElement): object is SvgShapePattern => object.instanceType === INSTANCE_TYPE.SVG_SHAPE_PATTERN;
-    public static asImage = (object: SvgElement): object is SvgImage => object.instanceType === INSTANCE_TYPE.SVG_IMAGE;
-    public static asUseG = (object: SvgElement): object is SvgUseG => object.instanceType === INSTANCE_TYPE.SVG_USE_G;
-    public static asUseSymbol = (object: SvgElement): object is SvgUseSymbol => object.instanceType === INSTANCE_TYPE.SVG_USE_SYMBOL;
-    public static asUseShape = (object: SvgElement): object is SvgUseShape => object.instanceType === INSTANCE_TYPE.SVG_USE_SHAPE;
-    public static asUseShapePattern = (object: SvgElement): object is SvgUseShapePattern => object.instanceType === INSTANCE_TYPE.SVG_USE_SHAPE_PATTERN;
-    public static asSet = (object: SvgAnimation) => object.instanceType === INSTANCE_TYPE.SVG_ANIMATION;
-    public static asAnimate = (object: SvgAnimation): object is SvgAnimate => object.instanceType === INSTANCE_TYPE.SVG_ANIMATE;
-    public static asAnimateTransform = (object: SvgAnimation): object is SvgAnimateTransform => object.instanceType === INSTANCE_TYPE.SVG_ANIMATE_TRANSFORM;
-    public static asAnimateMotion = (object: SvgAnimation): object is SvgAnimateMotion => object.instanceType === INSTANCE_TYPE.SVG_ANIMATE_MOTION;
-    public static drawCircle = (cx: number, cy: number, r: number, precision?: number) => SvgBuild.drawEllipse(cx, cy, r, r, precision);
-    public static drawPolygon = (values: Point[] | DOMPoint[], precision?: number) => values.length > 0 ? SvgBuild.drawPolyline(values, precision) + 'Z' : '';
+    public static isUse(object: SvgElement): object is SvgUse {
+        return hasBit(object.instanceType, INSTANCE_TYPE.SVG_USE);
+    }
+    public static isContainer(object: SvgElement): object is SvgGroup {
+        return hasBit(object.instanceType, INSTANCE_TYPE.SVG_CONTAINER);
+    }
+
+    public static isElement(object: SvgElement): object is SvgElement {
+        return hasBit(object.instanceType, INSTANCE_TYPE.SVG_ELEMENT);
+    }
+
+    public static isShape(object: SvgElement): object is SvgShape {
+        return hasBit(object.instanceType, INSTANCE_TYPE.SVG_SHAPE);
+    }
+
+    public static isAnimate(object: SvgAnimation): object is SvgAnimate {
+        return hasBit(object.instanceType, INSTANCE_TYPE.SVG_ANIMATE);
+    }
+
+    public static isAnimateTransform(object: SvgAnimation): object is SvgAnimateTransform {
+        return hasBit(object.instanceType, INSTANCE_TYPE.SVG_ANIMATE_TRANSFORM);
+    }
+
+    public static asSvg(object: SvgElement): object is Svg {
+        return object.instanceType === INSTANCE_TYPE.SVG;
+    }
+
+    public static asG(object: SvgElement): object is SvgG {
+        return object.instanceType === INSTANCE_TYPE.SVG_G;
+    }
+
+    public static asPattern(object: SvgElement): object is SvgPattern {
+        return object.instanceType === INSTANCE_TYPE.SVG_PATTERN;
+    }
+
+    public static asShapePattern(object: SvgElement): object is SvgShapePattern {
+        return object.instanceType === INSTANCE_TYPE.SVG_SHAPE_PATTERN;
+    }
+
+    public static asImage(object: SvgElement): object is SvgImage {
+        return object.instanceType === INSTANCE_TYPE.SVG_IMAGE;
+    }
+
+    public static asUseG(object: SvgElement): object is SvgUseG {
+        return object.instanceType === INSTANCE_TYPE.SVG_USE_G;
+    }
+
+    public static asUseSymbol(object: SvgElement): object is SvgUseSymbol {
+        return object.instanceType === INSTANCE_TYPE.SVG_USE_SYMBOL;
+    }
+
+    public static asUseShape(object: SvgElement): object is SvgUseShape {
+        return object.instanceType === INSTANCE_TYPE.SVG_USE_SHAPE;
+    }
+
+    public static asUseShapePattern(object: SvgElement): object is SvgUseShapePattern {
+        return object.instanceType === INSTANCE_TYPE.SVG_USE_SHAPE_PATTERN;
+    }
+
+    public static asSet(object: SvgAnimation) {
+        return object.instanceType === INSTANCE_TYPE.SVG_ANIMATION;
+    }
+
+    public static asAnimate(object: SvgAnimation): object is SvgAnimate {
+        return object.instanceType === INSTANCE_TYPE.SVG_ANIMATE;
+    }
+
+    public static asAnimateTransform(object: SvgAnimation): object is SvgAnimateTransform {
+        return object.instanceType === INSTANCE_TYPE.SVG_ANIMATE_TRANSFORM;
+    }
+
+    public static asAnimateMotion(object: SvgAnimation): object is SvgAnimateMotion {
+        return object.instanceType === INSTANCE_TYPE.SVG_ANIMATE_MOTION;
+    }
+
+    public static drawCircle(cx: number, cy: number, r: number, precision?: number) {
+        return SvgBuild.drawEllipse(cx, cy, r, r, precision);
+    }
+
+    public static drawPolygon(values: Point[] | DOMPoint[], precision?: number) {
+        return values.length > 0 ? SvgBuild.drawPolyline(values, precision) + 'Z' : '';
+    }
 
     public static drawLine(x1: number, y1: number, x2 = 0, y2 = 0, precision?: number) {
         if (precision) {

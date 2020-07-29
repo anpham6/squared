@@ -90,12 +90,12 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     public abstract processTraverseHorizontal(layout: squared.base.LayoutUI<T>, siblings: T[]): Undef<squared.base.LayoutUI<T>>;
     public abstract processTraverseVertical(layout: squared.base.LayoutUI<T>, siblings: T[]): Undef<squared.base.LayoutUI<T>>;
     public abstract processLayoutHorizontal(layout: squared.base.LayoutUI<T>): squared.base.LayoutUI<T>;
-    public abstract createNodeGroup(node: T, children: T[], parent?: T, options?: CreateNodeGroupUIOptions<T>): T;
+    public abstract createNodeGroup(node: T, children: T[], parent?: T, options?: CreateNodeGroupUIOptions): T;
     public abstract renderNode(layout: squared.base.LayoutUI<T>): Undef<NodeTemplate<T>>;
     public abstract renderNodeGroup(layout: squared.base.LayoutUI<T>): Undef<NodeTemplate<T>>;
     public abstract sortRenderPosition(parent: T, templates: NodeTemplate<T>[]): NodeTemplate<T>[];
-    public abstract setConstraints(cache: squared.base.NodeList<T>): void;
-    public abstract optimize(nodes: T[]): void;
+    public abstract setConstraints(rendering: squared.base.NodeList<T>): void;
+    public abstract optimize(rendered: T[]): void;
     public abstract finalize(layouts: FileAsset[]): void;
 
     public abstract get userSettings(): UserSettingsUI;

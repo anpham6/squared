@@ -156,7 +156,7 @@ declare module "lib" {
         function newBoxRectDimension(): BoxRectDimension;
         function withinViewport(rect: DOMRect | ClientRect): boolean;
         function assignRect(rect: Undef<DOMRect | ClientRect | BoxRectDimension>, scrollPosition?: boolean): BoxRectDimension;
-        function getRangeClientRect(element: Element, textOnly?: boolean): Undef<BoxRectDimension>;
+        function getRangeClientRect(element: Element): Undef<BoxRectDimension>;
         function removeElementsByClassName(className: string): void;
         function getElementsBetweenSiblings(elementStart: Null<Element>, elementEnd: Element): Undef<Element[]>;
         function getNamedItem(element: Element, attr: string): string;

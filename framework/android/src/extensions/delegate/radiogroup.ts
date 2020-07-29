@@ -88,10 +88,8 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
                 container.css('verticalAlign', 'middle');
                 container.setCacheValue('baseline', false);
             }
-            length = removeable.length;
-            let i = 0;
-            while (i < length) {
-                removeable[i++].hide({ remove: true });
+            for (const item of removeable) {
+                item.hide({ remove: true });
             }
             this.subscribers.add(container);
             return {

@@ -77,7 +77,6 @@ declare namespace base {
         static availablePercent<T extends View>(nodes: T[], dimension: DimensionAttr, boxSize: number): number;
         static getControlName(containerType: number, api?: number): string;
         api: number;
-        readonly constraint: Constraint;
         readonly documentId: string;
         android(attr: string, value?: string, overwrite?: boolean): string;
         app(attr: string, value?: string, overwrite?: boolean): string;
@@ -103,6 +102,7 @@ declare namespace base {
         set localSettings(value);
         get localSettings(): AndroidLocalSettingsUI;
         get anchorTarget(): View;
+        get constraint(): Constraint;
         get layoutFrame(): boolean;
         get layoutLinear(): boolean;
         get layoutGrid(): boolean;

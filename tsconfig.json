@@ -20,8 +20,10 @@
   "exclude": [
     "build",
     "dist",
+    "html",
     "md5",
     "node",
-    "node_modules"
+    "node_modules",
+    "temp"
   ]
 }

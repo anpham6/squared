@@ -63,7 +63,6 @@ function parseImageUrl(baseMap: StringMap, attr: string, styleSheetHref: string,
     }
 }
 
-const isSvg = (value: string) => FILE.SVG.test(value);
 const parseConditionText = (rule: string, value: string) => new RegExp(`\\s*@${rule}([^{]+)`).exec(value)?.[1].trim() || value;
 const hasExactValue = (attr: string, value: string, cssText: string) => new RegExp(`\\b${attr}[\\s\\n]*:[\\s\\n]*(?:${value})[\\s\\n]*;?`).test(cssText);
 const hasPartialValue = (attr: string, value: string, cssText: string) => new RegExp(`\\b${attr}[\\s\\n]*:[^;]*?${value}[^;]*;?`).test(cssText);
@@ -221,7 +220,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     const href = use.href.baseVal || use.getAttributeNS('xlink', 'href');
                     if (href && href.indexOf('#') > 0) {
                         const src = resolvePath(splitPairStart(href, '#'));
-                        if (isSvg(src)) {
+                        if (FILE.SVG.test(src)) {
                             addImageSrc(resourceHandler, src);
                         }
                     }
@@ -271,7 +270,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             preloaded = [];
             for (const item of image.values()) {
                 const uri = item.uri as string;
-                if (isSvg(uri)) {
+                if (FILE.SVG.test(uri)) {
                     imageElements.push(uri);
                 }
                 else if (item.width === 0 || item.height === 0) {
@@ -312,7 +311,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     if (!preloadImages) {
                         resourceHandler.addImage(image);
                     }
-                    else if (isSvg(image.src)) {
+                    else if (FILE.SVG.test(image.src)) {
                         imageElements.push(image.src);
                     }
                     else if (image.complete) {

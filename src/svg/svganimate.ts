@@ -15,7 +15,9 @@ const REGEXP_CUBICBEZIER = /\s*[\d.]+\s+[\d.]+\s+[\d.]+\s+[\d.]+\s*/;
 export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgAnimate {
     public static PATTERN_CUBICBEZIER = 'cubic-bezier\\(([01](?:\\.\\d+)?),\\s+(-?\\d+(?:\\.\\d+)?),\\s+([01](?:\\.\\d+)?),\\s+(-?\\d+(?:\\.\\d+)?)\\)';
 
-    public static getSplitValue = (value: number, next: number, percent: number) => value + (next - value) * percent;
+    public static getSplitValue(value: number, next: number, percent: number) {
+        return value + (next - value) * percent;
+    }
 
     public static convertTimingFunction(value: string) {
         const keySpline = KEYSPLINE_NAME[value];
@@ -375,7 +377,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         return this._from;
     }
     set from(value) {
-        if (!this._values) {
+        if (this._values === undefined) {
             const animationElement = this.animationElement;
             if (animationElement) {
                 if (this.to === '') {

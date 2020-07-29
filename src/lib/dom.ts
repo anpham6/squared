@@ -50,23 +50,21 @@ export function assignRect(rect: Undef<DOMRect | ClientRect | BoxRectDimension>,
     return newBoxRectDimension();
 }
 
-export function getRangeClientRect(element: Element, textOnly?: boolean) {
+export function getRangeClientRect(element: Element) {
     let hidden: Undef<[HTMLElement, string][]>;
-    if (!textOnly) {
-        if (element.childElementCount > 0) {
-            iterateArray(element.children, (item: HTMLElement) => {
-                const style = getStyle(item);
-                if (style.getPropertyValue('visibility') !== 'visible') {
-                    if (hasCoords(style.getPropertyValue('position'))) {
-                        const display = style.getPropertyValue('display');
-                        if (display !== 'none') {
-                            item.style.display = 'none';
-                            (hidden ?? (hidden = [])).push([item, display]);
-                        }
+    if (element.childElementCount) {
+        iterateArray(element.children, (item: HTMLElement) => {
+            const style = getStyle(item);
+            if (style.getPropertyValue('visibility') !== 'visible') {
+                if (hasCoords(style.getPropertyValue('position'))) {
+                    const display = style.getPropertyValue('display');
+                    if (display !== 'none') {
+                        item.style.display = 'none';
+                        (hidden ?? (hidden = [])).push([item, display]);
                     }
                 }
-            });
-        }
+            }
+        });
     }
     const domRect: ClientRect[] = [];
     const range = document.createRange();

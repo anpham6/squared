@@ -572,7 +572,9 @@ const excludeVertical = (node: T) => node.bounds.height === 0 && node.contentBox
 
 export default (Base: Constructor<squared.base.NodeUI>) => {
     return class View extends Base implements android.base.View {
-        public static horizontalMatchConstraint = (node: T, parent: T) => getMatchConstraint(node, parent);
+        public static horizontalMatchConstraint(node: T, parent: T) {
+            return getMatchConstraint(node, parent);
+        }
 
         public static setConstraintDimension(node: T, percentWidth = NaN) {
             percentWidth = constraintPercentWidth(node, percentWidth);
@@ -677,25 +679,21 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public renderChildren!: T[];
         public renderParent?: T;
         public horizontalRows?: T[][];
-        public readonly constraint: Constraint = {
-            horizontal: false,
-            vertical: false,
-            current: {}
-        };
 
-        protected _namespaces: ObjectMap<StringMap> = { android: {}, app: {} };
+        protected _namespaces: ObjectMap<StringMap> = { android: {} };
         protected _containerType = 0;
         protected _controlName = '';
         protected _cached!: AndroidCachedValueUI<T>;
-        protected _boxReset!: BoxModel;
-        protected _boxAdjustment!: BoxModel;
         protected _localSettings!: AndroidLocalSettingsUI;
+        protected _boxReset?: BoxModel;
+        protected _boxAdjustment?: BoxModel;
         protected _documentParent?: T;
         protected _innerWrapped?: T;
 
         private _positioned = false;
         private _controlId?: string;
         private _labelFor?: T;
+        private _constraint?: Constraint;
 
         public setControlType(controlName: string, containerType?: number) {
             this.controlName = controlName;
@@ -1277,7 +1275,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     left = 0;
                 for (let j = 0; j < 4; ++j) {
                     const attr = attrs[j];
-                    let value: number = boxReset[attr] === 0 ? this[attr] : 0;
+                    let value: number = !boxReset || boxReset[attr] === 0 ? this[attr] : 0;
                     if (value !== 0) {
                         if (margin) {
                             switch (j) {
@@ -1328,7 +1326,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             }
                         }
                     }
-                    value += boxAdjustment[attr];
+                    if (boxAdjustment) {
+                        value += boxAdjustment[attr];
+                    }
                     switch (j) {
                         case 0:
                             top = value;
@@ -1562,8 +1562,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             this.cloneBase(node);
             if (attributes !== false) {
-                Object.assign(node.unsafe<BoxModel>('boxReset'), this._boxReset);
-                Object.assign(node.unsafe<BoxModel>('boxAdjustment'), this._boxAdjustment);
+                Object.assign(node.boxReset, this.boxReset);
+                Object.assign(node.boxAdjustment, this.boxAdjustment);
                 for (const name in this._namespaces) {
                     const obj: StringMap = this._namespaces[name];
                     for (const attr in obj) {
@@ -1855,7 +1855,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         public hasFlex(direction: "row" | "column") {
             const parent = this.actualParent as T;
-            if (parent?.flexdata[direction] === true) {
+            if (parent?.flexdata[direction]) {
                 if (direction === 'column' && !parent.hasHeight) {
                     const grandParent = parent.actualParent;
                     if (grandParent) {
@@ -2569,10 +2569,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             template.parent = renderParent as View;
                             template.node.renderParent = renderParent as View;
                         }
-                        renderParent.renderTemplates = renderTemplates;
                         renderParent.renderChildren = renderChildren;
-                        const boxReset = this._boxReset;
-                        const boxAdjustment = this._boxAdjustment;
+                        renderParent.renderTemplates = renderTemplates;
+                        const boxReset = this.boxReset;
+                        const boxAdjustment = this.boxAdjustment;
                         renderParent.modifyBox(BOX_STANDARD.PADDING_TOP, (boxReset.marginTop === 0 ? this.marginTop : 0) + (boxReset.paddingTop === 0 ? this.paddingTop : 0) + boxAdjustment.marginTop + boxAdjustment.paddingTop);
                         renderParent.modifyBox(BOX_STANDARD.PADDING_RIGHT, (boxReset.marginRight === 0 ? this.marginRight : 0) + (boxReset.paddingRight === 0 ? this.paddingRight : 0) + boxAdjustment.marginRight + boxAdjustment.paddingRight);
                         renderParent.modifyBox(BOX_STANDARD.PADDING_BOTTOM, (boxReset.marginBottom === 0 ? this.marginBottom : 0) + (boxReset.paddingBottom === 0 ? this.paddingBottom : 0) + boxAdjustment.marginBottom + boxAdjustment.paddingBottom);
@@ -2693,7 +2693,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     positionTranslation: this.layoutConstraint,
                     positionRelative: this.layoutRelative,
                     maxDimension: this.textElement || this.imageContainer
-                } as AndroidSupportUI;
+                };
                 if (this.containerType !== 0) {
                     this._cached.support = result;
                 }
@@ -2830,11 +2830,17 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         set anchored(value) {
-            this.constraint.horizontal = value;
-            this.constraint.vertical = value;
+            const constraint = this.constraint;
+            constraint.horizontal = value;
+            constraint.vertical = value;
         }
         get anchored() {
-            return this.constraint.horizontal && this.constraint.vertical;
+            const constraint = this.constraint;
+            return constraint.horizontal && constraint.vertical;
+        }
+
+        get constraint() {
+            return this._constraint ?? (this._constraint = { horizontal: false, vertical: false, current: {} });
         }
 
         get layoutFrame() {

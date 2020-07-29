@@ -50,13 +50,16 @@ function getFloatAlignmentType(nodes: NodeUI[]) {
     while (i < length) {
         const item = nodes[i++];
         if (!item.floating) {
+            if (!right) {
+                break;
+            }
             floating = false;
         }
         if (!item.rightAligned) {
+            if (!floating) {
+                break;
+            }
             right = false;
-        }
-        if (!floating && !right) {
-            break;
         }
     }
     if (floating) {
@@ -430,7 +433,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (!element && parent.naturalElement) {
                 node.actualParent = parent;
             }
-            const child = options.innerWrap;
+            const child = options.innerWrapped;
             if (child && parent.replaceTry({ child, replaceWith: node })) {
                 child.parent = node;
                 node.innerWrapped = child;
@@ -595,7 +598,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const filename = dataset['filename' + systemName] || dataset.filename;
         const iteration = dataset['iteration' + systemName];
         const prefix = isString(filename) && filename.replace(this._layoutFileExtension, '') || node.elementId || `document_${this.length}`;
-        const suffix = (iteration ? parseInt(iteration) : -1) + 1;
+        const suffix = iteration ? parseInt(iteration) + 1 : 0;
         const layoutName = convertWord(suffix > 0 ? `${prefix}_${suffix}` : prefix, true);
         dataset['iteration' + systemName] = suffix.toString();
         dataset['layoutName' + systemName] = layoutName;
@@ -1168,7 +1171,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         while (i < length) {
             const ext = extensions[i++];
             for (const node of ext.subscribers) {
-                if (cache.contains(node)) {
+                if (node.sessionId === sessionId) {
                     ext.postBaseLayout(node);
                 }
             }
@@ -1185,7 +1188,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         while (i < length) {
             const ext = extensions[i++];
             for (const node of ext.subscribers) {
-                if (cache.contains(node)) {
+                if (node.sessionId === sessionId) {
                     ext.postConstraints(node);
                 }
             }
@@ -1373,18 +1376,18 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         alignmentType: alignmentType | (segments.some(seg => seg === rightSub || seg === rightAbove) ? NODE_ALIGNMENT.RIGHT : 0),
                         itemCount
                     }));
-                }
+}
             }
             else {
                 segments = [item as T[]];
                 itemCount = 1;
             }
+            const parent = floatgroup || layout.node;
             j = 0;
             while (j < itemCount) {
                 const seg = segments[j++];
-                const node = floatgroup || layout.node;
-                const target = controllerHandler.createNodeGroup(seg[0], seg, node, { delegate: true, cascade: true });
-                const group = new LayoutUI(node, target, 0, NODE_ALIGNMENT.SEGMENTED, seg);
+                const target = controllerHandler.createNodeGroup(seg[0], seg, parent, { delegate: true, cascade: true });
+                const group = new LayoutUI(parent, target, 0, NODE_ALIGNMENT.SEGMENTED, seg);
                 if (seg === inlineAbove) {
                     group.addAlign(NODE_ALIGNMENT.COLUMN);
                     if (inheritStyle) {
@@ -1416,7 +1419,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
                 this.addLayout(group);
                 if (seg === inlineAbove) {
-                    this.setFloatPadding(node, target, inlineAbove, leftSub && flatArray(leftSub), rightSub && flatArray(rightSub));
+                    this.setFloatPadding(parent, target, inlineAbove, leftSub && flatArray(leftSub), rightSub && flatArray(rightSub));
                 }
             }
         }

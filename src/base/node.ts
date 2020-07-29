@@ -51,33 +51,6 @@ const validateCssSet = (value: string, actualValue: string) => value === actualV
 const sortById = (a: T, b: T) => a.id < b.id ? -1 : 1;
 const isInlineVertical = (value: string) => value.startsWith('inline') || value === 'table-cell';
 
-function setNaturalChildren(node: T): T[] {
-    let children: T[];
-    if (node.naturalElement) {
-        children = [];
-        const sessionId = node.sessionId;
-        let i = 0;
-        (node.element as HTMLElement).childNodes.forEach((element: Element) => {
-            const item = getElementAsNode<T>(element, sessionId);
-            if (item) {
-                item.childIndex = i++;
-                children.push(item);
-            }
-        });
-    }
-    else {
-        children = node.children.slice(0);
-    }
-    node.naturalChildren = children;
-    return children;
-}
-
-function setNaturalElements(node: T): T[] {
-    const children = node.naturalChildren.filter((item: T) => item.naturalElement);
-    node.naturalElements = children;
-    return children;
-}
-
 function getFlexValue(node: T, attr: string, fallback: number, parent?: Null<Node>): number {
     const value = (parent || node).css(attr);
     return isNumber(value) ? parseFloat(value) : fallback;
@@ -93,7 +66,7 @@ function hasTextAlign(node: T, ...values: string[]) {
 }
 
 function setDimension(node: T, styleMap: StringMap, attr: DimensionAttr, attrMin: string, attrMax: string) {
-    const options = { dimension: attr };
+    const options: NodeParseUnitOptions = { dimension: attr };
     const value = styleMap[attr];
     const min = styleMap[attrMin];
     const baseValue = value ? node.parseUnit(value, options) : 0;
@@ -205,17 +178,12 @@ function convertBox(node: T, attr: string, margin: boolean) {
                                 case 'marginBottom':
                                     return vertical ? node.parseUnit(vertical, { dimension: 'height', parent: false }) : node.parseUnit(horizontal, { parent: false });
                                 case 'marginRight':
-                                    if (node.actualParent!.lastChild !== node) {
-                                        return node.parseUnit(horizontal, { parent: false });
-                                    }
-                                case 'marginLeft':
-                                    return 0;
+                                    return node.actualParent!.lastChild !== node ? node.parseUnit(horizontal, { parent: false }) : 0;
                             }
                         }
-                        break;
+                        return 0;
                     }
                 }
-                return 0;
             }
             break;
     }
@@ -1027,31 +995,32 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             this._textStyle = undefined;
         }
         if (!this._preferInitial) {
-            let parent: Undef<T>;
+            let parent: T;
             if (attrs.some(value => hasBit(CSS_PROPERTIES[value].trait, CSS_TRAITS.LAYOUT))) {
                 parent = this.pageFlow && this.ascend({ condition: item => item.documentRoot })[0] || this;
             }
             else if (attrs.some(value => hasBit(CSS_PROPERTIES[value].trait, CSS_TRAITS.CONTAIN))) {
                 parent = this;
             }
-            if (parent) {
-                parent.resetBounds();
-                const queryMap = parent.queryMap;
-                if (queryMap) {
-                    const q = queryMap.length;
-                    let i = 0, j: number;
-                    while (i < q) {
-                        const children = queryMap[i++];
-                        const r = children.length;
-                        j = 0;
-                        while (j < r) {
-                            children[j++].resetBounds();
-                        }
+            else {
+                return;
+            }
+            parent.resetBounds();
+            const queryMap = parent.queryMap;
+            if (queryMap) {
+                const q = queryMap.length;
+                let i = 0, j: number;
+                while (i < q) {
+                    const children = queryMap[i++];
+                    const r = children.length;
+                    j = 0;
+                    while (j < r) {
+                        children[j++].resetBounds();
                     }
                 }
-                else {
-                    this.cascade(item => item.resetBounds());
-                }
+            }
+            else {
+                this.cascade(item => item.resetBounds());
             }
         }
     }
@@ -1066,7 +1035,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         }
         const { condition, error, every, including, excluding } = options;
         const result: T[] = [];
-        let parent = options.startSelf ? this : this[attr];
+        let parent: Null<T> = options.startSelf ? this : this[attr];
         while (parent && parent !== excluding) {
             if (error && error(parent)) {
                 break;
@@ -1239,26 +1208,33 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return value !== '' && options.values.includes(value);
     }
 
-    public cssSort(attr: string, options: CssSortOptions = {}) {
-        const ascending = options.ascending !== false;
-        const byFloat = options.byFloat === true;
-        const byInt = !byFloat && options.byInt === true;
-        return (options.duplicate ? this.duplicate() : this.children).sort((a, b) => {
+    public cssSort(attr: string, options?: CssSortOptions) {
+        let ascending: Undef<boolean>,
+            byFloat: Undef<boolean>,
+            byInt: Undef<boolean>,
+            duplicate: Undef<boolean>;
+        if (options) {
+            ({ ascending, byFloat, byInt, duplicate } = options);
+        }
+        return (duplicate ? this.duplicate() : this.children).sort((a, b) => {
             let valueA: NumString,
                 valueB: NumString;
             if (byFloat) {
-                valueA = a.toFloat(attr, a.childIndex), valueB = b.toFloat(attr, b.childIndex);
+                valueA = a.toFloat(attr, a.childIndex);
+                valueB = b.toFloat(attr, b.childIndex);
             }
             else if (byInt) {
-                valueA = a.toInt(attr, a.childIndex), valueB = b.toInt(attr, b.childIndex);
+                valueA = a.toInt(attr, a.childIndex);
+                valueB = b.toInt(attr, b.childIndex);
             }
             else {
-                valueA = a.css(attr), valueB = b.css(attr);
+                valueA = a.css(attr);
+                valueB = b.css(attr);
             }
             if (valueA === valueB) {
                 return 0;
             }
-            else if (ascending) {
+            else if (ascending !== false) {
                 return valueA < valueB ? -1 : 1;
             }
             return valueA > valueB ? -1 : 1;
@@ -1285,10 +1261,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     public cssSpecificity(attr: string) {
         if (this.styleElement) {
             const element = this._element as Element;
-            return (
-                this.pseudoElement
-                    ? getElementCache<ObjectMap<number>>(element.parentElement as Element, 'styleSpecificity' + Node.getPseudoElt(element, this.sessionId), this.sessionId)?.[attr]
-                    : getElementCache<ObjectMap<number>>(element, 'styleSpecificity', this.sessionId)?.[attr]) || 0;
+            return (this.pseudoElement
+                ? getElementCache<ObjectMap<number>>(element.parentElement as Element, 'styleSpecificity' + Node.getPseudoElt(element, this.sessionId), this.sessionId)?.[attr]
+                : getElementCache<ObjectMap<number>>(element, 'styleSpecificity', this.sessionId)?.[attr]) || 0;
         }
         return 0;
     }
@@ -1457,7 +1432,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return (this._element?.[attr] as Undef<string> ?? fallback).toString();
     }
 
-    public parseUnit(value: string, options?: ParseUnitBaseOptions) {
+    public parseUnit(value: string, options?: NodeParseUnitOptions) {
         if (value.endsWith('px')) {
             return parseFloat(value);
         }
@@ -1547,7 +1522,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             this._bounds = bounds;
         }
         else if (this.plainText) {
-            const rect = getRangeClientRect(this._element!, true);
+            const rect = getRangeClientRect(this._element!);
             if (rect) {
                 const lines = rect.numberOfLines || 1;
                 rect.numberOfLines = lines;
@@ -2050,7 +2025,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get linear() {
-        if (!this._linear) {
+        if (this._linear === undefined) {
             const bounds = this.bounds;
             if (bounds) {
                 if (this.styleElement) {
@@ -2074,7 +2049,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get box() {
-        if (!this._box) {
+        if (this._box === undefined) {
             const bounds = this.bounds;
             if (bounds) {
                 if (this.styleElement && this.naturalChildren.length > 0) {
@@ -2508,9 +2483,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 if (this.textElement) {
                     return this._textBounds = getRangeClientRect(this._element as Element) || null;
                 }
-                else {
-                    const children = this.naturalChildren;
-                    const length = children.length;
+                else if (this.length > 0) {
+                    const naturalChildren = this.naturalChildren;
+                    const length = naturalChildren.length;
                     if (length > 0) {
                         let top = Infinity,
                             right = -Infinity,
@@ -2519,7 +2494,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             numberOfLines = 0;
                         let i = 0;
                         while (i < length) {
-                            const node = children[i++];
+                            const node = naturalChildren[i++];
                             if (node.textElement) {
                                 const rect = node.textBounds;
                                 if (rect) {
@@ -2608,13 +2583,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     get backgroundImage() {
         let result = this._cached.backgroundImage;
         if (result === undefined) {
+            result = '';
             if (!this.plainText) {
                 let value = this.css('backgroundImage');
                 if (value !== '' && value !== 'none') {
                     result = value;
                 }
                 else {
-                    result = '';
                     value = this.css('background');
                     if (REGEXP_BACKGROUND.test(value)) {
                         const background = splitEnclosing(value);
@@ -2626,9 +2601,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         }
                     }
                 }
-            }
-            else {
-                result = '';
             }
             this._cached.backgroundImage = result;
         }
@@ -2795,14 +2767,32 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         this._naturalChildren = value;
     }
     get naturalChildren() {
-        return this._naturalChildren || setNaturalChildren(this);
+        if (this._naturalChildren === undefined) {
+            if (this.naturalElement) {
+                const sessionId = this.sessionId;
+                const children: T[] = [];
+                let i = 0;
+                (this.element as HTMLElement).childNodes.forEach((element: Element) => {
+                    const item = getElementAsNode<T>(element, sessionId);
+                    if (item) {
+                        item.childIndex = i++;
+                        children.push(item);
+                    }
+                });
+                if (children.length > 0) {
+                    return this._naturalChildren = children;
+                }
+            }
+            return this._naturalChildren = this.children.slice(0);
+        }
+        return this._naturalChildren;
     }
 
     set naturalElements(value) {
         this._naturalElements = value;
     }
     get naturalElements() {
-        return this._naturalElements || setNaturalElements(this);
+        return this._naturalElements ?? (this._naturalElements = this.naturalChildren.filter((item: T) => item.naturalElement));
     }
 
     get firstChild(): Null<T> {

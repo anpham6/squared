@@ -94,12 +94,12 @@ function traverseElementSibling(element: UndefNull<Element>, direction: "previou
     return result;
 }
 
-function applyBoxReset(node: T, boxReset: BoxModel, attrs: string[], spacing: number[], region: number, other?: NodeUI) {
+function applyBoxReset(node: T, attrs: string[], spacing: number[], region: number, other?: NodeUI) {
+    const boxReset = node.boxReset;
     for (let i = 0; i < 4; ++i) {
         const key = spacing[i];
         if (hasBit(region, key)) {
-            const name = attrs[i];
-            boxReset[name] = 1;
+            boxReset[attrs[i]] = 1;
             if (other) {
                 const previous = node.registerBox(key);
                 if (previous) {
@@ -107,7 +107,7 @@ function applyBoxReset(node: T, boxReset: BoxModel, attrs: string[], spacing: nu
                 }
                 else {
                     if (node.naturalChild) {
-                        const value = node[name];
+                        const value = node[attrs[i]];
                         if (value >= 0) {
                             other.modifyBox(key, value);
                         }
@@ -119,7 +119,7 @@ function applyBoxReset(node: T, boxReset: BoxModel, attrs: string[], spacing: nu
     }
 }
 
-function applyBoxAdjustment(node: T, boxAdjustment: BoxModel, attrs: string[], spacing: number[], region: number, other: NodeUI) {
+function applyBoxAdjustment(node: T, boxAdjustment: Undef<BoxModel>, attrs: string[], spacing: number[], region: number, other: NodeUI) {
     for (let i = 0; i < 4; ++i) {
         const key = spacing[i];
         if (hasBit(region, key)) {
@@ -128,11 +128,13 @@ function applyBoxAdjustment(node: T, boxAdjustment: BoxModel, attrs: string[], s
                 previous.transferBox(key, other);
             }
             else {
-                const name = attrs[i];
-                const value: number = boxAdjustment[name];
-                if (value !== 0) {
-                    other.modifyBox(key, value, false);
-                    boxAdjustment[name] = 0;
+                if (boxAdjustment) {
+                    const name = attrs[i];
+                    const value: number = boxAdjustment[name];
+                    if (value !== 0) {
+                        other.modifyBox(key, value, false);
+                        boxAdjustment[name] = 0;
+                    }
                 }
                 node.registerBox(key, other);
             }
@@ -167,11 +169,8 @@ function getExclusionValue(enumeration: {}, offset: number, value?: string) {
     return offset;
 }
 
-const hasTextIndent = (node: T) => node.blockDimension || node.display === 'table-cell';
 const canCascadeChildren = (node: T) =>  node.naturalElements.length > 0 && !node.layoutElement && !node.tableElement;
 const checkBlockDimension = (node: T, previous: T) => node.blockDimension && Math.ceil(node.bounds.top) >= previous.bounds.bottom && (node.blockVertical || previous.blockVertical || node.percentWidth > 0 || previous.percentWidth > 0);
-const getPercentWidth = (node: T) => node.inlineDimension && !node.hasPX('maxWidth') ? node.percentWidth : -Infinity;
-const getLayoutWidth = (node: T) => node.actualWidth + Math.max(node.marginLeft, 0) + node.marginRight;
 
 export default abstract class NodeUI extends Node implements squared.base.NodeUI {
     public static justified(node: T) {
@@ -264,7 +263,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         };
     }
 
-    public static baseline<T extends NodeUI>(list: T[], text = false, image = false): Null<T> {
+    public static baseline<T extends NodeUI>(list: T[], text?: boolean, image?: boolean): Null<T> {
         const length = list.length;
         const result: T[] = new Array(length);
         let i = 0, j = 0;
@@ -530,12 +529,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public renderedAs?: NodeTemplate<T>;
     public horizontalRows?: T[][];
 
-    protected _boxAdjustment = newBoxModel();
-    protected _boxReset = newBoxModel();
     protected _preferInitial = true;
     protected _cached!: CachedValueUI<T>;
     protected _documentParent?: T;
     protected _controlName?: string;
+    protected _boxReset?: BoxModel;
+    protected _boxAdjustment?: BoxModel;
     protected _boxRegister?: ObjectIndex<T>;
     protected abstract _namespaces: ObjectMap<StringMap>;
 
@@ -545,7 +544,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     private _childIndex = Infinity;
     private _containerIndex = Infinity;
     private _renderAs: Null<T> = null;
-    private _locked: ObjectMapNested<boolean> = {};
+    private _locked?: ObjectMapNested<boolean>;
     private _siblingsLeading?: T[];
     private _siblingsTrailing?: T[];
 
@@ -643,18 +642,24 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public lockAttr(name: string, attr: string) {
+        if (this._locked === undefined) {
+            this._locked = {};
+        }
         (this._locked[name] ?? (this._locked[name] = {}))[attr] = true;
     }
 
     public unlockAttr(name: string, attr: string) {
-        const locked: Undef<ObjectKeyed<boolean>> = this._locked[name];
+        const locked = this._locked;
         if (locked) {
-            locked[attr] = false;
+            const data: Undef<ObjectKeyed<boolean>> = locked[name];
+            if (data) {
+                data[attr] = false;
+            }
         }
     }
 
     public lockedAttr(name: string, attr: string) {
-        return this._locked[name]?.[attr] === true;
+        return this._locked?.[name]?.[attr] === true;
     }
 
     public render(parent?: T) {
@@ -662,7 +667,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         this.rendered = true;
     }
 
-    public parseUnit(value: string, options?: ParseUnitBaseOptions) {
+    public parseUnit(value: string, options?: NodeParseUnitOptions) {
         if (REGEXP_PARSEUNIT.test(value)) {
             if (!options) {
                 options = {};
@@ -1038,6 +1043,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                 if (actualParent && actualParent.ascend({ condition: item => !item.inline && item.hasWidth, error: (item: T) => item.layoutElement, startSelf: true })) {
                                     const length = siblings.length;
                                     if (actualParent.naturalChildren.filter((item: T) => item.visible && item.pageFlow).length === length + 1) {
+                                        const getLayoutWidth = (node: T) => node.actualWidth + Math.max(node.marginLeft, 0) + node.marginRight;
                                         let width = actualParent.box.width - getLayoutWidth(this);
                                         let i = 0;
                                         while (i < length) {
@@ -1117,6 +1123,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     return NODE_TRAVERSE.INLINE_WRAP;
                 }
                 else {
+                    const getPercentWidth = (node: T) => node.inlineDimension && !node.hasPX('maxWidth') ? node.percentWidth : -Infinity;
                     const percentWidth = getPercentWidth(this);
                     if (percentWidth > 0 && siblings.reduce((a, b) => a + getPercentWidth(b), percentWidth) > 1) {
                         return NODE_TRAVERSE.PERCENT_WRAP;
@@ -1172,81 +1179,77 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public modifyBox(region: number, value: number, negative = true) {
         if (value !== 0) {
-            const attr = CSS_SPACING.get(region);
-            if (attr) {
-                const node = this._boxRegister?.[region];
-                if (node) {
-                    node.modifyBox(region, value, negative);
+            const node = this._boxRegister?.[region];
+            if (node) {
+                node.modifyBox(region, value, negative);
+            }
+            else {
+                const boxAdjustment = this.boxAdjustment;
+                const attr = CSS_SPACING.get(region)!;
+                if (!negative && (this.boxReset[attr] === 0 ? this[attr] : 0) + boxAdjustment[attr] + value <= 0) {
+                    boxAdjustment[attr] = 0;
+                    if (this[attr] >= 0 && value < 0) {
+                        this.boxReset[attr] = 1;
+                    }
                 }
                 else {
-                    const boxAdjustment = this._boxAdjustment;
-                    if (!negative && (this._boxReset[attr] === 0 ? this[attr] : 0) + boxAdjustment[attr] + value <= 0) {
-                        boxAdjustment[attr] = 0;
-                        if (this[attr] >= 0 && value < 0) {
-                            this._boxReset[attr] = 1;
-                        }
-                    }
-                    else {
-                        boxAdjustment[attr] += value;
-                    }
+                    boxAdjustment[attr] += value;
                 }
             }
         }
     }
 
     public getBox(region: number): [number, number] {
-        const attr = CSS_SPACING.get(region);
-        return attr ? [this._boxReset[attr] as number, this._boxAdjustment[attr] as number] : [NaN, 0];
+        const attr = CSS_SPACING.get(region)!;
+        return [this._boxReset ? this._boxReset[attr] as number : 0, this._boxAdjustment ? this._boxAdjustment[attr] as number : 0];
     }
 
     public setBox(region: number, options: BoxOptions) {
-        const attr = CSS_SPACING.get(region);
-        if (attr) {
-            const node = this._boxRegister?.[region];
-            if (node) {
-                node.setBox(region, options);
+        const node = this._boxRegister?.[region];
+        if (node) {
+            node.setBox(region, options);
+        }
+        else {
+            const { reset, adjustment } = options;
+            const boxReset = this.boxReset;
+            const boxAdjustment = this.boxAdjustment;
+            const attr = CSS_SPACING.get(region)!;
+            if (reset !== undefined) {
+                boxReset[attr] = reset;
             }
-            else {
-                const { reset, adjustment } = options;
-                const boxReset = this._boxReset;
-                const boxAdjustment = this._boxAdjustment;
-                if (reset !== undefined) {
-                    boxReset[attr] = reset;
+            if (adjustment !== undefined) {
+                let value = adjustment;
+                if (options.max) {
+                    boxAdjustment[attr] = Math.max(value, boxAdjustment[attr]);
                 }
-                if (adjustment !== undefined) {
-                    let value = adjustment;
-                    if (options.max) {
-                        boxAdjustment[attr] = Math.max(value, boxAdjustment[attr]);
+                else if (options.min) {
+                    boxAdjustment[attr] = Math.min(value, boxAdjustment[attr] || Infinity);
+                }
+                else {
+                    if (options.accumulate) {
+                        value += boxAdjustment[attr];
                     }
-                    else if (options.min) {
-                        boxAdjustment[attr] = Math.min(value, boxAdjustment[attr] || Infinity);
-                    }
-                    else {
-                        if (options.accumulate) {
-                            value += boxAdjustment[attr];
+                    if (options.negative === false && (boxReset[attr] === 0 ? this[attr] : 0) + value <= 0) {
+                        value = 0;
+                        if (this[attr] >= 0 && value < 0) {
+                            boxReset[attr] = 1;
                         }
-                        if (options.negative === false && (boxReset[attr] === 0 ? this[attr] : 0) + value <= 0) {
-                            value = 0;
-                            if (this[attr] >= 0 && value < 0) {
-                                boxReset[attr] = 1;
-                            }
-                        }
-                        boxAdjustment[attr] = value;
                     }
+                    boxAdjustment[attr] = value;
                 }
-                else if (reset === 1 && !this.naturalChild) {
-                    boxAdjustment[attr] = 0;
-                }
+            }
+            else if (reset === 1 && !this.naturalChild) {
+                boxAdjustment[attr] = 0;
             }
         }
     }
 
     public resetBox(region: number, node?: T) {
         if (hasBit(BOX_STANDARD.MARGIN, region)) {
-            applyBoxReset(this, this._boxReset, BOX_MARGIN, SPACING_MARGIN, region, node);
+            applyBoxReset(this, BOX_MARGIN, SPACING_MARGIN, region, node);
         }
         if (hasBit(BOX_STANDARD.PADDING, region)) {
-            applyBoxReset(this, this._boxReset, BOX_PADDING, SPACING_PADDING, region, node);
+            applyBoxReset(this, BOX_PADDING, SPACING_PADDING, region, node);
         }
     }
 
@@ -1260,7 +1263,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public registerBox(region: number, node?: T): Undef<T> {
-        if (!this._boxRegister) {
+        if (this._boxRegister === undefined) {
             this._boxRegister = {};
         }
         if (node) {
@@ -1348,27 +1351,26 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (!tagName) {
             tagName = this.tagName;
         }
-        const style: StringMap =
-            tagName === '#text'
-                ? {}
-                : this.cssAsObject(
-                    'paddingTop',
-                    'paddingRight',
-                    'paddingBottom',
-                    'paddingLeft',
-                    'borderTopWidth',
-                    'borderRightWidth',
-                    'borderBottomWidth',
-                    'borderLeftWidth',
-                    'borderTopColor',
-                    'borderRightColor',
-                    'borderBottomColor',
-                    'borderLeftColor',
-                    'borderTopStyle',
-                    'borderRightStyle',
-                    'borderBottomStyle',
-                    'borderLeftStyle'
-                );
+        const style: StringMap = tagName === '#text'
+            ? {}
+            : this.cssAsObject(
+                'paddingTop',
+                'paddingRight',
+                'paddingBottom',
+                'paddingLeft',
+                'borderTopWidth',
+                'borderRightWidth',
+                'borderBottomWidth',
+                'borderLeftWidth',
+                'borderTopColor',
+                'borderRightColor',
+                'borderBottomColor',
+                'borderLeftColor',
+                'borderTopStyle',
+                'borderRightStyle',
+                'borderBottomStyle',
+                'borderLeftStyle'
+            );
         Object.assign(style, this.textStyle);
         if (this.naturalElement) {
             style.fontSize = this.cssInitial('fontSize') || this.fontSize + 'px';
@@ -1498,12 +1500,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         const result = this._cached.naturalChild;
         if (result === undefined) {
             const element = this._element;
-            return this._cached.naturalChild =
-                element
-                    ? element.parentElement
-                        ? true
-                        : element === document.documentElement
-                    : false;
+            return this._cached.naturalChild = element !== null && (!!element.parentElement || element === document.documentElement);
         }
         return result;
     }
@@ -1947,6 +1944,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return hasBit(result, NODE_ALIGNMENT.VERTICAL);
     }
 
+    get boxReset() {
+        return this._boxReset ?? (this._boxReset = newBoxModel());
+    }
+
+    get boxAdjustment() {
+        return this._boxAdjustment ?? (this._boxAdjustment = newBoxModel());
+    }
+
     get textEmpty() {
         let result = this._cached.textEmpty;
         if (result === undefined) {
@@ -1969,6 +1974,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         let result = this._cached.textIndent;
         if (result === undefined) {
             if (this.naturalChild) {
+                const hasTextIndent = (node: T) => node.blockDimension || node.display === 'table-cell';
                 if (hasTextIndent(this)) {
                     const value = this.css('textIndent');
                     result = this.parseUnit(value);
@@ -2053,7 +2059,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     const index = wrapped.containerIndex;
                     if (index !== Infinity) {
                         return this._containerIndex = index;
-                        break;
                     }
                     wrapped = wrapped.innerWrapped;
                 }
@@ -2150,7 +2155,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
     get use() {
         const dataset = this.dataset;
-        return dataset['use' + capitalize(this.localSettings.systemName)] || dataset['use'];
+        return dataset['use' + capitalize(this.localSettings.systemName)] || dataset.use;
     }
 
     get extensions() {

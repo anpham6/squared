@@ -7,37 +7,36 @@ import LayoutUI = squared.base.LayoutUI;
 const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
 interface NegativeXData {
-    container: View;
     children: View[];
     offsetLeft: number;
     firstChild?: View;
 }
 
-function outsideX(node: View, parent: View) {
-    if (node.pageFlow) {
-        return node === parent.firstStaticChild && node.inlineFlow && !node.centerAligned && !node.rightAligned && node.marginLeft < 0 && Math.abs(node.marginLeft) <= parent.marginLeft + parent.paddingLeft && !parent.some(item => item.multiline);
-    }
-    else {
-        return node.leftTopAxis && (node.left < 0 || !node.hasPX('left') && node.right < 0);
-    }
-}
-
 export default class NegativeX<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
-        return node.length > 0 && !node.rootElement && node.css('overflowX') !== 'hidden';
+        return node.length > 0 && node.css('overflowX') !== 'hidden' && !node.rootElement;
     }
 
     public condition(node: T) {
-        return node.some((item: T) => outsideX(item, node));
+        const children = node.children.filter((item: T) => {
+            if (item.pageFlow) {
+                return item.marginLeft < 0 && item === node.firstStaticChild && Math.abs(item.marginLeft) <= node.marginLeft + node.paddingLeft && item.inlineFlow && !item.centerAligned && !item.rightAligned && !node.floatContainer;
+            }
+            return item.leftTopAxis && (item.left < 0 || !item.hasPX('left') && item.right < 0);
+        });
+        if (children.length > 0) {
+            node.data(this.name, 'mainData', { children, offsetLeft: node.marginLeft + node.paddingLeft } as NegativeXData);
+            return true;
+        }
+        return false;
     }
 
     public processNode(node: T, parent: T) {
-        const children = node.children.filter((item: T) => outsideX(item, node)) as T[];
+        const mainData = node.data<NegativeXData>(this.name, 'mainData')!;
+        const children = mainData.children as T[];
         const container = (this.controller as android.base.Controller<T>).createNodeWrapper(node, parent, { children, containerType: CONTAINER_NODE.CONSTRAINT, alignmentType: NODE_ALIGNMENT.VERTICAL });
         let left = NaN,
-            right = NaN,
-            firstChild: Undef<T>;
-        node.resetBox(BOX_STANDARD.MARGIN_TOP | BOX_STANDARD.MARGIN_BOTTOM, container);
+            right = NaN;
         const length = children.length;
         let i = 0;
         while (i < length) {
@@ -47,7 +46,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
                 if (isNaN(left) || linear.left < left) {
                     left = linear.left;
                 }
-                firstChild = item;
+                mainData.firstChild = item;
             }
             else if (item.hasPX('left')) {
                 if (item.left < 0 && (isNaN(left) || linear.left < left)) {
@@ -79,12 +78,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
             container.css('width', node.css('width'), true);
             node.setLayoutWidth('0px');
         }
-        node.data(this.name, 'mainData', {
-            container,
-            children,
-            offsetLeft: node.marginLeft + node.paddingLeft,
-            firstChild
-        } as NegativeXData);
+        node.resetBox(BOX_STANDARD.MARGIN_TOP | BOX_STANDARD.MARGIN_BOTTOM, container);
         return {
             parent: container,
             renderAs: container,
@@ -114,11 +108,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
                 View.setConstraintDimension(firstChild);
                 firstChild.positioned = true;
             }
-            const children = mainData.children;
-            const length = children.length;
-            let i = 0;
-            while (i < length) {
-                const item = children[i++];
+            for (const item of mainData.children) {
                 if (item === firstChild) {
                     continue;
                 }
@@ -149,11 +139,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
                 if (translateX !== '' || translateY !== '') {
                     const x = parseInt(translateX);
                     const y = parseInt(translateY);
-                    const children = mainData.children;
-                    const length = children.length;
-                    let i = 0;
-                    while (i < length) {
-                        const item = children[i++];
+                    for (const item of mainData.children) {
                         if (!isNaN(x)) {
                             item.translateX(x);
                         }

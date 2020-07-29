@@ -1,18 +1,17 @@
 interface CreateNodeOptions {
-    element: Element;
+    element?: Element;
 }
 
-interface CreateNodeUIOptions<T> {
+interface CreateNodeUIOptions<T> extends CreateNodeOptions {
     parent?: T;
-    element?: Null<Element>;
     children?: T[];
-    innerWrap?: T;
+    innerWrapped?: T;
     append?: boolean;
     delegate?: boolean;
     cascade?: boolean;
 }
 
-interface CreateNodeGroupUIOptions<T> {
+interface CreateNodeGroupUIOptions {
     delegate?: boolean;
     cascade?: boolean;
 }
@@ -117,7 +116,7 @@ interface MinMaxOptions extends CssInitialOptions {
     wrapperOf?: boolean;
 }
 
-interface ParseUnitBaseOptions extends ParseUnitOptions {
+interface NodeParseUnitOptions extends ParseUnitOptions {
     dimension?: DimensionAttr;
     parent?: boolean;
 }

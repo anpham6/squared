@@ -15,8 +15,13 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         rawData: new Map()
     };
 
-    public static canCompressImage = (filename: string, mimeType?: string) => /\.(png|jpg|jpeg)$/i.test(filename) || mimeType === 'image/png' || mimeType === 'image/jpeg';
-    public static getExtension = (value: string) => /\.(\w+)\s*$/.exec(value)?.[1] || '';
+    public static canCompressImage(filename: string, mimeType?: string) {
+        return /\.(png|jpg|jpeg)$/i.test(filename) || mimeType === 'image/png' || mimeType === 'image/jpeg';
+    }
+
+    public static getExtension(value: string) {
+        return /\.(\w+)\s*$/.exec(value)?.[1] || '';
+    }
 
     private _fileHandler: Undef<squared.base.File<T>>;
 
