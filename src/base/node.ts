@@ -1,7 +1,7 @@
 type T = Node;
 
 const { USER_AGENT, isUserAgent } = squared.lib.client;
-const { CSS_PROPERTIES, CSS_TRAITS, CSS_UNIT, PROXY_INLINESTYLE, checkFontSizeValue, checkStyleValue, checkWritingMode, formatPX, getRemSize, getStyle, hasComputedStyle, isAngle, isEm, isLength, isPercent, isTime, parseSelectorText, parseUnit } = squared.lib.css;
+const { CSS_PROPERTIES, CSS_TRAITS, CSS_UNIT, PROXY_INLINESTYLE, SVG_PROPERTIES, checkFontSizeValue, checkStyleValue, checkWritingMode, formatPX, getRemSize, getStyle, hasComputedStyle, isAngle, isEm, isLength, isPercent, isTime, parseSelectorText, parseUnit } = squared.lib.css;
 const { assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { CSS, FILE } = squared.lib.regex;
 const { getElementData, getElementAsNode, getElementCache, setElementCache } = squared.lib.session;
@@ -1467,8 +1467,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             if (options) {
                 ({ not, type, ignoreDefault } = options);
             }
-            if (ignoreDefault !== true && value === CSS_PROPERTIES[attr]?.value) {
-                return false;
+            if (ignoreDefault !== true) {
+                const data = options?.map === 'svg' ? SVG_PROPERTIES[attr] : CSS_PROPERTIES[attr];
+                if (data && (value === data.value || hasBit(data.trait, CSS_TRAITS.UNIT) && parseFloat(value) === parseFloat(data.value as string))) {
+                    return false;
+                }
             }
             if (not) {
                 if (value === not) {

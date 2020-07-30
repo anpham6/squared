@@ -104,6 +104,7 @@ interface HasOptions extends CssInitialOptions {
     not?: string | string[];
     type?: number;
     ignoreDefault?: boolean;
+    map?: 'document' | 'svg';
 }
 
 interface HasPXOptions extends CssInitialOptions {

@@ -99,7 +99,8 @@ declare module "lib" {
             COLOR = 1 << 4,
             DEPRECATED = 1 << 5,
             NONE = 1 << 6,
-            AUTO = 1 << 7
+            AUTO = 1 << 7,
+            UNIT = 1 << 8
         }
         const PROXY_INLINESTYLE: Readonly<CSSStyleDeclaration>;
         const CSS_PROPERTIES: CssProperties;

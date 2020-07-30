@@ -324,7 +324,8 @@ export const enum CSS_TRAITS {
     COLOR = 1 << 4,
     DEPRECATED = 1 << 5,
     NONE = 1 << 6,
-    AUTO = 1 << 7
+    AUTO = 1 << 7,
+    UNIT = 1 << 8
 }
 
 export const CSS_PROPERTIES: CssProperties = {
@@ -476,11 +477,11 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'currentcolor'
     },
     borderBottomLeftRadius: {
-        trait: CSS_TRAITS.CALC,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
         value: '0'
     },
     borderBottomRightRadius: {
-        trait: CSS_TRAITS.CALC,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
         value: '0'
     },
     borderBottomStyle: {
@@ -516,7 +517,7 @@ export const CSS_PROPERTIES: CssProperties = {
         valueOfNone: 'none 100% / 1 / 0 stretch'
     },
     borderImageOutset: {
-        trait: CSS_TRAITS.CALC,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
         value: '0'
     },
     borderImageRepeat: {
@@ -532,7 +533,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'none'
     },
     borderImageWidth: {
-        trait: CSS_TRAITS.CALC,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
         value: '1'
     },
     borderLeft: {
@@ -585,7 +586,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'medium'
     },
     borderSpacing: {
-        trait: CSS_TRAITS.CALC,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
         value: '0'
     },
     borderStyle: {
@@ -610,11 +611,11 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'currentcolor'
     },
     borderTopLeftRadius: {
-        trait: CSS_TRAITS.CALC,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
         value: '0'
     },
     borderTopRightRadius: {
-        trait: CSS_TRAITS.CALC,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
         value: '0'
     },
     borderTopStyle: {
@@ -765,11 +766,11 @@ export const CSS_PROPERTIES: CssProperties = {
         ]
     },
     flexGrow: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.UNIT,
         value: '0'
     },
     flexShrink: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.UNIT,
         value: '1'
     },
     flexWrap: {
@@ -1021,19 +1022,19 @@ export const CSS_PROPERTIES: CssProperties = {
         ]
     },
     marginBottom: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.UNIT,
         value: '0'
     },
     marginLeft: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.UNIT,
         value: '0'
     },
     marginRight: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.UNIT,
         value: '0'
     },
     marginTop: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.UNIT,
         value: '0'
     },
     maxHeight: {
@@ -1078,11 +1079,11 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'auto'
     },
     opacity: {
-        trait: CSS_TRAITS.CALC,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
         value: '1'
     },
     order: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT | CSS_TRAITS.UNIT,
         value: '0'
     },
     outline: {
@@ -1098,7 +1099,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'currentcolor'
     },
     outlineOffset: {
-        trait: CSS_TRAITS.CALC,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
         value: '0'
     },
     outlineStyle: {
@@ -1134,19 +1135,19 @@ export const CSS_PROPERTIES: CssProperties = {
         ]
     },
     paddingBottom: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.UNIT,
         value: '0'
     },
     paddingLeft: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.UNIT,
         value: '0'
     },
     paddingRight: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.UNIT,
         value: '0'
     },
     paddingTop: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.UNIT,
         value: '0'
     },
     pageBreakAfter: {
@@ -1220,19 +1221,19 @@ export const CSS_PROPERTIES: CssProperties = {
         ]
     },
     scrollMarginBottom: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.UNIT,
         value: '0'
     },
     scrollMarginLeft: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.UNIT,
         value: '0'
     },
     scrollMarginRight: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.UNIT,
         value: '0'
     },
     scrollMarginTop: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.UNIT,
         value: '0'
     },
     scrollPadding: {
@@ -1301,7 +1302,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'solid'
     },
     textIndent: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.UNIT,
         value: '0'
     },
     textJustify: {
@@ -1406,11 +1407,11 @@ export const SVG_PROPERTIES: CssProperties = {
         value: 'nonzero'
     },
     cx: {
-        trait: CSS_TRAITS.CALC,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
         value: '0'
     },
     cy: {
-        trait: CSS_TRAITS.CALC,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
         value: '0'
     },
     fill: {
@@ -1418,7 +1419,7 @@ export const SVG_PROPERTIES: CssProperties = {
         value: 'black'
     },
     fillOpacity: {
-        trait: CSS_TRAITS.CALC,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
         value: '1'
     },
     fillRule: {
@@ -1434,7 +1435,7 @@ export const SVG_PROPERTIES: CssProperties = {
         value: 'none'
     },
     strokeDashoffset: {
-        trait: CSS_TRAITS.CALC,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
         value: '0'
     },
     strokeLinecap: {
@@ -1446,51 +1447,51 @@ export const SVG_PROPERTIES: CssProperties = {
         value: 'miter'
     },
     strokeMiterlimit: {
-        trait: CSS_TRAITS.CALC,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
         value: '4'
     },
     strokeOpacity: {
-        trait: CSS_TRAITS.CALC,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
         value: '1'
     },
     strokeWidth: {
-        trait: CSS_TRAITS.CALC,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
         value: '1'
     },
     r: {
-        trait: CSS_TRAITS.CALC,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
         value: '0'
     },
     rx: {
-        trait: CSS_TRAITS.CALC,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
         value: '0'
     },
     ry: {
-        trait: CSS_TRAITS.CALC,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
         value: '0'
     },
     x: {
-        trait: CSS_TRAITS.CALC,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
         value: '0'
     },
     x1: {
-        trait: CSS_TRAITS.CALC,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
         value: '0'
     },
     x2: {
-        trait: CSS_TRAITS.CALC,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
         value: '0'
     },
     y: {
-        trait: CSS_TRAITS.CALC,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
         value: '0'
     },
     y1: {
-        trait: CSS_TRAITS.CALC,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
         value: '0'
     },
     y2: {
-        trait: CSS_TRAITS.CALC,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
         value: '0'
     }
 };
