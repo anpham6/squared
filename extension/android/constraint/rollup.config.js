@@ -6,10 +6,10 @@ import { terser } from 'rollup-plugin-terser'
 
 export default [
     {
-        input: '../../../build/extension/android/constraint/guideline/main.js',
+        input: './build/extension/android/constraint/guideline/main.js',
         treeshake: false,
         output: {
-            file: '../../../dist/extensions/android.constraint.guideline.min.js',
+            file: './dist/extensions/android.constraint.guideline.min.js',
             name: 'android.constraint.guideline',
             format: 'iife'
         },
@@ -18,10 +18,10 @@ export default [
         ]
     },
     {
-        input: '../../../build/extension/android/constraint/guideline/main.js',
+        input: './build/extension/android/constraint/guideline/main.js',
         treeshake: false,
         output: {
-            file: '../../../dist/extensions/android.constraint.guideline.js',
+            file: './dist/extensions/android.constraint.guideline.js',
             name: 'android.constraint.guideline',
             format: 'iife',
             banner: `/* android.constraint.guideline ${version}\n   https://github.com/anpham6/squared */\n`

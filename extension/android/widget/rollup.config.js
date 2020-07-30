@@ -6,10 +6,10 @@ import { terser } from 'rollup-plugin-terser'
 
 export default [
     {
-        input: '../../../build/extension/android/widget/bottomnavigation/main.js',
+        input: './build/extension/android/widget/bottomnavigation/main.js',
         treeshake: false,
         output: {
-            file: '../../../dist/extensions/android.widget.bottomnavigation.min.js',
+            file: './dist/extensions/android.widget.bottomnavigation.min.js',
             name: 'android.widget.bottomnavigation',
             format: 'iife'
         },
@@ -18,10 +18,10 @@ export default [
         ]
     },
     {
-        input: '../../../build/extension/android/widget/coordinator/main.js',
+        input: './build/extension/android/widget/coordinator/main.js',
         treeshake: false,
         output: {
-            file: '../../../dist/extensions/android.widget.coordinator.min.js',
+            file: './dist/extensions/android.widget.coordinator.min.js',
             name: 'android.widget.coordinator',
             format: 'iife'
         },
@@ -30,10 +30,10 @@ export default [
         ]
     },
     {
-        input: '../../../build/extension/android/widget/drawer/main.js',
+        input: './build/extension/android/widget/drawer/main.js',
         treeshake: false,
         output: {
-            file: '../../../dist/extensions/android.widget.drawer.min.js',
+            file: './dist/extensions/android.widget.drawer.min.js',
             name: 'android.widget.drawer',
             format: 'iife'
         },
@@ -42,10 +42,10 @@ export default [
         ]
     },
     {
-        input: '../../../build/extension/android/widget/floatingactionbutton/main.js',
+        input: './build/extension/android/widget/floatingactionbutton/main.js',
         treeshake: false,
         output: {
-            file: '../../../dist/extensions/android.widget.floatingactionbutton.min.js',
+            file: './dist/extensions/android.widget.floatingactionbutton.min.js',
             name: 'android.widget.floatingactionbutton',
             format: 'iife'
         },
@@ -54,10 +54,10 @@ export default [
         ]
     },
     {
-        input: '../../../build/extension/android/widget/menu/main.js',
+        input: './build/extension/android/widget/menu/main.js',
         treeshake: false,
         output: {
-            file: '../../../dist/extensions/android.widget.menu.min.js',
+            file: './dist/extensions/android.widget.menu.min.js',
             name: 'android.widget.menu',
             format: 'iife'
         },
@@ -66,10 +66,10 @@ export default [
         ]
     },
     {
-        input: '../../../build/extension/android/widget/toolbar/main.js',
+        input: './build/extension/android/widget/toolbar/main.js',
         treeshake: false,
         output: {
-            file: '../../../dist/extensions/android.widget.toolbar.min.js',
+            file: './dist/extensions/android.widget.toolbar.min.js',
             name: 'android.widget.toolbar',
             format: 'iife'
         },
@@ -78,10 +78,10 @@ export default [
         ]
     },
     {
-        input: '../../../build/extension/android/widget/bottomnavigation/main.js',
+        input: './build/extension/android/widget/bottomnavigation/main.js',
         treeshake: false,
         output: {
-            file: '../../../dist/extensions/android.widget.bottomnavigation.js',
+            file: './dist/extensions/android.widget.bottomnavigation.js',
             name: 'android.widget.bottomnavigation',
             format: 'iife',
             banner: `/* android.widget.bottomnavigation ${version}\n   https://github.com/anpham6/squared */\n`
@@ -91,10 +91,10 @@ export default [
         ]
     },
     {
-        input: '../../../build/extension/android/widget/coordinator/main.js',
+        input: './build/extension/android/widget/coordinator/main.js',
         treeshake: false,
         output: {
-            file: '../../../dist/extensions/android.widget.coordinator.js',
+            file: './dist/extensions/android.widget.coordinator.js',
             name: 'android.widget.coordinator',
             format: 'iife',
             banner: `/* android.widget.coordinator ${version}\n   https://github.com/anpham6/squared */\n`
@@ -104,10 +104,10 @@ export default [
         ]
     },
     {
-        input: '../../../build/extension/android/widget/drawer/main.js',
+        input: './build/extension/android/widget/drawer/main.js',
         treeshake: false,
         output: {
-            file: '../../../dist/extensions/android.widget.drawer.js',
+            file: './dist/extensions/android.widget.drawer.js',
             name: 'android.widget.drawer',
             format: 'iife',
             banner: `/* android.widget.drawer ${version}\n   https://github.com/anpham6/squared */\n`
@@ -117,10 +117,10 @@ export default [
         ]
     },
     {
-        input: '../../../build/extension/android/widget/floatingactionbutton/main.js',
+        input: './build/extension/android/widget/floatingactionbutton/main.js',
         treeshake: false,
         output: {
-            file: '../../../dist/extensions/android.widget.floatingactionbutton.js',
+            file: './dist/extensions/android.widget.floatingactionbutton.js',
             name: 'android.widget.floatingactionbutton',
             format: 'iife',
             banner: `/* android.widget.floatingactionbutton ${version}\n   https://github.com/anpham6/squared */\n`
@@ -130,10 +130,10 @@ export default [
         ]
     },
     {
-        input: '../../../build/extension/android/widget/menu/main.js',
+        input: './build/extension/android/widget/menu/main.js',
         treeshake: false,
         output: {
-            file: '../../../dist/extensions/android.widget.menu.js',
+            file: './dist/extensions/android.widget.menu.js',
             name: 'android.widget.menu',
             format: 'iife',
             banner: `/* android.widget.menu ${version}\n   https://github.com/anpham6/squared */\n`
@@ -143,10 +143,10 @@ export default [
         ]
     },
     {
-        input: '../../../build/extension/android/widget/toolbar/main.js',
+        input: './build/extension/android/widget/toolbar/main.js',
         treeshake: false,
         output: {
-            file: '../../../dist/extensions/android.widget.toolbar.js',
+            file: './dist/extensions/android.widget.toolbar.js',
             name: 'android.widget.toolbar',
             format: 'iife',
             banner: `/* android.widget.toolbar ${version}\n   https://github.com/anpham6/squared */\n`

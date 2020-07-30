@@ -6,10 +6,10 @@ import { terser } from 'rollup-plugin-terser'
 
 export default [
     {
-        input: '../../build/framework/chrome/src/main.js',
+        input: './build/framework/chrome/src/main.js',
         treeshake: false,
         output: {
-            file: '../../dist/chrome.framework.min.js',
+            file: './dist/chrome.framework.min.js',
             name: 'chrome',
             format: 'umd'
         },
@@ -18,10 +18,10 @@ export default [
         ]
     },
     {
-        input: '../../build/framework/chrome/src/main.js',
+        input: './build/framework/chrome/src/main.js',
         treeshake: false,
         output: {
-            file: '../../dist/chrome.framework.js',
+            file: './dist/chrome.framework.js',
             name: 'chrome',
             format: 'umd',
             banner: `/* chrome-framework ${version}\n   https://github.com/anpham6/squared */\n`

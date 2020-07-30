@@ -44,17 +44,19 @@
     "md5-webkit-rebase": "node md5sum.js -z -c ./md5/webkit/master ./temp/webkit",
     "md5-webkit-svg-rebase": "node md5sum.js -z -c ./md5/webkit/master-svg ./temp/webkit-svg",
     "md5-webkit-all-rebase": "node md5sum.js -z -c ./md5/webkit/master ./temp/webkit && node md5sum.js -z -c ./md5/webkit/master-raw ./temp/webkit-raw && node md5sum.js -z -c ./md5/webkit/master-svg ./temp/webkit-svg",
-    "dev-android": "tsc -p ./config/tsconfig.android.json && rollup -c ./config/rollup.config.dev-base.js && cd ./framework/android && rollup -c rollup.config.dev.js",
-    "dev-android-framework": "tsc -p ./config/tsconfig.android-framework.json && cd ./framework/android && rollup -c rollup.config.dev.js",
-    "dev-chrome": "tsc -p ./config/tsconfig.chrome.json && rollup -c ./config/rollup.config.dev-base.js && cd ./framework/chrome && rollup -c rollup.config.dev.js",
-    "dev-vdom": "tsc -p ./config/tsconfig.vdom.json && rollup -c ./config/rollup.config.dev-base.js && cd ./framework/vdom && rollup -c rollup.config.dev.js",
-    "dev-vdom-lite": "tsc -p ./config/tsconfig.vdom-lite.json && cd ./framework/vdom-lite && rollup -c rollup.config.dev.js",
-    "dev-express": "cd ./node/express && eslint **/*.ts && tsc -outDir ../../",
-    "dev-scripts": "cd ./node/scripts && eslint **/*.ts && tsc -outDir ../../",
-    "dev": "tsc -p ./config/tsconfig.dev.json && rollup -c ./config/rollup.config.dev.js && cd ./framework/android && rollup -c rollup.config.dev.js && cd ../chrome && rollup -c rollup.config.dev.js && cd ../vdom && rollup -c rollup.config.dev.js && cd ../vdom-lite && rollup -c rollup.config.dev.js",
-    "prod": "npm run clean && eslint **/*.ts && tsc -p ./config/tsconfig.prod.json && rollup -c ./config/rollup.config.js && cd ./node/express && eslint **/*.ts && tsc && rollup -c rollup.config.js && cd ../../framework/android && rollup -c rollup.config.js && cd ../chrome && rollup -c rollup.config.js && cd ../vdom && rollup -c rollup.config.js && cd ../vdom-lite && rollup -c rollup.config.js",
-    "prod-android-extension": "tsc -p ./config/tsconfig.android-extension.json && cd ./extension/android/constraint && rollup -c rollup.config.js && cd ../widget && rollup -c rollup.config.js",
-    "prod-all": "npm run prod && npm run prod-android-extension && npm run bundles-win",
+    "dev-android": "tsc -p ./config/tsconfig.android.json && rollup -c ./config/rollup.config.dev-base.js && rollup -c ./framework/android/rollup.config.dev.js",
+    "dev-android-framework": "tsc -p ./config/tsconfig.android-framework.json && rollup -c ./framework/android/rollup.config.dev.js",
+    "dev-chrome": "tsc -p ./config/tsconfig.chrome.json && rollup -c ./config/rollup.config.dev-base.js && rollup -c ./framework/chrome/rollup.config.dev.js",
+    "dev-vdom": "tsc -p ./config/tsconfig.vdom.json && rollup -c ./config/rollup.config.dev-base.js && rollup -c ./framework/vdom/rollup.config.dev.js",
+    "dev-vdom-lite": "tsc -p ./config/tsconfig.vdom-lite.json && rollup -c ./framework/vdom-lite/rollup.config.dev.js",
+    "dev-express": "cd ./node/express && tsc --inlineSourceMap -outDir ../../",
+    "dev-scripts": "cd ./node/scripts && tsc --inlineSourceMap -outDir ../../",
+    "dev": "tsc -p ./config/tsconfig.dev.json && rollup -c ./config/rollup.config.dev.js && rollup -c ./framework/android/rollup.config.dev.js && rollup -c ./framework/chrome/rollup.config.dev.js && rollup -c ./framework/vdom/rollup.config.dev.js && rollup -c ./framework/vdom-lite/rollup.config.dev.js",
+    "prod": "npm run clean && eslint **/*.ts && tsc -p ./config/tsconfig.prod.json && rollup -c ./config/rollup.config.js && rollup -c ./framework/android/rollup.config.js && rollup -c ./framework/chrome/rollup.config.js && rollup -c ./framework/vdom/rollup.config.js && rollup -c ./framework/vdom-lite/rollup.config.js",
+    "prod-android-extension": "tsc -p ./config/tsconfig.android-extension.json && rollup -c ./extension/android/constraint/rollup.config.js && rollup -c ./extension/android/widget/rollup.config.js",
+    "prod-express": "cd ./node/express && eslint **/*.ts && tsc -outDir ../../",
+    "prod-scripts": "cd ./node/scripts && eslint **/*.ts && tsc -outDir ../../",
+    "prod-all": "npm run prod && npm run prod-android-extension && npm run prod-express && npm run prod-scripts && npm run bundles-win",
     "clean": "rimraf build/* && rimraf dist/* && rimraf temp/*"
   },
   "repository": {
@@ -137,6 +139,7 @@
     "rollup-plugin-prettier": "^2.1.0",
     "rollup-plugin-terser": "^6.1.0",
     "terser": "^4.8.0",
+    "ts-node": "^8.10.2",
     "typescript": "^3.9.7"
   }
 }

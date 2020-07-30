@@ -6,10 +6,10 @@ import { terser } from 'rollup-plugin-terser'
 
 export default [
     {
-        input: '../../build/framework/vdom-lite/src/main.js',
+        input: './build/framework/vdom-lite/src/main.js',
         treeshake: true,
         output: {
-            file: '../../dist/vdom-lite.framework.min.js',
+            file: './dist/vdom-lite.framework.min.js',
             name: 'vdom',
             format: 'umd'
         },
@@ -18,10 +18,10 @@ export default [
         ]
     },
     {
-        input: '../../build/framework/vdom-lite/src/main.js',
+        input: './build/framework/vdom-lite/src/main.js',
         treeshake: true,
         output: {
-            file: '../../dist/vdom-lite.framework.js',
+            file: './dist/vdom-lite.framework.js',
             name: 'vdom',
             format: 'umd',
             banner: `/* vdom-lite-framework ${version}\n   https://github.com/anpham6/squared */\n`

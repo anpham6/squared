@@ -6,10 +6,10 @@ import { terser } from 'rollup-plugin-terser'
 
 export default [
     {
-        input: '../../build/framework/android/src/main.js',
+        input: './build/framework/android/src/main.js',
         treeshake: false,
         output: {
-            file: '../../dist/android.framework.min.js',
+            file: './dist/android.framework.min.js',
             name: 'android',
             format: 'iife'
         },
@@ -18,10 +18,10 @@ export default [
         ]
     },
     {
-        input: '../../build/framework/android/src/main.js',
+        input: './build/framework/android/src/main.js',
         treeshake: false,
         output: {
-            file: '../../dist/android.framework.js',
+            file: './dist/android.framework.js',
             name: 'android',
             format: 'iife',
             banner: `/* android-framework ${version}\n   https://github.com/anpham6/squared */\n`
