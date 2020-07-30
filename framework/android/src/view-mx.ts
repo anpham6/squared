@@ -108,10 +108,10 @@ function setMultiline(node: T, lineHeight: number, overwrite: boolean) {
             if (renderParent.layoutVertical || renderParent.layoutRelative || renderParent.hasAlign(NODE_ALIGNMENT.COLUMN)) {
                 const renderChildren = node.renderParent!.renderChildren;
                 const index = renderChildren.findIndex(item => item === node);
-                if (index > 0 && offset > node.marginTop) {
+                if (index > 0 && offset > Math.max(node.marginTop, 0) + node.borderTopWidth) {
                     node.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: offset, max: true });
                 }
-                if ((node.blockStatic || index === renderChildren.length - 1) && offset > node.marginBottom) {
+                if ((node.blockStatic || index === renderChildren.length - 1) && offset > Math.max(node.marginBottom, 0)+ node.borderBottomWidth) {
                     node.setBox(BOX_STANDARD.MARGIN_BOTTOM, { reset: 1, adjustment: offset, max: true });
                 }
             }
@@ -157,13 +157,13 @@ function setLineHeight(node: T, lineHeight: number, inlineStyle: boolean, top: b
                     }
                     else if (node.pageFlow) {
                         if (top && (inlineStyle || !node.baselineAltered)) {
-                            const adjustment = Math.floor(offset - node.paddingTop - Math.max(0, node.marginTop + node.getBox(BOX_STANDARD.MARGIN_TOP)[1]));
+                            const adjustment = Math.floor(offset - node.paddingTop - node.borderTopWidth - Math.max(0, node.marginTop + node.getBox(BOX_STANDARD.MARGIN_TOP)[1]));
                             if (adjustment > 0) {
                                 node.setBox(BOX_STANDARD.MARGIN_TOP, { adjustment });
                             }
                         }
                         if (bottom) {
-                            offset = Math.floor(offset - node.paddingBottom - Math.max(0, node.marginBottom + node.getBox(BOX_STANDARD.MARGIN_BOTTOM)[1]));
+                            offset = Math.floor(offset - node.paddingBottom - node.borderBottomWidth - Math.max(0, node.marginBottom + node.getBox(BOX_STANDARD.MARGIN_BOTTOM)[1]));
                             if (offset > 0) {
                                 node.setBox(BOX_STANDARD.MARGIN_BOTTOM, { adjustment: offset });
                             }
