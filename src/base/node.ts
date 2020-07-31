@@ -22,7 +22,7 @@ function setStyleCache(element: HTMLElement, attr: string, sessionId: string, va
     if (current !== value) {
         element.style.setProperty(attr, value);
         if (validateCssSet(value, element.style.getPropertyValue(attr))) {
-            setElementCache(element, attr, sessionId, current);
+            setElementCache(element, attr, sessionId, value !== 'auto' ? current : '');
             return 2;
         }
         return 0;
@@ -2076,7 +2076,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         const result = this._cached.flexdata;
         if (result === undefined) {
             if (this.flexElement) {
-                const { flexWrap, flexDirection, alignContent, justifyContent } = this.cssAsObject('flexWrap', 'flexDirection', 'alignContent', 'justifyContent') as StringSafeMap;
+                const { flexWrap, flexDirection, alignContent, justifyContent } = this.cssAsObject('flexWrap', 'flexDirection', 'alignContent', 'justifyContent') as StringMapChecked;
                 const row = flexDirection.startsWith('row');
                 return this._cached.flexdata = {
                     row,

@@ -66,7 +66,6 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
             if ((top !== 0 || bottom !== 0 || verticalAlign !== 0) && renderParent.layoutHorizontal && renderParent.support.positionRelative && !node.rendering) {
                 target = node.clone(this.application.nextId) as T;
                 target.baselineAltered = true;
-                node.hide({ hidden: true });
                 this.application.getProcessingCache(node.sessionId).add(target);
                 const layout = new LayoutUI(renderParent, target, target.containerType, target.alignmentType);
                 const index = renderParent.renderChildren.findIndex(item => item === node);
@@ -86,6 +85,10 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                         }
                     });
                 }
+                if (top < 0 || bottom > 0) {
+                    node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, Math.min(top, bottom * -1));
+                }
+                node.hide({ hidden: true });
             }
             else if (node.positionRelative && node.naturalElement) {
                 const bounds = node.bounds;

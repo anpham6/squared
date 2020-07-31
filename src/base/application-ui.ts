@@ -76,7 +76,7 @@ function checkPseudoAfter(element: Element) {
     return previousSibling.nodeName === '#text' && !/\s+$/.test(previousSibling.textContent as string);
 }
 
-function checkPseudoDimension(styleMap: StringSafeMap, after: boolean, absolute: boolean) {
+function checkPseudoDimension(styleMap: StringMapChecked, after: boolean, absolute: boolean) {
     switch (styleMap.display) {
         case undefined:
         case 'block':
@@ -1564,7 +1564,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected createPseduoElement(element: HTMLElement, pseudoElt: string, sessionId: string) {
-        let styleMap = getElementCache<StringSafeMap>(element, 'styleMap' + pseudoElt, sessionId);
+        let styleMap = getElementCache<StringMapChecked>(element, 'styleMap' + pseudoElt, sessionId);
         if (element.tagName === 'Q') {
             if (!styleMap) {
                 styleMap = {};

@@ -16,7 +16,7 @@ type FunctionVoid = () => void;
 type ObjectKeyed<T> = ObjectMap<T> | ObjectIndex<T>;
 type ObjectMapNested<T> = ObjectKeyed<ObjectKeyed<T>>;
 type StringMap = ObjectMap<Undef<string>>;
-type StringSafeMap = ObjectMap<string>;
+type StringMapChecked = ObjectMap<string>;
 type CallbackResult = (result: {}) => void;
 
 type NumString = number | string;

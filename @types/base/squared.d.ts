@@ -570,8 +570,8 @@ declare module "base" {
         cloneBase(node: NodeUI): void;
         is(containerType: number): boolean;
         of(containerType: number, ...alignmentType: number[]): boolean;
-        namespace(name: string): StringMap;
-        namespaces(): [string, StringMap][];
+        namespace(name: string): StringMapChecked;
+        namespaces(): [string, StringMapChecked][];
         unsafe<T = unknown>(name: string, value?: any): Undef<T>;
         unset(name: string): void;
         delete(name: string, ...attrs: string[]): void;

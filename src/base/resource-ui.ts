@@ -1036,7 +1036,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             value = value.replace(CHAR_LEADINGSPACE, '');
                         }
                         else if (previousSibling.naturalElement) {
-                            previousSpaceEnd = hasEndingSpace(previousSibling.element as HTMLElement);
+                            previousSpaceEnd = hasEndingSpace(previousSibling.element as HTMLElement) || previousSibling.lastStaticChild?.lineBreak;
                         }
                     }
                     if (inlined) {

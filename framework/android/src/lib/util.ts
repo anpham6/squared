@@ -152,7 +152,7 @@ export function isUnstyled(node: View, checkMargin = true) {
     switch (node.css('verticalAlign')) {
         case 'baseline':
         case 'initial':
-            return node.contentBoxWidth === 0 && node.contentBoxHeight === 0 && (!checkMargin || !node.blockStatic && node.marginTop === 0 && node.marginBottom === 0) && !node.visibleStyle.background && !node.positionRelative && !node.hasWidth && !node.hasHeight && !node.has('maxWidth') && !node.has('maxHeight');
+            return node.contentBoxWidth === 0 && node.contentBoxHeight === 0 && (!checkMargin || !node.blockStatic && node.marginTop === 0 && node.marginBottom === 0) && !node.visibleStyle.background && !node.positionRelative && !node.hasWidth && !node.hasHeight && !node.has('maxWidth') && !node.has('maxHeight') && node.css('whiteSpace') !== 'nowrap';
         default:
             return false;
     }

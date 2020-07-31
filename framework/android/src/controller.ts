@@ -294,12 +294,11 @@ function checkClearMap(node: View, clearMap: Map<View, string>) {
 }
 
 function isConstraintLayout(layout: LayoutUI<View>, vertical: boolean) {
-    const parent = layout.parent;
-    if (parent.flexElement && (parent.css('alignItems') === 'baseline' || layout.some(item => item.flexbox.alignSelf === 'baseline'))) {
+    if (layout.parent.flexElement && (layout.parent.css('alignItems') === 'baseline' || layout.some(item => item.flexbox.alignSelf === 'baseline')) || layout.singleRowAligned && layout.some(item => item.positionRelative && item.percentWidth === 0 && Math.ceil(item.actualRect('bottom', 'bounds')) > Math.floor(layout.node.box.bottom))) {
         return false;
     }
     const multiple = layout.length > 1;
-    return layout.some(item => multiple && (item.rightAligned || item.centerAligned) && layout.singleRowAligned || item.percentWidth > 0 && item.percentWidth < 1 || item.hasPX('maxWidth')) && (!vertical || layout.every(item => item.marginTop >= 0));
+    return layout.some(item => multiple && (item.rightAligned || item.centerAligned) && layout.singleRowAligned && (item.positionStatic && item.marginTop >= 0 || item.positionRelative && Math.floor(item.actualRect('bottom', 'bounds')) <= Math.ceil(layout.node.box.bottom)) || item.percentWidth > 0 && item.percentWidth < 1 || item.hasPX('maxWidth')) && (!vertical || layout.every(item => item.marginTop >= 0));
 }
 
 function adjustBodyMargin(node: View, position: string) {
@@ -982,6 +981,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         group.addAlign(NODE_ALIGNMENT.VERTICAL);
                         group.setLayoutWidth('wrap_content');
                         group.setLayoutHeight('wrap_content');
+                        group.mergeGravity('gravity', 'center_horizontal');
                         group.android('baselineAlignedChildIndex', '1');
                         children.push(group);
                     }
@@ -1097,7 +1097,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
             }
             else {
-                layout.setContainerType(isConstraintLayout(layout, false) ? CONTAINER_NODE.CONSTRAINT : CONTAINER_NODE.RELATIVE);
+                layout.setContainerType(layout.singleRowAligned && isConstraintLayout(layout, false) ? CONTAINER_NODE.CONSTRAINT : CONTAINER_NODE.RELATIVE);
             }
             layout.addAlign(NODE_ALIGNMENT.HORIZONTAL);
         }
@@ -1443,7 +1443,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 B = true;
             for (const node of layout) {
                 if (!clearMap.has(node)) {
-                    if (A && !(node.floating || node.autoMargin.horizontal || node.inlineDimension && !(node.inputElement || node.controlElement) || node.imageContainer || node.marginTop < 0)) {
+                    if (A && !(node.floating || node.autoMargin.horizontal || node.inlineDimension && !node.inputElement && !node.controlElement || node.imageContainer || node.marginTop < 0)) {
                         if (!B) {
                             return false;
                         }
@@ -1492,7 +1492,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 case 2:
                     return false;
             }
-            return layout.some(node => node.blockVertical || node.autoMargin.leftRight || node.percentWidth > 0 && node.percentWidth < 1 && !node.inputElement && !node.controlElement || node.marginTop < 0 || node.css('verticalAlign') === 'bottom' && !layout.parent.hasHeight);
+            return layout.some(node => (node.blockVertical || node.autoMargin.leftRight || node.marginTop < 0) && Math.floor(node.bounds.bottom) <= Math.ceil(layout.node.box.bottom) || node.percentWidth > 0 && node.percentWidth < 1 && !node.inputElement && !node.controlElement || node.css('verticalAlign') === 'bottom' && !layout.parent.hasHeight && node.inlineVertical);
         }
         return false;
     }
@@ -2530,7 +2530,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         if (textNewRow ||
                             Math.ceil(item.bounds.top) >= Math.floor(previous.bounds.bottom) && (item.blockStatic || item.blockDimension && item.baseline || floating && previous.float === item.float || node.preserveWhiteSpace) ||
                             !floating && (previous.blockStatic || item.siblingsLeading.some(sibling => sibling.excluded && sibling.blockStatic) || siblings?.some(element => causesLineBreak(element))) ||
-                            floating && !currentFloated && item.float === 'right' ||
+                            floating && !currentFloated && item.float === 'right' && item.previousSibling?.multiline ||
                             previous.autoMargin.horizontal ||
                             clearMap.has(item) ||
                             Resource.checkPreIndent(previous))
@@ -2705,6 +2705,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 maxCenter: Null<T> = null,
                                 maxCenterHeight = 0,
                                 checkBottom: Undef<boolean>,
+                                previousFloatRight: Undef<T>,
                                 textBaseline: UndefNull<T>;
                             baseline = NodeUI.baseline(textBottom ? items.filter(item => !bottomAligned.includes(item)) : items);
                             if (baseline && textBottom) {
@@ -2717,7 +2718,20 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 }
                             }
                             if (floating) {
-                                sortHorizontalFloat(items);
+                                items.sort((a, b) => {
+                                    const floatA = a.float;
+                                    const floatB = b.float;
+                                    if (floatA === 'left' && floatB === 'left') {
+                                        return 0;
+                                    }
+                                    else if (floatA === 'left') {
+                                        return -1;
+                                    }
+                                    else if (floatB === 'left') {
+                                        return 1;
+                                    }
+                                    return 0;
+                                });
                                 checkBottom = true;
                             }
                             const baselineAlign: T[] = [];
@@ -2765,6 +2779,15 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                         else {
                                             setAlignLeft();
                                         }
+                                    }
+                                    else if (item.float === 'right') {
+                                        if (previousFloatRight) {
+                                            item.anchor('rightLeft', previousFloatRight.documentId);
+                                        }
+                                        else {
+                                            setAlignRight();
+                                        }
+                                        previousFloatRight = item;
                                     }
                                     else if (rightAligned) {
                                         if (k === r - 1) {
@@ -2929,6 +2952,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 const application = this.application;
                                 baseline = this.createNodeGroup(items[0], items, node);
                                 baseline.setControlType(CONTAINER_ANDROID.RELATIVE, CONTAINER_NODE.RELATIVE);
+                                baseline.addAlign(NODE_ALIGNMENT.HORIZONTAL);
                                 baseline.render(node);
                                 if (lastRowAligned) {
                                     switch (textAlignLast) {
@@ -3874,7 +3898,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         else {
             const guideline = parent.constraint.guideline || {};
-            const anchors = guideline[axis]?.[attr]?.[LT] as Undef<StringSafeMap>;
+            const anchors = guideline[axis]?.[attr]?.[LT] as Undef<StringMapChecked>;
             if (anchors) {
                 for (const id in anchors) {
                     if (parseInt(anchors[id]) === location) {

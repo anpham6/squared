@@ -130,7 +130,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public applyDefaultStyles(element: Element, sessionId: string) {
-        let styleMap: StringSafeMap;
+        let styleMap: StringMapChecked;
         if (element.nodeName === '#text') {
             styleMap = {
                 position: 'static',
@@ -294,8 +294,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     }
                     break;
                 case 'IFRAME':
-                    if (!styleMap.display) {
-                        styleMap.display = 'block';
+                    if (!styleMap.display || styleMap.display === 'inline') {
+                        styleMap.display = 'inline-block';
                     }
                 case 'IMG':
                 case 'CANVAS':
@@ -403,12 +403,12 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         else {
             style = getStyle(element);
             if (style.getPropertyValue('display') !== 'none') {
-                const rect = element.getBoundingClientRect();
-                if (!withinViewport(rect)) {
+                const bounds = element.getBoundingClientRect();
+                if (!withinViewport(bounds)) {
                     return false;
                 }
-                ({ width, height } = rect);
-                setElementCache(element, 'clientRect', sessionId, rect);
+                ({ width, height } = bounds);
+                setElementCache(element, 'clientRect', sessionId, bounds);
             }
             else {
                 return false;

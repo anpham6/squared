@@ -536,7 +536,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     protected _boxReset?: BoxModel;
     protected _boxAdjustment?: BoxModel;
     protected _boxRegister?: ObjectIndex<T>;
-    protected abstract _namespaces: ObjectMap<StringMap>;
+    protected abstract _namespaces: ObjectMap<StringMapChecked>;
 
     private _excludeSection = 0;
     private _excludeProcedure = 0;
@@ -593,7 +593,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 overwrite = false;
             }
             if (!overwrite && obj[attr]) {
-                return obj[attr] as string;
+                return obj[attr];
             }
             else {
                 obj[attr] = value;
@@ -626,7 +626,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return result === undefined ? this._namespaces[name] = {} : result;
     }
 
-    public namespaces(): [string, StringMap][] {
+    public namespaces() {
         return Object.entries(this._namespaces);
     }
 
