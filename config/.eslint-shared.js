@@ -82,6 +82,7 @@ module.exports = {
         "no-loss-of-precision": "error",
         "no-misleading-character-class": "error",
         "no-mixed-spaces-and-tabs": "error",
+        "no-multi-spaces": "error",
         "no-new-symbol": "error",
         "no-new-wrappers": "error",
         "no-obj-calls": "error",

@@ -82,7 +82,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         if (currentValue && nextValue) {
             const length = currentValue.length;
             if (length === nextValue.length) {
-                switch (timingFunction)  {
+                switch (timingFunction) {
                     case 'step-start':
                         timingFunction = 'steps(1, start)';
                         break;
@@ -272,7 +272,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         const to = this.to;
         if (to) {
             this.values = [this.from, to];
-            if (keyTimes && keyTimes.length === 2) {
+            if (keyTimes?.length === 2) {
                 const keyTimesBase = this.keyTimes;
                 if (keyTimesBase.length !== 2 || keyTimesBase[0] === 0 && keyTimesBase[1] <= 1) {
                     this.keyTimes = keyTimes;

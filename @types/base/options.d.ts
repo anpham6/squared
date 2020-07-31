@@ -60,7 +60,7 @@ interface AscendOptions<T> {
     error?: (item: T) => boolean;
     including?: T;
     excluding?: T;
-    attr?: 'actualParent' | 'absoluteParent' | 'parent' | 'renderParent' | 'documentParent' | 'outerWrapper';
+    attr?: "actualParent" | "absoluteParent" | "parent" | "renderParent" | "documentParent" | "outerWrapper";
     startSelf?: boolean;
     every?: boolean;
 }
@@ -104,7 +104,7 @@ interface HasOptions extends CssInitialOptions {
     not?: string | string[];
     type?: number;
     ignoreDefault?: boolean;
-    map?: 'document' | 'svg';
+    map?: "document" | "svg";
 }
 
 interface HasPXOptions extends CssInitialOptions {

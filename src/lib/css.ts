@@ -2,7 +2,7 @@ import { parseColor } from './color';
 import { USER_AGENT, getDeviceDPI, isUserAgent } from './client';
 import { clamp, truncate, truncateFraction } from './math';
 import { CSS, STRING, TRANSFORM } from './regex';
-import { getElementCache, setElementCache  } from './session';
+import { getElementCache, setElementCache } from './session';
 import { convertAlpha, convertFloat, convertHyphenated, convertRoman, hasBit, hasKeys, isNumber, isString, iterateArray, replaceMap, resolvePath, spliceString, splitEnclosing, splitPair, trimBoth } from './util';
 
 const DOCUMENT_ELEMENT = document.documentElement;
@@ -1618,16 +1618,16 @@ export function updateDocumentFont() {
                 DOCUMENT_FONTMAP = DOCUMENT_FIXEDMAP;
                 break;
             case 4:
-                DOCUMENT_FONTMAP = [9/12,  9/12, 10/12, 14/12, 18/12, 2, 3];
+                DOCUMENT_FONTMAP = [9/12, 9/12, 10/12, 14/12, 18/12, 2, 3];
                 break;
             case 5:
-                DOCUMENT_FONTMAP = [9/11,  9/11, 10/11, 13/11, 17/11, 2, 3];
+                DOCUMENT_FONTMAP = [9/11, 9/11, 10/11, 13/11, 17/11, 2, 3];
                 break;
             case 6:
-                DOCUMENT_FONTMAP = [9/10,  9/10,  9/10, 12/10, 15/10, 2, 3];
+                DOCUMENT_FONTMAP = [9/10, 9/10, 9/10, 12/10, 15/10, 2, 3];
                 break;
             default:
-                DOCUMENT_FONTMAP = [   1,     1,     1,  11/9,  14/9, 2, 3];
+                DOCUMENT_FONTMAP = [1, 1, 1, 11/9, 14/9, 2, 3];
                 break;
         }
     }

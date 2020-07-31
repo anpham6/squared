@@ -23,7 +23,7 @@ export function close(): void;
 export function reset(): void;
 export function getElementById(value: string, cache?: boolean): Promise<Null<Node>>;
 export function querySelector(value: string, cache?: boolean): Promise<Null<Node>>;
-export function querySelectorAll(value: string, cache?: boolean):  Promise<Node[]>;
+export function querySelectorAll(value: string, cache?: boolean): Promise<Node[]>;
 export function fromElement(element: HTMLElement, cache?: boolean): Promise<Null<Node>>;
 export function getElementMap(): Map<HTMLElement, Node>;
 export function clearElementMap(): void;

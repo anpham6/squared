@@ -9,6 +9,8 @@ const { fromLastIndexOf, hasMimeType, isNumber, isPlainObject, isString, resolve
 
 const STORED = squared.base.ResourceUI.STORED as AndroidResourceStoredMap;
 
+const REGEXP_STRINGNAME = /(\\[nt]|<\/?[A-Za-z]+>|&#?[A-Za-z\d]{2,};)/g;
+const REGEXP_STRINGWORD = /[^A-Za-z\d]+/g;
 let CACHE_IMAGE: StringMap = {};
 
 function formatObject(obj: ObjectMap<Undef<string | StringMap>>, numberAlias?: boolean) {
@@ -135,8 +137,8 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                 const partial =
                     trimString(
                         (name || (value.length > 64 ? value.substring(0, 64) : value))
-                            .replace(/(\\[nt]|<\/?[a-z]+>|&#?[A-Za-z\d]{2,};)/g, '_')
-                            .replace(/[^A-Za-z\d]+/g, '_'),
+                            .replace(REGEXP_STRINGNAME, '_')
+                            .replace(REGEXP_STRINGWORD, '_'),
                         '_'
                     )
                     .split(/_+/);

@@ -46,7 +46,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
         this.application.getProcessingCache(sessionId).each(node => {
             if (node.hasResource(NODE_RESOURCE.VALUE_STRING)) {
                 if (node.styleElement) {
-                    const title =  node.data<string>(Resource.KEY_NAME, 'titleString') || node.toElementString('title');
+                    const title = node.data<string>(Resource.KEY_NAME, 'titleString') || node.toElementString('title');
                     if (title !== '') {
                         setTextValue(
                             node,

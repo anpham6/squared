@@ -19,7 +19,7 @@ export default class ViewGroup<T extends View> extends View$MX(squared.base.Node
         while (i < length) {
             const item = children[i++];
             const parent = item.parent;
-            if (parent && !(item === node && parent === parentAs && parentAs.replaceTry({ child: node, replaceWith: (this as unknown) as T }))) {
+            if (parent && !(item === node && parent === parentAs && parentAs.replaceTry({ child: node, replaceWith: this }))) {
                 const index = parent.children.indexOf(item);
                 if (index !== -1) {
                     parent.children.splice(index, 1);

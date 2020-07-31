@@ -595,7 +595,7 @@ declare module "base" {
         parseWidth(value: string, parent?: boolean): number;
         parseHeight(value: string, parent?: boolean): number;
         actualRect(direction: string, dimension?: BoxType): number;
-        actualPadding(attr: 'paddingTop' | 'paddingBottom', value: number): number;
+        actualPadding(attr: "paddingTop" | "paddingBottom", value: number): number;
         actualBoxWidth(value?: number): number;
         actualTextHeight(options?: TextHeightOptions): number;
         alignedVertically(siblings?: Node[], cleared?: Map<Node, string>, horizontal?: boolean): number;
@@ -770,7 +770,7 @@ declare module "base" {
             }
             enum APP_SECTION {
                 DOM_TRAVERSE = 1,
-                EXTENSION  = 1 << 1,
+                EXTENSION = 1 << 1,
                 RENDER = 1 << 2,
                 ALL = DOM_TRAVERSE | EXTENSION | RENDER
             }
@@ -779,7 +779,7 @@ declare module "base" {
                 BOX_SPACING = 1 << 1,
                 FONT_STYLE = 1 << 2,
                 VALUE_STRING = 1 << 3,
-                IMAGE_SOURCE  = 1 << 4,
+                IMAGE_SOURCE = 1 << 4,
                 ASSET = FONT_STYLE | VALUE_STRING | IMAGE_SOURCE,
                 ALL = BOX_STYLE | BOX_SPACING | ASSET
             }

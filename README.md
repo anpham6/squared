@@ -431,7 +431,7 @@ Layout rendering can also be customized using extensions as the program was buil
     // third-party: create an extension
     class Sample extends squared.base.Extension {
         constructor(name, framework = 0, options = {}) {
-            // framework: universal = 0; android = 2; chrome = 4;
+            // framework: universal = 0; vdom = 1, android = 2; chrome = 4;
             super(name, framework, options);
         }
     }

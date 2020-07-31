@@ -300,7 +300,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                     previous.value = previousValue;
                                     item.value = itemValue;
                                     if (previousValue.split(' ').pop() !== itemValue.split(' ').pop()) {
-                                        const previousAuto =  previousValue.startsWith('auto');
+                                        const previousAuto = previousValue.startsWith('auto');
                                         const auto = itemValue.startsWith('auto');
                                         if (previousAuto && !auto || !previousAuto && auto) {
                                             const key = (previous.key + item.key) / 2;
@@ -458,7 +458,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                     }
                 }
                 groupOrdering.reverse();
-                length =  groupName.length;
+                length = groupName.length;
                 let i = 0;
                 while (i < length) {
                     groupName[i++].setGroupOrdering(groupOrdering);

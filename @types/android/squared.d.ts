@@ -10,7 +10,7 @@ declare namespace base {
         variable?: { name: string; type: string }[];
     }
 
-    class Application<T extends View>  extends squared.base.ApplicationUI<T> {
+    class Application<T extends View> extends squared.base.ApplicationUI<T> {
         readonly userSettings: AndroidUserSettingsUI;
         readonly controllerHandler: Controller<T>;
         readonly resourceHandler: Resource<T>;

@@ -419,8 +419,7 @@ export function setHorizontalAlignment(node: View) {
             );
         }
         else {
-            const rightAligned = node.rightAligned;
-            if (rightAligned) {
+            if (node.rightAligned) {
                 node.anchor('right', 'parent');
                 node.anchorStyle('horizontal', 1);
             }
@@ -429,7 +428,7 @@ export function setHorizontalAlignment(node: View) {
                 node.anchorStyle('horizontal', 0);
             }
             if (node.blockStatic || node.percentWidth > 0 || node.block && node.multiline && node.floating) {
-                node.anchor(rightAligned ? 'left' : 'right', 'parent');
+                node.anchor(node.rightAligned ? 'left' : 'right', 'parent');
             }
         }
     }
@@ -1010,7 +1009,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             layout.next = true;
         }
         else {
-            switch (node.tagName)  {
+            switch (node.tagName) {
                 case 'LI':
                 case 'OUTPUT':
                     layout.setContainerType(CONTAINER_NODE.TEXT);
@@ -1880,7 +1879,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     [node.previousSibling, node.nextSibling].some((sibling: T) => {
                         if (sibling?.visible && sibling.pageFlow) {
                             const id = node.elementId;
-                            if (id !== '' && id ===  sibling.toElementString('htmlFor').trim()) {
+                            if (id !== '' && id === sibling.toElementString('htmlFor').trim()) {
                                 sibling.android('labelFor', node.documentId);
                                 return true;
                             }
@@ -2796,7 +2795,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     }
                                 }
                                 if (verticalAlign !== 0) {
-                                    if (verticalAlign > 0)  {
+                                    if (verticalAlign > 0) {
                                         if (i > 0 || node.renderParent!.layoutVertical && items.every(sibling => !sibling.rendering)) {
                                             offsetTop = Math.max(verticalAlign, offsetTop);
                                         }
@@ -3630,24 +3629,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             if (withinRange(linear[LT], box[LT])) {
                 node.anchor(LT, 'parent', true);
                 return;
-            }
-            if (node.autoPosition) {
-                const siblings = node.siblingsLeading;
-                const length = siblings.length;
-                if (length > 0 && !node.alignedVertically()) {
-                    let i = length - 1;
-                    while (i >= 0) {
-                        const previous = siblings[i--] as T;
-                        if (previous.pageFlow) {
-                            if (previous.renderParent === node.renderParent) {
-                                node.anchor(horizontal ? 'leftRight' : 'top', previous.documentId, true);
-                                node.constraint[axis] = true;
-                                return;
-                            }
-                            break;
-                        }
-                    }
-                }
             }
             if (!node.pageFlow && node.css('position') !== 'fixed' && !parent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
                 const adjustBodyMargin = (item: T, position: string) => {

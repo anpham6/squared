@@ -113,7 +113,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                             k = 0;
                             while (k < s) {
                                 const previous = group[k++];
-                                if (interval.animation !== previous.animation && previous.value !== '' && (previous.time === -1 || previous.fillMode === FILL_MODE.FORWARDS || previous.fillMode === FILL_MODE.FREEZE)) {
+                                if (animation !== previous.animation && previous.value !== '' && (previous.time === -1 || previous.fillMode === FILL_MODE.FORWARDS || previous.fillMode === FILL_MODE.FREEZE)) {
                                     value = previous.value;
                                     break;
                                 }
@@ -253,7 +253,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
     public has(attr: string, time?: number, animation?: SvgAnimation) {
         const map = this.map[attr];
         if (time !== undefined) {
-            if (map && map.has(time)) {
+            if (map?.has(time)) {
                 if (!animation) {
                     return true;
                 }
@@ -265,9 +265,9 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
     }
 
     public get(attr: string, time: number, playing?: boolean) {
-        let value: Undef<string>;
         const map = this.map[attr];
         if (map) {
+            let value: Undef<string>;
             for (const [interval, data] of map.entries()) {
                 if (interval <= time) {
                     const length = data.length;
@@ -284,14 +284,15 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                     break;
                 }
             }
+            return value;
         }
-        return value;
+        return undefined;
     }
 
     public paused(attr: string, time: number) {
-        let value = 0;
         const map = this.map[attr];
         if (map) {
+            let state = 0;
             for (const [interval, entry] of map.entries()) {
                 if (interval <= time) {
                     const length = entry.length;
@@ -300,15 +301,15 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                         const previous = entry[i++];
                         if (previous.start && (previous.infinite || previous.fillMode === 0 && previous.endTime > time)) {
                             if (previous.animation) {
-                                value = 2;
+                                state = 2;
                             }
                             else {
-                                value = 1;
+                                state = 1;
                                 break;
                             }
                         }
-                        else if (previous.end && (previous.fillMode === FILL_MODE.FORWARDS || value === 1 && previous.fillMode === FILL_MODE.FREEZE)) {
-                            value = 0;
+                        else if (previous.end && (previous.fillMode === FILL_MODE.FORWARDS || state === 1 && previous.fillMode === FILL_MODE.FREEZE)) {
+                            state = 0;
                             break;
                         }
                     }
@@ -317,8 +318,9 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                     break;
                 }
             }
+            return state === 0;
         }
-        return value === 0;
+        return true;
     }
 
     public evaluateStart(item: SvgAnimate, fallback?: string) {

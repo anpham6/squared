@@ -41,6 +41,6 @@ export function getElementData(element: Element, sessionId?: string) {
     return SESSION_MAP[sessionId].get(element);
 }
 
-export function getElementAsNode<T>(element: Element, sessionId?: string)  {
+export function getElementAsNode<T>(element: Element, sessionId?: string) {
     return getElementCache<T>(element, 'node', sessionId) || null;
 }

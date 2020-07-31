@@ -8,7 +8,7 @@ type T = android.base.View;
 const { CSS_PROPERTIES, CSS_UNIT, formatPX, getBackgroundPosition, isLength, parseTransform } = squared.lib.css;
 const { getNamedItem, getRangeClientRect } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
-const { capitalize, convertInt, convertWord, fromLastIndexOf, hasKeys, isNumber, isString, replaceMap, splitPair } = squared.lib.util;
+const { capitalize, convertInt, convertWord, fromLastIndexOf, hasKeys, isString, replaceMap, splitPair } = squared.lib.util;
 
 const { EXT_NAME } = squared.base.lib.constant;
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE } = squared.base.lib.enumeration;
@@ -71,33 +71,35 @@ function checkMergableGravity(value: string, direction: string[]) {
 
 function setMultiline(node: T, lineHeight: number, overwrite: boolean) {
     const lineHeightAdjust = node.dataset.androidLineHeightAdjust;
-    let offset = getLineSpacingExtra(node, lineHeight);
-    lineHeight *= lineHeightAdjust && parseFloat(lineHeightAdjust) || node.localSettings.lineHeightAdjust;
-    if (node.api >= BUILD_ANDROID.PIE) {
-        node.android('lineHeight', truncate(lineHeight, node.localSettings.floatPrecision) + 'px', overwrite);
-    }
-    else if (offset > 0) {
-        node.android('lineSpacingExtra', truncate(offset, node.localSettings.floatPrecision) + 'px', overwrite);
-    }
-    else {
-        return;
-    }
-    offset = Math.floor(offset);
-    if (offset > 0 && node.pageFlow) {
-        if (node.inlineDimension) {
-            node.modifyBox(BOX_STANDARD.PADDING_TOP, offset);
-            node.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset);
+    if (lineHeightAdjust !== 'false') {
+        let offset = getLineSpacingExtra(node, lineHeight);
+        lineHeight *= lineHeightAdjust && parseFloat(lineHeightAdjust) || node.localSettings.lineHeightAdjust;
+        if (node.api >= BUILD_ANDROID.PIE) {
+            node.android('lineHeight', truncate(lineHeight, node.localSettings.floatPrecision) + 'px', overwrite);
+        }
+        else if (offset > 0) {
+            node.android('lineSpacingExtra', truncate(offset, node.localSettings.floatPrecision) + 'px', overwrite);
         }
         else {
-            const renderParent = node.renderParent as T;
-            if (renderParent.layoutVertical || renderParent.layoutRelative || renderParent.hasAlign(NODE_ALIGNMENT.COLUMN)) {
-                const renderChildren = node.renderParent!.renderChildren;
-                const index = renderChildren.findIndex(item => item === node);
-                if (index > 0 && offset > Math.max(node.marginTop, 0) + node.borderTopWidth) {
-                    node.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: offset, max: true });
-                }
-                if ((node.blockStatic || index === renderChildren.length - 1) && offset > Math.max(node.marginBottom, 0)+ node.borderBottomWidth) {
-                    node.setBox(BOX_STANDARD.MARGIN_BOTTOM, { reset: 1, adjustment: offset, max: true });
+            return;
+        }
+        offset = Math.floor(offset);
+        if (offset > 0 && node.pageFlow) {
+            if (node.inlineDimension) {
+                node.modifyBox(BOX_STANDARD.PADDING_TOP, offset);
+                node.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset);
+            }
+            else {
+                const renderParent = node.renderParent as T;
+                if (renderParent.layoutVertical || renderParent.layoutRelative || renderParent.hasAlign(NODE_ALIGNMENT.COLUMN)) {
+                    const renderChildren = node.renderParent!.renderChildren;
+                    const index = renderChildren.findIndex(item => item === node);
+                    if (index > 0 && offset > Math.max(node.marginTop, 0) + node.borderTopWidth) {
+                        node.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: offset, max: true });
+                    }
+                    if ((node.blockStatic || index === renderChildren.length - 1) && offset > Math.max(node.marginBottom, 0)+ node.borderBottomWidth) {
+                        node.setBox(BOX_STANDARD.MARGIN_BOTTOM, { reset: 1, adjustment: offset, max: true });
+                    }
                 }
             }
         }
@@ -169,7 +171,7 @@ function setLineHeight(node: T, lineHeight: number, inlineStyle: boolean, top: b
                 const textHeight = node.actualTextHeight({ tagName: 'span' });
                 if (!isNaN(textHeight)) {
                     let rows: number;
-                    switch (node.tagName)  {
+                    switch (node.tagName) {
                         case 'SELECT':
                             rows = node.toElementInt('size', 1);
                             break;
@@ -1522,7 +1524,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public extractAttributes(depth: number) {
-            if (this.dir === 'rtl' && !this.imageContainer) {
+            if (this.dir === 'rtl') {
                 if (this.textElement) {
                     this.android('textDirection', 'rtl');
                 }
@@ -1535,11 +1537,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 if (dataset) {
                     const pattern = /^attr[A-Z]/;
                     for (const namespace in dataset) {
-                        const name = namespace === 'attr'
-                             ? 'android'
-                             : pattern.test(namespace)
-                                ? capitalize(namespace.substring(4), false)
-                                : undefined;
+                        const name =
+                            namespace === 'attr'
+                                ? 'android'
+                                : pattern.test(namespace)
+                                    ? capitalize(namespace.substring(4), false)
+                                    : undefined;
                         if (name) {
                             for (const values of dataset[namespace]!.split(';')) {
                                 const [key, value] = splitPair(values, '::');
@@ -1552,7 +1555,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 if (!this.svgElement) {
                     const opacity = this.css('opacity');
-                    if (opacity !== '1' && isNumber(opacity)) {
+                    if (opacity !== '1') {
                         this.android('alpha', opacity);
                     }
                 }
@@ -2515,7 +2518,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             }
                         }
                     }
-                    if (this.onlyChild && this.controlName ===  renderParent.controlName && !this.visibleStyle.borderWidth && this.elementId === '') {
+                    if (this.onlyChild && this.controlName === renderParent.controlName && !this.visibleStyle.borderWidth && this.elementId === '') {
                         let valid = true;
                         for (const name in this._namespaces) {
                             const parentObj = renderParent.unsafe<StringMap>('namespaces')![name];
@@ -2731,15 +2734,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 result = excludeHorizontal(this) && (parent.layoutHorizontal || excludeVertical(this));
                             }
                         }
-                        else {
-                            result = false;
-                        }
                     }
                 }
-                else {
-                    result = false;
-                }
-                this._cached.renderExclude = result;
+                return this._cached.renderExclude = result || false;
             }
             return result;
         }

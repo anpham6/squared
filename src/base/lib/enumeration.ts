@@ -42,7 +42,7 @@ export const enum BOX_STANDARD {
 
 export enum APP_SECTION {
     DOM_TRAVERSE = 1,
-    EXTENSION  = 1 << 1,
+    EXTENSION = 1 << 1,
     RENDER = 1 << 2,
     ALL = DOM_TRAVERSE | EXTENSION | RENDER
 }

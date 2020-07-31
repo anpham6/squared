@@ -169,7 +169,7 @@ function getExclusionValue(enumeration: {}, offset: number, value?: string) {
     return offset;
 }
 
-const canCascadeChildren = (node: T) =>  node.naturalElements.length > 0 && !node.layoutElement && !node.tableElement;
+const canCascadeChildren = (node: T) => node.naturalElements.length > 0 && !node.layoutElement && !node.tableElement;
 
 export default abstract class NodeUI extends Node implements squared.base.NodeUI {
     public static justified(node: T) {
@@ -711,7 +711,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             switch (modules[i++]) {
                 case 'base': {
                     this._documentParent = node.documentParent;
-                    this._bounds =  node.bounds;
+                    this._bounds = node.bounds;
                     this._linear = node.linear;
                     this._box = node.box;
                     if (this.depth === -1) {
@@ -1039,8 +1039,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         }
                         else if (Math.ceil(this.bounds.top) >= previous.bounds.bottom) {
                             if (siblings.every(item => item.inlineDimension)) {
-                                const actualParent = this.actualParent;
-                                if (actualParent && actualParent.ascend({ condition: item => !item.inline && item.hasWidth, error: (item: T) => item.layoutElement, startSelf: true })) {
+                                const actualParent = this.actualParent as T;
+                                if (actualParent.ascend({ condition: item => !item.inline && item.hasWidth, error: (item: T) => item.layoutElement, startSelf: true })) {
                                     const length = siblings.length;
                                     if (actualParent.naturalChildren.filter((item: T) => item.visible && item.pageFlow).length === length + 1) {
                                         const getLayoutWidth = (node: T) => node.actualWidth + Math.max(node.marginLeft, 0) + node.marginRight;
@@ -1284,7 +1284,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return node;
     }
 
-    public actualPadding(attr: 'paddingTop' | 'paddingBottom', value: number) {
+    public actualPadding(attr: "paddingTop" | "paddingBottom", value: number) {
         if (value > 0) {
             if (!this.layoutElement) {
                 const node = this.innerMostWrapped;
@@ -1551,10 +1551,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         break;
                 }
             }
-            else {
-                result = false;
-            }
-            this._cached.scrollElement = result;
+            return this._cached.scrollElement = result || false;
         }
         return result;
     }
@@ -1678,16 +1675,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get inlineVertical() {
-        let result = this._cached.inlineVertical;
+        const result = this._cached.inlineVertical;
         if (result === undefined) {
             if ((this.naturalElement || this.pseudoElement) && !this.floating) {
                 const value = this.display;
-                result = value.startsWith('inline') || value === 'table-cell';
+                return this._cached.inlineVertical = value.startsWith('inline') || value === 'table-cell';
             }
-            else {
-                result = false;
-            }
-            this._cached.inlineVertical = result;
+            return this._cached.inlineVertical = false;
         }
         return result;
     }
@@ -1795,10 +1789,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     result = this.inlineText && this.textElement || this.plainText && !this.multiline || this.inputElement || this.imageElement || this.svgElement;
                 }
             }
-            else {
-                result = false;
-            }
-            return this._cached.baselineElement = result;
+            return this._cached.baselineElement = result || false;
         }
         return result;
     }
@@ -1953,16 +1944,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get textEmpty() {
-        let result = this._cached.textEmpty;
+        const result = this._cached.textEmpty;
         if (result === undefined) {
             if (this.styleElement && !this.imageElement && !this.svgElement && !this.inputElement) {
                 const value = this.textContent;
-                result = value === '' || !this.preserveWhiteSpace && isEmptyString(value);
+                return this._cached.textEmpty = value === '' || !this.preserveWhiteSpace && isEmptyString(value);
             }
-            else {
-                result = false;
-            }
-            this._cached.textEmpty = result;
+            return this._cached.textEmpty = false;
         }
         return result;
     }

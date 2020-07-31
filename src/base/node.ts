@@ -328,7 +328,7 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
                 case ':default':
                     switch (tagName) {
                         case 'INPUT': {
-                            const element =  child.element as HTMLInputElement;
+                            const element = child.element as HTMLInputElement;
                             switch (element.type) {
                                 case 'radio':
                                 case 'checkbox':
@@ -380,7 +380,7 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
                 case ':in-range':
                 case ':out-of-range':
                     if (tagName === 'INPUT') {
-                        const element =  child.element as HTMLInputElement;
+                        const element = child.element as HTMLInputElement;
                         const value = parseFloat(element.value);
                         if (!isNaN(value)) {
                             const min = parseFloat(element.min);
@@ -404,7 +404,7 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
                     break;
                 case ':indeterminate':
                     if (tagName === 'INPUT') {
-                        const element =  child.element as HTMLInputElement;
+                        const element = child.element as HTMLInputElement;
                         switch (element.type) {
                             case 'checkbox':
                                 if (!element.indeterminate) {
@@ -944,7 +944,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         cached.height = undefined;
                         if (!this._preferInitial) {
                             this.unsetCache('blockVertical');
-                            this.each(item => item.unsetCache('height', 'actualHeight', 'blockVertical', 'overflow', 'bottomAligned'));
+                            this.each(item => item.unsetCache());
                         }
                         break;
                     case 'verticalAlign':

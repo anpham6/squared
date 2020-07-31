@@ -647,7 +647,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             let valueArray = SvgBuild.parseCoordinates(this.strokeDasharray);
             if (valueArray.length > 0) {
                 const totalLength = this.totalLength;
-                const pathLength =  this.pathLength || totalLength;
+                const pathLength = this.pathLength || totalLength;
                 const dashGroup: DashGroup[] = [];
                 let valueOffset = convertInt(this.strokeDashoffset),
                     dashTotal = 0,

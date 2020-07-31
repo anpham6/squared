@@ -238,7 +238,7 @@ function insertDoubleBorder(items: StandardMap[], border: BorderAttribute, top: 
         top: top ? indentOffset : hideOffset,
         right: right ? indentOffset : hideOffset,
         bottom: bottom ? indentOffset : hideOffset,
-        left: left ? indentOffset :  hideOffset,
+        left: left ? indentOffset : hideOffset,
         shape: {
             'android:shape': 'rectangle',
             stroke: {

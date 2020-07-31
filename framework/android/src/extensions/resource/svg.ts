@@ -663,7 +663,7 @@ function insertFillAfter(propertyName: string, valueType: string, item: SvgAnima
                             else {
                                 for (const attr in ATTRIBUTE_ANDROID) {
                                     if ((ATTRIBUTE_ANDROID[attr] as string[]).includes(propertyName)) {
-                                        valueTo =  path[convertCamelCase(attr)];
+                                        valueTo = path[convertCamelCase(attr)];
                                         break;
                                     }
                                 }
@@ -1118,7 +1118,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                             repeatCount: string,
                                             beforeValues: Undef<string[]>,
                                             propertyNames: Undef<string[]>,
-                                            values:  Undef<string[] |number[][]>;
+                                            values: Undef<string[] |number[][]>;
                                         if (i === 1) {
                                             repeatCount = v > 1 ? '0' : '-1';
                                         }
@@ -1225,7 +1225,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                 if (useKeyFrames && r > 1) {
                                                     if (supportedKeyFrames && valueType !== 'pathType') {
                                                         if (!resetBefore && requireBefore && beforeValues) {
-                                                            resetBeforeValue(propertyName,  valueType, beforeValues[k], beforeAnimator, precision);
+                                                            resetBeforeValue(propertyName, valueType, beforeValues[k], beforeAnimator, precision);
                                                         }
                                                         const propertyValuesHolder = animatorMap.get(keyName) || [];
                                                         const keyframe: KeyFrame[] = [];
