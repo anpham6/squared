@@ -8,7 +8,7 @@ type PreloadImage = HTMLImageElement | string;
 const { CSS_PROPERTIES, CSS_TRAITS, checkMediaRule, getSpecificity, hasComputedStyle, insertStyleSheetRule, getPropertiesAsTraits, parseSelectorText } = squared.lib.css;
 const { FILE, STRING } = squared.lib.regex;
 const { frameworkNotInstalled, getElementCache, newSessionInit, resetSessionAll, setElementCache } = squared.lib.session;
-const { capitalize, convertCamelCase, isEmptyString, parseMimeType, plainMap, promisify, resolvePath, splitPair, splitPairStart, trimBoth } = squared.lib.util;
+const { capitalize, convertCamelCase, isEmptyString, parseMimeType, promisify, resolvePath, splitPair, splitPairStart, trimBoth } = squared.lib.util;
 
 const REGEXP_IMPORTANT = /\s*([a-z-]+):[^!;]+!important;/g;
 const REGEXP_FONTFACE = /\s*@font-face\s*{([^}]+)}\s*/;
@@ -33,39 +33,6 @@ function parseSrcSet(resourceHandler: squared.base.Resource<Node>, value: string
         }
     }
 }
-
-function parseImageUrl(baseMap: StringMap, attr: string, styleSheetHref: string, resourceHandler?: squared.base.Resource<Node>) {
-    const value = baseMap[attr];
-    if (value && value !== 'initial') {
-        let result: Undef<string>,
-            match: Null<RegExpExecArray>;
-        while (match = REGEXP_DATAURI.exec(value)) {
-            if (match[2]) {
-                if (resourceHandler) {
-                    const [mimeType, encoding] = match[2].trim().split(/\s*;\s*/);
-                    resourceHandler.addRawData(match[1], mimeType, match[3], { encoding });
-                }
-            }
-            else {
-                const uri = resolvePath(match[3], styleSheetHref);
-                if (uri !== '') {
-                    if (resourceHandler) {
-                        addImageSrc(resourceHandler, uri);
-                    }
-                    result = (result || value).replace(match[0], `url("${uri}")`);
-                }
-            }
-        }
-        if (result) {
-            baseMap[attr] = result;
-        }
-        REGEXP_DATAURI.lastIndex = 0;
-    }
-}
-
-const parseConditionText = (rule: string, value: string) => new RegExp(`\\s*@${rule}([^{]+)`).exec(value)?.[1].trim() || value;
-const hasExactValue = (attr: string, value: string, cssText: string) => new RegExp(`\\b${attr}[\\s\\n]*:[\\s\\n]*(?:${value})[\\s\\n]*;?`).test(cssText);
-const hasPartialValue = (attr: string, value: string, cssText: string) => new RegExp(`\\b${attr}[\\s\\n]*:[^;]*?${value}[^;]*;?`).test(cssText);
 
 export default abstract class Application<T extends Node> implements squared.base.Application<T> {
     public static readonly KEY_NAME = 'squared.application';
@@ -325,7 +292,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
         if (imageElements.length > 0) {
             processing.initializing = true;
-            return Promise.all(plainMap(imageElements, image => {
+            return Promise.all(imageElements.map(image => {
                 return new Promise((resolve, reject) => {
                     if (typeof image === 'string') {
                         fetch(image, {
@@ -548,6 +515,36 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const baseMap: StringMap = {};
                 const important: ObjectMap<boolean> = {};
                 const cssStyle = item.style;
+                const parseImageUrl = (attr: string) => {
+                    const value = baseMap[attr];
+                    if (value && value !== 'initial') {
+                        let result: Undef<string>,
+                            match: Null<RegExpExecArray>;
+                        while (match = REGEXP_DATAURI.exec(value)) {
+                            if (match[2]) {
+                                if (resourceHandler) {
+                                    const [mimeType, encoding] = match[2].trim().split(/\s*;\s*/);
+                                    resourceHandler.addRawData(match[1], mimeType, match[3], { encoding });
+                                }
+                            }
+                            else {
+                                const uri = resolvePath(match[3], styleSheetHref);
+                                if (uri !== '') {
+                                    if (resourceHandler) {
+                                        addImageSrc(resourceHandler, uri);
+                                    }
+                                    result = (result || value).replace(match[0], `url("${uri}")`);
+                                }
+                            }
+                        }
+                        if (result) {
+                            baseMap[attr] = result;
+                        }
+                        REGEXP_DATAURI.lastIndex = 0;
+                    }
+                };
+                const hasExactValue = (attr: string, value: string) => new RegExp(`\\b${attr}[\\s\\n]*:[\\s\\n]*(?:${value})[\\s\\n]*;?`).test(cssText);
+                const hasPartialValue = (attr: string, value: string) => new RegExp(`\\b${attr}[\\s\\n]*:[^;]*?${value}[^;]*;?`).test(cssText);
                 for (const attr of Array.from(cssStyle)) {
                     if (attr.startsWith('-')) {
                         continue;
@@ -562,12 +559,12 @@ export default abstract class Application<T extends Node> implements squared.bas
                             }
                         case 'normal':
                             valid: {
-                                if (!hasExactValue(attr, value, cssText)) {
+                                if (!hasExactValue(attr, value)) {
                                     for (const name in CSS_SHORTHANDNONE) {
                                         const css = CSS_SHORTHANDNONE[name];
                                         if ((css.value as string[]).includes(baseAttr)) {
                                             const cssName = css.name!;
-                                            if (hasExactValue(cssName, 'none|initial', cssText) || value === 'initial' && hasPartialValue(cssName, 'initial', cssText) || css.valueOfNone && hasExactValue(cssName, css.valueOfNone, cssText)) {
+                                            if (hasExactValue(cssName, 'none|initial') || value === 'initial' && hasPartialValue(cssName, 'initial') || css.valueOfNone && hasExactValue(cssName, css.valueOfNone)) {
                                                 break valid;
                                             }
                                             break;
@@ -595,9 +592,9 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                 }
                 REGEXP_IMPORTANT.lastIndex = 0;
-                parseImageUrl(baseMap, 'backgroundImage', styleSheetHref, resourceHandler);
-                parseImageUrl(baseMap, 'listStyleImage', styleSheetHref, resourceHandler);
-                parseImageUrl(baseMap, 'content', styleSheetHref, resourceHandler);
+                parseImageUrl('backgroundImage');
+                parseImageUrl('listStyleImage');
+                parseImageUrl('content');
                 for (const selectorText of parseSelectorText(item.selectorText, true)) {
                     const specificity = getSpecificity(selectorText);
                     const [selector, target] = splitPair(selectorText, '::');
@@ -683,6 +680,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         try {
             const cssRules = item.cssRules;
             if (cssRules) {
+                const parseConditionText = (rule: string, value: string) => new RegExp(`\\s*@${rule}([^{]+)`).exec(value)?.[1].trim() || value;
                 const length = cssRules.length;
                 let i = 0;
                 while (i < length) {

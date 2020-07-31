@@ -170,7 +170,6 @@ function getExclusionValue(enumeration: {}, offset: number, value?: string) {
 }
 
 const canCascadeChildren = (node: T) =>  node.naturalElements.length > 0 && !node.layoutElement && !node.tableElement;
-const checkBlockDimension = (node: T, previous: T) => node.blockDimension && Math.ceil(node.bounds.top) >= previous.bounds.bottom && (node.blockVertical || previous.blockVertical || node.percentWidth > 0 || previous.percentWidth > 0);
 
 export default abstract class NodeUI extends Node implements squared.base.NodeUI {
     public static justified(node: T) {
@@ -1027,6 +1026,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         }
         else {
             const floating = this.floating;
+            const checkBlockDimension = (previous: T) => this.blockDimension && Math.ceil(this.bounds.top) >= previous.bounds.bottom && (this.blockVertical || previous.blockVertical || this.percentWidth > 0 || previous.percentWidth > 0);
             if (isArray(siblings)) {
                 const previous = siblings[siblings.length - 1];
                 if (cleared) {
@@ -1119,7 +1119,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         }
                     }
                 }
-                if (checkBlockDimension(this, previous)) {
+                if (checkBlockDimension(previous)) {
                     return NODE_TRAVERSE.INLINE_WRAP;
                 }
                 else {
@@ -1159,7 +1159,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         return NODE_TRAVERSE.FLOAT_BLOCK;
                     }
                 }
-                if (checkBlockDimension(this, previous)) {
+                if (checkBlockDimension(previous)) {
                     return NODE_TRAVERSE.INLINE_WRAP;
                 }
             }

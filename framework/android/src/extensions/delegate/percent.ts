@@ -12,33 +12,12 @@ const { truncate } = squared.lib.math;
 const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
 interface PercentData {
-    percentWidth: boolean;
-    percentHeight: boolean;
-    marginHorizontal: boolean;
-    marginVertical: boolean;
+    percentWidth?: boolean;
+    percentHeight?: boolean;
+    marginHorizontal?: boolean;
+    marginVertical?: boolean;
 }
 
-function hasPercentWidth(node: View) {
-    const value = node.percentWidth;
-    return value > 0 && value < 1 || node.has('maxWidth', { type: CSS_UNIT.PERCENT, not: '100%' });
-}
-
-function hasPercentHeight(node: View, parent: View) {
-    const value = node.percentHeight;
-    return value > 0 && value < 1 || node.has('maxHeight', { type: CSS_UNIT.PERCENT, not: '100%' }) && parent.hasHeight;
-}
-
-function hasMarginHorizontal(node: View, parent: View, clearMap: Map<View, string>) {
-    return (validPercent(node.css('marginLeft')) || validPercent(node.css('marginRight'))) && (
-        parent.layoutVertical && !parent.hasAlign(NODE_ALIGNMENT.UNKNOWN) ||
-        parent.layoutFrame ||
-        node.blockStatic && node.alignedVertically(undefined, clearMap) ||
-        node.documentParent.length === 1 ||
-        !node.pageFlow
-    );
-}
-
-const hasMarginVertical = (node: View) => (validPercent(node.css('marginTop')) || validPercent(node.css('marginBottom'))) && node.documentParent.percentHeight > 0 && !node.inlineStatic && (node.documentParent.length === 1 || !node.pageFlow);
 const validPercent = (value: string) => value.endsWith('%') && parseFloat(value) > 0;
 
 export default class Percent<T extends View> extends squared.base.ExtensionUI<T> {
@@ -48,12 +27,26 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
 
     public condition(node: T, parent: T) {
         const absoluteParent = node.absoluteParent || parent;
-        const requireWidth = !absoluteParent.hasPX('width', { percent: false });
-        const requireHeight = !absoluteParent.hasPX('height', { percent: false });
-        const percentWidth = requireWidth && hasPercentWidth(node) && !parent.layoutConstraint && (node.cssInitial('width') !== '100%' || node.has('maxWidth', { type: CSS_UNIT.PERCENT, not: '100%' })) && (node.rootElement || (parent.layoutVertical || node.onlyChild) && (parent.blockStatic || parent.percentWidth > 0));
-        const marginHorizontal = requireWidth && hasMarginHorizontal(node, parent, this.application.clearMap);
-        const percentHeight = requireHeight && hasPercentHeight(node, parent) && (node.cssInitial('height') !== '100%' || node.has('maxHeight', { type: CSS_UNIT.PERCENT, not: '100%' })) && (node.rootElement || parent.percentHeight > 0);
-        const marginVertical = requireHeight && hasMarginVertical(node);
+        let percentWidth: Undef<boolean>,
+            percentHeight: Undef<boolean>,
+            marginHorizontal: Undef<boolean>,
+            marginVertical: Undef<boolean>;
+        if (!absoluteParent.hasPX('width', { percent: false })) {
+            const percent = node.percentWidth;
+            percentWidth = (percent > 0 && percent < 1 || node.has('maxWidth', { type: CSS_UNIT.PERCENT, not: '100%' })) && !parent.layoutConstraint && (node.cssInitial('width') !== '100%' || node.has('maxWidth', { type: CSS_UNIT.PERCENT, not: '100%' })) && (node.rootElement || (parent.layoutVertical || node.onlyChild) && (parent.blockStatic || parent.percentWidth > 0));
+            marginHorizontal = (validPercent(node.css('marginLeft')) || validPercent(node.css('marginRight'))) && (
+                parent.layoutVertical && !parent.hasAlign(NODE_ALIGNMENT.UNKNOWN) ||
+                parent.layoutFrame ||
+                node.blockStatic && node.alignedVertically(undefined, this.application.clearMap) > 0 ||
+                node.documentParent.length === 1 ||
+                !node.pageFlow
+            );
+        }
+        if (!absoluteParent.hasPX('height', { percent: false })) {
+            const percent = node.percentHeight;
+            percentHeight = (percent > 0 && percent < 1 || node.has('maxHeight', { type: CSS_UNIT.PERCENT, not: '100%' }) && parent.hasHeight) && (node.cssInitial('height') !== '100%' || node.has('maxHeight', { type: CSS_UNIT.PERCENT, not: '100%' })) && (node.rootElement || parent.percentHeight > 0);
+            marginVertical = (validPercent(node.css('marginTop')) || validPercent(node.css('marginBottom'))) && node.documentParent.percentHeight > 0 && !node.inlineStatic && (node.documentParent.length === 1 || !node.pageFlow);
+        }
         if (percentWidth || percentHeight || marginHorizontal || marginVertical) {
             node.data(this.name, 'mainData', { percentWidth, percentHeight, marginHorizontal, marginVertical });
             return true;

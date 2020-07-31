@@ -71,11 +71,6 @@ function getFloatAlignmentType(nodes: NodeUI[]) {
     return result;
 }
 
-function checkPseudoAfter(element: Element) {
-    const previousSibling = element.childNodes[element.childNodes.length - 1] as Element;
-    return previousSibling.nodeName === '#text' && !/\s+$/.test(previousSibling.textContent as string);
-}
-
 function checkPseudoDimension(styleMap: StringMapChecked, after: boolean, absolute: boolean) {
     switch (styleMap.display) {
         case undefined:
@@ -99,6 +94,7 @@ function checkPseudoDimension(styleMap: StringMapChecked, after: boolean, absolu
 }
 
 function getPseudoQuoteValue(element: HTMLElement, pseudoElt: string, outside: string, inside: string, sessionId: string) {
+    const extractQuote = (value: string) => /^"(.+)"$/.exec(value)?.[1] || value;
     let current: Null<HTMLElement> = element,
         found = 0;
     let i = 0, j = -1;
@@ -145,16 +141,6 @@ function getPseudoQuoteValue(element: HTMLElement, pseudoElt: string, outside: s
     return i % 2 === 0 ? outside : inside;
 }
 
-function setMapDepth(map: Map<number, Set<NodeUI>>, depth: number, node: NodeUI) {
-    const data = map.get(depth);
-    if (data) {
-        data.add(node);
-    }
-    else {
-        map.set(depth, new Set([node]));
-    }
-}
-
 function getCounterValue(value: Undef<string>, counterName: string, fallback = 1) {
     if (value && value !== 'none') {
         REGEXP_PSEUDOCOUNTERVALUE.lastIndex = 0;
@@ -181,8 +167,6 @@ function setColumnMaxWidth(nodes: NodeUI[], offset: number) {
 }
 
 const getCounterIncrementValue = (parent: HTMLElement, counterName: string, pseudoElt: string, sessionId: string, fallback?: number) => getCounterValue(getElementCache<CSSStyleDeclaration>(parent, 'styleMap' + pseudoElt, sessionId)?.counterIncrement, counterName, fallback);
-const extractQuote = (value: string) => /^"(.+)"$/.exec(value)?.[1] || value;
-const requirePadding = (node: NodeUI, depth?: number): boolean => node.textElement && (node.blockStatic || node.multiline || depth === 1);
 
 export default abstract class ApplicationUI<T extends NodeUI> extends Application<T> implements squared.base.ApplicationUI<T> {
     public readonly session: squared.base.AppSessionUI<T> = {
@@ -803,12 +787,21 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const controllerHandler = this.controllerHandler;
         const { extensionMap, clearMap } = this.session;
         const { cache, node: rootNode } = this.getProcessing(sessionId)!;
-        const mapY = new Map<number, Set<T>>();
+        const mapData = new Map<number, Set<T>>();
+        const setMapDepth = (depth: number, node: T) => {
+            const data = mapData.get(depth);
+            if (data) {
+                data.add(node);
+            }
+            else {
+                mapData.set(depth, new Set([node]));
+            }
+        };
         let i: number, length: number;
-        setMapDepth(mapY, -1, rootNode!.parent as T);
+        setMapDepth(-1, rootNode!.parent as T);
         cache.each(node => {
             if (node.length > 0) {
-                setMapDepth(mapY, node.depth, node);
+                setMapDepth(node.depth, node);
                 if (node.floatContainer) {
                     const floated = new Set<string>();
                     let clearable: T[] = [];
@@ -845,22 +838,22 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
         });
-        for (const depth of Array.from(mapY.keys())) {
+        for (const depth of Array.from(mapData.keys())) {
             if (depth !== -1) {
-                mapY.set((depth + 2) * -1, new Set<T>());
+                mapData.set((depth + 2) * -1, new Set<T>());
             }
         }
         cache.afterAdd = (node: T, cascade?: boolean, remove?: boolean) => {
             if (remove) {
-                mapY.get(node.depth)?.delete(node);
+                mapData.get(node.depth)?.delete(node);
             }
-            setMapDepth(mapY, (node.depth + 2) * -1, node);
+            setMapDepth((node.depth + 2) * -1, node);
             if (cascade && node.length > 0) {
                 node.cascade((item: T) => {
                     if (item.length > 0) {
                         const depth = item.depth;
-                        mapY.get(depth)?.delete(item);
-                        setMapDepth(mapY, (depth + 2) * -1, item);
+                        mapData.get(depth)?.delete(item);
+                        setMapDepth((depth + 2) * -1, item);
                     }
                 });
             }
@@ -872,13 +865,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             extensions[i++].beforeBaseLayout(sessionId);
         }
         let extensionsTraverse = this.extensionsTraverse;
-        for (const depth of mapY.values()) {
+        for (const depth of mapData.values()) {
             for (const parent of depth.values()) {
                 const q = parent.length;
                 if (q === 0) {
                     continue;
                 }
-                const floatContainer = parent.floatContainer;
                 const renderExtension = parent.renderExtension as Undef<ExtensionUI<T>[]>;
                 const axisY = parent.duplicate() as T[];
                 for (i = 0; i < q; ++i) {
@@ -888,6 +880,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                     let parentY = nodeY.parent as T;
                     if (q > 1 && i < q - 1 && nodeY.pageFlow && !nodeY.nodeGroup && (parentY.alignmentType === 0 || parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) || nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) && !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
+                        const floatContainer = parent.floatContainer;
                         const horizontal: T[] = [];
                         const vertical: T[] = [];
                         let j = i, k = 0;
@@ -994,7 +987,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             }
                         }
                         if (horizontal.length > 1) {
-                            const items = horizontal.filter(item => !item.renderExclude || clearMap.has(item));
+                            const items = horizontal.filter(item => !item.renderExclude || floatContainer && clearMap.has(item));
                             if (items.length > 1) {
                                 const layout = controllerHandler.processTraverseHorizontal(new LayoutUI(parentY, nodeY, 0, 0, items), axisY);
                                 if (layout) {
@@ -1008,7 +1001,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             }
                         }
                         else if (vertical.length > 1) {
-                            const items = vertical.filter(item => !item.renderExclude || clearMap.has(item));
+                            const items = vertical.filter(item => !item.renderExclude || floatContainer && clearMap.has(item));
                             if (items.length > 1) {
                                 const layout = controllerHandler.processTraverseVertical(new LayoutUI(parentY, nodeY, 0, 0, items), axisY);
                                 if (layout) {
@@ -1041,8 +1034,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         const descendant = extensionMap.get(nodeY.id);
                         let combined = descendant
                             ? renderExtension?.concat(descendant as ExtensionUI<T>[]) || descendant
-                            : renderExtension;
-                        let next: Undef<boolean>;
+                            : renderExtension,
+                            next: Undef<boolean>;
                         if (combined) {
                             const r = combined.length;
                             let j = 0;
@@ -1197,7 +1190,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected setResources(sessionId: string) {
-        const resourceHandler = this.resourceHandler;
+        const { extensions, resourceHandler } = this;
         this.getProcessingCache(sessionId).each(node => {
             resourceHandler.setBoxStyle(node);
             if (node.hasResource(NODE_RESOURCE.VALUE_STRING) && node.visible && !node.imageElement && !node.svgElement) {
@@ -1205,7 +1198,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 resourceHandler.setValueString(node);
             }
         });
-        const extensions = this.extensions;
         const length = extensions.length;
         let i = 0;
         while (i < length) {
@@ -1583,7 +1575,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (!isString(textContent)) {
                     const absolute = hasCoords(styleMap.position);
                     if (pseudoElt === '::after') {
-                        if ((absolute || textContent === '' || !checkPseudoAfter(element)) && !checkPseudoDimension(styleMap, true, absolute)) {
+                        const checkPseudoAfter = (sibling: Element) => sibling.nodeName === '#text' && !/\s+$/.test(sibling.textContent as string);
+                        if ((absolute || textContent === '' || !checkPseudoAfter(element.lastChild as Element)) && !checkPseudoDimension(styleMap, true, absolute)) {
                             return undefined;
                         }
                     }
@@ -1848,6 +1841,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected setFloatPadding(parent: T, target: T, inlineAbove: T[], leftAbove: T[] = [], rightAbove: T[] = []) {
+        const requirePadding = (node: NodeUI, depth?: number): boolean => node.textElement && (node.blockStatic || node.multiline || depth === 1);
         let paddingNodes: T[] = [];
         let i = 0;
         while (i < inlineAbove.length) {

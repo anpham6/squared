@@ -204,14 +204,6 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
     return result;
 }
 
-function getBackgroundSize(node: NodeUI, index: number, value: string, screenDimension?: Dimension) {
-    if (value !== '') {
-        const sizes = value.split(CHAR_SEPARATOR);
-        return ResourceUI.getBackgroundSize(node, sizes[index % sizes.length], screenDimension);
-    }
-    return undefined;
-}
-
 function setBorderStyle(node: NodeUI, boxStyle: BoxStyle, attr: string, border: string[]) {
     const style = node.css(border[1]) || 'none';
     if (style !== 'none') {
@@ -272,35 +264,13 @@ function setBackgroundOffset(node: NodeUI, boxStyle: BoxStyle, attr: "background
     return false;
 }
 
-function getAngle(value: string, fallback = 0) {
-    value = value.trim();
-    if (value !== '') {
-        let degree = parseAngle(value, fallback);
-        if (!isNaN(degree)) {
-            if (degree < 0) {
-                degree += 360;
-            }
-            return degree;
-        }
-    }
-    return fallback;
-}
-
-function getGradientPosition(value: string) {
-    return isString(value)
-        ? value.includes('at ')
-            ? /(.+?)?\s*at (.+?)\s*$/.exec(value)
-            : [value, value] as RegExpExecArray
-        : null;
-}
-
 function hasEndingSpace(element: HTMLElement) {
     const textContent = element.textContent!;
     const length = textContent.length;
     return length > 0 && textContent.charCodeAt(length - 1) === 32;
 }
 
-const checkPreviousSibling = (sibling: UndefNull<NodeUI>) => !sibling || sibling.lineBreak || sibling.floating || sibling.plainText && CHAR_TRAILINGSPACE.test(sibling.textContent);
+const checkPreviousSibling = (node: Undef<NodeUI>) => node === undefined || node.lineBreak || node.floating || node.plainText && CHAR_TRAILINGSPACE.test(node.textContent);
 
 export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> implements squared.base.ResourceUI<T> {
     public static STRING_SPACE = '&#160;';
@@ -406,7 +376,27 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
 
     public static parseBackgroundImage(node: NodeUI, backgroundImage: string, screenDimension?: Dimension) {
         if (backgroundImage !== '') {
+            const backgroundSize = node.css('backgroundSize').split(CHAR_SEPARATOR);
             const images: (string | Gradient)[] = [];
+            const getGradientPosition = (value: string) =>
+                isString(value)
+                    ? value.includes('at ')
+                        ? /(.+?)?\s*at (.+?)\s*$/.exec(value)
+                        : [value, value] as RegExpExecArray
+                    : null;
+            const getAngle = (value: string, fallback = 0) => {
+                value = value.trim();
+                if (value !== '') {
+                    let degree = parseAngle(value, fallback);
+                    if (!isNaN(degree)) {
+                        if (degree < 0) {
+                            degree += 360;
+                        }
+                        return degree;
+                    }
+                }
+                return fallback;
+            };
             let i = 0,
                 match: Null<RegExpExecArray>;
             while (match = REGEXP_BACKGROUNDIMAGE.exec(backgroundImage)) {
@@ -418,7 +408,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     const repeating = !!match[1];
                     const type = match[2];
                     const direction = match[3];
-                    const imageDimension = getBackgroundSize(node, i, node.css('backgroundSize'), screenDimension);
+                    const imageDimension = backgroundSize.length > 0 ? ResourceUI.getBackgroundSize(node, backgroundSize[i % backgroundSize.length], screenDimension) : undefined;
                     const dimension = NodeUI.refitScreen(node, imageDimension || node.actualDimension);
                     let gradient: Undef<Gradient>;
                     switch (type) {

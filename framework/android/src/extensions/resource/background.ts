@@ -48,7 +48,7 @@ interface ShapeStrokeData {
 
 interface LayerList {
     'xmlns:android': string;
-    item: LayerData[] ;
+    item: LayerData[];
 }
 
 interface LayerData {
@@ -70,10 +70,11 @@ const NodeUI = squared.base.NodeUI;
 
 const CHAR_SEPARATOR = /\s*,\s*/;
 
-function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = false): ShapeStrokeData {
+function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = false) {
     const { style, color } = border;
+    const createStrokeColor = (value: ColorData): ShapeStrokeData => ({ color: getColorValue(value), dashWidth: '', dashGap: '' });
     const width = roundFloat(border.width);
-    const result = getStrokeColor(color);
+    const result = createStrokeColor(color);
     switch (style) {
         case 'solid':
             break;
@@ -160,7 +161,7 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
             if (percent !== 1) {
                 const reduced = reduceRGBA(rgba, percent, color.valueAsRGBA);
                 if (reduced) {
-                    return getStrokeColor(reduced);
+                    return createStrokeColor(reduced);
                 }
             }
             break;
@@ -177,33 +178,13 @@ function getBorderStroke(border: BorderAttribute, direction = -1, hasInset = fal
             result = getBorderStyle(border, direction, !isInset);
             result.width = isInset
                 ? formatPX(Math.ceil(width / 2) * 2)
-                : formatPX(hasInset ? Math.ceil(width / 2) : roundFloat(border.width));
+                : formatPX(hasInset ? Math.ceil(width / 2) : width);
         }
         else {
             result = getBorderStyle(border);
-            result.width = formatPX(roundFloat(border.width));
+            result.width = roundFloat(border.width) + 'px';
         }
         return result;
-    }
-    return undefined;
-}
-
-function getBorderRadius(radius?: string[]): Undef<StringMap> {
-    if (radius) {
-        switch (radius.length) {
-            case 1:
-                return { radius: radius[0] };
-            case 8: {
-                const corners = new Array(4);
-                let i = 0, j = 0;
-                while (i < 8) {
-                    corners[j++] = formatPX((parseFloat(radius[i++]) + parseFloat(radius[i++])) / 2);
-                }
-                return getCornerRadius(corners);
-            }
-            default:
-                return getCornerRadius(radius);
-        }
     }
     return undefined;
 }
@@ -408,42 +389,19 @@ function createLayerList(boxStyle: BoxStyle, images: BackgroundImageData[] = [],
     return result;
 }
 
-function createShapeData(stroke?: ObjectMap<any> | false, solid?: StringMap | false, corners?: StringMap | false) {
-    return [{
-        'xmlns:android': XMLNS_ANDROID.android,
-        'android:shape': 'rectangle',
-        stroke,
-        solid,
-        corners
-    }];
-}
-
-function getIndentOffset(border: BorderAttribute) {
-    const width = roundFloat(border.width);
-    return width === 2 && border.style === 'double' ? 3 : width;
-}
-
 function getColorValue(value: Undef<ColorData | string>, transparency = true) {
     const color = Resource.addColor(value, transparency);
     return color !== '' ? `@color/${color}` : '';
 }
 
-function fillBackgroundAttribute(attribute: string[], length: number) {
-    while (attribute.length < length) {
-        attribute = attribute.concat(attribute.slice(0));
-    }
-    attribute.length = length;
-    return attribute;
-}
-
 function setBorderStyle(layerList: LayerList, borders: Undef<BorderAttribute>[], index: number, corners: Undef<StringMap>, indentWidth: number, indentOffset: string) {
-    const item = borders[index];
-    if (item) {
-        const width = roundFloat(item.width);
-        if (item.style === 'double' && width > 1) {
+    const border = borders[index];
+    if (border) {
+        const width = roundFloat(border.width);
+        if (border.style === 'double' && width > 1) {
             insertDoubleBorder(
                 layerList.item,
-                item,
+                border,
                 index === 0,
                 index === 1,
                 index === 2,
@@ -453,7 +411,7 @@ function setBorderStyle(layerList: LayerList, borders: Undef<BorderAttribute>[],
             );
         }
         else {
-            const inset = width > 1 && isInsetBorder(item);
+            const inset = width > 1 && border.style === 'groove' || border.style === 'ridge' || border.style === 'double' && roundFloat(border.width) > 1;
             if (inset) {
                 const hideInsetOffset = '-' + formatPX(width + indentWidth + 1);
                 layerList.item.push({
@@ -463,7 +421,7 @@ function setBorderStyle(layerList: LayerList, borders: Undef<BorderAttribute>[],
                     left: index === 3 ? '' : hideInsetOffset,
                     shape: {
                         'android:shape': 'rectangle',
-                        stroke: getBorderStroke(item, index, inset, true)
+                        stroke: getBorderStroke(border, index, inset, true)
                     }
                 });
             }
@@ -476,33 +434,14 @@ function setBorderStyle(layerList: LayerList, borders: Undef<BorderAttribute>[],
                 shape: {
                     'android:shape': 'rectangle',
                     corners,
-                    stroke: getBorderStroke(item, index, inset)
+                    stroke: getBorderStroke(border, index, inset)
                 }
             });
         }
     }
 }
 
-function deleteBodyWrapper(body: View, wrapper: View) {
-    if (body !== wrapper && !wrapper.hasResource(NODE_RESOURCE.BOX_SPACING) && body.percentWidth === 0) {
-        switch (body.cssInitial('maxWidth')) {
-            case '':
-            case 'auto':
-            case '100%': {
-                const children = wrapper.renderChildren;
-                if (children.length === 1) {
-                    wrapper.removeTry({ replaceWith: children[0] });
-                }
-                break;
-            }
-        }
-    }
-}
-
 const roundFloat = (value: string) => Math.round(parseFloat(value));
-const getStrokeColor = (value: ColorData): ShapeStrokeData => ({ color: getColorValue(value), dashWidth: '', dashGap: '' });
-const isInsetBorder = (border: BorderAttribute) => border.style === 'groove' || border.style === 'ridge' || border.style === 'double' && roundFloat(border.width) > 1;
-const getPixelUnit = (width: number, height: number) => `${width}px ${height}px`;
 
 export function convertColorStops(list: ColorStop[], precision?: number) {
     return plainMap(list, item => ({ color: getColorValue(item.color), offset: truncate(item.offset, precision) }));
@@ -538,6 +477,21 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         const settings = (this.application as android.base.Application<T>).userSettings;
         const drawOutline = this.options.drawOutlineAsInsetBorder;
         let themeBackground: Undef<boolean>;
+        const deleteBodyWrapper = (body: View, wrapper: View) => {
+            if (body !== wrapper && !wrapper.hasResource(NODE_RESOURCE.BOX_SPACING) && body.percentWidth === 0) {
+                switch (body.cssInitial('maxWidth')) {
+                    case '':
+                    case 'auto':
+                    case '100%': {
+                        const renderChildren = wrapper.renderChildren;
+                        if (renderChildren.length === 1) {
+                            wrapper.removeTry({ replaceWith: renderChildren[0] });
+                        }
+                        break;
+                    }
+                }
+            }
+        };
         const setBodyBackground = (name: string, parent: string, value: string) => {
             Resource.addTheme({
                 name,
@@ -588,7 +542,12 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     stored.borderRadius = undefined;
                 }
                 const outline = stored.outline;
-                let [shapeData, layerList] = this.getDrawableBorder(stored, undefined, images, drawOutline && outline ? getIndentOffset(outline) : 0);
+                let indentWidth: Undef<number>;
+                if (drawOutline && outline) {
+                    const width = roundFloat(outline.width);
+                    indentWidth = width === 2 && outline.style === 'double' ? 3 : width;
+                }
+                let [shapeData, layerList] = this.getDrawableBorder(stored, undefined, images, indentWidth);
                 const emptyBackground = shapeData === undefined && layerList === undefined;
                 if (outline && (drawOutline || emptyBackground)) {
                     const [outlineShapeData, outlineLayerList] = this.getDrawableBorder(stored, outline, emptyBackground ? images : undefined, undefined, !emptyBackground);
@@ -647,15 +606,37 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
 
     public getDrawableBorder(data: BoxStyle, outline?: BorderAttribute, images?: BackgroundImageData[], indentWidth = 0, borderOnly = false): [Undef<StandardMap[]>, Undef<LayerList[]>] {
         const borderVisible: boolean[] = new Array(4);
-        const corners = !borderOnly ? getBorderRadius(data.borderRadius) : undefined;
         const indentOffset = indentWidth > 0 ? formatPX(indentWidth) : '';
         let borderStyle = true,
             borderAll = true,
             borders: Undef<BorderAttribute>[],
             border: Undef<BorderAttribute>,
+            corners: Undef<StringMap>,
             borderData: Undef<BorderAttribute>,
             shapeData: Undef<StandardMap[]>,
             layerList: Undef<LayerList[]>;
+        if (!borderOnly) {
+            const radius = data.borderRadius;
+            if (radius) {
+                switch (radius.length) {
+                    case 1:
+                        corners = { radius: radius[0] };
+                        break;
+                    case 8: {
+                        const result = new Array(4);
+                        let i = 0, j = 0;
+                        while (i < 8) {
+                            result[j++] = formatPX((parseFloat(radius[i++]) + parseFloat(radius[i++])) / 2);
+                        }
+                        corners = getCornerRadius(result);
+                        break;
+                    }
+                    default:
+                        corners = getCornerRadius(radius);
+                        break;
+                }
+            }
+        }
         if (outline) {
             borderData = outline;
             borders = new Array(4);
@@ -698,7 +679,13 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 layerList = createLayerList(data, images, borderOnly, stroke, corners, indentOffset);
             }
             else {
-                shapeData = createShapeData(stroke, !borderOnly && getBackgroundColor(data.backgroundColor), corners);
+                shapeData = [{
+                    'xmlns:android': XMLNS_ANDROID.android,
+                    'android:shape': 'rectangle',
+                    stroke,
+                    solid: !borderOnly && getBackgroundColor(data.backgroundColor),
+                    corners
+                }];
             }
         }
         else if (borderData) {
@@ -752,8 +739,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             const { bounds, fontSize } = node;
             const { width: boundsWidth, height: boundsHeight } = bounds;
             const result: BackgroundImageData[] = [];
-            const images: (string | GradientTemplate)[] = [];
             const svg: boolean[] = [];
+            const images: (string | GradientTemplate)[] = [];
             const imageDimensions: Undef<Dimension>[] = [];
             const backgroundPosition: BoxRectPosition[] = [];
             const backgroundPositionX = data.backgroundPositionX.split(CHAR_SEPARATOR);
@@ -764,12 +751,19 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             if (backgroundImage) {
                 const svgInstance = this._resourceSvgInstance;
                 const q = backgroundImage.length;
-                backgroundRepeat = fillBackgroundAttribute(backgroundRepeat, q);
-                backgroundSize = fillBackgroundAttribute(backgroundSize, q);
+                const fillAttribute = (attribute: string[]) => {
+                    while (attribute.length < q) {
+                        attribute = attribute.concat(attribute.slice(0));
+                    }
+                    attribute.length = q;
+                    return attribute;
+                };
+                backgroundRepeat = fillAttribute(backgroundRepeat);
+                backgroundSize = fillAttribute(backgroundSize);
                 let modified: Undef<boolean>;
                 for (let i = 0; i < q; ++i) {
                     let value = backgroundImage[i],
-                        valid = false;
+                        valid: Undef<boolean>;
                     if (typeof value === 'string') {
                         if (value !== 'initial') {
                             if (svgInstance) {
@@ -878,6 +872,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
             }
             if (embedded) {
+                const getPixelUnit = (width: number, height: number) => `${width}px ${height}px`;
                 if (length === 0) {
                     backgroundRepeat.length = 0;
                     backgroundSize.length = 0;

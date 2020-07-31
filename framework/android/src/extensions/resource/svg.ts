@@ -205,15 +205,6 @@ function getPathInterpolator(keySplines: Undef<string[]>, index: number) {
     return name ? INTERPOLATOR_ANDROID[name] as string || createPathInterpolator(name) : '';
 }
 
-function getPaintAttribute(value: string) {
-    for (const attr in ATTRIBUTE_ANDROID) {
-        if ((ATTRIBUTE_ANDROID[attr] as string[]).includes(value)) {
-            return convertCamelCase(attr);
-        }
-    }
-    return '';
-}
-
 function createPathInterpolator(value: string) {
     const interpolator: string = INTERPOLATOR_ANDROID[value];
     if (interpolator) {
@@ -505,6 +496,7 @@ function createFillGradient(gradient: Gradient, path: SvgPath, precision?: numbe
         case 'radial': {
             const { cxAsString, cyAsString, rAsString, spreadMethod } = gradient as SvgRadialGradient;
             const element = path.element;
+            const getRadiusPercent = (value: string) => value.endsWith('%') ? parseFloat(value) / 100 : 0.5;
             let points: Point[] = [],
                 cx!: number,
                 cy!: number,
@@ -665,7 +657,17 @@ function insertFillAfter(propertyName: string, valueType: string, item: SvgAnima
                     if (SvgBuild.isShape(parent)) {
                         const path = parent.path;
                         if (path) {
-                            valueTo = propertyName === 'pathData' ? path.value : path[getPaintAttribute(propertyName)];
+                            if (propertyName === 'pathData') {
+                                valueTo = path.value;
+                            }
+                            else {
+                                for (const attr in ATTRIBUTE_ANDROID) {
+                                    if ((ATTRIBUTE_ANDROID[attr] as string[]).includes(propertyName)) {
+                                        valueTo =  path[convertCamelCase(attr)];
+                                        break;
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -711,7 +713,6 @@ function insertFillAfter(propertyName: string, valueType: string, item: SvgAnima
 const getTemplateFilename = (templateName: string, length: number, prefix?: string, suffix?: string) => templateName + (prefix ? '_' + prefix : '') + (length ? '_vector' : '') + (suffix ? '_' + suffix.toLowerCase() : '');
 const isColorType = (attr: string) => attr === 'fill' || attr === 'stroke';
 const getVectorName = (target: SvgView, section: string, index = -1) => `${target.name}_${section + (index !== -1 ? '_' + (index + 1) : '')}`;
-const getRadiusPercent = (value: string) => value.endsWith('%') ? parseFloat(value) / 100 : 0.5;
 const getDrawableSrc = (name: string) => `@drawable/${name}`;
 const getFillData = (ordering = ''): FillData => ({ ordering, objectAnimator: [] });
 
