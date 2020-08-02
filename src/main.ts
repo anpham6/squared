@@ -21,6 +21,7 @@ type FileActionOptions = squared.base.FileActionOptions;
 const extensionsQueue = new Set<Extension>();
 const extensionsExternal = new Set<Extension>();
 const optionsQueue = new Map<string, StandardMap>();
+const prototypeMap = new Map<number, ExtensionPrototypeData>();
 const settings = {} as UserSettings;
 const system = {} as FunctionMap<any>;
 
@@ -80,6 +81,33 @@ async function findElementAsync(element: HTMLElement) {
     return [await main!.parseDocument(element) as Node];
 }
 
+function extendNodePrototype(Node: Constructor<Node>, value: number) {
+    const functionMap = prototypeMap.get(value);
+    if (functionMap) {
+        const proto = Node.prototype;
+        for (const method in functionMap) {
+            const item = functionMap[method];
+            if (typeof item === 'object') {
+                const property: ObjectMap<FunctionType<any>> = {};
+                let valid: Undef<boolean>;
+                if (typeof item.get === 'function') {
+                    property.get = item.get;
+                    valid = true;
+                }
+                if (typeof item.set === 'function') {
+                    property.set = item.set;
+                    valid = true;
+                }
+                if (valid) {
+                    Object.defineProperty(proto, method, property);
+                    continue;
+                }
+            }
+            proto[method] = item;
+        }
+    }
+}
+
 const checkWritable = (app: Undef<Main>): app is Main => app?.initializing === false && app.length > 0;
 
 export function setHostname(value: string) {
@@ -106,6 +134,8 @@ export function setFramework(value: Framework, options?: ObjectMap<any>, cached?
         Object.assign(settings, appBase.userSettings);
         main = appBase.application;
         main.userSettings = settings;
+        extendNodePrototype(main.Node, 0);
+        extendNodePrototype(main.Node, main.framework);
         const { builtInExtensions, extensions } = main;
         extensions.length = 0;
         for (const namespace of settings.builtInExtensions) {
@@ -235,6 +265,15 @@ export function retrieve(value: string) {
         return result;
     }
     return null;
+}
+
+export function extend(functionMap: ExtensionPrototypeData, value = 0) {
+    let map = prototypeMap.get(value);
+    if (!map) {
+        map = {};
+        prototypeMap.set(value, map);
+    }
+    Object.assign(map, functionMap);
 }
 
 export function get(...elements: (Element | string)[]) {

@@ -18,6 +18,7 @@ interface CreateNodeWrapperUIOptions<T> extends ExcludeOptions {
     alignmentType?: number;
     cascade?: boolean;
     resetMargin?: boolean;
+    resetContentBox?: boolean;
     inheritDataset?: boolean;
     inheritContentBox?: boolean;
 }

@@ -198,22 +198,6 @@ function constraintAlignTop(node: View, boxTop: number) {
     }
 }
 
-function getVerticalLayout(layout: LayoutUI<View>) {
-    return isConstraintLayout(layout, true)
-        ? CONTAINER_NODE.CONSTRAINT
-        : layout.some(item => item.positionRelative || !item.pageFlow && item.autoPosition)
-            ? CONTAINER_NODE.RELATIVE
-            : CONTAINER_NODE.LINEAR;
-}
-
-function getVerticalAlignedLayout(layout: LayoutUI<View>) {
-    return isConstraintLayout(layout, true)
-        ? CONTAINER_NODE.CONSTRAINT
-        : layout.some(item => item.positionRelative)
-            ? CONTAINER_NODE.RELATIVE
-            : CONTAINER_NODE.LINEAR;
-}
-
 function setObjectContainer(layout: LayoutUI<View>) {
     const node = layout.node;
     const element = node.element as HTMLEmbedElement & HTMLObjectElement;
@@ -398,6 +382,8 @@ function sortTemplateInvalid(a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>)
     return depthA < depthB ? -1 : 1;
 }
 
+const getVerticalLayout = (layout: LayoutUI<View>) => isConstraintLayout(layout, true) ? CONTAINER_NODE.CONSTRAINT : layout.some(item => item.positionRelative || !item.pageFlow && item.autoPosition) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR;
+const getVerticalAlignedLayout = (layout: LayoutUI<View>) => isConstraintLayout(layout, true) ? CONTAINER_NODE.CONSTRAINT : layout.some(item => item.positionRelative) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR;
 const sortTemplateStandard = (a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>) => doOrderStandard(a.node.innerMostWrapped as View, b.node.innerMostWrapped as View);
 const getAnchorDirection = (reverse = false) => reverse ? ['right', 'left', 'rightLeft', 'leftRight'] : ['left', 'right', 'leftRight', 'rightLeft'];
 const getAnchorBaseline = (node: View) => isBottomAligned(node) ? 'baseline' : 'bottom';
@@ -411,12 +397,7 @@ export function setHorizontalAlignment(node: View) {
     else {
         const autoMargin = node.autoMargin;
         if (autoMargin.horizontal) {
-            node.anchorParent('horizontal', autoMargin.left
-                ? 1
-                : autoMargin.leftRight
-                    ? 0.5
-                    : 0
-            );
+            node.anchorParent('horizontal', autoMargin.leftRight ? 0.5 : autoMargin.left ? 1 : 0);
         }
         else {
             if (node.rightAligned) {
@@ -441,11 +422,7 @@ export function setVerticalAlignment(node: View, onlyChild = true, biasOnly?: bo
         bias = 0;
     }
     else if (autoMargin.vertical) {
-        bias = autoMargin.top
-            ? 1
-            : autoMargin.topBottom
-                ? 0.5
-                : 0;
+        bias = autoMargin.topBottom ? 0.5 : autoMargin.top ? 1 : 0;
     }
     else if (node.imageContainer || node.inlineVertical) {
         switch (node.css('verticalAlign')) {
@@ -2160,21 +2137,23 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             section: options.section ?? APP_SECTION.ALL
         });
         container.saveAsInitial();
-        container.cssApply({
-            marginTop: '0px',
-            marginRight: '0px',
-            marginBottom: '0px',
-            marginLeft: '0px',
-            paddingTop: '0px',
-            paddingRight: '0px',
-            paddingBottom: '0px',
-            paddingLeft: '0px',
-            borderTopStyle: 'none',
-            borderRightStyle: 'none',
-            borderBottomStyle: 'none',
-            borderLeftStyle: 'none',
-            borderRadius: '0px'
-        });
+        if (options.resetContentBox) {
+            container.cssApply({
+                marginTop: '0px',
+                marginRight: '0px',
+                marginBottom: '0px',
+                marginLeft: '0px',
+                paddingTop: '0px',
+                paddingRight: '0px',
+                paddingBottom: '0px',
+                paddingLeft: '0px',
+                borderTopStyle: 'none',
+                borderRightStyle: 'none',
+                borderBottomStyle: 'none',
+                borderLeftStyle: 'none',
+                borderRadius: '0px'
+            });
+        }
         if (options.inheritContentBox !== false) {
             container.setCacheValue('contentBoxWidth', node.contentBoxWidth);
             container.setCacheValue('contentBoxHeight', node.contentBoxHeight);
@@ -2503,7 +2482,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         item.unset('textStyle');
                     }
                 };
-                const isMultilineGroup = (item: T) => item.contentAltered && item.inlineText && !item.naturalChild;
+                const isMultilineSegment = (item: T) => item.contentAltered && item.inlineText && !item.naturalChild;
                 for (let i = 0; i < length; ++i) {
                     const [currentFloated, rows, floating] = rowsAll[i];
                     if (currentFloated) {
@@ -2525,7 +2504,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         let r = items.length;
                         for (let k = 0; k < r - 1; ++k) {
                             const item = items[k];
-                            if (isMultilineGroup(item)) {
+                            if (isMultilineSegment(item)) {
                                 const element = item.element;
                                 if (element) {
                                     let textContent = '',
@@ -2534,7 +2513,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     const start = k + 1;
                                     for (let l = start; l < r; ++l) {
                                         const next = items[l];
-                                        if (isMultilineGroup(next) && next.element === element) {
+                                        if (isMultilineSegment(next) && next.element === element) {
                                             textContent += next.textContent;
                                             width += next.bounds.width;
                                             next.hide({ remove: true });
@@ -2557,7 +2536,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                                         const row = nextRows[0];
                                                         for (let m = 0, n = row.length; m < n; ++m) {
                                                             const next = row[m];
-                                                            if (isMultilineGroup(next) && next.element === element) {
+                                                            if (isMultilineSegment(next) && next.element === element) {
                                                                 textRemainder += next.textContent;
                                                                 widthRemainder += next.bounds.width;
                                                                 nodes.push(next);
@@ -3130,11 +3109,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
             }
             else if (length === 1) {
-                bias = item.centerAligned
-                    ? 0.5
-                    : item.rightAligned
-                        ? 1
-                        : 0;
+                bias = item.centerAligned ? 0.5 : item.rightAligned ? 1 : 0;
                 if (item.blockStatic || bias === 0.5) {
                     item.anchorParent('horizontal', bias);
                 }
@@ -3765,12 +3740,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             const renderParent = node.renderParent;
             if (documentParent.ascend({ condition: item => item === renderParent, attr: 'renderParent' }).length > 0) {
                 location = horizontal
-                    ? !opposing
-                        ? documentParent.marginLeft
-                        : documentParent.marginRight
-                    : !opposing
-                        ? documentParent.marginTop
-                        : documentParent.marginBottom;
+                    ? !opposing ? documentParent.marginLeft : documentParent.marginRight
+                    : !opposing ? documentParent.marginTop : documentParent.marginBottom;
             }
         }
         if (percent) {
@@ -3784,24 +3755,15 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         if (!node.pageFlow) {
             if (documentParent.outerWrapper && node.parent === documentParent.outerMostWrapper) {
-                location += documentParent[
-                    horizontal
-                        ? !opposing
-                            ? 'paddingLeft'
-                            : 'paddingRight'
-                        : !opposing
-                            ? 'paddingTop'
-                            : 'paddingBottom'
+                location += documentParent[horizontal
+                    ? !opposing ? 'paddingLeft' : 'paddingRight'
+                    : !opposing ? 'paddingTop' : 'paddingBottom'
                 ];
             }
             else if (absoluteParent === node.documentParent) {
                 const direction = horizontal
-                    ? !opposing
-                        ? BOX_STANDARD.PADDING_LEFT
-                        : BOX_STANDARD.PADDING_RIGHT
-                    : !opposing
-                        ? BOX_STANDARD.PADDING_TOP
-                        : BOX_STANDARD.PADDING_BOTTOM;
+                    ? !opposing ? BOX_STANDARD.PADDING_LEFT : BOX_STANDARD.PADDING_RIGHT
+                    : !opposing ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.PADDING_BOTTOM;
                 location = adjustAbsolutePaddingOffset(documentParent, direction, location);
             }
         }

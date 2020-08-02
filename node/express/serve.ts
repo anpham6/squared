@@ -580,7 +580,7 @@ let Node: serve.INode,
                                 }
                                 break;
                             }
-                            case 'js_beautify': {
+                            case 'js-beautify': {
                                 const result = require('js-beautify').html_beautify(value, options);
                                 if (result) {
                                     if (j === length - 1) {
@@ -621,7 +621,7 @@ let Node: serve.INode,
                                 };
                                 break;
                             case 'minify':
-                                module = 'clean_css';
+                                module = 'clean-css';
                                 options = {
                                     level: 1,
                                     inline: ['none']
@@ -643,7 +643,7 @@ let Node: serve.INode,
                                 }
                                 break;
                             }
-                            case 'clean_css': {
+                            case 'clean-css': {
                                 const clean_css = require('clean-css');
                                 const result = new clean_css(options).minify(value).styles;
                                 if (result) {
@@ -655,7 +655,7 @@ let Node: serve.INode,
                                 }
                                 break;
                             }
-                            case 'js_beautify': {
+                            case 'js-beautify': {
                                 const result = require('js-beautify').css_beautify(value, options);
                                 if (result) {
                                     if (j === length - 1) {
@@ -730,7 +730,7 @@ let Node: serve.INode,
                                 }
                                 break;
                             }
-                            case 'js_beautify': {
+                            case 'js-beautify': {
                                 const result = require('js-beautify').js_beautify(value, options);
                                 if (result) {
                                     if (j === length - 1) {
@@ -1030,7 +1030,7 @@ class FileManager implements serve.IFileManager {
                         }
                         else if (requestMain) {
                             const requestMatch = pattern.exec(requestMain.uri!);
-                            if (requestMatch && requestMatch[1] === originMatch[1]) {
+                            if (requestMatch?.[1] === originMatch[1]) {
                                 const [originDir] = Express.getBaseDirectory(baseDir + '/' + file.filename, requestMatch[2]);
                                 return '../'.repeat(originDir.length - 1) + Express.getFullUri(asset);
                             }
@@ -2344,7 +2344,7 @@ app.post('/api/assets/archive', (req, res) => {
                 }
             }
             catch (err) {
-                Node.writeFail(zippath,  err as Error);
+                Node.writeFail(zippath, err as Error);
             }
         }
         else {

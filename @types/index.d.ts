@@ -7,3 +7,5 @@
 /// <reference path="type.d.ts" />
 /// <reference path="object.d.ts" />
 /// <reference path="squared.d.ts" />
+
+type ExtensionPrototypeData = ObjectMap<FunctionType<any> | { get: () => any, set: (value: any) => void } | number | string | boolean>;

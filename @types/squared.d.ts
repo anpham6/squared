@@ -25,6 +25,7 @@ export function getElementById(value: string, cache?: boolean): Promise<Null<Nod
 export function querySelector(value: string, cache?: boolean): Promise<Null<Node>>;
 export function querySelectorAll(value: string, cache?: boolean): Promise<Node[]>;
 export function fromElement(element: HTMLElement, cache?: boolean): Promise<Null<Node>>;
+export function extend(functionMap: ExtensionPrototypeData, framework?: number): void;
 export function getElementMap(): Map<HTMLElement, Node>;
 export function clearElementMap(): void;
 export function toString(): string;

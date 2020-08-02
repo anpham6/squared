@@ -266,6 +266,8 @@ retrieve(name: string) // retrieve an extension by namespace or control
 configure(name: string, options: {}) // see extension configuration section
 exclude(name: string) // remove an extension by namespace or control
 
+extend(functionMap: {}, framework?: number) // add extension functions to Node prototype (framework: 0 - ALL | 1 - vdom | 2 - android | 4 - chrome)
+
 getElementMap() // map used for caching results from parseDocument
 clearElementMap()
 
@@ -431,7 +433,7 @@ Layout rendering can also be customized using extensions as the program was buil
     // third-party: create an extension
     class Sample extends squared.base.Extension {
         constructor(name, framework = 0, options = {}) {
-            // framework: universal = 0; vdom = 1, android = 2; chrome = 4;
+            // framework: 0 - ALL | 1 - vdom | 2 - android | 4 - chrome
             super(name, framework, options);
         }
     }
@@ -439,6 +441,24 @@ Layout rendering can also be customized using extensions as the program was buil
     // third-party: install an extension
     const sample = new Sample('your.namespace.sample', 0, { /* same as configure */ });
     squared.include(sample);
+
+    // Node extension functions and properties
+    squared.extend({
+        id: 1,
+        getId: function() {
+            return this.id;
+        },
+        altId: {
+            get: function() {
+                return this.id;
+            },
+            set: function(value) {
+                this.id += value;
+            }
+        }
+    }, 2);
+    const body = await squared.fromElement(document.body);
+    body.altId = 5; // body.altId: 6
 </script>
 ```
 

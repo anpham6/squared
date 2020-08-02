@@ -48,7 +48,7 @@
           "removeComments": true
         }
       },
-      "js_beautify": {}
+      "js-beautify": {}
     },
     "css": {
       "prettier": {
@@ -57,13 +57,13 @@
           "tabWidth": 4
         }
       },
-      "clean_css": {
+      "clean-css": {
         "minify": {
           "inline": ["none"],
           "level": 1
         }
       },
-      "js_beautify": {}
+      "js-beautify": {}
     },
     "js": {
       "prettier": {
@@ -79,7 +79,7 @@
           "keep_classnames": true
         }
       },
-      "js_beautify": {}
+      "js-beautify": {}
     }
   }
 }

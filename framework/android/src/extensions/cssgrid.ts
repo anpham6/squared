@@ -548,7 +548,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
             renderAs: Undef<T>,
             outputAs: Undef<NodeTemplate<T>>;
         if (CssGrid.isJustified(node) || CssGrid.isAligned(node)) {
-            container = (this.controller as android.base.Controller<T>).createNodeWrapper(node, parent, { containerType: CONTAINER_NODE.CONSTRAINT, resource: NODE_RESOURCE.ASSET });
+            container = (this.controller as android.base.Controller<T>).createNodeWrapper(node, parent, { containerType: CONTAINER_NODE.CONSTRAINT, resource: NODE_RESOURCE.ASSET, resetContentBox: true });
             container.inherit(node, 'styleMap', 'boxStyle');
             node.resetBox(BOX_STANDARD.MARGIN, container);
             node.resetBox(BOX_STANDARD.PADDING, container);

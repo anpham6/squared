@@ -1,6 +1,6 @@
 import fs = require('fs-extra');
 import path = require('path');
-import parse  = require('csv-parse');
+import parse = require('csv-parse');
 import playwright = require('playwright');
 import readdirp = require('readdirp');
 import md5 = require('md5');
@@ -17,7 +17,7 @@ interface PageRequest {
 
 let host: String;
 let data: String;
-let browserName: "chromium" | "firefox" | "webkit" | undefined;
+let browserName: "chromium"| "firefox" | "webkit" | undefined;
 let master: String;
 let snapshot: String;
 let executablePath: String;
