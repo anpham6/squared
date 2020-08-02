@@ -847,7 +847,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         children.push(text);
                     }
                 };
-                for (const item of layout.duplicate()) {
+                for (const item of layout.toArray()) {
                     switch (item.tagName) {
                         case 'RP':
                         case 'RT':

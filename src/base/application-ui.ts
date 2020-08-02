@@ -872,7 +872,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     continue;
                 }
                 const renderExtension = parent.renderExtension as Undef<ExtensionUI<T>[]>;
-                const axisY = parent.duplicate() as T[];
+                const axisY = parent.toArray() as T[];
                 for (i = 0; i < q; ++i) {
                     let nodeY = axisY[i];
                     if (nodeY.rendered || !nodeY.visible) {

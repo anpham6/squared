@@ -199,7 +199,7 @@ function convertPosition(node: T, attr: string) {
         else if (unit.endsWith('%')) {
             return node.styleElement ? convertFloat(node.style[attr]) : 0;
         }
-        return node.parseUnit(unit, attr === 'top' || attr === 'bottom' ? { dimension:  'height' } : undefined);
+        return node.parseUnit(unit, attr === 'top' || attr === 'bottom' ? { dimension: 'height' } : undefined);
     }
     return 0;
 }
@@ -883,7 +883,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     public saveAsInitial() {
         this._initial = {
             styleMap: { ...this._styleMap },
-            children: this.length > 0 ? this.duplicate() : undefined,
+            children: this.length > 0 ? this.toArray() : undefined,
             bounds: this._bounds
         };
     }
@@ -1216,7 +1216,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (options) {
             ({ ascending, byFloat, byInt, duplicate } = options);
         }
-        return (duplicate ? this.duplicate() : this.children).sort((a, b) => {
+        return (duplicate ? this.toArray() : this.children).sort((a, b) => {
             let valueA: NumString,
                 valueB: NumString;
             if (byFloat) {
@@ -1306,9 +1306,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 this.cssFinally(succeeded);
                 return true;
             }
-            else {
-                return succeeded;
-            }
+            return succeeded;
         }
         return false;
     }
@@ -1442,17 +1440,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             if (options) {
                 ({ parent, dimension } = options);
             }
-            const bounds = parent !== false && this.absoluteParent?.box || this.bounds;
-            let result = parseFloat(value) / 100;
-            switch (dimension) {
-                case 'height':
-                    result *= bounds.height;
-                    break;
-                default:
-                    result *= bounds.width;
-                    break;
-            }
-            return result;
+            const bounds: BoxRectDimension = parent !== false && this.absoluteParent?.box || this.bounds;
+            return (parseFloat(value) / 100) * (dimension === 'height' ? bounds.height : bounds.width);
         }
         (options ?? (options = {})).fontSize = this.fontSize;
         return parseUnit(value, options);
@@ -1514,10 +1503,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (this.styleElement) {
             const elementData = this._elementData;
             if (elementData) {
-                if (!cache || !elementData.clientRect) {
-                    elementData.clientRect = this._element!.getBoundingClientRect();
+                if (!cache) {
+                    elementData.clientRect = undefined;
                 }
-                bounds = assignRect(elementData.clientRect);
+                bounds = assignRect(elementData.clientRect || this._element!.getBoundingClientRect());
             }
             else {
                 bounds = assignRect(this._element!.getBoundingClientRect());
@@ -2575,10 +2564,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         break;
                 }
             }
-            else {
-                result = '';
-            }
-            this._cached.backgroundColor = result;
+            return this._cached.backgroundColor = result || '';
         }
         return result;
     }
@@ -2683,7 +2669,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         const result = this._cached.actualParent;
         if (result === undefined) {
             const parentElement = this._element?.parentElement;
-            return this._cached.actualParent = parentElement && getElementAsNode<T>(parentElement, this.sessionId) || null;
+            return this._cached.actualParent = parentElement ? getElementAsNode<T>(parentElement, this.sessionId) : null;
         }
         return result;
     }

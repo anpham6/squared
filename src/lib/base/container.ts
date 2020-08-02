@@ -82,10 +82,6 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return this._children.includes(item);
     }
 
-    public duplicate() {
-        return this._children.slice(0);
-    }
-
     public clear() {
         this._children.length = 0;
         return this;
@@ -286,6 +282,10 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     public sort(predicate: (a: T, b: T) => number) {
         this._children.sort(predicate);
         return this;
+    }
+
+    public toArray() {
+        return this._children.slice(0);
     }
 
     public iterator() {

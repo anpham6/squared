@@ -267,18 +267,6 @@ function insertDoubleBorder(items: StandardMap[], border: BorderAttribute, top: 
     });
 }
 
-function checkBackgroundPosition(value: string, adjacent: string, fallback: string) {
-    if (!value.includes(' ') && adjacent.includes(' ')) {
-        return /^[a-z]+$/.test(value)
-            ? (value === 'initial' ? fallback : value) + ' 0px'
-            : fallback + ' ' + value;
-    }
-    else if (value === 'initial') {
-        return '0px';
-    }
-    return value;
-}
-
 function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LATEST, imageCount: number, borderRadius?: string[], precision?: number) {
     const { colorStops, type } = gradient;
     let positioning = api >= BUILD_ANDROID.LOLLIPOP;
@@ -415,7 +403,7 @@ function setBorderStyle(layerList: LayerList, borders: Undef<BorderAttribute>[],
             if (inset) {
                 const hideInsetOffset = '-' + formatPX(width + indentWidth + 1);
                 layerList.item.push({
-                    top:  index === 0 ? '' : hideInsetOffset,
+                    top: index === 0 ? '' : hideInsetOffset,
                     right: index === 1 ? '' : hideInsetOffset,
                     bottom: index === 2 ? '' : hideInsetOffset,
                     left: index === 3 ? '' : hideInsetOffset,
@@ -427,7 +415,7 @@ function setBorderStyle(layerList: LayerList, borders: Undef<BorderAttribute>[],
             }
             const hideOffset = '-' + formatPX((inset ? Math.ceil(width / 2) : width) + indentWidth + 1);
             layerList.item.push({
-                top:  index === 0 ? indentOffset : hideOffset,
+                top: index === 0 ? indentOffset : hideOffset,
                 right: index === 1 ? indentOffset : hideOffset,
                 bottom: index === 2 ? indentOffset : hideOffset,
                 left: index === 3 ? indentOffset : hideOffset,
@@ -442,6 +430,7 @@ function setBorderStyle(layerList: LayerList, borders: Undef<BorderAttribute>[],
 }
 
 const roundFloat = (value: string) => Math.round(parseFloat(value));
+const checkBackgroundPosition = (value: string, adjacent: string, fallback: string) => !value.includes(' ') && adjacent.includes(' ') ? /^[a-z]+$/.test(value) ? value + ' 0px' : fallback + ' ' + value : value;
 
 export function convertColorStops(list: ColorStop[], precision?: number) {
     return plainMap(list, item => ({ color: getColorValue(item.color), offset: truncate(item.offset, precision) }));
@@ -738,6 +727,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             const screenDimension = node.localSettings.screenDimension;
             const { bounds, fontSize } = node;
             const { width: boundsWidth, height: boundsHeight } = bounds;
+            const documentBody = node.innerMostWrapped.documentBody;
             const result: BackgroundImageData[] = [];
             const svg: boolean[] = [];
             const images: (string | GradientTemplate)[] = [];
@@ -810,14 +800,14 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 if (uri) {
                                     if (uri.startsWith('data:image/')) {
                                         const rawData = resource.getRawData(uri);
-                                        if (rawData?.base64) {
-                                            const filename = rawData.filename;
-                                            if (filename) {
+                                        if (rawData) {
+                                            const { base64, filename } = rawData;
+                                            if (base64 && filename) {
                                                 images[length] = filename.substring(0, filename.lastIndexOf('.'));
                                                 imageDimensions[length] = rawData.width && rawData.height ? rawData as Dimension : undefined;
                                                 resource.writeRawImage(rawData.mimeType, {
                                                     filename,
-                                                    data: rawData.base64,
+                                                    data: base64,
                                                     encoding: 'base64'
                                                 });
                                                 valid = true;
@@ -907,7 +897,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                 }
             }
-            const documentBody = node.innerMostWrapped.documentBody;
             for (let i = length - 1, j = 0; i >= 0; --i) {
                 const value = images[i];
                 const imageData: BackgroundImageData = { order: Infinity };
@@ -1519,10 +1508,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
                 else if (value.item) {
                     if (width === 0) {
-                        width = dimension?.width || NodeUI.refitScreen(node, node.actualDimension).width;
+                        width = dimension ? dimension.width : NodeUI.refitScreen(node, node.actualDimension).width;
                     }
                     if (height === 0) {
-                        height = dimension?.height || NodeUI.refitScreen(node, node.actualDimension).height;
+                        height = dimension ? dimension.height : NodeUI.refitScreen(node, node.actualDimension).height;
                     }
                     const gradient = Resource.insertStoredAsset(
                         'drawables',

@@ -924,7 +924,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     const procedure = getExclusionValue(NODE_PROCEDURE, 0, dataset['excludeProcedureChild' + systemName] || dataset.excludeProcedureChild);
                     const section = getExclusionValue(APP_SECTION, 0, dataset['excludeSectionChild' + systemName] || dataset.excludeSectionChild);
                     if (resource > 0 || procedure > 0 || section > 0) {
-                        const data = { resource, procedure, section };
+                        const data: ExcludeOptions = { resource, procedure, section };
                         this.each((node: T) => node.exclude(data));
                     }
                 }
@@ -1426,7 +1426,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         node.renderedAs = this.renderedAs;
         node.rootElement = this.rootElement;
         if (this.length > 0) {
-            node.retainAs(this.duplicate());
+            node.retainAs(this.toArray());
         }
         node.inherit(this, 'initial', 'base', 'alignment', 'styleMap', 'textStyle');
         Object.assign(node.unsafe<CachedValueUI<T>>('cached'), this._cached);
@@ -1652,10 +1652,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     result = element.tagName.toUpperCase();
                 }
             }
-            else {
-                result = '';
-            }
-            this._cached.containerName = result;
+            return this._cached.containerName = result || '';
         }
         return result;
     }
@@ -1948,11 +1945,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return hasBit(result, NODE_ALIGNMENT.VERTICAL);
     }
 
-    get boxReset(): number[] {
+    get boxReset() {
         return this._boxReset ?? (this._boxReset = [0, 0, 0, 0, 0, 0, 0, 0]);
     }
 
-    get boxAdjustment(): number[] {
+    get boxAdjustment() {
         return this._boxAdjustment ?? (this._boxAdjustment = [0, 0, 0, 0, 0, 0, 0, 0]);
     }
 
@@ -2066,7 +2063,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 while (wrapped !== undefined);
             }
             else if (this.length > 0 && !this.naturalChild) {
-                return this._containerIndex = (this.min('containerIndex', { self:  true }) as NodeUI).containerIndex;
+                return this._containerIndex = (this.min('containerIndex', { self: true }) as NodeUI).containerIndex;
             }
         }
         return result;

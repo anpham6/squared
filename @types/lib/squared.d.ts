@@ -9,7 +9,6 @@ declare module "lib" {
             removeAt(index: number): Undef<T>;
             retainAs(list: T[]): this;
             contains(item: T): boolean;
-            duplicate(): T[];
             clear(): this;
             each(predicate: IteratorPredicate<T, void>, options?: ContainerFindOptions<T>): this;
             iterate(predicate: IteratorPredicate<T, void | boolean>, options?: ContainerRangeOptions): number;
@@ -23,6 +22,7 @@ declare module "lib" {
             partition(predicate: IteratorPredicate<T, boolean>): [T[], T[]];
             findIndex(predicate: IteratorPredicate<T, boolean>): number;
             sort(predicate: (a: T, b: T) => number): this;
+            toArray(): T[];
             iterator(): ListIterator<T>;
             get children(): T[];
             get isEmpty(): boolean;
