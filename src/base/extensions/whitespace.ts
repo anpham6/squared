@@ -541,7 +541,7 @@ export default class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
                                                 }
                                             }
                                             if (valid) {
-                                                current.modifyBox(BOX_STANDARD.MARGIN_TOP, previous.box.top - Math.max(...previous.naturalElements.map(item => item.linear.bottom)), false);
+                                                current.modifyBox(BOX_STANDARD.MARGIN_TOP, current.linear.top - Math.max(...previous.naturalElements.map(item => item.linear.bottom)), false);
                                             }
                                         }
                                         if (inheritedTop) {

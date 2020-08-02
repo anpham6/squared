@@ -609,8 +609,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         protected _controlName = '';
         protected _cached!: AndroidCachedValueUI<T>;
         protected _localSettings!: AndroidLocalSettingsUI;
-        protected _boxReset?: BoxModel;
-        protected _boxAdjustment?: BoxModel;
+        protected _boxReset?: number[];
+        protected _boxAdjustment?: number[];
         protected _documentParent?: T;
         protected _innerWrapped?: T;
 
@@ -1213,7 +1213,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     left = 0;
                 for (let j = 0; j < 4; ++j) {
                     const attr = attrs[j];
-                    let value: number = !boxReset || boxReset[attr] === 0 ? this[attr] : 0;
+                    let value: number = !boxReset || boxReset[margin ? j : j + 4] === 0 ? this[attr] : 0;
                     if (value !== 0) {
                         if (margin) {
                             switch (j) {
@@ -1265,7 +1265,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                     }
                     if (boxAdjustment) {
-                        value += boxAdjustment[attr];
+                        value += boxAdjustment[margin ? j : j + 4];
                     }
                     switch (j) {
                         case 0:
@@ -1421,7 +1421,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     left = Math.round(left);
                     if ((!margin || !(this.renderParent as T).layoutGrid) && this.api >= BUILD_ANDROID.OREO) {
                         if (top === right && right === bottom && bottom === left) {
-                            this.android(margin ? STRING_ANDROID.MARGIN : STRING_ANDROID.PADDING, Math.round(top) + 'px');
+                            if (top !== 0) {
+                                this.android(margin ? STRING_ANDROID.MARGIN : STRING_ANDROID.PADDING, top + 'px');
+                            }
                             continue;
                         }
                         else {
@@ -1500,8 +1502,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             this.cloneBase(node);
             if (attributes !== false) {
-                Object.assign(node.boxReset, this.boxReset);
-                Object.assign(node.boxAdjustment, this.boxAdjustment);
+                if (this._boxReset) {
+                    node.unsafe('boxReset', this._boxReset.slice(0));
+                }
+                if (this._boxAdjustment) {
+                    node.unsafe('boxAdjustment', this._boxAdjustment.slice(0));
+                }
                 for (const name in this._namespaces) {
                     const obj: StringMap = this._namespaces[name];
                     for (const attr in obj) {
@@ -2553,10 +2559,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             renderParent.renderTemplates = renderTemplates;
                             const boxReset = this.boxReset;
                             const boxAdjustment = this.boxAdjustment;
-                            renderParent.modifyBox(BOX_STANDARD.PADDING_TOP, (boxReset.marginTop === 0 ? this.marginTop : 0) + (boxReset.paddingTop === 0 ? this.paddingTop : 0) + boxAdjustment.marginTop + boxAdjustment.paddingTop);
-                            renderParent.modifyBox(BOX_STANDARD.PADDING_RIGHT, (boxReset.marginRight === 0 ? this.marginRight : 0) + (boxReset.paddingRight === 0 ? this.paddingRight : 0) + boxAdjustment.marginRight + boxAdjustment.paddingRight);
-                            renderParent.modifyBox(BOX_STANDARD.PADDING_BOTTOM, (boxReset.marginBottom === 0 ? this.marginBottom : 0) + (boxReset.paddingBottom === 0 ? this.paddingBottom : 0) + boxAdjustment.marginBottom + boxAdjustment.paddingBottom);
-                            renderParent.modifyBox(BOX_STANDARD.PADDING_LEFT, (boxReset.marginLeft === 0 ? this.marginLeft : 0) + (boxReset.paddingLeft === 0 ? this.paddingLeft : 0) + boxAdjustment.marginLeft + boxAdjustment.paddingLeft);
+                            renderParent.modifyBox(BOX_STANDARD.PADDING_TOP, (boxReset[0] === 0 ? this.marginTop : 0) + (boxReset[4] === 0 ? this.paddingTop : 0) + boxAdjustment[0] + boxAdjustment[4]);
+                            renderParent.modifyBox(BOX_STANDARD.PADDING_RIGHT, (boxReset[1] === 0 ? this.marginRight : 0) + (boxReset[5] === 0 ? this.paddingRight : 0) + boxAdjustment[1] + boxAdjustment[5]);
+                            renderParent.modifyBox(BOX_STANDARD.PADDING_BOTTOM, (boxReset[2] === 0 ? this.marginBottom : 0) + (boxReset[6] === 0 ? this.paddingBottom : 0) + boxAdjustment[2] + boxAdjustment[6]);
+                            renderParent.modifyBox(BOX_STANDARD.PADDING_LEFT, (boxReset[3] === 0 ? this.marginLeft : 0) + (boxReset[7] === 0 ? this.paddingLeft : 0) + boxAdjustment[3] + boxAdjustment[7]);
                         }
                     }
                 }

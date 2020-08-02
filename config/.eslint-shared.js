@@ -9,7 +9,7 @@ module.exports = {
     ],
     "rules": {
         "arrow-parens": ["error", "as-needed"],
-        "comma-dangle": "off",
+        "comma-dangle": "error",
         "comma-style": "error",
         "comma-spacing": "error",
         "complexity": "off",

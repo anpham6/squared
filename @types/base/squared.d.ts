@@ -680,8 +680,8 @@ declare module "base" {
         get lastStaticChild(): Null<NodeUI>;
         get onlyChild(): boolean;
         get rendering(): boolean;
-        get boxReset(): BoxModel;
-        get boxAdjustment(): BoxModel;
+        get boxReset(): number[];
+        get boxAdjustment(): number[];
         get overflowX(): boolean;
         get overflowY(): boolean;
         get textEmpty(): boolean;

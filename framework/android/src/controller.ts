@@ -102,14 +102,14 @@ function setBaselineItems(parent: View, baseline: View, items: View[], index: nu
                 }
                 if (bottomAligned) {
                     if (height > baselineHeight) {
-                        if (!bottomBaseline || height >= bottomHeight) {
+                        if (height >= bottomHeight) {
                             if (bottomBaseline) {
                                 bottomBaseline.anchor(getAnchorBaseline(item), item.documentId);
                             }
                             bottomHeight = height;
                             bottomBaseline = item;
                         }
-                        else {
+                        else if (bottomBaseline) {
                             item.anchor(getAnchorBaseline(bottomBaseline), bottomBaseline.documentId);
                         }
                         continue;
@@ -616,7 +616,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     node.setLayoutHeight('0px');
                                 }
                                 if (parent.innerMostWrapped.documentBody) {
-                                    const options = { type: CSS_UNIT.LENGTH | CSS_UNIT.PERCENT, not: '100%' };
+                                    const options: HasOptions = { type: CSS_UNIT.LENGTH | CSS_UNIT.PERCENT, not: '100%' };
                                     do {
                                         if (!parent.has(dimension, options) && !parent.has(horizontal ? 'maxWidth' : 'maxHeight', options)) {
                                             if (horizontal) {
@@ -1329,9 +1329,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (!(node.naturalChild && node.isEmpty && !node.positionRelative && node.css('verticalAlign') === 'baseline' && !node.multiline && !node.blockVertical && node.lineHeight === lineHeight && node.fontSize === fontSize && node.zIndex === 0 && !node.inputElement && !node.controlElement)) {
                     return false;
                 }
-                else {
-                    contentWidth += node.linear.width;
-                }
+                contentWidth += node.linear.width;
                 if (contentWidth >= boxWidth) {
                     return false;
                 }
@@ -2258,6 +2256,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
             {
                 const clearMap = this.application.clearMap;
+                const emptyMap = clearMap.size === 0;
                 const baseWidth = node.marginLeft + node.marginRight < 0 ? node.marginRight : 0;
                 const lineWrap = node.css('whiteSpace') !== 'nowrap';
                 let boxWidth = documentParent.actualBoxWidth(getBoxWidth(node)),
@@ -2412,10 +2411,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             !floating && (previous.blockStatic || item.siblingsLeading.some(sibling => sibling.excluded && sibling.blockStatic) || siblings?.some(element => causesLineBreak(element))) ||
                             floating && !currentFloated && item.float === 'right' && item.previousSibling?.multiline ||
                             previous.autoMargin.horizontal ||
-                            clearMap.has(item) ||
+                            !emptyMap && clearMap.has(item) ||
                             Resource.checkPreIndent(previous))
                         {
-                            if (clearMap.has(item)) {
+                            if (!emptyMap && clearMap.has(item)) {
                                 item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1 });
                                 currentFloated = undefined;
                                 currentFloatedWidth = 0;

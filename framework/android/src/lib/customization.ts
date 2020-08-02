@@ -108,7 +108,7 @@ export const API_ANDROID: Customizations<View> = {
             shortcutId: false,
             shortcutLongLabel: false,
             shortcutShortLabel: false,
-            showMetadataInPreview: false,
+            showMetadataInPreview: false
         },
         assign: {}
     },

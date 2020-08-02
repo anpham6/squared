@@ -321,10 +321,7 @@ function requireDirectionSpacer(data: CssGridDirectionData, dimension: number) {
 function applyLayout(node: View, parent: View, item: View, mainData: CssGridData<View>, cellData: CssGridCellData, dimension: string) {
     const horizontal = dimension === 'width';
     const { column, row } = mainData;
-    const [data, cellStart, cellSpan, minDimension] =
-        horizontal
-            ? [column, cellData.columnStart, cellData.columnSpan, 'minWidth']
-            : [row, cellData.rowStart, cellData.rowSpan, 'minHeight'];
+    const [data, cellStart, cellSpan, minDimension] = horizontal ? [column, cellData.columnStart, cellData.columnSpan, 'minWidth'] : [row, cellData.rowStart, cellData.rowSpan, 'minHeight'];
     const { unit, unitMin } = data;
     let size = 0,
         minSize = 0,
@@ -401,7 +398,7 @@ function applyLayout(node: View, parent: View, item: View, mainData: CssGridData
             size = 0;
         }
         else {
-            const cellSize = horizontal ? item.parseUnit(value) : item.parseUnit(value, { dimension:  'height' });
+            const cellSize = horizontal ? item.parseUnit(value) : item.parseUnit(value, { dimension: 'height' });
             if (minSize === 0) {
                 size += cellSize;
             }
@@ -750,7 +747,8 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
         }
         return {
             parent: renderAs,
-            renderAs, outputAs
+            renderAs,
+            outputAs
         };
     }
 

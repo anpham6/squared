@@ -30,7 +30,7 @@ export default {
                         '@': ['ordering'],
                         '>': {
                             'objectAnimator': OBJECTANIMATOR.objectAnimator
-                        },
+                        }
                     },
                     'objectAnimator': OBJECTANIMATOR.objectAnimator
                 }
