@@ -848,8 +848,10 @@ export function cloneInstance<T = unknown>(value: T) {
 }
 
 export function cloneArray<T = unknown>(data: T[], result: T[] = [], object?: boolean) {
-    for (let i = 0; i < data.length; ++i) {
-        const value = data[i];
+    const length = data.length;
+    let i = 0;
+    while(i < length) {
+        const value = data[i++];
         if (Array.isArray(value)) {
             result.push(cloneArray(value, [], object) as any);
         }

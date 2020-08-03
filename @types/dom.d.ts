@@ -40,10 +40,10 @@ interface BoxPadding {
 }
 
 interface BoxModel extends BoxMargin, BoxPadding {
-    borderTopWidth?: number;
-    borderRightWidth?: number;
-    borderBottomWidth?: number;
-    borderLeftWidth?: number;
+    borderTopWidth: number;
+    borderRightWidth: number;
+    borderBottomWidth: number;
+    borderLeftWidth: number;
 }
 
 interface FlexData {

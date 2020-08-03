@@ -1418,8 +1418,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                                         if (pending.length > 0) {
                                                             sortEvaluateStart(pending, actualMaxTime);
                                                             [keyTimes, values, keySplines] = appendPartialKeyTimes(intervalMap, forwardMap, baseValueMap, k, item, keyTimes, values, keySplines, baseValue, pending, true);
-                                                            for (let l = 0; l < pending.length; ++l) {
-                                                                const previous = pending[l];
+                                                            for (const previous of pending) {
                                                                 if (previous.hasState(SYNCHRONIZE_STATE.INTERRUPTED) && data.includes(previous)) {
                                                                     queueIncomplete(incomplete, previous);
                                                                 }
@@ -1597,8 +1596,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                         for (let k = i; k < length; ++k) {
                                             if (groupDelay[k] < actualMaxTime) {
                                                 const dataA = groupData[k];
-                                                for (let l = 0; l < dataA.length; ++l) {
-                                                    const next = dataA[l];
+                                                for (const next of dataA) {
                                                     const nextDuration = next.getTotalDuration();
                                                     if (nextDuration > actualMaxTime && !next.hasState(SYNCHRONIZE_STATE.INTERRUPTED, SYNCHRONIZE_STATE.COMPLETE, SYNCHRONIZE_STATE.INVALID)) {
                                                         queueIncomplete(incomplete, next);
@@ -1891,8 +1889,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                             infiniteAnimations.push(map);
                         }
                         const maxDuration = multipleOf(duration);
-                        for (let i = 0; i < infiniteAnimations.length; ++i) {
-                            const item = infiniteAnimations[i];
+                        for (const item of infiniteAnimations) {
                             const attr = item.attributeName;
                             timelineMap[attr] = new Map<number, AnimateValue>();
                             let baseValue: AnimateValue = repeatingMap[attr].get(repeatingMaxTime[attr]) ?? baseValueMap[attr];

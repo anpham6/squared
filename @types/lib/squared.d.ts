@@ -107,7 +107,6 @@ declare module "lib" {
         const SVG_PROPERTIES: CssProperties;
         const ELEMENT_BLOCK: Set<string>;
         function getPropertiesAsTraits(value: number, map?: string): ObjectMap<CssPropertyData>;
-        function newBoxModel(): BoxModel;
         function getStyle(element: Element, pseudoElt?: string): CSSStyleDeclaration;
         function getRemSize(fixedWidth?: boolean): number;
         function getFontSize(element: Element): number;
@@ -153,7 +152,6 @@ declare module "lib" {
     }
 
     namespace dom {
-        function newBoxRect(): BoxRect;
         function newBoxRectDimension(): BoxRectDimension;
         function withinViewport(rect: DOMRect | ClientRect): boolean;
         function assignRect(rect: Undef<DOMRect | ClientRect | BoxRectDimension>, scrollPosition?: boolean): BoxRectDimension;

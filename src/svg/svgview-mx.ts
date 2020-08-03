@@ -118,32 +118,32 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                     if (times.length > 0) {
                         switch (item.tagName) {
                             case 'set':
-                                for (let i = 0; i < times.length; ++i) {
-                                    addAnimation(new SvgAnimation(element, item), times[i]);
+                                for (const time of times) {
+                                    addAnimation(new SvgAnimation(element, item), time);
                                 }
                                 break;
                             case 'animate':
-                                for (let i = 0; i < times.length; ++i) {
-                                    addAnimation(new SvgAnimate(element, item as SVGAnimateElement), times[i]);
+                                for (const time of times) {
+                                    addAnimation(new SvgAnimate(element, item as SVGAnimateElement), time);
                                 }
                                 break;
                             case 'animateTransform':
-                                for (let i = 0; i < times.length; ++i) {
+                                for (const time of times) {
                                     const animate = new SvgAnimateTransform(element, item as SVGAnimateTransformElement);
                                     if (SvgBuild.isShape(this) && this.path) {
                                         animate.transformFrom = SvgBuild.drawRefit(element as SVGGraphicsElement, this.parent, this.viewport?.precision);
                                     }
-                                    addAnimation(animate, times[i]);
+                                    addAnimation(animate, time);
                                 }
                                 break;
                             case 'animateMotion':
-                                for (let i = 0; i < times.length; ++i) {
+                                for (const time of times) {
                                     const animate = new SvgAnimateMotion(element, item as SVGAnimateMotionElement);
                                     const motionPathElement = animate.motionPathElement;
                                     if (motionPathElement) {
                                         animate.path = SvgBuild.drawRefit(motionPathElement, this.parent, this.viewport?.precision);
                                     }
-                                    addAnimation(animate, times[i]);
+                                    addAnimation(animate, time);
                                 }
                                 break;
                         }
@@ -368,8 +368,8 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                 if (animation[0].key !== 0) {
                                     animateMotion.addKeyPoint({ key: 0, value: animateMotion.distance });
                                 }
-                                for (let j = 0; j < animation.length; ++j) {
-                                    animateMotion.addKeyPoint(animation[j]);
+                                for (const keyPoint of animation) {
+                                    animateMotion.addKeyPoint(keyPoint);
                                 }
                                 if ((animation.pop() as NumberValue).key !== 1) {
                                     animateMotion.addKeyPoint({ key: 1, value: animateMotion.distance });

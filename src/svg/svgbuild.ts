@@ -302,9 +302,9 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         const totalLength = Math.ceil(element.getTotalLength());
         const result: SvgOffsetPath[] = [];
         if (totalLength) {
-            const keyPoints: Point[] = [];
-            const rotatingPoints: boolean[] = [];
-            let rotateFixed = 0,
+            let keyPoints: Point[] = [],
+                rotatingPoints: boolean[] = [],
+                rotateFixed = 0,
                 rotateInitial = 0,
                 rotatePrevious = 0,
                 overflow = 0,
@@ -322,11 +322,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                         case 'H':
                         case 'V':
                         case 'Z': {
-                            const values = item.value;
-                            for (let i = 0; i < values.length; ++i) {
-                                keyPoints.push(values[i]);
-                                rotatingPoints.push(false);
-                            }
+                            keyPoints = keyPoints.concat(item.value);
+                            rotatingPoints = rotatingPoints.concat(new Array(item.value.length).fill(false));
                             break;
                         }
                         case 'C':
@@ -667,8 +664,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static filterTransforms(transforms: SvgTransform[], exclude?: number[]) {
         const result: SvgTransform[] = [];
-        for (let i = 0; i < transforms.length; ++i) {
-            const item = transforms[i];
+        for (const item of transforms) {
             const type = item.type;
             if (!exclude || !exclude.includes(type)) {
                 switch (type) {
@@ -742,8 +738,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                         break;
                 }
             }
-            for (let i = 0; i < result.length; ++i) {
-                const pt = result[i];
+            for (const pt of result) {
                 const { x, y } = pt;
                 pt.x = MATRIX.applyX(m, x, y + y1) + x2;
                 pt.y = MATRIX.applyY(m, x + x1, y) + y2;

@@ -1,15 +1,6 @@
 import { getStyle, hasCoords } from './css';
 import { iterateArray, withinRange } from './util';
 
-export function newBoxRect(): BoxRect {
-    return {
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0
-    };
-}
-
 export function newBoxRectDimension(): BoxRectDimension {
     return {
         top: 0,

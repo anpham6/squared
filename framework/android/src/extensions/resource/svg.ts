@@ -989,8 +989,8 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     for (const item of transformMap.values()) {
                         transformTargets.push(item.sort(sortSynchronized));
                     }
-                    for (let i = 0; i < isolatedData.length; ++i) {
-                        isolatedTargets.push([[isolatedData[i]]]);
+                    for (const item of isolatedData) {
+                        isolatedTargets.push([[item]]);
                     }
                     const combined = [togetherTargets, transformTargets, ...isolatedTargets];
                     for (let index = 0, length = combined.length; index < length; ++index) {
