@@ -331,7 +331,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     const value = applyTemplate('resources', STYLE_TMPL, [item]);
                     result.push(
                         replaceTab(
-                            convertPixels ? value.replace(/>(-?[\d.]+)px</g, (found, ...capture) => `>${capture[0]}dp<`) : value,
+                            convertPixels ? value.replace(/>(-?[\d.]+)px</g, (found, ...capture: string[]) => `>${capture[0]}dp<`) : value,
                             insertSpaces
                         ),
                         match[1],
@@ -370,7 +370,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             for (const [name, value] of STORED.drawables.entries()) {
                 result.push(
                     replaceTab(
-                        convertPixels ? value.replace(/"(-?[\d.]+)px"/g, (match, ...capture) => `"${capture[0]}dp"`) : value,
+                        convertPixels ? value.replace(/"(-?[\d.]+)px"/g, (match, ...capture: string[]) => `"${capture[0]}dp"`) : value,
                         insertSpaces
                     ),
                     directory,

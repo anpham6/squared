@@ -111,7 +111,7 @@ let Node: serve.INode,
         app.use(body_parser.json({ limit: request_post_limit || '250mb' }));
     }
     catch (err) {
-        console.log(`${chalk.bold.bgGrey.blackBright('FAIL')}: ${err}`);
+        console.log(`${chalk.bold.bgGrey.blackBright('FAIL')}: ${err as string}`);
     }
 
     const argv = (yargs
@@ -222,7 +222,7 @@ let Node: serve.INode,
                             ++mounted;
                         }
                         catch (err) {
-                            console.log(`${chalk.bold.bgGrey.blackBright('FAIL')}: ${dirname} -> ${err}`);
+                            console.log(`${chalk.bold.bgGrey.blackBright('FAIL')}: ${dirname} -> ${err as string}`);
                         }
                     }
                 }
@@ -326,7 +326,7 @@ let Node: serve.INode,
             return /^\\\\([\w.-]+)\\([\w-]+\$|[\w-]+\$\\.+|[\w-]+\\.*)$/.test(value);
         }
         writeFail(description: string, message: any) {
-            console.log(`${chalk.bgRed.bold.white('FAIL')}: ${description} (${message})`);
+            console.log(`${chalk.bgRed.bold.white('FAIL')}: ${description} (${message as string})`);
         }
     }
     (DISK_READ, DISK_WRITE, UNC_READ, UNC_WRITE);

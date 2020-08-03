@@ -256,8 +256,18 @@ export default abstract class Application<T extends Node> implements squared.bas
             for (const [uri, data] of rawData.entries()) {
                 const mimeType = data.mimeType;
                 if (mimeType?.startsWith('image/') && !mimeType.endsWith('svg+xml')) {
+                    let src = `data:${mimeType};`;
+                    if (data.base64) {
+                        src += 'base64,' + data.base64;
+                    }
+                    else if (data.content) {
+                        src += data.content;
+                    }
+                    else {
+                        continue;
+                    }
                     const element = document.createElement('img');
-                    element.src = `data:${mimeType};${data.base64 ? 'base64,' + data.base64 : data.content}`;
+                    element.src = src;
                     const { naturalWidth: width, naturalHeight: height } = element;
                     if (width > 0 && height > 0) {
                         data.width = width;

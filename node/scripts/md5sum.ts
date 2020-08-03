@@ -322,7 +322,7 @@ else if (host && data && browserName && snapshot) {
         });
     }
     catch (err) {
-        console.log(`FAIL: Build incomplete (${err})`);
+        console.log(`FAIL: Build incomplete (${err as string})`);
     }
 }
 else {

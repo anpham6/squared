@@ -134,7 +134,7 @@ module.exports = {
         "@typescript-eslint/prefer-string-starts-ends-with": "error",
         "@typescript-eslint/quotes": "off",
         "@typescript-eslint/restrict-plus-operands": "off",
-        "@typescript-eslint/restrict-template-expressions": "off",
+        "@typescript-eslint/restrict-template-expressions": "error",
         "@typescript-eslint/triple-slash-reference": "off",
         "@typescript-eslint/unified-signatures": "error",
         "@typescript-eslint/no-extra-parens": ["error", "all", {

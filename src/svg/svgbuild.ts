@@ -154,7 +154,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         else {
             cx -= rx;
         }
-        return `M${cx},${cy} a${rx},${ry},0,0,1,${radius},0 a${rx},${ry},0,0,1,-${radius},0`;
+        return `M${cx},${cy} a${rx},${ry!},0,0,1,${radius},0 a${rx},${ry!},0,0,1,-${radius},0`;
     }
 
     public static drawPolyline(values: Point[] | DOMPoint[], precision?: number) {
@@ -199,7 +199,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     result += value.coordinates[1];
                     break;
                 case 'A':
-                    result += `${value.radiusX},${value.radiusY},${value.xAxisRotation},${value.largeArcFlag},${value.sweepFlag},${value.coordinates.join(',')}`;
+                    result += `${value.radiusX!},${value.radiusY!},${value.xAxisRotation!},${value.largeArcFlag!},${value.sweepFlag!},${value.coordinates.join(',')}`;
                     break;
             }
         }

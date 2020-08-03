@@ -77,7 +77,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                                 renderTemplates.splice(index, templates.length, {
                                     type: NODE_TEMPLATE.INCLUDE,
                                     node: templates[0].node,
-                                    content: controller.renderNodeStatic({ controlName: 'include', width: 'match_parent' }, { layout: `@layout/${name}`, android: {} }),
+                                    content: controller.renderNodeStatic({ controlName: 'include', width: 'match_parent' }, { layout: `@layout/${name!}`, android: {} }),
                                     indent: true
                                 } as NodeIncludeTemplate<T>);
                                 let content = controller.writeDocument(templates, depth, this.application.userSettings.showAttributes);

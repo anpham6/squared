@@ -101,11 +101,11 @@ if (output) {
                 throw err;
             }
             else {
-                console.log(`WRITE: Bundle created (${output})`);
+                console.log(`WRITE: Bundle created (${output!})`);
             }
         });
     }
     catch (err) {
-        console.log(`FAIL: Build incomplete (${err})`);
+        console.log(`FAIL: Build incomplete (${err as string})`);
     }
 }

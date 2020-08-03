@@ -39,7 +39,7 @@ function getFilePath(value: string, saveTo?: boolean): [Undef<string>, string, s
                 break;
             }
         }
-        value = `${pathname.join('/')}/${value.split('../').pop()}`;
+        value = `${pathname.join('/')}/${value.split('../').pop() as string}`;
     }
     else if (value.startsWith('./')) {
         value = value.substring(2);
@@ -487,7 +487,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 const data = File.parseUri(uri, { preserveCrossOrigin, saveAs: file, saveTo });
                 if (this.validFile(data) && !result.find(item => item.uri === uri)) {
                     if (mimeType) {
-                        data.mimeType = file ? `${mimeType}:${data.mimeType}` : mimeType;
+                        data.mimeType = file && data.mimeType ? `${mimeType}:${data.mimeType}` : mimeType;
                     }
                     processExtensions.call(this, data, getExtensions(element));
                     result.push(data);
@@ -560,7 +560,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     data = { pathname: '__generated__/base64', filename, mimeType, base64 };
                 }
                 else if (mimeType && rawData.content) {
-                    data = { pathname: `__generated__/${mimeType.split('/').pop()}`, filename, content: rawData.content };
+                    data = { pathname: `__generated__/${mimeType.split('/').pop() as string}`, filename, content: rawData.content };
                 }
                 else {
                     continue;

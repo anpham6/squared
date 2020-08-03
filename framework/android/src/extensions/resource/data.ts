@@ -19,7 +19,7 @@ export default class ResourceData<T extends View> extends squared.base.Extension
                 const node = rendered[i++];
                 if (node.styleElement && node.visible) {
                     for (const [name] of node.namespaces()) {
-                        const dataset = getDataSet(node.dataset, 'viewmodel' + capitalize(name));
+                        const dataset = getDataSet(node.dataset, 'viewmodel' + capitalize(name)) as Undef<StringMapChecked>;
                         if (dataset) {
                             for (const attr in dataset) {
                                 node.attr(name, attr, `@{${dataset[attr]}}`, true);

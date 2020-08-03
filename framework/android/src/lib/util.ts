@@ -335,7 +335,7 @@ export function localizeString(value: string, rtl: boolean, api: number) {
 }
 
 export function getXmlNs(value: string) {
-    return XMLNS_ANDROID[value] ? `xmlns:${value}="${XMLNS_ANDROID[value]}"` : '';
+    return XMLNS_ANDROID[value] ? `xmlns:${value}="${XMLNS_ANDROID[value] as string}"` : '';
 }
 
 export function getRootNs(value: string) {

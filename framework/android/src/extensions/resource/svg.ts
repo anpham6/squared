@@ -618,7 +618,7 @@ function insertTargetAnimation(data: AnimatedVectorTemplate[], name: string, tar
                 applyTemplate('set', SET_TMPL, [targetSetTemplate])
             )
         };
-        if (targetData.animation !== '') {
+        if (targetData.animation) {
             targetData.animation = `@anim/${targetData.animation}`;
             data[0].target.push(targetData);
         }
