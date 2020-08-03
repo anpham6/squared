@@ -444,16 +444,16 @@ Layout rendering can also be customized using extensions as the program was buil
 
     // Node extension functions and properties
     squared.extend({
-        id: 1,
+        _id: 1,
         getId: function() {
-            return this.id;
+            return this._id;
         },
         altId: {
             get: function() {
-                return this.id;
+                return this._id;
             },
             set: function(value) {
-                this.id += value;
+                this._id += value;
             }
         }
     }, 2);

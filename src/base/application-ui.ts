@@ -237,7 +237,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
         }
         const documentRoot: squared.base.LayoutRoot<T>[] = [];
-        i = 0, j = rendered.length;
+        i = 0;
         while (i < j) {
             const node = rendered[i++];
             if (node.hasResource(NODE_RESOURCE.BOX_SPACING)) {
@@ -797,7 +797,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 mapData.set(depth, new Set([node]));
             }
         };
-        let i: number, length: number;
+        let i: number;
         setMapDepth(-1, rootNode!.parent as T);
         cache.each(node => {
             if (node.length > 0) {
@@ -805,34 +805,28 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (node.floatContainer) {
                     const floated = new Set<string>();
                     let clearable: T[] = [];
-                    const children = (node.documentChildren || node.naturalChildren) as T[];
-                    length = children.length;
-                    i = 0;
-                    while (i < length) {
-                        const item = children[i++];
-                        if (item.pageFlow) {
-                            const floating = item.floating;
-                            if (floated.size > 0) {
-                                const clear = item.css('clear');
-                                if (floated.has(clear) || clear === 'both') {
-                                    if (!floating) {
-                                        item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1 });
-                                    }
-                                    clearMap.set(item, floated.size === 2 ? 'both' : floated.values().next().value as string);
-                                    floated.clear();
-                                    clearable.length = 0;
+                    for (const item of (node.documentChildren || node.naturalChildren) as T[]) {
+                        const floating = item.floating;
+                        if (floated.size > 0 && item.pageFlow) {
+                            const clear = item.css('clear');
+                            if (floated.has(clear) || clear === 'both') {
+                                if (!floating) {
+                                    item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1 });
                                 }
-                                else if (item.blockStatic && Math.ceil(item.bounds.top) >= Math.max(...clearable.map(previous => previous.bounds.bottom))) {
-                                    item.data(Application.KEY_NAME, 'cleared', clearable);
-                                    floated.clear();
-                                    clearable = [];
-                                }
+                                clearMap.set(item, floated.size === 2 ? 'both' : floated.values().next().value as string);
+                                floated.clear();
+                                clearable.length = 0;
                             }
-                            if (floating) {
-                                const float = item.float;
-                                floated.add(float);
-                                clearable.push(item);
+                            else if (item.blockStatic && Math.ceil(item.bounds.top) >= Math.max(...clearable.map(previous => previous.bounds.bottom))) {
+                                item.data(Application.KEY_NAME, 'cleared', clearable);
+                                floated.clear();
+                                clearable = [];
                             }
+                        }
+                        if (floating) {
+                            const float = item.float;
+                            floated.add(float);
+                            clearable.push(item);
                         }
                     }
                 }
@@ -859,7 +853,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
         };
         const extensions = this.extensionsAll as ExtensionUI<T>[];
-        length = extensions.length;
+        const length = extensions.length;
         i = 0;
         while (i < length) {
             extensions[i++].beforeBaseLayout(sessionId);
@@ -872,6 +866,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     continue;
                 }
                 const renderExtension = parent.renderExtension as Undef<ExtensionUI<T>[]>;
+                const floatContainer = parent.floatContainer;
                 const axisY = parent.toArray() as T[];
                 for (i = 0; i < q; ++i) {
                     let nodeY = axisY[i];
@@ -880,7 +875,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                     let parentY = nodeY.parent as T;
                     if (q > 1 && i < q - 1 && nodeY.pageFlow && !nodeY.nodeGroup && (parentY.alignmentType === 0 || parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) || nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) && !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
-                        const floatContainer = parent.floatContainer;
                         const horizontal: T[] = [];
                         const vertical: T[] = [];
                         let j = i, k = 0;
@@ -990,13 +984,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             const items = horizontal.filter(item => !item.renderExclude || floatContainer && clearMap.has(item));
                             if (items.length > 1) {
                                 const layout = controllerHandler.processTraverseHorizontal(new LayoutUI(parentY, nodeY, 0, 0, items), axisY);
-                                if (layout) {
-                                    if (horizontal[horizontal.length - 1] === axisY[q - 1]) {
-                                        parentY.removeAlign(NODE_ALIGNMENT.UNKNOWN);
-                                    }
-                                    if (this.addLayout(layout)) {
-                                        parentY = nodeY.parent as T;
-                                    }
+                                if (horizontal[horizontal.length - 1] === axisY[q - 1]) {
+                                    parentY.removeAlign(NODE_ALIGNMENT.UNKNOWN);
+                                }
+                                if (layout && this.addLayout(layout)) {
+                                    parentY = nodeY.parent as T;
                                 }
                             }
                         }
@@ -1004,17 +996,15 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             const items = vertical.filter(item => !item.renderExclude || floatContainer && clearMap.has(item));
                             if (items.length > 1) {
                                 const layout = controllerHandler.processTraverseVertical(new LayoutUI(parentY, nodeY, 0, 0, items), axisY);
-                                if (layout) {
-                                    const segEnd = vertical[vertical.length - 1];
-                                    if (segEnd === axisY[q - 1]) {
-                                        parentY.removeAlign(NODE_ALIGNMENT.UNKNOWN);
-                                    }
-                                    else if (segEnd.inlineFlow && segEnd !== axisY[q - 1]) {
-                                        segEnd.addAlign(NODE_ALIGNMENT.EXTENDABLE);
-                                    }
-                                    if (this.addLayout(layout)) {
-                                        parentY = nodeY.parent as T;
-                                    }
+                                const segEnd = vertical[vertical.length - 1];
+                                if (segEnd === axisY[q - 1]) {
+                                    parentY.removeAlign(NODE_ALIGNMENT.UNKNOWN);
+                                }
+                                else if (segEnd.inlineFlow && segEnd !== axisY[q - 1]) {
+                                    segEnd.addAlign(NODE_ALIGNMENT.EXTENDABLE);
+                                }
+                                if (layout && this.addLayout(layout)) {
+                                    parentY = nodeY.parent as T;
                                 }
                             }
                         }
@@ -1031,9 +1021,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                     }
                     if (!nodeY.rendered && nodeY.hasSection(APP_SECTION.EXTENSION)) {
-                        const descendant = extensionMap.get(nodeY.id);
+                        const descendant = extensionMap.get(nodeY.id) as Undef<ExtensionUI<T>[]>;
                         let combined = descendant
-                            ? renderExtension?.concat(descendant as ExtensionUI<T>[]) || descendant
+                            ? renderExtension ? renderExtension.concat(descendant) : descendant
                             : renderExtension,
                             next: Undef<boolean>;
                         if (combined) {
@@ -1070,7 +1060,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             const r = combined.length;
                             let j = 0;
                             while (j < r) {
-                                const ext = combined[j++] as ExtensionUI<T>;
+                                const ext = combined[j++];
                                 if (ext.is(nodeY)) {
                                     if (ext.condition(nodeY, parentY) && (!descendant || !descendant.includes(ext))) {
                                         const result = ext.processNode(nodeY, parentY);
@@ -1173,8 +1163,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected setConstraints(sessionId: string) {
-        const cache = this.getProcessingCache(sessionId);
-        this.controllerHandler.setConstraints(cache);
+        this.controllerHandler.setConstraints(this.getProcessingCache(sessionId));
         const extensions = this.extensions;
         const length = extensions.length;
         let i = 0;
@@ -1368,7 +1357,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         alignmentType: alignmentType | (segments.some(seg => seg === rightSub || seg === rightAbove) ? NODE_ALIGNMENT.RIGHT : 0),
                         itemCount
                     }));
-}
+                }
             }
             else {
                 segments = [item as T[]];
@@ -1669,11 +1658,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 }
                                 else if (match[2] || match[5]) {
                                     const counterType = match[2] === 'counter';
-                                    const [counterName, styleName] =
-                                        counterType
-                                            ? [match[3], match[4] || 'decimal']
-                                            : [match[6], match[8] || 'decimal'];
-                                    const initialValue = (getCounterIncrementValue(element, counterName, pseudoElt, sessionId, 0) ?? 1) + (getCounterValue(style.getPropertyValue('counter-reset'), counterName, 0) || 0);
+                                    const [counterName, styleName] = counterType ? [match[3], match[4] || 'decimal'] : [match[6], match[8] || 'decimal'];
+                                    const initialValue = (getCounterIncrementValue(element, counterName, pseudoElt, sessionId, 0) ?? 1) + (getCounterValue(style.getPropertyValue('counter-reset'), counterName, 0) ?? 0);
                                     const subcounter: number[] = [];
                                     let current: Null<HTMLElement> = element,
                                         counter = initialValue,

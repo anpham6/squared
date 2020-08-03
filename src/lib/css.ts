@@ -3004,7 +3004,7 @@ export function calculateVar(element: CSSElement, value: string, options: Calcul
                         else {
                             boundingElement = element.parentElement;
                             if (boundingElement instanceof HTMLElement) {
-                                let style: CSSStyleDeclaration | undefined;
+                                let style: Undef<CSSStyleDeclaration>;
                                 if (hasCoords(getStyle(element).position)) {
                                     do {
                                         style = getStyle(boundingElement);
@@ -3178,10 +3178,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, optio
             for (let i = 0; i < 2; ++i) {
                 let position = orientation[i];
                 const horizontal = i === 0;
-                const [direction, offsetParent] =
-                    horizontal
-                        ? ['left', width]
-                        : ['top', height];
+                const [direction, offsetParent] = horizontal ? ['left', width] : ['top', height];
                 const directionAsPercent = direction + 'AsPercent';
                 switch (position) {
                     case '0%':

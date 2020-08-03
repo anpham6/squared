@@ -462,11 +462,11 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     public resourceRawAudioToString(options: FileUniversalOptions = {}): string[] {
-        if (Resource.ASSETS.video.size > 0) {
+        if (Resource.ASSETS.audio.size > 0) {
             const result: string[] = [];
-            for (const video of Resource.ASSETS.audio.values()) {
-                const uri = video.uri as string;
-                result.push(uri, video.mimeType || '', fromLastIndexOf(uri, '/', '\\'));
+            for (const audio of Resource.ASSETS.audio.values()) {
+                const uri = audio.uri as string;
+                result.push(uri, audio.mimeType || '', fromLastIndexOf(uri, '/', '\\'));
             }
             if (options.directory || options.filename) {
                 const assets = getRawAssets(getOutputDirectory(this.userSettings.outputDirectory) + this.directory.audio, result);

@@ -1152,9 +1152,15 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     while (i < length) {
                         const item = nested[i++];
                         const node = item.node.innerMostWrapped;
-                        const adjacent = node.ascend({ condition: (above: T) => actualParent.includes(above), error: (above: T) => above.rootElement })[0] as T | undefined;
+                        const adjacent = node.ascend({ condition: (above: T) => actualParent.includes(above), error: (above: T) => above.rootElement })[0] as Undef<T>;
                         if (adjacent) {
-                            map.get(adjacent)?.push(item) || map.set(adjacent, [item]);
+                            const data = map.get(adjacent);
+                            if (data) {
+                                data.push(item);
+                            }
+                            else {
+                                map.set(adjacent, [item]);
+                            }
                         }
                         else if (node.zIndex < 0) {
                             below.push(item);
@@ -1431,9 +1437,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public renderNode(layout: LayoutUI<T>): NodeXmlTemplate<T> {
-        let { parent, containerType } = layout;
         const node = layout.node;
-        let controlName = View.getControlName(containerType, node.api);
+        let { parent, containerType } = layout,
+            controlName = View.getControlName(containerType, node.api);
         const setReadOnly = () => {
             const element = node.element as HTMLInputElement;
             if (element.readOnly) {
@@ -3563,14 +3569,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if (node.constraint[axis]) {
             return;
         }
-        let orientation: Undef<OrientationAttr>,
-            percent: Undef<boolean>,
+        let percent: Undef<boolean>,
             opposing: Undef<boolean>;
         if (options) {
-            ({ orientation, percent, opposing } = options);
-            if (orientation && axis !== orientation) {
+            if (options.orientation && axis !== options.orientation) {
                 return;
             }
+            ({ percent, opposing } = options);
         }
         let documentParent = node.documentParent as T;
         if (parent.nodeGroup && !documentParent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
@@ -3704,7 +3709,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                     const wrapped = item.innerMostWrapped as T;
                     const boundsA = wrapped.bounds;
-                    if (withinRange(bounds[TL], boundsA[TL]) || withinRange(linear[TL], wrapped.linear[TL])) {
+                    if (withinRange(bounds[TL], boundsA[TL])) {
                         const offset = bounds[LT] - boundsA[RB];
                         if (offset >= 0) {
                             setAnchorOffset(item.documentId, horizontal ? 'leftRight' : 'topBottom', offset);

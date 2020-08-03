@@ -15,10 +15,7 @@ const REGEXP_WORD = /(?:[^\w\s\n]+[\s\n]+|(?:&#?[A-Za-z0-9]{2};[^\w]*|[^\w]+|\b)
 
 function getFontMeasureAdjust(node: View) {
     const value = node.dataset.androidFontMeasureAdjust;
-    if (value) {
-        return value === 'false' ? Infinity : parseFloat(value);
-    }
-    return NaN;
+    return value === 'false' ? Infinity : value ? parseFloat(value) : NaN;
 }
 
 function setContentAltered(node: View, indexing: boolean) {
@@ -47,7 +44,7 @@ function isTextElement(node: View) {
     return node.textElement && !(node.tagName === 'LABEL' && node.toElementString('htmlFor') !== '');
 }
 
-const checkBreakable = (node: View, checkMargin?: boolean): boolean => node.plainText || node.naturalChild && node.naturalElements.length === 0 && !node.floating && node.innerAfter === undefined && node.innerBefore === undefined && isUnstyled(node, checkMargin);
+const checkBreakable = (node: View, checkMargin?: boolean) => node.plainText || node.naturalChild && node.naturalElements.length === 0 && !node.floating && node.innerAfter === undefined && node.innerBefore === undefined && isUnstyled(node, checkMargin);
 const hasTextIndent = (node: View) => node.textElement && node.textIndent < 0 && node.naturalElement && !node.floating;
 
 export default class Multiline<T extends View> extends squared.base.ExtensionUI<T> {

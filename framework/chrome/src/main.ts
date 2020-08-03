@@ -50,6 +50,7 @@ function createAssetsOptions(assets: ChromeAsset[], options?: FileOptions, direc
     };
 }
 
+const checkFileName = (value: Undef<string>) => value || application.userSettings.outputArchiveName;
 const directoryNotProvided = () => Promise.reject('Directory not provided.');
 
 const appBase: chrome.ChromeFramework<Node> = {
@@ -121,25 +122,25 @@ const appBase: chrome.ChromeFramework<Node> = {
             return directoryNotProvided();
         },
         saveHtmlPage(filename?: string, options?: ChromeFileArchivingOptions) {
-            return file?.archiving(createAssetsOptions(file.getHtmlPage(options), options, undefined, (filename || application.userSettings.outputArchiveName) + '-html')) || frameworkNotInstalled();
+            return file?.archiving(createAssetsOptions(file.getHtmlPage(options), options, undefined, checkFileName(filename) + '-html')) || frameworkNotInstalled();
         },
         saveScriptAssets(filename?: string, options?: ChromeFileArchivingOptions) {
-            return file?.archiving(createAssetsOptions(file.getScriptAssets(options), options, undefined, (filename || application.userSettings.outputArchiveName) + '-script')) || frameworkNotInstalled();
+            return file?.archiving(createAssetsOptions(file.getScriptAssets(options), options, undefined, checkFileName(filename) + '-script')) || frameworkNotInstalled();
         },
         saveLinkAssets(filename?: string, options?: ChromeFileArchivingOptions) {
-            return file?.archiving(createAssetsOptions(file.getLinkAssets(options), options, undefined, (filename || application.userSettings.outputArchiveName) + '-link')) || frameworkNotInstalled();
+            return file?.archiving(createAssetsOptions(file.getLinkAssets(options), options, undefined, checkFileName(filename) + '-link')) || frameworkNotInstalled();
         },
         saveImageAssets(filename?: string, options?: ChromeFileArchivingOptions) {
-            return file?.archiving(createAssetsOptions(file.getImageAssets(options), options, undefined, (filename || application.userSettings.outputArchiveName) + '-image')) || frameworkNotInstalled();
+            return file?.archiving(createAssetsOptions(file.getImageAssets(options), options, undefined, checkFileName(filename) + '-image')) || frameworkNotInstalled();
         },
         saveVideoAssets(filename?: string, options?: ChromeFileArchivingOptions) {
-            return file?.archiving(createAssetsOptions(file.getVideoAssets(options), options, undefined, (filename || application.userSettings.outputArchiveName) + '-video')) || frameworkNotInstalled();
+            return file?.archiving(createAssetsOptions(file.getVideoAssets(options), options, undefined, checkFileName(filename) + '-video')) || frameworkNotInstalled();
         },
         saveAudioAssets(filename?: string, options?: ChromeFileArchivingOptions) {
-            return file?.archiving(createAssetsOptions(file.getAudioAssets(options), options, undefined, (filename || application.userSettings.outputArchiveName) + '-audio')) || frameworkNotInstalled();
+            return file?.archiving(createAssetsOptions(file.getAudioAssets(options), options, undefined, checkFileName(filename) + '-audio')) || frameworkNotInstalled();
         },
         saveFontAssets(filename?: string, options?: ChromeFileArchivingOptions) {
-            return file?.archiving(createAssetsOptions(file.getFontAssets(options), options, undefined, (filename || application.userSettings.outputArchiveName) + '-font')) || frameworkNotInstalled();
+            return file?.archiving(createAssetsOptions(file.getFontAssets(options), options, undefined, checkFileName(filename) + '-font')) || frameworkNotInstalled();
         }
     },
     create() {
