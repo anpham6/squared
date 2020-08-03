@@ -3,7 +3,7 @@
     "target": "es2017",
     "module": "es6",
     "moduleResolution": "node",
-    "inlineSourceMap": false,
+    "sourceMap": false,
     "lib": ["dom", "es2017"],
     "outDir": "./build",
     "noUnusedLocals": true,

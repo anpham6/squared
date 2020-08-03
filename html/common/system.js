@@ -1,5 +1,5 @@
 /*
-* SystemJS 6.3.1
+* SystemJS 6.4.1
 */
 (function () {
   function errMsg(errCode, msg) {
@@ -126,6 +126,8 @@
     return to;
   }
 
+  var IMPORT_MAP = hasSymbol ? Symbol() : '#';
+
   function resolveAndComposePackages (packages, outPackages, baseUrl, parentMap, parentUrl) {
     for (var p in packages) {
       var resolvedLhs = resolveIfNotPlainOrUrl(p, baseUrl) || p;
@@ -143,7 +145,7 @@
   }
 
   function resolveAndComposeImportMap (json, baseUrl, parentMap) {
-    var outMap = { imports: objectAssign({}, parentMap.imports), scopes: objectAssign({}, parentMap.scopes) };
+    var outMap = { imports: objectAssign({}, parentMap.imports), scopes: objectAssign({}, parentMap.scopes), depcache: objectAssign({}, parentMap.depcache) };
 
     if (json.imports)
       resolveAndComposePackages(json.imports, outMap.imports, baseUrl, parentMap, null);
@@ -152,6 +154,12 @@
       for (var s in json.scopes) {
         var resolvedScope = resolveUrl(s, baseUrl);
         resolveAndComposePackages(json.scopes[s], outMap.scopes[resolvedScope] || (outMap.scopes[resolvedScope] = {}), baseUrl, parentMap, resolvedScope);
+      }
+
+    if (json.depcache)
+      for (var d in json.depcache) {
+        var resolvedDepcache = resolveUrl(d, baseUrl);
+        outMap.depcache[resolvedDepcache] = json.depcache[d];
       }
 
     return outMap;
@@ -247,8 +255,8 @@
   function loadToId (load) {
     return load.id;
   }
-  function triggerOnload (loader, load, err) {
-    loader.onload(err, load.id, load.d && load.d.map(loadToId));
+  function triggerOnload (loader, load, err, isErrSource) {
+    loader.onload(err, load.id, load.d && load.d.map(loadToId), !!isErrSource);
     if (err)
       throw err;
   }
@@ -308,8 +316,10 @@
           }
         }
         if (changed)
-          for (var i = 0; i < importerSetters.length; i++)
-            importerSetters[i](ns);
+          for (var i = 0; i < importerSetters.length; i++) {
+            var setter = importerSetters[i];
+            if (setter) setter(ns);
+          }
         return value;
       }
       var declared = registration[1](_export, registration[1].length === 2 ? {
@@ -323,7 +333,7 @@
     });
 
     instantiatePromise = instantiatePromise.catch(function (err) {
-        triggerOnload(loader, load, err);
+        triggerOnload(loader, load, err, true);
       });
 
     var linkPromise = instantiatePromise
@@ -347,9 +357,14 @@
           });
         })
       }))
-      .then(function (depLoads) {
-        load.d = depLoads;
-      });
+      .then(
+        function (depLoads) {
+          load.d = depLoads;
+        },
+         function (err) {
+          triggerOnload(loader, load, err, false);
+        }
+      )
     });
 
     linkPromise.catch(function (err) {
@@ -438,26 +453,23 @@
     // deps execute first, unless circular
     var depLoadPromises;
     load.d.forEach(function (depLoad) {
-      if (true) {
         try {
           var depLoadPromise = postOrderExec(loader, depLoad, seen);
-          if (depLoadPromise) {
-            depLoadPromise.catch(function (err) {
-              triggerOnload(loader, load, err);
-            });
+          if (depLoadPromise) 
             (depLoadPromises = depLoadPromises || []).push(depLoadPromise);
-          }
         }
         catch (err) {
-          triggerOnload(loader, load, err);
+          load.e = null;
+          load.er = err;
+          triggerOnload(loader, load, err, false);
         }
-      }
-      else {
-        var depLoadPromise;
-      }
     });
     if (depLoadPromises)
-      return Promise.all(depLoadPromises).then(doExec);
+      return Promise.all(depLoadPromises).then(doExec, function (err) {
+        load.e = null;
+        load.er = err;
+        triggerOnload(loader, load, err, false);
+      });
 
     return doExec();
 
@@ -465,28 +477,25 @@
       try {
         var execPromise = load.e.call(nullContext);
         if (execPromise) {
-          if (!false)
             execPromise = execPromise.then(function () {
               load.C = load.n;
               load.E = null; // indicates completion
-              triggerOnload(loader, load, null);
+              if (!false) triggerOnload(loader, load, null, true);
             }, function (err) {
-              triggerOnload(loader, load, err);
-            });
-          else
-            execPromise = execPromise.then(function () {
-              load.C = load.n;
+              load.er = err;
               load.E = null;
+              if (!false) triggerOnload(loader, load, err, true);
+              else throw err;
             });
           return load.E = load.E || execPromise;
         }
         // (should be a promise, but a minify optimization to leave out Promise.resolve)
         load.C = load.n;
-        if (!false) triggerOnload(loader, load, null);
+        if (!false) triggerOnload(loader, load, null, true);
       }
       catch (err) {
         load.er = err;
-        triggerOnload(loader, load, err);
+        triggerOnload(loader, load, err, true);
       }
       finally {
         load.L = load.I = undefined;
@@ -498,86 +507,71 @@
   envGlobal.System = new SystemJS();
 
   /*
-   * Import map support for SystemJS
-   * 
-   * <script type="systemjs-importmap">{}</script>
-   * OR
-   * <script type="systemjs-importmap" src=package.json></script>
-   * 
-   * Only those import maps available at the time of SystemJS initialization will be loaded
-   * and they will be loaded in DOM order.
-   * 
-   * There is no support for dynamic import maps injection currently.
+   * Script instantiation loading
    */
 
-  var IMPORT_MAP = hasSymbol ? Symbol() : '#';
-  var IMPORT_MAP_PROMISE = hasSymbol ? Symbol() : '$';
-
-  iterateDocumentImportMaps(function (script) {
-    script._t = fetch(script.src).then(function (res) {
-      return res.text();
+  if (hasDocument) {
+    window.addEventListener('error', function (evt) {
+      lastWindowErrorUrl = evt.filename;
+      lastWindowError = evt.error;
     });
-  }, '[src]');
-
-  systemJSPrototype.prepareImport = function () {
-    var loader = this;
-    if (!loader[IMPORT_MAP_PROMISE]) {
-      loader[IMPORT_MAP] = { imports: {}, scopes: {} };
-      loader[IMPORT_MAP_PROMISE] = Promise.resolve();
-      iterateDocumentImportMaps(function (script) {
-        loader[IMPORT_MAP_PROMISE] = loader[IMPORT_MAP_PROMISE].then(function () {
-          return (script._t || script.src && fetch(script.src).then(function (res) { return res.text(); }) || Promise.resolve(script.innerHTML))
-          .then(function (text) {
-            try {
-              return JSON.parse(text);
-            } catch (err) {
-              throw Error( errMsg(1, "systemjs-importmap contains invalid JSON"));
-            }
-          })
-          .then(function (newMap) {
-            loader[IMPORT_MAP] = resolveAndComposeImportMap(newMap, script.src || baseUrl, loader[IMPORT_MAP]);
-          });
-        });
-      }, '');
-    }
-    return loader[IMPORT_MAP_PROMISE];
-  };
-
-  systemJSPrototype.resolve = function (id, parentUrl) {
-    parentUrl = parentUrl || !true  || baseUrl;
-    return resolveImportMap(this[IMPORT_MAP], resolveIfNotPlainOrUrl(id, parentUrl) || id, parentUrl) || throwUnresolved(id, parentUrl);
-  };
-
-  function throwUnresolved (id, parentUrl) {
-    throw Error(errMsg(8,  "Unable to resolve bare specifier '" + id + (parentUrl ? "' from " + parentUrl : "'")));
+    var baseOrigin = location.origin;
   }
-
-  function iterateDocumentImportMaps(cb, extraSelector) {
-    if (hasDocument)
-      [].forEach.call(document.querySelectorAll('script[type="systemjs-importmap"]' + extraSelector), cb);
-  }
-
-  /*
-   * Supports loading System.register via script tag injection
-   */
-
-  var systemRegister = systemJSPrototype.register;
-  systemJSPrototype.register = function (deps, declare) {
-    systemRegister.call(this, deps, declare);
-  };
 
   systemJSPrototype.createScript = function (url) {
     var script = document.createElement('script');
     script.charset = 'utf-8';
     script.async = true;
-    script.crossOrigin = 'anonymous';
+    // Only add cross origin for actual cross origin
+    // this is because Safari triggers for all
+    // - https://bugs.webkit.org/show_bug.cgi?id=171566
+    if (!url.startsWith(baseOrigin + '/'))
+      script.crossOrigin = 'anonymous';
     script.src = url;
     return script;
+  };
+
+  // Auto imports -> script tags can be inlined directly for load phase
+  var lastAutoImportUrl, lastAutoImportDeps;
+  var autoImportCandidates = {};
+  var systemRegister = systemJSPrototype.register;
+  var timeoutCnt = 0;
+  systemJSPrototype.register = function (deps, declare) {
+    if (hasDocument && document.readyState === 'loading' && typeof deps !== 'string') {
+      var scripts = document.getElementsByTagName('script');
+      var lastScript = scripts[scripts.length - 1];
+      var url = lastScript && lastScript.src;
+      if (url) {
+        lastAutoImportUrl = url;
+        lastAutoImportDeps = deps;
+        autoImportCandidates[url] = [deps, declare];
+        var loader = this;
+        // This timeout ensures that if this is a dynamic script injection by SystemJS
+        // that the auto import will be cleared after the timeout and hence will not
+        // be auto imported
+        timeoutCnt++;
+        setTimeout(function () {
+          if (autoImportCandidates[url])
+            loader.import(url);
+          if (--timeoutCnt === 0 && document.readyState !== 'loading')
+            autoImportCandidates = {};
+        });
+      }
+    }
+    else {
+      lastAutoImportDeps = undefined;
+    }
+    return systemRegister.call(this, deps, declare);
   };
 
   var lastWindowErrorUrl, lastWindowError;
   systemJSPrototype.instantiate = function (url, firstParentUrl) {
     var loader = this;
+    var autoImportRegistration = autoImportCandidates[url];
+    if (autoImportRegistration) {
+      delete autoImportCandidates[url];
+      return autoImportRegistration;
+    }
     return new Promise(function (resolve, reject) {
       var script = systemJSPrototype.createScript(url);
       script.addEventListener('error', function () {
@@ -591,31 +585,94 @@
           reject(lastWindowError);
         }
         else {
-          resolve(loader.getRegister());
+          var register = loader.getRegister();
+          // Clear any auto import registration for dynamic import scripts during load
+          if (register && register[0] === lastAutoImportDeps)
+            delete autoImportCandidates[lastAutoImportUrl];
+          resolve(register);
         }
       });
       document.head.appendChild(script);
     });
   };
 
-  if (hasDocument) {
-    window.addEventListener('error', function (evt) {
-      lastWindowErrorUrl = evt.filename;
-      lastWindowError = evt.error;
-    });
+  systemJSPrototype.resolve = function (id, parentUrl) {
+    parentUrl = parentUrl || !true  || baseUrl;
+    return resolveImportMap(this[IMPORT_MAP], resolveIfNotPlainOrUrl(id, parentUrl) || id, parentUrl) || throwUnresolved(id, parentUrl);
+  };
 
-    window.addEventListener('DOMContentLoaded', loadScriptModules);
-    loadScriptModules();
+  function throwUnresolved (id, parentUrl) {
+    throw Error(errMsg(8,  "Unable to resolve bare specifier '" + id + (parentUrl ? "' from " + parentUrl : "'")));
   }
 
+  /*
+   * SystemJS browser attachments for script and import map processing
+   */
 
-  function loadScriptModules() {
-    [].forEach.call(
-      document.querySelectorAll('script[type=systemjs-module]'), function (script) {
-        if (script.src) {
-          System.import(script.src.slice(0, 7) === 'import:' ? script.src.slice(7) : resolveUrl(script.src, baseUrl));
-        }
-      });
+  var importMapPromise = Promise.resolve({ imports: {}, scopes: {}, depcache: {} });
+
+  // Scripts are processed immediately, on the first System.import, and on DOMReady.
+  // Import map scripts are processed only once (by being marked) and in order for each phase.
+  // This is to avoid using DOM mutation observers in core, although that would be an alternative.
+  var processFirst = hasDocument;
+  systemJSPrototype.prepareImport = function (doProcessScripts) {
+    if (processFirst || doProcessScripts) {
+      processScripts();
+      processFirst = false;
+    }
+    var loader = this;
+    return importMapPromise.then(function (importMap) {
+      loader[IMPORT_MAP] = importMap;
+    });
+  };
+  if (hasDocument) {
+    processScripts();
+    window.addEventListener('DOMContentLoaded', processScripts);
+  }
+
+  const systemInstantiate = systemJSPrototype.instantiate;
+  systemJSPrototype.instantiate = function (url, firstParentUrl) {
+    var preloads = this[IMPORT_MAP].depcache[url];
+    if (preloads) {
+      for (var i = 0; i < preloads.length; i++)
+        getOrCreateLoad(this, this.resolve(preloads[i], url), url);
+    }
+    return systemInstantiate.call(this, url, firstParentUrl);
+  };
+
+  function processScripts () {
+    [].forEach.call(document.querySelectorAll('script'), function (script) {
+      if (script.sp) // sp marker = systemjs processed
+        return;
+      // TODO: deprecate systemjs-module in next major now that we have auto import
+      if (script.type === 'systemjs-module') {
+        script.sp = true;
+        if (!script.src)
+          return;
+        System.import(script.src.slice(0, 7) === 'import:' ? script.src.slice(7) : resolveUrl(script.src, baseUrl));
+      }
+      else if (script.type === 'systemjs-importmap') {
+        script.sp = true;
+        importMapPromise = importMapPromise.then(function (importMap) {
+          if (script.src)
+            return fetch(script.src).then(function (res) {
+              return res.text();
+            }).then(function (text) {
+              return extendImportMap(importMap, text, script.src);
+            });
+          return extendImportMap(importMap, script.innerHTML, baseUrl);
+        });
+      }
+    });
+  }
+
+  function extendImportMap (importMap, newMapText, newMapUrl) {
+    try {
+      var newMap = JSON.parse(newMapText);
+    } catch (err) {
+      throw Error( errMsg(1, "systemjs-importmap contains invalid JSON"));
+    }
+    return resolveAndComposeImportMap(newMap, newMapUrl, importMap);
   }
 
   /*
@@ -637,7 +694,7 @@
    * (Included by default in system.js build)
    */
   (function (global) {
-    var systemJSPrototype = System.constructor.prototype;
+    var systemJSPrototype = global.System.constructor.prototype;
 
     // safari unpredictably lists some new globals first or second in object order
     var firstGlobalProp, secondGlobalProp, lastGlobalProp;
@@ -748,6 +805,8 @@
           if (!res.ok)
             throw Error(errMsg(7,  res.status + ' ' + res.statusText + ', loading ' + url + (parent ? ' from ' + parent : '')));
           var contentType = res.headers.get('content-type');
+          if (!contentType)
+            throw Error(errMsg(4,  'Missing header "Content-Type", loading ' + url + (parent ? ' from ' + parent : '')));
           if (contentType.match(/^(text|application)\/(x-)?javascript(;|$)/)) {
             return res.text().then(function (source) {
               (0, eval)(source);
