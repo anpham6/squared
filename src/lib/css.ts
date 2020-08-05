@@ -2828,8 +2828,12 @@ export function checkMediaRule(value: string, fontSize?: number) {
     return false;
 }
 
-export function getInheritedStyle(element: Element, attr: string, options: InheritedStyleOptions) {
-    const { exclude, tagNames } = options;
+export function getInheritedStyle(element: Element, attr: string, options?: InheritedStyleOptions) {
+    let exclude: Undef<RegExp>,
+        tagNames: Undef<string[]>;
+    if (options) {
+        ({ exclude, tagNames } = options);
+    }
     let value = '',
         current = element.parentElement;
     while (current && (tagNames === undefined || !tagNames.includes(current.tagName))) {

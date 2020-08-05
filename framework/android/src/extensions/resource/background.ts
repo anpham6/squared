@@ -805,7 +805,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                             if (base64 && filename) {
                                                 images[length] = filename.substring(0, filename.lastIndexOf('.'));
                                                 imageDimensions[length] = rawData.width && rawData.height ? rawData as Dimension : undefined;
-                                                resource.writeRawImage(rawData.mimeType, {
+                                                resource.writeRawImage({
+                                                    mimeType: rawData.mimeType,
                                                     filename,
                                                     data: base64,
                                                     encoding: 'base64'

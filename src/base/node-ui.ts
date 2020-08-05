@@ -770,28 +770,28 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     break;
                 case 'boxStyle': {
                     if (this.naturalChild) {
-                        const options = { values: ['none', '0px', 'transparent', 'rgba(0, 0, 0, 0)'] };
+                        const values = ['none', '0px', 'transparent', 'rgba(0, 0, 0, 0)'];
                         let properties: string[] = [];
                         if (this.css('backgroundImage') === 'none') {
                             properties = properties.concat(CSS_PROPERTIES.background.value as string[]);
                             --properties.length;
                         }
-                        if (this.cssAny('backgroundColor', options)) {
+                        if (this.cssAny('backgroundColor', values)) {
                             properties.push('backgroundColor');
                         }
-                        if (this.cssAny('borderTopStyle', options)) {
+                        if (this.cssAny('borderTopStyle', values)) {
                             properties = properties.concat(CSS_PROPERTIES.borderLeft.value as string[]);
                         }
-                        if (this.cssAny('borderRightStyle', options)) {
+                        if (this.cssAny('borderRightStyle', values)) {
                             properties = properties.concat(CSS_PROPERTIES.borderRight.value as string[]);
                         }
-                        if (this.cssAny('borderBottomStyle', options)) {
+                        if (this.cssAny('borderBottomStyle', values)) {
                             properties = properties.concat(CSS_PROPERTIES.borderBottom.value as string[]);
                         }
-                        if (this.cssAny('borderLeftStyle', options)) {
+                        if (this.cssAny('borderLeftStyle', values)) {
                             properties = properties.concat(CSS_PROPERTIES.borderLeft.value as string[]);
                         }
-                        if (this.cssAny('borderRadius', options)) {
+                        if (this.cssAny('borderRadius', values)) {
                             properties = properties.concat(CSS_PROPERTIES.borderRadius.value as string[]);
                         }
                         this.cssCopy(node, ...properties);

@@ -28,7 +28,7 @@ declare namespace base {
         checkConstraintFloat(data: LayoutUI<T>): boolean;
         checkConstraintHorizontal(data: LayoutUI<T>): boolean;
         checkLinearHorizontal(data: LayoutUI<T>): boolean;
-        addGuideline(node: T, parent: T, options?: GuidelineOptions): void;
+        addGuideline(options: GuidelineOptions<T>): void;
         addBarrier(nodes: T[], barrierDirection: string): string;
         evaluateAnchors(nodes: T[]): void;
         createNodeWrapper(node: T, parent: T, options?: CreateNodeWrapperUIOptions<T>): T;

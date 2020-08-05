@@ -1364,10 +1364,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                         }
                                     }
                                     if (!constraint.horizontal) {
-                                        this.addGuideline(item, node, { orientation: 'horizontal' });
+                                        this.applyGuideline('horizontal', { target: item, parent: node });
                                     }
                                     if (!constraint.vertical) {
-                                        this.addGuideline(item, node, { orientation: 'vertical' });
+                                        this.applyGuideline('vertical', { target: item, parent: node });
                                     }
                                     item.positioned = true;
                                 }
@@ -1433,7 +1433,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             type: NODE_TEMPLATE.XML,
             node,
             controlName: node.controlName
-        } as NodeXmlTemplate<T>;
+        };
     }
 
     public renderNode(layout: LayoutUI<T>): NodeXmlTemplate<T> {
@@ -1520,7 +1520,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         if (data) {
                             node.setControlType(controlName, containerType);
                             src = 'canvas_' + convertWord(node.controlId, true);
-                            this.application.resourceHandler.writeRawImage('image/png', { filename: src + '.png', data, encoding: 'base64' });
+                            this.application.resourceHandler.writeRawImage({ mimeType: 'image/png', filename: src + '.png', data, encoding: 'base64' });
                         }
                     }
                     else {
@@ -1962,9 +1962,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         return output;
     }
 
-    public addGuideline(node: T, parent: T, options?: GuidelineOptions) {
-        this.applyGuideline(node, parent, 'horizontal', options);
-        this.applyGuideline(node, parent, 'vertical', options);
+    public addGuideline(options: GuidelineOptions<T>) {
+        this.applyGuideline('horizontal', options);
+        this.applyGuideline('vertical', options);
     }
 
     public addBarrier(nodes: T[], barrierDirection: string) {
@@ -3573,18 +3573,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
     }
 
-    protected applyGuideline(node: T, parent: T, axis: string, options?: GuidelineOptions) {
-        if (node.constraint[axis]) {
+    protected applyGuideline(axis: string, options: GuidelineOptions<T>) {
+        const node = options.target;
+        if (node.constraint[axis] || options.orientation && axis !== options.orientation) {
             return;
         }
-        let percent: Undef<boolean>,
-            opposing: Undef<boolean>;
-        if (options) {
-            if (options.orientation && axis !== options.orientation) {
-                return;
-            }
-            ({ percent, opposing } = options);
-        }
+        const { parent, percent, opposing } = options;
         let documentParent = node.documentParent as T;
         if (parent.nodeGroup && !documentParent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
             documentParent = parent;

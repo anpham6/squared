@@ -184,14 +184,14 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
 }
 
 function getBaseline(nodes: View[]) {
-    const options: CssAnyOptions = { values: ['baseline', 'initial'] };
+    const values = ['baseline', 'initial'];
     const length = nodes.length;
     let i = 0;
     while (i < length) {
         const node = nodes[i++];
         const wrapperOf = node.wrapperOf;
         const target = wrapperOf || node;
-        if (target.textElement && target.cssAny('verticalAlign', options)) {
+        if (target.textElement && target.cssAny('verticalAlign', values)) {
             return node;
         }
     }
@@ -808,8 +808,11 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     if (q > 1) {
                                         segStart.constraint[orientation] = false;
                                         segEnd.constraint[orientation] = false;
-                                        controller.addGuideline(segStart, node, { orientation, percent: true });
-                                        controller.addGuideline(segEnd, node, { orientation, percent: true, opposing: true });
+                                        const options: GuidelineOptions<T> = { target: segStart, parent: node, orientation, percent: true };
+                                        controller.addGuideline(options);
+                                        options.target = segEnd;
+                                        options.opposing = true;
+                                        controller.addGuideline(options);
                                         segStart.anchorStyle(orientation, 0, 'spread_inside');
                                         continue;
                                     }

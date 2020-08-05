@@ -76,7 +76,7 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
                 anchor = node.item(0) as T;
             }
             if (!anchor.anchored) {
-                controller.addGuideline(anchor, node);
+                controller.addGuideline({ target: anchor, parent: node });
             }
             const { x: x2, y: y2 } = anchor.center;
             node.each((item: T) => {
@@ -127,7 +127,7 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
         else {
             node.each((item: T) => {
                 if (!item.anchored) {
-                    controller.addGuideline(item, node);
+                    controller.addGuideline({ target: item, parent: node });
                 }
             });
         }

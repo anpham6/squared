@@ -675,10 +675,10 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         }
     }
 
-    public writeRawImage(mimeType: Undef<string>, options: RawDataOptions) {
+    public writeRawImage(options: RawDataOptions) {
         const fileHandler = this.fileHandler;
         if (fileHandler) {
-            const { filename, data, encoding, width, height } = options;
+            const { mimeType, filename, data, encoding, width, height } = options;
             if (filename && data) {
                 const asset = {
                     pathname: appendSeparator(this.userSettings.outputDirectory, this.controllerSettings.directory.image),

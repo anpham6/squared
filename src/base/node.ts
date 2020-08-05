@@ -1196,16 +1196,21 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return '';
     }
 
-    public cssAny(attr: string, options: CssAnyOptions) {
+    public cssAny(attr: string, values: string[], options?: CssAnyOptions) {
+        let ascend: Undef<boolean>,
+            initial: Undef<boolean>;
+        if (options) {
+            ({ ascend, initial } = options);
+        }
         let value: string;
-        if (options.ascend) {
-            options.startSelf = true;
+        if (ascend) {
+            options!.startSelf = true;
             value = this.cssAscend(attr, options);
         }
         else {
-            value = options.initial ? this.cssInitial(attr, options) : this.css(attr);
+            value = initial ? this.cssInitial(attr, options) : this.css(attr);
         }
-        return value !== '' && options.values.includes(value);
+        return value !== '' && values.includes(value);
     }
 
     public cssSort(attr: string, options?: CssSortOptions) {

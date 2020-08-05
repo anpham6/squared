@@ -241,7 +241,7 @@ declare module "base" {
         static hasLineBreak<T extends NodeUI>(node: T, lineBreak?: boolean, trim?: boolean): boolean;
         static checkPreIndent(node: NodeUI): Undef<[string, NodeUI]>;
         finalize(layouts: FileAsset[]): void;
-        writeRawImage(mimeType: Undef<string>, options: RawDataOptions): Undef<Partial<RawAsset>>;
+        writeRawImage(options: RawDataOptions): Undef<Partial<RawAsset>>;
         setBoxStyle(node: T): void;
         setFontStyle(node: T): void;
         setValueString(node: T): void;
@@ -380,7 +380,7 @@ declare module "base" {
         outsideY(rect: BoxRectDimension, options?: OffsetXYOptions): boolean;
         css(attr: string, value?: string, cache?: boolean): string;
         cssInitial(attr: string, options?: CssInitialOptions): string;
-        cssAny(attr: string, options: CssAnyOptions): boolean;
+        cssAny(attr: string, values: string[], options?: CssAnyOptions): boolean;
         cssAscend(attr: string, options?: CssAscendOptions): string;
         cssSort(attr: string, options?: CssSortOptions): Node[];
         cssPX(attr: string, value: number, cache?: boolean, options?: CssPXOptions): string;

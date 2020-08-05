@@ -283,7 +283,8 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
             if (rawData) {
                 if (rawData.base64) {
                     const filename = rawData.filename;
-                    this.application.resourceHandler.writeRawImage(rawData.mimeType, {
+                    this.application.resourceHandler.writeRawImage({
+                        mimeType: rawData.mimeType,
                         filename: prefix + filename,
                         data: rawData.base64,
                         encoding: 'base64'
@@ -301,9 +302,9 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         return Resource.addImage(images, prefix, this._imageFormat);
     }
 
-    public writeRawImage(mimeType: Undef<string>, options: RawDataOptions) {
-        const asset = super.writeRawImage(mimeType, options);
-        if (asset && this.userSettings.compressImages && Resource.canCompressImage(options.filename || '', mimeType)) {
+    public writeRawImage(options: RawDataOptions) {
+        const asset = super.writeRawImage(options);
+        if (asset && this.userSettings.compressImages && Resource.canCompressImage(options.filename || '', options.mimeType)) {
             (asset.compress ?? (asset.compress = [])).unshift({ format: 'png' });
         }
         return asset;

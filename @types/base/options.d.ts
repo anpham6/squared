@@ -41,6 +41,7 @@ interface WriteDocumentExtensionUIOptions<T extends squared.base.NodeUI> {
 }
 
 interface RawDataOptions {
+    mimeType?: string;
     data?: any;
     width?: number;
     height?: number;
@@ -97,7 +98,6 @@ interface CssAscendOptions extends CssInitialOptions {
 
 interface CssAnyOptions extends CssInitialOptions, CssAscendOptions {
     ascend?: boolean;
-    values: string[];
 }
 
 interface HasOptions extends CssInitialOptions {
