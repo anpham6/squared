@@ -2,7 +2,7 @@ declare module "lib" {
     namespace base {
         class Container<T> implements Iterable<T> {
             [Symbol.iterator](): Iterator<T>;
-            item(index?: number, value?: T): Undef<T>;
+            item(index: number, value?: T): Undef<T>;
             add(item: T): this;
             addAll(list: T[]): this;
             remove(...items: T[]): T[];

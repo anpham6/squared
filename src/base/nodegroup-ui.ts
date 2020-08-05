@@ -25,7 +25,7 @@ export default abstract class NodeGroupUI extends NodeUI {
     public nextSiblings(options?: SiblingOptions) {
         let node = this as NodeUI;
         do {
-            node = node.item() as NodeUI;
+            node = node.item(-1) as NodeUI;
         }
         while (node !== undefined && node.nodeGroup);
         return node ? node.nextSiblings(options) : [];
@@ -136,12 +136,11 @@ export default abstract class NodeGroupUI extends NodeUI {
     }
 
     get firstChild() {
-        return this.children[0] as NodeUI || null;
+        return this.item(0) as NodeUI || null;
     }
 
     get lastChild() {
-        const children = this.children;
-        return children[children.length - 1] as NodeUI || null;
+        return this.item(-1) as NodeUI || null;
     }
 
     set childIndex(value) {
