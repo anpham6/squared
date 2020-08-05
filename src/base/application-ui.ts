@@ -1658,7 +1658,16 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 }
                                 else if (match[2] || match[5]) {
                                     const counterType = match[2] === 'counter';
-                                    const [counterName, styleName] = counterType ? [match[3], match[4] || 'decimal'] : [match[6], match[8] || 'decimal'];
+                                    let counterName: string,
+                                        styleName: string;
+                                    if (counterType) {
+                                        counterName = match[3];
+                                        styleName = match[4] || 'decimal';
+                                    }
+                                    else {
+                                        counterName = match[6];
+                                        styleName = match[8] || 'decimal';
+                                    }
                                     const initialValue = (getCounterIncrementValue(element, counterName, pseudoElt, sessionId, 0) ?? 1) + (getCounterValue(style.getPropertyValue('counter-reset'), counterName, 0) ?? 0);
                                     const subcounter: number[] = [];
                                     let current: Null<HTMLElement> = element,

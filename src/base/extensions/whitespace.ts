@@ -51,7 +51,22 @@ function adjustRegion(item: NodeUI, region: number, adjustment: number) {
 
 function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
     if (!direction || isBlockElement(child, true)) {
-        const [marginName, borderWidth, paddingName, region] = direction ? ['marginTop', 'borderTopWidth', 'paddingTop', BOX_STANDARD.MARGIN_TOP] : ['marginBottom', 'borderBottomWidth', 'paddingBottom', BOX_STANDARD.MARGIN_BOTTOM];
+        let marginName: string,
+            borderWidth: string,
+            paddingName: string,
+            region: number;
+        if (direction) {
+            marginName = 'marginTop';
+            borderWidth = 'borderTopWidth';
+            paddingName = 'paddingTop';
+            region = BOX_STANDARD.MARGIN_TOP;
+        }
+        else {
+            marginName = 'marginBottom';
+            borderWidth = 'borderBottomWidth';
+            paddingName = 'paddingBottom';
+            region = BOX_STANDARD.MARGIN_BOTTOM;
+        }
         if (node[borderWidth] === 0) {
             if (node[paddingName] === 0) {
                 let target = child;

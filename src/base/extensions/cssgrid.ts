@@ -319,10 +319,24 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
         const openCells: number[][] = [];
         const layout: GridLayout[] = [];
         const gridTemplates = [node.cssInitial('gridTemplateRows'), node.cssInitial('gridTemplateColumns'), node.css('gridAutoRows'), node.css('gridAutoColumns')];
-        const [rowA, colA, rowB, colB] = horizontal ? [0, 1, 2, 3] : [1, 0, 3, 2];
         let autoWidth: Undef<boolean>,
             autoHeight: Undef<boolean>,
-            ITERATION: number;
+            rowA: number,
+            colA: number,
+            rowB: number,
+            colB: number;
+        if (horizontal) {
+            rowA = 0;
+            colA = 1;
+            rowB = 2;
+            colB = 3;
+        }
+        else {
+            rowA = 1;
+            colA = 0;
+            rowB = 3;
+            colB = 2;
+        }
         for (let index = 0; index < 4; ++index) {
             const value = gridTemplates[index];
             if (value !== '' && value !== 'none' && value !== 'auto') {
@@ -449,11 +463,29 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             });
         }
         if (!node.has('gridTemplateAreas') && node.every(item => item.css('gridRowStart') === 'auto' && item.css('gridColumnStart') === 'auto')) {
-            const [directionA, directionB, indexA, indexB, indexC] = horizontal ? ['top', 'bottom', 2, 1, 3] : ['left', 'right', 3, 0, 2];
             let rowIndex = 0,
                 columnIndex = 0,
                 columnMax = 0,
-                previous: Undef<T>;
+                previous: Undef<T>,
+                directionA: string,
+                directionB: string,
+                indexA: number,
+                indexB: number,
+                indexC: number;
+            if (horizontal) {
+                directionA = 'top';
+                directionB = 'bottom';
+                indexA = 2;
+                indexB = 1;
+                indexC = 3;
+            }
+            else {
+                directionA = 'left';
+                directionB = 'right';
+                indexA = 3;
+                indexB = 0;
+                indexC = 2;
+            }
             if (horizontal) {
                 if (column.autoFill) {
                     autoWidth = setAutoFill(column, node.actualWidth);
@@ -769,14 +801,29 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 previousPlacement = placement;
             });
         }
+        let ITERATION: number,
+            ROW_SPAN: number,
+            COLUMN_SPAN: number;
         {
             let totalCount = 1,
-                outerCount = 0;
+                outerCount = 0,
+                totalSpan: number,
+                start: number,
+                end: number;
             let i = 0;
             while (i < layout.length) {
                 const item = layout[i++];
                 if (item) {
-                    const [totalSpan, start, end] = horizontal ? [item.columnSpan, 1, 3] : [item.rowSpan, 0, 2];
+                    if (horizontal) {
+                        totalSpan = item.columnSpan;
+                        start = 1;
+                        end = 3;
+                    }
+                    else {
+                        totalSpan = item.rowSpan;
+                        start = 0;
+                        end = 2;
+                    }
                     const placement = item.placement;
                     if (placement.some(value => value > 0)) {
                         totalCount = Math.max(totalCount, totalSpan, placement[start], placement[end] - 1);
@@ -790,7 +837,14 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
         }
         node.each((item: T, index) => {
             const { placement, rowSpan, columnSpan } = layout[index];
-            const [ROW_SPAN, COLUMN_SPAN] = horizontal ? [rowSpan, columnSpan] : [columnSpan, rowSpan];
+            if (horizontal) {
+                ROW_SPAN = rowSpan;
+                COLUMN_SPAN = columnSpan;
+            }
+            else {
+                ROW_SPAN = columnSpan;
+                COLUMN_SPAN = rowSpan;
+            }
             while (placement[0] === 0 || placement[1] === 0) {
                 const PLACEMENT = placement.slice(0);
                 if (PLACEMENT[rowA] === 0) {

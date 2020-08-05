@@ -531,15 +531,15 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     stored.borderRadius = undefined;
                 }
                 const outline = stored.outline;
-                let indentWidth: Undef<number>;
+                let indentWidth = 0;
                 if (drawOutline && outline) {
                     const width = roundFloat(outline.width);
                     indentWidth = width === 2 && outline.style === 'double' ? 3 : width;
                 }
-                let [shapeData, layerList] = this.getDrawableBorder(stored, undefined, images, indentWidth);
+                let [shapeData, layerList] = this.getDrawableBorder(stored, images, indentWidth);
                 const emptyBackground = shapeData === undefined && layerList === undefined;
                 if (outline && (drawOutline || emptyBackground)) {
-                    const [outlineShapeData, outlineLayerList] = this.getDrawableBorder(stored, outline, emptyBackground ? images : undefined, undefined, !emptyBackground);
+                    const [outlineShapeData, outlineLayerList] = this.getDrawableBorder(stored, emptyBackground ? images : undefined, 0, !emptyBackground, outline);
                     if (outlineShapeData) {
                         if (!shapeData) {
                             shapeData = outlineShapeData;
@@ -593,7 +593,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         });
     }
 
-    public getDrawableBorder(data: BoxStyle, outline?: BorderAttribute, images?: BackgroundImageData[], indentWidth = 0, borderOnly = false): [Undef<StandardMap[]>, Undef<LayerList[]>] {
+    public getDrawableBorder(data: BoxStyle, images: Undef<BackgroundImageData[]>, indentWidth: number, borderOnly = false, outline?: BorderAttribute): [Undef<StandardMap[]>, Undef<LayerList[]>] {
         const borderVisible: boolean[] = new Array(4);
         const indentOffset = indentWidth > 0 ? formatPX(indentWidth) : '';
         let borderStyle = true,

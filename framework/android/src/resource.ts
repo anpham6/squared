@@ -66,10 +66,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
     }
 
     public static formatName(value: string) {
-        if (/^\d/.test(value)) {
-            value = '__' + value;
-        }
-        return value.replace(/[^\w]+/g, '_');
+        return (/^\d/.test(value) ? '__' : '') + value.replace(/[^\w]+/g, '_');
     }
 
     public static addTheme(theme: StyleAttribute) {

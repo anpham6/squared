@@ -3175,10 +3175,19 @@ export function getBackgroundPosition(value: string, dimension: Dimension, optio
                 }
                 return 0;
             });
+            let direction: string,
+                offsetParent: number;
             for (let i = 0; i < 2; ++i) {
                 let position = orientation[i];
                 const horizontal = i === 0;
-                const [direction, offsetParent] = horizontal ? ['left', width] : ['top', height];
+                if (horizontal) {
+                    direction = 'left';
+                    offsetParent = width;
+                }
+                else {
+                    direction = 'top';
+                    offsetParent = height;
+                }
                 const directionAsPercent = direction + 'AsPercent';
                 switch (position) {
                     case '0%':

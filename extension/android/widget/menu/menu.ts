@@ -71,17 +71,13 @@ function parseDataSet(validator: ObjectMap<RegExp>, element: HTMLElement, option
 }
 
 function getTitle(node: View, element: HTMLElement) {
-    const title = element.title;
-    if (title) {
+    const title = element.title.trim();
+    if (title !== '') {
         return title;
     }
     else {
-        const children = node.naturalChildren;
-        const length = children.length;
-        let i = 0;
-        while (i < length) {
-            const child = children[i++];
-            if (child.textElement) {
+        for (const child of node.naturalChildren as View[]) {
+            if (child.textElement && !child.textEmpty) {
                 return child.textContent.trim();
             }
         }

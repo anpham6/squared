@@ -3083,10 +3083,19 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         const { top: boxTop, width: boxWidth } = node.box;
         const baseline = NodeUI.baseline(children, false, true);
-        const [baselineActive, documentId] = baseline ? [baseline.baselineElement && !baseline.imageElement, baseline.documentId] : [false, 'parent'];
         const getMaxHeight = (item: T) => Math.max(item.actualHeight, item.lineHeight);
         let percentWidth = View.availablePercent(children, 'width', boxWidth),
-            checkPercent = !node.hasPX('width');
+            checkPercent = !node.hasPX('width'),
+            baselineActive: boolean,
+            documentId: string;
+        if (baseline) {
+            baselineActive = baseline.baselineElement && !baseline.imageElement;
+            documentId = baseline.documentId;
+        }
+        else {
+            baselineActive = false;
+            documentId = 'parent';
+        }
         for (let i = 0, length = children.length, start = false; i < length; ++i) {
             const item = children[i];
             if (previous) {
@@ -3273,7 +3282,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     case 'middle':
                         baseline.anchorParent('vertical', 0.5, '', true);
                         return;
-                    case 'baseline': {
+                    case 'baseline':
                         baseline.anchor(getAnchorBaseline(tallest), tallest.documentId);
                         if (node.hasHeight) {
                             tallest.anchorDelete('top', 'bottom');
@@ -3288,7 +3297,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                         }
                         return;
-                    }
                     case 'bottom':
                     case 'text-bottom':
                         baseline.anchor('bottom', tallest.documentId);

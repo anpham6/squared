@@ -402,7 +402,16 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     continue;
                 }
                 const { orientation, orientationInverse, WHL, HWL, LT, TL, RB, BR, LRTB, RLBT } = horizontal ? MAP_HORIZONAL : MAP_VERTICAL;
-                const [dimension, dimensionInverse] = horizontal ? [node.hasHeight, node.hasWidth] : [node.hasWidth, node.hasHeight];
+                let dimension: boolean,
+                    dimensionInverse: boolean;
+                if (horizontal) {
+                    dimension = node.hasHeight;
+                    dimensionInverse = node.hasWidth;
+                }
+                else {
+                    dimension = node.hasWidth;
+                    dimensionInverse = node.hasHeight;
+                }
                 const orientationWeight = `layout_constraint${capitalize(orientation)}_weight`;
                 for (let j = 0; j < length; ++j) {
                     const seg = partition[j];

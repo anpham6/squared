@@ -99,14 +99,26 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
                 }
             }
         });
-        const [controlName, appBarName, collapsingToolbarName] = node.api < BUILD_ANDROID.Q ? [SUPPORT_ANDROID.TOOLBAR, SUPPORT_ANDROID.APPBAR, SUPPORT_ANDROID.COLLAPSING_TOOLBAR] : [SUPPORT_ANDROID_X.TOOLBAR, SUPPORT_ANDROID_X.APPBAR, SUPPORT_ANDROID_X.COLLAPSING_TOOLBAR];
         const hasCollapsingToolbar = 'collapsingToolbar' in options || collapsingToolbarChildren.length > 0;
         const hasAppBar = 'appBar' in options || appBarChildren.length > 0 || hasCollapsingToolbar;
         let appBarOverlay = '',
             popupOverlay = '',
             appBarNode: Undef<T>,
             collapsingToolbarNode: Undef<T>,
-            outputAs: Undef<NodeXmlTemplate<T>>;
+            outputAs: Undef<NodeXmlTemplate<T>>,
+            controlName: string,
+            appBarName: string,
+            collapsingToolbarName: string;
+        if (node.api < BUILD_ANDROID.Q) {
+            controlName = SUPPORT_ANDROID.TOOLBAR;
+            appBarName = SUPPORT_ANDROID.APPBAR;
+            collapsingToolbarName = SUPPORT_ANDROID.COLLAPSING_TOOLBAR;
+        }
+        else {
+            controlName = SUPPORT_ANDROID_X.TOOLBAR;
+            appBarName = SUPPORT_ANDROID_X.APPBAR;
+            collapsingToolbarName = SUPPORT_ANDROID_X.COLLAPSING_TOOLBAR;
+        }
         if (hasCollapsingToolbar) {
             assignEmptyValue(app, 'layout_collapseMode', 'pin');
         }

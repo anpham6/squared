@@ -64,6 +64,7 @@ function createAssetsOptions(options?: FileUniversalOptions, directory?: string,
 }
 
 const checkApplication = (main: Application<View>): main is Application<View> => initialized && (main.closed || autoClose());
+const checkFileName = (value: Undef<string>) => value || application.userSettings.outputArchiveName;
 
 const lib = {
     constant,
@@ -197,67 +198,67 @@ const appBase: squared.base.AppFramework<View> = {
         },
         saveLayoutAllXml(filename?: string, options?: FileUniversalOptions) {
             if (checkApplication(application)) {
-                file.layoutAllToXml(application.layouts, createAssetsOptions(options, undefined, filename || application.userSettings.outputArchiveName + '-layouts'));
+                file.layoutAllToXml(application.layouts, createAssetsOptions(options, undefined, checkFileName(filename) + '-layouts'));
             }
         },
         saveResourceAllXml(filename?: string, options?: FileUniversalOptions) {
             if (checkApplication(application)) {
-                file.resourceAllToXml(createAssetsOptions(options, undefined, filename || application.userSettings.outputArchiveName + '-resources'));
+                file.resourceAllToXml(createAssetsOptions(options, undefined, checkFileName(filename) + '-resources'));
             }
         },
         saveResourceStringXml(filename?: string, options?: FileUniversalOptions) {
             if (checkApplication(application)) {
-                file.resourceStringToXml(createAssetsOptions(options, undefined, filename || application.userSettings.outputArchiveName + '-string'));
+                file.resourceStringToXml(createAssetsOptions(options, undefined, checkFileName(filename) + '-string'));
             }
         },
         saveResourceArrayXml(filename?: string, options?: FileUniversalOptions) {
             if (checkApplication(application)) {
-                file.resourceStringArrayToXml(createAssetsOptions(options, undefined, filename || application.userSettings.outputArchiveName + '-array'));
+                file.resourceStringArrayToXml(createAssetsOptions(options, undefined, checkFileName(filename) + '-array'));
             }
         },
         saveResourceFontXml(filename?: string, options?: FileUniversalOptions) {
             if (checkApplication(application)) {
-                file.resourceFontToXml(createAssetsOptions(options, undefined, filename || application.userSettings.outputArchiveName + '-font'));
+                file.resourceFontToXml(createAssetsOptions(options, undefined, checkFileName(filename) + '-font'));
             }
         },
         saveResourceColorXml(filename?: string, options?: FileUniversalOptions) {
             if (checkApplication(application)) {
-                file.resourceColorToXml(createAssetsOptions(options, undefined, filename || application.userSettings.outputArchiveName + '-color'));
+                file.resourceColorToXml(createAssetsOptions(options, undefined, checkFileName(filename) + '-color'));
             }
         },
         saveResourceStyleXml(filename?: string, options?: FileUniversalOptions) {
             if (checkApplication(application)) {
-                file.resourceStyleToXml(createAssetsOptions(options, undefined, filename || application.userSettings.outputArchiveName + '-style'));
+                file.resourceStyleToXml(createAssetsOptions(options, undefined, checkFileName(filename) + '-style'));
             }
         },
         saveResourceDimenXml(filename?: string, options?: FileUniversalOptions) {
             if (checkApplication(application)) {
-                file.resourceDimenToXml(createAssetsOptions(options, undefined, filename || application.userSettings.outputArchiveName + '-dimen'));
+                file.resourceDimenToXml(createAssetsOptions(options, undefined, checkFileName(filename) + '-dimen'));
             }
         },
         saveResourceDrawableXml(filename?: string, options?: FileUniversalOptions) {
             if (checkApplication(application)) {
-                file.resourceDrawableToXml(createAssetsOptions(options, undefined, filename || application.userSettings.outputArchiveName + '-drawable'));
+                file.resourceDrawableToXml(createAssetsOptions(options, undefined, checkFileName(filename) + '-drawable'));
             }
         },
         saveResourceAnimXml(filename?: string, options?: FileUniversalOptions) {
             if (checkApplication(application)) {
-                file.resourceAnimToXml(createAssetsOptions(options, undefined, filename || application.userSettings.outputArchiveName + '-anim'));
+                file.resourceAnimToXml(createAssetsOptions(options, undefined, checkFileName(filename) + '-anim'));
             }
         },
         saveResourceDrawableImage(filename?: string, options?: FileUniversalOptions) {
             if (checkApplication(application)) {
-                file.resourceDrawableImageToString(createAssetsOptions(options, undefined, filename || application.userSettings.outputArchiveName + '-drawable-image'));
+                file.resourceDrawableImageToString(createAssetsOptions(options, undefined, checkFileName(filename) + '-drawable-image'));
             }
         },
         saveResourceRawVideo(filename?: string, options?: FileUniversalOptions) {
             if (checkApplication(application)) {
-                file.resourceRawVideoToString(createAssetsOptions(options, undefined, filename || application.userSettings.outputArchiveName + '-raw-video'));
+                file.resourceRawVideoToString(createAssetsOptions(options, undefined, checkFileName(filename) + '-raw-video'));
             }
         },
         saveResourceRawAudio(filename?: string, options?: FileUniversalOptions) {
             if (checkApplication(application)) {
-                file.resourceRawAudioToString(createAssetsOptions(options, undefined, filename || application.userSettings.outputArchiveName + '-raw-audio'));
+                file.resourceRawAudioToString(createAssetsOptions(options, undefined, checkFileName(filename) + '-raw-audio'));
             }
         },
         writeLayoutAllXml(options?: FileUniversalOptions) {

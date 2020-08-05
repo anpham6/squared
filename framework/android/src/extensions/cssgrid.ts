@@ -321,7 +321,22 @@ function requireDirectionSpacer(data: CssGridDirectionData, dimension: number) {
 function applyLayout(node: View, parent: View, item: View, mainData: CssGridData<View>, cellData: CssGridCellData, dimension: string) {
     const horizontal = dimension === 'width';
     const { column, row } = mainData;
-    const [data, cellStart, cellSpan, minDimension] = horizontal ? [column, cellData.columnStart, cellData.columnSpan, 'minWidth'] : [row, cellData.rowStart, cellData.rowSpan, 'minHeight'];
+    let data: CssGridDirectionData,
+        cellStart: number,
+        cellSpan: number,
+        minDimension: string;
+    if (horizontal) {
+        data = column;
+        cellStart = cellData.columnStart;
+        cellSpan = cellData.columnSpan;
+        minDimension = 'minWidth';
+    }
+    else {
+        data = row;
+        cellStart = cellData.rowStart;
+        cellSpan = cellData.rowSpan;
+        minDimension = 'minHeight';
+    }
     const { unit, unitMin } = data;
     let size = 0,
         minSize = 0,
