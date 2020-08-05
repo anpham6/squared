@@ -477,14 +477,24 @@ let Node: serve.INode,
         constructor(public external: Undef<ExternalModules>) {
         }
 
-        findExternalPlugin(data: ObjectMap<StandardMap>, name: string): [string, StandardMap] {
+        findExternalPlugin(data: ObjectMap<StandardMap>, name: string): [string, StandardMap | FunctionType<string>] {
             for (const module in data) {
                 const plugin = data[module];
                 for (const custom in plugin) {
                     if (custom === name) {
-                        let options: StandardMap = plugin[custom];
-                        if (!options || typeof options !== 'object') {
+                        let options: StandardMap | string = plugin[custom];
+                        if (!options) {
                             options = {};
+                        }
+                        else if (typeof options === 'string') {
+                            options = options.trim();
+                            if (options !== '') {
+                                return [module, options.startsWith('function') ? eval('(' + options + ')') as FunctionType<string> : new Function('context', 'value', options)];
+                            }
+                            break;
+                        }
+                        else if (typeof options !== 'object') {
+                            break;
                         }
                         return [module, options];
                     }
@@ -556,40 +566,41 @@ let Node: serve.INode,
                         }
                     }
                     try {
-                        switch (module) {
-                            case 'prettier': {
-                                options.plugins = this.getPrettierParser(options.parser);
-                                const result = require('prettier').format(value, options);
-                                if (result) {
-                                    if (j === length - 1) {
-                                        return result;
-                                    }
-                                    value = result;
-                                    valid = true;
+                        if (typeof options === 'function') {
+                            const result = options(require(module), value);
+                            if (typeof result === 'string' && result !== '') {
+                                if (j === length - 1) {
+                                    return result;
                                 }
-                                break;
+                                value = result;
+                                valid = true;
                             }
-                            case 'html-minifier-terser': {
-                                const result = require('html-minifier-terser').minify(value, options);
-                                if (result) {
-                                    if (j === length - 1) {
-                                        return result;
+                        }
+                        else {
+                            switch (module) {
+                                case 'prettier': {
+                                    options.plugins = this.getPrettierParser(options.parser);
+                                    const result = require('prettier').format(value, options);
+                                    if (result) {
+                                        if (j === length - 1) {
+                                            return result;
+                                        }
+                                        value = result;
+                                        valid = true;
                                     }
-                                    value = result;
-                                    valid = true;
+                                    break;
                                 }
-                                break;
-                            }
-                            case 'js-beautify': {
-                                const result = require('js-beautify').html_beautify(value, options);
-                                if (result) {
-                                    if (j === length - 1) {
-                                        return result;
+                                case 'html-minifier-terser': {
+                                    const result = require('html-minifier-terser').minify(value, options);
+                                    if (result) {
+                                        if (j === length - 1) {
+                                            return result;
+                                        }
+                                        value = result;
+                                        valid = true;
                                     }
-                                    value = result;
-                                    valid = true;
+                                    break;
                                 }
-                                break;
                             }
                         }
                     }
@@ -630,41 +641,42 @@ let Node: serve.INode,
                         }
                     }
                     try {
-                        switch (module) {
-                            case 'prettier': {
-                                options.plugins = this.getPrettierParser(options.parser);
-                                const result = require('prettier').format(value, options);
-                                if (result) {
-                                    if (j === length - 1) {
-                                        return result;
-                                    }
-                                    value = result;
-                                    valid = true;
+                        if (typeof options === 'function') {
+                            const result = options(require(module), value);
+                            if (typeof result === 'string' && result !== '') {
+                                if (j === length - 1) {
+                                    return result;
                                 }
-                                break;
+                                value = result;
+                                valid = true;
                             }
-                            case 'clean-css': {
-                                const clean_css = require('clean-css');
-                                const result = new clean_css(options).minify(value).styles;
-                                if (result) {
-                                    if (j === length - 1) {
-                                        return result;
+                        }
+                        else {
+                            switch (module) {
+                                case 'prettier': {
+                                    options.plugins = this.getPrettierParser(options.parser);
+                                    const result = require('prettier').format(value, options);
+                                    if (result) {
+                                        if (j === length - 1) {
+                                            return result;
+                                        }
+                                        value = result;
+                                        valid = true;
                                     }
-                                    value = result;
-                                    valid = true;
+                                    break;
                                 }
-                                break;
-                            }
-                            case 'js-beautify': {
-                                const result = require('js-beautify').css_beautify(value, options);
-                                if (result) {
-                                    if (j === length - 1) {
-                                        return result;
+                                case 'clean-css': {
+                                    const clean_css = require('clean-css');
+                                    const result = new clean_css(options).minify(value).styles;
+                                    if (result) {
+                                        if (j === length - 1) {
+                                            return result;
+                                        }
+                                        value = result;
+                                        valid = true;
                                     }
-                                    value = result;
-                                    valid = true;
+                                    break;
                                 }
-                                break;
                             }
                         }
                     }
@@ -706,40 +718,41 @@ let Node: serve.INode,
                         }
                     }
                     try {
-                        switch (module) {
-                            case 'prettier': {
-                                options.plugins = this.getPrettierParser(options.parser);
-                                const result = require('prettier').format(value, options);
-                                if (result) {
-                                    if (j === length - 1) {
-                                        return result;
-                                    }
-                                    value = result;
-                                    valid = true;
+                        if (typeof options === 'function') {
+                            const result = options(require(module), value);
+                            if (typeof result === 'string' && result !== '') {
+                                if (j === length - 1) {
+                                    return result;
                                 }
-                                break;
+                                value = result;
+                                valid = true;
                             }
-                            case 'terser': {
-                                const result = require('terser').minify(value, options).code;
-                                if (result) {
-                                    if (j === length - 1) {
-                                        return result;
+                        }
+                        else {
+                            switch (module) {
+                                case 'prettier': {
+                                    options.plugins = this.getPrettierParser(options.parser);
+                                    const result = require('prettier').format(value, options);
+                                    if (result) {
+                                        if (j === length - 1) {
+                                            return result;
+                                        }
+                                        value = result;
+                                        valid = true;
                                     }
-                                    value = result;
-                                    valid = true;
+                                    break;
                                 }
-                                break;
-                            }
-                            case 'js-beautify': {
-                                const result = require('js-beautify').js_beautify(value, options);
-                                if (result) {
-                                    if (j === length - 1) {
-                                        return result;
+                                case 'terser': {
+                                    const result = require('terser').minify(value, options).code;
+                                    if (result) {
+                                        if (j === length - 1) {
+                                            return result;
+                                        }
+                                        value = result;
+                                        valid = true;
                                     }
-                                    value = result;
-                                    valid = true;
+                                    break;
                                 }
-                                break;
                             }
                         }
                     }
@@ -1005,7 +1018,7 @@ class FileManager implements serve.IFileManager {
     }
     getRelativeUrl(file: ExpressAsset, url: string) {
         let asset = this.assets.find(item => item.uri === url),
-            origin: Undef<string> = file.uri;
+            origin = file.uri;
         if (!asset && origin) {
             const location = Express.resolvePath(url, origin);
             if (location) {
@@ -1055,23 +1068,17 @@ class FileManager implements serve.IFileManager {
     }
     replacePath(source: string, segment: string, value: string, base64?: boolean) {
         segment = !base64 ? segment.replace(/[\\/]/g, '[\\\\/]') : '[^"\'\\s]+' + segment;
-        let result: Undef<string>,
+        let output: Undef<string>,
             pattern = new RegExp(`(?:([sS][rR][cC]|[hH][rR][eE][fF]|[dD][aA][tT][aA]|[pP][oO][sS][tT][eE][rR])=)?(["'])(\\s*)${segment}(\\s*)\\2`, 'g'),
             match: Null<RegExpExecArray>;
         while (match = pattern.exec(source)) {
-            if (result === undefined) {
-                result = source;
-            }
-            result = result.replace(match[0], match[1]?.toLowerCase() + `="${value}"` || match[2] + match[3] + value + match[4] + match[2]);
+            output = (output || source).replace(match[0], match[1]?.toLowerCase() + `="${value}"` || match[2] + match[3] + value + match[4] + match[2]);
         }
         pattern = new RegExp(`[uU][rR][lL]\\(\\s*(["'])?\\s*${segment}\\s*\\1?\\s*\\)`, 'g');
         while (match = pattern.exec(source)) {
-            if (result === undefined) {
-                result = source;
-            }
-            result = result.replace(match[0], `url(${value})`);
+            output = (output || source).replace(match[0], `url(${value})`);
         }
-        return result;
+        return output;
     }
     replaceExtension(value: string, ext: string) {
         const index = value.lastIndexOf('.');
@@ -1211,8 +1218,8 @@ class FileManager implements serve.IFileManager {
         switch (mimeType) {
             case '@text/html':
             case '@application/xhtml+xml': {
-                const getOuterHTML = (script: boolean, value: string) => script ? `<script type="text/javascript" src="${value}"></script>` : `<link rel="stylesheet" type="text/css" href="${value}" />`;
                 const minifySpace = (value: string) => value.replace(/[\s\n]+/g, '');
+                const getOuterHTML = (script: boolean, value: string) => script ? `<script type="text/javascript" src="${value}"></script>` : `<link rel="stylesheet" type="text/css" href="${value}" />`;
                 const saved = new Set<string>();
                 const baseUri = file.uri!;
                 let html = fs.readFileSync(filepath).toString('utf8'),
@@ -1265,7 +1272,7 @@ class FileManager implements serve.IFileManager {
                                 source = source.replace(new RegExp(`\\s*${outerHTML}\\n*`), '');
                             }
                             if (original === source) {
-                                const content = minifySpace(item.content || '');
+                                const content = item.content ? minifySpace(item.content) : undefined;
                                 const outerContent = minifySpace(outerHTML);
                                 while (match = pattern.exec(html)) {
                                     if (outerContent === minifySpace(match[0]) || content && content === minifySpace(match[3])) {
@@ -1633,11 +1640,11 @@ class FileManager implements serve.IFileManager {
         }
     }
     getTrailingContent(file: ExpressAsset) {
-        let output = '';
         const trailingContent = file.trailingContent;
         if (trailingContent) {
             const unusedStyles = this.dataMap?.unusedStyles;
             const mimeType = file.mimeType;
+            let output = '';
             for (const item of trailingContent) {
                 let value = item.value;
                 if (mimeType) {
@@ -1665,8 +1672,9 @@ class FileManager implements serve.IFileManager {
                 }
                 output += '\n' + value;
             }
+            return output;
         }
-        return output || undefined;
+        return undefined;
     }
     transformCss(file: ExpressAsset, content: string) {
         const baseUrl = file.uri!;
@@ -1684,14 +1692,10 @@ class FileManager implements serve.IFileManager {
                     }
                 }
             }
-            const pattern = /[uU][rR][lL]\(([^)]+)\)/g;
+            const pattern = /[uU][rR][lL]\(\s*([^)]+)\s*\)/g;
             let match: Null<RegExpExecArray>;
             while (match = pattern.exec(content)) {
-                const url = match[1]
-                    .trim()
-                    .replace(/^["']/, '')
-                    .replace(/["']$/, '')
-                    .trim();
+                const url = match[1].replace(/^["']\s*/, '').replace(/\s*["']$/, '');
                 if (!Node.isFileURI(url) || Express.fromSameOrigin(baseUrl, url)) {
                     let location = this.getRelativeUrl(file, url);
                     if (location) {

@@ -47,8 +47,7 @@
           "removeStyleLinkTypeAttributes": true,
           "removeComments": true
         }
-      },
-      "js-beautify": {}
+      }
     },
     "css": {
       "prettier": {
@@ -62,8 +61,7 @@
           "inline": ["none"],
           "level": 1
         }
-      },
-      "js-beautify": {}
+      }
     },
     "js": {
       "prettier": {
@@ -78,8 +76,7 @@
           "toplevel": true,
           "keep_classnames": true
         }
-      },
-      "js-beautify": {}
+      }
     }
   }
 }

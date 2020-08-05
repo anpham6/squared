@@ -8,7 +8,7 @@
     "express-r": "node ./serve.js --disk-read --unc-read",
     "express-w": "node ./serve.js --disk-write --unc-write",
     "express-rw": "node ./serve.js --access-all",
-    "install-chrome": "npm i terser && npm i prettier && npm i clean-css && npm i html-minifier-terser && npm i js-beautify",
+    "install-chrome": "npm i terser@4.8.0 && npm i prettier && npm i clean-css && npm i html-minifier-terser",
     "watch": "tsc -w -p ./config/tsconfig.dev.json",
     "lint": "eslint **/*.ts --no-ignore",
     "bundles": "node bundle.js -f android -o ./dist/bundles/squared.android.bundle.$npm_package_version.js && node bundle.js -f android -m svg -o ./dist/bundles/squared+svg.android.bundle.$npm_package_version.js && node bundle.js -f android -e android.widget.* -o ./dist/bundles/squared.android+widget.bundle.$npm_package_version.js && node bundle.js -f android -m svg -e android.widget.* -o ./dist/bundles/squared+svg.android+widget.bundle.$npm_package_version.js && node bundle.js -f chrome -o ./dist/bundles/squared.chrome.bundle.$npm_package_version.js && node bundle.js -f chrome -m svg -o ./dist/bundles/squared+svg.chrome.bundle.$npm_package_version.js && node bundle.js -f vdom -o ./dist/bundles/squared.vdom.bundle.$npm_package_version.js && node bundle.js -f vdom -m svg -o ./dist/bundles/squared+svg.vdom.bundle.$npm_package_version.js && node bundle.js -f vdom-lite -o ./dist/bundles/squared.vdom-lite.bundle.$npm_package_version.js",
@@ -45,7 +45,7 @@
     "md5-webkit-svg-rebase": "node md5sum.js -z -c ./md5/webkit/master-svg ./temp/webkit-svg",
     "md5-webkit-all-rebase": "node md5sum.js -z -c ./md5/webkit/master ./temp/webkit && node md5sum.js -z -c ./md5/webkit/master-raw ./temp/webkit-raw && node md5sum.js -z -c ./md5/webkit/master-svg ./temp/webkit-svg",
     "dev-android": "tsc -p ./config/tsconfig.android.json && rollup -c ./config/rollup.config.dev-base.js && rollup -c ./framework/android/rollup.config.dev.js",
-    "dev-android-framework": "tsc -p ./config/tsconfig.android-framework.json && rollup -c ./framework/android/rollup.config.dev.js",
+    "dev-android-framework": "tsc -p ./config/tsconfig.android.json && rollup -c ./framework/android/rollup.config.dev.js",
     "dev-chrome": "tsc -p ./config/tsconfig.chrome.json && rollup -c ./config/rollup.config.dev-base.js && rollup -c ./framework/chrome/rollup.config.dev.js",
     "dev-vdom": "tsc -p ./config/tsconfig.vdom.json && rollup -c ./config/rollup.config.dev-base.js && rollup -c ./framework/vdom/rollup.config.dev.js",
     "dev-vdom-lite": "tsc -p ./config/tsconfig.vdom-lite.json && rollup -c ./framework/vdom-lite/rollup.config.dev.js",
@@ -54,7 +54,7 @@
     "dev": "tsc -p ./config/tsconfig.dev.json && rollup -c ./config/rollup.config.dev.js && rollup -c ./framework/android/rollup.config.dev.js && rollup -c ./framework/chrome/rollup.config.dev.js && rollup -c ./framework/vdom/rollup.config.dev.js && rollup -c ./framework/vdom-lite/rollup.config.dev.js",
     "prod": "npm run clean && eslint **/*.ts && tsc -p ./config/tsconfig.prod.json && rollup -c ./config/rollup.config.js && rollup -c ./framework/android/rollup.config.js && rollup -c ./framework/chrome/rollup.config.js && rollup -c ./framework/vdom/rollup.config.js && rollup -c ./framework/vdom-lite/rollup.config.js",
     "prod-android-extension": "tsc -p ./config/tsconfig.android-extension.json && rollup -c ./extension/android/constraint/rollup.config.js && rollup -c ./extension/android/widget/rollup.config.js",
-    "prod-express": "cd ./node/express && eslint **/*.ts && tsc -outDir ../../",
+    "prod-express": "cd ./node/express && eslint **/*.ts && tsc && rollup -c rollup.config.js",
     "prod-scripts": "cd ./node/scripts && eslint **/*.ts && tsc -outDir ../../",
     "prod-all": "npm run prod && npm run prod-android-extension && npm run prod-express && npm run prod-scripts && npm run bundles-win",
     "clean": "rimraf build/* && rimraf dist/* && rimraf temp/*"
@@ -138,7 +138,7 @@
     "rollup": "^2.23.0",
     "rollup-plugin-prettier": "^2.1.0",
     "rollup-plugin-terser": "^6.1.0",
-    "terser": "^5.0.0",
+    "terser": "^4.8.0",
     "ts-node": "^8.10.2",
     "typescript": "^3.9.7"
   }

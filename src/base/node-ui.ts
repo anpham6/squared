@@ -23,7 +23,6 @@ const CSS_SPACING = new Map<number, number>(
     ]
 );
 const CSS_SPACINGINDEX = [BOX_STANDARD.MARGIN_TOP, BOX_STANDARD.MARGIN_RIGHT, BOX_STANDARD.MARGIN_BOTTOM, BOX_STANDARD.MARGIN_LEFT, BOX_STANDARD.PADDING_TOP, BOX_STANDARD.PADDING_RIGHT, BOX_STANDARD.PADDING_BOTTOM, BOX_STANDARD.PADDING_LEFT];
-
 const REGEXP_PARSEUNIT = /(?:%|vw|vh|vmin|vmax)$/;
 
 function cascadeActualPadding(children: T[], attr: string, value: number) {
@@ -559,6 +558,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     private _locked?: ObjectMapNested<boolean>;
     private _siblingsLeading?: T[];
     private _siblingsTrailing?: T[];
+    private _innerMostWrapped?: T;
 
     public abstract setControlType(viewName: string, containerType?: number): void;
     public abstract setLayout(width?: number, height?: number): void;
@@ -2070,20 +2070,23 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get innerMostWrapped() {
-        if (this.naturalChild) {
-            return this;
-        }
-        let result = this.innerWrapped;
-        while (result !== undefined) {
-            const innerWrapped = result.innerWrapped;
-            if (innerWrapped) {
-                result = innerWrapped;
+        if (this._innerMostWrapped === undefined) {
+            let result: Undef<T>;
+            if (!this.naturalChild) {
+                result = this.innerWrapped;
+                while (result !== undefined) {
+                    const innerWrapped = result.innerWrapped;
+                    if (innerWrapped) {
+                        result = innerWrapped;
+                    }
+                    else {
+                        break;
+                    }
+                }
             }
-            else {
-                break;
-            }
+            return this._innerMostWrapped = result || this;
         }
-        return result || this;
+        return this._innerMostWrapped;
     }
 
     get outerMostWrapper() {

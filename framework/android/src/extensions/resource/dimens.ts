@@ -22,7 +22,7 @@ function createNamespaceData(namespace: string, node: View, group: GroupData) {
     for (const attr in obj) {
         if (attr !== 'text') {
             const value = obj[attr]!;
-            if (/\dpx$/.test(value)) {
+            if (value.endsWith('px')) {
                 const name = `${namespace},${attr},${value}`;
                 (group[name] ?? (group[name] = [])).push(node);
             }
@@ -64,8 +64,8 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
     public afterFinalize() {
         if (this.controller.hasAppendProcessing()) {
             const dimens = (Resource.STORED as AndroidResourceStoredMap).dimens;
-            const pattern = /:(\w+)="(-?[\d.]+px)"/g;
             const layouts = this.application.layouts;
+            const pattern = /:(\w+)="(-?[\d.]+px)"/g;
             let i = 0;
             while (i < layouts.length) {
                 const layout = layouts[i++];

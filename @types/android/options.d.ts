@@ -2,8 +2,8 @@ interface FileUniversalOptions extends squared.base.FileCopyingOptions, squared.
 }
 
 interface GuidelineOptions<T> {
-    target: T; 
-    parent: T; 
+    target: T;
+    parent: T;
     orientation?: OrientationAttr;
     percent?: boolean;
     opposing?: boolean;

@@ -731,13 +731,30 @@ JS and CSS files can be optimized further using these settings (node-express):
 
 You can also define your own optimizations in squared.settings.json:
 
-* npm i terser -> https://github.com/terser/terser
+* npm i terser@4.8 -> https://github.com/terser/terser (<b>NOTE</b>: Incompatible with 5.0+)
 * npm i prettier -> https://github.com/prettier/prettier
 * npm i clean-css -> https://github.com/jakubpawlowicz/clean-css
 * npm i html-minifier-terser -> https://github.com/DanielRuf/html-minifier-terser
-* npm i js-beautify -> https://github.com/beautify-web/js-beautify
 
-These plugins are not included with the default installation. You have to manually add them yourself since this feature is only relevant to the Chrome framework [<b>npm run install-chrome</b>].
+These plugins are not included with the default installation. You have to manually add them since this feature is only relevant to the Chrome framework [<b>npm run install-chrome</b>]. You can also install other non-builtin minifiers by defining a custom string-based synchronous function which is stored under the external category (html/js/css) and as the npm package name in squared.settings.json.
+
+```javascript
+// squared.settings.json
+{
+  "external": {
+    "js": {
+      "terser": {
+        "minify-example": "const options = { keep_classnames: true }; return context.minify(value, options).code;" // arguments are always 'context' and 'value'
+      }
+    },
+    "css": {
+      "clean-css": {
+        "beautify-example": "function(clean_css, value) { return new clean_css({ level: 1 }).minify(value).styles; }"
+      }
+    }
+  }
+}
+```
 
 JS and CSS files can be bundled together with the "saveAs" or "exportAs" action. Multiple transformations per asset are supported using the "+" symbol to chain them together. The "preserve" command will prevent unused styles from being deleted.
 

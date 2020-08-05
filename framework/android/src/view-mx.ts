@@ -618,6 +618,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         private _controlId?: string;
         private _labelFor?: T;
         private _constraint?: Constraint;
+        private _anchored?: boolean;
 
         public setControlType(controlName: string, containerType?: number) {
             this.controlName = controlName;
@@ -2058,13 +2059,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 case 'layout_height':
                                     continue;
                                 default:
-                                    if (attr.includes('margin')) {
-                                        continue;
+                                    if (attr.startsWith('layout_') && !attr.includes('margin')) {
+                                        replaceWith.attr(name, attr, item[attr], true);
                                     }
-                                    break;
-                            }
-                            if (attr.startsWith('layout_')) {
-                                replaceWith.attr(name, attr, item[attr], true);
+                                    continue;
                             }
                         }
                     }
@@ -2281,12 +2279,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         public applyOptimizations() {
             if (this.renderExclude) {
-                if (this.alignSibling('topBottom') === '' && this.alignSibling('bottomTop') === '' && this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '') {
-                    this.hide({ remove: true });
-                }
-                else {
-                    this.hide({ collapse: true });
-                }
+                this.hide(this.alignSibling('topBottom') === '' && this.alignSibling('bottomTop') === '' && this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '' ? { remove: true } : { collapse: true });
                 return;
             }
             const renderParent = this.renderParent!;
@@ -2441,10 +2434,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 if (pivoted && this.has('transformOrigin')) {
                     const { left, top } = getBackgroundPosition(this.css('transformOrigin'), this.bounds, { fontSize: this.fontSize });
                     if (top !== 0) {
-                        this.android('transformPivotX', formatPX(top - (offsetX >= 0 ? offsetX : -(offsetX * 2))));
+                        this.android('transformPivotX', formatPX(top - (offsetX >= 0 ? offsetX : -offsetX * 2)));
                     }
                     if (left !== 0) {
-                        this.android('transformPivotY', formatPX(left - (offsetY >= 0 ? offsetY : -(offsetY * 2))));
+                        this.android('transformPivotY', formatPX(left - (offsetY >= 0 ? offsetY : -offsetY * 2)));
                     }
                 }
             }
@@ -2802,13 +2795,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         set anchored(value) {
-            const constraint = this.constraint;
-            constraint.horizontal = value;
-            constraint.vertical = value;
+            this._anchored = value;
         }
         get anchored() {
-            const constraint = this.constraint;
-            return constraint.horizontal && constraint.vertical;
+            return this._anchored || (this._anchored = this.constraint.horizontal && this.constraint.vertical);
         }
 
         get constraint() {

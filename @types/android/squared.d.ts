@@ -406,7 +406,6 @@ declare namespace lib {
 
     namespace customizations {
         const API_ANDROID: Customizations<View>;
-
         function getValue(api: number, tagName: string, obj: string, attr: string): string;
     }
 
@@ -419,8 +418,6 @@ declare namespace lib {
         function getHorizontalBias(node: View): number;
         function getVerticalBias(node: View): number;
         function adjustAbsolutePaddingOffset(parent: View, direction: number, value: number): number;
-        function isGridJustified(node: View): boolean;
-        function isGridAligned(node: View): boolean;
         function createViewAttribute(data?: StandardMap): ViewAttribute;
         function createStyleAttribute(data?: StandardMap): Required<StyleAttribute>;
         function getDataSet(dataset: StringMap | DOMStringMap, prefix: string): Undef<StringMap>;

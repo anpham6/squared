@@ -180,8 +180,7 @@ function isConstraintLayout(layout: LayoutUI<View>, vertical: boolean) {
     if (layout.parent.flexElement && (layout.parent.css('alignItems') === 'baseline' || layout.some(item => item.flexbox.alignSelf === 'baseline')) || layout.singleRowAligned && layout.some(item => item.positionRelative && item.percentWidth === 0 && Math.ceil(item.actualRect('bottom', 'bounds')) > Math.floor(layout.node.box.bottom))) {
         return false;
     }
-    const multiple = layout.length > 1;
-    return layout.some(item => multiple && (item.rightAligned || item.centerAligned) && layout.singleRowAligned && (item.positionStatic && item.marginTop >= 0 || item.positionRelative && Math.floor(item.actualRect('bottom', 'bounds')) <= Math.ceil(layout.node.box.bottom)) || item.percentWidth > 0 && item.percentWidth < 1 || item.hasPX('maxWidth')) && (!vertical || layout.every(item => item.marginTop >= 0));
+    return layout.some(item => (item.rightAligned || item.centerAligned) && layout.length > 1 && (item.positionStatic && item.marginTop >= 0 || item.positionRelative && Math.floor(item.actualRect('bottom', 'bounds')) <= Math.ceil(layout.node.box.bottom)) && layout.singleRowAligned || item.percentWidth > 0 && item.percentWidth < 1 || item.hasPX('maxWidth')) && (!vertical || layout.every(item => item.marginTop >= 0));
 }
 
 function setVerticalLayout(node: View) {
@@ -2005,7 +2004,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             if (documentId) {
                 i = 0;
                 while (i < length) {
-                    (unbound[i++].constraint.barrier as {})[barrierDirection] = documentId;
+                    unbound[i++].constraint.barrier![barrierDirection] = documentId;
                 }
                 return documentId;
             }
@@ -2065,6 +2064,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         i = 0;
         while (i < length) {
             const node = nodes[i++];
+            if (node.anchored) {
+                continue;
+            }
             const constraint = node.constraint;
             const current = constraint.current;
             if (!constraint.horizontal) {
