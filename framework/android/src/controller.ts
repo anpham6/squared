@@ -2488,7 +2488,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         item.unset('textStyle');
                     }
                 };
-                const isMultilineSegment = (item: T) => item.contentAltered && item.inlineText && !item.naturalChild;
+                const isMultilineSegment = (item: T) => item.contentAltered && !item.naturalChild && item.inlineText;
                 for (let i = 0; i < length; ++i) {
                     const [currentFloated, rows, floating] = rowsAll[i];
                     if (currentFloated) {

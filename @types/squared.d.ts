@@ -16,7 +16,7 @@ export function appendToArchive(value: string, options?: {}): Promise<{} | void>
 export function saveToArchive(value?: string, options?: {}): Promise<{} | void>;
 export function createFrom(value: string, options: {}): Promise<{} | void>;
 export function appendFromArchive(value: string, options: {}): Promise<{} | void>;
-export function get(...elements: (string | Element)[]): Node[] | Map<Element, Node[]>;
+export function get(...elements: (string | Element)[]): Undef<Node> | Map<Element, Node[]>;
 export function latest(): string;
 export function ready(): boolean;
 export function close(): void;

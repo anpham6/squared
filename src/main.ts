@@ -35,9 +35,36 @@ function includeExtension(extensions: Extension[], ext: Extension) {
     }
 }
 
-function deleteProperties(data: {}) {
+function clearProperties(data: StandardMap) {
     for (const attr in data) {
         delete data[attr];
+    }
+}
+
+function extendPrototype(proto: any, offset: number) {
+    for (const [value, functionMap] of prototypeMap.entries()) {
+        if (value === 0 || util.hasBit(value, offset)) {
+            for (const method in functionMap) {
+                const item = functionMap[method];
+                if (typeof item === 'object') {
+                    const property: ObjectMap<FunctionType<any>> = {};
+                    let valid: Undef<boolean>;
+                    if (typeof item.get === 'function') {
+                        property.get = item.get;
+                        valid = true;
+                    }
+                    if (typeof item.set === 'function') {
+                        property.set = item.set;
+                        valid = true;
+                    }
+                    if (valid) {
+                        Object.defineProperty(proto, method, property);
+                        continue;
+                    }
+                }
+                proto[method] = item;
+            }
+        }
     }
 }
 
@@ -81,33 +108,6 @@ async function findElementAsync(element: HTMLElement) {
     return [await main!.parseDocument(element) as Node];
 }
 
-function extendNodePrototype(Node: Constructor<Node>, value: number) {
-    const functionMap = prototypeMap.get(value);
-    if (functionMap) {
-        const proto = Node.prototype;
-        for (const method in functionMap) {
-            const item = functionMap[method];
-            if (typeof item === 'object') {
-                const property: ObjectMap<FunctionType<any>> = {};
-                let valid: Undef<boolean>;
-                if (typeof item.get === 'function') {
-                    property.get = item.get;
-                    valid = true;
-                }
-                if (typeof item.set === 'function') {
-                    property.set = item.set;
-                    valid = true;
-                }
-                if (valid) {
-                    Object.defineProperty(proto, method, property);
-                    continue;
-                }
-            }
-            proto[method] = item;
-        }
-    }
-}
-
 const checkWritable = (app: Undef<Main>): app is Main => app?.initializing === false && app.length > 0;
 
 export function setHostname(value: string) {
@@ -130,12 +130,11 @@ export function setFramework(value: Framework, options?: ObjectMap<any>, cached?
         if (util.isPlainObject(options)) {
             Object.assign(appBase.userSettings, options);
         }
-        deleteProperties(settings);
+        clearProperties(settings);
         Object.assign(settings, appBase.userSettings);
         main = appBase.application;
         main.userSettings = settings;
-        extendNodePrototype(main.Node, 0);
-        extendNodePrototype(main.Node, main.framework);
+        extendPrototype(main.Node.prototype, main.framework);
         const { builtInExtensions, extensions } = main;
         extensions.length = 0;
         for (const namespace of settings.builtInExtensions) {
@@ -153,7 +152,7 @@ export function setFramework(value: Framework, options?: ObjectMap<any>, cached?
             }
         }
         if (reloading) {
-            deleteProperties(system);
+            clearProperties(system);
         }
         Object.assign(system, value.system);
         framework = value;
@@ -301,11 +300,7 @@ export function get(...elements: (Element | string)[]) {
             }
         }
     }
-    return length <= 1
-        ? result.size === 1
-            ? result.values().next().value as Node[]
-            : []
-        : result;
+    return length <= 1 ? result.size === 1 ? result.values().next().value as Node : undefined : result;
 }
 
 export function latest() {
