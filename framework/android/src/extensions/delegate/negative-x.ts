@@ -87,8 +87,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
                     parent,
                     container,
                     container.containerType,
-                    NODE_ALIGNMENT.HORIZONTAL | NODE_ALIGNMENT.SINGLE,
-                    container.children as T[]
+                    NODE_ALIGNMENT.HORIZONTAL | NODE_ALIGNMENT.SINGLE
                 )
             ),
             subscribe: true

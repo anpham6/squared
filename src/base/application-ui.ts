@@ -1411,16 +1411,15 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const { clearMap, controllerHandler } = this;
         const { containerType, alignmentType } = controllerHandler.containerTypeVertical;
         if (layout.containerType !== 0) {
-            const node = layout.node;
-            const parent = controllerHandler.createNodeGroup(node, [node], layout.parent);
+            const wrapper = controllerHandler.createNodeWrapper(layout.node, layout.parent, { containerType, alignmentType, cascade: true });
             this.addLayout(new LayoutUI(
-                parent,
-                node,
+                wrapper,
+                layout.node,
                 containerType,
                 alignmentType,
-                parent.children as T[]
+                wrapper.children as T[]
             ));
-            layout.node = parent;
+            layout.node = wrapper;
         }
         else {
             layout.setContainerType(containerType, alignmentType);
@@ -1530,8 +1529,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             wrapper,
                             item,
                             containerType,
-                            alignmentType | NODE_ALIGNMENT.SEGMENTED | NODE_ALIGNMENT.BLOCK,
-                            item.children as T[]
+                            alignmentType | NODE_ALIGNMENT.SEGMENTED | NODE_ALIGNMENT.BLOCK
                         ));
                     }
                     if (blockCount && floating && subgroup) {
@@ -1830,8 +1828,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             parent,
             node,
             node.containerType,
-            node.alignmentType,
-            node.children as T[]
+            node.alignmentType
         );
     }
 

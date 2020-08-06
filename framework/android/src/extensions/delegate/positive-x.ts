@@ -181,8 +181,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                         parent,
                         container,
                         CONTAINER_NODE.CONSTRAINT,
-                        NODE_ALIGNMENT.ABSOLUTE,
-                        container.children as T[]
+                        NODE_ALIGNMENT.ABSOLUTE
                     )
                 ),
                 subscribe: true

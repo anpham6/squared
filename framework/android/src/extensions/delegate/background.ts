@@ -133,8 +133,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
                         parentAs || parent,
                         container,
                         CONTAINER_NODE.CONSTRAINT,
-                        NODE_ALIGNMENT.VERTICAL,
-                        container.children as T[]
+                        NODE_ALIGNMENT.VERTICAL
                     )
                 ),
                 remove: true

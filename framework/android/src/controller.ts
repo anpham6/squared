@@ -2141,7 +2141,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         return group;
     }
 
-    public createNodeWrapper(node: T, parent: T, options: CreateNodeWrapperUIOptions<T> = {}) {
+    public createNodeWrapper(node: T, parent: T, options: AndroidCreateNodeWrapperUIOptions<T> = {}) {
         const { children, containerType, alignmentType } = options;
         const container = this.application.createNode(node.sessionId, {
             parent,

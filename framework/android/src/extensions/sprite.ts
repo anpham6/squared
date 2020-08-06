@@ -60,8 +60,7 @@ export default class <T extends View> extends squared.base.extensions.Sprite<T> 
                         parent,
                         container,
                         CONTAINER_NODE.FRAME,
-                        NODE_ALIGNMENT.SINGLE,
-                        container.children as T[]
+                        NODE_ALIGNMENT.SINGLE
                     )
                 ),
                 parent: container,

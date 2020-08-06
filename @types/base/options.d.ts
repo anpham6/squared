@@ -16,6 +16,13 @@ interface CreateNodeGroupUIOptions {
     cascade?: boolean;
 }
 
+interface CreateNodeWrapperUIOptions<T> extends ExcludeOptions {
+    children?: T[];
+    containerType?: number;
+    alignmentType?: number;
+    cascade?: boolean;
+}
+
 interface LayoutOptions<T> extends Partial<LayoutType> {
     parent: T;
     node: T;

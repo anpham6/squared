@@ -36,7 +36,7 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
         public node: T,
         public containerType = 0,
         public alignmentType = 0,
-        children?: T[])
+        children: T[] = node.children as T[])
     {
         super(children);
     }
@@ -132,29 +132,25 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
     }
 
     get singleRowAligned() {
-        let result = this._singleRow;
+        const result = this._singleRow;
         if (result === undefined) {
             const children = this.children;
             const length = children.length;
             if (length > 0) {
-                result = true;
                 if (length > 1) {
                     let previousBottom = Infinity;
                     let i = 0;
                     while (i < length) {
                         const node = children[i++];
                         if (node.blockStatic || node.multiline || Math.ceil(node.bounds.top) >= previousBottom) {
-                            result = false;
-                            break;
+                            return this._singleRow = false;
                         }
                         previousBottom = node.bounds.bottom;
                     }
                 }
-                this._singleRow = result;
+                return this._singleRow = true;
             }
-            else {
-                return false;
-            }
+            return false;
         }
         return result;
     }

@@ -91,6 +91,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     public abstract processTraverseVertical(layout: squared.base.LayoutUI<T>, siblings: T[]): Undef<squared.base.LayoutUI<T>>;
     public abstract processLayoutHorizontal(layout: squared.base.LayoutUI<T>): squared.base.LayoutUI<T>;
     public abstract createNodeGroup(node: T, children: T[], parent?: T, options?: CreateNodeGroupUIOptions): T;
+    public abstract createNodeWrapper(node: T, parent: T, options?: CreateNodeWrapperUIOptions<T>): T;
     public abstract renderNode(layout: squared.base.LayoutUI<T>): Undef<NodeTemplate<T>>;
     public abstract renderNodeGroup(layout: squared.base.LayoutUI<T>): Undef<NodeTemplate<T>>;
     public abstract sortRenderPosition(parent: T, templates: NodeTemplate<T>[]): NodeTemplate<T>[];
@@ -392,13 +393,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         let style: CSSStyleDeclaration,
             width: number,
             height: number;
-        if (pseudoElt) {
-            const parentElement = element.parentElement;
-            style = parentElement ? getStyle(parentElement, pseudoElt) : getStyle(element);
-            width = 1;
-            height = 1;
-        }
-        else {
+        if (!pseudoElt) {
             style = getStyle(element);
             if (style.getPropertyValue('display') !== 'none') {
                 const bounds = element.getBoundingClientRect();
@@ -411,6 +406,12 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             else {
                 return false;
             }
+        }
+        else {
+            const parentElement = element.parentElement;
+            style = parentElement ? getStyle(parentElement, pseudoElt) : getStyle(element);
+            width = 1;
+            height = 1;
         }
         if (width > 0 && height > 0) {
             return style.getPropertyValue('visibility') === 'visible' || !hasCoords(style.getPropertyValue('position'));
@@ -561,14 +562,15 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             node.each((item: T, index) => item.containerIndex = index);
         }
         for (const [previousParent, data] of escaped.entries()) {
-            const { parent, appending } = data;
-            const children = parent.children as T[];
-            if (children.includes(previousParent)) {
-                const actualParent = new Set<T>();
+            const parent = data.parent;
+            if (parent.contains(previousParent)) {
                 const { childIndex, containerIndex } = previousParent;
+                const appending = data.appending;
+                const children = parent.children;
                 const documentChildren = parent.naturalChildren.slice(0);
-                const target = children[containerIndex];
+                const target = children[containerIndex] as T;
                 const depth = parent.depth + 1;
+                const actualParent = new Set<T>();
                 for (let i = 0, j = 0, k = 0, prepend = false; i < appending.length; ++i) {
                     const item = appending[i];
                     if (item.containerIndex === 0) {
@@ -783,12 +785,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     let template = indent + '<' +
                         controlName +
                         (depth === 0 ? '{#0}' : '') +
-                        (showAttributes
-                            ? attributes
-                                ? pushIndent(attributes, next)
-                                : node.extractAttributes(next)
-                            : ''
-                        );
+                        (showAttributes ? !attributes ? node.extractAttributes(next) : pushIndent(attributes, next) : '');
                     if (renderTemplates || beforeInside !== '' || afterInside !== '') {
                         template += '>\n' +
                                     beforeInside +

@@ -67,8 +67,7 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
                     parent,
                     container,
                     container.containerType,
-                    NODE_ALIGNMENT.SINGLE,
-                    container.children as T[]
+                    NODE_ALIGNMENT.SINGLE
                 )
             )
         };

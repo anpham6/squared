@@ -12,7 +12,7 @@ const { BOX_STANDARD, NODE_ALIGNMENT, NODE_TEMPLATE } = squared.base.lib.enumera
 
 export default class <T extends View> extends squared.base.extensions.List<T> {
     public processNode(node: T, parent: T) {
-        const layout = new LayoutUI(parent, node, 0, 0, node.children as T[]);
+        const layout = new LayoutUI(parent, node, 0, 0);
         if (layout.linearY) {
             layout.rowCount = node.length;
             layout.columnCount = node.some(item => item.css('listStylePosition') === 'inside') ? 3 : 2;
@@ -248,8 +248,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                             parent,
                             container,
                             node.baselineElement && node.percentWidth === 0 && !node.css('maxWidth').endsWith('%') ? CONTAINER_NODE.LINEAR : CONTAINER_NODE.CONSTRAINT,
-                            NODE_ALIGNMENT.VERTICAL | NODE_ALIGNMENT.UNKNOWN,
-                            container.children as T[]
+                            NODE_ALIGNMENT.VERTICAL | NODE_ALIGNMENT.UNKNOWN
                         ))
                     };
                 }

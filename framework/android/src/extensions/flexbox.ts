@@ -270,8 +270,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         parent,
                         node,
                         CONTAINER_NODE.CONSTRAINT,
-                        NODE_ALIGNMENT.AUTO_LAYOUT,
-                        node.children as T[]
+                        NODE_ALIGNMENT.AUTO_LAYOUT
                     )
                 ),
                 complete: true,
@@ -305,8 +304,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 parent,
                                 container,
                                 CONTAINER_NODE.FRAME,
-                                NODE_ALIGNMENT.SINGLE,
-                                container.children as T[]
+                                NODE_ALIGNMENT.SINGLE
                             )
                         )
                     };

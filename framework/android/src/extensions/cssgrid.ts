@@ -554,8 +554,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                     parent,
                     container,
                     CONTAINER_NODE.CONSTRAINT,
-                    NODE_ALIGNMENT.SINGLE,
-                    container.children as T[]
+                    NODE_ALIGNMENT.SINGLE
                 )
             );
         }
@@ -571,7 +570,6 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 node,
                 containerType: CONTAINER_NODE.GRID,
                 alignmentType: NODE_ALIGNMENT.AUTO_LAYOUT,
-                children: node.children as T[],
                 rowCount: row.length,
                 columnCount
             });
@@ -699,8 +697,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                         parent,
                         renderAs,
                         CONTAINER_NODE.FRAME,
-                        NODE_ALIGNMENT.SINGLE,
-                        renderAs.children as T[]
+                        NODE_ALIGNMENT.SINGLE
                     )
                 ) as NodeXmlTemplate<T>;
             }

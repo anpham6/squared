@@ -33,8 +33,7 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
                     parent,
                     node,
                     CONTAINER_NODE.CONSTRAINT,
-                    NODE_ALIGNMENT.ABSOLUTE,
-                    node.children as T[]
+                    NODE_ALIGNMENT.ABSOLUTE
                 )
             )
         };

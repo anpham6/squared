@@ -111,7 +111,6 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                 node,
                 containerType: CONTAINER_NODE.GRID,
                 alignmentType: NODE_ALIGNMENT.AUTO_LAYOUT,
-                children: node.children as T[],
                 rowCount: mainData.rowCount,
                 columnCount: mainData.columnCount
             })),
