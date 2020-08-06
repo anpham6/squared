@@ -16,9 +16,9 @@ const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE
 
 export default class <T extends View> extends squared.base.extensions.Sprite<T> {
     public processNode(node: T, parent: T) {
-        const mainData = node.data<SpriteData>(this.name, 'mainData');
         const drawable = (this.resource as android.base.Resource<T>).addImageSrc(node.backgroundImage);
-        if (mainData && drawable !== '') {
+        if (drawable !== '') {
+            const { image, position } = this.data.get(node) as SpriteData;
             const container = this.application.createNode(node.sessionId, { parent, innerWrapped: node });
             container.inherit(node, 'base', 'initial', 'styleMap');
             container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
@@ -38,8 +38,8 @@ export default class <T extends View> extends squared.base.extensions.Sprite<T> 
                 bottom: 'auto',
                 left: 'auto',
                 display: 'inline-block',
-                width: mainData.image.width > 0 ? formatPX(mainData.image.width) : 'auto',
-                height: mainData.image.height > 0 ? formatPX(mainData.image.height) : 'auto',
+                width: image.width > 0 ? formatPX(image.width) : 'auto',
+                height: image.height > 0 ? formatPX(image.height) : 'auto',
                 borderTopStyle: 'none',
                 borderRightStyle: 'none',
                 borderBottomStyle: 'none',
@@ -51,8 +51,8 @@ export default class <T extends View> extends squared.base.extensions.Sprite<T> 
             });
             node.unsetCache();
             node.android('src', `@drawable/${drawable}`);
-            node.android('layout_marginTop', formatPX(mainData.position.top));
-            node.android(node.localizeString('layout_marginLeft'), formatPX(mainData.position.left));
+            node.android('layout_marginTop', formatPX(position.top));
+            node.android(node.localizeString('layout_marginLeft'), formatPX(position.left));
             return {
                 renderAs: container,
                 outputAs: this.application.renderNode(

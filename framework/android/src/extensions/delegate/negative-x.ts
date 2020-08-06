@@ -25,14 +25,14 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
             return item.leftTopAxis && (item.left < 0 || !item.hasPX('left') && item.right < 0);
         });
         if (children.length > 0) {
-            node.data(this.name, 'mainData', { children, offsetLeft: node.marginLeft + node.paddingLeft } as NegativeXData);
+            this.data.set(node, { children, offsetLeft: node.marginLeft + node.paddingLeft });
             return true;
         }
         return false;
     }
 
     public processNode(node: T, parent: T) {
-        const mainData = node.data<NegativeXData>(this.name, 'mainData')!;
+        const mainData = this.data.get(node) as NegativeXData;
         const children = mainData.children as T[];
         const container = (this.controller as android.base.Controller<T>).createNodeWrapper(node, parent, { children, containerType: CONTAINER_NODE.CONSTRAINT, alignmentType: NODE_ALIGNMENT.VERTICAL });
         let left = NaN,
@@ -96,7 +96,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
     }
 
     public postBaseLayout(node: T) {
-        const mainData = node.data<NegativeXData>(this.name, 'mainData');
+        const mainData = this.data.get(node) as NegativeXData;
         if (mainData) {
             let firstChild = mainData.firstChild;
             if (firstChild) {
@@ -132,7 +132,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
 
     public beforeDocumentWrite() {
         for (const node of this.subscribers) {
-            const mainData = node.data<NegativeXData>(this.name, 'mainData');
+            const mainData = this.data.get(node) as NegativeXData;
             if (mainData) {
                 const translateX = node.android('translationX');
                 const translateY = node.android('translationY');

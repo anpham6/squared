@@ -55,7 +55,7 @@ export default abstract class Column<T extends squared.base.NodeUI> extends Exte
             columnGap = (columnWidth > 0 && !isNaN(maxSize) && maxSize !== Infinity ? Math.max(maxSize - columnWidth, 0) : 0) + 16;
             columnSized = Math.ceil(getColumnSizing());
         }
-        node.data(this.name, 'mainData', {
+        this.data.set(node, {
             rows,
             columnCount,
             columnWidth,
@@ -68,7 +68,7 @@ export default abstract class Column<T extends squared.base.NodeUI> extends Exte
             },
             boxWidth: parent.actualBoxWidth(boxWidth),
             multiline
-        } as ColumnData<T>);
+        });
         return undefined;
     }
 }

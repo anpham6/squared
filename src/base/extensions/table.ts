@@ -250,7 +250,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     td.modifyBox(BOX_STANDARD.MARGIN_TOP, i === 0 ? vertical : spacingHeight);
                     td.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, i + rowSpan < rowCount ? spacingHeight : vertical);
                 }
-                td.data(this.name, 'cellData', { colSpan, rowSpan });
+                this.data.set(td, { colSpan, rowSpan });
             });
             hideCell(tr);
             columnCount = Math.max(columnCount, row.length);
@@ -357,7 +357,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             if (!caption.cssInitial('textAlign')) {
                 caption.css('textAlign', 'center');
             }
-            caption.data(this.name, 'cellData', { colSpan: columnCount });
+            this.data.set(caption as T, { colSpan: columnCount });
             if (!captionBottom) {
                 caption.parent = node;
             }
@@ -368,7 +368,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             let j = 0;
             while (j < length) {
                 const td = tr[j];
-                const cellData = td.data<TableCellData>(this.name, 'cellData')!;
+                const cellData = this.data.get(td) as TableCellData;
                 const columnWidth = mapWidth[j];
                 j += cellData.colSpan;
                 if (cellData.placed) {
@@ -448,7 +448,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 td.parent = node;
             }
             if (length < columnCount) {
-                const cellData = tr[length - 1].data<StandardMap>(this.name, 'cellData');
+                const cellData = this.data.get(tr[length - 1]) as Undef<TableCellData>;
                 if (cellData) {
                     cellData.spaceSpan = columnCount - length;
                 }
@@ -547,7 +547,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         }
         mainData.rowCount = rowCount + (caption ? 1 : 0);
         mainData.columnCount = columnCount;
-        node.data(this.name, 'mainData', mainData);
+        this.data.set(node, mainData);
         return undefined;
     }
 }

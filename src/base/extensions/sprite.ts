@@ -21,7 +21,7 @@ export default abstract class Sprite<T extends squared.base.NodeUI> extends Exte
                 const x = (position.left < 0 || REGEXP_POSITION.test(backgroundPositionX)) && image.width > dimension.width;
                 const y = (position.top < 0 || REGEXP_POSITION.test(backgroundPositionY)) && image.height > dimension.height;
                 if ((x || y) && (x || position.left === 0) && (y || position.top === 0)) {
-                    node.data(this.name, 'mainData', { image, position });
+                    this.data.set(node, { image, position });
                     return true;
                 }
             }

@@ -66,7 +66,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                 let i = 0;
                 while (i < length) {
                     const item = children[i++];
-                    if (item.pageFlow && item.blockStatic && !item.visibleStyle.background && item.percentWidth === 0 && !item.autoMargin.leftRight && !item.autoMargin.left && !item.find((child: T) => !checkAlignment(child) || child.percentWidth > 0)) {
+                    if (item.blockStatic && !item.visibleStyle.background && (item.percentWidth === 0 || item.percentWidth === 1) && !item.autoMargin.leftRight && !item.autoMargin.left && item.pageFlow && !item.find((child: T) => !checkAlignment(child) || child.percentWidth > 0)) {
                         if (item.length > 1) {
                             minLength = true;
                         }
@@ -219,8 +219,8 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                 for (let j = 0, start = 0, spacer = 0; j < rowCount; ++j) {
                     const item = column[j];
                     const rowData = rows[j] ?? (rows[j] = []);
-                    if (!item['spacer']) {
-                        const data = Object.assign(Grid.createDataCellAttribute(), item.data<GridCellData<T>>(this.name, 'cellData'));
+                    if (!item.spacer) {
+                        const cellData: GridCellData<T> = Object.assign(Grid.createDataCellAttribute<T>(), this.data.get(item as T));
                         let rowSpan = 1,
                             columnSpan = 1 + spacer;
                         let k = i + 1;
@@ -254,24 +254,22 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                             k = 0;
                             while (k < q) {
                                 const sibling = children[k++];
-                                if (!assigned.has(sibling) && sibling.visible && !sibling.rendered) {
-                                    if (sibling.withinX({ left: item.linear.right, right: columnEnd[l] } as BoxRectDimension, { dimension: 'linear' })) {
-                                        (data.siblings ?? (data.siblings = [])).push(sibling);
-                                    }
+                                if (!assigned.has(sibling) && !sibling.excluded && sibling.withinX({ left: item.linear.right, right: columnEnd[l] } as BoxRectDimension, { dimension: 'linear' })) {
+                                    (cellData.siblings ?? (cellData.siblings = [])).push(sibling);
                                 }
                             }
                         }
-                        data.rowSpan = rowSpan;
-                        data.columnSpan = columnSpan;
-                        data.rowStart = start++ === 0;
-                        data.rowEnd = columnSpan + i === columnCount;
-                        data.cellStart = count++ === 0;
-                        data.cellEnd = data.rowEnd && j === rowCount - 1;
-                        data.index = i;
-                        spacer = 0;
-                        item.data(this.name, 'cellData', data);
+                        cellData.rowSpan = rowSpan;
+                        cellData.columnSpan = columnSpan;
+                        cellData.rowStart = start++ === 0;
+                        cellData.rowEnd = columnSpan + i === columnCount;
+                        cellData.cellStart = count++ === 0;
+                        cellData.cellEnd = cellData.rowEnd && j === rowCount - 1;
+                        cellData.index = i;
+                        this.data.set(item as T, cellData);
                         rowData.push(item);
                         assigned.add(item);
+                        spacer = 0;
                     }
                     else if (item.spacer === 1) {
                         ++spacer;
@@ -293,7 +291,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
             if (node.tableElement && node.css('borderCollapse') === 'collapse') {
                 node.resetBox(BOX_STANDARD.PADDING);
             }
-            node.data(this.name, 'columnCount', columnCount);
+            this.data.set(node, columnCount);
         }
         return undefined;
     }

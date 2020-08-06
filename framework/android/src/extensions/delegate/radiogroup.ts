@@ -9,24 +9,6 @@ const { NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumer
 
 const NodeUI = squared.base.NodeUI;
 
-function setBaselineIndex(children: View[], container: View, name: string) {
-    let valid = false;
-    const length = children.length;
-    let i = 0;
-    while (i < length) {
-        const item = children[i++];
-        if (item.toElementBoolean('checked')) {
-            item.android('checked', 'true');
-        }
-        if (!valid && item.baseline && item.parent === container && container.layoutLinear && (i === 0 || container.layoutHorizontal)) {
-            container.android('baselineAlignedChildIndex', i.toString());
-            valid = true;
-        }
-        item.data(name, 'siblings', children);
-    }
-    return valid;
-}
-
 const getInputName = (element: HTMLInputElement) => element.name?.trim() || '';
 
 export default class RadioGroup<T extends View> extends squared.base.ExtensionUI<T> {
@@ -35,7 +17,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
     }
 
     public condition(node: T) {
-        return getInputName(node.element as HTMLInputElement) !== '' && node.data<T[]>(this.name, 'siblings') === undefined;
+        return getInputName(node.element as HTMLInputElement) !== '' && !this.data.has(node);
     }
 
     public processNode(node: T, parent: T) {
@@ -84,7 +66,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
             container.inherit(node, 'alignment');
             container.exclude({ resource: NODE_RESOURCE.ASSET });
             container.render(parent);
-            if (!setBaselineIndex(radiogroup, container, this.name)) {
+            if (!this.setBaselineIndex(container, radiogroup)) {
                 container.css('verticalAlign', 'middle');
                 container.setCacheValue('baseline', false);
             }
@@ -142,7 +124,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
                         if (template) {
                             template.controlName = controlName;
                         }
-                        setBaselineIndex(radiogroup, group, this.name);
+                        this.setBaselineIndex(group, radiogroup);
                         return undefined;
                     }
                 }
@@ -153,5 +135,23 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
 
     public postBaseLayout(node: T) {
         node.renderEach((item: T) => item.naturalElement && item.toElementBoolean('checked') && node.android('checkedButton', item.documentId));
+    }
+
+    private setBaselineIndex(container: T, children: T[]) {
+        let valid = false;
+        const length = children.length;
+        let i = 0;
+        while (i < length) {
+            const item = children[i++];
+            if (item.toElementBoolean('checked')) {
+                item.android('checked', 'true');
+            }
+            if (!valid && item.baseline && item.parent === container && container.layoutLinear && (i === 0 || container.layoutHorizontal)) {
+                container.android('baselineAlignedChildIndex', i.toString());
+                valid = true;
+            }
+            this.data.set(item, children);
+        }
+        return valid;
     }
 }

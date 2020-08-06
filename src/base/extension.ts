@@ -3,6 +3,7 @@ export default abstract class Extension<T extends squared.base.Node> implements 
     public readonly options: StandardMap = {};
     public readonly dependencies: ExtensionDependency[] = [];
     public readonly subscribers = new Set<T>();
+    public readonly data = new Map<T, unknown>();
 
     protected _application!: squared.base.Application<T>;
     protected _controller!: squared.base.Controller<T>;
@@ -26,6 +27,11 @@ export default abstract class Extension<T extends squared.base.Node> implements 
 
     public require(name: string, preload = false) {
         this.dependencies.push({ name, preload });
+    }
+
+    public reset() {
+        this.subscribers.clear();
+        this.data.clear();
     }
 
     public beforeParseDocument(sessionId: string) {}

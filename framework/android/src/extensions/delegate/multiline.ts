@@ -60,7 +60,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                 }
             }
             else if (parent.layoutVertical && hasTextIndent(node)) {
-                node.data(this.name, 'mainData', [[1, node]]);
+                this.data.set(node, [[1, node]]);
                 return true;
             }
         }
@@ -105,7 +105,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                             }
                         }
                         if (nodes.length > 0) {
-                            node.data(this.name, 'mainData', nodes);
+                            this.data.set(node, nodes);
                             return true;
                         }
                     }
@@ -166,12 +166,12 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                 if (leading) {
                     nodes.unshift([1, leading]);
                 }
-                node.data(this.name, 'mainData', nodes);
+                this.data.set(node, nodes);
                 return true;
             }
         }
         else if (node.textElement && node.firstLineStyle || node.multiline && node.textAlignLast !== '') {
-            node.data(this.name, 'mainData', [[NaN, node]]);
+            this.data.set(node, [[NaN, node]]);
             return true;
         }
         return false;
@@ -183,15 +183,15 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
             return undefined;
         }
         const application = this.application as android.base.Application<T>;
-        const mainData = node.data<MultilineData<T>>(this.name, 'mainData');
-        const parentContainer = mainData ? node : parent;
-        const { children, sessionId } = parentContainer;
         if (isNaN(fontAdjust)) {
             fontAdjust = application.userSettings.fontMeasureAdjust;
         }
+        const mainData = this.data.get(node) as MultilineData<T>;
+        const parentContainer = mainData ? node : parent;
+        const { children, sessionId } = parentContainer;
+        const breakable = mainData || [[1, node]];
         let modified: Undef<boolean>,
             partition: Undef<boolean>;
-        const breakable = mainData || [[1, node]];
         for (let i = 0, length = breakable.length; i < length; ++i) {
             const [columns, seg] = breakable[i];
             const element = seg.element!;

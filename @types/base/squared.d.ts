@@ -258,6 +258,8 @@ declare module "base" {
         readonly options: StandardMap;
         readonly dependencies: ExtensionDependency[];
         readonly subscribers: Set<T>;
+        readonly data: Map<T, unknown>;
+        reset(): void;
         require(name: string, preload?: boolean): void;
         beforeParseDocument(sessionId: string): void;
         afterParseDocument(sessionId: string): void;

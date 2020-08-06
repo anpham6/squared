@@ -36,6 +36,7 @@ interface CssGridCellData {
     rowSpan: number;
     columnStart: number;
     columnSpan: number;
+    bounds?: BoxRectDimension;
 }
 
 interface FlexboxData<T> extends Required<FlexData> {

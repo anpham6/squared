@@ -990,12 +990,12 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         rowSpanMultiple[i++] = true;
                     }
                 }
-                item.data(this.name, 'cellData', {
+                this.data.set(item, {
                     rowStart,
                     rowSpan: rowCount,
                     columnStart,
                     columnSpan: d - b
-                } as CssGridCellData);
+                });
             }
         });
         let columnCount = rowData.length;
@@ -1068,7 +1068,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                 while (k < length) {
                                     const item = columnItem[k++] as T;
                                     if (!modified.has(item)) {
-                                        const { columnSpan, rowSpan } = item.data<CssGridCellData>(this.name, 'cellData')!;
+                                        const { columnSpan, rowSpan } = this.data.get(item) as CssGridCellData;
                                         const x = j + columnSpan - 1;
                                         const y = i + rowSpan - 1;
                                         if (columnGap > 0 && x < columnCount - 1) {
@@ -1155,13 +1155,13 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 if (node.cssTry('display', 'block')) {
                     node.each((item: T) => {
                         const bounds = item.boundingClientRect;
-                        item.data(this.name, 'boundsData', bounds ? { ...item.bounds, width: bounds.width, height: bounds.height } : item.bounds);
+                        (this.data.get(item) as CssGridCellData).bounds = bounds ? { ...item.bounds, width: bounds.width, height: bounds.height } : item.bounds;
                     });
                     node.cssFinally('display');
                 }
                 applyLayout(node, column, columnCount, true);
                 applyLayout(node, row, rowCount, false);
-                node.data(this.name, 'mainData', mainData);
+                this.data.set(node, mainData);
             }
         }
         return undefined;

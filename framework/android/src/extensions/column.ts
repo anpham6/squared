@@ -22,7 +22,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
     }
 
     public postBaseLayout(node: T) {
-        const mainData = node.data<ColumnData<T>>(this.name, 'mainData');
+        const mainData = this.data.get(node) as Undef<ColumnData<T>>;
         if (mainData) {
             const application = this.application;
             const { columnCount, columnGap, columnWidth, columnRule, columnSized, boxWidth, rows, multiline } = mainData;

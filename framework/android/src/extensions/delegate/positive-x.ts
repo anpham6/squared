@@ -137,64 +137,62 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
             }
         });
         if (children.size > 0 || right || bottom) {
-            node.data(this.name, 'mainData', { children: Array.from(children), right, bottom });
+            this.data.set(node, { children: Array.from(children), right, bottom });
             return true;
         }
         return false;
     }
 
     public processNode(node: T, parent: T) {
-        const mainData = node.data<PositiveXData>(this.name, 'mainData');
-        if (mainData) {
-            const children = mainData.children as T[];
-            let container: Undef<T>;
-            if (children.length > 0) {
-                container = (this.controller as android.base.Controller<T>).createNodeWrapper(node, parent, {
-                    alignmentType: NODE_ALIGNMENT.VERTICAL,
-                    children,
-                    resetMargin: !node.rootElement && !node.pageFlow || parent.layoutGrid,
-                    cascade: true,
-                    inheritDataset: true
-                });
+        const mainData = this.data.get(node) as PositiveXData;
+        const children = mainData.children as T[];
+        let container: Undef<T>;
+        if (children.length > 0) {
+            container = (this.controller as android.base.Controller<T>).createNodeWrapper(node, parent, {
+                alignmentType: NODE_ALIGNMENT.VERTICAL,
+                children,
+                resetMargin: !node.rootElement && !node.pageFlow || parent.layoutGrid,
+                cascade: true,
+                inheritDataset: true
+            });
+        }
+        if (node.documentBody) {
+            if (mainData.right) {
+                (container || node).setLayoutWidth('match_parent');
             }
-            if (node.documentBody) {
-                if (mainData.right) {
-                    (container || node).setLayoutWidth('match_parent');
-                }
-                if (mainData.bottom) {
-                    (container || node).setLayoutHeight('match_parent');
-                }
+            if (mainData.bottom) {
+                (container || node).setLayoutHeight('match_parent');
             }
-            else if (!node.pageFlow) {
-                if (!node.hasPX('width') && node.hasPX('left') && node.hasPX('right')) {
-                    node.setLayoutWidth('match_parent');
-                }
-                if (!node.hasPX('height') && node.hasPX('top') && node.hasPX('bottom')) {
-                    node.setLayoutHeight('match_parent');
-                }
+        }
+        else if (!node.pageFlow) {
+            if (!node.hasPX('width') && node.hasPX('left') && node.hasPX('right')) {
+                node.setLayoutWidth('match_parent');
             }
-            if (container) {
-                return {
-                    parent: container,
-                    renderAs: container,
-                    outputAs: this.application.renderNode(
-                        new LayoutUI(
-                            parent,
-                            container,
-                            CONTAINER_NODE.CONSTRAINT,
-                            NODE_ALIGNMENT.ABSOLUTE,
-                            container.children as T[]
-                        )
-                    ),
-                    subscribe: true
-                };
+            if (!node.hasPX('height') && node.hasPX('top') && node.hasPX('bottom')) {
+                node.setLayoutHeight('match_parent');
             }
+        }
+        if (container) {
+            return {
+                parent: container,
+                renderAs: container,
+                outputAs: this.application.renderNode(
+                    new LayoutUI(
+                        parent,
+                        container,
+                        CONTAINER_NODE.CONSTRAINT,
+                        NODE_ALIGNMENT.ABSOLUTE,
+                        container.children as T[]
+                    )
+                ),
+                subscribe: true
+            };
         }
         return undefined;
     }
 
     public postBaseLayout(node: T) {
-        const mainData = node.data<PositiveXData>(this.name, 'mainData');
+        const mainData = this.data.get(node) as Undef<PositiveXData>;
         if (mainData) {
             const documentId = node.documentId;
             for (const item of mainData.children) {

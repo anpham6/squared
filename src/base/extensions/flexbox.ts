@@ -31,7 +31,6 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
     }
 
     public processNode(node: T) {
-        const controller = this.controller;
         const [children, absolute] = node.partition((item: T) => item.pageFlow) as [T[], T[]];
         const mainData = createDataAttribute(node, children);
         if (node.cssTry('align-items', 'start')) {
@@ -51,6 +50,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
             node.cssFinally('align-items');
         }
         if (mainData.wrap) {
+            const controller = this.controller;
             const options: CoordsXYOptions = { dimension: 'bounds' };
             let align: string,
                 sort: string,
@@ -163,7 +163,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                 mainData.columnCount = 1;
             }
         }
-        node.data(this.name, 'mainData', mainData);
+        this.data.set(node, mainData);
         return undefined;
     }
 }

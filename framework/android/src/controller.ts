@@ -478,9 +478,34 @@ export function setVerticalAlignment(node: View, onlyChild = true, biasOnly?: bo
 
 export default class Controller<T extends View> extends squared.base.ControllerUI<T> implements android.base.Controller<T> {
     public static anchorPosition<T extends View>(node: T, parent: T, horizontal: boolean, modifyAnchor = true) {
-        const [orientation, dimension, posA, posB, marginA, marginB, paddingA, paddingB] = horizontal
-            ? ['horizontal', 'width', 'left', 'right', BOX_STANDARD.MARGIN_LEFT, BOX_STANDARD.MARGIN_RIGHT, BOX_STANDARD.PADDING_LEFT, BOX_STANDARD.PADDING_RIGHT]
-            : ['vertical', 'height', 'top', 'bottom', BOX_STANDARD.MARGIN_TOP, BOX_STANDARD.MARGIN_BOTTOM, BOX_STANDARD.PADDING_TOP, BOX_STANDARD.PADDING_BOTTOM];
+        let orientation: string,
+            dimension: string,
+            posA: string,
+            posB: string,
+            marginA: number,
+            marginB: number,
+            paddingA: number,
+            paddingB: number;
+        if (horizontal) {
+            orientation = 'horizontal';
+            dimension = 'width';
+            posA = 'left';
+            posB = 'right';
+            marginA = BOX_STANDARD.MARGIN_LEFT;
+            marginB = BOX_STANDARD.MARGIN_RIGHT;
+            paddingA = BOX_STANDARD.PADDING_LEFT;
+            paddingB = BOX_STANDARD.PADDING_RIGHT;
+        }
+        else {
+            orientation = 'vertical';
+            dimension = 'height';
+            posA = 'top';
+            posB = 'bottom';
+            marginA = BOX_STANDARD.MARGIN_TOP;
+            marginB = BOX_STANDARD.MARGIN_BOTTOM;
+            paddingA = BOX_STANDARD.PADDING_TOP;
+            paddingB = BOX_STANDARD.PADDING_BOTTOM;
+        }
         const autoMargin = node.autoMargin;
         const hasDimension = node.hasPX(dimension);
         const result: Partial<BoxRect> = {};

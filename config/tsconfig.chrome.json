@@ -1,9 +1,5 @@
 {
     "extends": "../tsconfig.json",
-    "compilerOptions": {
-      "sourceMap": true,
-      "incremental": true
-    },
     "include": [
       "../@types/**/object.d.ts",
       "../@types/index.d.ts",

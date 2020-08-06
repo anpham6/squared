@@ -234,9 +234,8 @@ const setBoxPercentage = (parent: View, node: View, attr: DimensionAttr) => node
 export default class <T extends View> extends squared.base.extensions.Flexbox<T> {
     public processNode(node: T, parent: T) {
         super.processNode(node, parent);
-        const mainData = node.data<FlexboxData<T>>(this.name, 'mainData')!;
-        const { rowCount, columnCount } = mainData;
-        if (rowCount === 1 && mainData.row || columnCount === 1 && mainData.column) {
+        const mainData = this.data.get(node) as FlexboxData<T>;
+        if (mainData.row && mainData.rowCount === 1 || mainData.column && mainData.columnCount === 1) {
             node.containerType = CONTAINER_NODE.CONSTRAINT;
             node.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
             node.addAlign(mainData.column ? NODE_ALIGNMENT.VERTICAL : NODE_ALIGNMENT.HORIZONTAL);
@@ -254,8 +253,8 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     containerType: CONTAINER_NODE.CONSTRAINT,
                     alignmentType: NODE_ALIGNMENT.AUTO_LAYOUT | (mainData.column ? NODE_ALIGNMENT.HORIZONTAL : NODE_ALIGNMENT.VERTICAL),
                     itemCount: node.length,
-                    rowCount,
-                    columnCount
+                    rowCount: mainData.rowCount,
+                    columnCount: mainData.columnCount
                 })),
                 include: true,
                 complete: true
@@ -279,41 +278,38 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 subscribe: true
             };
         }
-        else {
-            const autoMargin = node.autoMargin;
-            if (autoMargin.horizontal || autoMargin.vertical && parent.hasHeight) {
-                const mainData = parent.data<FlexboxData<T>>(this.name, 'mainData');
-                if (mainData) {
-                    const index = mainData.children.findIndex(item => item === node);
-                    if (index !== -1) {
-                        const container = (this.controller as android.base.Controller<T>).createNodeWrapper(node, parent);
-                        container.cssApply({
-                            marginTop: '0px',
-                            marginRight: '0px',
-                            marginBottom: '0px',
-                            marginLeft: '0px',
-                            display: 'block'
-                        }, true);
-                        container.saveAsInitial();
-                        container.setCacheValue('flexbox', node.flexbox);
-                        mainData.children[index] = container;
-                        if (autoMargin.horizontal && !node.hasWidth) {
-                            node.setLayoutWidth('wrap_content');
-                        }
-                        return {
-                            parent: container,
-                            renderAs: container,
-                            outputAs: this.application.renderNode(
-                                new LayoutUI(
-                                    parent,
-                                    container,
-                                    CONTAINER_NODE.FRAME,
-                                    NODE_ALIGNMENT.SINGLE,
-                                    container.children as T[]
-                                )
-                            )
-                        };
+        else if (node.autoMargin.horizontal || parent.hasHeight && node.autoMargin.vertical) {
+            const mainData = this.data.get(parent) as Undef<FlexboxData<T>>;
+            if (mainData) {
+                const index = mainData.children.findIndex(item => item === node);
+                if (index !== -1) {
+                    const container = (this.controller as android.base.Controller<T>).createNodeWrapper(node, parent);
+                    container.cssApply({
+                        marginTop: '0px',
+                        marginRight: '0px',
+                        marginBottom: '0px',
+                        marginLeft: '0px',
+                        display: 'block'
+                    }, true);
+                    container.saveAsInitial();
+                    container.setCacheValue('flexbox', node.flexbox);
+                    mainData.children[index] = container;
+                    if (!node.hasWidth && node.autoMargin.horizontal) {
+                        node.setLayoutWidth('wrap_content');
                     }
+                    return {
+                        parent: container,
+                        renderAs: container,
+                        outputAs: this.application.renderNode(
+                            new LayoutUI(
+                                parent,
+                                container,
+                                CONTAINER_NODE.FRAME,
+                                NODE_ALIGNMENT.SINGLE,
+                                container.children as T[]
+                            )
+                        )
+                    };
                 }
             }
         }
@@ -321,7 +317,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
     }
 
     public postBaseLayout(node: T) {
-        const mainData = node.data<FlexboxData<T>>(this.name, 'mainData');
+        const mainData = this.data.get(node) as Undef<FlexboxData<T>>;
         if (mainData) {
             const controller = this.controller as android.base.Controller<T>;
             const { row, column, reverse, wrap, wrapReverse, alignContent, justifyContent, children } = mainData;
@@ -511,12 +507,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             if (horizontal) {
                                 if (autoMargin.horizontal) {
                                     if (innerWrapped) {
-                                        innerWrapped.mergeGravity('layout_gravity', autoMargin.leftRight
-                                            ? 'center_horizontal'
-                                            : autoMargin.left
-                                                ? chain.localizeString('right')
-                                                : chain.localizeString('left')
-                                        );
+                                        innerWrapped.mergeGravity('layout_gravity', autoMargin.leftRight ? 'center_horizontal' : autoMargin.left ? chain.localizeString('right') : chain.localizeString('left'));
                                         if (growAvailable > 0) {
                                             chain.flexbox.basis = '0%';
                                             layoutWeight.push(chain);
@@ -536,12 +527,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             }
                             else if (autoMargin.vertical) {
                                 if (innerWrapped) {
-                                    innerWrapped.mergeGravity('layout_gravity', autoMargin.topBottom
-                                        ? 'center_vertical'
-                                        : autoMargin.top
-                                            ? 'bottom'
-                                            : 'top'
-                                    );
+                                    innerWrapped.mergeGravity('layout_gravity', autoMargin.topBottom ? 'center_vertical' : autoMargin.top ? 'bottom' : 'top');
                                     if (growAvailable > 0) {
                                         chain.flexbox.basis = '0%';
                                         layoutWeight.push(chain);

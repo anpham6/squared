@@ -35,7 +35,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
     }
 
     public processChild(node: T, parent: T) {
-        const mainData = node.data<ListData>(this.name, 'mainData');
+        const mainData = this.data.get(node) as Undef<ListData>;
         if (mainData) {
             const application = this.application;
             const controller = this.controller as android.base.Controller<T>;
@@ -107,9 +107,9 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                             if (adjustPadding) {
                                 const marginOffset = node.marginLeft + (parent.paddingLeft > 0 ? parent.paddingLeft : parent.marginLeft);
                                 if (marginOffset < 0) {
-                                    const storedOffset = parent.data<number>(this.name, 'marginOffset') ?? Infinity;
+                                    const storedOffset = this.data.get(parent) as Undef<number> ?? Infinity;
                                     if (marginOffset < storedOffset) {
-                                        parent.data(this.name, 'marginOffset', marginOffset);
+                                        this.data.set(parent, marginOffset);
                                     }
                                 }
                             }
@@ -261,8 +261,8 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
     public postConstraints(node: T) {
         if (node.naturalChild) {
             node.setBox(node.paddingLeft > 0 ? BOX_STANDARD.PADDING_LEFT : BOX_STANDARD.MARGIN_LEFT, { reset: 1 });
-            const marginOffset = node.data<number>(this.name, 'marginOffset');
-            if (marginOffset && marginOffset < 0) {
+            const marginOffset = this.data.get(node) as Undef<number> || 0;
+            if (marginOffset < 0) {
                 node.modifyBox(BOX_STANDARD.MARGIN_LEFT, marginOffset);
             }
         }

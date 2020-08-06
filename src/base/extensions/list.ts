@@ -76,7 +76,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
         let i = ordered && node.toElementInt('start') || 1;
         node.each((item: T) => {
             const mainData: ListData = {};
-            item.data(this.name, 'mainData', mainData);
+            this.data.set(item, mainData);
             if (isListItem(item) || hasSingleImage(item.visibleStyle)) {
                 const type = item.display === 'list-item' ? item.css('listStyleType') : 'none';
                 if (item.has('listStyleImage')) {
