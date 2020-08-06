@@ -991,7 +991,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     layout.setContainerType(CONTAINER_NODE.TEXT);
                     break;
                 default:
-                    if (node.textContent !== '' && (background || !node.pageFlow || node.pseudoElement && NodeUI.getPseudoElt(node.element as Element, node.sessionId) === '::after')) {
+                    if (node.textContent !== '' && (background || !node.pageFlow || node.pseudoElt === '::after')) {
                         layout.setContainerType(CONTAINER_NODE.TEXT);
                         node.inlineText = true;
                     }

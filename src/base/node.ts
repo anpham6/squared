@@ -759,10 +759,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         'wordSpacing'
     ];
 
-    public static getPseudoElt(element: Element, sessionId: string) {
-        return getElementCache<string>(element, 'pseudoElt', sessionId) || '';
-    }
-
     public static sanitizeCss(element: HTMLElement, styleMap: StringMap, writingMode?: string) {
         const result: StringMap = {};
         for (let attr in styleMap) {
@@ -812,6 +808,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     private _dataset?: {};
     private _textStyle?: StringMap;
     private _elementData?: ElementData;
+    private _pseudoElt?: string;
 
     constructor(
         public readonly id: number,
@@ -850,6 +847,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 if (sessionId === this.sessionId) {
                     return true;
                 }
+                else if (!sessionId) {
+                    return false;
+                }
             }
             const styleMap: Undef<StringMap> = getElementCache(element, 'styleMap', sessionId);
             if (styleMap) {
@@ -864,6 +864,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                 styleMap[convertCamelCase(attr)] = element.style.getPropertyValue(attr);
                             }
                         }
+                    }
+                    else {
+                        this._pseudoElt = getElementCache<string>(element, 'pseudoElt', sessionId);
                     }
                     this._styleMap = Node.sanitizeCss(element, styleMap, styleMap.writingMode);
                 }
@@ -1266,9 +1269,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     public cssSpecificity(attr: string) {
         if (this.styleElement) {
             const element = this._element as Element;
-            return (this.pseudoElement
-                ? getElementCache<ObjectMap<number>>(element.parentElement as Element, 'styleSpecificity' + Node.getPseudoElt(element, this.sessionId), this.sessionId)?.[attr]
-                : getElementCache<ObjectMap<number>>(element, 'styleSpecificity', this.sessionId)?.[attr]) || 0;
+            return (!this._pseudoElt ? getElementCache<ObjectMap<number>>(element, 'styleSpecificity', this.sessionId)?.[attr] : getElementCache<ObjectMap<number>>(element.parentElement as Element, 'styleSpecificity' + this._pseudoElt, this.sessionId)?.[attr]) || 0;
         }
         return 0;
     }
@@ -2944,19 +2945,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get style() {
         const result = this._style;
-        if (result === undefined) {
-            if (this.naturalChild && this.styleElement) {
-                if (!this.pseudoElement) {
-                    return this._style = getStyle(this._element!);
-                }
-                else {
-                    const element = this._element!;
-                    return this._style = getStyle(element.parentElement!, Node.getPseudoElt(element, this.sessionId));
-                }
-            }
-            return this._style = PROXY_INLINESTYLE;
-        }
-        return result;
+        return result === undefined ? this._style = this.naturalChild && this.styleElement ? !this._pseudoElt ? getStyle(this._element!) : getStyle(this._element!.parentElement!, this._pseudoElt) : PROXY_INLINESTYLE : result;
     }
 
     get cssStyle() {
@@ -2970,6 +2959,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get elementData() {
         return this._elementData;
+    }
+
+    get pseudoElt() {
+        return this._pseudoElt;
     }
 
     set dir(value) {

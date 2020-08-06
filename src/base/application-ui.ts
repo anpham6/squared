@@ -495,7 +495,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             });
             cache.each(item => {
-                if (!item.pseudoElement) {
+                if (!item.pseudoElt) {
                     item.setBounds(!resetBounds && preAlignment[item.id] === undefined);
                 }
                 else {
@@ -516,7 +516,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             id = '__squared_' + Math.round(Math.random() * new Date().getTime());
                             parentElement.id = id;
                         }
-                        styleElement = insertStyleSheetRule(`#${id + NodeUI.getPseudoElt(item.element as Element, sessionId)} { display: none !important; }`);
+                        styleElement = insertStyleSheetRule(`#${id + item.pseudoElt!} { display: none !important; }`);
                     }
                     if (item.cssTry('display', item.display)) {
                         pseudoMap.push({ item, id, parentElement, styleElement });
