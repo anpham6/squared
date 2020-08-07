@@ -733,7 +733,7 @@ function ascendQuerySelector(node: T, selectors: QueryData[], i: number, index: 
                 }
                 parent = parent.actualParent as T;
             }
-            while (parent !== null);
+            while (parent);
         }
     }
     if (next.length > 0) {
@@ -1189,7 +1189,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         }
         let parent = startSelf ? this : this.actualParent,
             value: string;
-        while (parent !== null) {
+        while (parent) {
             value = initial ? parent.cssInitial(attr, options) : parent.css(attr);
             if (value !== '' && value !== 'inherit') {
                 return value;
@@ -2007,7 +2007,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get textContent() {
-        return this.naturalChild && !this.svgElement ? this._element!.textContent as string : '';
+        return this.naturalChild && !this.svgElement ? this._element!.textContent! : '';
     }
 
     get dataset(): DOMStringMap {
@@ -2556,7 +2556,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     default:
                         if (result !== '' && this.styleElement && !this.inputElement && (this._initial === undefined || this.valueOf('backgroundColor') === result)) {
                             let parent = this.actualParent;
-                            while (parent !== null) {
+                            while (parent) {
                                 const color = parent.valueOf('backgroundColor', { modified: true });
                                 if (color !== '') {
                                     if (color === result && parent.backgroundColor === '') {
@@ -2881,7 +2881,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     }
                     if (value === 'inherit') {
                         let parent: Null<T> = this.actualParent;
-                        if (parent !== null) {
+                        if (parent) {
                             do {
                                 if (parent.tagName === 'HTML') {
                                     value = '1rem';
@@ -2904,7 +2904,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                     parent = parent.actualParent;
                                 }
                             }
-                            while (parent !== null);
+                            while (parent);
                         }
                         else {
                             value = '1rem';
@@ -2974,7 +2974,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             result = this.naturalElement ? (this._element as HTMLElement).dir : '';
             if (result === '') {
                 let parent = this.actualParent;
-                while (parent !== null) {
+                while (parent) {
                     result = parent.dir;
                     if (result !== '') {
                         break;

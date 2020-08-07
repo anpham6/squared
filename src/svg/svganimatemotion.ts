@@ -292,8 +292,8 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                         }
                         const fromValue = from.value;
                         const toValue = to.value;
-                        const angleFrom = parseAngle(fromValue.split(' ').pop() as string);
-                        const angleTo = parseAngle(toValue.split(' ').pop() as string);
+                        const angleFrom = parseAngle(fromValue.split(' ').pop()!);
+                        const angleTo = parseAngle(toValue.split(' ').pop()!);
                         if (isNaN(angleFrom) || isNaN(angleTo)) {
                             continue;
                         }

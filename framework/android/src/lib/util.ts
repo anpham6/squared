@@ -142,7 +142,7 @@ export function getDataSet(dataset: StringMap | DOMStringMap, prefix: string) {
             if (!result) {
                 result = {};
             }
-            result[capitalize(attr.substring(prefix.length), false)] = dataset[attr] as string;
+            result[capitalize(attr.substring(prefix.length), false)] = dataset[attr]!;
         }
     }
     return result;

@@ -1,9 +1,9 @@
 import { getRootNs } from '../../lib/util';
 
 type View = android.base.View;
-type RenderIndex = Undef<NodeRenderIndex[]>;
+type RenderData = Undef<NodeIndex[]>;
 
-interface NodeRenderIndex {
+interface NodeIndex {
     item: View;
     name?: string;
     index: number;
@@ -15,7 +15,7 @@ const { NODE_TEMPLATE } = squared.base.lib.enumeration;
 export default class ResourceIncludes<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
 
-    public beforeDocumentWrite(options: WriteDocumentExtensionUIOptions<T>) {
+    public beforeDocumentWrite(options: DocumentWriteExtensionUIOptions<T>) {
         const rendered = options.rendered;
         const length = rendered.length;
         let i = 0;
@@ -24,8 +24,8 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
             if (!node.rendering) {
                 continue;
             }
-            let open: RenderIndex,
-                close: RenderIndex;
+            let open: RenderData,
+                close: RenderData;
             node.renderEach((item: T, index) => {
                 const dataset = item.dataset;
                 const name = dataset.androidInclude;
@@ -34,7 +34,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                     if (item.documentRoot) {
                         return;
                     }
-                    const data: NodeRenderIndex = {
+                    const data: NodeIndex = {
                         item,
                         name,
                         index,
@@ -83,7 +83,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                             else {
                                 item.documentRoot = true;
                             }
-                            application.saveDocument(name as string, content, '', Infinity);
+                            application.saveDocument(name!, content, '', Infinity);
                             close.splice(k, 1);
                             break;
                         }

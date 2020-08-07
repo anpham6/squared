@@ -580,7 +580,7 @@ export function convertRoman(value: number) {
     let result = '';
     let i = 3;
     while (i--) {
-        result = (NUMERALS[parseInt(digits.pop() as string) + (i * 10)] || '') + result;
+        result = (NUMERALS[parseInt(digits.pop()!) + (i * 10)] || '') + result;
     }
     return 'M'.repeat(parseInt(digits.join(''))) + result;
 }

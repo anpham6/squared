@@ -11,7 +11,7 @@ const REGEXP_STYLEATTR = /(\w+:(\w+))="([^"]+)"/;
 export default class ResourceStyles<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
 
-    public beforeDocumentWrite(options: WriteDocumentExtensionUIOptions<T>) {
+    public beforeDocumentWrite(options: DocumentWriteExtensionUIOptions<T>) {
         const styles = (Resource.STORED as AndroidResourceStoredMap).styles;
         const rendered = options.rendered;
         const length = rendered.length;

@@ -20,9 +20,9 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
 
     public static convertTimingFunction(value: string) {
-        const keySpline = KEYSPLINE_NAME[value];
+        const keySpline = KEYSPLINE_NAME[value] as Undef<string>;
         if (keySpline) {
-            return keySpline as string;
+            return keySpline;
         }
         else if (REGEXP_CUBICBEZIER.test(value)) {
             return value.trim();
@@ -240,8 +240,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                                 values = values.concat(result[1]);
                             }
                         }
-                        keyTimes.push(keyTimesBase.pop() as number);
-                        values.push(valuesBase.pop() as string);
+                        keyTimes.push(keyTimesBase.pop()!);
+                        values.push(valuesBase.pop()!);
                         this._values = values;
                         this._keyTimes = keyTimes;
                         this._keySplines = [KEYSPLINE_NAME['step-end']];

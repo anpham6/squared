@@ -43,7 +43,7 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
         const controller = this.controller as android.base.Controller<T>;
         const circlePosition = this.options.circlePosition;
         const { left, top } = node.box;
-        let anchor!: T;
+        let anchor: Undef<T>;
         node.each((item: T) => {
             const linear = item.linear;
             if (withinRange(linear.left, left)) {
@@ -117,7 +117,7 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
                     else {
                         degrees = x1 > x2 ? 90 : 270;
                     }
-                    item.app('layout_constraintCircle', anchor.documentId);
+                    item.app('layout_constraintCircle', anchor!.documentId);
                     item.app('layout_constraintCircleRadius', formatPX(radius));
                     item.app('layout_constraintCircleAngle', degrees.toString());
                 }

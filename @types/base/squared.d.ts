@@ -289,7 +289,7 @@ declare module "base" {
         afterConstraints(sessionId: string): void;
         afterResources(sessionId: string): void;
         beforeBaseLayout(sessionId: string): void;
-        beforeDocumentWrite(options: WriteDocumentExtensionUIOptions<T>): void;
+        beforeDocumentWrite(options: DocumentWriteExtensionUIOptions<T>): void;
         afterFinalize(): void;
         set application(value);
         get application(): ApplicationUI<T>;

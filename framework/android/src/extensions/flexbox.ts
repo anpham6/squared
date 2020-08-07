@@ -23,14 +23,14 @@ const NodeUI = squared.base.NodeUI;
 interface OrientationMap {
     orientation: OrientationAttr;
     orientationInverse: OrientationAttr;
-    WHL: string;
-    HWL: string;
-    LT: string;
-    TL: string;
-    RB: string;
-    BR: string;
-    LRTB: string;
-    RLBT: string;
+    WHL: DimensionAttr;
+    HWL: DimensionAttr;
+    LT: AnchorPosition;
+    TL: AnchorPosition;
+    RB: AnchorPosition;
+    BR: AnchorPosition;
+    LRTB: AnchorPosition;
+    RLBT: AnchorPosition;
 }
 
 const MAP_HORIZONAL: OrientationMap = {
@@ -208,7 +208,7 @@ function setLayoutWeightOpposing(item: View, value: string, horizontal: boolean)
 }
 
 function getOuterFrameChild(item: Undef<View>) {
-    while (item !== undefined) {
+    while (item) {
         if (item.layoutFrame) {
             return item.innerWrapped;
         }
@@ -450,7 +450,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     }
                     else {
                         growAll = horizontal || dimensionInverse;
-                        growAvailable = 1 - adjustGrowRatio(node, seg, WHL as DimensionAttr);
+                        growAvailable = 1 - adjustGrowRatio(node, seg, WHL);
                         if (q > 1) {
                             let sizeCount = 0;
                             let k = 0;
@@ -672,11 +672,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                     }
                                                 }
                                                 else if ((chain.naturalElement ? (chain.data<BoxRectDimension>(this.name, 'boundsData') || chain.bounds)[HWL] : Infinity) < maxSize) {
-                                                    setLayoutWeightOpposing(chain,
-                                                        chain.flexElement && chain.css('flexDirection').startsWith(horizontal ? 'row' : 'column')
-                                                            ? 'match_parent'
-                                                            : '0px'
-                                                    , horizontal);
+                                                    setLayoutWeightOpposing(chain, chain.flexElement && chain.css('flexDirection').startsWith(horizontal ? 'row' : 'column') ? 'match_parent' : '0px', horizontal);
                                                     if (innerWrapped && !innerWrapped.autoMargin[orientation]) {
                                                         setLayoutWeightOpposing(innerWrapped as T, 'match_parent', horizontal);
                                                     }
@@ -695,7 +691,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     break;
                                 }
                             }
-                            percentWidth = View.setFlexDimension(chain, WHL as DimensionAttr, percentWidth);
+                            percentWidth = View.setFlexDimension(chain, WHL, percentWidth);
                             if (!chain.innerMostWrapped.has('flexGrow')) {
                                 growAll = false;
                             }

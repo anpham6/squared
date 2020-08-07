@@ -384,7 +384,7 @@ function sortTemplateInvalid(a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>)
 const getVerticalLayout = (layout: LayoutUI<View>) => isConstraintLayout(layout, true) ? CONTAINER_NODE.CONSTRAINT : layout.some(item => item.positionRelative || !item.pageFlow && item.autoPosition) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR;
 const getVerticalAlignedLayout = (layout: LayoutUI<View>) => isConstraintLayout(layout, true) ? CONTAINER_NODE.CONSTRAINT : layout.some(item => item.positionRelative) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR;
 const sortTemplateStandard = (a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>) => doOrderStandard(a.node.innerMostWrapped as View, b.node.innerMostWrapped as View);
-const getAnchorDirection = (reverse = false) => reverse ? ['right', 'left', 'rightLeft', 'leftRight'] : ['left', 'right', 'leftRight', 'rightLeft'];
+const getAnchorDirection = (reverse = false): AnchorPosition[] => reverse ? ['right', 'left', 'rightLeft', 'leftRight'] : ['left', 'right', 'leftRight', 'rightLeft'];
 const getAnchorBaseline = (node: View) => isBottomAligned(node) ? 'baseline' : 'bottom';
 const hasCleared = (layout: LayoutUI<View>, clearMap: Map<View, string>, ignoreFirst = true) => clearMap.size > 0 && layout.some((node, index) => (index > 0 || !ignoreFirst) && clearMap.has(node));
 const isUnknownParent = (node: View, containerType: number, length: number) => node.containerType === containerType && node.length === length && (node.alignmentType === 0 || node.hasAlign(NODE_ALIGNMENT.UNKNOWN));
@@ -480,8 +480,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     public static anchorPosition<T extends View>(node: T, parent: T, horizontal: boolean, modifyAnchor = true) {
         let orientation: string,
             dimension: string,
-            posA: string,
-            posB: string,
+            posA: AnchorPosition,
+            posB: AnchorPosition,
             marginA: number,
             marginB: number,
             paddingA: number,
@@ -632,7 +632,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                             break;
                                         }
                                     }
-                                    while (parent !== undefined);
+                                    while (parent);
                                 }
                             }
                             break;
@@ -766,7 +766,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     const template = node.removeTry({ alignSiblings: true }) as NodeTemplate<T>;
                     if (template) {
                         const { renderChildren, renderTemplates } = parent;
-                        const index = parseInt(node.dataset.androidTargetIndex as string);
+                        const index = parseInt(node.dataset.androidTargetIndex!);
                         if (!isNaN(index) && index >= 0 && index < renderChildren.length) {
                             renderChildren.splice(index, 0, node);
                             renderTemplates!.splice(index, 0, template);
@@ -2520,7 +2520,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     const [currentFloated, rows, floating] = rowsAll[i];
                     if (currentFloated) {
                         node.floatContainer = true;
-                        currentFloated.anchor(currentFloated.float, 'true');
+                        currentFloated.anchor(currentFloated.float as AnchorPosition, 'true');
                         setLayoutBelow(currentFloated);
                         float = currentFloated.float;
                     }
@@ -2992,7 +2992,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     }
                                 }
                                 else if (baseline.floating) {
-                                    baseline.anchor(baseline.float, 'true');
+                                    baseline.anchor(baseline.float as AnchorPosition, 'true');
                                 }
                                 else if (textAlignLast !== '' && i === length - 1) {
                                     switch (textAlignLast) {
@@ -3611,8 +3611,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             documentParent = parent;
         }
         const horizontal = axis === 'horizontal';
-        let LT: string,
-            RB: string;
+        let LT: AnchorPosition,
+            RB: AnchorPosition;
         if (horizontal) {
             if (!opposing) {
                 LT = 'left';
@@ -3679,7 +3679,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     if (itemA.pageFlow || item.constraint[axis]) {
                         const { linear: linearA, bounds: boundsA } = itemA;
                         let offset = NaN,
-                            position: Undef<string>;
+                            position: Undef<AnchorPosition>;
                         if (withinRange(bounds[LT], boundsA[LT])) {
                             position = LT;
                         }
@@ -3723,7 +3723,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                 }
                 const TL = horizontal ? 'top' : 'left';
-                const setAnchorOffset = (documentId: string, position: string, adjustment: number) => {
+                const setAnchorOffset = (documentId: string, position: AnchorPosition, adjustment: number) => {
                     node.anchor(position, documentId, true);
                     node.setBox(horizontal ? BOX_STANDARD.MARGIN_LEFT : BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment });
                     node.constraint[axis] = true;
@@ -3768,8 +3768,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         const absoluteParent = node.absoluteParent as T;
         const bounds = node.positionStatic ? node.bounds : linear;
-        let attr = 'layout_constraintGuide_',
-            location = 0;
+        let location = 0,
+            attr: string;
         if (!node.leftTopAxis && documentParent.rootElement) {
             const renderParent = node.renderParent;
             if (documentParent.ascend({ condition: item => item === renderParent, attr: 'renderParent' }).length > 0) {
@@ -3780,11 +3780,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         if (percent) {
             const position = Math.abs(bounds[LT] - box[LT]) / (horizontal ? box.width : box.height);
-            attr += 'percent';
+            attr = 'layout_constraintGuide_percent';
             location += parseFloat(truncate(!opposing ? position : 1 - position, node.localSettings.floatPrecision));
         }
         else {
-            attr += 'begin';
+            attr = 'layout_constraintGuide_begin';
             location += bounds[LT] - box[!opposing ? LT : RB];
         }
         if (!node.pageFlow) {

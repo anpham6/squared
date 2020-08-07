@@ -2175,7 +2175,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
                             if (hasCalc(component[j])) {
                                 const previous = component[j - 1];
                                 if (isColor(previous)) {
-                                    const prefix = previous.split(CHAR_SPACE).pop() as string;
+                                    const prefix = previous.split(CHAR_SPACE).pop()!;
                                     const result = calculateColor(element, prefix + component[j]);
                                     if (result !== '') {
                                         component[j] = result.replace(prefix, '');
@@ -2201,7 +2201,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
                 for (let i = 1; i < length; ++i) {
                     const previous = color[i - 1];
                     if (isColor(previous) && hasCalc(color[i])) {
-                        const prefix = previous.split(CHAR_SPACE).pop() as string;
+                        const prefix = previous.split(CHAR_SPACE).pop()!;
                         const result = calculateColor(element, prefix + color[i]);
                         if (result !== '') {
                             color[i] = result;
@@ -2266,7 +2266,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
             if (length > 1) {
                 for (let i = 1; i < length; ++i) {
                     const previous = border[i - 1];
-                    const prefix = previous.split(CHAR_SPACE).pop() as string;
+                    const prefix = previous.split(CHAR_SPACE).pop()!;
                     let result: string;
                     if (prefix === 'calc') {
                         result = formatVar(calculateVar(element, prefix + border[i], { min: 0, supportPercent: false }));
@@ -3022,7 +3022,7 @@ export function calculateVar(element: CSSElement, value: string, options: Calcul
                                             break;
                                         }
                                     }
-                                    while (boundingElement !== null);
+                                    while (boundingElement);
                                 }
                                 else {
                                     style = getStyle(boundingElement);

@@ -373,7 +373,7 @@ function ascendFlexibleWidth(node: T) {
     }
     let parent = node.renderParent as Undef<T>;
     let i = 0;
-    while (parent !== undefined) {
+    while (parent) {
         if (!parent.inlineWidth && (parent.hasWidth || parseInt(parent.layoutWidth) > 0 || parent.of(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.BLOCK) || parent.documentRoot && (parent.blockWidth || parent.blockStatic))) {
             return true;
         }
@@ -1233,7 +1233,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         else {
                             switch (j) {
                                 case 0:
-                                    value = this.actualPadding(attr as 'paddingTop', value);
+                                    value = this.actualPadding(attr as "paddingTop", value);
                                     break;
                                 case 2:
                                     if (this.hasPX('height', { percent: false, initial: true }) && (!this.layoutElement && (this.layoutVertical || this.layoutFrame) || !this.pageFlow) || this.documentParent.gridElement && this.hasPX('height', { percent: false })) {
@@ -1249,7 +1249,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                         value = clamp(this.bounds.bottom - maxBottom, 0, value);
                                     }
                                     else {
-                                        value = this.actualPadding(attr as 'paddingBottom', value);
+                                        value = this.actualPadding(attr as "paddingBottom", value);
                                     }
                                     break;
                             }
@@ -1795,7 +1795,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 let maxHeight = 0,
                                     parentHeight = 0;
                                 for (const item of grandParent) {
-                                    const height = (item.data<BoxRectDimension>(EXT_NAME.FLEXBOX as string, 'boundsData') || item.bounds).height;
+                                    const height = (item.data<BoxRectDimension>(EXT_NAME.FLEXBOX!, 'boundsData') || item.bounds).height;
                                     if (height > maxHeight) {
                                         maxHeight = height;
                                     }
@@ -1873,7 +1873,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
         }
 
-        public anchor(position: string, documentId = '', overwrite?: boolean) {
+        public anchor(position: AnchorPosition, documentId = '', overwrite?: boolean) {
             const node = this.anchorTarget;
             const renderParent = node.renderParent as Undef<T>;
             if (renderParent && node.documentId !== documentId) {
@@ -2020,7 +2020,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return result;
         }
 
-        public anchorDelete(...position: string[]) {
+        public anchorDelete(...position: AnchorPosition[]) {
             const node = this.anchorTarget;
             const renderParent = node.renderParent as Undef<T>;
             if (renderParent) {
@@ -2074,7 +2074,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     else if (update) {
                         transferLayoutAlignment(update);
                     }
-                    node.anchorDelete(...Object.keys(LAYOUT_CONSTRAINT));
+                    node.anchorDelete(...Object.keys(LAYOUT_CONSTRAINT) as AnchorPosition[]);
                     node.delete('app', 'layout_constraintHorizontal_bias', 'layout_constraintHorizontal_chainStyle', 'layout_constraintVertical_bias', 'layout_constraintVertical_chainStyle');
                 }
                 else if (renderParent.layoutRelative) {
@@ -2084,8 +2084,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     else if (update) {
                         transferLayoutAlignment(update);
                     }
-                    node.anchorDelete(...Object.keys(LAYOUT_RELATIVE_PARENT));
-                    node.anchorDelete(...Object.keys(LAYOUT_RELATIVE));
+                    node.anchorDelete(...Object.keys(LAYOUT_RELATIVE_PARENT) as AnchorPosition[]);
+                    node.anchorDelete(...Object.keys(LAYOUT_RELATIVE) as AnchorPosition[]);
                 }
             }
         }
@@ -2790,7 +2790,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 target = target.outerWrapper as T;
             }
-            while (target !== undefined);
+            while (target);
             return this;
         }
 

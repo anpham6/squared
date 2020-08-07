@@ -7,7 +7,7 @@ const { capitalize } = squared.lib.util;
 export default class ResourceData<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
 
-    public beforeDocumentWrite(options: WriteDocumentExtensionUIOptions<T>) {
+    public beforeDocumentWrite(options: DocumentWriteExtensionUIOptions<T>) {
         const { rendered, documentRoot } = options;
         const viewModel = this.application.viewModel as android.base.AppViewModel;
         if (viewModel) {

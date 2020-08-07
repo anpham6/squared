@@ -10,3 +10,4 @@
 /// <reference path="resource.d.ts" />
 
 type OrientationAttr = "horizontal" | "vertical";
+type AnchorPosition = "left" | "top" | "right" | "bottom" | "baseline" | "leftRight" | "rightLeft" | "topBottom" | "bottomTop" | "centerHorizontal" | "centerVertical";

@@ -236,7 +236,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             const { image, rawData } = resourceHandler!.mapOfAssets;
             preloaded = [];
             for (const item of image.values()) {
-                const uri = item.uri as string;
+                const uri = item.uri!;
                 if (FILE.SVG.test(uri)) {
                     imageElements.push(uri);
                 }

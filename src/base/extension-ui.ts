@@ -87,7 +87,7 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
 
     public beforeBaseLayout(sessionId: string) {}
 
-    public beforeDocumentWrite(options: WriteDocumentExtensionUIOptions<T>) {}
+    public beforeDocumentWrite(options: DocumentWriteExtensionUIOptions<T>) {}
     public afterFinalize() {}
 
     set application(value) {

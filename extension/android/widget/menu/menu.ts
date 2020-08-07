@@ -108,7 +108,7 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
                 const rootElements = this.application.getProcessing(sessionId)?.rootElements;
                 if (rootElements) {
                     let current = element.parentElement;
-                    while (current !== null) {
+                    while (current) {
                         if (current.tagName === 'NAV' && rootElements.has(current)) {
                             return false;
                         }

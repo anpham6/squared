@@ -3,10 +3,10 @@ interface CssProperties {
 }
 
 interface CssPropertyData {
-    trait: number;
-    value: string | string[];
     name?: string;
-    valueOfNone?: string;
+    readonly trait: number;
+    readonly value: string | string[];
+    readonly valueOfNone?: string;
 }
 
 interface KeyframesData extends ObjectMap<StringMap> {}

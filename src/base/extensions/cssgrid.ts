@@ -66,7 +66,7 @@ function repeatUnit(data: CssGridDirectionData, sizes: string[]) {
             --i;
         }
         else {
-            result[i] = unitPX.shift() as string;
+            result[i] = unitPX.shift()!;
         }
     }
     return result;

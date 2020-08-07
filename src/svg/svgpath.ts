@@ -820,7 +820,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         }
                                     }
                                     if (item.fillReplace && item.iterationCount !== -1) {
-                                        const offsetForward = convertFloat(intervalMap.get(item.attributeName, item.getTotalDuration()) as string);
+                                        const offsetForward = convertFloat(intervalMap.get(item.attributeName, item.getTotalDuration())!);
                                         if (offsetForward !== valueOffset) {
                                             let offsetReplace = (Math.abs(offsetForward - valueOffset) % extendedLength) / extendedLength;
                                             if (offsetForward > valueOffset) {

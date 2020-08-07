@@ -337,7 +337,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     }
                 }
                 if (rotation !== 'auto 0deg') {
-                    rotateInitial = parseAngle(rotation.split(' ').pop() as string, 0);
+                    rotateInitial = parseAngle(rotation.split(' ').pop()!, 0);
                 }
             }
             while (++key <= totalLength) {

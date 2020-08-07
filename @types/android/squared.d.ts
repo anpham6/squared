@@ -85,11 +85,11 @@ declare namespace base {
         applyCustomizations(overwrite?: boolean): void;
         formatted(value: string, overwrite?: boolean): void;
         mergeGravity(attr: string, alignment: string, overwrite?: boolean): void;
-        anchor(position: string, documentId?: string, overwrite?: boolean): boolean;
+        anchor(position: AnchorPosition, documentId?: string, overwrite?: boolean): boolean;
         anchorChain(direction: PositionAttr): View[];
         anchorParent(orientation: OrientationAttr, bias?: number, style?: string, overwrite?: boolean): boolean;
         anchorStyle(orientation: OrientationAttr, bias: number, style?: string, overwrite?: boolean): void;
-        anchorDelete(...position: string[]): void;
+        anchorDelete(...position: AnchorPosition[]): void;
         anchorClear(update?: View | true): void;
         supported(obj: string, attr: string, result?: {}): boolean;
         combine(...objs: string[]): string[];

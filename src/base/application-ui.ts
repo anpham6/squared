@@ -254,7 +254,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
         }
-        const documentWriteOptions: WriteDocumentExtensionUIOptions<T> = { rendered, documentRoot };
+        const documentWriteOptions: DocumentWriteExtensionUIOptions<T> = { rendered, documentRoot };
         i = 0;
         while (i < length) {
             extensions[i++].beforeDocumentWrite(documentWriteOptions);
@@ -316,7 +316,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     return this.useElement(element);
                 }
                 let current = element.parentElement;
-                while (current !== null) {
+                while (current) {
                     if (getStyle(current).display === 'none') {
                         return this.useElement(element);
                     }
@@ -1562,7 +1562,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (!isString(textContent)) {
                     const absolute = hasCoords(styleMap.position);
                     if (pseudoElt === '::after') {
-                        const checkPseudoAfter = (sibling: Element) => sibling.nodeName === '#text' && !/\s+$/.test(sibling.textContent as string);
+                        const checkPseudoAfter = (sibling: Element) => sibling.nodeName === '#text' && !/\s+$/.test(sibling.textContent!);
                         if ((absolute || textContent === '' || !checkPseudoAfter(element.lastChild as Element)) && !checkPseudoDimension(styleMap, true, absolute)) {
                             return undefined;
                         }
@@ -1603,7 +1603,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                         current = current.parentElement;
                     }
-                    while (current !== null);
+                    while (current);
                 }
                 const style = getStyle(element);
                 let tagName = '',
@@ -1703,7 +1703,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             });
                                         }
                                     };
-                                    while (current !== null) {
+                                    while (current) {
                                         ascending = false;
                                         if (current.previousElementSibling) {
                                             current = current.previousElementSibling as Null<HTMLElement>;

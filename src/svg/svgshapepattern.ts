@@ -173,7 +173,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                         case SVGTransform.SVG_TRANSFORM_TRANSLATE:
                             break;
                         case SVGTransform.SVG_TRANSFORM_ROTATE:
-                            while (rotateOrigin.length) {
+                            while (rotateOrigin.length > 0) {
                                 const pt = rotateOrigin.shift() as SvgPoint;
                                 if (pt.angle === item.angle) {
                                     item.origin = {

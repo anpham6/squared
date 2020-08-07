@@ -443,7 +443,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         if (Resource.ASSETS.video.size > 0) {
             const result: string[] = [];
             for (const video of Resource.ASSETS.video.values()) {
-                const uri = video.uri as string;
+                const uri = video.uri!;
                 result.push(uri, video.mimeType || '', fromLastIndexOf(uri, '/', '\\'));
             }
             if (options.directory || options.filename) {
@@ -465,7 +465,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         if (Resource.ASSETS.audio.size > 0) {
             const result: string[] = [];
             for (const audio of Resource.ASSETS.audio.values()) {
-                const uri = audio.uri as string;
+                const uri = audio.uri!;
                 result.push(uri, audio.mimeType || '', fromLastIndexOf(uri, '/', '\\'));
             }
             if (options.directory || options.filename) {

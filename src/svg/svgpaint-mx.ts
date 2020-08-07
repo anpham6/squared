@@ -231,7 +231,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                     }
                 }
                 let current = this.useParent || this.parent;
-                while (current !== undefined) {
+                while (current) {
                     value = getAttribute(SvgBuild.isUse(current) ? current.useElement : current.element, attr);
                     if (value !== '') {
                         break;

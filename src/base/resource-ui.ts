@@ -629,11 +629,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             return node.naturalElements.some(item => item.lineBreak);
         }
         else if (!lineBreak && node.naturalChild) {
-            const element = node.element as Element;
-            let value = element.textContent as string;
-            if (trim) {
-                value = value.trim();
-            }
+            const value = trim ? node.element!.textContent!.trim() : node.element!.textContent!;
             return value.includes('\n') && (node.preserveWhiteSpace || node.plainText && node.actualParent!.preserveWhiteSpace || node.css('whiteSpace') === 'pre-line');
         }
         return false;

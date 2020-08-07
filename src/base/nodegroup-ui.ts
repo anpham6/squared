@@ -18,7 +18,7 @@ export default abstract class NodeGroupUI extends NodeUI {
         do {
             node = node.item(0) as NodeUI;
         }
-        while (node !== undefined && node.nodeGroup);
+        while (node && node.nodeGroup);
         return node ? node.previousSiblings(options) : [];
     }
 
@@ -27,7 +27,7 @@ export default abstract class NodeGroupUI extends NodeUI {
         do {
             node = node.item(-1) as NodeUI;
         }
-        while (node !== undefined && node.nodeGroup);
+        while (node && node.nodeGroup);
         return node ? node.nextSiblings(options) : [];
     }
 

@@ -321,7 +321,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                     while (j < q) {
                                         const item = offsetRotate[j++];
                                         const value = item.value;
-                                        let angle = parseAngle(value.split(' ').pop() as string, 0);
+                                        let angle = parseAngle(value.split(' ').pop()!, 0);
                                         if (value.startsWith('auto')) {
                                             angle += 90;
                                         }

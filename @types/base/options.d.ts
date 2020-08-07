@@ -42,7 +42,7 @@ interface ExtensionUIOptions extends ExtensionOptions {
     tagNames?: string[];
 }
 
-interface WriteDocumentExtensionUIOptions<T extends squared.base.NodeUI> {
+interface DocumentWriteExtensionUIOptions<T extends squared.base.NodeUI> {
     rendered: T[];
     documentRoot: squared.base.LayoutRoot<T>[];
 }

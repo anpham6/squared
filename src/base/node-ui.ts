@@ -1285,7 +1285,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         else {
             node = this._boxRegister[region];
         }
-        while (node !== undefined) {
+        while (node) {
             const next: Undef<T> = node.unsafe<ObjectIndex<T>>('boxRegister')?.[region];
             if (next) {
                 node = next;
@@ -1335,7 +1335,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             let offsetLeft = 0,
                 offsetRight = 0,
                 current = this.actualParent;
-            while (current !== null) {
+            while (current) {
                 if (current.hasPX('width', { percent: false }) || !current.pageFlow) {
                     return value;
                 }
@@ -2023,7 +2023,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     }
                     wrapped = wrapped.innerWrapped;
                 }
-                while (wrapped !== undefined);
+                while (wrapped);
             }
             else {
                 const element = this._element;
@@ -2060,7 +2060,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     }
                     wrapped = wrapped.innerWrapped;
                 }
-                while (wrapped !== undefined);
+                while (wrapped);
             }
             else if (this.length > 0 && !this.naturalChild) {
                 return this._containerIndex = (this.min('containerIndex', { self: true }) as NodeUI).containerIndex;
@@ -2074,7 +2074,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             let result: Undef<T>;
             if (!this.naturalChild) {
                 result = this.innerWrapped;
-                while (result !== undefined) {
+                while (result) {
                     const innerWrapped = result.innerWrapped;
                     if (innerWrapped) {
                         result = innerWrapped;
@@ -2091,7 +2091,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     get outerMostWrapper() {
         let result = this.outerWrapper;
-        while (result !== undefined) {
+        while (result) {
             const outerWrapper = result.outerWrapper;
             if (outerWrapper) {
                 result = outerWrapper;
