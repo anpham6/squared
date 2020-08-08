@@ -1028,17 +1028,25 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         }
     }
 
-    public ascend(options: AscendOptions<T>) {
-        let attr = options.attr;
+    public ascend(options?: AscendOptions<T>) {
+        let condition: Undef<(item: T) => boolean>,
+            error: Undef<(item: T) => boolean>,
+            every: Undef<boolean>,
+            including: Undef<T>,
+            excluding: Undef<T>,
+            attr: Undef<string>,
+            startSelf: Undef<boolean>;
+        if (options) {
+            ({ condition, error, every, including, excluding, attr, startSelf } = options);
+        }
         if (!attr) {
             attr = 'actualParent';
         }
         else if (attr !== 'parent' && !attr.endsWith('Parent')) {
             return [];
         }
-        const { condition, error, every, including, excluding } = options;
         const result: T[] = [];
-        let parent: Null<T> = options.startSelf ? this : this[attr];
+        let parent: Null<T> = startSelf ? this : this[attr];
         while (parent && parent !== excluding) {
             if (error && error(parent)) {
                 break;
@@ -1060,6 +1068,54 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             parent = parent[attr];
         }
         return result;
+    }
+
+    public descend(options?: DescendOptions<T>) {
+        let condition: Undef<(item: T) => boolean>,
+            error: Undef<(item: T) => boolean>,
+            every: Undef<boolean>,
+            including: Undef<T>,
+            excluding: Undef<T>;
+        if (options) {
+            ({ condition, error, every, including, excluding } = options);
+        }
+        let invalid: Undef<boolean>;
+        const recurse = (parent: T) => {
+            let result: T[] = [];
+            const children = parent.children;
+            const length = children.length;
+            for (let i = 0; i < length; ++i) {
+                const item = children[i];
+                if (error && error(item) || item === excluding) {
+                    invalid = true;
+                    break;
+                }
+                if (condition) {
+                    if (condition(item)) {
+                        result.push(item);
+                        if (!every || item === including) {
+                            invalid = true;
+                            break;
+                        }
+                    }
+                }
+                else {
+                    result.push(item);
+                    if (item === including) {
+                        invalid = true;
+                        break;
+                    }
+                }
+                if (item instanceof Node && !item.isEmpty) {
+                    result = result.concat(recurse(item));
+                    if (invalid) {
+                        break;
+                    }
+                }
+            }
+            return result;
+        };
+        return recurse(this);
     }
 
     public intersectX(rect: BoxRectDimension, options?: CoordsXYOptions) {
@@ -1641,11 +1697,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 }
                 else {
                     invalid: {
-                        let adjacent: Undef<string>,
+                        let segment: string,
+                            all: boolean,
+                            adjacent: Undef<string>,
                             match: Null<RegExpExecArray>;
                         while (match = SELECTOR_G.exec(query)) {
-                            let segment = match[1],
-                                all = false;
+                            segment = match[1];
+                            all = false;
                             if (segment.length === 1) {
                                 const ch = segment.charAt(0);
                                 switch (ch) {
@@ -1868,13 +1926,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public ancestors(value?: string, options?: AscendOptions<T>) {
-        const result: T[] = this.ascend(options || { attr: 'actualParent' });
+        const result: T[] = this.ascend(options);
         return value && result.length > 0 ? this.querySelectorAll(value, result) : result;
     }
 
-    public descendants(value?: string, options?: DescendantsOptions<T>) {
+    public descendants(value?: string, options?: DescendOptions<T>) {
         if (options || !this.queryMap) {
-            const result: T[] = options ? this.cascade(options.condition, options) : this.cascade();
+            const result: T[] = this.descend(options);
             return value && result.length > 0 ? this.querySelectorAll(value, result) : result;
         }
         return this.querySelectorAll(value || '*');

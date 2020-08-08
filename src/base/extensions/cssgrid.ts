@@ -517,38 +517,36 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     columnSpan = parseInt(gridColumnEnd) - columnIndex;
                 }
                 if (columnIndex === 1 && columnMax > 0) {
-                    let valid: Undef<boolean>;
-                    do {
-                        const available: number[] = new Array(columnMax - 1).fill(1);
-                        for (const cell of layout) {
-                            const placement = cell.placement;
-                            if (placement[indexA] > rowIndex) {
-                                for (let i = placement[indexB]; i < placement[indexC]; ++i) {
-                                    available[i - 1] = 0;
+                    found: {
+                        do {
+                            const available: number[] = new Array(columnMax - 1).fill(1);
+                            for (const cell of layout) {
+                                const placement = cell.placement;
+                                if (placement[indexA] > rowIndex) {
+                                    for (let i = placement[indexB]; i < placement[indexC]; ++i) {
+                                        available[i - 1] = 0;
+                                    }
                                 }
                             }
-                        }
-                        for (let i = 0, j = 0, k = 0, length = available.length; i < length; ++i) {
-                            if (available[i]) {
-                                if (j === 0) {
-                                    k = i;
+                            for (let i = 0, j = 0, k = 0, length = available.length; i < length; ++i) {
+                                if (available[i]) {
+                                    if (j === 0) {
+                                        k = i;
+                                    }
+                                    if (++j === columnSpan) {
+                                        columnIndex = k + 1;
+                                        break found;
+                                    }
                                 }
-                                if (++j === columnSpan) {
-                                    columnIndex = k + 1;
-                                    valid = true;
-                                    break;
+                                else {
+                                    j = 0;
                                 }
                             }
-                            else {
-                                j = 0;
-                            }
-                        }
-                        if (!valid) {
                             mainData.emptyRows[rowIndex - 1] = available;
                             ++rowIndex;
                         }
+                        while (true);
                     }
-                    while (!valid);
                 }
                 if (horizontal) {
                     layout[index] = {

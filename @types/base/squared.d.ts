@@ -372,7 +372,8 @@ declare module "base" {
         saveAsInitial(): void;
         data<T = unknown>(name: string, attr: string, value?: any, overwrite?: boolean): Undef<T>;
         unsetCache(...attrs: string[]): void;
-        ascend(options: AscendOptions<Node>): Node[];
+        ascend(options?: AscendOptions<Node>): Node[];
+        descend(options?: DescendOptions<Node>): Node[];
         intersectX(rect: BoxRectDimension, options?: CoordsXYOptions): boolean;
         intersectY(rect: BoxRectDimension, options?: CoordsXYOptions): boolean;
         withinX(rect: BoxRectDimension, options?: OffsetXYOptions): boolean;
@@ -412,7 +413,7 @@ declare module "base" {
         querySelector(value: string): Null<Node>;
         querySelectorAll(value: string, elements?: Node[], resultCount?: number): Node[];
         ancestors(value?: string, options?: AscendOptions<Node>): Node[];
-        descendants(value?: string, options?: DescendantsOptions<Node>): Node[];
+        descendants(value?: string, options?: DescendOptions<Node>): Node[];
         valueOf(attr: string, options?: CssInitialOptions): string;
         set parent(value);
         get parent(): Null<Node>;

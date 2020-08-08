@@ -63,18 +63,17 @@ interface SiblingOptions {
     excluded?: boolean;
 }
 
-interface AscendOptions<T> {
+interface DescendOptions<T> {
     condition?: (item: T) => boolean;
     error?: (item: T) => boolean;
     including?: T;
     excluding?: T;
-    attr?: "actualParent" | "absoluteParent" | "parent" | "renderParent" | "documentParent" | "outerWrapper";
-    startSelf?: boolean;
     every?: boolean;
 }
 
-interface DescendantsOptions<T> extends ContainerCascadeOptions<T> {
-    condition?: (item: T) => boolean;
+interface AscendOptions<T> extends DescendOptions<T> {
+    attr?: "actualParent" | "absoluteParent" | "parent" | "renderParent" | "documentParent" | "outerWrapper";
+    startSelf?: boolean;
 }
 
 interface BoxOptions {
