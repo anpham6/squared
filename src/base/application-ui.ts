@@ -347,9 +347,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public saveDocument(filename: string, content: string, pathname?: string, index?: number) {
         const layout: LayoutAsset = {
-            pathname: pathname
-                ? trimString(pathname.replace(/\\/g, '/'), '/')
-                : appendSeparator(this.userSettings.outputDirectory, this._controllerSettings.layout.pathName),
+            pathname: pathname ? trimString(pathname.replace(/\\/g, '/'), '/') : appendSeparator(this.userSettings.outputDirectory, this._controllerSettings.layout.pathName),
             filename,
             content,
             index
@@ -797,8 +795,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 mapData.set(depth, new Set([node]));
             }
         };
-        let i: number;
-        setMapDepth(-1, rootNode!.parent as T);
+        if (rootNode!.parent) {
+            setMapDepth(-1, rootNode!.parent as T);
+        }
         cache.each(node => {
             if (node.length > 0) {
                 setMapDepth(node.depth, node);
@@ -834,27 +833,27 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         });
         for (const depth of Array.from(mapData.keys())) {
             if (depth !== -1) {
-                mapData.set((depth + 2) * -1, new Set<T>());
+                mapData.set(-(depth + 2), new Set<T>());
             }
         }
         cache.afterAdd = (node: T, cascade?: boolean, remove?: boolean) => {
             if (remove) {
                 mapData.get(node.depth)?.delete(node);
             }
-            setMapDepth((node.depth + 2) * -1, node);
+            setMapDepth(-(node.depth + 2), node);
             if (cascade && node.length > 0) {
                 node.cascade((item: T) => {
                     if (item.length > 0) {
                         const depth = item.depth;
                         mapData.get(depth)?.delete(item);
-                        setMapDepth((depth + 2) * -1, item);
+                        setMapDepth(-(depth + 2), item);
                     }
                 });
             }
         };
         const extensions = this.extensionsAll as ExtensionUI<T>[];
         const length = extensions.length;
-        i = 0;
+        let i = 0;
         while (i < length) {
             extensions[i++].beforeBaseLayout(sessionId);
         }

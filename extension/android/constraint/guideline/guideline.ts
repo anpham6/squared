@@ -15,7 +15,7 @@ const { CONTAINER_NODE } = android.lib.enumeration;
 
 export default class Guideline<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly options: ConstraintGuidelineOptions = {
-        circlePosition: false
+        circlePosition: true
     };
 
     public is(node: T) {
@@ -79,7 +79,7 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
             }
             const { x: x2, y: y2 } = anchor.center;
             node.each((item: T) => {
-                if (item !== anchor) {
+                if (!item.anchored) {
                     const { x: x1, y: y1 } = item.center;
                     const x = Math.abs(x1 - x2);
                     const y = Math.abs(y1 - y2);

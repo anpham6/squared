@@ -410,7 +410,9 @@ declare module "base" {
         min(attr: string, options?: MinMaxOptions): Node;
         max(attr: string, options?: MinMaxOptions): Node;
         querySelector(value: string): Null<Node>;
-        querySelectorAll(value: string, resultCount?: number): Node[];
+        querySelectorAll(value: string, elements?: Node[], resultCount?: number): Node[];
+        ancestors(value?: string, options?: AscendOptions<Node>): Node[];
+        descendants(value?: string, options?: DescendantsOptions<Node>): Node[];
         valueOf(attr: string, options?: CssInitialOptions): string;
         set parent(value);
         get parent(): Null<Node>;
@@ -420,7 +422,7 @@ declare module "base" {
         get naturalChildren(): Node[];
         set naturalElements(value);
         get naturalElements(): Node[];
-        set dir(value)
+        set dir(value);
         get dir(): string;
         set inlineText(value);
         get inlineText(): boolean;

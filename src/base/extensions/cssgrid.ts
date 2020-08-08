@@ -313,6 +313,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
     }
 
     public processNode(node: T) {
+        const data = this.data;
         const mainData = createDataAttribute(node);
         const { column, dense, row, rowDirection: horizontal } = mainData;
         const rowData: Undef<T[]>[][] = [];
@@ -990,7 +991,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         rowSpanMultiple[i++] = true;
                     }
                 }
-                this.data.set(item, {
+                data.set(item, {
                     rowStart,
                     rowSpan: rowCount,
                     columnStart,
@@ -1068,7 +1069,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                 while (k < length) {
                                     const item = columnItem[k++] as T;
                                     if (!modified.has(item)) {
-                                        const { columnSpan, rowSpan } = this.data.get(item) as CssGridCellData;
+                                        const { columnSpan, rowSpan } = data.get(item) as CssGridCellData;
                                         const x = j + columnSpan - 1;
                                         const y = i + rowSpan - 1;
                                         if (columnGap > 0 && x < columnCount - 1) {
@@ -1152,16 +1153,15 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     }
                 }
                 node.retainAs(children).cssSort('zIndex', { byInt: true });
-                if (node.cssTry('display', 'block')) {
+                node.cssTry('display', 'block', () => {
                     node.each((item: T) => {
                         const bounds = item.boundingClientRect;
-                        (this.data.get(item) as CssGridCellData).bounds = bounds ? { ...item.bounds, width: bounds.width, height: bounds.height } : item.bounds;
+                        (data.get(item) as CssGridCellData).bounds = bounds ? { ...item.bounds, width: bounds.width, height: bounds.height } : item.bounds;
                     });
-                    node.cssFinally('display');
-                }
+                });
                 applyLayout(node, column, columnCount, true);
                 applyLayout(node, row, rowCount, false);
-                this.data.set(node, mainData);
+                data.set(node, mainData);
             }
         }
         return undefined;

@@ -382,7 +382,7 @@ function applyLayout(node: View, parent: View, item: View, mainData: CssGridData
                 minSize += cellSize;
             }
         }
-        if (node.textElement && /^0[a-z]*$/.test(min)) {
+        if (node.textElement && /^0[a-zQ]*$/.test(min)) {
             fitContent = true;
         }
     }

@@ -1622,12 +1622,12 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public querySelector(value: string) {
-        return this.querySelectorAll(value, 1)[0] || null;
+        return this.querySelectorAll(value, undefined, 1)[0] || null;
     }
 
-    public querySelectorAll(value: string, resultCount = -1) {
+    public querySelectorAll(value: string, elements?: T[], resultCount = -1) {
         let result: T[] = [];
-        const queryMap = this.queryMap;
+        const queryMap = elements ? [elements] : this.queryMap;
         if (queryMap && resultCount !== 0) {
             const queries = parseSelectorText(value);
             let i = 0, length = queries.length;
@@ -1778,6 +1778,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     }
                     SELECTOR_G.lastIndex = 0;
                 }
+                if (elements) {
+                    offset = 0;
+                }
                 length = queryMap.length;
                 if (selectors.length > 0 && offset !== -1 && offset < length) {
                     const dataEnd = selectors.pop() as QueryData;
@@ -1862,6 +1865,19 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             }
         }
         return result.sort(sortById);
+    }
+
+    public ancestors(value?: string, options?: AscendOptions<T>) {
+        const result: T[] = this.ascend(options || { attr: 'actualParent' });
+        return value && result.length > 0 ? this.querySelectorAll(value, result) : result;
+    }
+
+    public descendants(value?: string, options?: DescendantsOptions<T>) {
+        if (options || !this.queryMap) {
+            const result: T[] = options ? this.cascade(options.condition, options) : this.cascade();
+            return value && result.length > 0 ? this.querySelectorAll(value, result) : result;
+        }
+        return this.querySelectorAll(value || '*');
     }
 
     public valueOf(attr: string, options?: CssInitialOptions) {
@@ -2091,7 +2107,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     get flexbox() {
         const result = this._cached.flexbox;
         if (result === undefined) {
-            if (this.styleElement && this.actualParent!.flexElement) {
+            if (this.styleElement && this.actualParent?.flexElement) {
                 const [alignSelf, justifySelf, basis] = this.cssAsTuple('alignSelf', 'justifySelf', 'flexBasis');
                 return this._cached.flexbox = {
                     alignSelf: alignSelf === 'auto' ? this.cssParent('alignItems') : alignSelf,
@@ -2166,10 +2182,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 }
                 result = hasOwnStyle || value > this.height || this.multiline || this.block && this.naturalChildren.some((node: T) => node.textElement) ? value : 0;
             }
-            else {
-                result = 0;
-            }
-            this._cached.lineHeight = result;
+            return this._cached.lineHeight = result || 0;
         }
         return result;
     }

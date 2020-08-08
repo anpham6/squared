@@ -1689,7 +1689,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (result === undefined) {
             if ((this.naturalElement || this.pseudoElement) && !this.floating) {
                 const value = this.display;
-                return this._cached.inlineVertical = value.startsWith('inline') || value === 'table-cell';
+                return this._cached.inlineVertical = (value.startsWith('inline') || value === 'table-cell') && this._element !== document.documentElement;
             }
             return this._cached.inlineVertical = false;
         }

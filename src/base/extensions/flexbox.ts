@@ -33,22 +33,18 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
     public processNode(node: T) {
         const [children, absolute] = node.partition((item: T) => item.pageFlow) as [T[], T[]];
         const mainData = createDataAttribute(node, children);
-        if (node.cssTry('align-items', 'start')) {
-            if (node.cssTry('justify-items', 'start')) {
-                const dataName = this.name;
-                const length = children.length;
-                let i = 0;
-                while (i < length) {
-                    const item = children[i++];
-                    item.cssTryAll(OPTIONS_BOUNDSDATA, function(this: T) {
-                        const bounds = this.boundingClientRect;
-                        this.data(dataName, 'boundsData', bounds ? { ...this.bounds, width: bounds.width, height: bounds.height } : this.bounds);
-                    });
-                }
-                node.cssFinally('justify-items');
+        const dataName = this.name;
+        node.cssTryAll({ 'align-items': 'start', 'justify-items': 'start' }, () => {
+            const length = children.length;
+            let i = 0;
+            while (i < length) {
+                const item = children[i++];
+                item.cssTryAll(OPTIONS_BOUNDSDATA, function(this: T) {
+                    const bounds = this.boundingClientRect;
+                    this.data(dataName, 'boundsData', bounds ? { ...this.bounds, width: bounds.width, height: bounds.height } : this.bounds);
+                });
             }
-            node.cssFinally('align-items');
-        }
+        });
         if (mainData.wrap) {
             const controller = this.controller;
             const options: CoordsXYOptions = { dimension: 'bounds' };

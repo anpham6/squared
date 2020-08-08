@@ -73,6 +73,10 @@ interface AscendOptions<T> {
     every?: boolean;
 }
 
+interface DescendantsOptions<T> extends ContainerCascadeOptions<T> {
+    condition?: (item: T) => boolean;
+}
+
 interface BoxOptions {
     reset?: 0 | 1;
     adjustment?: number;

@@ -340,7 +340,7 @@ export default class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
                     return;
                 }
                 const pageFlow = node.pageFlow;
-                const collapseMargin = pageFlow && isBlockElement(node, true) && !node.actualParent!.layoutElement;
+                const collapseMargin = pageFlow && isBlockElement(node, true) && node.actualParent?.layoutElement !== true;
                 let firstChild: Undef<T>,
                     lastChild: Undef<T>;
                 for (let i = 0; i < length; ++i) {

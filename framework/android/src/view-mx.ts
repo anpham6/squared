@@ -2686,7 +2686,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         result = false;
                     }
                     else if (!this.pageFlow) {
-                        result = this.length === 0 && (excludeHorizontal(this) || excludeVertical(this)) || /^rect\(0[a-z]*,\s+0[a-z]*,\s+0[a-z]*,\s+0[a-z]*\)$/.test(this.css('clip'));
+                        result = this.length === 0 && (excludeHorizontal(this) || excludeVertical(this)) || /^rect\(0[a-zQ]*,\s+0[a-zQ]*,\s+0[a-zQ]*,\s+0[a-zQ]*\)$/.test(this.css('clip'));
                     }
                     else {
                         const parent = this.renderParent || this.parent as T;
