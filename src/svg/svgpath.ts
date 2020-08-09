@@ -227,11 +227,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
     }
 
     public build(options?: SvgBuildOptions) {
-        let transforms: Undef<SvgTransform[]>;
-        if (options?.transforms) {
-            transforms = SvgBuild.filterTransforms(options.transforms, options.exclude?.[this.element.tagName]);
-        }
-        this.draw(transforms, options);
+        this.draw(options?.transforms ? SvgBuild.filterTransforms(options.transforms, options.exclude?.[this.element.tagName]) : undefined, options);
     }
 
     public draw(transforms?: SvgTransform[], options?: SvgBuildOptions) {

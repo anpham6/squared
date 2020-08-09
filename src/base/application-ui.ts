@@ -664,12 +664,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                     }
                     if (!rootElements.has(element)) {
-                        if (element.childNodes.length === 0) {
-                            child = this.insertNode(element, sessionId, cascadeAll);
-                        }
-                        else {
-                            child = this.cascadeParentNode(cache, excluded, rootElements, element, sessionId, childDepth, extensions, cascadeAll);
-                        }
+                        child = element.childNodes.length === 0 ? this.insertNode(element, sessionId, cascadeAll) : this.cascadeParentNode(cache, excluded, rootElements, element, sessionId, childDepth, extensions, cascadeAll);
                         if (!child.excluded) {
                             inlineText = false;
                         }

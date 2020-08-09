@@ -320,14 +320,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 return new Promise((resolve, reject) => {
                     if (typeof item === 'string') {
                         if (FILE.SVG.test(item)) {
-                            fetch(item, {
-                                method: 'GET',
-                                headers: new Headers({
-                                    'Accept': 'application/xhtml+xml, image/svg+xml',
-                                    'Content-Type': 'image/svg+xml'
-                                })
-                            })
-                            .then(async result => resolve(await result.text()));
+                            fetch(item).then(async result => resolve(await result.text()));
                         }
                         else {
                             fetch(item).then(async result => resolve(await result.arrayBuffer()));
@@ -477,12 +470,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                 }
                 else if (controllerHandler.includeElement(element)) {
-                    if (element.childNodes.length === 0) {
-                        child = this.insertNode(element, sessionId);
-                    }
-                    else {
-                        child = this.cascadeParentNode(cache, excluded, rootElements, element, sessionId, childDepth, extensions);
-                    }
+                    child = element.childNodes.length === 0 ? this.insertNode(element, sessionId) : this.cascadeParentNode(cache, excluded, rootElements, element, sessionId, childDepth, extensions);
                     if (child) {
                         elements[k++] = child;
                         inlineText = false;

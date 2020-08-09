@@ -57,7 +57,7 @@ Library files are in the /dist folder. A minimum of *two* files are required to 
 
 Usable combinations: 1-2-4 + 1-2-4-5 + 1-2-3-4-5 + 1-3 + 1-vdom-lite
 
-One file bundles for common combinations are available in the /dist/bundles folder.
+File bundles for common combinations are available in the /dist/bundles folder.
 
 #### Example: android
 
@@ -73,7 +73,7 @@ The primary function "parseDocument" can be called on multiple elements and mult
     squared.settings.targetAPI = 29;
 
     document.addEventListener('DOMContentLoaded', function() {
-        squared.setFramework(android, /* optional { builtInExtensions: [] } */);
+        squared.setFramework(android, /* optional: FrameworkOptions */);
 
         squared.parseDocument(); // default: document.body 'BODY'
         // OR
@@ -93,7 +93,7 @@ The primary function "parseDocument" can be called on multiple elements and mult
 
 #### Example: vdom / chrome
 
-VDOM is a minimal framework with slightly better performance when using selector queries. The "lite" version is about half the bundle size and recommended for most browser applications. Chrome is used with NodeJS and is better for bundling assets.
+VDOM is a minimal framework with slightly better performance when you are only looking for a better HTMLElement and performing cached selector queries. The "lite" version is about half the bundle size and recommended for most browser applications. Chrome is used with NodeJS and is better for bundling assets.
 
 ```javascript
 <script src="/dist/squared.min.js"></script>
@@ -101,7 +101,7 @@ VDOM is a minimal framework with slightly better performance when using selector
 <script src="/dist/vdom.framework.min.js"></script> /* OR: chrome.framework.min.js */
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        squared.setFramework(vdom /* chrome */);
+        squared.setFramework(vdom /* chrome */, /* optional: FrameworkOptions */);
 
         const element = squared.parseDocument(/* HTMLElement */); // default: document.documentElement 'HTML'
         const elementArray = squared.parseDocument(/* HTMLElement */, /* 'subview-id' */, /* ...etc */); // more than 1 element
@@ -241,6 +241,31 @@ squared.settings = {
 };
 ```
 
+### All: Local Storage
+
+Custom named user settings per framework can be saved to local storage and reloaded across all pages in the same domain. Extensions are configured using the same procedure.
+
+```javascript
+interface FrameworkOptions {
+    settings?: StandardMap;
+    loadAs?: string;
+    saveAs?: string;
+    cache?: boolean;
+}
+
+// Required: Initial save
+
+squared.setFramework(android, {
+    settings: { compressImages: true, createQuerySelectorMap: true },
+    saveAs: 'android-example'
+});
+
+// Optional: Subsequent loads
+
+squared.setFramework(android, { loadAs: 'android-example' });
+
+```
+
 ### ALL: Public Properties and Methods
 
 There is no official documentation as this project is still in early development. The entire source code including TypeScript definitions are available on GitHub if you need further clarification.
@@ -248,7 +273,7 @@ There is no official documentation as this project is still in early development
 ```javascript
 .settings // see user preferences section
 
-setFramework(module: {}, settings?: {}, cached?: boolean) // install application interpreter
+setFramework(module: {}, options?: FrameworkOptions) // install application interpreter
 setHostname(value: string) // use another cors-enabled server for processing archives (--cors <origin> | node-express + squared.settings.json: <https://github.com/expressjs/cors>)
 setViewModel(data?: {}) // object data for layout bindings
 
@@ -263,9 +288,9 @@ reset() // clear cached layouts and reopen new session
 
 toString() // main layout file contents
 
-include(extension: string | squared.base.Extension, options?: {}) // see extension configuration section
+include(extension: string | squared.base.Extension, options?: FrameworkOptions) // see extension configuration section
 retrieve(name: string) // retrieve an extension by namespace or control
-configure(name: string, options: {}) // see extension configuration section
+configure(name: string, options: FrameworkOptions) // see extension configuration section
 exclude(name: string) // remove an extension by namespace or control
 
 extend(functionMap: {}, framework?: number) // add extension functions to Node prototype (framework: 0 - ALL | 1 - vdom | 2 - android | 4 - chrome)
@@ -375,10 +400,6 @@ squared.system.addXmlNs('aapt', 'http://schemas.android.com/aapt');
 // Promise
 
 chrome.saveAsWebPage(filename?: string, options?: {}) // create archive with html and web page assets
-```
-
-```javascript
-// Promise
 
 squared.system.copyHtmlPage(directory: string, options?: {}) // option "name": e.g. "index.html"
 squared.system.copyScriptAssets(directory: string, options?: {})
@@ -421,18 +442,21 @@ Layout rendering can also be customized using extensions as the program was buil
 <script src="/dist/extensions/android.widget.menu.min.js"></script>
 <script src="/dist/extensions/android.widget.toolbar.min.js"></script>
 <script>
-    // configure an extension
-    squared.configure('android.widget.toolbar', { // optional: default configuration is usually provided
-        'elementId': { // HTML DOM
-            appBar: {
-                android: {
-                    theme: '@style/ThemeOverlay.AppCompat.Dark.ActionBar'
+    // Configure an extension (optional)
+    squared.configure('android.widget.toolbar', {
+        settings: {
+            'elementId': { // HTML DOM
+                appBar: {
+                    android: {
+                        theme: '@style/ThemeOverlay.AppCompat.Dark.ActionBar'
+                    }
                 }
             }
-        }
+        },
+        saveAs: 'toolbar-example' // optional
     });
 
-    // third-party: create an extension
+    // Create an extension
     class Sample extends squared.base.Extension {
         constructor(name, framework = 0, options = {}) {
             // framework: 0 - ALL | 1 - vdom | 2 - android | 4 - chrome
@@ -440,7 +464,7 @@ Layout rendering can also be customized using extensions as the program was buil
         }
     }
 
-    // third-party: install an extension
+    // Install an extension
     const sample = new Sample('your.namespace.sample', 0, { /* same as configure */ });
     squared.include(sample);
 

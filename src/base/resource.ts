@@ -86,8 +86,8 @@ export default abstract class Resource<T extends squared.base.Node> implements s
                 encoding = encoding.toLowerCase();
             }
         }
-        let base64: Undef<string>;
         mimeType = mimeType.toLowerCase();
+        let base64: Undef<string>;
         if (encoding === 'base64') {
             if (content) {
                 if (mimeType === 'image/svg+xml') {

@@ -1729,10 +1729,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get rightAligned() {
-        if (this.hasAlign(NODE_ALIGNMENT.RIGHT)) {
-            return true;
-        }
-        return super.rightAligned;
+        return this.hasAlign(NODE_ALIGNMENT.RIGHT) || super.rightAligned;
     }
 
     get verticalAligned() {

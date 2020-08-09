@@ -8,4 +8,11 @@
 /// <reference path="object.d.ts" />
 /// <reference path="squared.d.ts" />
 
+interface FrameworkOptions {
+    settings?: StandardMap;
+    loadAs?: string;
+    saveAs?: string;
+    cache?: boolean;
+}
+
 type ExtensionPrototypeData = ObjectMap<FunctionType<any> | { get: () => any, set: (value: any) => void } | number | string | boolean>;

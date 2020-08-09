@@ -921,8 +921,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                     }
                     removeAnimations(animationsBase, removeable);
                 }
-                const z = staggered.length;
-                if (z + setterTotal > 1 || z === 1 && (staggered[0].alternate || staggered[0].end !== undefined)) {
+                if (staggered.length + setterTotal > 1 || staggered.length === 1 && (staggered[0].alternate || staggered[0].end !== undefined)) {
                     const groupName: ObjectMap<Map<number, SvgAnimate[]>> = {};
                     const groupAttributeMap: ObjectMap<SvgAnimate[]> = {};
                     const intervalMap = new SvgAnimationIntervalMap(mergeable);
@@ -941,8 +940,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                         repeatingAsInfinite = -1,
                         repeatingResult: Undef<KeyTimeMap>,
                         infiniteResult: Undef<KeyTimeMap>;
-                    for (let i = 0; i < z; ++i) {
-                        const item = staggered[i];
+                    for (const item of staggered) {
                         const ordering = item.group.ordering;
                         if (ordering) {
                             spliceArray(ordering, sibling => !groupActive.has(sibling.name));

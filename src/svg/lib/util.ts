@@ -219,11 +219,7 @@ export const TRANSFORM = {
                     const scale = REGEXP_TRANSFORM.SCALE.exec(match[0]);
                     if (scale) {
                         const x = isY ? undefined : parseFloat(scale[2]);
-                        const y = isY
-                            ? parseFloat(scale[2])
-                            : !isX && scale[3]
-                                ? parseFloat(scale[3])
-                                : x;
+                        const y = isY ? parseFloat(scale[2]) : !isX && scale[3] ? parseFloat(scale[3]) : x;
                         result.push(TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SCALE, MATRIX.scale(x, isX ? undefined : y), 0, !isY, !isX));
                     }
                 }
@@ -232,11 +228,7 @@ export const TRANSFORM = {
                     if (skew) {
                         const angle = convertAngle(skew[2], skew[3], 0);
                         const x = isY ? 0 : angle;
-                        const y = isY
-                            ? angle
-                            : skew[4] && skew[5]
-                                ? convertAngle(skew[4], skew[5], 0)
-                                : 0;
+                        const y = isY ? angle : skew[4] && skew[5] ? convertAngle(skew[4], skew[5], 0) : 0;
                         const matrix = MATRIX.skew(x, y);
                         if (isX) {
                             result.push(TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SKEWX, matrix, x, true, false));

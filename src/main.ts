@@ -123,16 +123,43 @@ export function setHostname(value: string) {
     }
 }
 
-export function setFramework(value: Framework, options?: ObjectMap<any>, cached?: boolean) {
+export function setFramework(value: Framework, options?: FrameworkOptions) {
     const reloading = framework !== undefined;
-    if (framework !== value) {
-        const appBase = cached ? value.cached() : value.create();
+    let userSettings: Undef<StandardMap>,
+        saveAs: Undef<string>,
+        loadAs: Undef<string>,
+        cache: Undef<boolean>;
+    if (options) {
+        ({ settings: userSettings, saveAs, loadAs, cache } = options);
+    }
+    const mergeSettings = (baseSettings: UserSettings, frameworkId: number) => {
+        if (loadAs) {
+            try {
+                const storedSettings = localStorage.getItem(`${loadAs}-${frameworkId}`);
+                if (storedSettings) {
+                    Object.assign(baseSettings, JSON.parse(storedSettings));
+                }
+            }
+            catch {
+            }
+        }
         if (!framework) {
-            Object.assign(appBase.userSettings, settings);
+            Object.assign(baseSettings, settings);
         }
-        if (util.isPlainObject(options)) {
-            Object.assign(appBase.userSettings, options);
+        if (util.isPlainObject(userSettings)) {
+            Object.assign(baseSettings, userSettings);
         }
+        if (saveAs) {
+            try {
+                localStorage.setItem(`${saveAs}-${frameworkId}`, JSON.stringify(baseSettings));
+            }
+            catch {
+            }
+        }
+    };
+    if (framework !== value || cache === false) {
+        const appBase = cache ? value.cached() : value.create();
+        mergeSettings(appBase.userSettings, appBase.framework);
         clearProperties(settings);
         Object.assign(settings, appBase.userSettings);
         main = appBase.application;
@@ -160,6 +187,9 @@ export function setFramework(value: Framework, options?: ObjectMap<any>, cached?
         }
         Object.assign(system, value.system);
         framework = value;
+    }
+    else if (options) {
+        mergeSettings(main!.userSettings, main!.framework);
     }
     if (reloading) {
         reset();
@@ -199,7 +229,7 @@ export function parseDocument(...elements: (HTMLElement | string)[]) {
     return session.frameworkNotInstalled<void>();
 }
 
-export function include(value: ExtensionRequest, options?: PlainObject) {
+export function include(value: ExtensionRequest, options?: FrameworkOptions) {
     if (typeof value === 'string') {
         value = main?.builtInExtensions[value] || retrieve(value);
     }
@@ -219,7 +249,7 @@ export function include(value: ExtensionRequest, options?: PlainObject) {
 export function exclude(value: ExtensionRequest) {
     if (extensionManager) {
         if (typeof value === 'string') {
-            value = extensionManager.retrieve(value.trim());
+            value = extensionManager.retrieve(value);
         }
         if (value instanceof squared.base.Extension) {
             extensionsQueue.delete(value);
@@ -230,21 +260,43 @@ export function exclude(value: ExtensionRequest) {
     return false;
 }
 
-export function configure(value: ExtensionRequest, options: PlainObject) {
-    if (util.isPlainObject(options)) {
+export function configure(value: ExtensionRequest, options: FrameworkOptions) {
+    if (util.isPlainObject<FrameworkOptions>(options)) {
+        const mergeSettings = (name: string) => {
+            const { loadAs, saveAs } = options;
+            const result: PlainObject = {};
+            if (loadAs) {
+                try {
+                    const storedSettings = localStorage.getItem(`${loadAs}-${name}`);
+                    if (storedSettings) {
+                        Object.assign(result, JSON.parse(storedSettings));
+                    }
+                }
+                catch {
+                }
+            }
+            Object.assign(result, options.settings);
+            if (saveAs) {
+                try {
+                    localStorage.setItem(`${saveAs}-${name}`, JSON.stringify(result));
+                }
+                catch {
+                }
+            }
+            return result;
+        };
         if (typeof value === 'string') {
-            value = value.trim();
             const extension = extensionManager?.retrieve(value) || util.findSet(extensionsQueue, item => item.name === value);
-            if (extension) {
-                Object.assign(extension.options, options);
+            if (!extension) {
+                optionsQueue.set(value, mergeSettings(value));
+                return true;
             }
             else {
-                optionsQueue.set(value, options);
+                value = extension;
             }
-            return true;
         }
-        else if (value instanceof squared.base.Extension) {
-            Object.assign(value.options, options);
+        if (value instanceof squared.base.Extension) {
+            Object.assign(value.options, mergeSettings(value.name));
             return true;
         }
     }
