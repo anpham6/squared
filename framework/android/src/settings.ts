@@ -36,6 +36,7 @@ const settings: AndroidUserSettingsUI = {
     preloadImages: true,
     compressImages: false,
     convertImages: '',
+    preloadFonts: true,
     supportNegativeLeftTop: true,
     fontMeasureWrap: true,
     fontMeasureAdjust: 0.75,

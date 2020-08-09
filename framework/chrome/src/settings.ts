@@ -1,6 +1,7 @@
 const settings: ChromeUserSettings = {
     builtInExtensions: [],
     preloadImages: false,
+    preloadFonts: false,
     excludePlainText: true,
     createElementMap: true,
     createQuerySelectorMap: true,

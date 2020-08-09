@@ -7,6 +7,7 @@ interface UserSettings {
 
 interface UserResourceSettings extends UserSettings {
     preloadImages: boolean;
+    preloadFonts: boolean;
     outputEmptyCopyDirectory: boolean;
     outputArchiveFormat: string;
     outputArchiveName: string;

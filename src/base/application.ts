@@ -3,7 +3,7 @@ import NodeList from './nodelist';
 
 type AppViewModel = squared.base.AppViewModel;
 type FileActionOptions = squared.base.FileActionOptions;
-type PreloadImage = HTMLImageElement | string;
+type PreloadItem = HTMLImageElement | string;
 
 const { CSS_PROPERTIES, CSS_TRAITS, checkMediaRule, getSpecificity, hasComputedStyle, insertStyleSheetRule, getPropertiesAsTraits, parseSelectorText } = squared.lib.css;
 const { FILE, STRING } = squared.lib.regex;
@@ -132,10 +132,14 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     public parseDocument(...elements: (string | HTMLElement)[]) {
         const resourceHandler = this._resourceHandler;
-        const preloadImages = resourceHandler?.userSettings.preloadImages === true;
+        let preloadImages: Undef<boolean>,
+            preloadFonts: Undef<boolean>;
+        if (resourceHandler) {
+            ({ preloadImages, preloadFonts } = resourceHandler.userSettings);
+        }
         const sessionId = this._controllerHandler.generateSessionId;
         const rootElements = new Set<HTMLElement>();
-        const imageElements: PreloadImage[] = [];
+        const preloadItems: PreloadItem[] = [];
         const processing: squared.base.AppProcessing<T> = {
             cache: new NodeList<T>(undefined, sessionId),
             excluded: new NodeList<T>(undefined, sessionId),
@@ -233,12 +237,12 @@ export default abstract class Application<T extends Node> implements squared.bas
             return elements.length > 1 ? success : success[0];
         };
         if (preloadImages) {
-            const { image, rawData } = resourceHandler!.mapOfAssets;
             preloaded = [];
+            const { image, rawData } = resourceHandler!.mapOfAssets;
             for (const item of image.values()) {
                 const uri = item.uri!;
                 if (FILE.SVG.test(uri)) {
-                    imageElements.push(uri);
+                    preloadItems.push(uri);
                 }
                 else if (item.width === 0 || item.height === 0) {
                     const element = document.createElement('img');
@@ -281,6 +285,16 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
             }
         }
+        if (preloadFonts) {
+            for (const item of resourceHandler!.mapOfAssets.fonts.values()) {
+                for (const font of item) {
+                    const srcUrl = font.srcUrl;
+                    if (srcUrl && !preloadItems.includes(srcUrl)) {
+                        preloadItems.push(srcUrl);
+                    }
+                }
+            }
+        }
         if (resourceHandler) {
             for (const element of rootElements) {
                 element.querySelectorAll('img').forEach((image: HTMLImageElement) => {
@@ -289,48 +303,55 @@ export default abstract class Application<T extends Node> implements squared.bas
                         resourceHandler.addImage(image);
                     }
                     else if (FILE.SVG.test(image.src)) {
-                        imageElements.push(image.src);
+                        preloadItems.push(image.src);
                     }
                     else if (image.complete) {
                         resourceHandler.addImage(image);
                     }
                     else {
-                        imageElements.push(image);
+                        preloadItems.push(image);
                     }
                 });
             }
         }
-        if (imageElements.length > 0) {
+        if (preloadItems.length > 0) {
             processing.initializing = true;
-            return Promise.all(imageElements.map(image => {
+            return Promise.all(preloadItems.map(item => {
                 return new Promise((resolve, reject) => {
-                    if (typeof image === 'string') {
-                        fetch(image, {
-                            method: 'GET',
-                            headers: new Headers({
-                                'Accept': 'application/xhtml+xml, image/svg+xml',
-                                'Content-Type': 'image/svg+xml'
+                    if (typeof item === 'string') {
+                        if (FILE.SVG.test(item)) {
+                            fetch(item, {
+                                method: 'GET',
+                                headers: new Headers({
+                                    'Accept': 'application/xhtml+xml, image/svg+xml',
+                                    'Content-Type': 'image/svg+xml'
+                                })
                             })
-                        })
-                        .then(async result => resolve(await result.text()));
-                    }
-                    else {
-                        image.addEventListener('load', () => resolve(image));
-                        image.addEventListener('error', () => reject(image));
-                    }
-                });
-            }))
-            .then((result: PreloadImage[]) => {
-                for (let i = 0, length = result.length; i < length; ++i) {
-                    const value = result[i];
-                    if (typeof value === 'string') {
-                        const uri = imageElements[i];
-                        if (typeof uri === 'string') {
-                            resourceHandler!.addRawData(uri, 'image/svg+xml', value, { encoding: 'utf8' });
+                            .then(async result => resolve(await result.text()));
+                        }
+                        else {
+                            fetch(item).then(async result => resolve(await result.arrayBuffer()));
                         }
                     }
                     else {
-                        resourceHandler!.addImage(value);
+                        item.addEventListener('load', () => resolve(item));
+                        item.addEventListener('error', () => reject(item));
+                    }
+                });
+            }))
+            .then((result: PreloadItem[]) => {
+                for (let i = 0, length = result.length; i < length; ++i) {
+                    const value = result[i];
+                    const uri = preloadItems[i];
+                    if (typeof uri === 'string') {
+                        if (typeof value === 'string') {
+                            if (FILE.SVG.test(uri)) {
+                                resourceHandler!.addRawData(uri, 'image/svg+xml', value, { encoding: 'utf8' });
+                            }
+                        }
+                    }
+                    else {
+                        resourceHandler!.addImage(value as HTMLImageElement);
                     }
                 }
                 return resumeThread();

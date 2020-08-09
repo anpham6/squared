@@ -178,6 +178,7 @@ squared.settings = {
     preloadImages: true,
     compressImages: false, // png | jpeg - TinyPNG API Key <https://tinypng.com/developers>
     convertImages: '', // png | jpeg | bmp | squared-apache: gif | tiff
+    preloadFonts: true,
     supportNegativeLeftTop: true,
     fontMeasureWrap: true, // slower rendering performance (alias: android.delegate.multiline)
     fontMeasureAdjust: 0.75, // wider < 0 | thinner > 0 (element: data-android-font-measure-adjust)
@@ -217,6 +218,7 @@ squared.settings = {
         'chrome.compress.gzip'
     ],
     preloadImages: false,
+    preloadFonts: false,
     excludePlainText: true,
     createElementMap: true,
     createQuerySelectorMap: true,
@@ -736,7 +738,9 @@ You can also define your own optimizations in squared.settings.json:
 * npm i clean-css -> https://github.com/jakubpawlowicz/clean-css
 * npm i html-minifier-terser -> https://github.com/DanielRuf/html-minifier-terser
 
-These plugins are not included with the default installation. You have to manually add them since this feature is only relevant to the Chrome framework [<b>npm run install-chrome</b>]. You can also install other non-builtin minifiers by defining a custom string-based synchronous function which is stored under the external category (html/js/css) and as the npm package name in squared.settings.json.
+These plugins are not included with the default installation. You have to manually install them since this feature is only relevant to the Chrome framework [<b>npm run install-chrome</b>]. You can also use other non-builtin minifiers by defining a custom string-based synchronous function which are stored inside the external section.
+
+external = category -> npm package name -> custom function name
 
 ```javascript
 // squared.settings.json
