@@ -678,9 +678,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                         return 0;
                     });
                     const intervalMap = new SvgAnimationIntervalMap(sorted, 'stroke-dasharray', 'stroke-dashoffset');
-                    let extracted: SvgAnimation[] = [],
-                        modified: Undef<boolean>;
-                    let setDashLength: Undef<(index: number) => void> = (index: number) => {
+                    const setDashLength: Undef<(index: number) => void> = (index: number) => {
                         let offset = valueOffset;
                         const length = sorted.length;
                         let j = index;
@@ -697,6 +695,9 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                             }
                         }
                     };
+                    let extracted: SvgAnimation[] = [],
+                        initialized: Undef<boolean>,
+                        modified: Undef<boolean>;
                     if (sorted.length > 1) {
                         for (let i = 0; i < sorted.length; ++i) {
                             const item = sorted[i];
@@ -727,9 +728,9 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                             intervalMap.evaluateStart(item);
                             switch (item.attributeName) {
                                 case 'stroke-dasharray': {
-                                    if (setDashLength) {
+                                    if (!initialized) {
                                         setDashLength(i);
-                                        setDashLength = undefined;
+                                        initialized = true;
                                     }
                                     const delayOffset = getDashOffset(intervalMap, valueOffset, item.delay);
                                     const baseValue = this.flattenStrokeDash(getDashArray(intervalMap, valueArray, item.delay), delayOffset, totalLength, pathLength).items;
@@ -974,9 +975,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                 }
                             }
                             else {
-                                const baseValue = length > 2
-                                    ? this.flattenStrokeDash(getDashArray(intervalMap, valueArray, delay - 1), getDashOffset(intervalMap, valueOffset, delay - 1), totalLength, pathLength).items
-                                    : result;
+                                const baseValue = length > 2 ? this.flattenStrokeDash(getDashArray(intervalMap, valueArray, delay - 1), getDashOffset(intervalMap, valueOffset, delay - 1), totalLength, pathLength).items : result;
                                 let j = 0;
                                 while (j < dashTotal) {
                                     const animate = new SvgAnimation(this.element);

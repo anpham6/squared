@@ -55,7 +55,7 @@ declare namespace base {
         resource: Resource<T>;
         get userSettings(): AndroidUserSettingsUI;
         get directory(): { string: string; image: string; video: string; audio: string; font: string };
-        resourceAllToXml(options?: FileUniversalOptions): {};
+        resourceAllToXml(options?: FileUniversalOptions): PlainObject;
         resourceStringToXml(options?: FileUniversalOptions): string[];
         resourceStringArrayToXml(options?: FileUniversalOptions): string[];
         resourceFontToXml(options?: FileUniversalOptions): string[];
@@ -67,7 +67,7 @@ declare namespace base {
         resourceDrawableImageToString(options?: FileUniversalOptions): string[];
         resourceRawVideoToString(options?: FileUniversalOptions): string[];
         resourceRawAudioToString(options?: FileUniversalOptions): string[];
-        layoutAllToXml(layouts: FileAsset[], options?: FileUniversalOptions): {};
+        layoutAllToXml(layouts: FileAsset[], options?: FileUniversalOptions): PlainObject;
     }
 
     class View extends squared.base.NodeUI {
@@ -91,7 +91,7 @@ declare namespace base {
         anchorStyle(orientation: OrientationAttr, bias: number, style?: string, overwrite?: boolean): void;
         anchorDelete(...position: AnchorPosition[]): void;
         anchorClear(update?: View | true): void;
-        supported(obj: string, attr: string, result?: {}): boolean;
+        supported(obj: string, attr: string, result?: PlainObject): boolean;
         combine(...objs: string[]): string[];
         setLayoutWidth(value: string, overwrite?: boolean): void;
         setLayoutHeight(value: string, overwrite?: boolean): void;

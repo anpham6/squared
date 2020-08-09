@@ -1456,7 +1456,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
         }
 
-        public apply(options: {}) {
+        public apply(options: PlainObject) {
             for (const name in options) {
                 const data = options[name];
                 switch (typeof data) {

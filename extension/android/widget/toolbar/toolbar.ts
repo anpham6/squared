@@ -317,8 +317,8 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
             const optionsPopup = createStyleAttribute({ name: '.PopupOverlay', output: options.output });
             assignEmptyValue(options, 'name', (this.application.userSettings as AndroidUserSettingsUI).manifestThemeName);
             assignEmptyValue(options, 'parent', 'Theme.AppCompat.Light.DarkActionBar');
-            assignEmptyValue(optionsActionBar.items, 'windowActionBar', 'false');
-            assignEmptyValue(optionsActionBar.items, 'windowNoTitle', 'true');
+            assignEmptyValue(optionsActionBar.items as StringMap, 'windowActionBar', 'false');
+            assignEmptyValue(optionsActionBar.items as StringMap, 'windowNoTitle', 'true');
             assignEmptyValue(optionsAppBar, 'parent', themeData.appBarOverlay || 'ThemeOverlay.AppCompat.Dark.ActionBar');
             assignEmptyValue(optionsPopup, 'parent', themeData.popupOverlay || 'ThemeOverlay.AppCompat.Light');
             Resource.addTheme(options);

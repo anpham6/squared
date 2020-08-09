@@ -1,5 +1,6 @@
-import * as fs from 'fs';
+import * as express from 'express';
 import * as cors from 'cors';
+import * as fs from 'fs';
 import * as jimp from 'jimp';
 
 type BoolString = boolean | string;
@@ -13,7 +14,7 @@ interface INode {
     readonly minor: number;
     readonly patch: number;
     checkVersion(major: number, minor: number, patch?: number): boolean;
-    checkPermissions(res: {}, dirname: string): boolean;
+    checkPermissions(res: express.Response, dirname: string): boolean;
     isFileURI(value: string): boolean;
     isFileUNC(value: string): boolean;
     isDirectoryUNC(value: string): boolean;

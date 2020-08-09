@@ -169,10 +169,10 @@ function setOverflow(node: T) {
     return result;
 }
 
-function getExclusionValue(enumeration: {}, offset: number, value?: string) {
+function getExclusionValue(enumeration: PlainObject, offset: number, value?: string) {
     if (value) {
         for (const name of value.split('|')) {
-            const i: number = enumeration[name.trim().toUpperCase()] || 0;
+            const i = enumeration[name.trim().toUpperCase()] as number || 0;
             if (i > 0 && !hasBit(offset, i)) {
                 offset |= i;
             }
@@ -564,7 +564,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public abstract setLayout(width?: number, height?: number): void;
     public abstract setAlignment(): void;
     public abstract setBoxSpacing(): void;
-    public abstract apply(options: {}): void;
+    public abstract apply(options: PlainObject): void;
     public abstract clone(id: number): T;
     public abstract extractAttributes(depth?: number): string;
     public abstract alignParent(position: string): boolean;
@@ -968,7 +968,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 if (index !== -1) {
                     const template = renderTemplates[index];
                     if (template.node === this) {
-                        const replaceWith = options?.replaceWith;
+                        let replaceWith: Undef<T>,
+                            beforeReplace: Undef<BindGeneric<Undef<T>, void>>;
+                        if (options) {
+                            ({ replaceWith, beforeReplace } = options);
+                        }
                         if (replaceWith) {
                             const replaceParent = replaceWith.renderParent;
                             if (replaceParent) {
@@ -976,7 +980,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                 if (replaceTemplates) {
                                     const replaceIndex = replaceTemplates.findIndex(item => item.node === replaceWith);
                                     if (replaceIndex !== -1) {
-                                        options!.beforeReplace?.(this, replaceWith);
+                                        if (beforeReplace) {
+                                            beforeReplace(this, replaceWith);
+                                        }
                                         renderChildren[index] = replaceWith;
                                         renderTemplates[index] = replaceTemplates[replaceIndex];
                                         replaceTemplates.splice(replaceIndex, 1);
@@ -994,7 +1000,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             }
                         }
                         else {
-                            options?.beforeReplace?.(this, undefined);
+                            if (beforeReplace) {
+                                beforeReplace(this, undefined);
+                            }
                             renderChildren.splice(index, 1);
                             this.renderParent = undefined;
                             return renderTemplates.splice(index, 1)[0];

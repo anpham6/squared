@@ -36,9 +36,9 @@ declare module "base" {
     }
 
     interface AppFramework<T extends Node> {
-        base: {};
-        extensions: {};
-        lib: {};
+        base: PlainObject;
+        extensions: PlainObject;
+        lib: PlainObject;
         system: FunctionMap<any>;
         create(): AppBase<T>;
         cached(): AppBase<T>;
@@ -304,7 +304,7 @@ declare module "base" {
         exclude(ext: Extension<T> | string): boolean;
         retrieve(name: string, checkBuiltIn?: boolean): Null<Extension<T>>;
         optionValue<T = unknown>(name: string, attr: string, fallback?: T): Undef<T>;
-        optionValueAsObject(name: string, attr: string, fallback?: Null<{}>): Null<{}>;
+        optionValueAsObject(name: string, attr: string, fallback?: Null<PlainObject>): Null<PlainObject>;
         optionValueAsString(name: string, attr: string, fallback?: string): string;
         optionValueAsNumber(name: string, attr: string, fallback?: number): number;
         optionValueAsBoolean(name: string, attr: string, fallback?: boolean): boolean;
@@ -580,7 +580,7 @@ declare module "base" {
         unsafe<T = unknown>(name: string, value?: any): Undef<T>;
         unset(name: string): void;
         delete(name: string, ...attrs: string[]): void;
-        apply(options: {}): void;
+        apply(options: PlainObject): void;
         lockAttr(name: string, attr: string): void;
         unlockAttr(name: string, attr: string): void;
         lockedAttr(name: string, attr: string): boolean;

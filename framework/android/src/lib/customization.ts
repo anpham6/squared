@@ -3,7 +3,7 @@ import { BUILD_ANDROID } from './enumeration';
 
 type View = android.base.View;
 
-function substitute(result: StringMap, value: string, api?: number, minApi = 0) {
+function substitute(result: PlainObject, value: string, api?: number, minApi = 0) {
     if (!api || api >= minApi) {
         result.attr = value;
         return true;
@@ -179,7 +179,7 @@ export const API_ANDROID: Customizations<View> = {
             contextClickable: false,
             drawableTint: false,
             drawableTintMode: false,
-            end: (result: {}) => substitute(result, 'right'),
+            end: (result: PlainObject) => substitute(result, 'right'),
             extractNativeLibs: false,
             fingerprintAuthDrawable: false,
             fraction: false,
@@ -190,7 +190,7 @@ export const API_ANDROID: Customizations<View> = {
             numbersInnerTextColor: false,
             scrollIndicators: false,
             showForAllUsers: false,
-            start: (result: {}) => substitute(result, 'left'),
+            start: (result: PlainObject) => substitute(result, 'left'),
             subtitleTextColor: false,
             supportsAssist: false,
             supportsLaunchVoiceAssistFromKeyguard: false,
@@ -346,7 +346,7 @@ export const API_ANDROID: Customizations<View> = {
             slideEdge: false,
             splitTrack: false,
             spotShadowAlpha: false,
-            src(this: View, result: {}) {
+            src(this: View, result: PlainObject) {
                 if (this.svgElement) {
                     result['obj'] = 'app';
                     result['attr'] = 'srcCompat';
@@ -452,7 +452,7 @@ export const API_ANDROID: Customizations<View> = {
     },
     [BUILD_ANDROID.JELLYBEAN_1]: {
         android: {
-            canRequestEnhancedWebAccessibility: (result: {}, api: number) => api < BUILD_ANDROID.OREO,
+            canRequestEnhancedWebAccessibility: (result: PlainObject, api: number) => api < BUILD_ANDROID.OREO,
             canRequestFilterKeyEvents: false,
             canRequestTouchExplorationMode: false,
             childIndicatorEnd: false,
@@ -477,18 +477,18 @@ export const API_ANDROID: Customizations<View> = {
             initialKeyguardLayout: false,
             labelFor: false,
             layoutDirection: false,
-            layout_alignEnd: (result: {}) => substitute(result, 'layout_alignRight'),
-            layout_alignParentEnd: (result: {}) => substitute(result, 'layout_alignParentRight'),
-            layout_alignParentStart: (result: {}) => substitute(result, 'layout_alignParentLeft'),
-            layout_alignStart: (result: {}) => substitute(result, 'layout_alignLeft'),
-            layout_marginEnd: (result: {}) => substitute(result, 'layout_marginRight'),
-            layout_marginStart: (result: {}) => substitute(result, 'layout_marginLeft'),
-            layout_toEndOf: (result: {}) => substitute(result, 'layout_toRightOf'),
-            layout_toStartOf: (result: {}) => substitute(result, 'layout_toLeftOf'),
-            listPreferredItemPaddingEnd: (result: {}) => substitute(result, 'listPreferredItemPaddingRight'),
-            listPreferredItemPaddingStart: (result: {}) => substitute(result, 'listPreferredItemPaddingLeft'),
-            paddingEnd: (result: {}) => substitute(result, STRING_ANDROID.PADDING_RIGHT),
-            paddingStart: (result: {}) => substitute(result, STRING_ANDROID.PADDING_LEFT),
+            layout_alignEnd: (result: PlainObject) => substitute(result, 'layout_alignRight'),
+            layout_alignParentEnd: (result: PlainObject) => substitute(result, 'layout_alignParentRight'),
+            layout_alignParentStart: (result: PlainObject) => substitute(result, 'layout_alignParentLeft'),
+            layout_alignStart: (result: PlainObject) => substitute(result, 'layout_alignLeft'),
+            layout_marginEnd: (result: PlainObject) => substitute(result, 'layout_marginRight'),
+            layout_marginStart: (result: PlainObject) => substitute(result, 'layout_marginLeft'),
+            layout_toEndOf: (result: PlainObject) => substitute(result, 'layout_toRightOf'),
+            layout_toStartOf: (result: PlainObject) => substitute(result, 'layout_toLeftOf'),
+            listPreferredItemPaddingEnd: (result: PlainObject) => substitute(result, 'listPreferredItemPaddingRight'),
+            listPreferredItemPaddingStart: (result: PlainObject) => substitute(result, 'listPreferredItemPaddingLeft'),
+            paddingEnd: (result: PlainObject) => substitute(result, STRING_ANDROID.PADDING_RIGHT),
+            paddingStart: (result: PlainObject) => substitute(result, STRING_ANDROID.PADDING_LEFT),
             permissionFlags: false,
             permissionGroupFlags: false,
             presentationTheme: false,
@@ -533,22 +533,22 @@ export const API_ANDROID: Customizations<View> = {
 
 export const DEPRECATED_ANDROID: Deprecations<View> = {
     android: {
-        amPmBackgroundColor: (result: {}, api: number) => substitute(result, 'headerBackground', api, BUILD_ANDROID.MARSHMALLOW),
-        amPmTextColor: (result: {}, api: number) => substitute(result, 'headerTextColor', api, BUILD_ANDROID.MARSHMALLOW),
-        animationResolution: (result: {}, api: number) => api < BUILD_ANDROID.JELLYBEAN,
-        canRequestEnhancedWebAccessibility: (result: {}, api: number) => api < BUILD_ANDROID.OREO,
-        dayOfWeekBackground: (result: {}, api: number) => api < BUILD_ANDROID.MARSHMALLOW,
-        dayOfWeekTextAppearance: (result: {}, api: number) => api < BUILD_ANDROID.MARSHMALLOW,
-        directionDescriptions: (result: {}, api: number) => api < BUILD_ANDROID.MARSHMALLOW,
-        headerAmPmTextAppearance: (result: {}, api: number) => substitute(result, 'headerTextColor', api, BUILD_ANDROID.MARSHMALLOW),
-        headerDayOfMonthTextAppearance: (result: {}, api: number) => substitute(result, 'headerTextColor', api, BUILD_ANDROID.MARSHMALLOW),
-        headerMonthTextAppearance: (result: {}, api: number) => substitute(result, 'headerTextColor', api, BUILD_ANDROID.MARSHMALLOW),
-        headerTimeTextAppearance: (result: {}, api: number) => substitute(result, 'headerTextColor', api, BUILD_ANDROID.MARSHMALLOW),
-        headerYearTextAppearance: (result: {}, api: number) => substitute(result, 'headerTextColor', api, BUILD_ANDROID.MARSHMALLOW),
-        showOnLockScreen: (result: {}, api: number) => substitute(result, 'showForAllUsers', api, BUILD_ANDROID.MARSHMALLOW),
-        targetDescriptions: (result: {}, api: number) => api < BUILD_ANDROID.MARSHMALLOW,
-        yearListItemTextAppearance: (result: {}, api: number) => substitute(result, 'yearListTextColor', api, BUILD_ANDROID.MARSHMALLOW),
-        yearListSelectorColor: (result: {}, api: number) => api < BUILD_ANDROID.MARSHMALLOW
+        amPmBackgroundColor: (result: PlainObject, api: number) => substitute(result, 'headerBackground', api, BUILD_ANDROID.MARSHMALLOW),
+        amPmTextColor: (result: PlainObject, api: number) => substitute(result, 'headerTextColor', api, BUILD_ANDROID.MARSHMALLOW),
+        animationResolution: (result: PlainObject, api: number) => api < BUILD_ANDROID.JELLYBEAN,
+        canRequestEnhancedWebAccessibility: (result: PlainObject, api: number) => api < BUILD_ANDROID.OREO,
+        dayOfWeekBackground: (result: PlainObject, api: number) => api < BUILD_ANDROID.MARSHMALLOW,
+        dayOfWeekTextAppearance: (result: PlainObject, api: number) => api < BUILD_ANDROID.MARSHMALLOW,
+        directionDescriptions: (result: PlainObject, api: number) => api < BUILD_ANDROID.MARSHMALLOW,
+        headerAmPmTextAppearance: (result: PlainObject, api: number) => substitute(result, 'headerTextColor', api, BUILD_ANDROID.MARSHMALLOW),
+        headerDayOfMonthTextAppearance: (result: PlainObject, api: number) => substitute(result, 'headerTextColor', api, BUILD_ANDROID.MARSHMALLOW),
+        headerMonthTextAppearance: (result: PlainObject, api: number) => substitute(result, 'headerTextColor', api, BUILD_ANDROID.MARSHMALLOW),
+        headerTimeTextAppearance: (result: PlainObject, api: number) => substitute(result, 'headerTextColor', api, BUILD_ANDROID.MARSHMALLOW),
+        headerYearTextAppearance: (result: PlainObject, api: number) => substitute(result, 'headerTextColor', api, BUILD_ANDROID.MARSHMALLOW),
+        showOnLockScreen: (result: PlainObject, api: number) => substitute(result, 'showForAllUsers', api, BUILD_ANDROID.MARSHMALLOW),
+        targetDescriptions: (result: PlainObject, api: number) => api < BUILD_ANDROID.MARSHMALLOW,
+        yearListItemTextAppearance: (result: PlainObject, api: number) => substitute(result, 'yearListTextColor', api, BUILD_ANDROID.MARSHMALLOW),
+        yearListSelectorColor: (result: PlainObject, api: number) => api < BUILD_ANDROID.MARSHMALLOW
     }
 };
 

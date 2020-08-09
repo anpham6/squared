@@ -14,9 +14,9 @@ module.exports = {
     "rules": {
         "no-console": "off",
         "no-eval": "off",
+        "@typescript-eslint/no-implied-eval": "off",
         "@typescript-eslint/no-unsafe-call": "off",
         "@typescript-eslint/no-unsafe-return": "off",
-        "@typescript-eslint/no-var-requires": "off",
-        "@typescript-eslint/no-implied-eval": "off"
+        "@typescript-eslint/no-var-requires": "off"
     }
 };

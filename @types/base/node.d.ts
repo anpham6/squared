@@ -1,4 +1,4 @@
-interface InitialData<T> {
+interface InitialData<T> extends PlainObject {
     styleMap?: StringMap;
     children?: T[];
     bounds?: BoxRectDimension;

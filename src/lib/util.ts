@@ -429,7 +429,7 @@ export function formatXml(value: string, closeEmpty?: boolean, startIndent = -1,
     return output;
 }
 
-export function hasKeys(obj: {}) {
+export function hasKeys(obj: PlainObject) {
     for (const attr in obj) {
         return obj[attr] !== undefined;
     }
@@ -772,11 +772,11 @@ export function isArray<T>(value: any): value is Array<T> {
     return Array.isArray(value) && value.length > 0;
 }
 
-export function isObject(value: any): value is {} {
+export function isObject<T = PlainObject>(value: any): value is T {
     return typeof value === 'object' && value !== null;
 }
 
-export function isPlainObject(value: any): value is {} {
+export function isPlainObject<T = PlainObject>(value: any): value is T {
     return isObject(value) && (value.constructor === Object || Object.getPrototypeOf(Object(value)) === null);
 }
 
@@ -865,7 +865,7 @@ export function cloneArray<T = unknown>(data: T[], result: T[] = [], object?: bo
     return result;
 }
 
-export function cloneObject(data: {}, result = {}, array?: boolean) {
+export function cloneObject(data: PlainObject, result = {}, array?: boolean) {
     for (const attr in data) {
         const value = data[attr];
         if (Array.isArray(value)) {
@@ -1006,7 +1006,7 @@ export function withinRange(a: number, b: number, offset = 1) {
     return b >= (a - offset) && b <= (a + offset);
 }
 
-export function assignEmptyProperty(dest: {}, source: {}) {
+export function assignEmptyProperty(dest: PlainObject, source: PlainObject) {
     for (const attr in source) {
         if (!Object.prototype.hasOwnProperty.call(dest, attr)) {
             dest[attr] = source[attr];
@@ -1015,7 +1015,7 @@ export function assignEmptyProperty(dest: {}, source: {}) {
     return dest;
 }
 
-export function assignEmptyValue(dest: {}, ...attrs: string[]) {
+export function assignEmptyValue(dest: PlainObject | ObjectIndex<any>, ...attrs: string[]) {
     const length = attrs.length;
     if (length > 1) {
         let current = dest;

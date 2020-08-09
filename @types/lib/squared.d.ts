@@ -242,7 +242,7 @@ declare module "lib" {
         function parseMimeType(value: string): string;
         function fromMimeType(value: string): string;
         function formatXml(value: string, closeEmpty?: boolean): string;
-        function hasKeys(obj: {}): boolean;
+        function hasKeys(obj: PlainObject): boolean;
         function capitalize(value: string, upper?: boolean): string;
         function upperCaseString(value: string): string;
         function lowerCaseString(value: string): string;
@@ -265,14 +265,14 @@ declare module "lib" {
         function isNumber(value: string): boolean;
         function isString(value: any): value is string;
         function isArray<T>(value: any): value is Array<T>;
-        function isObject(value: any): value is {};
-        function isPlainObject(value: any): value is {};
+        function isObject<T = PlainObject>(value: any): value is T;
+        function isPlainObject<T = PlainObject>(value: any): value is T;
         function isEmptyString(value: string): boolean;
         function isEqual(source: any, other: any): boolean;
         function includes(source: Undef<string>, value: string, delimiter?: RegExp): boolean;
         function cloneInstance<T>(value: T): T;
         function cloneArray(data: any[], result?: any[], object?: boolean): any[];
-        function cloneObject(data: {}, result?: {}, array?: boolean): {};
+        function cloneObject(data: PlainObject, result?: PlainObject, array?: boolean): PlainObject;
         function resolvePath(value: string, href?: string): string;
         function trimBoth(value: string, pattern: string): string;
         function trimString(value: string, pattern: string): string;
@@ -284,8 +284,8 @@ declare module "lib" {
         function searchObject(obj: StringMap, value: string | StringMap): [string, string][];
         function hasValue<T>(value: any): value is T;
         function withinRange(a: number, b: number, offset?: number): boolean;
-        function assignEmptyProperty(dest: {}, source: {}): {};
-        function assignEmptyValue(dest: {}, ...attrs: string[]): void;
+        function assignEmptyProperty(dest: PlainObject, source: PlainObject): PlainObject;
+        function assignEmptyValue(dest: PlainObject, ...attrs: string[]): void;
         function sortNumber(values: number[], ascending?: boolean): number[];
         function findSet<T = unknown>(list: Set<T>, predicate: IteratorPredicate<T, boolean, Set<T>>): Undef<T>;
         function sortArray<T = any>(list: T[], ascending: boolean, ...attrs: string[]): T[];

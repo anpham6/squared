@@ -3844,7 +3844,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 node.anchor(LT, documentId, true);
                 node.anchorDelete(RB);
                 if (location > 0) {
-                    assignEmptyValue(guideline, axis, attr, LT, documentId, location.toString());
+                    assignEmptyValue(guideline as StandardMap, axis, attr, LT, documentId, location.toString());
                     parent.constraint.guideline = guideline;
                 }
             }

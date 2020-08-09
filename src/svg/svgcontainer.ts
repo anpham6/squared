@@ -18,7 +18,7 @@ function setAspectRatio(parent: Undef<Svg | SvgUseSymbol>, group: SvgGroup, view
         const aspectRatio = group.aspectRatio;
         const parentAspectRatio = parent.aspectRatio;
         if (viewBox && element) {
-            cloneObject(viewBox, aspectRatio);
+            cloneObject((viewBox as unknown) as PlainObject, (aspectRatio as unknown) as PlainObject);
             const { width, height } = aspectRatio;
             if (width > 0 && height > 0) {
                 const ratio = width / height;

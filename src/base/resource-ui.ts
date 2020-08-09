@@ -922,11 +922,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         inlined = true;
                     }
                     else if (node.inlineText) {
-                        value = node.textEmpty
-                            ? ResourceUI.STRING_SPACE
-                            : node.tagName === 'BUTTON'
-                                ? node.textContent
-                                : this.removeExcludedFromText(node, element);
+                        value = node.textEmpty ? ResourceUI.STRING_SPACE : node.tagName === 'BUTTON' ? node.textContent : this.removeExcludedFromText(node, element);
                     }
                     break;
                 }
@@ -1073,15 +1069,14 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             if (!child || !child.textElement || child.pseudoElement || !child.pageFlow || child.positioned || child.excluded) {
                 if (child) {
                     if (styled && child.htmlElement) {
-                        const outerHTML = child.toElementString('outerHTML');
                         if (child.lineBreak) {
-                            value = value.replace(!preserveWhiteSpace ? new RegExp(`\\s*${outerHTML}\\s*`) : outerHTML, '\\n');
+                            value = value.replace(!preserveWhiteSpace ? new RegExp(`\\s*${item.outerHTML}\\s*`) : item.outerHTML, '\\n');
                         }
                         else if (child.positioned) {
-                            value = value.replace(outerHTML, '');
+                            value = value.replace(item.outerHTML, '');
                         }
                         else if (!preserveWhiteSpace) {
-                            value = value.replace(outerHTML, child.pageFlow && isString(child.textContent) ? ResourceUI.STRING_SPACE : '');
+                            value = value.replace(item.outerHTML, child.pageFlow && isString(child.textContent) ? ResourceUI.STRING_SPACE : '');
                         }
                         return;
                     }

@@ -129,7 +129,7 @@ export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> 
         const options = createStyleAttribute(this.options.resource);
         assignEmptyValue(options, 'name', settings.manifestThemeName);
         assignEmptyValue(options, 'parent', settings.manifestParentThemeName);
-        assignEmptyValue(options.items, 'android:windowTranslucentStatus', 'true');
+        assignEmptyValue(options.items as StringMap, 'android:windowTranslucentStatus', 'true');
         Resource.addTheme(options);
         if (api >= BUILD_ANDROID.LOLLIPOP) {
             const themeOptions = createStyleAttribute(cloneObject(options));

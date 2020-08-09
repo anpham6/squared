@@ -119,7 +119,7 @@ interface PathData {
     trimPathOffset?: string;
 }
 
-interface TransformData {
+interface TransformData extends PlainObject {
     name?: string;
     translateX?: string;
     translateY?: string;

@@ -46,13 +46,11 @@ export function getRangeClientRect(element: Element) {
     if (element.childElementCount) {
         iterateArray(element.children, (item: HTMLElement) => {
             const style = getStyle(item);
-            if (style.getPropertyValue('visibility') !== 'visible') {
-                if (hasCoords(style.getPropertyValue('position'))) {
-                    const display = style.getPropertyValue('display');
-                    if (display !== 'none') {
-                        item.style.display = 'none';
-                        (hidden ?? (hidden = [])).push([item, display]);
-                    }
+            if (style.getPropertyValue('visibility') !== 'visible' && hasCoords(style.getPropertyValue('position'))) {
+                const display = style.getPropertyValue('display');
+                if (display !== 'none') {
+                    item.style.display = 'none';
+                    (hidden ?? (hidden = [])).push([item, display]);
                 }
             }
         });
@@ -74,8 +72,7 @@ export function getRangeClientRect(element: Element) {
         let numberOfLines = 1,
             overflow = false;
         bounds = assignRect(domRect[0]);
-        i = 0;
-        while (++i < length) {
+        for (i = 1; i < length; ++i) {
             const { left, right, top, bottom, width } = domRect[i];
             if (left < bounds.left) {
                 bounds.left = left;

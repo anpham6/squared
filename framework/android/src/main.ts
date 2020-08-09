@@ -115,7 +115,7 @@ const appBase: squared.base.AppFramework<View> = {
     },
     lib,
     system: {
-        customize(build: number, widget: string, options: {}) {
+        customize(build: number, widget: string, options: ObjectMap<StringMap>) {
             if (customization.API_ANDROID[build]) {
                 const assign = customization.API_ANDROID[build].assign;
                 if (assign[widget]) {

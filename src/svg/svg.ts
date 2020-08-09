@@ -136,7 +136,7 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
     protected init() {
         const element = this.element;
         if (this.documentRoot) {
-            cloneObject(element.viewBox.baseVal, this.aspectRatio);
+            cloneObject((element.viewBox.baseVal as unknown) as PlainObject, (this.aspectRatio as unknown) as PlainObject);
             element.querySelectorAll('set, animate, animateTransform, animateMotion').forEach((animation: SVGAnimationElement) => {
                 const target = getTargetElement(animation, element);
                 if (target) {

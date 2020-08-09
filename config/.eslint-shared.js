@@ -113,7 +113,7 @@ module.exports = {
         "no-var": "warn",
         "no-with": "error",
         "@typescript-eslint/array-type": "off",
-        "@typescript-eslint/ban-types": "off",
+        "@typescript-eslint/ban-types": "error",
         "@typescript-eslint/camelcase": "off",
         "@typescript-eslint/consistent-type-assertions": "error",
         "@typescript-eslint/consistent-type-definitions": "error",

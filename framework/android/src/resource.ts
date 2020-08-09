@@ -58,7 +58,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
     public static formatOptions(options: ViewAttribute, numberAlias?: boolean) {
         for (const namespace in options) {
             const obj: StandardMap = options[namespace];
-            if (isPlainObject(obj)) {
+            if (isPlainObject<StandardMap>(obj)) {
                 formatObject(obj, numberAlias);
             }
         }

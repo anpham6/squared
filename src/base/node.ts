@@ -805,7 +805,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     private _data = {};
     private _inlineText = false;
     private _style?: CSSStyleDeclaration;
-    private _dataset?: {};
+    private _dataset?: DOMStringMap;
     private _textStyle?: StringMap;
     private _elementData?: ElementData;
     private _pseudoElt?: string;
@@ -900,7 +900,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             return undefined;
         }
         else if (value !== undefined) {
-            let obj: {} = data[name];
+            let obj: PlainObject = data[name];
             if (!isObject(obj)) {
                 obj = {};
                 data[name] = obj;
@@ -909,7 +909,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 obj[attr] = value;
             }
         }
-        const stored: {} = data[name];
+        const stored: PlainObject = data[name];
         return isObject(stored) ? stored[attr] as T : undefined;
     }
 
@@ -1618,13 +1618,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     item = child;
                 }
             }
-            const value = parseFloat(
-                self
-                    ? item[attr] as string
-                    : initial
-                        ? item.cssInitial(attr, options)
-                        : item.css(attr)
-            );
+            const value = parseFloat(self ? item[attr] as string : initial ? item.cssInitial(attr, options) : item.css(attr));
             if (last) {
                 if (value <= min) {
                     result = item;
@@ -1656,13 +1650,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     item = child;
                 }
             }
-            const value = parseFloat(
-                self
-                    ? item[attr] as string
-                    : initial
-                        ? item.cssInitial(attr, options)
-                        : item.css(attr)
-            );
+            const value = parseFloat(self ? item[attr] as string : initial ? item.cssInitial(attr, options) : item.css(attr));
             if (last) {
                 if (value >= max) {
                     result = item;
@@ -1682,8 +1670,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public querySelectorAll(value: string, elements?: T[], resultCount = -1) {
-        let result: T[] = [];
         const queryMap = elements ? [elements] : this.queryMap;
+        let result: T[] = [];
         if (queryMap && resultCount !== 0) {
             const queries = parseSelectorText(value);
             let i = 0, length = queries.length;

@@ -17,11 +17,12 @@ type ObjectKeyed<T> = ObjectMap<T> | ObjectIndex<T>;
 type ObjectMapNested<T> = ObjectKeyed<ObjectKeyed<T>>;
 type StringMap = ObjectMap<Undef<string>>;
 type StringMapChecked = ObjectMap<string>;
-type CallbackResult = (result: {}) => void;
+type CallbackResult = (result: any) => void;
 
 type NumString = number | string;
 
 type StandardMap = ObjectMap<any>;
+type PlainObject = Record<string | number | symbol, unknown>;
 
 interface ObjectMap<T> {
     [key: string]: T;

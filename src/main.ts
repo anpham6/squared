@@ -26,6 +26,7 @@ const settings = {} as UserSettings;
 const system = {} as FunctionMap<any>;
 
 let main: Undef<Main>;
+let extensionManager: Undef<squared.base.ExtensionManager<Node>>;
 let framework: Undef<Framework>;
 
 function includeExtension(extensions: Extension[], ext: Extension) {
@@ -108,14 +109,16 @@ async function findElementAsync(element: HTMLElement) {
     return [await main!.parseDocument(element) as Node];
 }
 
-const checkWritable = (app: Undef<Main>): app is Main => app?.initializing === false && app.length > 0;
+const checkWritable = (app: Undef<Main>): app is Main => app ? !app.initializing && app.length > 0 : false;
 
 export function setHostname(value: string) {
-    const fileHandler = main?.resourceHandler?.fileHandler;
-    if (fileHandler) {
-        const match = regex.FILE.PROTOCOL.exec(value);
-        if (match?.[1].startsWith('http')) {
-            fileHandler.hostname = match[1] + match[2] + (match[3] || '');
+    if (main) {
+        const fileHandler = main.resourceHandler?.fileHandler;
+        if (fileHandler) {
+            const match = regex.FILE.PROTOCOL.exec(value);
+            if (match?.[1].startsWith('http')) {
+                fileHandler.hostname = match[1] + match[2] + (match[3] || '');
+            }
         }
     }
 }
@@ -134,6 +137,7 @@ export function setFramework(value: Framework, options?: ObjectMap<any>, cached?
         Object.assign(settings, appBase.userSettings);
         main = appBase.application;
         main.userSettings = settings;
+        extensionManager = main.extensionManager;
         extendPrototype(main.Node.prototype, main.framework);
         const { builtInExtensions, extensions } = main;
         extensions.length = 0;
@@ -162,7 +166,7 @@ export function setFramework(value: Framework, options?: ObjectMap<any>, cached?
     }
 }
 
-export function setViewModel(data?: {}) {
+export function setViewModel(data?: PlainObject) {
     if (main) {
         main.viewModel = data;
     }
@@ -170,7 +174,6 @@ export function setViewModel(data?: {}) {
 
 export function parseDocument(...elements: (HTMLElement | string)[]) {
     if (main) {
-        const extensionManager = main.extensionManager;
         if (extensionManager) {
             if (extensionsQueue.size > 0) {
                 for (const item of extensionsQueue) {
@@ -196,14 +199,13 @@ export function parseDocument(...elements: (HTMLElement | string)[]) {
     return session.frameworkNotInstalled<void>();
 }
 
-export function include(value: ExtensionRequest, options?: {}) {
+export function include(value: ExtensionRequest, options?: PlainObject) {
     if (typeof value === 'string') {
-        value = value.trim();
         value = main?.builtInExtensions[value] || retrieve(value);
     }
     if (value instanceof squared.base.Extension) {
         extensionsExternal.add(value);
-        if (!(main?.extensionManager?.include(value) === true)) {
+        if (!(extensionManager?.include(value) === true)) {
             extensionsQueue.add(value);
         }
         if (options) {
@@ -215,7 +217,6 @@ export function include(value: ExtensionRequest, options?: {}) {
 }
 
 export function exclude(value: ExtensionRequest) {
-    const extensionManager = main?.extensionManager;
     if (extensionManager) {
         if (typeof value === 'string') {
             value = extensionManager.retrieve(value.trim());
@@ -229,11 +230,11 @@ export function exclude(value: ExtensionRequest) {
     return false;
 }
 
-export function configure(value: ExtensionRequest, options: {}) {
+export function configure(value: ExtensionRequest, options: PlainObject) {
     if (util.isPlainObject(options)) {
         if (typeof value === 'string') {
             value = value.trim();
-            const extension = main?.extensionManager?.retrieve(value) || util.findSet(extensionsQueue, item => item.name === value);
+            const extension = extensionManager?.retrieve(value) || util.findSet(extensionsQueue, item => item.name === value);
             if (extension) {
                 Object.assign(extension.options, options);
             }
@@ -251,7 +252,6 @@ export function configure(value: ExtensionRequest, options: {}) {
 }
 
 export function retrieve(value: string) {
-    const extensionManager = main?.extensionManager;
     if (extensionManager) {
         const result = extensionManager.retrieve(value) || null;
         if (!result) {
@@ -314,11 +314,13 @@ export function latest() {
 }
 
 export function reset() {
-    main?.reset();
+    if (main) {
+        main.reset();
+    }
 }
 
 export function ready() {
-    return main?.initializing === false && !main.closed;
+    return main ? !main.initializing && !main.closed : false;
 }
 
 export function close() {
@@ -352,14 +354,14 @@ export function saveToArchive(value?: string, options?: FileActionOptions) {
 }
 
 export function createFrom(value: string, options: FileActionOptions) {
-    if (checkWritable(main) && util.isString(value) && util.isPlainObject(options) && options.assets?.length) {
+    if (checkWritable(main) && util.isString(value) && util.isPlainObject<FileActionOptions>(options) && options.assets?.length) {
         return main.createFrom(value, options);
     }
     return session.frameworkNotInstalled();
 }
 
 export function appendFromArchive(value: string, options: FileActionOptions) {
-    if (checkWritable(main) && util.isString(value) && util.isPlainObject(options) && options.assets?.length) {
+    if (checkWritable(main) && util.isString(value) && util.isPlainObject<FileActionOptions>(options) && options.assets?.length) {
         return main.appendFromArchive(value, options);
     }
     return session.frameworkNotInstalled();
@@ -409,15 +411,17 @@ export function fromElement(element: HTMLElement, cache = false) {
 }
 
 export function getElementMap() {
-    return main?.elementMap || new Map<Element, Node>();
+    return main ? main.elementMap : new Map<Element, Node>();
 }
 
 export function clearElementMap() {
-    main?.elementMap.clear();
+    if (main) {
+        main.elementMap.clear();
+    }
 }
 
 export function toString() {
-    return main?.toString() || '';
+    return main ? main.toString() : '';
 }
 
 const lib = {
