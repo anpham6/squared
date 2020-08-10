@@ -411,7 +411,7 @@ declare module "base" {
         min(attr: string, options?: MinMaxOptions): Node;
         max(attr: string, options?: MinMaxOptions): Node;
         querySelector(value: string): Null<Node>;
-        querySelectorAll(value: string, elements?: Node[], resultCount?: number): Node[];
+        querySelectorAll(value: string, customMap?: Node[][], resultCount?: number): Node[];
         ancestors(value?: string, options?: AscendOptions<Node>): Node[];
         descendants(value?: string, options?: DescendOptions<Node>): Node[];
         valueOf(attr: string, options?: CssInitialOptions): string;

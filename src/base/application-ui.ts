@@ -38,7 +38,7 @@ function prioritizeExtensions<T extends NodeUI>(value: string, extensions: Exten
             untagged.push(ext);
         }
     }
-    return result.length > 0 ? flatArray<ExtensionUI<T>>(result).concat(untagged) : extensions;
+    return result.length > 0 ? flatArray<ExtensionUI<T>>(result, 0).concat(untagged) : extensions;
 }
 
 function getFloatAlignmentType(nodes: NodeUI[]) {
@@ -1394,7 +1394,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
                 this.addLayout(group);
                 if (seg === inlineAbove) {
-                    this.setFloatPadding(parent, target, inlineAbove, leftSub && flatArray(leftSub), rightSub && flatArray(rightSub));
+                    this.setFloatPadding(parent, target, inlineAbove, leftSub && flatArray(leftSub, 0), rightSub && flatArray(rightSub, 0));
                 }
             }
         }

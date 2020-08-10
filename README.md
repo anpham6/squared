@@ -247,7 +247,7 @@ Custom named user settings per framework can be saved to local storage and reloa
 
 ```javascript
 interface FrameworkOptions {
-    settings?: StandardMap;
+    settings?: {};
     loadAs?: string;
     saveAs?: string;
     cache?: boolean;
@@ -382,6 +382,7 @@ squared.system.writeResourceRawAudio()
 
 ```javascript
 // targetAPI: 0 - ALL, 29 - Android Q
+
 squared.system.customize(squared.settings.targetAPI, 'Button', {
     android: {
         minWidth: '35px',
@@ -467,25 +468,35 @@ Layout rendering can also be customized using extensions as the program was buil
     // Install an extension
     const sample = new Sample('your.namespace.sample', 0, { /* same as configure */ });
     squared.include(sample);
+</script>
+```
 
-    // Node extension functions and properties
-    squared.extend({
-        _id: 1,
-        getId: function() {
+### ALL: Extending Node object
+
+You can add functions and initial variables to the Node object including overwriting preexisting class definitions per framework. Accessor properties are also supported using the get/set object syntax.
+
+```javascript
+squared.extend({
+    _id: 1,
+    getId: function() {
+        return this._id;
+    },
+    altId: {
+        get: function() {
             return this._id;
         },
-        altId: {
-            get: function() {
-                return this._id;
-            },
-            set: function(value) {
-                this._id += value;
-            }
+        set: function(value) {
+            this._id += value;
         }
-    }, 2);
-    const body = await squared.fromElement(document.body);
-    body.altId = 5; // body.altId: 6
-</script>
+    },
+    addEvent: function(eventName, callback) {
+        this.element.addEventListener(eventName, callback);
+    }
+}, 2);
+
+const body = await squared.fromElement(document.body);
+body.altId = 5; // body.altId: 6
+body.addEvent('click', (event) => body.element.classList.toggle('example'));
 ```
 
 ### ALL: Layouts and binding expressions (example: android)

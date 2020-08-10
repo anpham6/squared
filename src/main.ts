@@ -26,8 +26,8 @@ const settings = {} as UserSettings;
 const system = {} as FunctionMap<any>;
 
 let main: Undef<Main>;
-let extensionManager: Undef<squared.base.ExtensionManager<Node>>;
 let framework: Undef<Framework>;
+let extensionManager: Undef<squared.base.ExtensionManager<Node>>;
 
 function includeExtension(extensions: Extension[], ext: Extension) {
     if (!extensions.includes(ext)) {
@@ -85,24 +85,15 @@ async function findElementAll(query: NodeListOf<Element>, length: number) {
     const result: Node[] = new Array(length);
     for (let i = 0; i < length; ++i) {
         const element = query[i] as HTMLElement;
-        let item = elementMap.get(element);
+        const item = elementMap.get(element) || await main!.parseDocument(element) as Node;
         if (item) {
             result[i] = item;
         }
         else {
-            item = await main!.parseDocument(element) as Node;
-            if (item) {
-                result[i] = item;
-            }
-            else {
-                incomplete = true;
-            }
+            incomplete = true;
         }
     }
-    if (incomplete) {
-        util.flatArray<Node>(result);
-    }
-    return result;
+    return !incomplete ? result : util.flatArray<Node>(result, 0);
 }
 
 async function findElementAsync(element: HTMLElement) {
@@ -305,15 +296,15 @@ export function configure(value: ExtensionRequest, options: FrameworkOptions) {
 
 export function retrieve(value: string) {
     if (extensionManager) {
-        const result = extensionManager.retrieve(value) || null;
-        if (!result) {
-            for (const ext of extensionsExternal) {
-                if (ext.name === value) {
-                    return ext;
-                }
+        const result = extensionManager.retrieve(value);
+        if (result) {
+            return result;
+        }
+        for (const ext of extensionsExternal) {
+            if (ext.name === value) {
+                return ext;
             }
         }
-        return result;
     }
     return null;
 }

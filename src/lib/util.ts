@@ -1099,7 +1099,7 @@ export function sortArray<T = any>(list: T[], ascending: boolean, ...attrs: stri
     });
 }
 
-export function flatArray<T = unknown>(list: T[], depth = 0, current = 0): T[] {
+export function flatArray<T = unknown>(list: T[], depth = 1, current = 0): T[] {
     let result: T[] = [];
     const length = list.length;
     let i = 0;

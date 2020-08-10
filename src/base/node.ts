@@ -5,7 +5,7 @@ const { CSS_PROPERTIES, CSS_TRAITS, CSS_UNIT, PROXY_INLINESTYLE, SVG_PROPERTIES,
 const { assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { CSS, FILE } = squared.lib.regex;
 const { getElementData, getElementAsNode, getElementCache, setElementCache } = squared.lib.session;
-const { convertCamelCase, convertFloat, convertInt, hasBit, hasValue, isNumber, isObject, iterateArray, spliceString, splitEnclosing, splitPair } = squared.lib.util;
+const { convertCamelCase, convertFloat, convertInt, flatArray, hasBit, hasValue, isNumber, isObject, iterateArray, iterateReverseArray, spliceString, splitEnclosing, splitPair } = squared.lib.util;
 
 const { SELECTOR_ATTR, SELECTOR_G, SELECTOR_LABEL, SELECTOR_PSEUDO_CLASS } = CSS;
 
@@ -1669,8 +1669,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return this.querySelectorAll(value, undefined, 1)[0] || null;
     }
 
-    public querySelectorAll(value: string, elements?: T[], resultCount = -1) {
-        const queryMap = elements ? [elements] : this.queryMap;
+    public querySelectorAll(value: string, customMap?: T[][], resultCount = -1) {
+        const queryMap = customMap || this.queryMap;
         let result: T[] = [];
         if (queryMap && resultCount !== 0) {
             const queries = parseSelectorText(value);
@@ -1824,7 +1824,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     }
                     SELECTOR_G.lastIndex = 0;
                 }
-                if (elements) {
+                if (customMap) {
                     offset = 0;
                 }
                 length = queryMap.length;
@@ -1856,7 +1856,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             }
                         }
                     }
-                    if (selectors.length > 0) {
+                    if (selectors.length > 0 && (dataEnd.adjacent || resultCount !== -Infinity)) {
                         selectors.reverse();
                         let count = currentCount;
                         const r = pending.length;
@@ -1914,14 +1914,45 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public ancestors(value?: string, options?: AscendOptions<T>) {
-        const result: T[] = this.ascend(options);
-        return value && result.length > 0 ? this.querySelectorAll(value, result) : result;
+        const result: T[][] = [];
+        let depth = NaN;
+        iterateReverseArray(this.ascend(options), (item: T) => {
+            if (!isNaN(depth)) {
+                for (let i = item.depth - 1; i > depth; --i) {
+                    result.push([]);
+                }
+            }
+            result.push([item]);
+            depth = item.depth;
+        });
+        return result.length > 0 ? value ? this.querySelectorAll(value, result, -Infinity) : flatArray<T>(result, Infinity) : ((result as unknown) as T[]);
     }
 
     public descendants(value?: string, options?: DescendOptions<T>) {
         if (options || !this.queryMap) {
-            const result: T[] = this.descend(options);
-            return value && result.length > 0 ? this.querySelectorAll(value, result) : result;
+            const children: T[] = this.descend(options);
+            let length = children.length;
+            if (length > 0) {
+                const result: T[][] = [];
+                const depth = this.depth + 1;
+                let index: number;
+                for (let i = 0; i < length; ++i) {
+                    const item = children[i];
+                    index = item.depth - depth;
+                    (result[index] ?? (result[index] = [])).push(item);
+                }
+                if (value) {
+                    length = result.length;
+                    for (let i = 0; i < length; ++i) {
+                        if (result[i] === undefined) {
+                            result[i] = [];
+                        }
+                    }
+                    return this.querySelectorAll(value, result);
+                }
+                return flatArray<T>(result, Infinity);
+            }
+            return children;
         }
         return this.querySelectorAll(value || '*');
     }
