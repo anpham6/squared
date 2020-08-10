@@ -5,11 +5,7 @@ const REGEXP_TRAILINGZERO = /\.(\d*?)(0+)$/;
 
 function convertDecimalNotation(value: number) {
     const match = REGEXP_DECIMALNOTAION.exec(value.toString());
-    return match ?
-        parseInt(match[2]) > 0
-            ? Number.MAX_SAFE_INTEGER.toString()
-            : '0'
-        : value.toString();
+    return match ? parseInt(match[2]) > 0 ? Number.MAX_SAFE_INTEGER.toString() : '0' : value.toString();
 }
 
 export function equal(a: number, b: number, precision = 5) {
@@ -36,12 +32,10 @@ export function truncate(value: NumString, precision = 3) {
     else if ((value >= 0 && value <= 1 / Math.pow(10, precision)) || (value < 0 && value >= -1 / Math.pow(10, precision))) {
         return '0';
     }
-    else {
-        if (base !== 0) {
-            precision += base.toString().length;
-        }
-        return truncateTrailingZero(value.toPrecision(precision));
+    if (base !== 0) {
+        precision += base.toString().length;
     }
+    return truncateTrailingZero(value.toPrecision(precision));
 }
 
 export function truncateFraction(value: number) {

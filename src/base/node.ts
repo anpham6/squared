@@ -736,10 +736,10 @@ function ascendQuerySelector(node: T, selectors: QueryData[], i: number, index: 
             while (parent);
         }
     }
-    if (next.length > 0) {
-        return ++index === length ? true : ascendQuerySelector(node, selectors, i, index, selector.adjacent, next);
+    if (next.length === 0) {
+        return false;
     }
-    return false;
+    return ++index === length ? true : ascendQuerySelector(node, selectors, i, index, selector.adjacent, next);
 }
 
 const canTextAlign = (node: T) => node.naturalChild && (node.length === 0 || isInlineVertical(node.display)) && !node.floating && node.autoMargin.horizontal !== true;
@@ -1238,15 +1238,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public cssAscend(attr: string, options?: CssAscendOptions) {
-        let startSelf: Undef<boolean>,
-            initial: Undef<boolean>;
-        if (options) {
-            ({ startSelf, initial } = options);
-        }
-        let parent = startSelf ? this : this.actualParent,
+        let parent = options?.startSelf ? this : this.actualParent,
             value: string;
         while (parent) {
-            value = initial ? parent.cssInitial(attr, options) : parent.css(attr);
+            value = parent.valueOf(attr, options);
             if (value !== '' && value !== 'inherit') {
                 return value;
             }

@@ -263,7 +263,6 @@ squared.setFramework(android, {
 // Optional: Subsequent loads
 
 squared.setFramework(android, { loadAs: 'android-example' });
-
 ```
 
 ### ALL: Public Properties and Methods
@@ -310,7 +309,6 @@ fromElement(element: HTMLElement, cache?: boolean) // cache: default "false"
 Packaging methods will return a Promise and require either node-express or squared-apache installed. These features are not supported when the framework is VDOM.
 
 ```javascript
-
 saveToArchive(filename?: string, options?: {}) // save entire project as a new archive
 createFrom(format: string, options: {}) // create new archive from only RequestAsset[]
 
@@ -492,7 +490,7 @@ squared.extend({
     addEvent: function(eventName, callback) {
         this.element.addEventListener(eventName, callback);
     }
-}, 2);
+});
 
 const body = await squared.fromElement(document.body);
 body.altId = 5; // body.altId: 6

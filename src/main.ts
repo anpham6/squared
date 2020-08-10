@@ -101,6 +101,7 @@ async function findElementAsync(element: HTMLElement) {
 }
 
 const checkWritable = (app: Undef<Main>): app is Main => app ? !app.initializing && app.length > 0 : false;
+const checkFrom = (value: string, options: FileActionOptions) => checkWritable(main) && util.isString(value) && util.isPlainObject<FileActionOptions>(options) && options.assets && options.assets.length > 0;
 
 export function setHostname(value: string) {
     if (main) {
@@ -319,9 +320,9 @@ export function extend(functionMap: ExtensionPrototypeData, value = 0) {
 }
 
 export function get(...elements: (Element | string)[]) {
-    const result = new Map<Element, Node[]>();
-    const length = elements.length;
     if (main) {
+        const result = new Map<Element, Node[]>();
+        const length = elements.length;
         for (const sessionId of main.session.active.keys()) {
             let i = 0;
             while (i < length) {
@@ -342,8 +343,9 @@ export function get(...elements: (Element | string)[]) {
                 }
             }
         }
+        return length <= 1 ? result.size === 1 ? result.values().next().value as Node[] : undefined : result;
     }
-    return length <= 1 ? result.size === 1 ? result.values().next().value as Node : undefined : result;
+    return undefined;
 }
 
 export function latest() {
@@ -369,45 +371,29 @@ export function ready() {
 export function close() {
     if (checkWritable(main)) {
         main.finalize();
+        return true;
     }
+    return false;
 }
 
 export function copyToDisk(value: string, options?: FileActionOptions) {
-    if (checkWritable(main) && util.isString(value)) {
-        main.finalize();
-        return main.copyToDisk(value, options);
-    }
-    return session.frameworkNotInstalled();
+    return util.isString(value) && close() ? main!.copyToDisk(value, options) : session.frameworkNotInstalled();
 }
 
 export function appendToArchive(value: string, options?: FileActionOptions) {
-    if (checkWritable(main) && util.isString(value)) {
-        main.finalize();
-        return main.appendToArchive(value, options);
-    }
-    return session.frameworkNotInstalled();
+    return util.isString(value) && close() ? main!.appendToArchive(value, options) : session.frameworkNotInstalled();
 }
 
 export function saveToArchive(value?: string, options?: FileActionOptions) {
-    if (checkWritable(main)) {
-        main.finalize();
-        return main.saveToArchive(value, options);
-    }
-    return session.frameworkNotInstalled();
+    return close() ? main!.saveToArchive(value, options) : session.frameworkNotInstalled();
 }
 
 export function createFrom(value: string, options: FileActionOptions) {
-    if (checkWritable(main) && util.isString(value) && util.isPlainObject<FileActionOptions>(options) && options.assets?.length) {
-        return main.createFrom(value, options);
-    }
-    return session.frameworkNotInstalled();
+    return checkFrom(value, options) ? main!.createFrom(value, options) : session.frameworkNotInstalled();
 }
 
 export function appendFromArchive(value: string, options: FileActionOptions) {
-    if (checkWritable(main) && util.isString(value) && util.isPlainObject<FileActionOptions>(options) && options.assets?.length) {
-        return main.appendFromArchive(value, options);
-    }
-    return session.frameworkNotInstalled();
+    return checkFrom(value, options) ? main!.appendFromArchive(value, options) : session.frameworkNotInstalled();
 }
 
 export function getElementById(value: string, cache = true) {
@@ -441,9 +427,7 @@ export function querySelectorAll(value: string, cache = true) {
             else if (length === 1) {
                 return util.promisify<Node[]>(findElementAsync)(query[0] as HTMLElement);
             }
-            else {
-                return main.parseDocument(...Array.from(query) as HTMLElement[]) as Promise<Node[]>;
-            }
+            return main.parseDocument(...Array.from(query) as HTMLElement[]) as Promise<Node[]>;
         }
     }
     return Promise.resolve([]);

@@ -2121,12 +2121,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get textAlignLast() {
         if (!this.inlineStatic) {
             const value = this.cssAscend('textAlignLast', { startSelf: true });
-            if (value === 'auto') {
+            if (value === '' || value === 'auto') {
                 return '';
             }
             const rtl = this.dir === 'rtl';
             let valid: boolean;
-            switch (this.cssAscend('textAlign', { startSelf: true })) {
+            switch (this.css('textAlign')) {
                 case 'left':
                     valid = !(value === 'left' || value === (rtl ? 'end' : 'start'));
                     break;

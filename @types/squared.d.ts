@@ -16,10 +16,10 @@ export function appendToArchive(value: string, options?: PlainObject): Promise<P
 export function saveToArchive(value?: string, options?: PlainObject): Promise<PlainObject | void>;
 export function createFrom(value: string, options: PlainObject): Promise<PlainObject | void>;
 export function appendFromArchive(value: string, options: PlainObject): Promise<PlainObject | void>;
-export function get(...elements: (string | Element)[]): Undef<Node> | Map<Element, Node[]>;
+export function get(...elements: (string | Element)[]): Undef<Node[] | Map<Element, Node[]>>;
 export function latest(): string;
 export function ready(): boolean;
-export function close(): void;
+export function close(): boolean;
 export function reset(): void;
 export function getElementById(value: string, cache?: boolean): Promise<Null<Node>>;
 export function querySelector(value: string, cache?: boolean): Promise<Null<Node>>;

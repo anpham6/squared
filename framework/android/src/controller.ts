@@ -2257,7 +2257,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             let textIndent = 0,
                 rightAligned: Undef<boolean>,
                 centerAligned: Undef<boolean>;
-            switch ((!node.naturalElement && children[0].actualParent || node).cssAscend('textAlign', { initial: true, startSelf: true })) {
+            switch ((!node.naturalElement && children[0].actualParent || node).cssAscend('textAlign', { startSelf: true })) {
                 case 'center':
                     centerAligned = true;
                     break;
