@@ -64,6 +64,11 @@
       }
     },
     "js": {
+      "@babel/core": {
+        "es5": {
+          "presets": ["@babel/preset-env"]
+        }
+      },
       "prettier": {
         "beautify": {
           "parser": "babel",

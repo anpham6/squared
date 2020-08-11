@@ -8,7 +8,7 @@
     "express-r": "node ./serve.js --disk-read --unc-read",
     "express-w": "node ./serve.js --disk-write --unc-write",
     "express-rw": "node ./serve.js --access-all",
-    "install-chrome": "npm i terser@4.8.0 && npm i prettier && npm i clean-css && npm i html-minifier-terser",
+    "install-chrome": "npm i @babel/core --save-dev && npm i @babel/preset-env --save-dev && npm i terser@4.8.0 --save-dev && npm i prettier --save-dev && npm i clean-css --save-dev && npm i html-minifier-terser --save-dev",
     "watch": "tsc -w -p ./config/tsconfig.dev.json",
     "lint": "eslint **/*.ts --no-ignore",
     "bundles": "node bundle.js -f android -o ./dist/bundles/squared.android.bundle.$npm_package_version.js && node bundle.js -f android -m svg -o ./dist/bundles/squared+svg.android.bundle.$npm_package_version.js && node bundle.js -f android -e android.widget.* -o ./dist/bundles/squared.android+widget.bundle.$npm_package_version.js && node bundle.js -f android -m svg -e android.widget.* -o ./dist/bundles/squared+svg.android+widget.bundle.$npm_package_version.js && node bundle.js -f chrome -o ./dist/bundles/squared.chrome.bundle.$npm_package_version.js && node bundle.js -f chrome -m svg -o ./dist/bundles/squared+svg.chrome.bundle.$npm_package_version.js && node bundle.js -f vdom -o ./dist/bundles/squared.vdom.bundle.$npm_package_version.js && node bundle.js -f vdom -m svg -o ./dist/bundles/squared+svg.vdom.bundle.$npm_package_version.js && node bundle.js -f vdom-lite -o ./dist/bundles/squared.vdom-lite.bundle.$npm_package_version.js",
@@ -108,6 +108,8 @@
     "yargs": "^15.4.1"
   },
   "devDependencies": {
+    "@babel/core": "^7.11.1",
+    "@babel/preset-env": "^7.11.0",
     "@types/archiver": "^3.1.0",
     "@types/cors": "^2.8.7",
     "@types/csv-parse": "^1.2.2",
@@ -122,8 +124,8 @@
     "@types/request": "^2.48.5",
     "@types/uuid": "^8.0.1",
     "@types/yargs": "^15.0.5",
-    "@typescript-eslint/eslint-plugin": "^3.8.0",
-    "@typescript-eslint/parser": "^3.8.0",
+    "@typescript-eslint/eslint-plugin": "^3.9.0",
+    "@typescript-eslint/parser": "^3.9.0",
     "clean-css": "^4.2.3",
     "csv-parse": "^4.12.0",
     "diff": "^4.0.2",

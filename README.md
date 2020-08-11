@@ -762,16 +762,18 @@ JS and CSS files can be optimized further using these settings (node-express):
 
 * beautify
 * minify
+* es5 (Babel)
 * custom name
 
 You can also define your own optimizations in squared.settings.json:
 
-* npm i terser@4.8 -> https://github.com/terser/terser (<b>NOTE</b>: Incompatible with 5.0+)
-* npm i prettier -> https://github.com/prettier/prettier
-* npm i clean-css -> https://github.com/jakubpawlowicz/clean-css
-* npm i html-minifier-terser -> https://github.com/DanielRuf/html-minifier-terser
+* npm i @babel/core --save-dev && npm i @babel/preset-env --save-dev -> https://github.com/babel/babel
+* npm i terser@4.8 --save-dev -> https://github.com/terser/terser (<b>NOTE</b>: Incompatible with 5.0+)
+* npm i prettier --save-dev -> https://github.com/prettier/prettier
+* npm i clean-css --save-dev -> https://github.com/jakubpawlowicz/clean-css
+* npm i html-minifier-terser --save-dev -> https://github.com/DanielRuf/html-minifier-terser
 
-These plugins are not included with the default installation. You have to manually install them since this feature is only relevant to the Chrome framework [<b>npm run install-chrome</b>]. You can also use other non-builtin minifiers by defining a custom string-based synchronous function which are stored inside the external section.
+These particular plugins can be configured using a plain object literal. You have to manually install these packages [<b>npm run install-chrome</b>] since this feature is only relevant to the Chrome framework. Transpiling with Babel is also configurable with a .babelrc file in the base folder for any presets and additional settings. Other non-builtin minifiers can similarly be applied by defining a custom string-based synchronous function.
 
 external = category -> npm package name -> custom function name
 
@@ -782,6 +784,9 @@ external = category -> npm package name -> custom function name
     "js": {
       "terser": {
         "minify-example": "const options = { keep_classnames: true }; return context.minify(value, options).code;" // arguments are always 'context' and 'value'
+      },
+      "@babel/core": {
+        "es5-example": "function(context, value) { const options = { presets: ['@babel/preset-env'] }; return context.transformSync(value, options).code; }" // options: https://babeljs.io/docs/en/options
       }
     },
     "css": {
@@ -790,6 +795,11 @@ external = category -> npm package name -> custom function name
       }
     }
   }
+}
+
+// .babelrc
+{
+  "presets": ["@babel/preset-env"]
 }
 ```
 

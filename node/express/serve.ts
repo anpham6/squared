@@ -19,8 +19,7 @@ function promisify<T = unknown>(fn: FunctionType<any>): FunctionType<Promise<T>>
     return (...args: any[]) => {
         return new Promise((resolve, reject) => {
             try {
-                const result: T = fn.call(null, ...args);
-                resolve(result);
+                resolve(fn.call(null, ...args));
             }
             catch (err) {
                 reject(err);
@@ -715,6 +714,12 @@ let Node: serve.INode,
                                     keep_classnames: true
                                 };
                                 break;
+                            case 'es5':
+                                module = '@babel/core';
+                                options = {
+                                    presets: ['@babel/preset-env']
+                                };
+                                break;
                         }
                     }
                     try {
@@ -744,6 +749,17 @@ let Node: serve.INode,
                                 }
                                 case 'terser': {
                                     const result = require('terser').minify(value, options).code;
+                                    if (result) {
+                                        if (j === length - 1) {
+                                            return result;
+                                        }
+                                        value = result;
+                                        valid = true;
+                                    }
+                                    break;
+                                }
+                                case '@babel/core': {
+                                    const result = require('@babel/core').transformSync(value, options).code;
                                     if (result) {
                                         if (j === length - 1) {
                                             return result;
@@ -832,8 +848,9 @@ let Node: serve.INode,
                 case '.jpg':
                 case '.jpeg':
                     return true;
+                default:
+                    return false;
             }
-            return false;
         }
         parseResizeMode(value: string) {
             const match = /\(\s*(\d+)\s*x\s*(\d+)(?:\s*#\s*(contain|cover|scale))?\s*\)/.exec(value);
@@ -1678,7 +1695,6 @@ class FileManager implements serve.IFileManager {
     }
     transformCss(file: ExpressAsset, content: string) {
         const baseUrl = file.uri!;
-        let result: Undef<string>;
         if (this.requestMain && Express.fromSameOrigin(this.requestMain.uri!, baseUrl)) {
             const assets = this.assets;
             for (const item of assets) {
@@ -1693,13 +1709,14 @@ class FileManager implements serve.IFileManager {
                 }
             }
             const pattern = /[uU][rR][lL]\(\s*([^)]+)\s*\)/g;
-            let match: Null<RegExpExecArray>;
+            let output: Undef<string>,
+                match: Null<RegExpExecArray>;
             while (match = pattern.exec(content)) {
                 const url = match[1].replace(/^["']\s*/, '').replace(/\s*["']$/, '');
                 if (!Node.isFileURI(url) || Express.fromSameOrigin(baseUrl, url)) {
                     let location = this.getRelativeUrl(file, url);
                     if (location) {
-                        result = (result || content).replace(match[0], `url(${location})`);
+                        output = (output || content).replace(match[0], `url(${location})`);
                     }
                     else {
                         location = Express.resolvePath(url, this.requestMain.uri!);
@@ -1708,7 +1725,7 @@ class FileManager implements serve.IFileManager {
                             if (asset) {
                                 location = this.getRelativeUrl(file, location);
                                 if (location) {
-                                    result = (result || content).replace(match[0], `url(${location})`);
+                                    output = (output || content).replace(match[0], `url(${location})`);
                                 }
                             }
                         }
@@ -1718,12 +1735,13 @@ class FileManager implements serve.IFileManager {
                     const asset = assets.find(item => item.uri === url && !item.excluded);
                     if (asset) {
                         const count = file.pathname.split(/[\\/]/).length;
-                        result = (result || content).replace(match[0], `url(${(count > 0 ? '../'.repeat(count) : '') + Express.getFullUri(asset)})`);
+                        output = (output || content).replace(match[0], `url(${(count > 0 ? '../'.repeat(count) : '') + Express.getFullUri(asset)})`);
                     }
                 }
             }
+            return output;
         }
-        return result;
+        return undefined;
     }
     writeBuffer(assets: ExpressAsset[], file: ExpressAsset, filepath: string) {
         const png = Image.findCompress(file.compress);

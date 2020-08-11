@@ -9,7 +9,7 @@ type AttributeMap = ObjectMap<number[]>;
 type TagNameMap = ObjectMap<StyleAttribute[]>;
 type NodeStyleMap = ObjectMap<string[]>;
 
-const { capitalize, convertInt, convertWord, hasKeys, plainMap, spliceArray, trimBoth } = squared.lib.util;
+const { capitalize, convertInt, convertWord, hasKeys, replaceMap, spliceArray, trimBoth } = squared.lib.util;
 const { truncate } = squared.lib.math;
 
 const { NODE_RESOURCE } = squared.base.lib.enumeration;
@@ -344,7 +344,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                             }
                             for (const attr in combined) {
                                 const attrs = Array.from(combined[attr]).sort().join(';');
-                                const ids = plainMap(attr.split(','), value => parseInt(value));
+                                const ids = replaceMap(attr.split(','), value => parseInt(value));
                                 deleteStyleAttribute(sorted, attrs, ids);
                                 styleTag[attrs] = ids;
                             }
