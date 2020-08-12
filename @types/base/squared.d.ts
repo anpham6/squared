@@ -77,12 +77,12 @@ declare module "base" {
     class Application<T extends Node> implements FileActionAsync {
         static readonly KEY_NAME: string;
         userSettings: UserSettings;
+        builtInExtensions: Map<string, Extension<T>>;
         closed: boolean;
         readonly systemName: string;
         readonly framework: number;
         readonly elementMap: Map<Element, T>;
         readonly session: AppSession<T>;
-        readonly builtInExtensions: ObjectMap<Extension<T>>;
         readonly extensions: Extension<T>[];
         readonly initializing: boolean;
         readonly Node: Constructor<T>;
@@ -126,9 +126,9 @@ declare module "base" {
 
     class ApplicationUI<T extends NodeUI> extends Application<T> {
         userSettings: UserSettingsUI;
+        builtInExtensions: Map<string, ExtensionUI<T>>;
         readonly fileHandler?: File<T>;
         readonly session: AppSessionUI<T>;
-        readonly builtInExtensions: ObjectMap<ExtensionUI<T>>;
         readonly extensions: ExtensionUI<T>[];
         conditionElement(element: HTMLElement, sessionId: string, cacadeAll?: boolean, pseudoElt?: string): boolean;
         useElement(element: HTMLElement): boolean;

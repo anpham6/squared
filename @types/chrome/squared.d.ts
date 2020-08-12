@@ -9,7 +9,7 @@ declare interface ChromeFramework<T extends Node> extends squared.base.AppFramew
 declare namespace base {
     class Application<T extends Node> extends squared.base.Application<T> {
         userSettings: ChromeUserSettings;
-        readonly builtInExtensions: ObjectMap<Extension<T>>;
+        builtInExtensions: Map<string, Extension<T>>;
         readonly extensions: Extension<T>[];
         readonly controllerHandler: Controller<T>;
         readonly resourceHandler: Resource<T>;

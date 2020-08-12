@@ -10,18 +10,16 @@ const { equal } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
 const { capitalize, cloneObject, convertWord, hasBit, hasKeys, isArray, isEmptyString, iterateArray, searchObject, withinRange } = squared.lib.util;
 
-const CSS_SPACING = new Map<number, number>(
-    [
-        [BOX_STANDARD.MARGIN_TOP, 0],
-        [BOX_STANDARD.MARGIN_RIGHT, 1],
-        [BOX_STANDARD.MARGIN_BOTTOM, 2],
-        [BOX_STANDARD.MARGIN_LEFT, 3],
-        [BOX_STANDARD.PADDING_TOP, 4],
-        [BOX_STANDARD.PADDING_RIGHT, 5],
-        [BOX_STANDARD.PADDING_BOTTOM, 6],
-        [BOX_STANDARD.PADDING_LEFT, 7]
-    ]
-);
+const CSS_SPACING = new Map<number, number>([
+    [BOX_STANDARD.MARGIN_TOP, 0],
+    [BOX_STANDARD.MARGIN_RIGHT, 1],
+    [BOX_STANDARD.MARGIN_BOTTOM, 2],
+    [BOX_STANDARD.MARGIN_LEFT, 3],
+    [BOX_STANDARD.PADDING_TOP, 4],
+    [BOX_STANDARD.PADDING_RIGHT, 5],
+    [BOX_STANDARD.PADDING_BOTTOM, 6],
+    [BOX_STANDARD.PADDING_LEFT, 7]
+]);
 const CSS_SPACINGINDEX = [BOX_STANDARD.MARGIN_TOP, BOX_STANDARD.MARGIN_RIGHT, BOX_STANDARD.MARGIN_BOTTOM, BOX_STANDARD.MARGIN_LEFT, BOX_STANDARD.PADDING_TOP, BOX_STANDARD.PADDING_RIGHT, BOX_STANDARD.PADDING_BOTTOM, BOX_STANDARD.PADDING_LEFT];
 const REGEXP_PARSEUNIT = /(?:%|vw|vh|vmin|vmax)$/;
 
@@ -385,7 +383,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     nodes[n++] = item;
                 }
             }
-            if (n) {
+            if (n > 0) {
                 nodes.length = n;
                 const siblings = [nodes[0]];
                 let x = 1,

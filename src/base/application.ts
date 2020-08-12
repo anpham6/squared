@@ -37,7 +37,7 @@ function parseSrcSet(resourceHandler: squared.base.Resource<Node>, value: string
 export default abstract class Application<T extends Node> implements squared.base.Application<T> {
     public static readonly KEY_NAME = 'squared.application';
 
-    public builtInExtensions: ObjectMap<squared.base.Extension<T>> = {};
+    public builtInExtensions!: Map<string, squared.base.Extension<T>>;
     public extensions: squared.base.Extension<T>[] = [];
     public closed = false;
     public readonly Node: Constructor<T>;

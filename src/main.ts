@@ -161,15 +161,15 @@ export function setFramework(value: Framework, options?: FrameworkOptions) {
         const { builtInExtensions, extensions } = main;
         extensions.length = 0;
         for (const namespace of settings.builtInExtensions) {
-            const ext = builtInExtensions[namespace];
+            const ext = builtInExtensions.get(namespace);
             if (ext) {
                 includeExtension(extensions, ext);
             }
             else {
                 const packaage = namespace + '.';
-                for (const name in builtInExtensions) {
+                for (const [name, extension] of builtInExtensions.entries()) {
                     if (name.startsWith(packaage)) {
-                        includeExtension(extensions, builtInExtensions[name]);
+                        includeExtension(extensions, extension);
                     }
                 }
             }
@@ -223,7 +223,7 @@ export function parseDocument(...elements: (HTMLElement | string)[]) {
 
 export function include(value: ExtensionRequest, options?: FrameworkOptions) {
     if (typeof value === 'string') {
-        value = main?.builtInExtensions[value] || retrieve(value);
+        value = main?.builtInExtensions.get(value) || retrieve(value);
     }
     if (value instanceof squared.base.Extension) {
         extensionsExternal.add(value);

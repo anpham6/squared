@@ -777,6 +777,10 @@ These particular plugins can be configured using a plain object literal. You hav
 
 external = category -> npm package name -> custom function name
 
+* Function object
+* file relative to serve.js
+* function closure
+
 ```javascript
 // squared.settings.json
 {
@@ -786,12 +790,12 @@ external = category -> npm package name -> custom function name
         "minify-example": "const options = { keep_classnames: true }; return context.minify(value, options).code;" // arguments are always 'context' and 'value'
       },
       "@babel/core": {
-        "es5-example": "function(context, value) { const options = { presets: ['@babel/preset-env'] }; return context.transformSync(value, options).code; }" // options: https://babeljs.io/docs/en/options
+        "es5-example": "./es5.js" // startsWith './'
       }
     },
     "css": {
-      "clean-css": {
-        "beautify-example": "function(clean_css, value) { return new clean_css({ level: 1 }).minify(value).styles; }"
+      "node-sass": { // npm i node-sass --save-dev
+        "sass-example": "function (sass, value) { return sass.renderSync({ data: value }, functions: {}); }" // first transpiler in chain
       }
     }
   }
@@ -801,9 +805,15 @@ external = category -> npm package name -> custom function name
 {
   "presets": ["@babel/preset-env"]
 }
+
+// es5.js
+function (context, value) {
+    const options = { presets: ['@babel/preset-env'] }; // https://babeljs.io/docs/en/options
+    return context.transformSync(value, options).code;
+}
 ```
 
-JS and CSS files can be bundled together with the "saveAs" or "exportAs" action. Multiple transformations per asset are supported using the "+" symbol to chain them together. The "preserve" command will prevent unused styles from being deleted.
+JS and CSS files can be bundled together with the "saveAs" or "exportAs" action. Multiple transformations per asset can be chained together using the "+" symbol. The "preserve" command will prevent unused styles from being deleted.
 
 ```xml
 <link data-chrome-file="saveAs:css/prod.css::beautify::preserve" rel="stylesheet" href="css/dev.css" />

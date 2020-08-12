@@ -29,7 +29,7 @@ export default class ExtensionManager<T extends squared.base.Node> implements sq
                     const item = dependencies[i++];
                     if (item.preload) {
                         if (!this.retrieve(item.name)) {
-                            const extension = application.builtInExtensions[item.name];
+                            const extension = application.builtInExtensions.get(item.name);
                             if (extension) {
                                 this.include(extension);
                             }
@@ -67,7 +67,7 @@ export default class ExtensionManager<T extends squared.base.Node> implements sq
                 return ext;
             }
         }
-        return checkBuiltIn && this.application.builtInExtensions[name] || null;
+        return checkBuiltIn && this.application.builtInExtensions.get(name) || null;
     }
 
     public optionValue<T = unknown>(name: string, attr: string, fallback = undefined): Undef<T> {

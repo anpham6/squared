@@ -175,7 +175,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         extensionMap: new Map<number, ExtensionUI<T>[]>(),
         clearMap: new Map<T, string>()
     };
-    public readonly builtInExtensions: ObjectMap<ExtensionUI<T>> = {};
+    public builtInExtensions!: Map<string, ExtensionUI<T>>;
     public readonly extensions: ExtensionUI<T>[] = [];
     public readonly controllerHandler!: ControllerUI<T>;
     public readonly resourceHandler!: ResourceUI<T>;

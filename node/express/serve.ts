@@ -488,6 +488,14 @@ let Node: serve.INode,
                         else if (typeof options === 'string') {
                             options = options.trim();
                             if (options !== '') {
+                                if (options.startsWith('./')) {
+                                    try {
+                                        options = fs.readFileSync(path.resolve(options)).toString('utf8').trim();
+                                    }
+                                    catch {
+                                        continue;
+                                    }
+                                }
                                 return [module, options.startsWith('function') ? eval('(' + options + ')') as FunctionType<string> : new Function('context', 'value', options)];
                             }
                             break;

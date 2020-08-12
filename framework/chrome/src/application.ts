@@ -1,6 +1,6 @@
 export default class Application<T extends squared.base.Node> extends squared.base.Application<T> implements chrome.base.Application<T> {
     public userSettings!: ChromeUserSettings;
-    public readonly builtInExtensions: ObjectMap<chrome.base.Extension<T>> = {};
+    public builtInExtensions!: Map<string, chrome.base.Extension<T>>;
     public readonly extensions: chrome.base.Extension<T>[] = [];
     public readonly controllerHandler!: chrome.base.Controller<T>;
     public readonly resourceHandler!: chrome.base.Resource<T>;

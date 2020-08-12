@@ -148,17 +148,17 @@ const appBase: chrome.ChromeFramework<Node> = {
         application = new Application<Node>(framework, squared.base.Node, Controller, Resource, squared.base.ExtensionManager);
         file = new File();
         application.resourceHandler.fileHandler = file;
-        Object.assign(application.builtInExtensions, {
-            [EC.COMPRESS_BROTLI]: new CompressBrotli(EC.COMPRESS_BROTLI, framework),
-            [EC.COMPRESS_GZIP]: new CompressGzip(EC.COMPRESS_GZIP, framework),
-            [EC.COMPRESS_JPEG]: new CompressJpeg(EC.COMPRESS_JPEG, framework),
-            [EC.COMPRESS_PNG]: new CompressPng(EC.COMPRESS_PNG, framework),
-            [EC.CONVERT_BMP]: new ConvertBmp(EC.CONVERT_BMP, framework),
-            [EC.CONVERT_GIF]: new ConvertGif(EC.CONVERT_GIF, framework),
-            [EC.CONVERT_JPEG]: new ConvertJpeg(EC.CONVERT_JPEG, framework),
-            [EC.CONVERT_PNG]: new ConvertPng(EC.CONVERT_PNG, framework),
-            [EC.CONVERT_TIFF]: new ConvertTiff(EC.CONVERT_TIFF, framework)
-        });
+        application.builtInExtensions = new Map<string, chrome.base.Extension<Node>>([
+            [EC.COMPRESS_BROTLI, new CompressBrotli(EC.COMPRESS_BROTLI, framework)],
+            [EC.COMPRESS_GZIP, new CompressGzip(EC.COMPRESS_GZIP, framework)],
+            [EC.COMPRESS_JPEG, new CompressJpeg(EC.COMPRESS_JPEG, framework)],
+            [EC.COMPRESS_PNG, new CompressPng(EC.COMPRESS_PNG, framework)],
+            [EC.CONVERT_BMP, new ConvertBmp(EC.CONVERT_BMP, framework)],
+            [EC.CONVERT_GIF, new ConvertGif(EC.CONVERT_GIF, framework)],
+            [EC.CONVERT_JPEG, new ConvertJpeg(EC.CONVERT_JPEG, framework)],
+            [EC.CONVERT_PNG, new ConvertPng(EC.CONVERT_PNG, framework)],
+            [EC.CONVERT_TIFF, new ConvertTiff(EC.CONVERT_TIFF, framework)]
+        ]);
         initialized = true;
         return {
             application,
