@@ -67,10 +67,7 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
     }
 
     public addAlign(value: number) {
-        if (!hasBit(this.alignmentType, value)) {
-            this.alignmentType |= value;
-        }
-        return this.alignmentType;
+        return this.alignmentType |= value;
     }
 
     public hasAlign(value: number) {
@@ -81,10 +78,7 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
         if (this.renderType === undefined) {
             this.renderType = 0;
         }
-        if (!hasBit(this.renderType, value)) {
-            this.renderType |= value;
-        }
-        return this.renderType;
+        return this.renderType |= value;
     }
 
     public retainAs(list: T[]) {
