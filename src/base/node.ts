@@ -215,9 +215,8 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
     if (pseudoList) {
         const parent = child.actualParent as T;
         const tagName = child.tagName;
-        let i = 0;
-        while (i < pseudoList.length) {
-            const pseudo = pseudoList[i++];
+        for (let i = 0, length = pseudoList.length; i < length; ++i) {
+            const pseudo = pseudoList[i];
             switch (pseudo) {
                 case ':first-child':
                 case ':nth-child(1)':
@@ -238,7 +237,7 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
                     break;
                 case ':only-of-type': {
                     const children = parent.naturalElements;
-                    for (let j = 0, k = 0, length = children.length; j < length; ++j) {
+                    for (let j = 0, k = 0, q = children.length; j < q; ++j) {
                         if (children[j].tagName === tagName && ++k > 1) {
                             return false;
                         }
@@ -247,7 +246,7 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
                 }
                 case ':first-of-type': {
                     const children = parent.naturalElements;
-                    for (let j = 0, length = children.length; j < length; ++j) {
+                    for (let j = 0, q = children.length; j < q; ++j) {
                         const item = children[j];
                         if (item.tagName === tagName) {
                             if (item !== child) {
@@ -549,9 +548,8 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
         }
     }
     if (notList) {
-        let i = 0;
-        while (i < notList.length) {
-            const not = notList[i++];
+        for (let i = 0, length = notList.length; i < length; ++i) {
+            const not = notList[i];
             const notData: QueryData = {};
             switch (not.charAt(0)) {
                 case '.':
@@ -600,18 +598,16 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
     }
     if (classList) {
         const elementList = (child.element as HTMLElement).classList;
-        let i = 0;
-        while (i < classList.length) {
-            if (!elementList.contains(classList[i++])) {
+        for (let i = 0, length = classList.length; i < length; ++i) {
+            if (!elementList.contains(classList[i])) {
                 return false;
             }
         }
     }
     if (attrList) {
         const attributes = child.attributes;
-        let i = 0;
-        while (i < attrList.length) {
-            const attr = attrList[i++];
+        for (let i = 0, length = attrList.length; i < length; ++i) {
+            const attr = attrList[i];
             let value: Undef<string>;
             if (attr.endsWith) {
                 const pattern = new RegExp(`^(?:.+:)?${attr.key}$`);
@@ -679,10 +675,8 @@ function ascendQuerySelector(node: T, selectors: QueryData[], i: number, index: 
     const length = selectors.length;
     const last = index === length - 1;
     const next: T[] = [];
-    const q = nodes.length;
-    let j = 0;
-    while (j < q) {
-        const child = nodes[j++];
+    for (let j = 0, q = nodes.length; j < q; ++j) {
+        const child = nodes[j];
         if (adjacent) {
             const parent = child.actualParent as T;
             if (adjacent === '>') {
@@ -704,10 +698,8 @@ function ascendQuerySelector(node: T, selectors: QueryData[], i: number, index: 
                         break;
                     }
                     case '~': {
-                        const r = children.length;
-                        let k = 0;
-                        while (k < r) {
-                            const sibling = children[k++];
+                        for (let k = 0, r = children.length; k < r; ++k) {
+                            const sibling = children[k];
                             if (sibling === child) {
                                 break;
                             }
@@ -854,9 +846,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         const items = Array.from(element.style);
                         const length = items.length;
                         if (length > 0) {
-                            let i = 0;
-                            while (i < length) {
-                                const attr = items[i++];
+                            for (let i = 0; i < length; ++i) {
+                                const attr = items[i];
                                 styleMap[convertCamelCase(attr)] = element.style.getPropertyValue(attr);
                             }
                         }
@@ -915,9 +906,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         const length = attrs.length;
         if (length > 0) {
             const cached = this._cached;
-            let i = 0;
-            while (i < length) {
-                const attr = attrs[i++];
+            for (let i = 0; i < length; ++i) {
+                const attr = attrs[i];
                 switch (attr) {
                     case 'position':
                         if (!this._preferInitial) {
@@ -1009,14 +999,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             parent.resetBounds();
             const queryMap = parent.queryMap;
             if (queryMap) {
-                const q = queryMap.length;
-                let i = 0, j: number;
-                while (i < q) {
-                    const children = queryMap[i++];
-                    const r = children.length;
-                    j = 0;
-                    while (j < r) {
-                        children[j++].resetBounds();
+                for (let i = 0, q = queryMap.length; i < q; ++i) {
+                    const children = queryMap[i];
+                    for (let j = 0, r = children.length; j < r; ++j) {
+                        children[j].resetBounds();
                     }
                 }
             }
@@ -1081,8 +1067,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         const recurse = (parent: T) => {
             let result: T[] = [];
             const children = parent.children;
-            const length = children.length;
-            for (let i = 0; i < length; ++i) {
+            for (let i = 0, length = children.length; i < length; ++i) {
                 const item = children[i];
                 if (error && error(item) || item === excluding) {
                     invalid = true;
@@ -1393,18 +1378,16 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     public cssCopy(node: T, ...attrs: string[]) {
         const styleMap = this._styleMap;
-        let i = 0;
-        while (i < attrs.length) {
-            const attr = attrs[i++];
+        for (let i = 0, length = attrs.length; i < length; ++i) {
+            const attr = attrs[i];
             styleMap[attr] = node.css(attr);
         }
     }
 
     public cssCopyIfEmpty(node: T, ...attrs: string[]) {
         const styleMap = this._styleMap;
-        let i = 0;
-        while (i < attrs.length) {
-            const attr = attrs[i++];
+        for (let i = 0, length = attrs.length; i < length; ++i) {
+            const attr = attrs[i];
             if (!hasValue(styleMap[attr])) {
                 styleMap[attr] = node.css(attr);
             }
@@ -1414,18 +1397,16 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     public cssAsTuple(...attrs: string[]) {
         const length = attrs.length;
         const result: string[] = new Array(length);
-        let i = 0;
-        while (i < length) {
-            result[i] = this.css(attrs[i++]);
+        for (let i = 0; i < length; ++i) {
+            result[i] = this.css(attrs[i]);
         }
         return result;
     }
 
     public cssAsObject(...attrs: string[]) {
         const result: StringMap = {};
-        let i = 0;
-        while (i < attrs.length) {
-            const attr = attrs[i++];
+        for (let i = 0, length = attrs.length; i < length; ++i) {
+            const attr = attrs[i];
             result[attr] = this.css(attr);
         }
         return result;
@@ -1522,9 +1503,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     return false;
                 }
                 else if (Array.isArray(not)) {
-                    let i = 0;
-                    while (i < not.length) {
-                        if (value === not[i++]) {
+                    for (let i = 0, length = not.length; i < length; ++i) {
+                        if (value === not[i]) {
                             return false;
                         }
                     }
@@ -1669,9 +1649,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         let result: T[] = [];
         if (queryMap && resultCount !== 0) {
             const queries = parseSelectorText(value);
-            let i = 0, length = queries.length;
-            while (i < length) {
-                const query = queries[i++];
+            for (let i = 0, length = queries.length; i < length; ++i) {
+                const query = queries[i];
                 const selectors: QueryData[] = [];
                 let offset = -1;
                 if (query === '*') {
@@ -1822,28 +1801,25 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 if (customMap) {
                     offset = 0;
                 }
-                length = queryMap.length;
-                if (selectors.length > 0 && offset !== -1 && offset < length) {
+                const q = queryMap.length;
+                if (selectors.length > 0 && offset !== -1 && offset < q) {
                     const dataEnd = selectors.pop() as QueryData;
                     const lastEnd = selectors.length === 0;
                     const currentCount = result.length;
                     let pending: T[];
-                    if (dataEnd.all && length - offset === 1) {
+                    if (dataEnd.all && q - offset === 1) {
                         pending = queryMap[offset];
                     }
                     else {
                         pending = [];
-                        let j = offset;
-                        while (j < length) {
-                            const children = queryMap[j++];
+                        for (let j = offset; j < q; ++j) {
+                            const children = queryMap[j];
                             if (dataEnd.all) {
                                 pending = pending.concat(children);
                             }
                             else {
-                                const q = children.length;
-                                let k = 0;
-                                while (k < q) {
-                                    const node = children[k++];
+                                for (let k = 0, r = children.length; k < r; ++k) {
+                                    const node = children[k];
                                     if ((currentCount === 0 || !result.includes(node)) && validateQuerySelector(this, node, dataEnd, i, lastEnd)) {
                                         pending.push(node);
                                     }
@@ -1854,10 +1830,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     if (selectors.length > 0 && (dataEnd.adjacent || resultCount !== -Infinity)) {
                         selectors.reverse();
                         let count = currentCount;
-                        const r = pending.length;
-                        let j = 0;
-                        while (j < r) {
-                            const node = pending[j++];
+                        for (let j = 0, r = pending.length; j < r; ++j) {
+                            const node = pending[j];
                             if ((currentCount === 0 || !result.includes(node)) && ascendQuerySelector(this, selectors, i, 0, dataEnd.adjacent, [node])) {
                                 result.push(node);
                                 if (++count === resultCount) {
@@ -1878,12 +1852,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         }
                     }
                     else {
-                        const q = pending.length;
+                        const r = pending.length;
                         if (resultCount > 0) {
                             let count = currentCount;
-                            let j = 0;
-                            while (j < q) {
-                                const node = pending[j++];
+                            for (let j = 0; j < r; ++j) {
+                                const node = pending[j];
                                 if (!result.includes(node)) {
                                     result.push(node);
                                     if (++count === resultCount) {
@@ -1893,9 +1866,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             }
                         }
                         else {
-                            let j = 0;
-                            while (j < q) {
-                                const node = pending[j++];
+                            for (let j = 0; j < r; ++j) {
+                                const node = pending[j];
                                 if (!result.includes(node)) {
                                     result.push(node);
                                 }
@@ -2616,17 +2588,16 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     return this._textBounds = getRangeClientRect(this._element as Element) || null;
                 }
                 else if (this.length > 0) {
-                    const naturalChildren = this.naturalChildren;
-                    const length = naturalChildren.length;
+                    const children = this.naturalChildren;
+                    const length = children.length;
                     if (length > 0) {
                         let top = Infinity,
                             right = -Infinity,
                             bottom = -Infinity,
                             left = Infinity,
                             numberOfLines = 0;
-                        let i = 0;
-                        while (i < length) {
-                            const node = naturalChildren[i++];
+                        for (let i = 0; i < length; ++i) {
+                            const node = children[i];
                             if (node.textElement) {
                                 const rect = node.textBounds;
                                 if (rect) {
@@ -2970,10 +2941,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             result = {};
             if (this.styleElement) {
                 const attributes = this._element!.attributes;
-                const length = attributes.length;
-                let i = 0;
-                while (i < length) {
-                    const item = attributes.item(i++) as Attr;
+                for (let i = 0, length = attributes.length; i < length; ++i) {
+                    const item = attributes.item(i) as Attr;
                     result[item.name] = item.value;
                 }
             }

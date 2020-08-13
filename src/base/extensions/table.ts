@@ -365,8 +365,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         for (let i = 0; i < rowCount; ++i) {
             const tr = tableFilled[i];
             const length = tr.length;
-            let j = 0;
-            while (j < length) {
+            for (let j = 0; j < length; ) {
                 const td = tr[j];
                 const cellData = this.data.get(td) as TableCellData;
                 const columnWidth = mapWidth[j];

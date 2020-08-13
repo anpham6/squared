@@ -84,15 +84,11 @@ const FONT_STYLE = {
 
 function deleteStyleAttribute(sorted: AttributeMap[], attrs: string, ids: number[]) {
     const items = attrs.split(';');
-    const length = items.length;
-    const q = sorted.length;
-    let i = 0, j: number;
-    while (i < length) {
-        const value = items[i++];
+    for (let i = 0, length = items.length, q = sorted.length; i < length; ++i) {
+        const value = items[i];
         found: {
-            j = 0;
-            while (j < q) {
-                const data = sorted[j++];
+            for (let j = 0; j < q; ++j) {
+                const data = sorted[j];
                 for (const attr in data) {
                     if (attr === value) {
                         data[attr] = data[attr].filter(id => !ids.includes(id));
@@ -135,10 +131,8 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             const sorted: StyleList[] = [];
             const data = nameMap[tag];
             cache = cache.concat(data);
-            const length = data.length;
-            let i = 0;
-            while (i < length) {
-                let node = data[i++];
+            for (let i = 0, length = data.length; i < length; ++i) {
+                let node = data[i];
                 const stored = node.data<FontAttribute>(Resource.KEY_NAME, 'fontStyle')!;
                 const { id, companion } = node;
                 let { fontFamily, fontStyle, fontWeight } = stored;
@@ -161,9 +155,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                             createFont = true;
                         }
                         else {
-                            const font = fontStyle.startsWith('oblique')
-                                ? resource.getFont(value, 'italic') || resource.getFont(value, 'normal')
-                                : resource.getFont(value, fontStyle);
+                            const font = fontStyle.startsWith('oblique') ? resource.getFont(value, 'italic') || resource.getFont(value, 'normal') : resource.getFont(value, fontStyle);
                             if (font) {
                                 actualFontWeight = fontWeight;
                                 fontWeight = font.fontWeight.toString();
@@ -289,12 +281,9 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                     for (const attr in dataB) {
                                         const compare = dataB[attr];
                                         if (compare.length > 0) {
-                                            const q = ids.length;
-                                            let k = 0;
-                                            while (k < q) {
-                                                const id = ids[k++];
-                                                if (compare.includes(id)) {
-                                                    (found[attr] ?? (found[attr] = [])).push(id);
+                                            for (let k = 0, q = ids.length; k < q; ++k) {
+                                                if (compare.includes(ids[k])) {
+                                                    (found[attr] ?? (found[attr] = [])).push(ids[k]);
                                                 }
                                             }
                                         }
@@ -400,7 +389,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 }
                 return c <= d ? 1 : -1;
             });
-            for (let i = 0; i < styleData.length; ++i) {
+            for (let i = 0, length = styleData.length; i < length; ++i) {
                 styleData[i].name = capitalize(tag) + (i > 0 ? '_' + i : '');
             }
             resourceMap[tag] = styleData;
@@ -409,19 +398,14 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             for (const group of resourceMap[tag]) {
                 const ids = group.ids;
                 if (ids) {
-                    const length = ids.length;
-                    let i = 0;
-                    while (i < length) {
-                        const id = ids[i++];
-                        (nodeMap[id] ?? (nodeMap[id] = [])).push(group.name);
+                    for (let i = 0, length = ids.length; i < length; ++i) {
+                        (nodeMap[ids[i]] ?? (nodeMap[ids[i]] = [])).push(group.name);
                     }
                 }
             }
         }
-        const length = cache.length;
-        let i = 0;
-        while (i < length) {
-            const node = cache[i++];
+        for (let i = 0, length = cache.length; i < length; ++i) {
+            const node = cache[i];
             const styleData = nodeMap[node.id];
             if (styleData) {
                 if (styleData.length > 1) {
@@ -439,8 +423,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             const values = value.split('.');
             let parent = '',
                 items: Undef<StringValue[]>;
-            const q = values.length;
-            for (i = 0; i < q; ++i) {
+            for (let i = 0, q = values.length; i < q; ++i) {
                 const name = values[i];
                 const match = REGEXP_FONTNAME.exec(name);
                 if (match) {
@@ -458,10 +441,8 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         else {
                             if (items) {
                                 const styleItems = styleData.items as StringValue[];
-                                const r = styleItems.length;
-                                let j = 0;
-                                while (j < r) {
-                                    const item = styleItems[j++];
+                                for (let j = 0, r = styleItems.length; j < r; ++j) {
+                                    const item = styleItems[j];
                                     const key = item.key;
                                     const index = items.findIndex(previous => previous.key === key);
                                     if (index !== -1) {

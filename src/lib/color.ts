@@ -914,10 +914,8 @@ const clampOpacity = (value: number) => clamp(value) * 255;
 
 export function findColorName(value: string) {
     if (CACHE_COLORRESULT.size === 0) {
-        const length = COLOR_CSS3.length;
-        let i = 0;
-        while (i < length) {
-            const color = COLOR_CSS3[i++];
+        for (let i = 0, length = COLOR_CSS3.length; i < length; ++i) {
+            const color = COLOR_CSS3[i];
             CACHE_COLORRESULT.set(color.key, color);
         }
     }
@@ -930,10 +928,8 @@ export function findColorShade(value: string) {
         const hsl = convertHSLA(rgba);
         const result: ColorResult[] = [];
         let baseline = -1;
-        const length = COLOR_CSS3.length;
-        let i = 0;
-        while (i < length) {
-            const color = COLOR_CSS3[i++];
+        for (let i = 0, length = COLOR_CSS3.length; i < length; ++i) {
+            const color = COLOR_CSS3[i];
             if (color.value === value) {
                 return color;
             }
@@ -947,15 +943,15 @@ export function findColorShade(value: string) {
                 baseline = color.hsl.h;
             }
         }
-        const q = result.length;
-        if (q === 1) {
+        const length = result.length;
+        if (length === 1) {
             return result[0];
         }
-        else if (q > 1) {
+        else if (length > 1) {
             const total = hsl.l + hsl.s;
             let nearest = Infinity,
                 index = -1;
-            for (i = 0; i < q; ++i) {
+            for (let i = 0; i < length; ++i) {
                 const { l, s } = result[i].hsl;
                 const offset = Math.abs(total - (l + s));
                 if (offset < nearest) {
@@ -1090,9 +1086,8 @@ export function reduceRGBA(value: RGBA, percent: number, cacheName?: string) {
 
 export function getHexCode(...values: number[]) {
     let output = '';
-    let i = 0;
-    while (i < values.length) {
-        const rgb = Math.max(0, Math.min(values[i++], 255));
+    for (let i = 0, length = values.length; i < length; ++i) {
+        const rgb = Math.max(0, Math.min(values[i], 255));
         output += isNaN(rgb) ? '00' : STRING_HEX.charAt((rgb - (rgb % 16)) / 16) + STRING_HEX.charAt(rgb % 16);
     }
     return output;

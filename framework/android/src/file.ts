@@ -487,7 +487,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         const actionable = options.directory || options.filename;
         const result = {};
         const assets: FileAsset[] = [];
-        for (let i = 0; i < layouts.length; ++i) {
+        for (let i = 0, length = layouts.length; i < length; ++i) {
             const { content, filename, pathname } = layouts[i];
             result[filename] = [content];
             if (actionable) {
@@ -510,11 +510,8 @@ export default class File<T extends View> extends squared.base.File<T> implement
         const userSettings = this.userSettings;
         let result: FileAsset[] = [];
         if (assets) {
-            const length = assets.length;
-            let first = true;
-            let i = 0;
-            while (i < length) {
-                const item = assets[i++];
+            for (let i = 0, length = assets.length, first = true; i < length; ++i) {
+                const item = assets[i];
                 if (!item.uri) {
                     if (first) {
                         item.filename = userSettings.outputMainFileName;

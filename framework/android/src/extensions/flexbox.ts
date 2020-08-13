@@ -66,9 +66,8 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
         growShrinkType = 0,
         result = 0;
     const length = items.length;
-    let i = 0;
-    while (i < length) {
-        const item = items[i++];
+    for (let i = 0; i < length; ++i) {
+        const item = items[i];
         if (percent) {
             if (horizontal) {
                 if (item.innerMostWrapped.autoMargin.horizontal) {
@@ -90,9 +89,8 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
             maxDimension = 0,
             maxRatio = NaN,
             maxBasis: Undef<View>;
-        i = 0;
-        while (i < length) {
-            const item = items[i++].innerMostWrapped as View;
+        for (let i = 0; i < length; ++i) {
+            const item = items[i].innerMostWrapped as View;
             const { alignSelf, basis, shrink, grow } = item.flexbox;
             const dimension = item.bounds[attr];
             let growPercent: Undef<boolean>;
@@ -148,9 +146,8 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
         if (growShrinkType) {
             let q = groupBasis.length;
             if (q > 1) {
-                i = 0;
-                while (i < q) {
-                    const data = groupBasis[i++];
+                for (let i = 0; i < q; ++i) {
+                    const data = groupBasis[i];
                     const { basis, item } = data;
                     if (item === maxBasis || basis === maxBasisUnit && (growShrinkType === 1 && maxRatio === data.shrink || growShrinkType === 2 && maxRatio === data.grow)) {
                         item.flexbox.grow = 1;
@@ -161,20 +158,17 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
                 }
             }
             q = percentage.length;
-            i = 0;
-            while (i < q) {
-                setBoxPercentage(parent, percentage[i++], attr);
+            for (let i = 0; i < q; ++i) {
+                setBoxPercentage(parent, percentage[i], attr);
             }
         }
     }
     if (horizontal && growShrinkType === 0) {
-        i = 0;
-        while (i < length) {
-            const item = items[i++];
+        for (let i = 0; i < length; ++i) {
+            const item = items[i];
             if (item.find(child => child.multiline && child.ascend({ condition: above => above[hasDimension], including: parent }).length === 0, { cascade: true })) {
-                i = 0;
-                while (i < length) {
-                    setBoxPercentage(parent, items[i++], attr);
+                for (let j = 0; j < length; ++j) {
+                    setBoxPercentage(parent, items[j], attr);
                 }
                 break;
             }
@@ -185,10 +179,8 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
 
 function getBaseline(nodes: View[]) {
     const values = ['baseline', 'initial'];
-    const length = nodes.length;
-    let i = 0;
-    while (i < length) {
-        const node = nodes[i++];
+    for (let i = 0, length = nodes.length; i < length; ++i) {
+        const node = nodes[i];
         const wrapperOf = node.wrapperOf;
         const target = wrapperOf || node;
         if (target.textElement && target.cssAny('verticalAlign', values)) {
@@ -334,9 +326,8 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 item.setLayoutHeight('match_parent');
                                 if (previous) {
                                     let largest = previous[0];
-                                    let j = 1;
-                                    while (j < previous.length) {
-                                        const sibling = previous[j++];
+                                    for (let j = 1, length = previous.length; j < length; ++j) {
+                                        const sibling = previous[j];
                                         if (sibling.linear.right > largest.linear.right) {
                                             largest = sibling;
                                         }
@@ -383,9 +374,8 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
             else {
                 chainVertical[0] = children;
             }
-            let i = 0;
-            while (i < 2) {
-                const horizontal = i++ === 0;
+            for (let i = 0; i < 2; ++i) {
+                const horizontal = i === 0;
                 const partition = horizontal ? chainHorizontal : chainVertical;
                 const length = partition.length;
                 if (length === 0) {
@@ -449,9 +439,8 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         growAvailable = 1 - adjustGrowRatio(node, seg, WHL);
                         if (q > 1) {
                             let sizeCount = 0;
-                            let k = 0;
-                            while (k < q) {
-                                const chain = seg[k++];
+                            for (let k = 0; k < q; ++k) {
+                                const chain = seg[k];
                                 const value = (chain.data<BoxRectDimension>(this.name, 'boundsData') || chain.bounds)[HWL];
                                 if (sizeCount === 0) {
                                     maxSize = value;
@@ -705,17 +694,14 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         continue;
                     }
                     if (growAll) {
-                        let k = 0;
-                        while (k < q) {
-                            const item = seg[k++];
+                        for (let k = 0; k < q; ++k) {
+                            const item = seg[k];
                             setLayoutWeight(item, horizontal, WHL, orientationWeight, item.flexbox.grow);
                         }
                     }
                     else if (growAvailable > 0) {
-                        const r = layoutWeight.length;
-                        let k = 0;
-                        while (k < r) {
-                            const item = layoutWeight[k++];
+                        for (let k = 0, r = layoutWeight.length; k < r; ++k) {
+                            const item = layoutWeight[k];
                             const autoMargin = item.innerMostWrapped.autoMargin;
                             let ratio = 1;
                             if (horizontal) {

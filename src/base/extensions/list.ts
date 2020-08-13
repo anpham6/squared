@@ -37,8 +37,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
             blockAlternate = true,
             floated: Undef<Set<string>>;
         const children = node.children;
-        const length = children.length;
-        for (let i = 0; i < length; ++i) {
+        for (let i = 0, length = children.length; i < length; ++i) {
             const item = children[i] as T;
             if (floating || blockAlternate) {
                 if (item.floating) {

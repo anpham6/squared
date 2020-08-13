@@ -13,10 +13,8 @@ export default class ResourceData<T extends View> extends squared.base.Extension
         if (viewModel) {
             const controller = this.controller;
             const applied = new Set<T>();
-            const length = rendered.length;
-            let i = 0;
-            while (i < length) {
-                const node = rendered[i++];
+            for (let i = 0, length = rendered.length; i < length; ++i) {
+                const node = rendered[i];
                 if (node.styleElement && node.visible) {
                     for (const [name] of node.namespaces()) {
                         const dataset = getDataSet(node.dataset, 'viewmodel' + capitalize(name)) as Undef<StringMapChecked>;
@@ -30,9 +28,8 @@ export default class ResourceData<T extends View> extends squared.base.Extension
                 }
             }
             if (applied.size > 0) {
-                i = 0;
-                while (i < documentRoot.length) {
-                    const node = documentRoot[i++].node;
+                for (let i = 0, length = documentRoot.length; i < length; ++i) {
+                    const node = documentRoot[i].node;
                     for (const child of applied) {
                         if (child.ascend({ condition: item => item === node, attr: 'renderParent'}).length > 0) {
                             const { import: importing, variable } = viewModel;
@@ -43,15 +40,13 @@ export default class ResourceData<T extends View> extends squared.base.Extension
                             let output = indentA + '<layout {#0}>\n' +
                                          indentB + '<data>\n';
                             if (importing) {
-                                let j = 0;
-                                while (j < importing.length) {
-                                    output += indentC + `<import type="${importing[j++]}" />\n`;
+                                for (let j = 0, q = importing.length; j < q; ++j) {
+                                    output += indentC + `<import type="${importing[j]}" />\n`;
                                 }
                             }
                             if (variable) {
-                                let j = 0;
-                                while (j < variable.length) {
-                                    const { name, type } = variable[j++];
+                                for (let j = 0, q = variable.length; j < q; ++j) {
+                                    const { name, type } = variable[j];
                                     output += indentC + `<variable name="${name}" type="${type}" />\n`;
                                 }
                             }

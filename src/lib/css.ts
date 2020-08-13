@@ -2653,11 +2653,9 @@ export function getKeyframesRules(): ObjectMap<KeyframesData> {
     const result: ObjectMap<KeyframesData> = {};
     violation: {
         const styleSheets = document.styleSheets;
-        const length = styleSheets.length;
-        let i = 0;
-        while (i < length) {
+        for (let i = 0, length = styleSheets.length; i < length; ++i) {
             try {
-                const cssRules = styleSheets[i++].cssRules;
+                const cssRules = styleSheets[i].cssRules;
                 if (cssRules) {
                     for (let j = 0, q = cssRules.length; j < q; ++j) {
                         try {
@@ -2690,17 +2688,13 @@ export function getKeyframesRules(): ObjectMap<KeyframesData> {
 
 export function parseKeyframes(rules: CSSRuleList) {
     const result: KeyframesData = {};
-    const length = rules.length;
-    let i = 0;
-    while (i < length) {
-        const item = rules[i++];
+    for (let i = 0, length = rules.length; i < length; ++i) {
+        const item = rules[i];
         const match = REGEXP_KEYFRAMES.exec(item.cssText);
         if (match) {
             const keyframes = (item['keyText'] as string || match[1]).trim().split(CHAR_SEPARATOR);
-            const q = keyframes.length;
-            let j = 0;
-            while (j < q) {
-                let percent = keyframes[j++];
+            for (let j = 0, q = keyframes.length; j < q; ++j) {
+                let percent = keyframes[j];
                 switch (percent) {
                     case 'from':
                         percent = '0%';
@@ -2914,9 +2908,8 @@ export function calculateVarAsString(element: CSSElement, value: string, options
             const length = calc.length;
             if (length > 0) {
                 let partial = '';
-                let i = 0, j = 0;
-                while (i < length) {
-                    let output = calc[i++];
+                for (let i = 0, j = 0; i < length; ++i) {
+                    let output = calc[i];
                     if (isCalc(output)) {
                         if (orderedSize?.[j] !== undefined) {
                             optionsVar.boundingSize = orderedSize[j++];
@@ -2953,14 +2946,7 @@ export function calculateVarAsString(element: CSSElement, value: string, options
             }
         }
     }
-    value = result.length === 1
-        ? result[0]
-        : result.join(separator === ' '
-            ? ' '
-            : separator
-                ? separator + ' '
-                : ''
-            );
+    value = result.length === 1 ? result[0] : result.join(separator === ' ' ? ' ' : separator ? separator + ' ' : '');
     if (errorString) {
         let match: Null<RegExpExecArray>;
         while (match = errorString.exec(value)) {
@@ -2969,10 +2955,8 @@ export function calculateVarAsString(element: CSSElement, value: string, options
             }
             const segment = match[0];
             let optional = segment;
-            const length = match.length;
-            let i = length - 1;
-            while (i >= 1) {
-                optional = optional.replace(new RegExp(match[i--] + '$'), '');
+            for (let i = match.length - 1; i >= 1; --i) {
+                optional = optional.replace(new RegExp(match[i] + '$'), '');
             }
             if (optional === segment) {
                 return '';
@@ -3494,9 +3478,8 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
                     selected.actualWidth = width;
                     result.unshift(selected);
                 }
-                let i = 1;
-                while (i < length) {
-                    const item = result[i++];
+                for (let i = 1; i < length; ++i) {
+                    const item = result[i];
                     if (item.pixelRatio === 0) {
                         item.pixelRatio = item.width / width;
                     }
@@ -3570,15 +3553,13 @@ export function calculate(value: string, options?: CalculateOptions) {
     if (value === '') {
         return NaN;
     }
-    let length = value.length;
     if (!value.startsWith('(') || !value.endsWith(')')) {
         value = `(${value})`;
-        length += 2;
     }
     let opened = 0;
     const opening: boolean[] = [];
     const closing: number[] = [];
-    for (let i = 0; i < length; ++i) {
+    for (let i = 0, length = value.length; i < length; ++i) {
         switch (value.charAt(i)) {
             case '(':
                 ++opened;
@@ -3621,10 +3602,8 @@ export function calculate(value: string, options?: CalculateOptions) {
                     const seg: number[] = [];
                     const evaluate: string[] = [];
                     const operation = value.substring(j + 1, closing[i]).split(REGEXP_CALCOPERATION);
-                    const q = operation.length;
-                    let k = 0;
-                    while (k < q) {
-                        const partial = operation[k++].trim();
+                    for (let k = 0, length = operation.length; k < length; ++k) {
+                        const partial = operation[k].trim();
                         switch (partial) {
                             case '+':
                             case '-':
@@ -3769,7 +3748,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                     if (!found || seg.length !== evaluate.length + 1) {
                         return NaN;
                     }
-                    for (k = 0; k < evaluate.length; ++k) {
+                    for (let k = 0; k < evaluate.length; ++k) {
                         if (evaluate[k] === '/') {
                             if (Math.abs(seg[k + 1]) !== 0) {
                                 seg.splice(k, 2, seg[k] / seg[k + 1]);
@@ -3780,13 +3759,13 @@ export function calculate(value: string, options?: CalculateOptions) {
                             }
                         }
                     }
-                    for (k = 0; k < evaluate.length; ++k) {
+                    for (let k = 0; k < evaluate.length; ++k) {
                         if (evaluate[k] === '*') {
                             seg.splice(k, 2, seg[k] * seg[k + 1]);
                             evaluate.splice(k--, 1);
                         }
                     }
-                    for (k = 0; k < evaluate.length; ++k) {
+                    for (let k = 0; k < evaluate.length; ++k) {
                         seg.splice(k, 2, seg[k] + seg[k + 1] * (evaluate[k] === '-' ? -1 : 1));
                         evaluate.splice(k--, 1);
                     }

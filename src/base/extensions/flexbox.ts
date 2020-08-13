@@ -35,10 +35,8 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
         const mainData = createDataAttribute(node, children);
         const dataName = this.name;
         node.cssTryAll({ 'align-items': 'start', 'justify-items': 'start' }, () => {
-            const length = children.length;
-            let i = 0;
-            while (i < length) {
-                const item = children[i++];
+            for (let i = 0, length = children.length; i < length; ++i) {
+                const item = children[i];
                 item.cssTryAll(OPTIONS_BOUNDSDATA, function(this: T) {
                     const bounds = this.boundingClientRect;
                     this.data(dataName, 'boundsData', bounds ? { ...this.bounds, width: bounds.width, height: bounds.height } : this.bounds);
@@ -85,9 +83,8 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                 maxCount = 0,
                 offset: number;
             const rows: T[][] = [row];
-            let i = 1;
-            while (i < length) {
-                const item = children[i++];
+            for (let i = 1; i < length; ++i) {
+                const item = children[i];
                 if (rowStart[method as NodeIntersectXY](item.bounds, options)) {
                     row.push(item);
                 }
@@ -99,16 +96,15 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
             }
             node.clear();
             length = rows.length;
-            i = 0;
             if (length > 1) {
                 const boxSize: number = node.box[size];
-                while (i < length) {
+                for (let i = 0; i < length; ++i) {
                     const seg = rows[i];
                     maxCount = Math.max(seg.length, maxCount);
                     const group = controller.createNodeGroup(seg[0], seg, node, { delegate: true, cascade: true });
                     group.addAlign(NODE_ALIGNMENT.SEGMENTED);
                     group.box[size] = boxSize;
-                    group.containerIndex = i++;
+                    group.containerIndex = i;
                 }
                 offset = length;
             }
@@ -116,14 +112,13 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                 const items = rows[0];
                 node.retainAs(items);
                 maxCount = items.length;
-                while (i < maxCount) {
-                    items[i].containerIndex = i++;
+                for (let i = 0; i < maxCount; ++i) {
+                    items[i].containerIndex = i;
                 }
                 offset = maxCount;
             }
-            i = 0;
-            while (i < absolute.length) {
-                absolute[i].containerIndex = offset + i++;
+            for (let i = 0; i < absolute.length; ++i) {
+                absolute[i].containerIndex = offset + i;
             }
             node.addAll(absolute);
             if (mainData.row) {

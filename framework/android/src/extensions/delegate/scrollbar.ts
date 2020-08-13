@@ -123,10 +123,8 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                     } as NodeXmlTemplate<T>
                 );
             }
-            const q = children.length;
-            let i = 0;
-            while (i < q) {
-                const child = children[i++];
+            for (let i = 0, q = children.length; i < q; ++i) {
+                const child = children[i];
                 if (child.textElement) {
                     child.css('maxWidth', formatPX(boxWidth));
                 }

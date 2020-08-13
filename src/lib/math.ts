@@ -126,9 +126,8 @@ export function multipleOf(values: number[], min = 0, offset?: number[]) {
     if (length > 1) {
         const increment = Math.min(...values);
         if (offset?.length === length) {
-            let i = 0;
-            while (i < length) {
-                min = Math.max(min, offset[i] + values[i++]);
+            for (let i = 0; i < length; ++i) {
+                min = Math.max(min, offset[i] + values[i]);
             }
         }
         else {
@@ -143,9 +142,8 @@ export function multipleOf(values: number[], min = 0, offset?: number[]) {
         let valid: Undef<boolean>;
         while (!valid) {
             const total = start + value;
-            let i = 1;
-            while (i < length) {
-                const multiple = (offset ? offset[i] : 0) + values[i++];
+            for (let i = 1; i < length; ++i) {
+                const multiple = (offset ? offset[i] : 0) + values[i];
                 if (total % multiple === 0) {
                     valid = true;
                 }
@@ -185,9 +183,8 @@ export function tan(value: number, accuracy = 11) {
 
 export function factorial(value: number) {
     let result = 2;
-    let i = 3;
-    while (i <= value) {
-        result *= i++;
+    for (let i = 3; i <= value; ++i) {
+        result *= i;
     }
     return result;
 }

@@ -47,9 +47,8 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
         }) as SvgAnimate[];
         attrs.length = 0;
         const length = animations.length;
-        let i = 0;
-        while (i < length) {
-            const item = animations[i++];
+        for (let i = 0; i < length; ++i) {
+            const item = animations[i];
             const value = SvgAnimationIntervalMap.getKeyName(item);
             if (!attrs.includes(value)) {
                 attrs.push(value);
@@ -58,9 +57,8 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
         const map: SvgAnimationIntervalAttributeMap<SvgAnimation> = {};
         const intervalMap: IntervalMap = {};
         const intervalTimes: IntervalTime = {};
-        i = 0;
-        while (i < attrs.length) {
-            const keyName = attrs[i++];
+        for (let i = 0, q = attrs.length; i < q; ++i) {
+            const keyName = attrs[i];
             map[keyName] = new Map<number, SvgAnimationIntervalValue<SvgAnimation>[]>();
             intervalMap[keyName] = {};
             intervalTimes[keyName] = new Set<number>();
@@ -71,9 +69,8 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                 insertIntervalValue(intervalMap, intervalTimes, keyName, 0, backwards.values[0], delay, backwards, delay === 0, false, FILL_MODE.BACKWARDS);
             }
         }
-        i = 0;
-        while (i < length) {
-            const item = animations[i++];
+        for (let i = 0; i < length; ++i) {
+            const item = animations[i];
             const keyName = SvgAnimationIntervalMap.getKeyName(item);
             if (item.baseValue && intervalMap[keyName][-1] === undefined) {
                 insertIntervalValue(intervalMap, intervalTimes, keyName, -1, item.baseValue);
@@ -97,22 +94,17 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
         }
         for (const keyName in intervalMap) {
             const keyTimes = sortNumber(Array.from(intervalTimes[keyName]));
-            const q = keyTimes.length;
-            i = 0;
-            while (i < q) {
-                const time = keyTimes[i++];
+            for (let i = 0, q = keyTimes.length; i < q; ++i) {
+                const time = keyTimes[i];
                 const values = intervalMap[keyName][time];
                 for (let j = 0; j < values.length; ++j) {
                     const interval = values[j];
                     const animation = interval.animation;
                     if (interval.value === '' || animation && interval.start && SvgBuild.isAnimate(animation) && animation.from === '') {
                         let value: Undef<string>;
-                        let k: number;
                         for (const group of map[keyName].values()) {
-                            const s = group.length;
-                            k = 0;
-                            while (k < s) {
-                                const previous = group[k++];
+                            for (let k = 0, s = group.length; k < s; ++k) {
+                                const previous = group[k];
                                 if (animation !== previous.animation && previous.value !== '' && (previous.time === -1 || previous.fillMode === FILL_MODE.FORWARDS || previous.fillMode === FILL_MODE.FREEZE)) {
                                     value = previous.value;
                                     break;
@@ -143,20 +135,16 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
         }
         for (const keyName in map) {
             for (const [timeA, dataA] of map[keyName].entries()) {
-                const q = dataA.length;
-                i = 0;
-                while (i < q) {
-                    const itemA = dataA[i++];
+                for (let i = 0, q = dataA.length; i < q; ++i) {
+                    const itemA = dataA[i];
                     const animationA = itemA.animation;
                     if (animationA) {
                         if (itemA.fillMode === FILL_MODE.FREEZE) {
                             const previous: SvgAnimation[] = [];
                             for (const [timeB, dataB] of map[keyName].entries()) {
                                 if (timeB < timeA) {
-                                    const r = dataB.length;
-                                    let j = 0;
-                                    while (j < r) {
-                                        const itemB = dataB[j++];
+                                    for (let j = 0, r = dataB.length; j < r; ++j) {
+                                        const itemB = dataB[j];
                                         if (itemB.start) {
                                             const animation = itemB.animation;
                                             if (animation?.animationElement) {
@@ -190,9 +178,8 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                             if (ordering) {
                                 const duration = (animationA as SvgAnimate).getTotalDuration();
                                 const name = group.name;
-                                let j = 0;
-                                while (j < ordering.length) {
-                                    const sibling = ordering[j++];
+                                for (let j = 0, r = ordering.length; j < r; ++j) {
+                                    const sibling = ordering[j];
                                     if (sibling.name === name) {
                                         forwarded = true;
                                     }
@@ -204,10 +191,8 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                             const previous: SvgAnimation[] = [];
                             for (const [timeB, dataB] of map[keyName].entries()) {
                                 if (!forwarded && timeB < timeA) {
-                                    const r = dataB.length;
-                                    let j = 0;
-                                    while (j < r) {
-                                        const itemB = dataB[j++];
+                                    for (let j = 0, r = dataB.length; j < r; ++j) {
+                                        const itemB = dataB[j];
                                         if (itemB.start) {
                                             const animationB = itemB.animation;
                                             if (animationB) {
@@ -270,10 +255,8 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
             let value: Undef<string>;
             for (const [interval, data] of map.entries()) {
                 if (interval <= time) {
-                    const length = data.length;
-                    let i = 0;
-                    while (i < length) {
-                        const previous = data[i++];
+                    for (let i = 0, length = data.length; i < length; ++i) {
+                        const previous = data[i];
                         if (previous.value !== '' && (previous.time === -1 || previous.end && (previous.fillMode === FILL_MODE.FORWARDS || previous.fillMode === FILL_MODE.FREEZE)) || playing && previous.start && time !== interval) {
                             value = previous.value;
                             break;
@@ -294,10 +277,8 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
             let state = 0;
             for (const [interval, entry] of map.entries()) {
                 if (interval <= time) {
-                    const length = entry.length;
-                    let i = 0;
-                    while (i < length) {
-                        const previous = entry[i++];
+                    for (let i = 0, length = entry.length; i < length; ++i) {
+                        const previous = entry[i];
                         if (previous.start && (previous.infinite || previous.fillMode === 0 && previous.endTime > time)) {
                             if (previous.animation) {
                                 state = 2;

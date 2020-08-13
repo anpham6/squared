@@ -160,16 +160,15 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     public static drawPolyline(values: Point[] | DOMPoint[], precision?: number) {
         let result = 'M';
         const length = values.length;
-        let i = 0;
         if (precision) {
-            while (i < length) {
-                const { x, y } = values[i++];
+            for (let i = 0; i < length; ++i) {
+                const { x, y } = values[i];
                 result += ` ${truncate(x, precision)},${truncate(y, precision)}`;
             }
         }
         else {
-            while (i < length) {
-                const { x, y } = values[i++];
+            for (let i = 0; i < length; ++i) {
+                const { x, y } = values[i];
                 result += ` ${x},${y}`;
             }
         }
@@ -178,10 +177,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static drawPath(values: SvgPathCommand[], precision?: number) {
         let result = '';
-        const length = values.length;
-        let i = 0;
-        while (i < length) {
-            const value = values[i++];
+        for (let i = 0, length = values.length; i < length; ++i) {
+            const value = values[i];
             result += (result !== '' ? ' ' : '') + value.key;
             switch (value.key.toUpperCase()) {
                 case 'M':
@@ -298,17 +295,16 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     }
 
     public static getOffsetPath(value: string, rotation = 'auto 0deg') {
-        const element = (createPath(value) as unknown) as SVGGeometryElement;
+        const element = createPath(value);
         const totalLength = Math.ceil(element.getTotalLength());
         const result: SvgOffsetPath[] = [];
-        if (totalLength) {
+        if (totalLength > 0) {
             let keyPoints: Point[] = [],
                 rotatingPoints: boolean[] = [],
                 rotateFixed = 0,
                 rotateInitial = 0,
                 rotatePrevious = 0,
                 overflow = 0,
-                key = -1,
                 rotating: Undef<boolean>,
                 center: Undef<SvgPoint>;
             if (isAngle(rotation)) {
@@ -321,11 +317,10 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                         case 'L':
                         case 'H':
                         case 'V':
-                        case 'Z': {
+                        case 'Z':
                             keyPoints = keyPoints.concat(item.value);
                             rotatingPoints = rotatingPoints.concat(new Array(item.value.length).fill(false));
                             break;
-                        }
                         case 'C':
                         case 'S':
                         case 'Q':
@@ -340,7 +335,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     rotateInitial = parseAngle(rotation.split(' ').pop()!, 0);
                 }
             }
-            while (++key <= totalLength) {
+            for (let key = 0; key < totalLength; ++key) {
                 const nextPoint = element.getPointAtLength(key);
                 if (keyPoints.length > 0) {
                     const index = keyPoints.findIndex((pt: Point) => {
@@ -397,7 +392,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             if (first && key.toUpperCase() !== 'M') {
                 break;
             }
-            const coordinates = SvgBuild.parseCoordinates((match[2] || '').trim());
+            const coordinates = match[2] ? SvgBuild.parseCoordinates(match[2].trim()) : [];
             const items: number[][] = [];
             let length = coordinates.length,
                 previousCommand: Undef<string>,
@@ -419,18 +414,16 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     }
                     break;
                 case 'H':
-                    if (previousPoint && length) {
-                        let i = 0;
-                        while (i < length) {
-                            items.push([coordinates[i++], key === 'h' ? 0 : previousPoint.y]);
+                    if (previousPoint) {
+                        for (let i = 0; i < length; ++i) {
+                            items.push([coordinates[i], key === 'h' ? 0 : previousPoint.y]);
                         }
                     }
                     break;
                 case 'V':
-                    if (previousPoint && length) {
-                        let i = 0;
-                        while (i < length) {
-                            items.push([key === 'v' ? 0 : previousPoint.x, coordinates[i++]]);
+                    if (previousPoint) {
+                        for (let i = 0; i < length; ++i) {
+                            items.push([key === 'v' ? 0 : previousPoint.x, coordinates[i]]);
                         }
                     }
                     break;
@@ -444,8 +437,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     if (length >= 6) {
                         length -= length % 6;
                         for (let i = 0; i < length; i += 6) {
-                            const points = coordinates.slice(i, i + 6);
-                            items.push(points);
+                            items.push(coordinates.slice(i, i + 6));
                         }
                     }
                     break;
@@ -453,8 +445,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     if (length >= 4 && (previousCommand === 'C' || previousCommand === 'S')) {
                         length -= length % 4;
                         for (let i = 0; i < length; i += 4) {
-                            const points = coordinates.slice(i, i + 4);
-                            items.push(points);
+                            items.push(coordinates.slice(i, i + 4));
                         }
                     }
                     break;
@@ -462,8 +453,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     if (length >= 4) {
                         length -= length % 4;
                         for (let i = 0; i < length; i += 4) {
-                            const points = coordinates.slice(i, i + 4);
-                            items.push(points);
+                            items.push(coordinates.slice(i, i + 4));
                         }
                     }
                     break;
@@ -471,8 +461,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     if (length >= 2 && (previousCommand === 'Q' || previousCommand === 'T')) {
                         length -= length % 2;
                         for (let i = 0; i < length; i += 2) {
-                            const points = coordinates.slice(i, i + 2);
-                            items.push(points);
+                            items.push(coordinates.slice(i, i + 2));
                         }
                     }
                     break;
@@ -480,8 +469,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     if (length >= 7) {
                         length -= length % 7;
                         for (let i = 0; i < length; i += 7) {
-                            const points = coordinates.slice(i, i + 7);
-                            items.push(points);
+                            items.push(coordinates.slice(i, i + 7));
                         }
                     }
                     break;
@@ -520,8 +508,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 }
                 result.push(data);
                 previousPoint = data.end;
-                first = false;
             }
+            first = false;
         }
         REGEXP_PATHCOMMAND.lastIndex = 0;
         return result;
@@ -531,21 +519,17 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         const result: SvgPoint[] = [];
         let x = 0,
             y = 0;
-        const length = values.length;
-        let i = 0, j: number;
-        while (i < length) {
-            const value = values[i++];
+        for (let i = 0, length = values.length; i < length; ++i) {
+            const value = values[i];
             const { key, relative, coordinates } = value;
-            const q = coordinates.length;
-            j = 0;
-            while (j < q) {
+            for (let j = 0, q = coordinates.length; j < q; j += 2) {
                 if (relative) {
-                    x += coordinates[j++];
-                    y += coordinates[j++];
+                    x += coordinates[j];
+                    y += coordinates[j + 1];
                 }
                 else {
-                    x = coordinates[j++];
-                    y = coordinates[j++];
+                    x = coordinates[j];
+                    y = coordinates[j + 1];
                 }
                 const pt: SvgPoint = { x, y };
                 if (key.toUpperCase() === 'A') {
@@ -564,10 +548,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     public static syncPathPoints(values: SvgPathCommand[], points: SvgPoint[], transformed?: boolean) {
         invalid: {
             let location: Undef<Point>;
-            const length = values.length;
-            let i = 0;
-            while (i < length) {
-                const item = values[i++];
+            for (let i = 0, length = values.length; i < length; ++i) {
+                const item = values[i];
                 const { key, coordinates, value } = item;
                 if (item.relative) {
                     if (location) {
@@ -586,12 +568,11 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                         }
                         else {
                             const q = coordinates.length;
-                            let j = 0, k = 0;
-                            while (j < q) {
+                            for (let j = 0, k = 0; j < q; j += 2) {
                                 const pt = points.shift();
                                 if (pt) {
-                                    coordinates[j++] = pt.x - location.x;
-                                    coordinates[j++] = pt.y - location.y;
+                                    coordinates[j] = pt.x - location.x;
+                                    coordinates[j + 1] = pt.y - location.y;
                                     if (key === 'a' && pt.rx !== undefined && pt.ry !== undefined) {
                                         item.radiusX = pt.rx;
                                         item.radiusY = pt.ry;
@@ -622,12 +603,11 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                         case 'T':
                         case 'Z': {
                             const q = coordinates.length;
-                            let j = 0, k = 0;
-                            while (j < q) {
+                            for (let j = 0, k = 0; j < q; j += 2) {
                                 const pt = points.shift();
                                 if (pt) {
-                                    coordinates[j++] = pt.x;
-                                    coordinates[j++] = pt.y;
+                                    coordinates[j] = pt.x;
+                                    coordinates[j + 1] = pt.y;
                                     item.value[k++] = pt;
                                 }
                                 else {
@@ -664,7 +644,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static filterTransforms(transforms: SvgTransform[], exclude?: number[]) {
         const result: SvgTransform[] = [];
-        for (const item of transforms) {
+        for (let i = 0, length = transforms.length; i < length; ++i) {
+            const item = transforms[i];
             const type = item.type;
             if (!exclude || !exclude.includes(type)) {
                 switch (type) {
@@ -698,6 +679,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static applyTransforms(transforms: SvgTransform[], values: SvgPoint[], origin?: SvgPoint) {
         const result = SvgBuild.clonePoints(values);
+        const length = result.length;
         for (const item of transforms.slice(0).reverse()) {
             const m = item.matrix;
             let x1 = 0,
@@ -738,7 +720,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                         break;
                 }
             }
-            for (const pt of result) {
+            for (let i = 0; i < length; ++i) {
+                const pt = result[i];
                 const { x, y } = pt;
                 pt.x = MATRIX.applyX(m, x, y + y1) + x2;
                 pt.y = MATRIX.applyY(m, x + x1, y) + y2;
@@ -757,10 +740,9 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     public static convertTransforms(transform: SVGTransformList) {
         const length = transform.numberOfItems;
         const result: SvgTransform[] = new Array(length);
-        let i = 0;
-        while (i < length) {
+        for (let i = 0; i < length; ++i) {
             const { type, matrix, angle } = transform.getItem(i);
-            result[i++] = TRANSFORM.create(type, matrix, angle);
+            result[i] = TRANSFORM.create(type, matrix, angle);
         }
         return result;
     }
@@ -769,25 +751,23 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         if (Array.isArray(values)) {
             const length = values.length;
             const result: SvgPoint[] = new Array(length);
-            let i = 0;
-            while (i < length) {
+            for (let i = 0; i < length; ++i) {
                 const { x, y, rx, ry } = values[i];
                 const item: SvgPoint = { x, y };
                 if (rx !== undefined && ry !== undefined) {
                     item.rx = rx;
                     item.ry = ry;
                 }
-                result[i++] = item;
+                result[i] = item;
             }
             return result;
         }
         else {
             const length = values.numberOfItems;
             const result: SvgPoint[] = new Array(length);
-            let i = 0;
-            while (i < length) {
+            for (let i = 0; i < length; ++i) {
                 const { x, y } = values.getItem(i);
-                result[i++] = { x, y };
+                result[i] = { x, y };
             }
             return result;
         }
@@ -848,9 +828,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         const length = values.length;
         if (length % 2 === 0) {
             const result: Point[] = new Array(length / 2);
-            let i = 0, j = 0;
-            while (i < length) {
-                result[j++] = { x: values[i++], y: values[i++] };
+            for (let i = 0, j = 0; i < length; i += 2) {
+                result[j++] = { x: values[i], y: values[i] };
             }
             return result;
         }
@@ -879,10 +858,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static getBoxRect(values: string[]) {
         let points: SvgPoint[] = [];
-        const length = values.length;
-        let i = 0;
-        while (i < length) {
-            points = points.concat(SvgBuild.getPathPoints(SvgBuild.getPathCommands(values[i++])));
+        for (let i = 0, length = values.length; i < length; ++i) {
+            points = points.concat(SvgBuild.getPathPoints(SvgBuild.getPathCommands(values[i])));
         }
         return this.minMaxPoints(points, true);
     }

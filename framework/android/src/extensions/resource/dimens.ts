@@ -37,10 +37,8 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
         const dimens = (Resource.STORED as AndroidResourceStoredMap).dimens;
         const rendered = options.rendered;
         const groups: ObjectMapNested<T[]> = {};
-        const length = rendered.length;
-        let i = 0;
-        while (i < length) {
-            const node = rendered[i++];
+        for (let i = 0, length = rendered.length; i < length; ++i) {
+            const node = rendered[i];
             if (node.visible) {
                 const containerName = node.containerName.toLowerCase();
                 const group: GroupData = groups[containerName] ?? (groups[containerName] = {});
@@ -64,11 +62,8 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
     public afterFinalize() {
         if (this.controller.hasAppendProcessing()) {
             const dimens = (Resource.STORED as AndroidResourceStoredMap).dimens;
-            const layouts = this.application.layouts;
             const pattern = /:(\w+)="(-?[\d.]+px)"/g;
-            let i = 0;
-            while (i < layouts.length) {
-                const layout = layouts[i++];
+            for (const layout of this.application.layouts) {
                 let content = layout.content!,
                     match: Null<RegExpExecArray>;
                 while (match = pattern.exec(layout.content!)) {

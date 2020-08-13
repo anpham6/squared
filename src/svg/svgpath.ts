@@ -534,8 +534,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             arrayLength: number,
             dashArrayTotal: number,
             extendedLength: number,
-            end: number;
-        let j = 0;
+            end: number,
+            j = 0;
         const getDash = (index: number) => dashArray[index % arrayLength];
         if (data) {
             ({ dashArray, dashArrayTotal, extendedLength, startIndex: j } = data);
@@ -675,10 +675,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                     const intervalMap = new SvgAnimationIntervalMap(sorted, 'stroke-dasharray', 'stroke-dashoffset');
                     const setDashLength: Undef<(index: number) => void> = (index: number) => {
                         let offset = valueOffset;
-                        const length = sorted.length;
-                        let j = index;
-                        while (j < length) {
-                            const item = sorted[j++];
+                        for (let j = index, length = sorted.length; j < length; ++j) {
+                            const item = sorted[j];
                             if (item.attributeName === 'stroke-dasharray') {
                                 const value = intervalMap.get('stroke-dashoffset', item.delay);
                                 if (value) {
@@ -731,8 +729,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                     const baseValue = this.flattenStrokeDash(getDashArray(intervalMap, valueArray, item.delay), delayOffset, totalLength, pathLength).items;
                                     const group: SvgAnimate[] = [];
                                     const values: string[][] = [];
-                                    let j = 0;
-                                    while (j < dashTotal) {
+                                    for (let j = 0; j < dashTotal; ++j) {
                                         const animate = new SvgAnimate(this.element);
                                         animate.id = j;
                                         animate.baseValue = getFromToValue(baseValue[j]);
@@ -741,23 +738,21 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         animate.duration = item.duration;
                                         animate.iterationCount = item.iterationCount;
                                         animate.fillMode = item.fillMode;
-                                        values[j++] = [];
+                                        values[j] = [];
                                         group.push(animate);
                                     }
                                     const items = item.values;
-                                    for (j = 0; j < items.length; ++j) {
+                                    for (let j = 0, q = items.length; j < q; ++j) {
                                         const dashValue = this.flattenStrokeDash(SvgBuild.parseCoordinates(items[j]), delayOffset, totalLength, pathLength).items;
-                                        let k = 0;
-                                        while (k < dashTotal) {
-                                            values[k].push(getFromToValue(dashValue[k++]));
+                                        for (let k = 0; k < dashTotal; ++k) {
+                                            values[k].push(getFromToValue(dashValue[k]));
                                         }
                                     }
                                     const { keyTimes, keySplines } = item;
                                     const timingFunction = item.timingFunction;
-                                    j = 0;
-                                    while (j < dashTotal) {
+                                    for (let j = 0; j < dashTotal; ++j) {
                                         const data = group[j];
-                                        data.values = values[j++];
+                                        data.values = values[j];
                                         data.keyTimes = keyTimes;
                                         if (keySplines) {
                                             data.keySplines = keySplines;
@@ -769,9 +764,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                     if (item.fillReplace) {
                                         const totalDuration = item.getTotalDuration();
                                         const replaceValue = this.flattenStrokeDash(getDashArray(intervalMap, valueArray, totalDuration), getDashOffset(intervalMap, valueOffset, totalDuration), totalLength, pathLength).items;
-                                        j = 0;
-                                        while (j < dashTotal) {
-                                            group[j].replaceValue = getFromToValue(replaceValue[j++]);
+                                        for (let j = 0; j < dashTotal; ++j) {
+                                            group[j].replaceValue = getFromToValue(replaceValue[j]);
                                         }
                                     }
                                     extracted = extracted.concat(group);
@@ -959,20 +953,16 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                         extracted.push(item);
                     }
                     if (modified) {
-                        const length = dashGroup.length;
-                        let i = 0;
-                        while (i < length) {
-                            const { delay, duration, items } = dashGroup[i++];
+                        for (let i = 0, length = dashGroup.length; i < length; ++i) {
+                            const { delay, duration, items } = dashGroup[i];
                             if (items === result) {
-                                let j = items.length - 1;
-                                while (++j < dashTotal) {
+                                for (let j = items.length; j < dashTotal; ++j) {
                                     items.push({ start: 1, end: 1 });
                                 }
                             }
                             else {
                                 const baseValue = length > 2 ? this.flattenStrokeDash(getDashArray(intervalMap, valueArray, delay - 1), getDashOffset(intervalMap, valueOffset, delay - 1), totalLength, pathLength).items : result;
-                                let j = 0;
-                                while (j < dashTotal) {
+                                for (let j = 0; j < dashTotal; ++j) {
                                     const animate = new SvgAnimation(this.element);
                                     animate.id = j;
                                     animate.attributeName = 'stroke-dasharray';
@@ -980,7 +970,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                     animate.delay = delay;
                                     animate.duration = duration;
                                     animate.fillFreeze = duration === 0;
-                                    animate.to = getFromToValue(items[j++]);
+                                    animate.to = getFromToValue(items[j]);
                                     extracted.push(animate);
                                 }
                             }

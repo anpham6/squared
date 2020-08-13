@@ -321,10 +321,8 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
             const resourceArray = stringArray || numberArray;
             if (resourceArray) {
                 result = [];
-                const length = resourceArray.length;
-                let i = 0;
-                while (i < length) {
-                    const value = Resource.addString(replaceCharacterData(resourceArray[i++]), '', numberResourceValue);
+                for (let i = 0, length = resourceArray.length; i < length; ++i) {
+                    const value = Resource.addString(replaceCharacterData(resourceArray[i]), '', numberResourceValue);
                     if (value !== '') {
                         result.push(value);
                     }

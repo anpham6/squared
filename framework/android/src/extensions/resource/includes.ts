@@ -17,10 +17,8 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
 
     public beforeDocumentWrite(options: DocumentWriteExtensionUIOptions<T>) {
         const rendered = options.rendered;
-        const length = rendered.length;
-        let i = 0;
-        while (i < length) {
-            const node = rendered[i++];
+        for (let i = 0, length = rendered.length; i < length; ++i) {
+            const node = rendered[i];
             if (!node.rendering) {
                 continue;
             }
@@ -57,16 +55,14 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                 if (excess > 0) {
                     close.splice(0, excess);
                 }
-                let j = q - 1;
-                while (j >= 0) {
-                    const { index, include, item, name } = open[j--];
+                for (let j = q - 1; j >= 0; --j) {
+                    const { index, include, item, name } = open[j];
                     for (let k = 0; k < close.length; ++k) {
                         const r = close[k].index;
                         if (r >= index) {
                             const templates: NodeTemplate<T>[] = [];
-                            let l = index;
-                            while (l <= r) {
-                                templates.push(renderTemplates[l++] as NodeTemplate<T>);
+                            for (let l = index; l <= r; ++l) {
+                                templates.push(renderTemplates[l] as NodeTemplate<T>);
                             }
                             const merge = !include || templates.length > 1;
                             const depth = merge ? 1 : 0;

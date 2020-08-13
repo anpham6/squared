@@ -42,14 +42,13 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
     }
 
     public init() {
-        const length = this.length;
-        if (length > 1) {
+        if (this.length > 1) {
             const linearData = NodeUI.linearData(this.children);
             this._floated = linearData.floated;
             this._linearX = linearData.linearX;
             this._linearY = linearData.linearY;
         }
-        else if (length === 1) {
+        else if (this.length === 1) {
             this._linearY = this.children[0].blockStatic;
             this._linearX = !this._linearY;
         }
@@ -133,9 +132,8 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
             if (length > 0) {
                 if (length > 1) {
                     let previousBottom = Infinity;
-                    let i = 0;
-                    while (i < length) {
-                        const node = children[i++];
+                    for (let i = 0; i < length; ++i) {
+                        const node = children[i];
                         if (node.blockStatic || node.multiline || Math.ceil(node.bounds.top) >= previousBottom) {
                             return this._singleRow = false;
                         }

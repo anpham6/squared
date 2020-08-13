@@ -459,19 +459,11 @@ export function calculateStyle(element: SVGGraphicsElement, attr: string, value:
         }
         case 'rx': {
             const result = calculateVar(element, value, { boundingSize: viewBox.width, min: 0 });
-            return !isNaN(result)
-                ? SVG.rect(element)
-                    ? Math.min(result, viewBox.width / 2).toString()
-                    : result.toString()
-                : '0';
+            return !isNaN(result) ? SVG.rect(element) ? Math.min(result, viewBox.width / 2).toString() : result.toString() : '0';
         }
         case 'ry': {
             const result = calculateVar(element, value, { boundingSize: viewBox.height, min: 0 });
-            return !isNaN(result)
-                ? SVG.rect(element)
-                    ? Math.min(result, viewBox.height / 2).toString()
-                    : result.toString()
-                : '0';
+            return !isNaN(result) ? SVG.rect(element) ? Math.min(result, viewBox.height / 2).toString() : result.toString() : '0';
         }
         case 'strokeDasharray':
             return calculateVarAsString(element, value, { boundingSize: getViewportArea(viewBox), min: 0 });
@@ -530,10 +522,8 @@ export function getTargetElement(element: Element, rootElement?: Null<Element>, 
         }
         if (rootElement) {
             const elements = rootElement.querySelectorAll('*');
-            const length = elements.length;
-            let i = 0;
-            while (i < length) {
-                const target = elements.item(i++);
+            for (let i = 0, length = elements.length; i < length; ++i) {
+                const target = elements.item(i);
                 if (target.id.trim() === id && target instanceof SVGElement) {
                     return target;
                 }

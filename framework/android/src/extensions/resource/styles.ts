@@ -14,31 +14,26 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
     public beforeDocumentWrite(options: DocumentWriteExtensionUIOptions<T>) {
         const styles = (Resource.STORED as AndroidResourceStoredMap).styles;
         const rendered = options.rendered;
-        const length = rendered.length;
-        let i = 0;
-        while (i < length) {
-            const node = rendered[i++];
-            if (node.controlId && node.visible) {
-                const renderChildren = node.renderChildren;
-                const q = renderChildren.length;
-                if (q > 1) {
+        for (let i = 0, length = rendered.length; i < length; ++i) {
+            next: {
+                const node = rendered[i];
+                const q = node.renderChildren.length;
+                if (q > 1 && node.controlId !== '') {
+                    const renderChildren = node.renderChildren;
                     const attrMap: ObjectMap<number> = {};
                     let style = '';
-                    let j = 0, k: number;
-                    while (j < q) {
-                        const item = renderChildren[j++] as T;
+                    for (let j = 0; j < q; ++j) {
+                        const item = renderChildren[j] as T;
                         const combined = item.combine('_', 'android');
                         let found: Undef<boolean>;
-                        const r = combined.length;
-                        k = 0;
-                        while (k < r) {
-                            const value = combined[k++];
+                        for (let k = 0, r = combined.length; k < r; ++k) {
+                            const value = combined[k];
                             if (!found && value.startsWith('style=')) {
                                 if (j === 0) {
                                     style = value;
                                 }
                                 else if (style === '' || value !== style) {
-                                    return;
+                                    break next;
                                 }
                                 found = true;
                             }
@@ -47,7 +42,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                             }
                         }
                         if (!found && style !== '') {
-                            return;
+                            break next;
                         }
                     }
                     const keys: string[] = [];
@@ -63,9 +58,8 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                         }
                         const items: StringValue[] = [];
                         const attrs: string[] = [];
-                        j = 0;
-                        while (j < r) {
-                            const match = REGEXP_STYLEATTR.exec(keys[j++]);
+                        for (let j = 0; j < r; ++j) {
+                            const match = REGEXP_STYLEATTR.exec(keys[j]);
                             if (match) {
                                 items.push({ key: match[1], value: match[3] });
                                 attrs.push(match[2]);
@@ -76,9 +70,8 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                             items.sort((a, b) => a.key < b.key ? -1 : 1);
                             styles.set(name, Object.assign(createStyleAttribute(), { name, items }));
                         }
-                        j = 0;
-                        while (j < q) {
-                            const item = renderChildren[j++];
+                        for (let j = 0; j < q; ++j) {
+                            const item = renderChildren[j];
                             item.attr('_', 'style', `@style/${name}`);
                             item.delete('android', ...attrs);
                         }

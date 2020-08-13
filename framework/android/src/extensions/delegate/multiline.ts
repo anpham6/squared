@@ -118,8 +118,8 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                 textHeight = 0,
                 floatHeight = 0,
                 leading: Undef<T>,
-                valid: Undef<boolean>;
-            let j = 0, k = 0, l = 0, m = 0, n = 0;
+                valid: Undef<boolean>,
+                j = 0, k = 0, l = 0, m = 0, n = 0;
             for (let i = 0; i < length; ++i) {
                 const child = children[i];
                 if (!child.inlineFlow) {

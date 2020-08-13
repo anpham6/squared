@@ -14,10 +14,8 @@ export default class ViewGroup<T extends View> extends View$MX(squared.base.Node
     }
 
     public retainAs(children: T[], node?: T, parentAs?: T) {
-        const length = children.length;
-        let i = 0;
-        while (i < length) {
-            const item = children[i++];
+        for (let i = 0, length = children.length; i < length; ++i) {
+            const item = children[i];
             const parent = item.parent;
             if (parent && !(item === node && parent === parentAs && parentAs.replaceTry({ child: node, replaceWith: this }))) {
                 const index = parent.children.indexOf(item);

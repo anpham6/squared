@@ -371,8 +371,8 @@ function ascendFlexibleWidth(node: T) {
     if (node.documentRoot && (node.hasWidth || node.blockStatic || node.blockWidth)) {
         return true;
     }
-    let parent = node.renderParent as Undef<T>;
-    let i = 0;
+    let parent = node.renderParent as Undef<T>,
+        i = 0;
     while (parent) {
         if (!parent.inlineWidth && (parent.hasWidth || parseInt(parent.layoutWidth) > 0 || parent.of(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.BLOCK) || parent.documentRoot && (parent.blockWidth || parent.blockStatic))) {
             return true;
@@ -564,11 +564,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const horizontal = dimension === 'width';
             let percent = 1,
                 valid = false;
-            const length = nodes.length;
-            let i = 0;
-            while (i < length) {
-                let sibling = nodes[i++];
-                sibling = sibling.innerMostWrapped as T;
+            for (let i = 0, length = nodes.length; i < length; ++i) {
+                const sibling = nodes[i].innerMostWrapped;
                 if (sibling.pageFlow) {
                     valid = true;
                     if (sibling.hasPX(dimension, { initial: true })) {
@@ -763,9 +760,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             const length = nodes.length;
                             if (length > 0 && maxWidth > 0) {
                                 const width = formatPX(maxWidth);
-                                let i = 0;
-                                while (i < length) {
-                                    const node = nodes[i++];
+                                for (let i = 0; i < length; ++i) {
+                                    const node = nodes[i];
                                     if (!node.hasPX('maxWidth')) {
                                         node.css('maxWidth', width);
                                     }
@@ -1193,9 +1189,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public setBoxSpacing() {
             const boxReset = this._boxReset;
             const boxAdjustment = this._boxAdjustment;
-            let i = 0;
-            while (i < 2) {
-                const margin = i++ === 0;
+            for (let i = 0; i < 2; ++i) {
+                const margin = i === 0;
                 const attrs = margin ? BOX_MARGIN : BOX_PADDING;
                 let top = 0,
                     right = 0,
@@ -1554,10 +1549,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const indent = '\n' + '\t'.repeat(depth);
             const items = this.combine();
             let output = '';
-            const length = items.length;
-            let i = 0;
-            while (i < length) {
-                output += indent + items[i++];
+            for (let i = 0, length = items.length; i < length; ++i) {
+                output += indent + items[i];
             }
             return output;
         }
@@ -2028,9 +2021,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 else if (renderParent.layoutRelative) {
                     const layout: string[] = [];
-                    let i = 0;
-                    while (i < position.length) {
-                        const value = position[i++];
+                    for (let i = 0, length = position.length; i < length; ++i) {
+                        const value = position[i];
                         let attr: Undef<string> = LAYOUT_RELATIVE[value];
                         if (attr) {
                             layout.push(this.localizeString(attr));
@@ -2096,9 +2088,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     return valid;
                 }
             }
-            let i = this.api;
-            while (i <= BUILD_ANDROID.LATEST) {
-                const callback = API_ANDROID[i++]?.android[attr];
+            for (let i = this.api; i <= BUILD_ANDROID.LATEST; ++i) {
+                const callback = API_ANDROID[i]?.android[attr];
                 switch (typeof callback) {
                     case 'boolean':
                         return callback;
@@ -2251,9 +2242,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     y = '',
                     z = '',
                     result = '';
-                let i = 0;
-                while (i < direction.length) {
-                    const value = direction[i++];
+                for (let i = 0, length = direction.length; i < length; ++i) {
+                    const value = direction[i];
                     if (isHorizontalAlign(value)) {
                         if (x === '' || overwrite) {
                             x = value;
@@ -2321,12 +2311,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     continue;
                                 }
                             }
-                            let j = 0;
                             if (baseline) {
                                 if (q === 1) {
                                     let invalid: Undef<boolean>;
-                                    while (j < r) {
-                                        const item = row[j++];
+                                    for (let j = 0; j < r; ++j) {
+                                        const item = row[j];
                                         if (item.alignSibling('baseline') === '' && item !== baseline || getLineHeight(item, lineHeight, true) !== lineHeight) {
                                             invalid = true;
                                             break;
@@ -2350,8 +2339,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 }
                             }
                             else {
-                                while (j < r) {
-                                    const item = row[j++];
+                                for (let j = 0; j < r; ++j) {
+                                    const item = row[j];
                                     const value = getLineHeight(item, lineHeight);
                                     if (value > 0) {
                                         setLineHeight(item, value, false, top, bottom);
@@ -2387,9 +2376,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 let offsetX = 0,
                     offsetY = 0,
                     pivoted: Undef<boolean>;
-                let i = 0;
-                while (i < transforms.length) {
-                    const item = transforms[i++];
+                for (let i = 0, length = transforms.length; i < length; ++i) {
+                    const item = transforms[i];
                     const [x, y, z] = item.values;
                     switch (item.method) {
                         case 'rotate':
@@ -2466,13 +2454,13 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             else if (this.rendering) {
                 if (this.layoutLinear) {
-                    const renderChildren = this.renderChildren;
                     if (this.layoutVertical) {
-                        if ((renderParent.layoutHorizontal || renderParent.layoutGrid || this.alignSibling('baseline') !== '' || this.baselineActive) && (this.baselineElement || renderChildren[0].baselineElement) && !this.documentRoot) {
+                        if ((renderParent.layoutHorizontal || renderParent.layoutGrid || this.alignSibling('baseline') !== '' || this.baselineActive) && (this.baselineElement || this.renderChildren[0].baselineElement) && !this.documentRoot) {
                             this.android('baselineAlignedChildIndex', '0', false);
                         }
                     }
                     else {
+                        const renderChildren = this.renderChildren;
                         let baseline: Undef<boolean>;
                         if ((this.floatContainer || this.nodeGroup && (this.hasAlign(NODE_ALIGNMENT.FLOAT) || renderChildren.some(node => node.floating))) && !renderChildren.some(node => node.imageElement && node.baseline)) {
                             this.android('baselineAligned', 'false');
@@ -2481,8 +2469,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         else {
                             baseline = true;
                         }
-                        const length = renderChildren.length;
-                        for (let i = 0; i < length; ++i) {
+                        for (let i = 0, length = renderChildren.length; i < length; ++i) {
                             const item = renderChildren[i];
                             if (item.textElement && item.textContent.length > 1) {
                                 item.android('maxLines', '1');
@@ -2521,10 +2508,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                     if (valid) {
                         const renderTemplates = this.renderTemplates as NodeXmlTemplate<T>[];
-                        const q = renderTemplates.length;
-                        let i = 0;
-                        while (i < q) {
-                            const template = renderTemplates[i++];
+                        for (let i = 0, q = renderTemplates.length; i < q; ++i) {
+                            const template = renderTemplates[i];
                             template.parent = renderParent;
                             template.node.renderParent = renderParent;
                         }

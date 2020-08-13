@@ -463,8 +463,7 @@ export function lowerCaseString(value: string) {
     if (entities.length > 0) {
         let result = '';
         const segments = value.split(pattern);
-        const length = segments.length;
-        for (let i = 0; i < length; ++i) {
+        for (let i = 0, length = segments.length; i < length; ++i) {
             result += segments[i].toLowerCase() + (entities[i] || '');
         }
         return result;
@@ -495,10 +494,8 @@ export function convertHyphenated(value: string, char = '-') {
     }
     let result = value[0].toLowerCase(),
         lower = true;
-    const length = value.length;
-    let i = 1;
-    while (i < length) {
-        const ch = value.charAt(i++);
+    for (let i = 1, length = value.length; i < length; ++i) {
+        const ch = value.charAt(i);
         const upper = ch === ch.toUpperCase();
         result += lower && upper && ch !== char ? char + ch.toLowerCase() : ch;
         lower = !upper;
@@ -577,8 +574,8 @@ export function convertAlpha(value: number) {
 
 export function convertRoman(value: number) {
     const digits = value.toString().split('');
-    let result = '';
-    let i = 3;
+    let result = '',
+        i = 3;
     while (i--) {
         result = (NUMERALS[parseInt(digits.pop()!) + (i * 10)] || '') + result;
     }
@@ -600,10 +597,8 @@ export function randomUUID(separator = '-') {
 }
 
 export function formatString(value: string, ...params: string[]) {
-    const length = params.length;
-    let i = 0;
-    while (i < length) {
-        value = value.replace(`{${i}}`, params[i++]);
+    for (let i = 0, length = params.length; i < length; ++i) {
+        value = value.replace(`{${i}}`, params[i]);
     }
     return value;
 }
@@ -781,10 +776,8 @@ export function isPlainObject<T = PlainObject>(value: any): value is T {
 }
 
 export function isEmptyString(value: string) {
-    const length = value.length;
-    let i = 0;
-    while (i < length) {
-        switch (value.charCodeAt(i++)) {
+    for (let i = 0, length = value.length; i < length; ++i) {
+        switch (value.charCodeAt(i)) {
             case 32:
             case 9:
             case 10:
@@ -805,9 +798,8 @@ export function isEqual(source: any, other: any) {
     else if (Array.isArray(source) && Array.isArray(other)) {
         const length = source.length;
         if (length === other.length) {
-            let i = 0;
-            while (i < length) {
-                if (source[i] !== other[i++]) {
+            for (let i = 0; i < length; ++i) {
+                if (source[i] !== other[i]) {
                     return false;
                 }
             }
@@ -848,10 +840,8 @@ export function cloneInstance<T = unknown>(value: T) {
 }
 
 export function cloneArray<T = unknown>(data: T[], result: T[] = [], object?: boolean) {
-    const length = data.length;
-    let i = 0;
-    while(i < length) {
-        const value = data[i++];
+    for (let i = 0, length = data.length; i < length; ++i) {
+        const value = data[i];
         if (Array.isArray(value)) {
             result.push(cloneArray(value, [], object) as any);
         }
@@ -1018,8 +1008,8 @@ export function assignEmptyProperty(dest: PlainObject, source: PlainObject) {
 export function assignEmptyValue(dest: PlainObject | ObjectIndex<any>, ...attrs: string[]) {
     const length = attrs.length;
     if (length > 1) {
-        let current = dest;
-        let i = 0;
+        let current = dest,
+            i = 0;
         do {
             const name = attrs[i];
             const value = current[name];
@@ -1064,11 +1054,10 @@ export function findSet<T = unknown>(list: Set<T>, predicate: IteratorPredicate<
 
 export function sortArray<T = any>(list: T[], ascending: boolean, ...attrs: string[]) {
     return list.sort((a, b) => {
-        let i = 0;
-        while (i < attrs.length) {
+        for (let i = 0, length = attrs.length; i < length; ++i) {
             let valueA = a,
                 valueB = b;
-            for (const name of attrs[i++].split('.')) {
+            for (const name of attrs[i].split('.')) {
                 const vA = valueA[name];
                 const vB = valueB[name];
                 if (vA !== undefined && vB !== undefined) {
@@ -1100,10 +1089,8 @@ export function sortArray<T = any>(list: T[], ascending: boolean, ...attrs: stri
 
 export function flatArray<T = unknown>(list: T[], depth = 1, current = 0): T[] {
     let result: T[] = [];
-    const length = list.length;
-    let i = 0;
-    while (i < length) {
-        const item = list[i++];
+    for (let i = 0, length = list.length; i < length; ++i) {
+        const item = list[i];
         if (current < depth && Array.isArray(item)) {
             if (item.length > 0) {
                 result = result.concat(flatArray<T>(item, depth, current + 1));
@@ -1137,10 +1124,10 @@ export function partitionArray<T = unknown>(list: ArrayLike<T>, predicate: Itera
     const length = list.length;
     const valid: T[] = new Array(length);
     const invalid: T[] = new Array(length);
-    let i = 0, j = 0, k = 0;
-    while (i < length) {
+    let j = 0, k = 0;
+    for (let i = 0; i < length; ++i) {
         const item = list[i];
-        if (predicate(item, i++, list)) {
+        if (predicate(item, i, list)) {
             valid[j++] = item;
         }
         else {
@@ -1172,10 +1159,8 @@ export function sameArray<T = unknown>(list: ArrayLike<T>, predicate: IteratorPr
 
 export function joinArray<T = unknown>(list: ArrayLike<T>, predicate: IteratorPredicate<T, string>, char = '\n', trailing = true): string {
     let result = '';
-    const length = list.length;
-    let i = 0;
-    while (i < length) {
-        const value = predicate(list[i], i++, list);
+    for (let i = 0, length = list.length; i < length; ++i) {
+        const value = predicate(list[i], i, list);
         if (value !== '') {
             result += value + char;
         }
@@ -1184,12 +1169,8 @@ export function joinArray<T = unknown>(list: ArrayLike<T>, predicate: IteratorPr
 }
 
 export function iterateArray<T = unknown>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start = 0, end = Infinity) {
-    start = Math.max(start, 0);
-    const length = Math.min(list.length, end);
-    let i = start;
-    while (i < length) {
-        const item = list[i];
-        const result = predicate(item, i++, list);
+    for (let i = Math.max(start, 0), length = Math.min(list.length, end); i < length; ++i) {
+        const result = predicate(list[i], i, list);
         if (result === true) {
             return Infinity;
         }
@@ -1199,11 +1180,8 @@ export function iterateArray<T = unknown>(list: ArrayLike<T>, predicate: Iterato
 
 export function iterateReverseArray<T = unknown>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start = 0, end = Infinity) {
     start = Math.max(start, 0);
-    const length = Math.min(list.length, end);
-    let i = length - 1;
-    while (i >= start) {
-        const item = list[i];
-        const result = predicate(item, i--, list);
+    for (let i = Math.min(list.length, end) - 1; i >= start; --i) {
+        const result = predicate(list[i], i, list);
         if (result === true) {
             return Infinity;
         }
@@ -1212,8 +1190,7 @@ export function iterateReverseArray<T = unknown>(list: ArrayLike<T>, predicate: 
 }
 
 export function conditionArray<T = unknown>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, any>) {
-    const length = list.length;
-    for (let i = 0; i < length; ++i) {
+    for (let i = 0, length = list.length; i < length; ++i) {
         const item = list[i];
         if (predicate(item, i, list)) {
             const value = callback(item, i, list);
@@ -1225,10 +1202,8 @@ export function conditionArray<T = unknown>(list: ArrayLike<T>, predicate: Itera
 }
 
 export function replaceMap<T, U>(list: (T | U)[], predicate: IteratorPredicate<T, U>) {
-    const length = list.length;
-    let i = 0;
-    while (i < length) {
-        list[i] = predicate(list[i] as T, i++, list as T[]);
+    for (let i = 0, length = list.length; i < length; ++i) {
+        list[i] = predicate(list[i] as T, i, list as T[]);
     }
     return list as U[];
 }
@@ -1236,9 +1211,8 @@ export function replaceMap<T, U>(list: (T | U)[], predicate: IteratorPredicate<T
 export function plainMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>): U[] {
     const length = list.length;
     const result: U[] = new Array(length);
-    let i = 0;
-    while (i < length) {
-        result[i] = predicate(list[i], i++, list);
+    for (let i = 0; i < length; ++i) {
+        result[i] = predicate(list[i], i, list);
     }
     return result;
 }

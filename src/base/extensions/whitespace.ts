@@ -147,10 +147,8 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
                         resetBox(target, region);
                         if (!direction && target.floating) {
                             const children = target.actualParent!.naturalChildren;
-                            const length = children.length;
-                            let i = 0;
-                            while (i < length) {
-                                const item = children[i++];
+                            for (let i = 0, length = children.length; i < length; ++i) {
+                                const item = children[i];
                                 if (item.floating && item !== target && item.intersectY(target.bounds, { dimension: 'bounds' })) {
                                     resetBox(item as NodeUI, region);
                                 }
@@ -267,9 +265,8 @@ function getBottomChild(node: NodeUI) {
     else {
         let bottomFloatChild: Undef<NodeUI>;
         const children = node.naturalChildren;
-        let j = children.length - 1;
-        while (j >= 0) {
-            const item = children[j--] as NodeUI;
+        for (let j = children.length - 1; j >= 0; --j) {
+            const item = children[j] as NodeUI;
             if (item.floating) {
                 if (!bottomChild) {
                     const bottom = item.linear.bottom;
@@ -756,13 +753,11 @@ export default class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
                         }
                     }
                     if (valid) {
-                        let i = 0;
-                        while (i < q) {
-                            processed.add(previousSiblings[i++].id);
+                        for (let i = 0; i < q; ++i) {
+                            processed.add(previousSiblings[i].id);
                         }
-                        i = 0;
-                        while (i < r) {
-                            processed.add(nextSiblings[i++].id);
+                        for (let i = 0; i < r; ++i) {
+                            processed.add(nextSiblings[i].id);
                         }
                     }
                 }
@@ -805,9 +800,8 @@ export default class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
                                     for (let i = 0, length = horizontalRows.length; i < length; ++i) {
                                         const row = horizontalRows[i] as T[];
                                         const q = row.length;
-                                        let j = 0;
-                                        while (j < q) {
-                                            if (outerWrapper === row[j++]) {
+                                        for (let j = 0; j < q; ++j) {
+                                            if (outerWrapper === row[j]) {
                                                 if (i > 0) {
                                                     setSpacingOffset(outerWrapper, BOX_STANDARD.MARGIN_TOP, maxBottom);
                                                 }
@@ -817,9 +811,8 @@ export default class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
                                                 break found;
                                             }
                                         }
-                                        let k = 0;
-                                        while (k < row.length) {
-                                            const innerWrapped = row[k++].innerMostWrapped;
+                                        for (let j = 0; j < q; ++j) {
+                                            const innerWrapped = row[j].innerMostWrapped;
                                             if (validSibling(innerWrapped)) {
                                                 maxBottom = Math.max(innerWrapped.actualRect('bottom'), maxBottom);
                                             }
@@ -834,28 +827,24 @@ export default class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
                                 horizontal = renderParent.renderChildren as T[];
                             }
                             if (horizontal) {
-                                let children: T[] = [],
-                                    maxBottom = -Infinity,
-                                    length = horizontal.length;
-                                let i = 0;
-                                while (i < length) {
-                                    const item = horizontal[i++];
+                                let siblings: T[] = [],
+                                    maxBottom = -Infinity;
+                                for (let i = 0, length = horizontal.length; i < length; ++i) {
+                                    const item = horizontal[i];
                                     if (item.nodeGroup) {
-                                        children = children.concat(item.cascade(child => child.naturalChild) as T[]);
+                                        siblings = siblings.concat(item.cascade(child => child.naturalChild) as T[]);
                                     }
                                     else if (item.innerWrapped) {
-                                        children.push(item.innerMostWrapped as T);
+                                        siblings.push(item.innerMostWrapped as T);
                                     }
                                     else {
-                                        children.push(item);
+                                        siblings.push(item);
                                     }
                                 }
-                                const naturalChildren = node.actualParent!.naturalChildren as T[];
-                                length = naturalChildren.length;
-                                i = 0;
-                                while (i < length) {
-                                    const item = naturalChildren[i++];
-                                    if (children.includes(item)) {
+                                const children = node.actualParent!.naturalChildren as T[];
+                                for (let i = 0, length = children.length; i < length; ++i) {
+                                    const item = children[i];
+                                    if (siblings.includes(item)) {
                                         break;
                                     }
                                     else if (item.lineBreak || item.block) {
@@ -902,10 +891,8 @@ export default class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
             if (node.floatContainer && node.layoutVertical) {
                 const floating: T[] = [];
                 const children = node.naturalChildren as T[];
-                const length = children.length;
-                let i = 0;
-                while (i < length) {
-                    const item = children[i++];
+                for (let i = 0, length = children.length; i < length; ++i) {
+                    const item = children[i];
                     if (!item.pageFlow) {
                         continue;
                     }
@@ -919,9 +906,8 @@ export default class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
                                 const marginTop = (reset === 0 ? item.marginTop : 0) + adjustment;
                                 if (marginTop > 0) {
                                     const top = Math.floor(node.bounds.top);
-                                    let j = 0;
-                                    while (j < q) {
-                                        const previous = floating[j++];
+                                    for (let j = 0; j < q; ++j) {
+                                        const previous = floating[j];
                                         if (top <= Math.floor(previous.bounds.top)) {
                                             let floatingRenderParent = previous.outerMostWrapper.renderParent;
                                             if (floatingRenderParent) {

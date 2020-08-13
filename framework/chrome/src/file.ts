@@ -96,9 +96,8 @@ function setBundleIndex(bundleIndex: BundleIndex) {
         const items = bundleIndex[saveTo];
         const length = items.length;
         if (length > 1) {
-            let i = 0;
-            while (i < length) {
-                items[i].bundleIndex = i++;
+            for (let i = 0; i < length; ++i) {
+                items[i].bundleIndex = i;
             }
         }
     }
@@ -582,9 +581,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         const preserveCrossOrigin = options?.preserveCrossOrigin;
         const result: ChromeAsset[] = [];
         for (const fonts of Resource.ASSETS.fonts.values()) {
-            let i = 0;
-            while (i < fonts.length) {
-                const url = fonts[i++].srcUrl;
+            for (let i = 0, length = fonts.length; i < length; ++i) {
+                const url = fonts[i].srcUrl;
                 if (url) {
                     const data = File.parseUri(url, { preserveCrossOrigin });
                     if (this.validFile(data)) {
@@ -646,9 +644,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     protected combineAssets(options?: ChromeFileArchivingOptions) {
         const result = this.getHtmlPage(options).concat(this.getLinkAssets(options));
         if (options?.saveAsWebPage) {
-            let i = 0;
-            while (i < result.length) {
-                const item = result[i++];
+            for (let i = 0, length = result.length; i < length; ++i) {
+                const item = result[i];
                 const mimeType = item.mimeType;
                 switch (mimeType) {
                     case 'text/html':

@@ -343,9 +343,8 @@ export function get(...elements: (Element | string)[]) {
         const result = new Map<Element, Node[]>();
         const length = elements.length;
         for (const sessionId of main.session.active.keys()) {
-            let i = 0;
-            while (i < length) {
-                let element = elements[i++];
+            for (let i = 0; i < length; ++i) {
+                let element = elements[i];
                 if (typeof element === 'string') {
                     element = document.getElementById(element) as HTMLElement;
                 }

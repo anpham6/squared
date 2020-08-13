@@ -55,12 +55,10 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     public remove(...items: T[]) {
         const result: T[] = [];
         const children = this._children;
-        let i = 0;
-        while (i < items.length) {
-            const item = items[i++];
-            for (let j = 0; j < children.length; ++j) {
-                if (children[j] === item) {
-                    children.splice(j, 1);
+        for (const item of items) {
+            for (let i = 0; i < children.length; ++i) {
+                if (children[i] === item) {
+                    children.splice(i, 1);
                     result.push(item);
                     break;
                 }
@@ -89,10 +87,8 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
 
     public each(predicate: IteratorPredicate<T, void>) {
         const children = this._children;
-        const length = children.length;
-        let i = 0;
-        while (i < length) {
-            predicate(children[i], i++, children);
+        for (let i = 0, length = children.length; i < length; ++i) {
+            predicate(children[i], i, children);
         }
         return this;
     }
@@ -119,8 +115,8 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
                     length = Math.min(length, options.end);
                 }
             }
-            while (i < length) {
-                if (!predicate(children[i], i++, children)) {
+            for ( ; i < length; ++i) {
+                if (!predicate(children[i], i, children)) {
                     return false;
                 }
             }
@@ -160,8 +156,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
             ({ also, error } = options);
         }
         const children = this._children;
-        const length = children.length;
-        for (let i = 0; i < length; ++i) {
+        for (let i = 0, length = children.length; i < length; ++i) {
             const item = children[i];
             if (error && error(item, i, children)) {
                 return -1;
@@ -241,8 +236,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         const recurse = (container: Container<T>) => {
             let result: T[] = [];
             const children = container.children;
-            const length = children.length;
-            for (let i = 0; i < length; ++i) {
+            for (let i = 0, length = children.length; i < length; ++i) {
                 const item = children[i];
                 if (error && error(item, i, children)) {
                     invalid = true;

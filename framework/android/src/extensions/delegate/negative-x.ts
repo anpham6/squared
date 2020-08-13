@@ -37,10 +37,8 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
         const container = (this.controller as android.base.Controller<T>).createNodeWrapper(node, parent, { children, containerType: CONTAINER_NODE.CONSTRAINT, alignmentType: NODE_ALIGNMENT.VERTICAL });
         let left = NaN,
             right = NaN;
-        const length = children.length;
-        let i = 0;
-        while (i < length) {
-            const item = children[i++];
+        for (let i = 0, length = children.length; i < length; ++i) {
+            const item = children[i];
             const linear = item.linear;
             if (item.pageFlow) {
                 if (isNaN(left) || linear.left < left) {

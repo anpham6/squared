@@ -59,20 +59,19 @@ export function getRangeClientRect(element: Element) {
     const range = document.createRange();
     range.selectNodeContents(element);
     const clientRects = range.getClientRects();
-    let i = 0, length = clientRects.length;
-    while (i < length) {
-        const item = clientRects.item(i++) as ClientRect;
+    for (let i = 0, length = clientRects.length; i < length; ++i) {
+        const item = clientRects.item(i) as ClientRect;
         if (Math.round(item.width) > 0 && !withinRange(item.left, item.right, 0.5)) {
             domRect.push(item);
         }
     }
     let bounds: Undef<BoxRectDimension>;
-    length = domRect.length;
+    let length = domRect.length;
     if (length > 0) {
         let numberOfLines = 1,
             overflow = false;
         bounds = assignRect(domRect[0]);
-        for (i = 1; i < length; ++i) {
+        for (let i = 1; i < length; ++i) {
             const { left, right, top, bottom, width } = domRect[i];
             if (left < bounds.left) {
                 bounds.left = left;
@@ -101,9 +100,9 @@ export function getRangeClientRect(element: Element) {
         }
     }
     if (hidden) {
-        i = 0;
-        while (i < hidden.length) {
-            const [item, display] = hidden[i++];
+        length = hidden.length;
+        for (let i = 0; i < length; ++i) {
+            const [item, display] = hidden[i];
             item.style.display = display;
         }
     }

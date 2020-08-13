@@ -41,10 +41,8 @@ export function applyTemplate(tagName: string, template: StandardMap, children: 
         let valid: Undef<boolean>;
         output += `${indent}<${tagName}`;
         if (attrs) {
-            const q = attrs.length;
-            let j = 0;
-            while (j < q) {
-                const attr = attrs[j++];
+            for (let j = 0, q = attrs.length; j < q; ++j) {
+                const attr = attrs[j];
                 const value: Undef<string> = item[attr];
                 if (value) {
                     output += ` ${(tag['^'] ? tag['^'] + ':' : '') + attr}="${value}"`;
@@ -320,9 +318,8 @@ export function replaceCharacterData(value: string, tab?: number) {
     const length = char.length;
     if (length > 0) {
         const parts = value.split('');
-        let j = 0;
-        while (j < length) {
-            const item = char[j++];
+        for (let j = 0; j < length; ++j) {
+            const item = char[j];
             parts[item.i] = item.text;
         }
         return parts.join('');

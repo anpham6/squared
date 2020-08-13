@@ -25,16 +25,13 @@ function getRowData(mainData: CssGridData<View>, horizontal: boolean) {
     const rowData = mainData.rowData;
     if (horizontal) {
         const length = mainData.column.length;
-        const q = mainData.row.length;
         const result: Undef<View[]>[][] = new Array(length);
-        let i = 0, j: number;
-        while (i < length) {
+        for (let i = 0, q = mainData.row.length; i < length; ++i) {
             const data = new Array(q);
-            j = 0;
-            while (j < q) {
-                data[j] = rowData[j++][i];
+            for (let j = 0; j < q; ++j) {
+                data[j] = rowData[j][i];
             }
-            result[i++] = data;
+            result[i] = data;
         }
         return result;
     }
@@ -256,9 +253,8 @@ function requireDirectionSpacer(data: CssGridDirectionData, dimension: number) {
     const unit = data.unit;
     let size = 0,
         percent = 0;
-    let i = 0;
-    while (i < unit.length) {
-        const value = unit[i++];
+    for (let i = 0, length = unit.length; i < length; ++i) {
+        const value = unit[i];
         if (value.endsWith('px')) {
             size += parseFloat(value);
         }
@@ -305,9 +301,8 @@ function applyLayout(node: View, parent: View, item: View, mainData: CssGridData
         sizeWeight = 0,
         fitContent: Undef<boolean>,
         autoSize: Undef<boolean>;
-    let i = 0, j = 0;
-    while (i < cellSpan) {
-        const k = cellStart + i++;
+    for (let i = 0, j = 0; i < cellSpan; ++i) {
+        const k = cellStart + i;
         const min = unitMin[k];
         if (min) {
             minUnitSize += horizontal ? parent.parseUnit(min) : parent.parseUnit(min, { dimension: 'height' });
@@ -579,13 +574,11 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 const constraintData: T[][] = new Array(rowCount);
                 let valid = true;
                 invalid: {
-                    let i = 0, j: number;
-                    while (i < rowCount) {
+                    for (let i = 0; i < rowCount; ++i) {
                         const nodes: T[] = [];
                         const data = rowData[i];
-                        j = 0;
-                        while (j < data.length) {
-                            const cell = data[j++];
+                        for (let j = 0, length = data.length; j < length; ++j) {
+                            const cell = data[j];
                             if (cell?.length === 1) {
                                 nodes.push(cell[0]);
                             }
@@ -594,7 +587,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                                 break invalid;
                             }
                         }
-                        constraintData[i++] = nodes;
+                        constraintData[i] = nodes;
                     }
                 }
                 if (valid) {
@@ -851,16 +844,15 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 const { gap, length } = column;
                 const rowCount = constraintData.length;
                 const barrierIds: string[] = new Array(rowCount - 1);
-                let i = 1, j = 0;
-                while (i < rowCount) {
-                    barrierIds[j++] = controller.addBarrier(constraintData[i++], 'top');
+                for (let i = 1, j = 0; i < rowCount; ++i) {
+                    barrierIds[j++] = controller.addBarrier(constraintData[i], 'top');
                 }
-                for (i = 0; i < rowCount; ++i) {
+                for (let i = 0; i < rowCount; ++i) {
                     const nodes = constraintData[i];
                     const previousBarrierId = barrierIds[i - 1];
                     const barrierId = barrierIds[i];
                     let previousItem: Undef<T>;
-                    for (j = 0; j < length; ++j) {
+                    for (let j = 0; j < length; ++j) {
                         const item = nodes[j];
                         if (item) {
                             if (i === 0) {
@@ -1067,9 +1059,8 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
             if (mainData) {
                 const { gap, length, unit } = mainData.column;
                 let minWidth = gap * (length - 1);
-                let i = 0;
-                while (i < unit.length) {
-                    const value = unit[i++];
+                for (let i = 0, q = unit.length; i < q; ++i) {
+                    const value = unit[i];
                     if (value.endsWith('px')) {
                         minWidth += parseFloat(value);
                     }
@@ -1096,9 +1087,8 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 const unit = mainData.column.unit;
                 const { columnStart, columnSpan } = cellData;
                 let valid = false;
-                let i = 0;
-                while (i < columnSpan) {
-                    const value = unit[columnStart + i++];
+                for (let i = 0; i < columnSpan; ++i) {
+                    const value = unit[columnStart + i];
                     if (value.endsWith('fr') || value.endsWith('%')) {
                         valid = true;
                     }

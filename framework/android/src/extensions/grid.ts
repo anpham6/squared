@@ -51,9 +51,8 @@ export default class Grid <T extends View> extends squared.base.extensions.Grid<
                     )
                 );
                 node = layout.node;
-                let i = 0;
-                while (i < siblings.length) {
-                    const item = siblings[i++];
+                for (let i = 0, length = siblings.length; i < length; ++i) {
+                    const item = siblings[i];
                     const siblingData = this.data.get(item) as Undef<GridCellData<T>>;
                     if (siblingData) {
                         if (siblingData.cellStart) {

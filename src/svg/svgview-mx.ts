@@ -211,10 +211,8 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                         }
                         if (attrMap['transform']) {
                             const transforms = sortAttribute(attrMap['transform']);
-                            const q = transforms.length;
-                            let j = 0;
-                            while (j < q) {
-                                const transform = transforms[j++];
+                            for (let j = 0, q = transforms.length; j < q; ++j) {
+                                const transform = transforms[j];
                                 const key = transform.key;
                                 const origin = getKeyframeOrigin(attrMap, element, key) || TRANSFORM.origin(element);
                                 TRANSFORM.parse(element, transform.value)?.forEach(item => {
@@ -318,10 +316,8 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                     animate.fillForwards = true;
                                     animate.addKeyPoint({ key: 0, value: animate.distance });
                                     addAnimation(animate, delay, keyframeIndex);
-                                    const q = offsetRotate.length;
-                                    let j = 0;
-                                    while (j < q) {
-                                        const item = offsetRotate[j++];
+                                    for (let j = 0, q = offsetRotate.length; j < q; ++j) {
+                                        const item = offsetRotate[j];
                                         const value = item.value;
                                         let angle = parseAngle(value.split(' ').pop()!, 0);
                                         if (value.startsWith('auto')) {
@@ -415,14 +411,13 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                                     const [stepTime, stepValue] = steps;
                                                     const stepDuration = (keyTimes[j + 1] - time) * duration;
                                                     const s = stepTime.length - (keyTimes[j + 1] === 1 ? 1 : 0);
-                                                    let k = 0;
-                                                    while (k < s) {
+                                                    for (let k = 0; k < s; ++k) {
                                                         let keyTime = (time + stepTime[k] * stepDuration) / duration;
                                                         if (keyTimesData.includes(keyTime)) {
                                                             keyTime += 1 / 1000;
                                                         }
                                                         keyTimesData.push(keyTime);
-                                                        valuesData.push(stepValue[k++]);
+                                                        valuesData.push(stepValue[k]);
                                                         keySplinesData.push(KEYSPLINE_NAME[keySpline.includes('start') ? 'step-start' : 'step-end']);
                                                     }
                                                     continue;
@@ -461,9 +456,8 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                 }
                 groupOrdering.reverse();
                 length = groupName.length;
-                let i = 0;
-                while (i < length) {
-                    groupName[i++].setGroupOrdering(groupOrdering);
+                for (let i = 0; i < length; ++i) {
+                    groupName[i].setGroupOrdering(groupOrdering);
                 }
             }
             return result;

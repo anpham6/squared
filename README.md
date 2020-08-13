@@ -254,14 +254,12 @@ interface FrameworkOptions {
 }
 
 // Required: Initial save
-
 squared.setFramework(android, {
     settings: { compressImages: true, createQuerySelectorMap: true },
     saveAs: 'android-example'
 });
 
 // Optional: Subsequent loads
-
 squared.setFramework(android, { loadAs: 'android-example' });
 ```
 
@@ -328,8 +326,6 @@ copyToDisk(directory: string, options?: {}) // copy entire project to local dire
 The system methods are used internally to create the entire project and generally are not useful other than for debugging purposes or extracting the raw assets.
 
 ```javascript
-// Synchronous
-
 squared.system.customize(build: number, widget: string, options: {}) // global attributes applied to specific views
 squared.system.addXmlNs(name: string, uri: string) // add global namespaces for third-party controls
 
@@ -397,9 +393,7 @@ squared.system.addXmlNs('aapt', 'http://schemas.android.com/aapt');
 ### CHROME: Public Methods
 
 ```javascript
-// Promise
-
-chrome.saveAsWebPage(filename?: string, options?: {}) // create archive with html and web page assets
+chrome.saveAsWebPage(filename?: string, options?: {}) // create archive with html and web page assets (Promise)
 
 squared.system.copyHtmlPage(directory: string, options?: {}) // option "name": e.g. "index.html"
 squared.system.copyScriptAssets(directory: string, options?: {})

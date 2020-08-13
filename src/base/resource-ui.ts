@@ -183,9 +183,8 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
                 let basePercent = percent;
                 const original = result.slice(0);
                 while (percent < 100) {
-                    let i = 0;
-                    while (i < length) {
-                        const data = original[i++];
+                    for (let i = 0; i < length; ++i) {
+                        const data = original[i];
                         percent = Math.min(basePercent + data.offset, 1);
                         result.push({ ...data, offset: percent });
                         if (percent === 1) {
@@ -378,12 +377,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         if (backgroundImage !== '') {
             const backgroundSize = node.css('backgroundSize').split(CHAR_SEPARATOR);
             const images: (string | Gradient)[] = [];
-            const getGradientPosition = (value: string) =>
-                isString(value)
-                    ? value.includes('at ')
-                        ? /(.+?)?\s*at (.+?)\s*$/.exec(value)
-                        : [value, value] as RegExpExecArray
-                    : null;
+            const getGradientPosition = (value: string) => isString(value) ? value.includes('at ') ? /(.+?)?\s*at (.+?)\s*$/.exec(value) : [value, value] as RegExpExecArray : null;
             const getAngle = (value: string, fallback = 0) => {
                 value = value.trim();
                 if (value !== '') {
@@ -505,14 +499,17 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                         shape = 'circle';
                                     }
                                     else {
+                                        const [radiusX, radiusY] = splitPair(name, ' ', true);
                                         let minRadius = Infinity;
-                                        const radiusXY = name.split(' ');
-                                        for (let j = 0; j < radiusXY.length; ++j) {
-                                            minRadius = Math.min(j === 0 ? node.parseWidth(radiusXY[j], false) : node.parseHeight(radiusXY[j], false), minRadius);
+                                        if (radiusX) {
+                                            minRadius = node.parseWidth(radiusX, false);
+                                        }
+                                        if (radiusY) {
+                                            minRadius = Math.min(node.parseHeight(radiusY, false), minRadius);
                                         }
                                         radius = minRadius;
                                         radiusExtent = minRadius;
-                                        if (length === 1 || radiusXY[0] === radiusXY[1]) {
+                                        if (length === 1 || radiusX === radiusY) {
                                             shape = 'circle';
                                         }
                                     }
@@ -602,13 +599,11 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             case 'initial':
                 return;
             default: {
-                const dimensions = value.split(' ');
-                for (let i = 0; i < dimensions.length; ++i) {
-                    let size = dimensions[i];
+                value.split(' ').forEach((size, index) => {
                     if (size === 'auto') {
                         size = '100%';
                     }
-                    switch (i) {
+                    switch (index) {
                         case 0:
                             width = node.parseUnit(size, { parent: false, screenDimension });
                             break;
@@ -616,7 +611,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             height = node.parseUnit(size, { dimension: 'height', parent: false, screenDimension });
                             break;
                     }
-                }
+                });
                 break;
             }
         }
@@ -751,9 +746,8 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     const length = borderRadius.length;
                     if (length > 0) {
                         const dimension = horizontal ? 'width' : 'height';
-                        let i = 0;
-                        while (i < length) {
-                            borderRadius[i] = formatPX(node.parseUnit(borderRadius[i++], { dimension, parent: false }));
+                        for (let i = 0; i < length; ++i) {
+                            borderRadius[i] = formatPX(node.parseUnit(borderRadius[i], { dimension, parent: false }));
                         }
                         boxStyle.borderRadius = borderRadius;
                     }

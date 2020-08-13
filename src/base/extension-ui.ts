@@ -9,10 +9,8 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
         if (node.styleElement) {
             const systemName = capitalize(node.localSettings.systemName);
             const children = (node.element as HTMLElement).children;
-            const length = children.length;
-            let i = 0;
-            while (i < length) {
-                const item = children[i++] as HTMLElement;
+            for (let i = 0, length = children.length; i < length; ++i) {
+                const item = children[i] as HTMLElement;
                 if (includes(item.dataset['use' + systemName] || item.dataset.use, name)) {
                     return item;
                 }

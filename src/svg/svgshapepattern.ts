@@ -66,15 +66,14 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                 offsetY = tileHeight - offsetY;
                 remainingHeight += tileHeight;
             }
-            let j = 0;
-            while (remainingHeight > 0) {
+            for (let i = 0; remainingHeight > 0; ++i) {
                 const patternElement = this.patternElement;
                 const contentBoundingBox = this.patternContentUnits === REGION_UNIT.OBJECT_BOUNDING_BOX;
-                const y = boundingY + (j++ * tileHeight) - offsetY;
+                const y = boundingY + (i * tileHeight) - offsetY;
                 let remainingWidth = width;
-                let i = 0;
+                let j = 0;
                 do {
-                    const x = boundingX + (i++ * tileWidth) - offsetX;
+                    const x = boundingX + (j++ * tileWidth) - offsetX;
                     const pattern = new SvgPattern(element, patternElement);
                     pattern.build({ ...options });
                     pattern.cascade(item => {
@@ -125,10 +124,8 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
         if (this.drawRegion) {
             const x = this.patternWidth;
             const y = this.patternHeight;
-            const length = values.length;
-            let i = 0;
-            while (i < length) {
-                const pt = values[i++];
+            for (let i = 0, length = values.length; i < length; ++i) {
+                const pt = values[i];
                 pt.x *= x;
                 pt.y *= y;
                 if (pt.rx !== undefined && pt.ry !== undefined) {
@@ -166,9 +163,8 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                 const rotateOrigin = TRANSFORM.rotateOrigin(this.patternElement, 'patternTransform');
                 const x = this.patternWidth / 2;
                 const y = this.patternHeight / 2;
-                let i = 0;
-                while (i < length) {
-                    const item = transforms[i++];
+                for (let i = 0; i < length; ++i) {
+                    const item = transforms[i];
                     switch (item.type) {
                         case SVGTransform.SVG_TRANSFORM_TRANSLATE:
                             break;

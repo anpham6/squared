@@ -41,10 +41,8 @@ export default abstract class Application<T extends Node> implements squared.bas
         const included = value.trim().split(/\s*,\s*/);
         const result: squared.base.Extension<T>[] = [];
         const untagged: squared.base.Extension<T>[] = [];
-        const length = extensions.length;
-        let i = 0;
-        while (i < length) {
-            const ext = extensions[i++];
+        for (let i = 0, length = extensions.length; i < length; ++i) {
+            const ext = extensions[i];
             const index = included.indexOf(ext.name);
             if (index !== -1) {
                 result[index] = ext;
@@ -327,10 +325,8 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     public setStyleMap(sessionId: string) {
         const styleSheets = document.styleSheets;
-        const length = styleSheets.length;
-        let i = 0;
-        while (i < length) {
-            const styleSheet = styleSheets[i++];
+        for (let i = 0, length = styleSheets.length; i < length; ++i) {
+            const styleSheet = styleSheets[i];
             let mediaText: Undef<string>;
             try {
                 mediaText = styleSheet.media.mediaText;
@@ -386,9 +382,9 @@ export default abstract class Application<T extends Node> implements squared.bas
                     const parent = new this.Node(id--, sessionId, currentElement, children);
                     this._afterInsertNode(parent);
                     const elements: T[] = new Array(currentElement.childElementCount);
-                    let i = 0, j = 0, k = 0;
-                    while (i < length) {
-                        const element = childNodes[i++] as HTMLElement;
+                    let j = 0, k = 0;
+                    for (let i = 0; i < length; ++i) {
+                        const element = childNodes[i] as HTMLElement;
                         let child: Undef<T>;
                         if (element === previousElement) {
                             child = previousNode;
@@ -449,10 +445,10 @@ export default abstract class Application<T extends Node> implements squared.bas
             const children: T[] = new Array(length);
             const elements: T[] = new Array(parentElement.childElementCount);
             let inlineText = true,
-                plainText = false;
-            let i = 0, j = 0, k = 0;
-            while (i < length) {
-                const element = childNodes[i++] as HTMLElement;
+                plainText = false,
+                j = 0, k = 0;
+            for (let i = 0; i < length; ++i) {
+                const element = childNodes[i] as HTMLElement;
                 let child: Undef<T>;
                 if (element.nodeName.startsWith('#')) {
                     if (this.visibleText(node, element)) {
@@ -511,9 +507,8 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     protected createQueryMap(elements: T[], length: number) {
         const result: T[][] = [elements];
-        let i = 0;
-        while (i < length) {
-            const childMap = elements[i++].queryMap;
+        for (let i = 0; i < length; ++i) {
+            const childMap = elements[i].queryMap;
             if (childMap) {
                 for (let j = 0, q = childMap.length; j < q; ++j) {
                     const k = j + 1;
@@ -601,9 +596,8 @@ export default abstract class Application<T extends Node> implements squared.bas
                     const attr = convertCamelCase(match[1]);
                     const value = CSS_PROPERTIES[attr]?.value;
                     if (Array.isArray(value)) {
-                        let i = 0;
-                        while (i < value.length) {
-                            important[value[i++]] = true;
+                        for (let i = 0, length = value.length; i < length; ++i) {
+                            important[value[i]] = true;
                         }
                     }
                     else {
@@ -624,9 +618,8 @@ export default abstract class Application<T extends Node> implements squared.bas
                         unusedStyles.add(selectorText);
                         continue;
                     }
-                    let i = 0;
-                    while (i < q) {
-                        const element = elements[i++];
+                    for (let i = 0; i < q; ++i) {
+                        const element = elements[i];
                         const attrStyle = 'styleMap' + targetElt;
                         const attrSpecificity = 'styleSpecificity' + targetElt;
                         const styleData = getElementCache<StringMap>(element, attrStyle, sessionId);
@@ -700,10 +693,8 @@ export default abstract class Application<T extends Node> implements squared.bas
             const cssRules = item.cssRules;
             if (cssRules) {
                 const parseConditionText = (rule: string, value: string) => new RegExp(`\\s*@${rule}([^{]+)`).exec(value)?.[1].trim() || value;
-                const length = cssRules.length;
-                let i = 0;
-                while (i < length) {
-                    const rule = cssRules[i++];
+                for (let i = 0, length = cssRules.length; i < length; ++i) {
+                    const rule = cssRules[i];
                     switch (rule.type) {
                         case CSSRule.STYLE_RULE:
                         case CSSRule.FONT_FACE_RULE:
@@ -742,10 +733,8 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     protected applyCSSRuleList(rules: CSSRuleList, sessionId: string) {
-        const length = rules.length;
-        let i = 0;
-        while (i < length) {
-            this.applyStyleRule(rules[i++] as CSSStyleRule, sessionId);
+        for (let i = 0, length = rules.length; i < length; ++i) {
+            this.applyStyleRule(rules[i] as CSSStyleRule, sessionId);
         }
     }
 
@@ -763,13 +752,13 @@ export default abstract class Application<T extends Node> implements squared.bas
         this.session.active.set(sessionId, processing);
         this._controllerHandler.init();
         this.setStyleMap(sessionId);
-        if (elements.length === 0) {
+        const length = elements.length;
+        if (length === 0) {
             rootElements.add(this.mainElement);
         }
         else {
-            let i = 0;
-            while (i < elements.length) {
-                let element: Null<HTMLElement | string> = elements[i++];
+            for (let i = 0; i < length; ++i) {
+                let element: Null<HTMLElement | string> = elements[i];
                 if (typeof element === 'string') {
                     element = document.getElementById(element);
                 }
@@ -787,21 +776,17 @@ export default abstract class Application<T extends Node> implements squared.bas
         const sessionId = processing.sessionId;
         const extensions = this.extensions;
         const styleElement = insertStyleSheetRule('html > body { overflow: hidden !important; }');
-        let i: number, length: number;
         if (preloaded) {
-            length = preloaded.length;
-            i = 0;
-            while (i < length) {
-                const image = preloaded[i++];
+            for (let i = 0, length = preloaded.length; i < length; ++i) {
+                const image = preloaded[i];
                 if (image.parentElement) {
                     documentRoot!.removeChild(image);
                 }
             }
         }
-        length = extensions.length;
-        i = 0;
-        while (i < length) {
-            extensions[i++].beforeParseDocument(sessionId);
+        const length = extensions.length;
+        for (let i = 0; i < length; ++i) {
+            extensions[i].beforeParseDocument(sessionId);
         }
         const success: T[] = [];
         for (const element of rootElements) {
@@ -811,9 +796,8 @@ export default abstract class Application<T extends Node> implements squared.bas
                 success.push(node);
             }
         }
-        i = 0;
-        while (i < length) {
-            extensions[i++].afterParseDocument(sessionId);
+        for (let i = 0; i < length; ++i) {
+            extensions[i].afterParseDocument(sessionId);
         }
         try {
             document.head.removeChild(styleElement);

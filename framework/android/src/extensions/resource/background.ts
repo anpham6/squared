@@ -355,9 +355,8 @@ function createLayerList(boxStyle: BoxStyle, images: BackgroundImageData[] = [],
     if (solid && !images.find(image => !!image.gradient)) {
         item.push({ shape: { 'android:shape': 'rectangle', solid, corners } });
     }
-    let i = 0;
-    while (i < images.length) {
-        const image = images[i++];
+    for (let i = 0, length = images.length; i < length; ++i) {
+        const image = images[i];
         item.push(image.gradient ? { shape: { 'android:shape': 'rectangle', gradient: image.gradient, corners } } : image);
     }
     if (stroke) {
@@ -612,9 +611,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         break;
                     case 8: {
                         const result = new Array(4);
-                        let i = 0, j = 0;
-                        while (i < 8) {
-                            result[j++] = formatPX((parseFloat(radius[i++]) + parseFloat(radius[i++])) / 2);
+                        for (let i = 0, j = 0; i < 8; i += 2) {
+                            result[j++] = formatPX((parseFloat(radius[i]) + parseFloat(radius[i + 1])) / 2);
                         }
                         corners = getCornerRadius(result);
                         break;

@@ -173,9 +173,8 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                                 if (currentValues) {
                                     let time = (keyTimesBase[j] + i) * duration;
                                     if (previousValues) {
-                                        let k = 0;
-                                        while (k < currentValues.length) {
-                                            currentValues[k] += previousValues[k++];
+                                        for (let k = 0, r = currentValues.length; k < r; ++k) {
+                                            currentValues[k] += previousValues[k];
                                         }
                                     }
                                     if (i < iterationCount - 1 && j === length - 1) {

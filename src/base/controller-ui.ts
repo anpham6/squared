@@ -19,9 +19,8 @@ const BOX_BORDER = [BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM, BORDER_LEFT];
 function setBorderStyle(styleMap: StringMap, defaultColor: string) {
     if (!styleMap.border && !(BORDER_TOP[0] in styleMap || BORDER_RIGHT[0] in styleMap || BORDER_BOTTOM[0] in styleMap || BORDER_LEFT[0] in styleMap)) {
         styleMap.border = '1px outset ' + defaultColor;
-        let i = 0;
-        while (i < 4) {
-            const border = BOX_BORDER[i++];
+        for (let i = 0; i < 4; ++i) {
+            const border = BOX_BORDER[i];
             styleMap[border[0]] = '1px';
             styleMap[border[1]] = 'outset';
             styleMap[border[2]] = defaultColor;
@@ -61,12 +60,10 @@ function pushIndent(value: string, depth: number, char = '\t', indent?: string) 
 
 function pushIndentArray(values: string[], depth: number, char = '\t', separator = '') {
     if (depth > 0) {
-        let result = '';
         const indent = char.repeat(depth);
-        const length = values.length;
-        let i = 0;
-        while (i < length) {
-            result += (i > 0 ? separator : '') + pushIndent(values[i++], depth, char, indent);
+        let result = '';
+        for (let i = 0, length = values.length; i < length; ++i) {
+            result += (i > 0 ? separator : '') + pushIndent(values[i], depth, char, indent);
         }
         return result;
     }
@@ -603,9 +600,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         case 'both':
                             notFound: {
                                 let clearing: Undef<string>;
-                                let n = l - 1;
-                                while (n >= 0) {
-                                    const sibling = documentChildren[n--];
+                                for (let n = l - 1; n >= 0; --n) {
+                                    const sibling = documentChildren[n];
                                     if (sibling.floating) {
                                         const float = sibling.float;
                                         if (clear === 'both' || float === clear) {
@@ -647,25 +643,21 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 }
                 parent.each((item: T, index) => item.containerIndex = index);
                 parent.floatContainer = true;
-                const length = documentChildren.length;
-                let i = 0, j: number;
-                while (i < appending.length) {
-                    const item = appending[i++];
+                for (let i = 0, length = appending.length; i < length; ++i) {
+                    const item = appending[i];
                     const index = documentChildren.findIndex(child => child === item);
                     if (index !== -1) {
                         const siblingsLeading: T[] = [];
                         const siblingsTrailing: T[] = [];
-                        j = index - 1;
-                        while (j >= 0) {
-                            const sibling = documentChildren[j--] as T;
+                        for (let j = index - 1; j >= 0; --j) {
+                            const sibling = documentChildren[j] as T;
                             siblingsLeading.push(sibling);
                             if (!sibling.excluded) {
                                 break;
                             }
                         }
-                        j = index + 1;
-                        while (j < length) {
-                            const sibling = documentChildren[j++] as T;
+                        for (let j = index + 1, q = documentChildren.length; j < q; ++j) {
+                            const sibling = documentChildren[j] as T;
                             siblingsTrailing.push(sibling);
                             if (!sibling.excluded) {
                                 break;
@@ -771,10 +763,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     public writeDocument(templates: NodeTemplate<T>[], depth: number, showAttributes: boolean) {
         const indent = '\t'.repeat(depth);
         let output = '';
-        const length = templates.length;
-        let i = 0;
-        while (i < length) {
-            const item = templates[i++];
+        for (let i = 0, length = templates.length; i < length; ++i) {
+            const item = templates[i];
             switch (item.type) {
                 case NODE_TEMPLATE.XML: {
                     const { node, controlName, attributes } = item as NodeXmlTemplate<T>;
