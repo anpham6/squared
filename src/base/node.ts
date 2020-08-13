@@ -813,9 +813,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     constructor(
         public readonly id: number,
         public sessionId = '0',
-        element?: Element)
+        element?: Element,
+        children?: T[])
     {
-        super();
+        super(children);
         if (element) {
             this._element = element;
             if (!this.syncWith(sessionId)) {
@@ -1950,6 +1951,55 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             return children;
         }
         return this.querySelectorAll(value || '*');
+    }
+
+    public siblings(value?: string, options?: SiblingsOptions<T>) {
+        if (this.naturalChild) {
+            let condition: Undef<(item: T) => boolean>,
+                error: Undef<(item: T) => boolean>,
+                every: Undef<boolean>,
+                including: Undef<T>,
+                excluding: Undef<T>,
+                reverse: Undef<boolean>;
+            if (options) {
+                ({ condition, error, every, including, excluding, reverse } = options);
+            }
+            let result: T[] = [];
+            const filterPredicate = (item: T) => {
+                if (error && error(item) || item === excluding) {
+                    return true;
+                }
+                if (condition) {
+                    if (condition(item)) {
+                        result.push(item);
+                        if (!every) {
+                            return true;
+                        }
+                    }
+                }
+                else {
+                    result.push(item);
+                }
+                return item === including;
+            };
+            if (reverse) {
+                iterateReverseArray(this.actualParent!.naturalChildren, filterPredicate, 0, this.childIndex);
+            }
+            else {
+                iterateArray(this.actualParent!.naturalChildren, filterPredicate, this.childIndex + 1);
+            }
+            if (value) {
+                const ancestors: T[] = this.ascend();
+                const customMap: T[][] = [];
+                iterateReverseArray(ancestors, (item: T) => {
+                    customMap.push([item]);
+                });
+                customMap.push(result);
+                result = this.querySelectorAll(value, customMap).filter(item => !ancestors.includes(item));
+            }
+            return reverse ? result.reverse() : result;
+        }
+        return [];
     }
 
     public valueOf(attr: string, options?: CssInitialOptions) {

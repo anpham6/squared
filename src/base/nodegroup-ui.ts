@@ -13,7 +13,7 @@ export default abstract class NodeGroupUI extends NodeUI {
         return undefined;
     }
 
-    public previousSiblings(options?: SiblingOptions) {
+    public previousSiblings(options?: TraverseSiblingsOptions) {
         let node = this as NodeUI;
         do {
             node = node.item(0) as NodeUI;
@@ -22,7 +22,7 @@ export default abstract class NodeGroupUI extends NodeUI {
         return node ? node.previousSiblings(options) : [];
     }
 
-    public nextSiblings(options?: SiblingOptions) {
+    public nextSiblings(options?: TraverseSiblingsOptions) {
         let node = this as NodeUI;
         do {
             node = node.item(-1) as NodeUI;

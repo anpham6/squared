@@ -52,7 +52,7 @@ function cascadeActualPadding(children: T[], attr: string, value: number) {
     return valid;
 }
 
-function traverseElementSibling(element: UndefNull<Element>, direction: "previousSibling" | "nextSibling", sessionId: string, options?: SiblingOptions) {
+function traverseElementSibling(element: UndefNull<Element>, direction: "previousSibling" | "nextSibling", sessionId: string, options?: TraverseSiblingsOptions) {
     let floating: Undef<boolean>,
         pageFlow: Undef<boolean>,
         lineBreak: Undef<boolean>,
@@ -168,7 +168,7 @@ function setOverflow(node: T) {
 }
 
 function applyExclusionValue(enumeration: PlainObject, value: string) {
-    let offset = 0; 
+    let offset = 0;
     for (const name of value.split('|')) {
         offset |= enumeration[name.trim().toUpperCase()] as number || 0;
     }
@@ -635,10 +635,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public unsafe<T = unknown>(name: string, value?: any): Undef<T> {
-        if (value !== undefined) {
-            this['_' + name] = value;
-        }
-        return this['_' + name] as Undef<T>;
+        return value === undefined ? this['_' + name] as Undef<T> : this['_' + name] = value;
     }
 
     public unset(name: string) {
@@ -1190,12 +1187,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         }
     }
 
-    public previousSiblings(options?: SiblingOptions): T[] {
+    public previousSiblings(options?: TraverseSiblingsOptions): T[] {
         const node = this.innerMostWrapped;
         return options ? traverseElementSibling(node.element?.previousSibling as Element, 'previousSibling', this.sessionId, options) : node.siblingsLeading;
     }
 
-    public nextSiblings(options?: SiblingOptions): T[] {
+    public nextSiblings(options?: TraverseSiblingsOptions): T[] {
         const node = this.innerMostWrapped;
         return options ? traverseElementSibling(node.element?.nextSibling as Element, 'nextSibling', this.sessionId, options) : node.siblingsTrailing;
     }

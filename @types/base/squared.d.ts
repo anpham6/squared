@@ -414,6 +414,7 @@ declare module "base" {
         querySelectorAll(value: string, customMap?: Node[][], resultCount?: number): Node[];
         ancestors(value?: string, options?: AscendOptions<Node>): Node[];
         descendants(value?: string, options?: DescendOptions<Node>): Node[];
+        siblings(value?: string, options?: SiblingsOptions<Node>): Node[];
         valueOf(attr: string, options?: CssInitialOptions): string;
         set parent(value);
         get parent(): Null<Node>;
@@ -524,7 +525,7 @@ declare module "base" {
         get elementData(): Undef<ElementData>;
         get center(): Point;
         get style(): CSSStyleDeclaration;
-        constructor(id: number, sessionId?: string, element?: Element);
+        constructor(id: number, sessionId?: string, element?: Element, children?: Node[]);
     }
 
     class NodeUI extends Node implements LayoutType {
@@ -604,8 +605,8 @@ declare module "base" {
         actualBoxWidth(value?: number): number;
         actualTextHeight(options?: TextHeightOptions): number;
         alignedVertically(siblings?: Node[], cleared?: Map<Node, string>, horizontal?: boolean): number;
-        previousSiblings(options?: SiblingOptions): NodeUI[];
-        nextSiblings(options?: SiblingOptions): NodeUI[];
+        previousSiblings(options?: TraverseSiblingsOptions): NodeUI[];
+        nextSiblings(options?: TraverseSiblingsOptions): NodeUI[];
         modifyBox(region: number, value: number, negative?: boolean): void;
         setBox(region: number, options: BoxOptions): void;
         getBox(region: number): [number, number];

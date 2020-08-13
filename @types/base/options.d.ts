@@ -1,6 +1,6 @@
 interface CreateNodeOptions {
     element?: Element;
-}
+ }
 
 interface CreateNodeUIOptions<T> extends CreateNodeOptions {
     parent?: T;
@@ -56,13 +56,6 @@ interface RawDataOptions {
     filename?: string;
 }
 
-interface SiblingOptions {
-    floating?: boolean;
-    pageFlow?: boolean;
-    lineBreak?: boolean;
-    excluded?: boolean;
-}
-
 interface DescendOptions<T> {
     condition?: (item: T) => boolean;
     error?: (item: T) => boolean;
@@ -74,6 +67,17 @@ interface DescendOptions<T> {
 interface AscendOptions<T> extends DescendOptions<T> {
     attr?: "actualParent" | "absoluteParent" | "parent" | "renderParent" | "documentParent" | "outerWrapper";
     startSelf?: boolean;
+}
+
+interface SiblingsOptions<T> extends DescendOptions<T> {
+    reverse?: boolean;
+}
+
+interface TraverseSiblingsOptions {
+    floating?: boolean;
+    pageFlow?: boolean;
+    lineBreak?: boolean;
+    excluded?: boolean;
 }
 
 interface BoxOptions {
