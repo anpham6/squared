@@ -464,7 +464,7 @@ function getGravityValues(node: T, attr: string, value?: string) {
         const result = gravity.split('|');
         if (value) {
             if (result.includes(value)) {
-                return undefined;
+                return;
             }
             result.push(value);
         }
@@ -473,7 +473,6 @@ function getGravityValues(node: T, attr: string, value?: string) {
     else if (value) {
         node.android(attr, value);
     }
-    return undefined;
 }
 
 const hasFlexibleContainer = (renderParent: Undef<T>) => !!renderParent && (renderParent.layoutConstraint || renderParent.layoutGrid);

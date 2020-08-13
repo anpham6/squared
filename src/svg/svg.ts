@@ -91,7 +91,7 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
         super.synchronize(options);
     }
 
-    public findFill(value: string | SVGGraphicsElement): Undef<SVGPatternElement> {
+    public findFill(value: string | SVGGraphicsElement) {
         if (typeof value !== 'string') {
             value = extractURL(getParentAttribute(value, 'fill')) || '';
         }
@@ -105,7 +105,6 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
                 return element;
             }
         }
-        return undefined;
     }
 
     public findFillPattern(value: string | SVGGraphicsElement): Undef<SvgGradient> {

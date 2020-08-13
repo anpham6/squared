@@ -2,7 +2,6 @@ type FileActionOptions = squared.base.FileActionOptions;
 type FileArchivingOptions = squared.base.FileArchivingOptions;
 type FileCopyingOptions = squared.base.FileCopyingOptions;
 
-const { frameworkNotInstalled } = squared.lib.session;
 const { fromLastIndexOf, trimEnd } = squared.lib.util;
 
 export default abstract class File<T extends squared.base.Node> implements squared.base.File<T> {
@@ -34,9 +33,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
 
     public abstract get userSettings(): UserResourceSettings;
 
-    public getDataMap(options: FileActionOptions) {
-        return undefined;
-    }
+    public getDataMap(options: FileActionOptions): Void<StandardMap> {}
 
     public getCopyQueryParameters(options: FileCopyingOptions) {
         return '';
@@ -104,15 +101,15 @@ export default abstract class File<T extends squared.base.Node> implements squar
                         if (result.system) {
                             (this.userSettings.showErrorMessages ? alert : console.log)(result.application + '\n\n' + result.system);
                         }
+                        return result;
                     }
-                    return result;
                 });
             }
         }
         else {
             (this.userSettings.showErrorMessages ? alert : console.log)('SERVER (required): See README for instructions');
         }
-        return frameworkNotInstalled();
+        return Promise.resolve();
     }
 
     public archiving(options: FileArchivingOptions) {
@@ -146,15 +143,15 @@ export default abstract class File<T extends squared.base.Node> implements squar
                         else if (result.system) {
                             (this.userSettings.showErrorMessages ? alert : console.log)(result.application + '\n\n' + result.system);
                         }
+                        return result;
                     }
-                    return result;
                 });
             }
         }
         else {
             (this.userSettings.showErrorMessages ? alert : console.log)('SERVER (required): See README for instructions');
         }
-        return frameworkNotInstalled();
+        return Promise.resolve();
     }
 
     protected createRequestBody(assets: Undef<FileAsset[]>, options: FileCopyingOptions | FileArchivingOptions) {
@@ -170,7 +167,6 @@ export default abstract class File<T extends squared.base.Node> implements squar
             }
             return body;
         }
-        return undefined;
     }
 
     private hasHttpProtocol() {

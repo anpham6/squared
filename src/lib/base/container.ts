@@ -37,7 +37,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
                 children[index] = value;
                 return value;
             }
-            return undefined;
+            return;
         }
         return index >= 0 ? this._children[index] : this._children[this.length + index];
     }
@@ -223,7 +223,6 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
                     }
                 }
             }
-            return undefined;
         };
         return recurse(this);
     }

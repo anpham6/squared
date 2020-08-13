@@ -143,7 +143,7 @@ function getPathData(entries: TimelineEntries, path: SvgPath, parent: Undef<SvgC
             baseVal = ['cx', 'cy', 'rx', 'ry'];
             break;
         default:
-            return undefined;
+            return;
     }
     const transformOrigin = TRANSFORM.origin(path.element);
     const length = entries.length;
@@ -163,7 +163,7 @@ function getPathData(entries: TimelineEntries, path: SvgPath, parent: Undef<SvgC
                 values.push(value);
             }
             else {
-                return undefined;
+                return;
             }
         }
         let points: Undef<SvgPoint[]>;
@@ -411,7 +411,6 @@ function getIntermediateSplitValue(subTime: number, splitTime: number, item: Svg
             );
         }
     }
-    return undefined;
 }
 
 function appendPartialKeyTimes(map: SvgAnimationIntervalMap, forwardMap: ForwardMap, baseValueMap: ObjectMap<AnimateValue>, interval: number, item: SvgAnimate, keyTimes: number[], values: string[], keySplines: Undef<string[]>, baseValue: AnimateValue, queued: SvgAnimate[], evaluateStart: boolean): [number[], string[], string[]] {

@@ -34,7 +34,6 @@ export default class ListIterator<T> extends ArrayIterator<T> implements squared
             this._iterating = -1;
             return this.children[--this.index];
         }
-        return undefined;
     }
 
     public previousIndex(): number {

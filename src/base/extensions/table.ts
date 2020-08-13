@@ -548,6 +548,5 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         mainData.rowCount = rowCount + (caption ? 1 : 0);
         mainData.columnCount = columnCount;
         this.data.set(node, mainData);
-        return undefined;
     }
 }

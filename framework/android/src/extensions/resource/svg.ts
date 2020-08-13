@@ -401,7 +401,9 @@ function getValueType(attr: string) {
         case 'points':
             return 'pathType';
         default:
-            return getTransformInitialValue(attr) ? 'floatType' : undefined;
+            if (getTransformInitialValue(attr)) {
+                return 'floatType';
+            }
     }
 }
 
@@ -425,7 +427,7 @@ function getAttributePropertyName(value: string, checkTransform = true) {
     return result;
 }
 
-function getTransformPropertyName(type: number) {
+function getTransformPropertyName(type: number): Undef<string[]> {
     switch (type) {
         case SVGTransform.SVG_TRANSFORM_TRANSLATE:
             return ['translateX', 'translateY'];
@@ -433,12 +435,10 @@ function getTransformPropertyName(type: number) {
             return ['scaleX', 'scaleY', 'pivotX', 'pivotY'];
         case SVGTransform.SVG_TRANSFORM_ROTATE:
             return ['rotation', 'pivotX', 'pivotY'];
-        default:
-            return undefined;
     }
 }
 
-function getTransformValues(item: SvgAnimate) {
+function getTransformValues(item: SvgAnimate): Undef<number[][]> {
     switch (item.type) {
         case SVGTransform.SVG_TRANSFORM_ROTATE:
             return SvgAnimateTransform.toRotateList(item.values);
@@ -446,12 +446,10 @@ function getTransformValues(item: SvgAnimate) {
             return SvgAnimateTransform.toScaleList(item.values);
         case SVGTransform.SVG_TRANSFORM_TRANSLATE:
             return SvgAnimateTransform.toTranslateList(item.values);
-        default:
-            return undefined;
     }
 }
 
-function getTransformInitialValue(name: string) {
+function getTransformInitialValue(name: string): Undef<string> {
     switch (name) {
         case 'rotation':
         case 'pivotX':
@@ -462,8 +460,6 @@ function getTransformInitialValue(name: string) {
         case 'scaleX':
         case 'scaleY':
             return '1';
-        default:
-            return undefined;
     }
 }
 
@@ -512,7 +508,7 @@ function createFillGradient(gradient: Gradient, path: SvgPath, precision?: numbe
                         points = points.concat(SvgBuild.clonePoints(element.points));
                     }
                     if (points.length === 0) {
-                        return undefined;
+                        return;
                     }
                     ({ left: cx, top: cy, right: cxDiameter, bottom: cyDiameter } = SvgBuild.minMaxPoints(points));
                     cxDiameter -= cx;
@@ -541,7 +537,7 @@ function createFillGradient(gradient: Gradient, path: SvgPath, precision?: numbe
                         cyDiameter *= 2;
                     }
                     else {
-                        return undefined;
+                        return;
                     }
                     break;
             }

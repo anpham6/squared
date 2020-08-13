@@ -67,7 +67,9 @@ function convertRotate(value: string) {
 
 function getKeyframeOrigin(attrMap: AttributeMap, element: SVGGraphicsElement, order: number) {
     const origin = attrMap['transform-origin']?.find(item => item.key === order);
-    return origin ? TRANSFORM.origin(element, origin.value) : undefined;
+    if (origin) {
+        return TRANSFORM.origin(element, origin.value);
+    }
 }
 
 function getTextContent(element: SVGElement, attr: string, lang?: string) {

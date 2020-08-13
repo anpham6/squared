@@ -238,7 +238,6 @@ export function parseDocumentSync(...elements: (HTMLElement | string)[]) {
             return main.parseDocumentSync(...elements);
         }
     }
-    return undefined;
 }
 
 export function include(value: ExtensionRequest, options?: squared.FrameworkOptions) {
@@ -363,9 +362,15 @@ export function get(...elements: (Element | string)[]) {
                 }
             }
         }
-        return length <= 1 ? result.size === 1 ? result.values().next().value as Node[] : undefined : result;
+        if (length <= 1) {
+            if (result.size === 1) {
+                return result.values().next().value as Node[];
+            }
+        }
+        else {
+            return result;
+        }
     }
-    return undefined;
 }
 
 export function latest() {

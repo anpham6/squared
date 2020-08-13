@@ -399,7 +399,6 @@ let Node: serve.INode,
                 }
                 return origin + pathname.join('/') + '/' + value;
             }
-            return undefined;
         }
     }();
 
@@ -619,7 +618,6 @@ let Node: serve.INode,
                     return value;
                 }
             }
-            return undefined;
         }
         minifyCss(format: string, value: string) {
             const css = this.external?.css;
@@ -695,7 +693,6 @@ let Node: serve.INode,
                     return value;
                 }
             }
-            return undefined;
         }
         minifyJs(format: string, value: string) {
             const js = this.external?.js;
@@ -788,7 +785,6 @@ let Node: serve.INode,
                     return value;
                 }
             }
-            return undefined;
         }
         formatContent(value: string, mimeType: string, format: string) {
             if (mimeType.endsWith('text/html') || mimeType.endsWith('application/xhtml+xml')) {
@@ -800,7 +796,6 @@ let Node: serve.INode,
             else if (mimeType.endsWith('text/javascript')) {
                 return this.minifyJs(format, value);
             }
-            return undefined;
         }
         removeCss(source: string, styles: string[]) {
             let found: Undef<boolean>,
@@ -846,7 +841,9 @@ let Node: serve.INode,
         }
 
         findCompress(compress: Undef<CompressFormat[]>) {
-            return this.tinify_api_key ? Compress.findFormat(compress, 'png') : undefined;
+            if (this.tinify_api_key) {
+                return Compress.findFormat(compress, 'png');
+            }
         }
         isJpeg(file: ExpressAsset, filepath?: string) {
             if (file.mimeType?.endsWith('image/jpeg')) {
@@ -862,7 +859,9 @@ let Node: serve.INode,
         }
         parseResizeMode(value: string) {
             const match = /\(\s*(\d+)\s*x\s*(\d+)(?:\s*#\s*(contain|cover|scale))?\s*\)/.exec(value);
-            return match ? { width: parseInt(match[1]), height: parseInt(match[2]), mode: match[3] } : undefined;
+            if (match) {
+                return { width: parseInt(match[1]), height: parseInt(match[2]), mode: match[3] };
+            }
         }
         parseOpacity(value: string) {
             const match = /|\s*([\d.]+)\s*|/.exec(value);
@@ -872,7 +871,6 @@ let Node: serve.INode,
                     return Math.min(Math.max(opacity, 0), 1);
                 }
             }
-            return undefined;
         }
         parseRotation(value: string) {
             const result = new Set<number>();
@@ -885,7 +883,9 @@ let Node: serve.INode,
                     }
                 }
             }
-            return result.size > 0 ? Array.from(result) : undefined;
+            if (result.size > 0) {
+                return Array.from(result);
+            }
         }
         resize(self: jimp, width: number, height: number, mode?: string) {
             switch (mode) {
@@ -1089,7 +1089,6 @@ class FileManager implements serve.IFileManager {
                 }
             }
         }
-        return undefined;
     }
     replacePath(source: string, segment: string, value: string, base64?: boolean) {
         segment = !base64 ? segment.replace(/[\\/]/g, '[\\\\/]') : '[^"\'\\s]+' + segment;
@@ -1149,7 +1148,6 @@ class FileManager implements serve.IFileManager {
             items.splice(file.bundleIndex - 1, 0, content);
             this.contentToAppend.set(filepath, items);
         }
-        return undefined;
     }
     compressFile(assets: ExpressAsset[], file: ExpressAsset, filepath: string) {
         const compress = file.compress;
@@ -1699,7 +1697,6 @@ class FileManager implements serve.IFileManager {
             }
             return output;
         }
-        return undefined;
     }
     transformCss(file: ExpressAsset, content: string) {
         const baseUrl = file.uri!;
@@ -1749,8 +1746,7 @@ class FileManager implements serve.IFileManager {
             }
             return output;
         }
-        return undefined;
-    }
+}
     writeBuffer(assets: ExpressAsset[], file: ExpressAsset, filepath: string) {
         const png = Image.findCompress(file.compress);
         if (png && Compress.withinSizeRange(filepath, png.condition)) {

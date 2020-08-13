@@ -134,7 +134,6 @@ export function getElementsBetweenSiblings(elementStart: Null<Element>, elementE
                         return true;
                     }
                 }
-                return;
             });
             if (startIndex !== -1 && endIndex !== -1) {
                 iterateArray(parent.childNodes, (element: Element) => {

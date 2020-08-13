@@ -187,7 +187,6 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                 subscribe: true
             };
         }
-        return undefined;
     }
 
     public postBaseLayout(node: T) {

@@ -2,6 +2,8 @@ export default class Application<T extends squared.base.Node> extends squared.ba
     public readonly systemName = 'vdom';
 
     public insertNode(element: Element, sessionId: string) {
-        return element.nodeName !== '#text' ? new this.Node(this.nextId, sessionId, element) : undefined;
+        if (element.nodeName !== '#text') {
+            return new this.Node(this.nextId, sessionId, element);
+        }
     }
 }

@@ -212,9 +212,8 @@ function getOuterFrameChild(item: Undef<View>) {
         if (item.layoutFrame) {
             return item.innerWrapped;
         }
-        item = item.innerWrapped as View;
+        item = item.innerWrapped as Undef<View>;
     }
-    return undefined;
 }
 
 function setLayoutWeight(node: View, horizontal: boolean, dimension: string, attr: string, value: number) {
@@ -245,21 +244,19 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 complete: true
             };
         }
-        else {
-            return {
-                output: this.application.renderNode(LayoutUI.create({
-                    parent,
-                    node,
-                    containerType: CONTAINER_NODE.CONSTRAINT,
-                    alignmentType: NODE_ALIGNMENT.AUTO_LAYOUT | (mainData.column ? NODE_ALIGNMENT.HORIZONTAL : NODE_ALIGNMENT.VERTICAL),
-                    itemCount: node.length,
-                    rowCount: mainData.rowCount,
-                    columnCount: mainData.columnCount
-                })),
-                include: true,
-                complete: true
-            };
-        }
+        return {
+            output: this.application.renderNode(LayoutUI.create({
+                parent,
+                node,
+                containerType: CONTAINER_NODE.CONSTRAINT,
+                alignmentType: NODE_ALIGNMENT.AUTO_LAYOUT | (mainData.column ? NODE_ALIGNMENT.HORIZONTAL : NODE_ALIGNMENT.VERTICAL),
+                itemCount: node.length,
+                rowCount: mainData.rowCount,
+                columnCount: mainData.columnCount
+            })),
+            include: true,
+            complete: true
+        };
     }
 
     public processChild(node: T, parent: T) {
@@ -311,7 +308,6 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 }
             }
         }
-        return undefined;
     }
 
     public postBaseLayout(node: T) {
@@ -562,7 +558,6 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                 chain.anchor('baseline', item.documentId);
                                                 return true;
                                             }
-                                            return;
                                         });
                                         if (index === Infinity) {
                                             break;

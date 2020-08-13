@@ -171,22 +171,17 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
 }
 
 function getBorderStroke(border: BorderAttribute, direction = -1, hasInset = false, isInset = false) {
-    if (border) {
-        let result: StandardMap;
-        if (isAlternatingBorder(border.style)) {
-            const width = parseFloat(border.width);
-            result = getBorderStyle(border, direction, !isInset);
-            result.width = isInset
-                ? formatPX(Math.ceil(width / 2) * 2)
-                : formatPX(hasInset ? Math.ceil(width / 2) : width);
-        }
-        else {
-            result = getBorderStyle(border);
-            result.width = roundFloat(border.width) + 'px';
-        }
-        return result;
+    let result: StandardMap;
+    if (isAlternatingBorder(border.style)) {
+        const width = parseFloat(border.width);
+        result = getBorderStyle(border, direction, !isInset);
+        result.width = isInset ? formatPX(Math.ceil(width / 2) * 2) : formatPX(hasInset ? Math.ceil(width / 2) : width);
     }
-    return undefined;
+    else {
+        result = getBorderStyle(border);
+        result.width = roundFloat(border.width) + 'px';
+    }
+    return result;
 }
 
 function getCornerRadius(corners: string[]) {
@@ -209,12 +204,16 @@ function getCornerRadius(corners: string[]) {
         result.bottomLeftRadius = bottomLeft;
         valid = true;
     }
-    return valid ? result : undefined;
+    if (valid) {
+        return result;
+    }
 }
 
 function getBackgroundColor(value?: string) {
     const color = getColorValue(value, false);
-    return color !== '' ? { color } : undefined;
+    if (color !== '') {
+        return { color };
+    }
 }
 
 function isAlternatingBorder(value: string, width = 0) {
@@ -1665,6 +1664,5 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 return orderA < orderB ? -1 : 1;
             });
         }
-        return undefined;
     }
 }

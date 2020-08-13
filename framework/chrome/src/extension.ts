@@ -3,7 +3,9 @@ const getSizeRange = (options: CompressOptions) => `(${Math.max(options.largerTh
 export default abstract class Extension<T extends squared.base.Node> extends squared.base.Extension<T> implements chrome.base.Extension<T> {
     public static getCompressOptions(options: CompressOptions) {
         const result = (options.whenSmaller ? '%' : '') + getSizeRange(options);
-        return result !== '(0,*)' ? result : undefined;
+        if (result !== '(0,*)') {
+            return result;
+        }
     }
 
     public static getConvertOptions(name: string, options: ConvertOptions) {

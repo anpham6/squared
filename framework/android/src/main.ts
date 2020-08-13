@@ -126,7 +126,6 @@ const appBase: squared.base.AppFramework<View> = {
                 }
                 return assign[widget];
             }
-            return undefined;
         },
         addXmlNs(name: string, uri: string) {
             constant.XMLNS_ANDROID[name] = uri;

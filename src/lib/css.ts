@@ -1511,7 +1511,6 @@ export const PROXY_INLINESTYLE = Object.freeze(
             if (value) {
                 return typeof value === 'string' ? value : '';
             }
-            return undefined;
         }
     })
 );
@@ -3383,7 +3382,6 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
                     return true;
                 }
             }
-            return;
         });
     }
     if (srcset !== '') {
@@ -3409,7 +3407,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
     }
     const length = result.length;
     if (length === 0) {
-        return undefined;
+        return;
     }
     else if (length > 1) {
         result.sort((a, b) => {
@@ -3537,12 +3535,16 @@ export function convertListStyle(name: string, value: number, valueAsDefault?: b
 
 export function extractURL(value: string) {
     const match = CSS.URL.exec(value);
-    return match ? trimBoth(match[1].trim(), '"').trim() : undefined;
+    if (match) {
+        return trimBoth(match[1].trim(), '"').trim();
+    }
 }
 
 export function resolveURL(value: string) {
     const url = extractURL(value);
-    return url ? resolvePath(url) : undefined;
+    if (url) {
+        return resolvePath(url);
+    }
 }
 
 export function insertStyleSheetRule(value: string, index = 0) {

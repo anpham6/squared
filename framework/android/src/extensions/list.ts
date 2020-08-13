@@ -24,7 +24,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             layout.setContainerType(CONTAINER_NODE.LINEAR, NODE_ALIGNMENT.HORIZONTAL);
         }
         else {
-            return undefined;
+            return;
         }
         super.processNode(node, parent);
         return {
@@ -134,7 +134,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                                 node.modifyBox(BOX_STANDARD.MARGIN_LEFT, parent.paddingLeft);
                             }
                             node.android('layout_columnSpan', columnCount.toString());
-                            return undefined;
+                            return;
                     }
                 }
                 if (node.length === 0 && !node.outerWrapper) {
@@ -254,7 +254,6 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 }
             }
         }
-        return undefined;
     }
 
     public postConstraints(node: T) {

@@ -160,6 +160,5 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
             }
         }
         this.data.set(node, mainData);
-        return undefined;
     }
 }

@@ -67,6 +67,5 @@ export default class <T extends View> extends squared.base.extensions.Sprite<T> 
                 complete: true
             };
         }
-        return undefined;
     }
 }

@@ -28,14 +28,16 @@ export function setElementCache(element: Element, attr: string, sessionId: strin
 
 export function getElementCache<T = unknown>(element: Element, attr: string, sessionId?: string) {
     const elementMap = getElementData(element, sessionId);
-    return elementMap !== undefined ? elementMap[attr] as Undef<T> : undefined;
+    if (elementMap !== undefined) {
+        return elementMap[attr] as Undef<T>;
+    }
 }
 
 export function getElementData(element: Element, sessionId?: string) {
     if (!sessionId) {
         sessionId = SESSION_MAP['0'].get(element)?.sessionId;
         if (!sessionId) {
-            return undefined;
+            return;
         }
     }
     return SESSION_MAP[sessionId].get(element);

@@ -9,7 +9,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
     public insertNode(element: Element, sessionId: string) {
         if (element.nodeName === '#text') {
             if (this.userSettings.excludePlainText) {
-                return undefined;
+                return;
             }
             this.controllerHandler.applyDefaultStyles(element, sessionId);
         }

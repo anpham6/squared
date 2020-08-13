@@ -69,6 +69,5 @@ export default abstract class Column<T extends squared.base.NodeUI> extends Exte
             boxWidth: parent.actualBoxWidth(boxWidth),
             multiline
         });
-        return undefined;
     }
 }

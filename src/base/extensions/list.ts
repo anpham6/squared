@@ -125,6 +125,5 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                 ++i;
             }
         });
-        return undefined;
     }
 }

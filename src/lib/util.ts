@@ -1060,7 +1060,6 @@ export function findSet<T = unknown>(list: Set<T>, predicate: IteratorPredicate<
             return item;
         }
     }
-    return undefined;
 }
 
 export function sortArray<T = any>(list: T[], ascending: boolean, ...attrs: string[]) {

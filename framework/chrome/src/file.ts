@@ -10,7 +10,7 @@ const { appendSeparator, convertWord, fromLastIndexOf, isString, iterateReverseA
 const STRING_SERVERROOT = '__serverroot__';
 const REGEXP_IMGSRCSET = /[\s\n]*(.+?\.[^\s,]+)(\s+[\d.]+[wx]\s*)?,?/g;
 
-function parseFileAs(attr: string, value: Undef<string>): [string, Undef<string>, boolean] | undefined {
+function parseFileAs(attr: string, value: Undef<string>): Undef<[string, Undef<string>, boolean]> {
     if (value) {
         const match = new RegExp(`${attr}:\\s*((?:[^"]|\\\\")+)`).exec(value.replace(/\\/g, '/'));
         if (match) {
@@ -18,7 +18,6 @@ function parseFileAs(attr: string, value: Undef<string>): [string, Undef<string>
             return [segments[0], segments[1] || undefined, segments[2] === 'preserve'];
         }
     }
-    return undefined;
 }
 
 function getFilePath(value: string, saveTo?: boolean): [Undef<string>, string, string] {
@@ -105,7 +104,7 @@ function setBundleIndex(bundleIndex: BundleIndex) {
     }
 }
 
-function createBundleAsset(bundles: ChromeAsset[], element: HTMLElement, saveTo: string, format?: string, preserve?: boolean) {
+function createBundleAsset(bundles: ChromeAsset[], element: HTMLElement, saveTo: string, format?: string, preserve?: boolean): Undef<ChromeAsset> {
     const content = element.innerHTML.trim();
     if (content) {
         const [moveTo, pathname, filename] = getFilePath(saveTo);
@@ -114,7 +113,6 @@ function createBundleAsset(bundles: ChromeAsset[], element: HTMLElement, saveTo:
                 (item.trailingContent ?? (item.trailingContent = [])).push({ value: content, format, preserve });
                 return true;
             }
-            return;
         });
         if (index !== Infinity) {
             return {
@@ -128,7 +126,6 @@ function createBundleAsset(bundles: ChromeAsset[], element: HTMLElement, saveTo:
             } as ChromeAsset;
         }
     }
-    return undefined;
 }
 
 function setBundleData(bundleIndex: BundleIndex, data: ChromeAsset) {
@@ -180,7 +177,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             }
         }
         if (!local && !relocate && options?.preserveCrossOrigin) {
-            return undefined;
+            return;
         }
         const match = FILE.PROTOCOL.exec(value);
         if (match) {
@@ -253,7 +250,6 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 preserve
             };
         }
-        return undefined;
     }
 
     public resource!: chrome.base.Resource<T>;
@@ -494,7 +490,6 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     return data;
                 }
             }
-            return undefined;
         };
         document.querySelectorAll('video').forEach((element: HTMLVideoElement) => processUri(null, resolvePath(element.poster)));
         document.querySelectorAll('picture > source').forEach((element: HTMLSourceElement) => {
@@ -606,7 +601,6 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         if (options.removeUnusedStyles) {
             return { unusedStyles: Array.from(this.application.session.unusedStyles) };
         }
-        return undefined;
     }
 
     public getCopyQueryParameters(options: ChromeFileCopyingOptions) {

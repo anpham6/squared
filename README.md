@@ -776,7 +776,9 @@ You can also define your own optimizations in squared.settings.json:
 
 These particular plugins can be configured using a plain object literal. You have to manually install these packages [<b>npm run install-chrome</b>] since this feature is only relevant to the Chrome framework. Transpiling with Babel is also configurable with a .babelrc file in the base folder for any presets and additional settings. Other non-builtin minifiers can similarly be applied by defining a custom string-based synchronous function.
 
-external = category -> npm package name -> custom function name
+```xml
+external -> html | js | css -> npm package name -> custom name
+```
 
 * Function object
 * file relative to serve.js

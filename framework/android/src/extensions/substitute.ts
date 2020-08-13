@@ -53,7 +53,6 @@ export default class Substitute<T extends View> extends squared.base.ExtensionUI
                 };
             }
         }
-        return undefined;
     }
 
     public postOptimize(node: T) {

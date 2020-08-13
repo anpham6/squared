@@ -180,7 +180,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
     public processNode(node: T, parent: T) {
         let fontAdjust = getFontMeasureAdjust(node);
         if (fontAdjust === Infinity) {
-            return undefined;
+            return;
         }
         const application = this.application as android.base.Application<T>;
         if (isNaN(fontAdjust)) {
@@ -388,7 +388,6 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                 return { next: true };
             }
         }
-        return undefined;
     }
 
     public beforeParseDocument() {

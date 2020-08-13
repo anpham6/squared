@@ -13,7 +13,7 @@
     "strictPropertyInitialization": true,
     "noImplicitAny": true,
     "noImplicitThis": true,
-    "noImplicitReturns": true,
+    "noImplicitReturns": false,
     "suppressImplicitAnyIndexErrors": true,
     "allowUmdGlobalAccess": true
   },

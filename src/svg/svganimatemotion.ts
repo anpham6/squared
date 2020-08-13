@@ -54,7 +54,6 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                         }
                     }
                 }
-                return;
             });
             this.setCalcMode();
         }

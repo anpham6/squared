@@ -10,7 +10,6 @@ export default abstract class NodeGroupUI extends NodeUI {
             this._bounds = NodeUI.outerRegion(this);
             return this._bounds;
         }
-        return undefined;
     }
 
     public previousSiblings(options?: TraverseSiblingsOptions) {

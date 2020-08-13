@@ -30,7 +30,6 @@ export default class Grid <T extends View> extends squared.base.extensions.Grid<
                 complete: true
             };
         }
-        return undefined;
     }
 
     public processChild(node: T, parent: T) {
@@ -91,7 +90,6 @@ export default class Grid <T extends View> extends squared.base.extensions.Grid<
                 };
             }
         }
-        return undefined;
     }
 
     public postConstraints(node: T) {

@@ -620,7 +620,6 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 complete: true
             };
         }
-        return undefined;
     }
 
     public processChild(node: T, parent: T) {
@@ -725,7 +724,6 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 outputAs
             };
         }
-        return undefined;
     }
 
     public postBaseLayout(node: T) {

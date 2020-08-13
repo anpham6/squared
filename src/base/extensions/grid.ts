@@ -122,7 +122,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                     const nextAxisX: T[] = nextMapX[nextCoordsX[i]];
                     const q = nextAxisX.length;
                     if (i === 0 && q === 0) {
-                        return undefined;
+                        return;
                     }
                     columnRight[i] = i === 0 ? 0 : columnRight[i - 1];
                     for (let j = 0; j < q; ++j) {
@@ -139,7 +139,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                                     row[index] = nextX;
                                 }
                                 else {
-                                    return undefined;
+                                    return;
                                 }
                             }
                         }
@@ -293,6 +293,5 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
             }
             this.data.set(node, columnCount);
         }
-        return undefined;
     }
 }

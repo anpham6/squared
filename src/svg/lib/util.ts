@@ -258,7 +258,6 @@ export const TRANSFORM = {
                 return result;
             }
         }
-        return undefined;
     },
     matrix(element: SVGElement, value?: string): Undef<SvgMatrix> {
         const match = REGEXP_TRANSFORM.MATRIX.exec(value || getAttribute(element, 'transform'));
@@ -284,7 +283,6 @@ export const TRANSFORM = {
                     };
             }
         }
-        return undefined;
     },
     origin(element: SVGElement, value?: string) {
         if (!value) {
@@ -578,7 +576,6 @@ export function getNearestViewBox(element: SVGElement) {
         }
         current = current.parentElement;
     }
-    return undefined;
 }
 
 export function getRootOffset(element: SVGGraphicsElement, rootElement: Element) {

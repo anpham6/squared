@@ -138,14 +138,13 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                             splitValues[i] = result;
                         }
                         else {
-                            return undefined;
+                            return;
                         }
                     }
                     return [splitTimes, splitValues];
                 }
             }
         }
-        return undefined;
     }
 
     public static toFractionList(value: string, delimiter = ';', ordered = true) {

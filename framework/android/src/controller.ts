@@ -329,7 +329,7 @@ function getBoxWidth(node: View) {
             return width - (offsetLeft + offsetRight);
         }
     }
-    return undefined;
+    return 0;
 }
 
 function causesLineBreak(element: Element) {
@@ -1035,7 +1035,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             if (isUnknownParent(parent, CONTAINER_NODE.CONSTRAINT, layout.length)) {
                 parent.addAlign(NODE_ALIGNMENT.FLOAT);
                 parent.removeAlign(NODE_ALIGNMENT.UNKNOWN);
-                return undefined;
+                return;
             }
             else {
                 layout.node = this.createNodeGroup(layout.node, layout.children, parent);
@@ -1069,13 +1069,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const containerType = getVerticalLayout(layout);
                 if (isUnknownParent(parent, containerType, length)) {
                     setVerticalLayout(parent);
-                    return undefined;
+                    return;
                 }
                 else {
                     if (parent.layoutConstraint) {
                         parent.addAlign(NODE_ALIGNMENT.VERTICAL);
                         if (!parent.hasAlign(NODE_ALIGNMENT.ABSOLUTE)) {
-                            return undefined;
+                            return;
                         }
                     }
                     layout.node = this.createLayoutGroup(layout);
@@ -1103,13 +1103,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             const containerType = getVerticalAlignedLayout(layout);
             if (isUnknownParent(parent, containerType, length)) {
                 setVerticalLayout(parent);
-                return undefined;
+                return;
             }
             else {
                 if (parent.layoutConstraint) {
                     parent.addAlign(NODE_ALIGNMENT.VERTICAL);
                     if (!parent.hasAlign(NODE_ALIGNMENT.ABSOLUTE)) {
-                        return undefined;
+                        return;
                     }
                 }
                 layout.node = this.createLayoutGroup(layout);
@@ -1786,7 +1786,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 }
                             }
                         }
-                        return;
                     });
                 }
                 if (!node.hasPX('width')) {

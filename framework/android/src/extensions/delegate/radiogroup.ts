@@ -125,12 +125,11 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
                             template.controlName = controlName;
                         }
                         this.setBaselineIndex(group, radiogroup);
-                        return undefined;
+                        return;
                     }
                 }
             }
         }
-        return undefined;
     }
 
     public postBaseLayout(node: T) {

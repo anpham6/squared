@@ -41,7 +41,6 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
                         return true;
                     }
                 }
-                return;
             });
             const target = element.dataset.androidTarget;
             if (target) {
@@ -298,7 +297,6 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
             node.hide();
             return { next: true };
         }
-        return undefined;
     }
 
     public postOptimize(node: T) {

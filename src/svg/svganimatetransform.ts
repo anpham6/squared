@@ -25,7 +25,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                     result[i] = seg;
                 }
                 else {
-                    return undefined;
+                    return;
                 }
             }
         }
@@ -53,7 +53,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                     result[i] = seg;
                 }
                 else {
-                    return undefined;
+                    return;
                 }
             }
         }
@@ -77,7 +77,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                     result[i] = seg;
                 }
                 else {
-                    return undefined;
+                    return;
                 }
             }
         }
@@ -98,7 +98,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                     result[i] = seg;
                 }
                 else {
-                    return undefined;
+                    return;
                 }
             }
         }

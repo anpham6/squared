@@ -13,7 +13,6 @@ export default class Iterator<T> implements squared.lib.base.ArrayIterator<T> {
             this._iterating = 1;
             return this.children[++this.index];
         }
-        return undefined;
     }
 
     public hasNext() {

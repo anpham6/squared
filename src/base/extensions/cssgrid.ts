@@ -1162,6 +1162,5 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 data.set(node, mainData);
             }
         }
-        return undefined;
     }
 }

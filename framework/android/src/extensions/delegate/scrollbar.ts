@@ -67,7 +67,7 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                 if (i === 0) {
                     container.inherit(node, 'base', 'initial', 'styleMap');
                     if (!parent.replaceTry({ child: node, replaceWith: container })) {
-                        return undefined;
+                        return;
                     }
                 }
                 else {
@@ -150,6 +150,5 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
             node.parent = parent;
             return { parent };
         }
-        return undefined;
     }
 }

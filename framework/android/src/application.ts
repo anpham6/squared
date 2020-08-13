@@ -27,7 +27,6 @@ export default class Application<T extends View> extends squared.base.Applicatio
                 }
             }
         }
-        return undefined;
     }
 
     set viewModel(value) {

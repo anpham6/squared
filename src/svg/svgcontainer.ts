@@ -168,7 +168,6 @@ function getViewport(container: SvgContainer): Undef<Svg> {
         container = container.parent as SvgContainer;
     }
     while (container);
-    return undefined;
 }
 
 function getNearestViewBox(container: SvgContainer): Undef<Svg | SvgUseSymbol> {
@@ -179,7 +178,6 @@ function getNearestViewBox(container: SvgContainer): Undef<Svg | SvgUseSymbol> {
         container = container.parent as SvgContainer;
     }
     while (container);
-    return undefined;
 }
 
 const hasLength = (value: string) => REGEXP_LENGTHPERCENTAGE.test(value);

@@ -131,23 +131,25 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public applyDefaultStyles(element: Element, sessionId: string) {
-        let styleMap: StringMapChecked;
         if (element.nodeName === '#text') {
-            styleMap = {
+            setElementCache(element, 'styleMap', sessionId, {
                 position: 'static',
                 display: 'inline',
                 verticalAlign: 'baseline',
                 float: 'none'
-            };
+            });
         }
         else {
-            styleMap = getElementCache(element, 'styleMap', sessionId) || {};
-            const tagName = element.tagName;
+            let styleMap = getElementCache<StringMapChecked>(element, 'styleMap', sessionId);
+            if (!styleMap) {
+                styleMap = {};
+                setElementCache(element, 'styleMap', sessionId, styleMap);
+            }
             if (isUserAgent(USER_AGENT.FIREFOX)) {
-                switch (tagName) {
+                switch (element.tagName) {
                     case 'BODY':
                         if (styleMap.backgroundColor === 'rgba(0, 0, 0, 0)') {
-                            styleMap.backgroundColor = 'rgb(255, 255, 255)';
+                            styleMap.backgroundColor = '';
                         }
                         break;
                     case 'INPUT':
@@ -165,7 +167,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         break;
                 }
             }
-            switch (tagName) {
+            switch (element.tagName) {
                 case 'A':
                     if (!styleMap.color) {
                         styleMap.color = this._settingsStyle.anchorFontColor;
@@ -310,7 +312,6 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 }
             }
         }
-        setElementCache(element, 'styleMap', sessionId, styleMap);
     }
 
     public addBeforeOutsideTemplate(id: number, value: string, format = true, index = -1) {

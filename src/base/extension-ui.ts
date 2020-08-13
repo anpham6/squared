@@ -54,13 +54,8 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
         return includes(this.application.getDatasetName('use', element), this.name);
     }
 
-    public processNode(node: T, parent: T): Undef<ExtensionResult<T>> {
-        return undefined;
-    }
-
-    public processChild(node: T, parent: T): Undef<ExtensionResult<T>> {
-        return undefined;
-    }
+    public processNode(node: T, parent: T): Void<ExtensionResult<T>> {}
+    public processChild(node: T, parent: T): Void<ExtensionResult<T>> {}
 
     public addDescendant(node: T) {
         const map = this.application.session.extensionMap;

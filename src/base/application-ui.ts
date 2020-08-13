@@ -133,7 +133,6 @@ function getCounterValue(value: Undef<string>, counterName: string, fallback = 1
         }
         return fallback;
     }
-    return undefined;
 }
 
 function setColumnMaxWidth(nodes: NodeUI[], offset: number) {
@@ -1539,7 +1538,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (pseudoElt === '::after') {
                         const checkPseudoAfter = (sibling: Element) => sibling.nodeName === '#text' && !/\s+$/.test(sibling.textContent!);
                         if ((absolute || textContent === '' || !checkPseudoAfter(element.lastChild as Element)) && !checkPseudoDimension(styleMap, true, absolute)) {
-                            return undefined;
+                            return;
                         }
                     }
                     else {
@@ -1559,13 +1558,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     continue;
                                 }
                                 else if (style.getPropertyValue('float') !== 'none') {
-                                    return undefined;
+                                    return;
                                 }
                                 break;
                             }
                         }
                         if (!checkPseudoDimension(styleMap, false, absolute)) {
-                            return undefined;
+                            return;
                         }
                     }
                 }
@@ -1674,7 +1673,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                     }
                                                     cascadeCounterSibling(item);
                                                 }
-                                                return;
                                             });
                                         }
                                     };
@@ -1791,7 +1789,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
         }
-        return undefined;
     }
 
     protected createAssetOptions(options?: FileActionOptions) {

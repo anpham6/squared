@@ -1,6 +1,7 @@
 type Undef<T> = T | undefined;
 type Null<T> = T | null;
 type UndefNull<T> = Undef<T> | Null<T>;
+type Void<T> = T | void;
 type Nullable<T> = { [P in keyof T]: T[P] | null; };
 
 type Constructor<T> = new(...args: any[]) => T;

@@ -286,7 +286,6 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
             }
             return value;
         }
-        return undefined;
     }
 
     public paused(attr: string, time: number) {

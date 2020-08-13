@@ -969,7 +969,6 @@ export function findColorShade(value: string) {
             return COLOR_CSS3[COLOR_CSS3.length - 1];
         }
     }
-    return undefined;
 }
 
 export function parseColor(value: string, opacity = 1, transparency?: boolean) {
@@ -1054,7 +1053,6 @@ export function parseColor(value: string, opacity = 1, transparency?: boolean) {
             }
         }
     }
-    return undefined;
 }
 
 export function reduceRGBA(value: RGBA, percent: number, cacheName?: string) {
@@ -1133,7 +1131,6 @@ export function parseRGBA(value: string) {
             } as RGBA;
         }
     }
-    return undefined;
 }
 
 export function convertHSLA(value: RGBA): HSLA {

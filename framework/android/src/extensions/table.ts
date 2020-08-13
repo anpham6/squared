@@ -146,7 +146,6 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                 node.hide({ hidden: true });
             }
         }
-        return undefined;
     }
 
     public postOptimize(node: T) {

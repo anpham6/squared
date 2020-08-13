@@ -1010,7 +1010,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 }
             }
         }
-        return undefined;
     }
 
     public sort(predicate?: (a: T, b: T) => number) {
@@ -2040,7 +2039,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                 this._childIndex = index;
                                 return true;
                             }
-                            return;
                         });
                     }
                 }

@@ -587,7 +587,6 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 return images;
             }
         }
-        return undefined;
     }
 
     public static getBackgroundSize(node: NodeUI, value: string, screenDimension?: Dimension): Undef<Dimension> {
@@ -601,7 +600,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             case 'auto':
             case 'auto auto':
             case 'initial':
-                return undefined;
+                return;
             default: {
                 const dimensions = value.split(' ');
                 for (let i = 0; i < dimensions.length; ++i) {
@@ -621,7 +620,9 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 break;
             }
         }
-        return width > 0 && height > 0 ? { width: Math.round(width), height: Math.round(height) } : undefined;
+        if (width > 0 && height > 0) {
+            return { width: Math.round(width), height: Math.round(height) };
+        }
     }
 
     public static hasLineBreak(node: NodeUI, lineBreak?: boolean, trim?: boolean) {
@@ -656,7 +657,6 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 }
             }
         }
-        return undefined;
     }
 
     public abstract get userSettings(): UserSettingsUI;
@@ -692,13 +692,12 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     asset.bytes = data;
                 }
                 else {
-                    return undefined;
+                    return;
                 }
                 fileHandler.addAsset(asset);
                 return asset;
             }
         }
-        return undefined;
     }
 
     public setBoxStyle(node: T) {

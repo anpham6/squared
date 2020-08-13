@@ -545,7 +545,6 @@ export default class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
                                                         }
                                                         return true;
                                                     }
-                                                    return;
                                                 });
                                                 if (float) {
                                                     const clear = getElementCache<StringMap>(previous.element as Element, 'styleMap::after', previous.sessionId)?.clear;

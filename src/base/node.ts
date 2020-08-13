@@ -238,10 +238,8 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
                     break;
                 case ':only-of-type': {
                     const children = parent.naturalElements;
-                    const length = children.length;
-                    let j = 0, k = 0;
-                    while (j < length) {
-                        if (children[j++].tagName === tagName && ++k > 1) {
+                    for (let j = 0, k = 0, length = children.length; j < length; ++j) {
+                        if (children[j].tagName === tagName && ++k > 1) {
                             return false;
                         }
                     }
@@ -249,10 +247,8 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
                 }
                 case ':first-of-type': {
                     const children = parent.naturalElements;
-                    const length = children.length;
-                    let j = 0;
-                    while (j < length) {
-                        const item = children[j++];
+                    for (let j = 0, length = children.length; j < length; ++j) {
+                        const item = children[j];
                         if (item.tagName === tagName) {
                             if (item !== child) {
                                 return false;
@@ -365,7 +361,6 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
                                             }
                                             break;
                                     }
-                                    return;
                                 });
                                 if (!valid) {
                                     return false;
@@ -630,7 +625,7 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
             else {
                 value = attributes[attr.key];
             }
-            if (value === undefined) {
+            if (!value) {
                 return false;
             }
             else {
@@ -898,7 +893,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             if (data[name]) {
                 delete data[name][attr];
             }
-            return undefined;
+            return;
         }
         else if (value !== undefined) {
             let obj: PlainObject = data[name];
@@ -911,7 +906,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             }
         }
         const stored: PlainObject = data[name];
-        return isObject(stored) ? stored[attr] as T : undefined;
+        if (isObject(stored)) {
+            return stored[attr] as T;
+        }
     }
 
     public unsetCache(...attrs: string[]) {
@@ -1331,7 +1328,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             const element = this._element as HTMLElement;
             if (setStyleCache(element, attr, this.sessionId, value, getStyle(element).getPropertyValue(attr)) > 0) {
                 if (callback) {
-                    callback.call(this);
+                    callback.call(this, attr);
                     this.cssFinally(attr);
                 }
                 return true;
@@ -1342,7 +1339,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     public cssTryAll(values: StringMap, callback?: FunctionSelf<this>) {
         if (this.styleElement) {
-            const succeeded: StringMap = {};
+            const result: StringMap = {};
             const sessionId = this.sessionId;
             const element = this._element as HTMLElement;
             const style = getStyle(element);
@@ -1350,21 +1347,21 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 const value = values[attr]!;
                 switch (setStyleCache(element, attr, sessionId, value, style.getPropertyValue(attr))) {
                     case 0:
-                        this.cssFinally(succeeded);
+                        this.cssFinally(result);
                         return false;
                     case 1:
                         continue;
                     case 2:
-                       succeeded[attr] = value;
+                       result[attr] = value;
                        break;
                 }
             }
             if (callback) {
-                callback.call(this);
-                this.cssFinally(succeeded);
+                callback.call(this, result);
+                this.cssFinally(result);
                 return true;
             }
-            return succeeded;
+            return result;
         }
         return false;
     }
@@ -1582,11 +1579,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             bounds = rect || newBoxRectDimension();
             this._bounds = bounds;
         }
-        if (!cache && bounds) {
-            this._box = undefined;
-            this._linear = undefined;
+        if (bounds) {
+            if (!cache) {
+                this._box = undefined;
+                this._linear = undefined;
+            }
+            return bounds;
         }
-        return bounds;
     }
 
     public resetBounds() {

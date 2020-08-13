@@ -130,7 +130,6 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                 case 'points':
                     return Array.isArray(value);
             }
-            return undefined;
         }
     };
 };
