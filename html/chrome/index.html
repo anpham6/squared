@@ -127,6 +127,9 @@
                         time = performance.now();
                         searchQuery(await squared.parseDocument(), 'chrome #3');
 
+                        time = performance.now();
+                        searchQuery(squared.parseDocumentSync(), 'chrome sync #4');
+
                         squared.setFramework(vdom);
                         time = performance.now();
                         searchQuery(await squared.fromElement(document.documentElement), 'vdom #1');
@@ -137,6 +140,9 @@
 
                         time = performance.now();
                         searchQuery(await squared.parseDocument(), 'vdom #3');
+
+                        time = performance.now();
+                        searchQuery(squared.parseDocumentSync(), 'vdom sync #4');
                     });
                 });
             });

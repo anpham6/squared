@@ -1,6 +1,15 @@
 type Node = squared.base.Node;
 type ExtensionRequest = squared.base.Extension<Node> | string;
 
+export interface FrameworkOptions {
+    settings?: StandardMap;
+    loadAs?: string;
+    saveAs?: string;
+    cache?: boolean;
+}
+
+export type ExtensionPrototypeData = ObjectMap<FunctionType<any> | { get: () => any, set: (value: any) => void } | number | string | boolean>;
+
 export const settings: StandardMap;
 export const system: FunctionMap<any>;
 export function setHostname(value: string): void;
@@ -11,6 +20,7 @@ export function exclude(value: ExtensionRequest | string): boolean;
 export function configure(value: ExtensionRequest | string, options: FrameworkOptions): boolean;
 export function retrieve(value: string): Null<PlainObject>;
 export function parseDocument(...elements: (string | HTMLElement)[]): Promise<Node | Node[] | void>;
+export function parseDocumentSync(...elements: (string | HTMLElement)[]): Undef<Node | Node[]>;
 export function copyToDisk(value: string, options?: PlainObject): Promise<PlainObject | void>;
 export function appendToArchive(value: string, options?: PlainObject): Promise<PlainObject | void>;
 export function saveToArchive(value?: string, options?: PlainObject): Promise<PlainObject | void>;

@@ -61,7 +61,7 @@ File bundles for common combinations are available in the /dist/bundles folder.
 
 #### Example: android
 
-The primary function "parseDocument" can be called on multiple elements and multiple times per session. The application will continuously and progressively build the layout files into a single entity with combined shared resources.
+The primary function "parseDocument" can be called on multiple elements and multiple times per session. The application will continuously and progressively build the layout files into a single entity with combined shared resources. Using "parseDocumentSync" is not recommended when your page has either images or fonts.
 
 ```javascript
 <script src="/dist/squared.min.js"></script>
@@ -100,11 +100,11 @@ VDOM is a minimal framework with slightly better performance when you are only l
 <script src="/dist/squared.base.min.js"></script>
 <script src="/dist/vdom.framework.min.js"></script> /* OR: chrome.framework.min.js */
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
         squared.setFramework(vdom /* chrome */, /* optional: FrameworkOptions */);
 
-        const element = squared.parseDocument(/* HTMLElement */); // default: document.documentElement 'HTML'
-        const elementArray = squared.parseDocument(/* HTMLElement */, /* 'subview-id' */, /* ...etc */); // more than 1 element
+        const element = await squared.parseDocument(/* HTMLElement */); // default: document.documentElement 'HTML'
+        const elementArray = squared.parseDocumentSync(/* HTMLElement */, /* 'subview-id' */, /* ...etc */); // more than 1 element
 
         // start new "parseDocument" session (optional)
         squared.reset();
@@ -277,6 +277,7 @@ setHostname(value: string) // use another cors-enabled server for processing arc
 setViewModel(data?: {}) // object data for layout bindings
 
 parseDocument() // see installation section (Promise)
+parseDocumentSync() // skips preloadImages and preloadFonts (synchronous)
 
 get(...elements: (Element | string)[]) // Element map of any Node objects created during the active "parseDocument" session
 latest() // most recent parseDocument sessionId

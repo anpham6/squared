@@ -21,8 +21,6 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
         return null;
     }
 
-    public init?: (element: HTMLElement, sessionId: string) => boolean;
-
     public readonly tagNames: string[];
     public readonly eventOnly?: boolean;
     public readonly cascadeAll?: boolean;

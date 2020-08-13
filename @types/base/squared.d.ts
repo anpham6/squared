@@ -50,6 +50,7 @@ declare module "base" {
     }
 
     interface AppProcessing<T extends Node> {
+        sessionId: string;
         cache: NodeList<T>;
         excluded: NodeList<T>;
         rootElements: Set<HTMLElement>;
@@ -76,6 +77,7 @@ declare module "base" {
 
     class Application<T extends Node> implements FileActionAsync {
         static readonly KEY_NAME: string;
+        static prioritizeExtensions<T extends Node>(value: string, extensions: Extension<T>[]): Extension<T>[];
         userSettings: UserSettings;
         builtInExtensions: Map<string, Extension<T>>;
         closed: boolean;
@@ -88,6 +90,7 @@ declare module "base" {
         readonly Node: Constructor<T>;
         reset(): void;
         parseDocument(...elements: (string | HTMLElement)[]): Promise<T | T[]>;
+        parseDocumentSync(...elements: (string | HTMLElement)[]): Undef<T | T[]>;
         createCache(documentRoot: HTMLElement, sessionId: string): Undef<T>;
         setStyleMap(sessionId: string): void;
         createNode(sessionId: string, options: CreateNodeOptions): T;
@@ -259,6 +262,7 @@ declare module "base" {
         readonly dependencies: ExtensionDependency[];
         readonly subscribers: Set<T>;
         readonly data: Map<T, unknown>;
+        init?(element: HTMLElement, sessionId: string): boolean;
         reset(): void;
         require(name: string, preload?: boolean): void;
         beforeParseDocument(sessionId: string): void;
@@ -275,7 +279,6 @@ declare module "base" {
         readonly eventOnly?: boolean;
         readonly cascadeAll?: boolean;
         readonly documentBase?: boolean;
-        init?(element: HTMLElement, sessionId: string): boolean;
         included(element: HTMLElement): boolean;
         is(node: T): boolean;
         condition(node: T, parent?: T): boolean;

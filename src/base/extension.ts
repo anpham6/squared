@@ -25,6 +25,8 @@ export default abstract class Extension<T extends squared.base.Node> implements 
         }
     }
 
+    public init?: (element: HTMLElement, sessionId: string) => boolean;
+
     public require(name: string, preload = false) {
         this.dependencies.push({ name, preload });
     }

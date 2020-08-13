@@ -635,7 +635,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public unsafe<T = unknown>(name: string, value?: any): Undef<T> {
-        return value === undefined ? this['_' + name] as Undef<T> : this['_' + name] = value;
+        return (arguments.length === 1 ? this['_' + name] : this['_' + name] = value) as Undef<T>;
     }
 
     public unset(name: string) {

@@ -22,25 +22,6 @@ const REGEXP_PSEUDOQUOTE = /("(?:[^"]|\\")+"|[^\s]+)\s+("(?:[^"]|\\")+"|[^\s]+)(
 const TEXT_STYLE = NodeUI.TEXT_STYLE.slice(0);
 TEXT_STYLE.push('fontSize');
 
-function prioritizeExtensions<T extends NodeUI>(value: string, extensions: ExtensionUI<T>[]) {
-    const included = value.trim().split(/\s*,\s*/);
-    const result: ExtensionUI<T>[] = [];
-    const untagged: ExtensionUI<T>[] = [];
-    const length = extensions.length;
-    let i = 0;
-    while (i < length) {
-        const ext = extensions[i++];
-        const index = included.indexOf(ext.name);
-        if (index !== -1) {
-            result[index] = ext;
-        }
-        else {
-            untagged.push(ext);
-        }
-    }
-    return result.length > 0 ? flatArray<ExtensionUI<T>>(result, 0).concat(untagged) : extensions;
-}
-
 function getFloatAlignmentType(nodes: NodeUI[]) {
     let result = 0,
         right = true,
@@ -600,7 +581,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return this.layouts[0]?.content || '';
     }
 
-    protected cascadeParentNode(cache: squared.base.NodeList<T>, excluded: squared.base.NodeList<T>, rootElements: Set<HTMLElement>, parentElement: HTMLElement, sessionId: string, depth: number, extensions?: ExtensionUI<T>[], cascadeAll?: boolean) {
+    protected cascadeParentNode(cache: squared.base.NodeList<T>, excluded: squared.base.NodeList<T>, parentElement: HTMLElement, sessionId: string, depth: number, extensions?: ExtensionUI<T>[], rootElements?: Set<HTMLElement>, cascadeAll?: boolean) {
         const node = this.insertNode(parentElement, sessionId, cascadeAll);
         if (depth === 0) {
             cache.add(node);
@@ -660,11 +641,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (extensions) {
                         const use = this.getDatasetName('use', element);
                         if (use) {
-                            prioritizeExtensions(use, extensions).some(item => item.init!(element, sessionId));
+                            ApplicationUI.prioritizeExtensions(use, extensions).some(item => item.init!(element, sessionId));
                         }
                     }
-                    if (!rootElements.has(element)) {
-                        child = element.childNodes.length === 0 ? this.insertNode(element, sessionId, cascadeAll) : this.cascadeParentNode(cache, excluded, rootElements, element, sessionId, childDepth, extensions, cascadeAll);
+                    if (!rootElements || !rootElements.has(element)) {
+                        child = element.childNodes.length === 0 ? this.insertNode(element, sessionId, cascadeAll) : this.cascadeParentNode(cache, excluded, element, sessionId, childDepth, extensions, rootElements, cascadeAll);
                         if (!child.excluded) {
                             inlineText = false;
                         }
@@ -1050,7 +1031,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             }
                         }
                         if (nodeY.styleElement) {
-                            combined = nodeY.use ? prioritizeExtensions(nodeY.use, extensionsTraverse) : extensionsTraverse;
+                            combined = nodeY.use ? ApplicationUI.prioritizeExtensions<T>(nodeY.use, extensionsTraverse) as ExtensionUI<T>[] : extensionsTraverse;
                             const r = combined.length;
                             let j = 0;
                             while (j < r) {
@@ -1953,10 +1934,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             return 0;
         });
-    }
-
-    get extensionsCascade() {
-        return this.extensions.filter(item => item.enabled && !!item.init);
     }
 
     get extensionsTraverse() {

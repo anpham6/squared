@@ -21,13 +21,15 @@ type FileActionOptions = squared.base.FileActionOptions;
 const extensionsQueue = new Set<Extension>();
 const extensionsExternal = new Set<Extension>();
 const optionsQueue = new Map<string, StandardMap>();
-const prototypeMap = new Map<number, ExtensionPrototypeData>();
+const prototypeMap = new Map<number, squared.ExtensionPrototypeData>();
 const settings = {} as UserSettings;
 const system = {} as FunctionMap<any>;
 
 let main: Undef<Main>;
 let framework: Undef<Framework>;
 let extensionManager: Undef<squared.base.ExtensionManager<Node>>;
+
+const ERROR_PARSEDOCUMENT = 'ERROR: Document is closed. Reset and rerun?';
 
 function includeExtension(extensions: Extension[], ext: Extension) {
     if (!extensions.includes(ext)) {
@@ -79,6 +81,23 @@ function findElement(element: HTMLElement, cache: boolean) {
     return main!.parseDocument(element) as Promise<Node>;
 }
 
+function initializeExtensions() {
+    if (extensionManager) {
+        if (extensionsQueue.size > 0) {
+            for (const item of extensionsQueue) {
+                extensionManager.include(item);
+            }
+            extensionsQueue.clear();
+        }
+    }
+    if (optionsQueue.size > 0) {
+        for (const [name, options] of optionsQueue.entries()) {
+            configure(name, options);
+        }
+        optionsQueue.clear();
+    }
+}
+
 async function findElementAll(query: NodeListOf<Element>, length: number) {
     let incomplete: Undef<boolean>;
     const elementMap = main!.elementMap;
@@ -115,7 +134,7 @@ export function setHostname(value: string) {
     }
 }
 
-export function setFramework(value: Framework, options?: FrameworkOptions) {
+export function setFramework(value: Framework, options?: squared.FrameworkOptions) {
     const reloading = framework !== undefined;
     let userSettings: Undef<StandardMap>,
         saveAs: Undef<string>,
@@ -196,24 +215,11 @@ export function setViewModel(data?: PlainObject) {
 
 export function parseDocument(...elements: (HTMLElement | string)[]) {
     if (main) {
-        if (extensionManager) {
-            if (extensionsQueue.size > 0) {
-                for (const item of extensionsQueue) {
-                    extensionManager.include(item);
-                }
-                extensionsQueue.clear();
-            }
-        }
-        if (optionsQueue.size > 0) {
-            for (const [name, options] of optionsQueue.entries()) {
-                configure(name, options);
-            }
-            optionsQueue.clear();
-        }
+        initializeExtensions();
         if (!main.closed) {
             return main.parseDocument(...elements);
         }
-        else if (!settings.showErrorMessages || confirm('ERROR: Document is closed. Reset and rerun?')) {
+        else if (!settings.showErrorMessages || confirm(ERROR_PARSEDOCUMENT)) {
             main.reset();
             return main.parseDocument(...elements);
         }
@@ -221,7 +227,21 @@ export function parseDocument(...elements: (HTMLElement | string)[]) {
     return session.frameworkNotInstalled<void>();
 }
 
-export function include(value: ExtensionRequest, options?: FrameworkOptions) {
+export function parseDocumentSync(...elements: (HTMLElement | string)[]) {
+    if (main) {
+        initializeExtensions();
+        if (!main.closed) {
+            return main.parseDocumentSync(...elements);
+        }
+        else if (!settings.showErrorMessages || confirm(ERROR_PARSEDOCUMENT)) {
+            main.reset();
+            return main.parseDocumentSync(...elements);
+        }
+    }
+    return undefined;
+}
+
+export function include(value: ExtensionRequest, options?: squared.FrameworkOptions) {
     if (typeof value === 'string') {
         value = main?.builtInExtensions.get(value) || retrieve(value);
     }
@@ -252,8 +272,8 @@ export function exclude(value: ExtensionRequest) {
     return false;
 }
 
-export function configure(value: ExtensionRequest, options: FrameworkOptions) {
-    if (util.isPlainObject<FrameworkOptions>(options)) {
+export function configure(value: ExtensionRequest, options: squared.FrameworkOptions) {
+    if (util.isPlainObject<squared.FrameworkOptions>(options)) {
         const mergeSettings = (name: string) => {
             const { loadAs, saveAs } = options;
             const result: PlainObject = {};
@@ -310,7 +330,7 @@ export function retrieve(value: string) {
     return null;
 }
 
-export function extend(functionMap: ExtensionPrototypeData, value = 0) {
+export function extend(functionMap: squared.ExtensionPrototypeData, value = 0) {
     let map = prototypeMap.get(value);
     if (!map) {
         map = {};

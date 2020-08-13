@@ -8,7 +8,7 @@ type PreloadItem = HTMLImageElement | string;
 const { CSS_PROPERTIES, CSS_TRAITS, checkMediaRule, getSpecificity, hasComputedStyle, insertStyleSheetRule, getPropertiesAsTraits, parseSelectorText } = squared.lib.css;
 const { FILE, STRING } = squared.lib.regex;
 const { frameworkNotInstalled, getElementCache, newSessionInit, resetSessionAll, setElementCache } = squared.lib.session;
-const { capitalize, convertCamelCase, isEmptyString, parseMimeType, promisify, resolvePath, splitPair, splitPairStart, trimBoth } = squared.lib.util;
+const { capitalize, convertCamelCase, flatArray, isEmptyString, parseMimeType, resolvePath, splitPair, splitPairStart, trimBoth } = squared.lib.util;
 
 const REGEXP_IMPORTANT = /\s*([a-z-]+):[^!;]+!important;/g;
 const REGEXP_FONTFACE = /\s*@font-face\s*{([^}]+)}\s*/;
@@ -36,6 +36,25 @@ function parseSrcSet(resourceHandler: squared.base.Resource<Node>, value: string
 
 export default abstract class Application<T extends Node> implements squared.base.Application<T> {
     public static readonly KEY_NAME = 'squared.application';
+
+    public static prioritizeExtensions<T extends Node>(value: string, extensions: squared.base.Extension<T>[]) {
+        const included = value.trim().split(/\s*,\s*/);
+        const result: squared.base.Extension<T>[] = [];
+        const untagged: squared.base.Extension<T>[] = [];
+        const length = extensions.length;
+        let i = 0;
+        while (i < length) {
+            const ext = extensions[i++];
+            const index = included.indexOf(ext.name);
+            if (index !== -1) {
+                result[index] = ext;
+            }
+            else {
+                untagged.push(ext);
+            }
+        }
+        return result.length > 0 ? flatArray<squared.base.Extension<T>>(result, 0).concat(untagged) : extensions;
+    }
 
     public builtInExtensions!: Map<string, squared.base.Extension<T>>;
     public extensions: squared.base.Extension<T>[] = [];
@@ -131,50 +150,21 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     public parseDocument(...elements: (string | HTMLElement)[]) {
-        const resourceHandler = this._resourceHandler;
-        let preloadImages: Undef<boolean>,
-            preloadFonts: Undef<boolean>;
-        if (resourceHandler) {
-            ({ preloadImages, preloadFonts } = resourceHandler.userSettings);
-        }
-        const sessionId = this._controllerHandler.generateSessionId;
-        const rootElements = new Set<HTMLElement>();
-        const preloadItems: PreloadItem[] = [];
-        const processing: squared.base.AppProcessing<T> = {
-            cache: new NodeList<T>(undefined, sessionId),
-            excluded: new NodeList<T>(undefined, sessionId),
-            rootElements,
-            elementMap: newSessionInit(sessionId),
-            initializing: false
-        };
-        this.session.active.set(sessionId, processing);
-        this._controllerHandler.init();
-        this.setStyleMap(sessionId);
-        const styleElement = insertStyleSheetRule('html > body { overflow: hidden !important; }');
-        let documentRoot: Undef<HTMLElement>,
-            preloaded: Undef<HTMLImageElement[]>;
-        if (elements.length === 0) {
-            documentRoot = this.mainElement;
-            rootElements.add(documentRoot);
+        const [processing, rootElements] = this.createSessionThread(elements);
+        let documentRoot: HTMLElement;
+        if (rootElements.size === 0) {
+            return Promise.reject(new Error('Document root not found.'));
         }
         else {
-            let i = 0;
-            while (i < elements.length) {
-                let element: Null<HTMLElement | string> = elements[i++];
-                if (typeof element === 'string') {
-                    element = document.getElementById(element);
-                }
-                if (!element || !hasComputedStyle(element)) {
-                    continue;
-                }
-                if (!documentRoot) {
-                    documentRoot = element;
-                }
-                rootElements.add(element);
-            }
+            documentRoot = rootElements.values().next().value as HTMLElement;
         }
-        if (!documentRoot) {
-            return Promise.reject(new Error('Document root not found.'));
+        const resourceHandler = this._resourceHandler;
+        const preloadItems: PreloadItem[] = [];
+        let preloadImages: Undef<boolean>,
+            preloadFonts: Undef<boolean>,
+            preloaded: Undef<HTMLImageElement[]>;
+        if (resourceHandler) {
+            ({ preloadImages, preloadFonts } = resourceHandler.userSettings);
         }
         if (resourceHandler) {
             for (const element of rootElements) {
@@ -198,44 +188,6 @@ export default abstract class Application<T extends Node> implements squared.bas
                 });
             }
         }
-        const resumeThread = () => {
-            const extensions = this.extensions;
-            processing.initializing = false;
-            let i: number, length: number;
-            if (preloaded) {
-                length = preloaded.length;
-                i = 0;
-                while (i < length) {
-                    const image = preloaded[i++];
-                    if (image.parentElement) {
-                        documentRoot!.removeChild(image);
-                    }
-                }
-            }
-            length = extensions.length;
-            i = 0;
-            while (i < length) {
-                extensions[i++].beforeParseDocument(sessionId);
-            }
-            const success: T[] = [];
-            for (const element of rootElements) {
-                const node = this.createCache(element, sessionId);
-                if (node) {
-                    this.afterCreateCache(node);
-                    success.push(node);
-                }
-            }
-            i = 0;
-            while (i < length) {
-                extensions[i++].afterParseDocument(sessionId);
-            }
-            try {
-                document.head.removeChild(styleElement);
-            }
-            catch {
-            }
-            return elements.length > 1 ? success : success[0];
-        };
         if (preloadImages) {
             preloaded = [];
             const { image, rawData } = resourceHandler!.mapOfAssets;
@@ -347,17 +299,22 @@ export default abstract class Application<T extends Node> implements squared.bas
                         resourceHandler!.addImage(value as HTMLImageElement);
                     }
                 }
-                return resumeThread();
+                return this.resumeSessionThread(processing, rootElements, elements.length, documentRoot, preloaded);
             })
             .catch((error: Error | Event | HTMLImageElement) => {
                 if (error instanceof Event) {
                     error = error.target as HTMLImageElement;
                 }
                 const message = error instanceof HTMLImageElement ? error.src : '';
-                return message === '' || !this.userSettings.showErrorMessages || confirm(`FAIL: ${message}`) ? resumeThread() : Promise.reject(message);
+                return message === '' || !this.userSettings.showErrorMessages || confirm(`FAIL: ${message}`) ? this.resumeSessionThread(processing, rootElements, elements.length, documentRoot, preloaded) : Promise.reject(message);
             });
         }
-        return promisify<T[]>(resumeThread)();
+        return Promise.resolve(this.resumeSessionThread(processing, rootElements, elements.length));
+    }
+
+    public parseDocumentSync(...elements: (string | HTMLElement)[]): Undef<T | T[]> {
+        const sessionData = this.createSessionThread(elements);
+        return this.resumeSessionThread(sessionData[0], sessionData[1], elements.length);
     }
 
     public createCache(documentRoot: HTMLElement, sessionId: string) {
@@ -406,40 +363,77 @@ export default abstract class Application<T extends Node> implements squared.bas
         return this.systemName;
     }
 
-    protected createRootNode(element: HTMLElement, sessionId: string) {
+    protected createRootNode(rootElement: HTMLElement, sessionId: string) {
         const processing = this.getProcessing(sessionId)!;
         const extensions = this.extensionsCascade;
-        const node = this.cascadeParentNode(processing.cache, processing.excluded, processing.rootElements, element, sessionId, 0, extensions.length > 0 ? extensions : undefined);
+        const node = this.cascadeParentNode(processing.cache, processing.excluded, rootElement, sessionId, 0, extensions.length > 0 ? extensions : undefined, processing.rootElements.size > 1 ? processing.rootElements : undefined);
         if (node) {
-            let previousNode = node,
-                currentElement = element.parentElement,
-                depth = 0;
-            while (currentElement) {
-                const parent = new this.Node(depth, sessionId, currentElement);
-                this._afterInsertNode(parent);
-                previousNode.parent = parent;
-                previousNode.actualParent = parent;
-                previousNode.depth = depth--;
-                previousNode.childIndex = 0;
-                if (parent.tagName === 'HTML') {
-                    processing.documentElement = parent;
-                    break;
-                }
-                else {
-                    currentElement = currentElement.parentElement;
-                    previousNode = parent;
-                }
-            }
             node.documentRoot = true;
             processing.node = node;
-            if (node.tagName === 'HTML') {
+            if (rootElement === document.documentElement) {
                 processing.documentElement = node;
+            }
+            else {
+                let previousNode = node,
+                    currentElement = rootElement.parentElement,
+                    id = 0,
+                    depth = -1;
+                while (currentElement) {
+                    const previousElement = previousNode.element!;
+                    const childNodes = currentElement.childNodes;
+                    const length = childNodes.length;
+                    const children: T[] = new Array(length);
+                    const parent = new this.Node(id--, sessionId, currentElement, children);
+                    this._afterInsertNode(parent);
+                    const elements: T[] = new Array(currentElement.childElementCount);
+                    let i = 0, j = 0, k = 0;
+                    while (i < length) {
+                        const element = childNodes[i++] as HTMLElement;
+                        let child: Undef<T>;
+                        if (element === previousElement) {
+                            child = previousNode;
+                            elements[k++] = previousNode;
+                        }
+                        else if (element.nodeName.startsWith('#')) {
+                            if (this.visibleText(parent, element)) {
+                                child = this.insertNode(element, sessionId);
+                                if (child) {
+                                    child.cssApply(parent.textStyle);
+                                }
+                            }
+                        }
+                        else {
+                            child = this.insertNode(element, sessionId);
+                            if (child) {
+                                elements[k++] = child;
+                            }
+                        }
+                        if (child) {
+                            child.init(parent, depth + 1, j);
+                            child.actualParent = parent;
+                            children[j++] = child;
+                        }
+                    }
+                    children.length = j;
+                    elements.length = k;
+                    parent.naturalChildren = children;
+                    parent.naturalElements = elements;
+                    if (currentElement === document.documentElement) {
+                        processing.documentElement = parent;
+                        break;
+                    }
+                    else {
+                        currentElement = currentElement.parentElement;
+                        previousNode = parent;
+                        --depth;
+                    }
+                }
             }
         }
         return node;
     }
 
-    protected cascadeParentNode(cache: NodeList<T>, excluded: NodeList<T>, rootElements: Set<HTMLElement>, parentElement: HTMLElement, sessionId: string, depth: number, extensions?: squared.base.Extension<T>[]) {
+    protected cascadeParentNode(cache: NodeList<T>, excluded: NodeList<T>, parentElement: HTMLElement, sessionId: string, depth: number, extensions?: squared.base.Extension<T>[], rootElements?: Set<HTMLElement>) {
         const node = this.insertNode(parentElement, sessionId);
         if (node) {
             const controllerHandler = this.controllerHandler;
@@ -470,7 +464,13 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                 }
                 else if (controllerHandler.includeElement(element)) {
-                    child = element.childNodes.length === 0 ? this.insertNode(element, sessionId) : this.cascadeParentNode(cache, excluded, rootElements, element, sessionId, childDepth, extensions);
+                    if (extensions) {
+                        const use = this.getDatasetName('use', element);
+                        if (use) {
+                            Application.prioritizeExtensions(use, extensions).some(item => item.init!(element, sessionId));
+                        }
+                    }
+                    child = element.childNodes.length === 0 ? this.insertNode(element, sessionId) : this.cascadeParentNode(cache, excluded, element, sessionId, childDepth, extensions, rootElements);
                     if (child) {
                         elements[k++] = child;
                         inlineText = false;
@@ -749,6 +749,80 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
     }
 
+    private createSessionThread(elements: (string | HTMLElement)[]): [squared.base.AppProcessing<T>, Set<HTMLElement>] {
+        const sessionId = this._controllerHandler.generateSessionId;
+        const rootElements = new Set<HTMLElement>();
+        const processing: squared.base.AppProcessing<T> = {
+            sessionId,
+            cache: new NodeList<T>(undefined, sessionId),
+            excluded: new NodeList<T>(undefined, sessionId),
+            rootElements,
+            elementMap: newSessionInit(sessionId),
+            initializing: false
+        };
+        this.session.active.set(sessionId, processing);
+        this._controllerHandler.init();
+        this.setStyleMap(sessionId);
+        if (elements.length === 0) {
+            rootElements.add(this.mainElement);
+        }
+        else {
+            let i = 0;
+            while (i < elements.length) {
+                let element: Null<HTMLElement | string> = elements[i++];
+                if (typeof element === 'string') {
+                    element = document.getElementById(element);
+                }
+                if (!element || !hasComputedStyle(element)) {
+                    continue;
+                }
+                rootElements.add(element);
+            }
+        }
+        return [processing, rootElements];
+    }
+
+    private resumeSessionThread(processing: squared.base.AppProcessing<T>, rootElements: Set<HTMLElement>, multipleRequest: number, documentRoot?: HTMLElement, preloaded?: HTMLImageElement[]) {
+        processing.initializing = false;
+        const sessionId = processing.sessionId;
+        const extensions = this.extensions;
+        const styleElement = insertStyleSheetRule('html > body { overflow: hidden !important; }');
+        let i: number, length: number;
+        if (preloaded) {
+            length = preloaded.length;
+            i = 0;
+            while (i < length) {
+                const image = preloaded[i++];
+                if (image.parentElement) {
+                    documentRoot!.removeChild(image);
+                }
+            }
+        }
+        length = extensions.length;
+        i = 0;
+        while (i < length) {
+            extensions[i++].beforeParseDocument(sessionId);
+        }
+        const success: T[] = [];
+        for (const element of rootElements) {
+            const node = this.createCache(element, sessionId);
+            if (node) {
+                this.afterCreateCache(node);
+                success.push(node);
+            }
+        }
+        i = 0;
+        while (i < length) {
+            extensions[i++].afterParseDocument(sessionId);
+        }
+        try {
+            document.head.removeChild(styleElement);
+        }
+        catch {
+        }
+        return multipleRequest > 1 ? success : success[0];
+    }
+
     get mainElement() {
         return document.documentElement;
     }
@@ -778,8 +852,8 @@ export default abstract class Application<T extends Node> implements squared.bas
         return this.extensions.filter(item => item.enabled);
     }
 
-    get extensionsCascade(): squared.base.Extension<T>[] {
-        return [];
+    get extensionsCascade() {
+        return this.extensions.filter(item => item.enabled && !!item.init);
     }
 
     get childrenAll() {
