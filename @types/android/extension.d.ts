@@ -4,17 +4,17 @@ interface AccessibilityOptions {
 
 interface ResourceSvgOptions {
     transformExclude: SvgTransformExclude;
+    floatPrecision: number;
     floatPrecisionKeyTime: number;
-    floatPrecisionValue: number;
     animateInterpolator: string;
 }
 
 interface ResourceBackgroundOptions {
-    drawOutlineAsInsetBorder: boolean;
+    outlineAsInsetBorder: boolean;
 }
 
 interface ResourceStringsOptions {
-    numberResourceValue: boolean;
+    numberAsResource: boolean;
 }
 
 interface ResourceFontsOptions {

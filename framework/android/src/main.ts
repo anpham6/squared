@@ -54,15 +54,8 @@ function autoClose() {
     return false;
 }
 
-function createAssetsOptions(options?: FileUniversalOptions, directory?: string, filename?: string): FileUniversalOptions {
-    return {
-        ...options,
-        directory,
-        filename
-    };
-}
-
 const checkApplication = () => !!application && (application.closed || autoClose());
+const createAssetsOptions = (options?: FileUniversalOptions, directory?: string, filename?: string): FileUniversalOptions => ({ ...options, directory, filename });
 const checkFileName = (value: Undef<string>) => value || application!.userSettings.outputArchiveName;
 
 const lib = {
@@ -72,7 +65,7 @@ const lib = {
     util
 };
 
-const appBase: squared.base.AppFramework<View> = {
+const appBase: android.AndroidFramework<View> = {
     base: {
         Controller,
         File,
@@ -350,6 +343,11 @@ const appBase: squared.base.AppFramework<View> = {
             };
         }
         return appBase.create();
+    },
+    setViewModel(data: PlainObject, sessionId?: string) {
+        if (application) {
+            application.setViewModel(data, sessionId);
+        }
     }
 };
 

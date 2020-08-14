@@ -62,7 +62,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
         const toolbarOptions = createViewAttribute(options.self);
         const appBarOptions = createViewAttribute(options.appBar);
         const collapsingToolbarOptions = createViewAttribute(options.collapsingToolbar);
-        const numberResourceValue = application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue');
+        const numberAsResource = application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberAsResource');
         const hasMenu = Toolbar.findNestedElement(node, WIDGET_NAME.MENU);
         const backgroundImage = node.has('backgroundImage');
         const appBarChildren: T[] = [];
@@ -189,7 +189,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
         if (appBarNode) {
             appBarNode.setLayoutWidth('match_parent');
             appBarNode.setLayoutHeight('wrap_content');
-            appBarNode.apply(Resource.formatOptions(appBarOptions, numberResourceValue));
+            appBarNode.apply(Resource.formatOptions(appBarOptions, numberAsResource));
             appBarNode.render(parent);
             outputAs = {
                 type: NODE_TEMPLATE.XML,
@@ -198,7 +198,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
             };
             if (collapsingToolbarNode) {
                 node.parent = collapsingToolbarNode;
-                collapsingToolbarNode.apply(Resource.formatOptions(collapsingToolbarOptions, numberResourceValue));
+                collapsingToolbarNode.apply(Resource.formatOptions(collapsingToolbarOptions, numberAsResource));
                 collapsingToolbarNode.render(appBarNode);
                 collapsingToolbarNode.setLayoutWidth('match_parent');
                 collapsingToolbarNode.setLayoutHeight('match_parent');
@@ -249,7 +249,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
                                     width: 'match_parent',
                                     height: 'match_parent'
                                 },
-                                Resource.formatOptions(backgroundImageOptions, numberResourceValue)
+                                Resource.formatOptions(backgroundImageOptions, numberAsResource)
                             )
                         );
                         node.setCacheValue('backgroundImage', '');
@@ -269,7 +269,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
             node.render(parent);
         }
         node.setLayoutWidth('match_parent');
-        node.apply(Resource.formatOptions(toolbarOptions, numberResourceValue));
+        node.apply(Resource.formatOptions(toolbarOptions, numberAsResource));
         const output: NodeXmlTemplate<T> = {
             type: NODE_TEMPLATE.XML,
             node,

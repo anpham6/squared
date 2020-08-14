@@ -4,8 +4,12 @@ import LayoutUI = squared.base.LayoutUI;
 
 type View = base.View;
 
+declare interface AndroidFramework<T extends View> extends squared.base.AppFramework<T> {
+    setViewModel(data?: PlainObject): void;
+}
+
 declare namespace base {
-    interface AppViewModel extends squared.base.AppViewModel {
+    interface AppViewModel extends StandardMap {
         import?: string[];
         variable?: { name: string; type: string }[];
     }
@@ -14,9 +18,10 @@ declare namespace base {
         readonly userSettings: AndroidUserSettingsUI;
         readonly controllerHandler: Controller<T>;
         readonly resourceHandler: Resource<T>;
-        set viewModel(value);
-        get viewModel(): Undef<AppViewModel>;
+        setViewModel(data: AppViewModel, sessionId?: string): void;
+        getViewModel(sessionId: string): Undef<AppViewModel>;
         resolveTarget(sessionId: string, target: Null<HTMLElement | string>): Undef<T>;
+        get hasViewModel(): boolean;
     }
 
     class Controller<T extends View> extends squared.base.ControllerUI<T> {

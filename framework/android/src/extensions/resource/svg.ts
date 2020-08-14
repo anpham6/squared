@@ -711,7 +711,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
             image: [SVGTransform.SVG_TRANSFORM_SKEWX, SVGTransform.SVG_TRANSFORM_SKEWY]
         },
         floatPrecisionKeyTime: 5,
-        floatPrecisionValue: 3,
+        floatPrecision: 3,
         animateInterpolator: ''
     };
     public readonly eventOnly = true;
@@ -821,7 +821,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
     }
 
     public createSvgDrawable(node: T, element: SVGSVGElement, contentMap?: StringMap) {
-        const { transformExclude: exclude, floatPrecisionValue: precision, floatPrecisionKeyTime } = this.options;
+        const { transformExclude: exclude, floatPrecision: precision, floatPrecisionKeyTime } = this.options;
         const svg = new Svg(element);
         svg.contentMap = contentMap;
         const supportedKeyFrames = node.api >= BUILD_ANDROID.MARSHMALLOW;
@@ -1483,7 +1483,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
     }
 
     private parseVectorData(group: SvgGroup, depth = 0) {
-        const floatPrecisionValue = this.options.floatPrecisionValue;
+        const floatPrecision = this.options.floatPrecision;
         const result = this.createGroup(group);
         const length = result.length;
         const renderDepth = depth + length;
@@ -1498,7 +1498,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                         if (parseFloat(itemPath.strokeWidth) > 0 && (itemPath.strokeDasharray || itemPath.strokeDashoffset)) {
                             const animateData = this._animateData.get(item.name);
                             if (!animateData || animateData.animate.every(animate => animate.attributeName.startsWith('stroke-dash'))) {
-                                const [animations, strokeDash, pathData, clipPathData] = itemPath.extractStrokeDash(animateData?.animate, floatPrecisionValue);
+                                const [animations, strokeDash, pathData, clipPathData] = itemPath.extractStrokeDash(animateData?.animate, floatPrecision);
                                 if (strokeDash) {
                                     if (animateData) {
                                         this._animateData.delete(item.name);
@@ -1524,8 +1524,8 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                 animate: animateData.animate.filter(animate => animate.id === undefined || animate.id === i)
                                             });
                                         }
-                                        strokePath.trimPathStart = truncate(dash.start, floatPrecisionValue);
-                                        strokePath.trimPathEnd = truncate(dash.end, floatPrecisionValue);
+                                        strokePath.trimPathStart = truncate(dash.start, floatPrecision);
+                                        strokePath.trimPathEnd = truncate(dash.end, floatPrecision);
                                         pathArray.push(strokePath);
                                     }
                                     groupArray.unshift(strokeData);
@@ -1620,7 +1620,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         const useTarget = SvgBuild.asUseShape(target);
         const clipPath = path.clipPath;
         if (clipPath) {
-            const { transformExclude: exclude, floatPrecisionValue: precision } = this.options;
+            const { transformExclude: exclude, floatPrecision: precision } = this.options;
             const shape = new SvgShape(path.element);
             shape.build({ exclude, residualHandler, precision });
             shape.synchronize({ keyTimeMode: this._synchronizeMode, precision });
@@ -1693,7 +1693,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                 case 'polyline':
                                 case 'circle':
                                 case 'ellipse': {
-                                    const gradient = createFillGradient(pattern, path, this.options.floatPrecisionValue);
+                                    const gradient = createFillGradient(pattern, path, this.options.floatPrecision);
                                     if (gradient) {
                                         result['aapt:attr'] = {
                                             name: 'android:fillColor',
@@ -1875,7 +1875,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         if (clipPath) {
             const definitions = this._svgInstance.definitions;
             const keyTimeMode = this._synchronizeMode;
-            const { transformExclude: exclude, floatPrecisionValue: precision } = this.options;
+            const { transformExclude: exclude, floatPrecision: precision } = this.options;
             clipPath.split(';').forEach((value, index, array) => {
                 if (value.startsWith('#')) {
                     const element = (definitions.clipPath.get(value) as unknown) as SVGGElement;

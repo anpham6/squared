@@ -14,7 +14,7 @@ const Resource = android.base.Resource;
 export default class Coordinator<T extends View> extends squared.base.ExtensionUI<T> {
     public processNode(node: T, parent: T) {
         const options = createViewAttribute(this.options[node.elementId]);
-        Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
+        Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberAsResource'));
         const element = Coordinator.findNestedElement(node, WIDGET_NAME.TOOLBAR);
         if (element) {
             const toolbar = getElementAsNode<T>(element, node.sessionId);

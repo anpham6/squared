@@ -72,7 +72,7 @@ The primary function "parseDocument" can be called on multiple elements and mult
     // optional
     squared.settings.targetAPI = 29;
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', () => {
         squared.setFramework(android, /* optional: FrameworkOptions */);
 
         squared.parseDocument(); // default: document.body 'BODY'
@@ -100,7 +100,7 @@ VDOM is a minimal framework with slightly better performance when you are only l
 <script src="/dist/squared.base.min.js"></script>
 <script src="/dist/vdom.framework.min.js"></script> /* OR: chrome.framework.min.js */
 <script>
-    document.addEventListener('DOMContentLoaded', async function() {
+    document.addEventListener('DOMContentLoaded', async () => {
         squared.setFramework(vdom /* chrome */, /* optional: FrameworkOptions */);
 
         const element = await squared.parseDocument(/* HTMLElement */); // default: document.documentElement 'HTML'
@@ -122,9 +122,9 @@ Browsers without ES2017 are not being supported to fully take advantage of async
 NOTE: Calling "save" or "copy" methods before the images have completely loaded can sometimes cause them to be excluded from the generated layout. In these cases you should use the "parseDocument" promise method "then" to set a callback for your commands.
 
 ```javascript
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', () => {
     squared.setFramework(android);
-    squared.parseDocument(/* 'mainview' */, /* 'subview' */).then(function() {
+    squared.parseDocument(/* 'mainview' */, /* 'subview' */).then(() => {
         squared.close();
         squared.saveToArchive();
     });
@@ -272,7 +272,6 @@ There is no official documentation as this project is still in early development
 
 setFramework(module: {}, options?: FrameworkOptions) // install application interpreter
 setHostname(value: string) // use another cors-enabled server for processing archives (--cors <origin> | node-express + squared.settings.json: <https://github.com/expressjs/cors>)
-setViewModel(data?: {}) // object data for layout bindings
 
 parseDocument() // see installation section (Promise)
 parseDocumentSync() // skips preloadImages and preloadFonts (synchronous)
@@ -326,6 +325,8 @@ copyToDisk(directory: string, options?: {}) // copy entire project to local dire
 The system methods are used internally to create the entire project and generally are not useful other than for debugging purposes or extracting the raw assets.
 
 ```javascript
+android.setViewModel(data: {}, sessionId?: string) // object data for layout bindings
+
 squared.system.customize(build: number, widget: string, options: {}) // global attributes applied to specific views
 squared.system.addXmlNs(name: string, uri: string) // add global namespaces for third-party controls
 
@@ -492,59 +493,6 @@ body.altId = 5; // body.altId: 6
 body.addEvent('click', (event) => body.element.classList.toggle('example'));
 ```
 
-### ALL: Layouts and binding expressions (example: android)
-
-ViewModel data can be applied to most HTML elements using the dataset attribute.
-
-```javascript
-squared.setViewModel({
-    import: ['java.util.Map', 'java.util.List'],
-    variable: [
-        { name: 'user', type: 'com.example.User' },
-        { name: 'list', type: 'List&lt;String>' },
-        { name: 'map', type: 'Map&lt;String, String>' },
-        { name: 'index', type: 'int' },
-        { name: 'key', type: 'String' }
-    ]
-});
-```
-
-Two additional output parameters are required with the "data-viewmodel" prefix. 
-
-data-viewmodel-{namespace}-{attribute} -> data-viewmodel-android-text
-
-```xml
-<div>
-    <label>Name:</label>
-    <input type="text" data-viewmodel-android-text="user.firstName" />
-    <input type="text" data-viewmodel-android-text="user.lastName" />
-</div>
-```
-
-```xml
-<layout>
-    <data>
-        <import type="java.util.Map" />
-        <import type="java.util.List" />
-        <variable name="user" type="com.example.User" />
-        <variable name="list" type="List<String>" />
-        <variable name="map" type="Map<String, String>" />
-        <variable name="index" type="int" />
-        <variable name="key" type="String" />
-    </data>
-    <LinearLayout>
-        <TextView
-            android:text="Name:" />
-        <EditText
-            android:inputType="text"
-            android:text="@{user.firstName}" />
-        <EditText
-            android:inputType="text"
-            android:text="@{user.lastName}" />
-    </LinearLayout>
-</layout>
-```
-
 ### ALL: node-express / squared-apache
 
 These are some of the available options when creating archives or copying files.
@@ -629,6 +577,79 @@ document.querySelectorAll('img').forEach(element => {
 });
 
 chrome.saveAsWebPage();
+```
+
+### ANDROID: Layouts and binding expressions
+
+ViewModel data can be applied to most HTML elements using the dataset attribute. Different view models can be used for every "parseDocument" session. Leaving the sessionId empty sets the same view model for the entire project.
+
+```javascript
+await squared.parseDocument(/* 'mainview' */).then(() => {
+    android.setViewModel(
+        {
+            import: ['java.util.Map', 'java.util.List'],
+            variable: [
+                { name: 'user', type: 'com.example.User' },
+                { name: 'list', type: 'List&lt;String>' },
+                { name: 'map', type: 'Map&lt;String, String>' },
+                { name: 'index', type: 'int' },
+                { name: 'key', type: 'String' }
+            ]
+        },
+        squared.latest() /* optional: used when there are multiple layouts */
+    );
+});
+
+await squared.parseDocument(/* 'subview' */).then(() => {
+    android.setViewModel(
+        {
+            import: ['java.util.Map'],
+            variable: [
+                { name: 'map', type: 'Map&lt;String, String>' }
+            ]
+        },
+        squared.latest()
+    );
+});
+
+squared.close();
+squared.saveToArchive();
+```
+
+Two additional output parameters are required with the "data-viewmodel" prefix. 
+
+data-viewmodel-{namespace}-{attribute} -> data-viewmodel-android-text
+
+```xml
+<div>
+    <label>Name:</label>
+    <input type="text" data-viewmodel-android-text="user.firstName" />
+    <input type="text" data-viewmodel-android-text="user.lastName" />
+</div>
+```
+
+```xml
+<layout>
+    <data>
+        <import type="java.util.Map" />
+        <import type="java.util.List" />
+        <variable name="user" type="com.example.User" />
+        <variable name="list" type="List<String>" />
+        <variable name="map" type="Map<String, String>" />
+        <variable name="index" type="int" />
+        <variable name="key" type="String" />
+    </data>
+    <LinearLayout>
+        <TextView
+            android:text="Name:" />
+        <EditText
+            android:inputType="text"
+            android:text="@{user.firstName}" />
+        <EditText
+            android:inputType="text"
+            android:text="@{user.lastName}" />
+    </LinearLayout>
+</layout>
 ```
 
 ### ANDROID: Layout Includes / Merge Tag
@@ -831,7 +852,7 @@ The entire page can similarly be included using the "saveAs" attribute in option
 const options = {
     saveAs: { // All attributes are optional
         html: { filename: 'index.html', format: 'beautify' }
-        script: { pathname: '../js', filename: 'bundle.js', format: 'minify' },
+        script: { pathname: '../js', filename: 'bundle.js', format: 'es5+minify' },
         link: { pathname: 'css', filename: 'bundle.css', preserve: true },
         base64: { format: 'png' }
     }

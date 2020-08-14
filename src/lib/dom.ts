@@ -110,39 +110,39 @@ export function getRangeClientRect(element: Element) {
 }
 
 export function removeElementsByClassName(className: string) {
-    Array.from(document.getElementsByClassName(className)).forEach(element => element.parentElement?.removeChild(element));
+    for (const element of Array.from(document.getElementsByClassName(className))) {
+        element.parentElement?.removeChild(element);
+    }
 }
 
 export function getElementsBetweenSiblings(elementStart: Null<Element>, elementEnd: Element) {
+    const parentElement = elementEnd.parentElement;
     const result: Element[] = [];
-    if (!elementStart || elementStart.parentElement === elementEnd.parentElement) {
-        const parent = elementEnd.parentElement;
-        if (parent) {
-            let startIndex = elementStart ? -1 : 0,
-                endIndex = -1;
-            iterateArray(parent.childNodes, (element: Element, index: number) => {
-                if (element === elementEnd) {
-                    endIndex = index;
-                    if (startIndex !== -1) {
-                        return true;
-                    }
+    if (parentElement && (!elementStart || elementStart.parentElement === parentElement)) {
+        let startIndex = elementStart ? -1 : 0,
+            endIndex = -1;
+        iterateArray(parentElement.childNodes, (element: Element, index: number) => {
+            if (element === elementEnd) {
+                endIndex = index;
+                if (startIndex !== -1) {
+                    return true;
                 }
-                else if (element === elementStart) {
-                    startIndex = index;
-                    if (endIndex !== -1) {
-                        return true;
-                    }
-                }
-            });
-            if (startIndex !== -1 && endIndex !== -1) {
-                iterateArray(parent.childNodes, (element: Element) => {
-                    const nodeName = element.nodeName;
-                    if (!nodeName.startsWith('#') || nodeName === '#text') {
-                        result.push(element);
-                    }
-                },
-                Math.min(startIndex, endIndex), Math.max(startIndex, endIndex) + 1);
             }
+            else if (element === elementStart) {
+                startIndex = index;
+                if (endIndex !== -1) {
+                    return true;
+                }
+            }
+        });
+        if (startIndex !== -1 && endIndex !== -1) {
+            iterateArray(parentElement.childNodes, (element: Element) => {
+                const nodeName = element.nodeName;
+                if (!nodeName.startsWith('#') || nodeName === '#text') {
+                    result.push(element);
+                }
+            },
+            Math.min(startIndex, endIndex), Math.max(startIndex, endIndex) + 1);
         }
     }
     return result;

@@ -59,7 +59,7 @@ export default class Substitute<T extends View> extends squared.base.ExtensionUI
         node.apply(
             Resource.formatOptions(
                 createViewAttribute(this.options[node.elementId]),
-                this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')
+                this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberAsResource')
             )
         );
     }

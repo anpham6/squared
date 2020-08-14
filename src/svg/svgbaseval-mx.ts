@@ -18,7 +18,7 @@ function adjustPoints(values: SvgPoint[], x: number, y: number, scaleX: number, 
 
 export default <T extends Constructor<SvgElement>>(Base: T) => {
     return class extends Base implements squared.svg.SvgBaseVal {
-        private _baseVal: ObjectMap<any> = {};
+        private _baseVal: StandardMap = {};
 
         public setBaseValue(attr: string, value?: any) {
             if (value !== undefined) {

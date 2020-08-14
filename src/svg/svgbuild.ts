@@ -476,7 +476,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 default:
                     continue;
             }
-            for (let i = 0, length = items.length; i < length; ++i) {
+            for (let i = 0, q = items.length; i < q; ++i) {
                 const item = items[i];
                 const lowerKey = key.toLowerCase();
                 const commandA = lowerKey === 'a' ? item.splice(0, 5) : undefined;

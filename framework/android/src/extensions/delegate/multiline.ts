@@ -297,7 +297,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                         }
                     }
                     else {
-                        const items: Undef<T[]> = mainData ? new Array(q) : undefined;
+                        const items: Null<T[]> = mainData ? new Array(q) : null;
                         for (let j = 0; j < q; ++j) {
                             const container = createContainer('#text', words[j]);
                             if (items) {

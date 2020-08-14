@@ -67,8 +67,6 @@ declare module "base" {
 
     interface AppProcessingUI<T extends NodeUI> extends AppProcessing<T> {}
 
-    interface AppViewModel extends StandardMap {}
-
     interface LayoutRoot<T extends NodeUI> {
         node: T;
         layoutName: string;
@@ -107,8 +105,6 @@ declare module "base" {
         saveToArchive(filename?: string, options?: FileArchivingOptions): Promise<ResultOfFileAction | void>;
         createFrom(format: string, options: FileArchivingOptions): Promise<ResultOfFileAction | void>;
         appendFromArchive(filename: string, options: FileArchivingOptions): Promise<ResultOfFileAction | void>;
-        set viewModel(data: Undef<AppViewModel>);
-        get viewModel(): Undef<AppViewModel>;
         get mainElement(): Element;
         get controllerHandler(): Controller<T>;
         get resourceHandler(): Undef<Resource<T>>;

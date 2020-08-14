@@ -348,7 +348,7 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LATEST
     return result;
 }
 
-function createLayerList(boxStyle: BoxStyle, images: BackgroundImageData[] = [], borderOnly = true, stroke?: ObjectMap<any> | false, corners?: StringMap | false, indentOffset?: string) {
+function createLayerList(boxStyle: BoxStyle, images: BackgroundImageData[] = [], borderOnly: boolean, stroke?: StandardMap | false, corners?: StringMap | false, indentOffset?: string) {
     const item: LayerData[] = [];
     const result: LayerList[] = [{ 'xmlns:android': XMLNS_ANDROID.android, item }];
     const solid = !borderOnly && getBackgroundColor(boxStyle.backgroundColor);
@@ -450,19 +450,19 @@ export function drawRect(width: number, height: number, x = 0, y = 0, precision?
 
 export default class ResourceBackground<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly options: ResourceBackgroundOptions = {
-        drawOutlineAsInsetBorder: true
+        outlineAsInsetBorder: true
     };
     public readonly eventOnly = true;
 
-    private _resourceSvgInstance?: ResourceSvg<T>;
+    private _resourceSvgInstance: Null<ResourceSvg<T>> = null;
 
     public beforeParseDocument() {
-        this._resourceSvgInstance = this.controller.localSettings.use.svg ? this.application.builtInExtensions.get(EXT_ANDROID.RESOURCE_SVG) as ResourceSvg<T> : undefined;
+        this._resourceSvgInstance = this.controller.localSettings.use.svg ? this.application.builtInExtensions.get(EXT_ANDROID.RESOURCE_SVG) as ResourceSvg<T> : null;
     }
 
     public afterResources(sessionId: string) {
         const settings = (this.application as android.base.Application<T>).userSettings;
-        const drawOutline = this.options.drawOutlineAsInsetBorder;
+        const drawOutline = this.options.outlineAsInsetBorder;
         let themeBackground: Undef<boolean>;
         const deleteBodyWrapper = (body: View, wrapper: View) => {
             if (body !== wrapper && !wrapper.hasResource(NODE_RESOURCE.BOX_SPACING) && body.percentWidth === 0) {

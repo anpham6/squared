@@ -456,28 +456,17 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                     opposite = relativeAngle({ x: 0, y: height }, { x: -width, y: 0 });
                                 }
                                 const a = Math.abs(opposite - angle);
-                                x = truncateFraction(
-                                        offsetAngleX(
-                                            angle,
-                                            triangulate(a, 90 - a, hypotenuse(width, height))[1]
-                                        )
-                                    );
-                                y = truncateFraction(
-                                        offsetAngleY(
-                                            angle,
-                                            triangulate(90, 90 - angle, x)[0]
-                                        )
-                                    );
+                                x = truncateFraction(offsetAngleX(angle, triangulate(a, 90 - a, hypotenuse(width, height))[1]));
+                                y = truncateFraction(offsetAngleY(angle, triangulate(90, 90 - angle, x)[0]));
                             }
-                            const linear = {
+                            gradient = {
                                 type,
                                 repeating,
                                 dimension,
                                 angle,
                                 angleExtent: { x, y }
                             } as LinearGradient;
-                            linear.colorStops = parseColorStops(node, linear, match[4]);
-                            gradient = linear;
+                            gradient.colorStops = parseColorStops(node, gradient, match[4]);
                             break;
                         }
                         case 'radial': {
@@ -564,14 +553,13 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         }
                         case 'conic': {
                             const position = getGradientPosition(direction);
-                            const conic = {
+                            gradient = {
                                 type,
                                 dimension,
                                 angle: getAngle(direction),
                                 center: getBackgroundPosition(position?.[2] || 'center', dimension, { fontSize: node.fontSize, imageDimension, screenDimension })
                             } as ConicGradient;
-                            conic.colorStops = parseColorStops(node, conic, match[4]);
-                            gradient = conic;
+                            gradient.colorStops = parseColorStops(node, gradient, match[4]);
                             break;
                         }
                     }
@@ -634,7 +622,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     public static checkPreIndent(node: NodeUI): Undef<[string, NodeUI]> {
         if (node.plainText) {
             const parent = node.actualParent as NodeUI;
-            if (parent.preserveWhiteSpace && parent.ascend({ condition: item => item.tagName === 'PRE', startSelf: true }).length > 0) {
+            if (parent.preserveWhiteSpace && parent.ancestors('pre', { startSelf: true }).length > 0) {
                 let nextSibling = node.nextSibling as Undef<NodeUI>;
                 if (nextSibling?.naturalElement) {
                     const textContent = node.textContent;

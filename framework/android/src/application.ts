@@ -7,7 +7,12 @@ export default class Application<T extends View> extends squared.base.Applicatio
     public readonly resourceHandler!: android.base.Resource<T>;
     public readonly systemName = 'android';
 
-    private _viewModel?: AppViewModel;
+    private _viewModel = new Map<string, AppViewModel>();
+
+    public reset() {
+        super.reset();
+        this._viewModel.clear();
+    }
 
     public resolveTarget(sessionId: string, target: Null<HTMLElement | string>) {
         if (target) {
@@ -29,10 +34,15 @@ export default class Application<T extends View> extends squared.base.Applicatio
         }
     }
 
-    set viewModel(value) {
-        this._viewModel = value;
+    public setViewModel(data: AppViewModel, sessionId?: string) {
+        this._viewModel.set(sessionId || '0', data);
     }
-    get viewModel() {
-        return this._viewModel;
+
+    public getViewModel(sessionId: string) {
+        return this._viewModel.get(sessionId);
+    }
+
+    get hasViewModel() {
+        return this._viewModel.size > 0;
     }
 }

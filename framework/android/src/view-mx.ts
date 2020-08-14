@@ -2293,7 +2293,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             const row = horizontalRows[i];
                             const r = row.length;
                             const onlyChild = r === 1;
-                            const baseline = !onlyChild ? row.find(item => item.baselineActive && !item.rendering && !item.imageContainer) : undefined;
+                            const baseline = !onlyChild && row.find(item => item.baselineActive && !item.rendering && !item.imageContainer);
                             let top: boolean,
                                 bottom: boolean;
                             if (q === 1) {

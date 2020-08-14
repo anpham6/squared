@@ -45,7 +45,7 @@ interface FlexboxData<T> extends Required<FlexData> {
     children: T[];
 }
 
-interface GridCellData<T> extends ObjectMap<any> {
+interface GridCellData<T> {
     rowSpan: number;
     columnSpan: number;
     index: number;

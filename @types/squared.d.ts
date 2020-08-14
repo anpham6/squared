@@ -14,7 +14,6 @@ export const settings: StandardMap;
 export const system: FunctionMap<any>;
 export function setHostname(value: string): void;
 export function setFramework(value: PlainObject, options?: FrameworkOptions): void;
-export function setViewModel(data?: PlainObject): void;
 export function include(value: ExtensionRequest, options?: FrameworkOptions): boolean;
 export function exclude(value: ExtensionRequest | string): boolean;
 export function configure(value: ExtensionRequest | string, options: FrameworkOptions): boolean;

@@ -2260,7 +2260,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     rows!: T[][],
                     items!: T[],
                     previous!: T,
-                    siblings: Undef<Element[]>,
+                    siblings: Null<Element[]> = null,
                     currentFloated: Null<T> = null,
                     currentFloatedWidth = 0,
                     currentFloatedHeight = 0;
@@ -2355,7 +2355,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 item.multiline = false;
                             }
                         }
-                        siblings = item.naturalChild && previous.naturalChild && item.inlineVertical && previous.inlineVertical && item.previousSibling !== previous ? getElementsBetweenSiblings(previous.element, item.element!) : undefined;
+                        siblings = item.naturalChild && previous.naturalChild && item.inlineVertical && previous.inlineVertical && item.previousSibling !== previous ? getElementsBetweenSiblings(previous.element, item.element!) : null;
                         if (item.textElement) {
                             if (!floating && REGEXP_TEXTSYMBOL.test(item.textContent)) {
                                 items.push(item);

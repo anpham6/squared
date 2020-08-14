@@ -1845,11 +1845,11 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                             let baseValue: AnimateValue = repeatingMap[attr].get(repeatingMaxTime[attr]) ?? baseValueMap[attr];
                             const [keyTimesBase, values, keySplines] = cloneKeyTimes(item);
                             setStartItemValues(intervalMap, forwardMap, baseValueMap, item, baseValue, keyTimesBase, values, keySplines);
-                            const length = keyTimesBase.length;
+                            const q = keyTimesBase.length;
                             let maxTime = 0,
                                 j = 0;
                             do {
-                                for (let k = 0; k < length; ++k) {
+                                for (let k = 0; k < q; ++k) {
                                     let time = getItemTime(0, item.duration, keyTimesBase, j, k);
                                     if (k === keyTimesBase.length - 1 && time < maxDuration) {
                                         --time;

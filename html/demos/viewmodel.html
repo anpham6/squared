@@ -104,17 +104,6 @@
             if (copyTo) {
                 squared.settings.showErrorMessages = false;
             }
-            squared.setViewModel({
-                import: ['android.util.SparseArray', 'java.util.Map', 'java.util.List'],
-                variable: [
-                    { name: 'user', type: 'com.example.User' },
-                    { name: 'list', type: 'List&lt;String>' },
-                    { name: 'sparse', type: 'SparseArray&lt;String>' },
-                    { name: 'map', type: 'Map&lt;String, String>' },
-                    { name: 'index', type: 'int' },
-                    { name: 'key', type: 'String' }
-                ]
-            });
             squared.system.customize(squared.settings.targetAPI, 'Button', {
                 android: {
                     layout_height: 'wrap_content',
@@ -125,6 +114,17 @@
             const time = performance.now();
             squared.parseDocument()
                 .then(() => {
+                    android.setViewModel({
+                        import: ['android.util.SparseArray', 'java.util.Map', 'java.util.List'],
+                        variable: [
+                            { name: 'user', type: 'com.example.User' },
+                            { name: 'list', type: 'List&lt;String>' },
+                            { name: 'sparse', type: 'SparseArray&lt;String>' },
+                            { name: 'map', type: 'Map&lt;String, String>' },
+                            { name: 'index', type: 'int' },
+                            { name: 'key', type: 'String' }
+                        ]
+                    }, squared.latest());
                     if (copyTo) {
                         squared.copyToDisk(copyTo).then(response => {
                             squared.lib.dom.createElement('div', {

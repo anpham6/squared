@@ -207,12 +207,6 @@ export function setFramework(value: Framework, options?: squared.FrameworkOption
     }
 }
 
-export function setViewModel(data?: PlainObject) {
-    if (main) {
-        main.viewModel = data;
-    }
-}
-
 export function parseDocument(...elements: (HTMLElement | string)[]) {
     if (main) {
         initializeExtensions();

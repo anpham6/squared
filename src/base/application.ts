@@ -1,7 +1,6 @@
 import Node from './node';
 import NodeList from './nodelist';
 
-type AppViewModel = squared.base.AppViewModel;
 type FileActionOptions = squared.base.FileActionOptions;
 type PreloadItem = HTMLImageElement | string;
 
@@ -92,8 +91,6 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     public abstract insertNode(element: Element, sessionId: string): Undef<T>;
-    public abstract set viewModel(data: Undef<AppViewModel>);
-    public abstract get viewModel(): Undef<AppViewModel>;
 
     public afterCreateCache(node: T) {
         if (this.userSettings.createElementMap) {
@@ -412,7 +409,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                     children.length = j;
                     elements.length = k;
-                    parent.naturalChildren = children;
+                    parent.naturalChildren = children.slice(0);
                     parent.naturalElements = elements;
                     if (currentElement === document.documentElement) {
                         processing.documentElement = parent;

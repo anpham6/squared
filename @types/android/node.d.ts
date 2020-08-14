@@ -13,7 +13,7 @@ interface AndroidSupportUI extends SupportUI {
     maxDimension: boolean;
 }
 
-interface ViewAttribute extends ObjectMap<any> {
+interface ViewAttribute extends StandardMap {
     android: StringMap;
     app?: StringMap;
     documentId?: string;

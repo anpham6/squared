@@ -37,12 +37,12 @@ function setTextValue(node: View, attr: string, name: string) {
 
 export default class ResourceStrings<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly options: ResourceStringsOptions = {
-        numberResourceValue: false
+        numberAsResource: false
     };
     public readonly eventOnly = true;
 
     public afterResources(sessionId: string) {
-        const numberResourceValue = this.options.numberResourceValue;
+        const numberAsResource = this.options.numberAsResource;
         this.application.getProcessingCache(sessionId).each(node => {
             if (node.hasResource(NODE_RESOURCE.VALUE_STRING)) {
                 if (node.styleElement) {
@@ -51,7 +51,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                         setTextValue(
                             node,
                             'tooltipText',
-                            Resource.addString(replaceCharacterData(title), `${node.controlId.toLowerCase()}_title`, numberResourceValue)
+                            Resource.addString(replaceCharacterData(title), `${node.controlId.toLowerCase()}_title`, numberAsResource)
                         );
                     }
                 }
@@ -67,7 +67,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                         setTextValue(
                             node,
                             'hint',
-                            Resource.addString(replaceCharacterData(hintString), `${node.controlId.toLowerCase()}_hint`, numberResourceValue)
+                            Resource.addString(replaceCharacterData(hintString), `${node.controlId.toLowerCase()}_hint`, numberAsResource)
                         );
                     }
                 }
@@ -301,7 +301,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                             setTextValue(
                                 node,
                                 'text',
-                                Resource.addString(valueString, '', numberResourceValue)
+                                Resource.addString(valueString, '', numberAsResource)
                             );
                         }
                     }
@@ -312,9 +312,9 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
 
     public createOptionArray(element: HTMLSelectElement, controlId: string) {
         const [stringArray, numberArray] = Resource.getOptionArray(element);
-        const numberResourceValue = this.options.numberResourceValue;
+        const numberAsResource = this.options.numberAsResource;
         let result: Undef<string[]>;
-        if (!numberResourceValue && numberArray) {
+        if (!numberAsResource && numberArray) {
             result = numberArray;
         }
         else {
@@ -322,7 +322,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
             if (resourceArray) {
                 result = [];
                 for (let i = 0, length = resourceArray.length; i < length; ++i) {
-                    const value = Resource.addString(replaceCharacterData(resourceArray[i]), '', numberResourceValue);
+                    const value = Resource.addString(replaceCharacterData(resourceArray[i]), '', numberAsResource);
                     if (value !== '') {
                         result.push(value);
                     }

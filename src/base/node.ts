@@ -170,7 +170,7 @@ function convertBox(node: T, attr: string, margin: boolean) {
                     case 'TH':
                         return 0;
                     default: {
-                        const parent = node.ascend({ condition: item => item.tagName === 'TABLE'})[0];
+                        const parent = node.ascend({ condition: item => item.tagName === 'TABLE' })[0];
                         if (parent) {
                             const [horizontal, vertical] = splitPair(parent.css('borderSpacing'), ' ');
                             switch (attr) {
