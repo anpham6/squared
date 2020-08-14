@@ -25,9 +25,9 @@ const prototypeMap = new Map<number, squared.ExtensionPrototypeData>();
 const settings = {} as UserSettings;
 const system = {} as FunctionMap<any>;
 
-let main: Undef<Main>;
-let framework: Undef<Framework>;
-let extensionManager: Undef<squared.base.ExtensionManager<Node>>;
+let main: Null<Main> = null;
+let framework: Null<Framework> = null;
+let extensionManager: Null<squared.base.ExtensionManager<Node>> = null;
 
 const ERROR_PARSEDOCUMENT = 'ERROR: Document is closed. Reset and rerun?';
 
@@ -119,7 +119,7 @@ async function findElementAsync(element: HTMLElement) {
     return [await main!.parseDocument(element) as Node];
 }
 
-const checkWritable = (app: Undef<Main>): app is Main => app ? !app.initializing && app.length > 0 : false;
+const checkWritable = (app: Null<Main>): app is Main => app ? !app.initializing && app.length > 0 : false;
 const checkFrom = (value: string, options: FileActionOptions) => checkWritable(main) && util.isString(value) && util.isPlainObject<FileActionOptions>(options) && options.assets && options.assets.length > 0;
 
 export function setHostname(value: string) {
@@ -135,7 +135,7 @@ export function setHostname(value: string) {
 }
 
 export function setFramework(value: Framework, options?: squared.FrameworkOptions) {
-    const reloading = framework !== undefined;
+    const reloading = framework !== null;
     let userSettings: Undef<StandardMap>,
         saveAs: Undef<string>,
         loadAs: Undef<string>,
@@ -175,7 +175,7 @@ export function setFramework(value: Framework, options?: squared.FrameworkOption
         Object.assign(settings, appBase.userSettings);
         main = appBase.application;
         main.userSettings = settings;
-        extensionManager = main.extensionManager;
+        extensionManager = main.extensionManager || null;
         extendPrototype(main.Node.prototype, main.framework);
         const { builtInExtensions, extensions } = main;
         extensions.length = 0;

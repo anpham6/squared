@@ -2261,7 +2261,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     items!: T[],
                     previous!: T,
                     siblings: Undef<Element[]>,
-                    currentFloated: Undef<T>,
+                    currentFloated: Null<T> = null,
                     currentFloatedWidth = 0,
                     currentFloatedHeight = 0;
                 const setCurrentFloated = (item: T) => {
@@ -2330,7 +2330,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                         else {
                             const documentId = previous.documentId;
-                            if (previous === currentFloated && currentFloated.float === 'right') {
+                            if (previous === currentFloated && currentFloated!.float === 'right') {
                                 item.anchor('left', 'true');
                             }
                             else {
@@ -2412,7 +2412,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         {
                             if (!emptyMap && clearMap.has(item)) {
                                 item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1 });
-                                currentFloated = undefined;
+                                currentFloated = null;
                                 currentFloatedWidth = 0;
                             }
                             else if (currentFloated) {
@@ -2421,7 +2421,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     height += Math.ceil(Math.max(...plainMap(rows[j], sibling => Math.max(sibling.lineHeight, sibling.linear.height))));
                                 }
                                 if (height >= currentFloatedHeight) {
-                                    currentFloated = undefined;
+                                    currentFloated = null;
                                     currentFloatedWidth = 0;
                                 }
                             }
@@ -2508,7 +2508,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         float = currentFloated.float;
                     }
                     else {
-                        float = undefined;
+                        float = '';
                     }
                     const setTextIndent = (item: T) => {
                         if (i > 0 && textIndent < 0) {
@@ -2596,7 +2596,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                         if (r > 1) {
                             const bottomAligned = getTextBottom(items);
-                            let textBottom = bottomAligned[0] as Undef<T>,
+                            let textBottom = bottomAligned[0] as Null<T> || null,
                                 offsetTop = 0,
                                 offsetBottom = 0,
                                 maxCenter: Null<T> = null,
@@ -2611,7 +2611,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 }
                                 else {
                                     baseline = NodeUI.baseline(items);
-                                    textBottom = undefined;
+                                    textBottom = null;
                                 }
                             }
                             if (floating) {
@@ -3361,8 +3361,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             const [floatingRight, floatingLeft] = partitionArray(partition, item => item.float === 'right' || item.autoMargin.left === true);
             let alignParent: Undef<boolean>,
                 aboveRowEnd: Undef<T>,
-                currentRowTop: Undef<T>,
-                tallest: Undef<T>;
+                currentRowTop: Undef<T>;
             for (let j = 0; j < 2; ++j) {
                 const reverse = j === 1;
                 const seg = !reverse ? floatingLeft : floatingRight;
@@ -3386,7 +3385,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 else if (!rowStart.constraint.horizontal) {
                     setHorizontalAlignment(rowStart);
                 }
-                let percentWidth = View.availablePercent(partition, 'width', node.box.width);
                 if (i === 1 || previousAlignParent) {
                     alignParent =
                         !rowStart.pageFlow && (!rowStart.autoPosition || q === 1) ||
@@ -3396,7 +3394,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         );
                     previousAlignParent = alignParent;
                 }
-                tallest = undefined;
+                let percentWidth = View.availablePercent(partition, 'width', node.box.width),
+                    tallest: Undef<T>;
                 for (let k = 0; k < q; ++k) {
                     const chain = seg[k];
                     if (i === 0 || alignParent) {

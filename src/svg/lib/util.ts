@@ -251,9 +251,10 @@ export const TRANSFORM = {
                     }
                 }
             }
-            if (result.length > 0) {
-                for (const item of result) {
-                    item.fromStyle = true;
+            const length = result.length;
+            if (length > 0) {
+                for (let i = 0; i < length; ++i) {
+                    result[i].fromStyle = true;
                 }
                 return result;
             }

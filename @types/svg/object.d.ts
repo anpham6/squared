@@ -143,7 +143,7 @@ interface SvgSynchronizeOptions {
 }
 
 interface SvgTransformRefitOptions {
-    transforms?: SvgTransform[];
+    transforms?: Null<SvgTransform[]>;
     parent?: squared.svg.SvgView;
     container?: squared.svg.SvgContainer;
     precision?: number;

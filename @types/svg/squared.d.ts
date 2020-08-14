@@ -57,7 +57,7 @@ declare module "svg" {
 
     interface SvgView extends SvgElement {
         name: string;
-        transformed?: SvgTransform[];
+        transformed?: Null<SvgTransform[]>;
         readonly opacity: string;
         readonly visible: boolean;
         readonly transforms: SvgTransform[];
@@ -112,7 +112,7 @@ declare module "svg" {
 
     interface SvgTransformable {
         rotateAngle?: number;
-        transformed?: SvgTransform[];
+        transformed?: Null<SvgTransform[]>;
         transformResidual?: SvgTransform[][];
         readonly transforms: SvgTransform[];
     }
@@ -168,7 +168,7 @@ declare module "svg" {
 
     class Svg extends SvgContainer implements SvgViewBox {
         precision?: number;
-        transformed?: SvgTransform[];
+        transformed?: Null<SvgTransform[]>;
         readonly element: SVGSVGElement;
         readonly documentRoot: boolean;
         readonly definitions: SvgDefinitions;
@@ -223,7 +223,7 @@ declare module "svg" {
         strokeDashoffset: string;
         clipPath: string;
         clipRule: string;
-        transformed?: SvgTransform[];
+        transformed?: Null<SvgTransform[]>;
         useParent?: SvgUse;
         patternParent?: SvgShapePattern;
         readonly element: SVGGElement;
@@ -266,7 +266,7 @@ declare module "svg" {
     }
 
     class SvgShape extends SvgElement implements SvgView, SvgSynchronize {
-        transformed?: SvgTransform[];
+        transformed?: Null<SvgTransform[]>;
         readonly element: SVGGeometryElement;
         synchronize(options?: SvgSynchronizeOptions): void;
         getAnimateShape(element: SVGGraphicsElement): SvgAnimate[];
@@ -334,7 +334,7 @@ declare module "svg" {
 
     class SvgImage extends SvgElement implements SvgView, SvgViewRect, SvgBaseVal, SvgTransformable {
         rotateAngle?: number;
-        transformed?: SvgTransform[];
+        transformed?: Null<SvgTransform[]>;
         readonly element: SVGImageElement | SVGUseElement;
         setRect(): void;
         setBaseValue(attr: string, value?: any): boolean;
@@ -366,7 +366,7 @@ declare module "svg" {
 
     class SvgPath implements SvgBaseVal, SvgPaint, SvgTransformable {
         static transform(value: string, transforms: SvgTransform[], element?: SVGGeometryElement, precision?: number): string;
-        static extrapolate(attr: string, value: string, values: string[], transforms?: SvgTransform[], parent?: SvgShape, precision?: number): Undef<string[]>;
+        static extrapolate(attr: string, value: string, values: string[], transforms?: Null<SvgTransform[]>, parent?: SvgShape, precision?: number): Undef<string[]>;
         name: string;
         value: string;
         baseValue: string;
@@ -387,7 +387,7 @@ declare module "svg" {
         clipRule: string;
         useParent?: SvgUse;
         patternParent?: SvgShapePattern;
-        transformed?: SvgTransform[];
+        transformed?: Null<SvgTransform[]>;
         transformResidual?: SvgTransform[][];
         readonly element: SVGGeometryElement;
         setPaint(d?: string[], precision?: number): void;
@@ -430,7 +430,7 @@ declare module "svg" {
         strokeDashoffset: string;
         clipPath: string;
         clipRule: string;
-        transformed?: SvgTransform[];
+        transformed?: Null<SvgTransform[]>;
         useParent?: SvgUse;
         patternParent?: SvgShapePattern;
         readonly symbolElement: SVGSymbolElement
@@ -474,7 +474,7 @@ declare module "svg" {
     }
 
     class SvgPattern extends SvgContainer implements SvgView {
-        transformed?: SvgTransform[];
+        transformed?: Null<SvgTransform[]>;
         readonly element: SVGGraphicsElement;
         readonly patternElement: SVGPatternElement;
         getTransforms(element?: SVGGraphicsElement): SvgTransform[];
@@ -507,7 +507,7 @@ declare module "svg" {
         clipPath: string;
         clipRule: string;
         drawRegion?: BoxRect;
-        transformed?: SvgTransform[];
+        transformed?: Null<SvgTransform[]>;
         useParent?: SvgUse;
         patternParent?: SvgShapePattern;
         readonly element: SVGGeometryElement;
@@ -620,7 +620,7 @@ declare module "svg" {
         set keyTimes(value);
         get keyTimes(): number[];
         set keySplines(value);
-        get keySplines(): Undef<string[]>;
+        get keySplines(): Null<string[]>;
         set timingFunction(value);
         get timingFunction(): string;
         set reverse(value);

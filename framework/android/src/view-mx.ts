@@ -1045,7 +1045,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
             }
             if (this.pageFlow) {
-                let floatAlign: Undef<string>;
+                let floatAlign = '';
                 if (this.inlineVertical && (outerRenderParent.layoutFrame || outerRenderParent.layoutGrid) || this.display === 'table-cell') {
                     const gravity = this.display === 'table-cell' ? 'gravity' : 'layout_gravity';
                     switch (this.cssInitial('verticalAlign', { modified: true })) {
@@ -1096,7 +1096,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             }
                             if (floatAlign && !renderParent.naturalElement && (renderParent.inlineWidth || !renderParent.documentRoot && this.onlyChild)) {
                                 renderParent.mergeGravity('layout_gravity', floatAlign);
-                                floatAlign = undefined;
+                                floatAlign = '';
                             }
                         }
                         if (this.centerAligned) {
@@ -1122,7 +1122,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         this.mergeGravity('layout_gravity', gravity);
                     }
                 }
-                if (floatAlign) {
+                if (floatAlign !== '') {
                     if (this.blockWidth) {
                         if (!textAlign || floatAlign === 'right') {
                             textAlign = floatAlign;

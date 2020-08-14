@@ -324,7 +324,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                         }
                     }
                 }
-                this.keySplines = undefined;
+                this.keySplines = null;
                 this.timingFunction = KEYSPLINE_NAME.linear;
             }
         }

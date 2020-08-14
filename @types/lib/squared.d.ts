@@ -178,7 +178,7 @@ declare module "lib" {
         function offsetAngleX(angle: number, value: number): number;
         function offsetAngleY(angle: number, value: number): number;
         function clamp(value: number, min?: number, max?: number): number;
-        function multipleOf(values: number[], min?: number, offset?: number[]): number;
+        function multipleOf(values: number[], min?: number, offset?: Null<number[]>): number;
         function sin(value: number, accuracy?: number): number;
         function cos(value: number, accuracy?: number): number;
         function tan(value: number, accuracy?: number): number;

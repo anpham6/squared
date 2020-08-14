@@ -229,7 +229,7 @@ function isBlockElement(node: Null<NodeUI>, direction?: boolean): boolean {
     return false;
 }
 
-function getMarginOffset<T extends NodeUI>(below: T, above: T, lineHeight: number, aboveLineBreak?: T): [number, T] {
+function getMarginOffset<T extends NodeUI>(below: T, above: T, lineHeight: number, aboveLineBreak?: Null<T>): [number, T] {
     let top = Infinity;
     if (below.nodeGroup && below.some(item => item.floating)) {
         below.renderEach((item: T) => {
@@ -255,11 +255,11 @@ function getMarginOffset<T extends NodeUI>(below: T, above: T, lineHeight: numbe
 }
 
 function getBottomChild(node: NodeUI) {
-    let bottomChild: Undef<NodeUI>;
+    let bottomChild: Null<NodeUI> = null;
     if (!node.floatContainer) {
         bottomChild = node.lastStaticChild as NodeUI;
         if (!isBlockElement(node, false) || bottomChild && node.hasHeight && Math.floor(bottomChild.linear.bottom) < node.box.bottom) {
-            bottomChild = undefined;
+            bottomChild = null;
         }
     }
     else {
@@ -292,7 +292,7 @@ function getBottomChild(node: NodeUI) {
                 bottomChild = item;
             }
         }
-        if (!bottomChild) {
+        if (bottomFloatChild && !bottomChild) {
             bottomChild = bottomFloatChild;
         }
     }
@@ -637,7 +637,7 @@ export default class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
                         let above = previousSiblings[q - 1],
                             below = nextSiblings[r - 1],
                             lineHeight = 0,
-                            aboveLineBreak: Undef<T>,
+                            aboveLineBreak: Null<T> = null,
                             offset: number;
                         if (above.rendered && below.rendered) {
                             const inline = above.inlineStatic && below.inlineStatic;
@@ -653,7 +653,7 @@ export default class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
                                         aboveLineBreak.setBounds(false);
                                     }
                                     else {
-                                        aboveLineBreak = undefined;
+                                        aboveLineBreak = null;
                                     }
                                 }
                             }

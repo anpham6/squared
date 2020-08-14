@@ -84,7 +84,7 @@ function getTextContent(element: SVGElement, attr: string, lang?: string) {
 
 export default <T extends Constructor<SvgElement>>(Base: T) => {
     return class extends Base implements squared.svg.SvgView {
-        public transformed?: SvgTransform[];
+        public transformed?: Null<SvgTransform[]>;
 
         protected _transforms?: SvgTransform[];
         protected _animations?: squared.svg.SvgAnimation[];
@@ -153,7 +153,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                 }
             });
             const animationName = parseAttribute(element, 'animation-name');
-            let length = animationName.length;
+            const length = animationName.length;
             if (length > 0) {
                 const cssData: ObjectMap<string[]> = {};
                 const groupName: SvgAnimate[] = [];
@@ -360,14 +360,15 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                             const animation = attrMap[name];
                             const direction = cssData['animation-direction'][i];
                             const timingFunction = cssData['animation-timing-function'][i];
+                            const q = animation.length;
                             sortAttribute(animation);
                             if (name === 'offset-distance') {
                                 const animateMotion = animate as SvgAnimateMotion;
                                 if (animation[0].key !== 0) {
                                     animateMotion.addKeyPoint({ key: 0, value: animateMotion.distance });
                                 }
-                                for (const keyPoint of animation) {
-                                    animateMotion.addKeyPoint(keyPoint);
+                                for (let j = 0; j < q; ++j) {
+                                    animateMotion.addKeyPoint(animation[j]);
                                 }
                                 if ((animation.pop() as NumberValue).key !== 1) {
                                     animateMotion.addKeyPoint({ key: 1, value: animateMotion.distance });
@@ -379,7 +380,6 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                             else {
                                 attributes.push(name);
                                 const keySplines: string[] = [];
-                                const q = animation.length;
                                 const keyTimes: number[] = new Array(q);
                                 const values: string[] = new Array(q);
                                 for (let j = 0; j < q; ++j) {
@@ -455,8 +455,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                     }
                 }
                 groupOrdering.reverse();
-                length = groupName.length;
-                for (let i = 0; i < length; ++i) {
+                for (let i = 0, q = groupName.length; i < q; ++i) {
                     groupName[i].setGroupOrdering(groupOrdering);
                 }
             }

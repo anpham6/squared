@@ -121,7 +121,7 @@ export function clamp(value: number, min = 0, max = 1) {
     return value;
 }
 
-export function multipleOf(values: number[], min = 0, offset?: number[]) {
+export function multipleOf(values: number[], min = 0, offset?: Null<number[]>) {
     const length = values.length;
     if (length > 1) {
         const increment = Math.min(...values);
@@ -131,7 +131,7 @@ export function multipleOf(values: number[], min = 0, offset?: number[]) {
             }
         }
         else {
-            offset = undefined;
+            offset = null;
             min = Math.max(min, increment);
         }
         let value = 0;

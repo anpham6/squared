@@ -200,7 +200,7 @@ const ATTRIBUTE_ANDROID = {
     'clip-path': ['pathData']
 };
 
-function getPathInterpolator(keySplines: Undef<string[]>, index: number) {
+function getPathInterpolator(keySplines: Null<string[]>, index: number) {
     const name = keySplines?.[index];
     return name ? INTERPOLATOR_ANDROID[name] as string || createPathInterpolator(name) : '';
 }
@@ -562,11 +562,7 @@ function createFillGradient(gradient: Gradient, path: SvgPath, precision?: numbe
 function sortSynchronized(a: SvgAnimate, b: SvgAnimate) {
     const syncA = a.synchronized;
     const syncB = b.synchronized;
-    return syncA && syncB
-        ? syncA.key >= syncB.key
-            ? 1
-            : -1
-        : 0;
+    return syncA && syncB ? syncA.key >= syncB.key ? 1 : -1 : 0;
 }
 
 function insertTargetAnimation(data: AnimatedVectorTemplate[], name: string, targetSetTemplate: SetTemplate, templateName: string, imageLength: number) {
@@ -635,7 +631,7 @@ function resetBeforeValue(propertyName: string, valueType: string, valueTo: Unde
     }
 }
 
-function insertFillAfter(propertyName: string, valueType: string, item: SvgAnimation, synchronized: Undef<boolean>, transforming: Undef<boolean>, precision: number, afterAnimator: PropertyValue[], transformOrigin?: Point[], propertyValues?: PropertyValue[], startOffset?: number) {
+function insertFillAfter(propertyName: string, valueType: string, item: SvgAnimation, synchronized: Undef<boolean>, transforming: Undef<boolean>, precision: number, afterAnimator: PropertyValue[], transformOrigin?: Null<Point[]>, propertyValues?: PropertyValue[], startOffset?: number) {
     if (!synchronized && item.fillReplace) {
         let valueTo = item.replaceValue;
         if (!valueTo) {
@@ -743,8 +739,8 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     contentMap[uri] = data.content;
                 }
             }
-            let parentElement: Undef<HTMLElement>,
-                element: Undef<SVGSVGElement>;
+            let parentElement: UndefNull<HTMLElement>,
+                element: UndefNull<SVGSVGElement>;
             this.application.getProcessingCache(sessionId).each(node => {
                 if (node.imageElement) {
                     [parentElement, element] = this.createSvgElement(node, node.toElementString('src'));
@@ -784,9 +780,9 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     }
                     if (parentElement) {
                         parentElement.removeChild(element);
-                        parentElement = undefined;
+                        parentElement = null;
                     }
-                    element = undefined;
+                    element = null;
                 }
             });
         }
@@ -884,7 +880,6 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     const togetherData: SvgAnimation[] = [];
                     const isolatedData: SvgAnimation[] = [];
                     const togetherTargets: SvgAnimation[][] = [];
-                    const isolatedTargets: SvgAnimation[][][] = [];
                     const transformTargets: SvgAnimation[][] = [];
                     const [companions, animations] = partitionArray(group.animate, child => 'companion' in child);
                     const targetSetTemplate: SetTemplate = { set: [], objectAnimator: [] };
@@ -980,10 +975,10 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     for (const item of transformMap.values()) {
                         transformTargets.push(item.sort(sortSynchronized));
                     }
-                    for (const item of isolatedData) {
-                        isolatedTargets.push([[item]]);
+                    const combined = [togetherTargets, transformTargets];
+                    for (let i = 0, length = isolatedData.length; i < length; ++i) {
+                        combined.push([[isolatedData[i]]]);
                     }
-                    const combined = [togetherTargets, transformTargets, ...isolatedTargets];
                     for (let index = 0, length = combined.length; index < length; ++index) {
                         const targets = combined[index];
                         const t = targets.length;
@@ -1049,7 +1044,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                     }
                                     const requireBefore = item.delay > 0;
                                     let transforming: Undef<boolean>,
-                                        transformOrigin: Undef<Point[]>;
+                                        transformOrigin: Null<Point[]> = null;
                                     if (item.setterType) {
                                         const propertyNames = getAttributePropertyName(item.attributeName);
                                         if (propertyNames) {
@@ -1119,11 +1114,11 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                         if (!synchronized && valueType === 'pathType') {
                                             if (group.pathData) {
                                                 const parent = item.parent;
-                                                let transforms: Undef<SvgTransform[]>,
+                                                let transforms: Null<SvgTransform[]> = null,
                                                     parentContainer: Undef<SvgShape>;
                                                 if (parent && SvgBuild.isShape(parent)) {
                                                     parentContainer = parent;
-                                                    transforms = parent.path?.transformed;
+                                                    transforms = parent.path?.transformed || null;
                                                 }
                                                 propertyNames = ['pathData'];
                                                 values = SvgPath.extrapolate(item.attributeName, group.pathData, item.values, transforms, parentContainer, precision);
@@ -1139,7 +1134,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                 if (resetBefore || requireBefore) {
                                                     beforeValues = plainMap(propertyNames, value => getTransformInitialValue(value) || '0');
                                                 }
-                                                transformOrigin = item.transformOrigin;
+                                                transformOrigin = item.transformOrigin || null;
                                             }
                                             transforming = true;
                                         }
@@ -1231,7 +1226,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                             }
                                                             (i === 0 ? objectAnimator : customAnimator).push({ ...options, propertyValuesHolder });
                                                         }
-                                                        transformOrigin = undefined;
+                                                        transformOrigin = null;
                                                     }
                                                     else {
                                                         ordering = 'sequentially';

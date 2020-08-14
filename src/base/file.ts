@@ -22,7 +22,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
         setTimeout(() => window.URL.revokeObjectURL(url), 1);
     }
 
-    private _hostname?: string;
+    private _hostname = '';
 
     public readonly assets: RawAsset[] = [];
     public abstract resource: squared.base.Resource<T>;
@@ -178,7 +178,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
             this._hostname = trimEnd(value, '/');
             return;
         }
-        this._hostname = undefined;
+        this._hostname = '';
     }
     get hostname() {
         return this._hostname || location.origin;

@@ -200,7 +200,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                     }
                     this.values = values;
                     this.keyTimes = keyTimes;
-                    this.keySplines = keySplines.length > 0 ? keySplines : undefined;
+                    this.keySplines = keySplines.length > 0 ? keySplines : null;
                     this.duration = durationTotal;
                     this.iterationCount = 1;
                     this.accumulateSum = false;

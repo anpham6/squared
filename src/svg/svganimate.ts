@@ -167,9 +167,9 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
 
     protected _reverse = false;
     protected _alternate = false;
-    protected _values?: string[];
-    protected _keyTimes?: number[];
-    protected _keySplines?: string[];
+    protected _values?: Null<string[]>;
+    protected _keyTimes?: Null<number[]>;
+    protected _keySplines: Null<string[]> = null;
 
     private _iterationCount = 1;
     private _from = '';
@@ -244,7 +244,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                     break;
                 }
                 case 'paced':
-                    this._keySplines = undefined;
+                    this._keySplines = null;
                     break;
                 case 'spline':
                     this.keySplines = replaceMap(getNamedItem(animationElement, 'keySplines').split(';'), (value: string) => value.trim()).filter(value => value !== '');
@@ -257,7 +257,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                             keyTimes[i] = i / (length - 1);
                         }
                         this._keyTimes = keyTimes;
-                        this._keySplines = undefined;
+                        this._keySplines = null;
                     }
                     break;
                 }
@@ -430,8 +430,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     set values(value) {
         this._values = value;
         if (value && value.length !== this.keyTimes.length) {
-            this._keyTimes = undefined;
-            this._keySplines = undefined;
+            this._keyTimes = null;
+            this._keySplines = null;
         }
     }
     get values() {
@@ -466,7 +466,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             }
         }
         else {
-            this._keySplines = undefined;
+            this._keySplines = null;
         }
     }
     get keySplines() {
@@ -529,7 +529,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
 
     set length(value) {
         if (value === 0) {
-            this._values = undefined;
+            this._values = null;
         }
     }
     get length() {

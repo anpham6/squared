@@ -23,17 +23,16 @@ type FileOptions = ChromeFileArchivingOptions | ChromeFileCopyingOptions;
 
 const { util, session } = squared.lib;
 
-const { isString, isObject } = util;
+const { isString, isPlainObject } = util;
 const { frameworkNotInstalled } = session;
 
 const framework = squared.base.lib.enumeration.APP_FRAMEWORK.CHROME;
 
-let initialized = false;
-let application: Application<Node>;
-let file: Undef<File<Node>>;
+let application: Null<Application<Node>> = null;
+let file: Null<File<Node>> = null;
 
 function createAssetsOptions(assets: ChromeAsset[], options?: FileOptions, directory?: string, filename?: string): FileOptions {
-    if (isObject<FileOptions>(options)) {
+    if (isPlainObject<FileOptions>(options)) {
         const items = options.assets;
         if (items) {
             assets = assets.concat(items);
@@ -50,7 +49,7 @@ function createAssetsOptions(assets: ChromeAsset[], options?: FileOptions, direc
     };
 }
 
-const checkFileName = (value: Undef<string>) => value || application.userSettings.outputArchiveName;
+const checkFileName = (value: Undef<string>) => value || application!.userSettings.outputArchiveName;
 const directoryNotProvided = () => Promise.reject('Directory not provided.');
 
 const appBase: chrome.ChromeFramework<Node> = {
@@ -159,7 +158,6 @@ const appBase: chrome.ChromeFramework<Node> = {
             [EC.CONVERT_PNG, new ConvertPng(EC.CONVERT_PNG, framework)],
             [EC.CONVERT_TIFF, new ConvertTiff(EC.CONVERT_TIFF, framework)]
         ]);
-        initialized = true;
         return {
             application,
             framework,
@@ -167,7 +165,7 @@ const appBase: chrome.ChromeFramework<Node> = {
         };
     },
     cached() {
-        if (initialized) {
+        if (application) {
             return {
                 application,
                 framework,
@@ -178,15 +176,17 @@ const appBase: chrome.ChromeFramework<Node> = {
     },
     saveAsWebPage: (filename?: string, options?: ChromeFileArchivingOptions) => {
         if (application) {
-            options = !isObject(options) ? {} : { ...options };
+            options = !isPlainObject(options) ? {} : { ...options };
             options.saveAsWebPage = true;
             const settings = application.userSettings;
-            const preloadImages = settings.preloadImages;
+            const { preloadImages, preloadFonts } = settings;
             settings.preloadImages = false;
+            settings.preloadFonts = false;
             application.reset();
             return application.parseDocument(document.body).then((response: Node[]) => {
-                file!.saveToArchive(filename || application.userSettings.outputArchiveName, options);
+                file!.saveToArchive(filename || settings.outputArchiveName, options);
                 settings.preloadImages = preloadImages;
+                settings.preloadFonts = preloadFonts;
                 return response;
             });
         }

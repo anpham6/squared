@@ -116,7 +116,7 @@ function getDashArray(map: SvgAnimationIntervalMap, valueArray: number[], time: 
 const getFromToValue = (item?: SvgStrokeDash) => item ? item.start + ' ' + item.end : '1 1';
 
 export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) implements squared.svg.SvgPath {
-    public static extrapolate(attr: string, pathData: string, values: string[], transforms?: SvgTransform[], parent?: SvgShape, precision?: number) {
+    public static extrapolate(attr: string, pathData: string, values: string[], transforms?: Null<SvgTransform[]>, parent?: SvgShape, precision?: number) {
         const container = parent?.parent;
         const transformRefit = !!transforms || !!container?.requireRefit;
         const result: string[] = [];
@@ -216,7 +216,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
     public name = '';
     public value = '';
     public baseValue = '';
-    public transformed?: SvgTransform[];
+    public transformed?: Null<SvgTransform[]>;
     public transformResidual?: SvgTransform[][];
 
     private _transforms?: SvgTransform[];
@@ -241,7 +241,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         const patternParent = this.patternParent as SvgShapePattern;
         const requireRefit = parent?.requireRefit === true;
         const patternRefit = patternParent?.patternContentUnits === REGION_UNIT.OBJECT_BOUNDING_BOX;
-        this.transformed = undefined;
+        this.transformed = null;
         let d: string;
         if (SVG.path(element)) {
             d = this.getBaseValue<string>('d')!;
@@ -942,7 +942,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                     item.keyTimes = keyTimes;
                                     const timingFunction = item.timingFunction;
                                     if (timingFunction) {
-                                        item.keySplines = undefined;
+                                        item.keySplines = null;
                                         item.timingFunction = timingFunction;
                                     }
                                     modified = true;

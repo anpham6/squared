@@ -270,7 +270,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     }
 
     public static transformRefit(value: string, options?: SvgTransformRefitOptions) {
-        let transforms: Undef<SvgTransform[]>,
+        let transforms: UndefNull<SvgTransform[]>,
             parent: Undef<SvgView>,
             container: Undef<SvgContainer>,
             precision: Undef<number>;
@@ -283,7 +283,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             if (points.length > 0) {
                 const transformed = isArray(transforms);
                 if (transformed) {
-                    points = SvgBuild.applyTransforms(transforms as SvgTransform[], points, parent && TRANSFORM.origin(parent.element));
+                    points = SvgBuild.applyTransforms(transforms!, points, parent && TRANSFORM.origin(parent.element));
                 }
                 if (container?.requireRefit) {
                     container.refitPoints(points);
@@ -305,8 +305,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 rotateInitial = 0,
                 rotatePrevious = 0,
                 overflow = 0,
-                rotating: Undef<boolean>,
-                center: Undef<SvgPoint>;
+                center: Null<SvgPoint> = null,
+                rotating: Undef<boolean>;
             if (isAngle(rotation)) {
                 rotateFixed = parseAngle(rotation, 0);
             }
@@ -352,12 +352,12 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                                 rotateFixed = 0;
                             }
                             else {
-                                center = undefined;
+                                center = null;
                                 rotateFixed = truncateFraction(absoluteAngle(nextPoint, endPoint));
                             }
                         }
                         else {
-                            center = undefined;
+                            center = null;
                         }
                         overflow = 0;
                         keyPoints.splice(0, index + 1);
@@ -476,20 +476,21 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 default:
                     continue;
             }
-            for (const item of items) {
+            for (let i = 0, length = items.length; i < length; ++i) {
+                const item = items[i];
                 const lowerKey = key.toLowerCase();
                 const commandA = lowerKey === 'a' ? item.splice(0, 5) : undefined;
                 const relative = key === lowerKey;
                 const itemCount = item.length;
                 const points: SvgPoint[] = new Array(itemCount / 2);
-                for (let i = 0, j = 0; i < itemCount; i += 2) {
-                    let x = item[i],
-                        y = item[i + 1];
+                for (let j = 0, k = 0; j < itemCount; j += 2) {
+                    let x = item[j],
+                        y = item[j + 1];
                     if (relative && previousPoint) {
                         x += previousPoint.x;
                         y += previousPoint.y;
                     }
-                    points[j++] = { x, y };
+                    points[k++] = { x, y };
                 }
                 const data: SvgPathCommand = {
                     key,

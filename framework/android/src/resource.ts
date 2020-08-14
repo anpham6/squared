@@ -247,7 +247,8 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                 imageSet = getSrcSet(element, this._imageFormat);
             }
             if (imageSet) {
-                for (const image of imageSet) {
+                for (let i = 0, length = imageSet.length; i < length; ++i) {
+                    const image = imageSet[i];
                     const pixelRatio = image.pixelRatio;
                     if (pixelRatio > 0) {
                         const src = image.src;

@@ -385,9 +385,11 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                             repeating.push({ unit: convertLength(node, namedMatch[0], index) });
                                         }
                                     }
-                                    if (repeating.length > 0) {
+                                    const q = repeating.length;
+                                    if (q > 0) {
                                         for (let j = 0; j < iterations; ++j) {
-                                            for (const item of repeating) {
+                                            for (let k = 0; k < q; ++k) {
+                                                const item = repeating[k];
                                                 if (item.name) {
                                                     name[item.name].push(i);
                                                 }

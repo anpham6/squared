@@ -535,7 +535,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     indentWidth = width === 2 && outline.style === 'double' ? 3 : width;
                 }
                 let [shapeData, layerList] = this.getDrawableBorder(stored, images, indentWidth);
-                const emptyBackground = shapeData === undefined && layerList === undefined;
+                const emptyBackground = shapeData === null && layerList === null;
                 if (outline && (drawOutline || emptyBackground)) {
                     const [outlineShapeData, outlineLayerList] = this.getDrawableBorder(stored, emptyBackground ? images : undefined, 0, !emptyBackground, outline);
                     if (outlineShapeData) {
@@ -591,17 +591,17 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         });
     }
 
-    public getDrawableBorder(data: BoxStyle, images: Undef<BackgroundImageData[]>, indentWidth: number, borderOnly = false, outline?: BorderAttribute): [Undef<StandardMap[]>, Undef<LayerList[]>] {
+    public getDrawableBorder(data: BoxStyle, images: Undef<BackgroundImageData[]>, indentWidth: number, borderOnly = false, outline?: BorderAttribute): [Null<StandardMap[]>, Null<LayerList[]>] {
         const borderVisible: boolean[] = new Array(4);
         const indentOffset = indentWidth > 0 ? formatPX(indentWidth) : '';
-        let borderStyle = true,
+        let shapeData: Null<StandardMap[]> = null,
+            layerList: Null<LayerList[]> = null,
+            borderStyle = true,
             borderAll = true,
             borders: Undef<BorderAttribute>[],
             border: Undef<BorderAttribute>,
             corners: Undef<StringMap>,
-            borderData: Undef<BorderAttribute>,
-            shapeData: Undef<StandardMap[]>,
-            layerList: Undef<LayerList[]>;
+            borderData: Undef<BorderAttribute>;
         if (!borderOnly) {
             const radius = data.borderRadius;
             if (radius) {
@@ -909,7 +909,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 const padded = position.orientation.length === 4;
                 const size = backgroundSize[i];
                 let repeat = backgroundRepeat[i],
-                    dimension = imageDimensions[i],
+                    dimension = imageDimensions[i] || null,
                     dimenWidth = NaN,
                     dimenHeight = NaN,
                     bitmap = svg[i] !== true,
@@ -934,7 +934,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     offsetY: Undef<boolean>;
                 if (dimension) {
                     if (!dimension.width || !dimension.height) {
-                        dimension = undefined;
+                        dimension = null;
                     }
                     else {
                         dimenWidth = dimension.width;
