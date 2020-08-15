@@ -295,13 +295,13 @@ extend(functionMap: {}, framework?: number) // add extension functions to Node p
 getElementMap() // map used for caching results from parseDocument
 clearElementMap()
 
-// Promise
+// Promise (cache: createElementMap - true)
 
-getElementById(value: string, cache?: boolean) // cache: default "true"
-querySelector(value: string, cache?: boolean)
-querySelectorAll(value: string, cache?: boolean)
+getElementById(value: string, sync?: boolean, cache?: boolean) // default: sync - false | cache - true
+querySelector(value: string, sync?: boolean, cache?: boolean)
+querySelectorAll(value: string, sync?: boolean, cache?: boolean)
 
-fromElement(element: HTMLElement, cache?: boolean) // cache: default "false"
+fromElement(element: HTMLElement, sync?: boolean, cache?: boolean) // default: sync - false | cache - false
 ```
 
 Packaging methods will return a Promise and require either node-express or squared-apache installed. These features are not supported when the framework is VDOM.
@@ -541,7 +541,7 @@ format[@%]?(minSize(0),maxSize(*))?(width(n)xheight(n)#?cover|contain|scale)?{..
 Placing an @ symbol (@png:image/jpeg) before the mime type will remove the original file from the package. The % symbol (%png:image/jpeg) will choose the smaller of the two files. You can also use these commands with the setting "convertImages" in the Android framework.
 
 ```javascript
-// NOTE: squared-apache uses TinyPNG for resizing and refitting (contain|cover|scale) and supports only PNG and JPEG. <https://tinypng.com/developers>
+// NOTE: squared-apache uses TinyPNG <https://tinypng.com/developers> for resizing and refitting (contain|cover|scale) and supports only PNG and JPEG.
 
 const options = {
     assets: [
@@ -781,11 +781,11 @@ JS and CSS files can be optimized further using these settings (node-express):
 
 You can also define your own optimizations in squared.settings.json:
 
-* npm i @babel/core --save-dev && npm i @babel/preset-env --save-dev -> https://github.com/babel/babel
-* npm i terser@4.8 --save-dev -> https://github.com/terser/terser (<b>NOTE</b>: Incompatible with 5.0+)
-* npm i prettier --save-dev -> https://github.com/prettier/prettier
-* npm i clean-css --save-dev -> https://github.com/jakubpawlowicz/clean-css
-* npm i html-minifier-terser --save-dev -> https://github.com/DanielRuf/html-minifier-terser
+* npm i @babel/core --save-dev && npm i @babel/preset-env --save-dev (<https://github.com/babel/babel>)
+* npm i terser@4.8 --save-dev (<https://github.com/terser/terser> - <b>NOTE</b>: Incompatible with 5.0+)
+* npm i prettier --save-dev (<https://github.com/prettier/prettier>)
+* npm i clean-css --save-dev (<https://github.com/jakubpawlowicz/clean-css>)
+* npm i html-minifier-terser --save-dev (<https://github.com/DanielRuf/html-minifier-terser>)
 
 These particular plugins can be configured using a plain object literal. You have to manually install these packages [<b>npm run install-chrome</b>] since this feature is only relevant to the Chrome framework. Transpiling with Babel is also configurable with a .babelrc file in the base folder for any presets and additional settings. Other non-builtin minifiers can similarly be applied by defining a custom string-based synchronous function.
 
@@ -824,7 +824,7 @@ external -> html | js | css -> npm package name -> custom name
 
 // es5.js
 function (context, value) {
-    const options = { presets: ['@babel/preset-env'] }; // https://babeljs.io/docs/en/options
+    const options = { presets: ['@babel/preset-env'] }; // <https://babeljs.io/docs/en/options>
     return context.transformSync(value, options).code;
 }
 ```
