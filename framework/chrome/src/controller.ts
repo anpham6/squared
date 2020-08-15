@@ -6,7 +6,7 @@ export default class Controller<T extends squared.base.Node> extends squared.bas
     }
 
     public applyDefaultStyles(element: Element, sessionId: string) {
-        if (element.nodeName === '#text') {
+        if (element.nodeName.charAt(0) === '#') {
             setElementCache(element, 'styleMap', sessionId, {
                 position: 'static',
                 display: 'inline',

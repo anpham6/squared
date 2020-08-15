@@ -355,7 +355,7 @@ let Node: serve.INode,
         getAbsoluteUrl(value: string, href: string) {
             value = value.replace(/\\/g, '/');
             let moveTo = '';
-            if (value.startsWith('/')) {
+            if (value.charAt(0) === '/') {
                 moveTo = STRING_SERVERROOT;
             }
             else if (value.startsWith('../')) {
@@ -377,7 +377,7 @@ let Node: serve.INode,
                 const pathname = match[2].split('/');
                 pathname.pop();
                 value = value.replace(/\\/g, '/');
-                if (value.startsWith('/')) {
+                if (value.charAt(0) === '/') {
                     return origin + value;
                 }
                 else if (value.startsWith('../')) {
@@ -820,7 +820,7 @@ let Node: serve.INode,
                     if (segment.trim().endsWith('{')) {
                         replaceWith = ' {' + match[2];
                     }
-                    else if (segment.startsWith(',')) {
+                    else if (segment.charAt(0) === ',') {
                         replaceWith = ', ';
                     }
                     output = (output || source).replace(match[0], match[0].replace(segment, replaceWith));
@@ -1123,7 +1123,7 @@ class FileManager implements serve.IFileManager {
                             }
                         }
                     }
-                    if (mimeType.startsWith('@')) {
+                    if (mimeType.charAt(0) === '@') {
                         const result = this.transformCss(file, content);
                         if (result) {
                             content = result;
@@ -1234,7 +1234,7 @@ class FileManager implements serve.IFileManager {
     }
     transformBuffer(assets: ExpressAsset[], file: ExpressAsset, filepath: string) {
         const mimeType = file.mimeType as string;
-        if (!mimeType || mimeType.startsWith('&')) {
+        if (!mimeType || mimeType.charAt(0) === '&') {
             return;
         }
         const format = file.format;
@@ -1372,7 +1372,7 @@ class FileManager implements serve.IFileManager {
             case 'text/css':
             case '@text/css': {
                 const unusedStyles = file.preserve !== true && this.dataMap?.unusedStyles;
-                const transforming = mimeType.startsWith('@');
+                const transforming = mimeType.charAt(0) === '@';
                 const trailing = this.getTrailingContent(file);
                 if (!unusedStyles && !transforming && !format) {
                     if (trailing) {
@@ -1678,7 +1678,7 @@ class FileManager implements serve.IFileManager {
                                 value = result;
                             }
                         }
-                        if (mimeType.startsWith('@')) {
+                        if (mimeType.charAt(0) === '@') {
                             const result = this.transformCss(file, value);
                             if (result) {
                                 value = result;

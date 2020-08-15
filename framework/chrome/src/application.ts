@@ -7,7 +7,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
     public readonly systemName = 'chrome';
 
     public insertNode(element: Element, sessionId: string) {
-        if (element.nodeName === '#text') {
+        if (element.nodeName.charAt(0) === '#') {
             if (this.userSettings.excludePlainText) {
                 return;
             }

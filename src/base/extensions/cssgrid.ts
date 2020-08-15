@@ -344,7 +344,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     switch (index) {
                         case 0:
                         case 1:
-                            if (command.startsWith('[')) {
+                            if (command.charAt(0) === '[') {
                                 for (const attr of match[4].split(/\s+/)) {
                                     (name[attr] ?? (name[attr] = [])).push(i);
                                 }
@@ -571,7 +571,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             node.css('gridTemplateAreas').split(/"[\s\n]+"/).forEach((template, rowStart) => {
                 if (template !== 'none') {
                     trimString(template.trim(), '"').split(/\s+/).forEach((area, columnStart) => {
-                        if (!area.startsWith('.')) {
+                        if (area.charAt(0) !== '.') {
                             const templateArea = templateAreas[area];
                             if (templateArea) {
                                 templateArea.rowSpan = (rowStart - templateArea.rowStart) + 1;

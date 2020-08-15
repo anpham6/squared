@@ -1719,7 +1719,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                         case -1:
                                             break;
                                         case 1:
-                                            if (key.startsWith('*')) {
+                                            if (key.charAt(0) === '*') {
                                                 endsWith = true;
                                                 key = key.substring(2);
                                                 break;
@@ -2003,11 +2003,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         const result = this._cached.tagName;
         if (result === undefined) {
             const element = this._element;
-            if (element) {
-                const nodeName = element.nodeName;
-                return this._cached.tagName = nodeName.startsWith('#') ? nodeName : element.tagName;
-            }
-            return this._cached.tagName = '';
+            return this._cached.tagName = element ? element.nodeName.charAt(0) === '#' ? element.nodeName : element.tagName : '';
         }
         return result;
     }
@@ -2084,7 +2080,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get plainText() {
-        return this.tagName === '#text';
+        return this.tagName.charAt(0) === '#';
     }
 
     get styleText() {

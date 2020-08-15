@@ -1624,14 +1624,14 @@ export function getRemSize(fixedWidth?: boolean) {
 }
 
 export function getFontSize(element: Element) {
-    if (element.nodeName.startsWith('#')) {
+    if (element.nodeName.charAt(0) === '#') {
         element = element.parentElement || DOCUMENT_ELEMENT;
     }
     return parseFloat(getStyle(element).getPropertyValue('font-size'));
 }
 
 export function hasComputedStyle(element: Element): element is HTMLElement {
-    return !element.nodeName.startsWith('#') && (element instanceof HTMLElement || element instanceof SVGElement);
+    return element.nodeName.charAt(0) !== '#' && (element instanceof HTMLElement || element instanceof SVGElement);
 }
 
 export function parseSelectorText(value: string, document?: boolean) {
@@ -2070,7 +2070,6 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
         case 'transformOrigin':
             return calculatePosition(element, value, boundingBox);
         case 'transform': {
-            value = value.trim();
             const transform = splitEnclosing(value);
             const length = transform.length;
             if (length > 1) {
@@ -2162,7 +2161,6 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
         }
         case 'backgroundImage':
         case 'borderImageSource': {
-            value = value.trim();
             const image = splitEnclosing(value);
             const length = image.length;
             if (length > 1) {
@@ -2193,7 +2191,6 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
         }
         case 'borderColor':
         case 'scrollbarColor': {
-            value = value.trim();
             const color = splitEnclosing(value);
             const length = color.length;
             if (length > 1) {
@@ -2259,7 +2256,6 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
         case 'borderTop':
         case 'columnRule':
         case 'outline': {
-            value = value.trim();
             const border = splitEnclosing(value);
             const length = border.length;
             if (length > 1) {
@@ -2290,7 +2286,6 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
         }
         case 'animationTimingFunction':
         case 'transitionTimingFunction': {
-            value = value.trim();
             const timingFunction = splitEnclosing(value);
             const length = timingFunction.length;
             if (length > 1) {
@@ -2349,7 +2344,6 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
         case 'clipPath':
         case 'offsetPath':
         case 'shapeOutside': {
-            value = value.trim();
             const path = splitEnclosing(value);
             const length = path.length;
             if (length === 2) {
@@ -2879,7 +2873,9 @@ export function calculateVarAsString(element: CSSElement, value: string, options
         }
         ({ separator, unitType, checkUnit, errorString } = options);
     }
-    value = value.trim();
+    if (separator === ' ') {
+        value = value.trim();
+    }
     let unit: string;
     switch (unitType) {
         case CSS_UNIT.INTEGER:
@@ -3058,8 +3054,7 @@ export function getContentBoxDimension(element: Null<CSSElement>) {
 }
 
 export function getBackgroundPosition(value: string, dimension: Dimension, options?: BackgroundPositionOptions) {
-    value = value.trim();
-    if (value !== '') {
+    if (value) {
         let fontSize: Undef<number>,
             imageDimension: Undef<Dimension>,
             imageSize: Undef<string>,

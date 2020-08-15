@@ -128,7 +128,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public applyDefaultStyles(element: Element, sessionId: string) {
-        if (element.nodeName === '#text') {
+        if (element.nodeName.charAt(0) === '#') {
             setElementCache(element, 'styleMap', sessionId, {
                 position: 'static',
                 display: 'inline',

@@ -14,7 +14,7 @@ export default class <T extends Node> extends Application<T> implements vdom.bas
     }
 
     public insertNode(element: Element, sessionId: string) {
-        if (element.nodeName !== '#text') {
+        if (element.nodeName.charAt(0) !== '#') {
             return new this.Node(this.nextId, sessionId, element);
         }
     }

@@ -877,7 +877,7 @@ export function resolvePath(value: string, href?: string) {
         const pathname = (href?.replace(location.origin, '') || location.pathname).replace(/\\/g, '/').split('/');
         pathname.pop();
         value = value.replace(/\\/g, '/');
-        if (value.startsWith('/')) {
+        if (value.charAt(0) === '/') {
             return location.origin + value;
         }
         else if (value.startsWith('../')) {
@@ -1161,7 +1161,7 @@ export function joinArray<T = unknown>(list: ArrayLike<T>, predicate: IteratorPr
     let result = '';
     for (let i = 0, length = list.length; i < length; ++i) {
         const value = predicate(list[i], i, list);
-        if (value !== '') {
+        if (value) {
             result += value + char;
         }
     }

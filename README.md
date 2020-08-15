@@ -104,7 +104,7 @@ VDOM is a minimal framework with slightly better performance when you are only l
         squared.setFramework(vdom /* chrome */, /* optional: FrameworkOptions */);
 
         const element = await squared.parseDocument(/* HTMLElement */); // default: document.documentElement 'HTML'
-        const elementArray = squared.parseDocumentSync(/* HTMLElement */, /* 'subview-id' */, /* ...etc */); // more than 1 element
+        const elementArray = squared.parseDocumentSync(/* HTMLElement */, /* 'elementId' */, /* ...etc */); // more than 1 element
 
         // start new "parseDocument" session (optional)
         squared.reset();

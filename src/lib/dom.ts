@@ -138,7 +138,7 @@ export function getElementsBetweenSiblings(elementStart: Null<Element>, elementE
         if (startIndex !== -1 && endIndex !== -1) {
             iterateArray(parentElement.childNodes, (element: Element) => {
                 const nodeName = element.nodeName;
-                if (!nodeName.startsWith('#') || nodeName === '#text') {
+                if (nodeName.charAt(0) !== '#' || nodeName === '#text') {
                     result.push(element);
                 }
             },

@@ -131,7 +131,7 @@ module.exports = {
         }],
         "@typescript-eslint/prefer-for-of": "error",
         "@typescript-eslint/prefer-function-type": "error",
-        "@typescript-eslint/prefer-string-starts-ends-with": "error",
+        "@typescript-eslint/prefer-string-starts-ends-with": "off",
         "@typescript-eslint/quotes": "off",
         "@typescript-eslint/restrict-plus-operands": "off",
         "@typescript-eslint/restrict-template-expressions": "error",

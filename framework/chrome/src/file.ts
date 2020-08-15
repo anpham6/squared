@@ -23,7 +23,7 @@ function parseFileAs(attr: string, value: Undef<string>): Undef<[string, Undef<s
 function getFilePath(value: string, saveTo?: boolean): [Undef<string>, string, string] {
     value = value.replace(/\\/g, '/');
     let moveTo: Undef<string>;
-    if (value.startsWith('/')) {
+    if (value.charAt(0) === '/') {
         moveTo = STRING_SERVERROOT;
     }
     else if (value.startsWith('../')) {
@@ -59,7 +59,7 @@ function resolveAssetSource(element: HTMLVideoElement | HTMLAudioElement | HTMLO
 }
 
 function convertFileMatch(value: string) {
-    value = value.trim()
+    value = value
         .replace(/([.|/\\{}()?])/g, (match, ...capture) => '\\' + capture[0])
         .replace(/\*/g, '.*?');
     return new RegExp(`${value}$`);
@@ -68,9 +68,9 @@ function convertFileMatch(value: string) {
 function getExtensions(element: Null<HTMLElement>) {
     if (element) {
         const dataset = element.dataset;
-        const use = dataset.useChrome?.trim() || dataset.use?.trim();
+        const use = dataset.useChrome || dataset.use;
         if (use) {
-            return use.split(/\s*,\s*/);
+            return use.trim().split(/\s*,\s*/);
         }
     }
     return [];
@@ -512,7 +512,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         document.querySelectorAll('object, embed').forEach((element: HTMLObjectElement & HTMLEmbedElement) => {
             const src = element.data || element.src;
             if (src && (element.type.startsWith('image/') || parseMimeType(src).startsWith('image/'))) {
-                processUri(element, src.trim());
+                processUri(element, src);
             }
         });
         for (const uri of Resource.ASSETS.image.keys()) {

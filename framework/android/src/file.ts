@@ -92,7 +92,7 @@ function getRawAssets(pathname: string, items: string[]) {
 }
 
 function getOutputDirectory(value: string) {
-    value = value.trim().replace(/\\/g, '/');
+    value = value.replace(/\\/g, '/');
     return value + (!value.endsWith('/') ? '/' : '');
 }
 
