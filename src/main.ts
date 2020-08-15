@@ -366,14 +366,14 @@ export function get(...elements: (Element | string)[]) {
     }
 }
 
-export function latest() {
-    let result = '';
-    if (main) {
-        for (const sessionId of main.session.active.keys()) {
-            result = sessionId;
+export function latest(value = 1) {
+    if (main && value > 0) {
+        const active = main.session.active;
+        if (active.size > 0) {
+            return Array.from(active.keys()).slice(Math.max(0, active.size - value)).reverse().join(',');
         }
     }
-    return result;
+    return '';
 }
 
 export function reset() {

@@ -9,7 +9,7 @@ export default class ResourceData<T extends View> extends squared.base.Extension
 
     public beforeDocumentWrite(options: DocumentWriteExtensionUIOptions<T>) {
         const application = this.application as android.base.Application<T>;
-        if (application.hasViewModel) {
+        if (application.viewModel.size > 0) {
             const { rendered, documentRoot } = options;
             const controller = this.controller;
             const applied = new Set<T>();

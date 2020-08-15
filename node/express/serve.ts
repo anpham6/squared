@@ -1890,23 +1890,23 @@ class FileManager implements serve.IFileManager {
                 }
                 else if (Compress.getFileSize(filepath) > 0) {
                     this.compressFile(assets, bundleMain || file, filepath);
-                    this.finalize(filepath);
                 }
                 else {
+                    filepath = '';
                     (bundleMain || file).excluded = true;
-                    this.finalize('');
                 }
+                this.finalize(filepath);
             }
             else if (Array.isArray(processing[filepath])) {
                 completed.push(filepath);
                 for (const item of processing[filepath]) {
                     if (item.excluded) {
-                        this.finalize('');
+                        filepath = '';
                     }
                     else {
                         this.writeBuffer(assets, item, filepath);
-                        this.finalize(filepath);
                     }
+                    this.finalize(filepath);
                 }
                 delete processing[filepath];
             }

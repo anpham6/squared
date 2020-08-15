@@ -26,7 +26,7 @@ export function saveToArchive(value?: string, options?: PlainObject): Promise<Pl
 export function createFrom(value: string, options: PlainObject): Promise<PlainObject | void>;
 export function appendFromArchive(value: string, options: PlainObject): Promise<PlainObject | void>;
 export function get(...elements: (string | Element)[]): Undef<Node[] | Map<Element, Node[]>>;
-export function latest(): string;
+export function latest(value?: number): string;
 export function ready(): boolean;
 export function close(): boolean;
 export function reset(): void;

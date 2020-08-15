@@ -21,7 +21,7 @@ declare namespace base {
         setViewModel(data: AppViewModel, sessionId?: string): void;
         getViewModel(sessionId: string): Undef<AppViewModel>;
         resolveTarget(sessionId: string, target: Null<HTMLElement | string>): Undef<T>;
-        get hasViewModel(): boolean;
+        get viewModel(): Map<string, AppViewModel>;
     }
 
     class Controller<T extends View> extends squared.base.ControllerUI<T> {

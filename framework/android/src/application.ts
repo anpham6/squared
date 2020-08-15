@@ -42,7 +42,7 @@ export default class Application<T extends View> extends squared.base.Applicatio
         return this._viewModel.get(sessionId);
     }
 
-    get hasViewModel() {
-        return this._viewModel.size > 0;
+    get viewModel() {
+        return this._viewModel;
     }
 }

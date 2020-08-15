@@ -277,7 +277,7 @@ parseDocument() // see installation section (Promise)
 parseDocumentSync() // skips preloadImages and preloadFonts (synchronous)
 
 get(...elements: (Element | string)[]) // Element map of any Node objects created during the active "parseDocument" session
-latest() // most recent parseDocument sessionId
+latest(count?: number) // most recent parseDocument session ids
 
 ready() // boolean indicating if parseDocument can be called
 close() // close current session preceding write to disk or local output
@@ -581,10 +581,11 @@ chrome.saveAsWebPage();
 
 ### ANDROID: Layouts and binding expressions
 
-ViewModel data can be applied to most HTML elements using the dataset attribute. Different view models can be used for every "parseDocument" session. Leaving the sessionId empty sets the same view model for the entire project.
+View model data can be applied to most HTML elements using the dataset attribute. Different view models can be used for every "parseDocument" session. Leaving the sessionId empty sets the default view model for the entire project.
 
 ```javascript
-await squared.parseDocument(/* 'mainview' */).then(() => {
+await squared.parseDocument(/* 'mainview' */, /* 'subview' */).then(() => {
+    const sessions = squared.latest(2).split(',');
     android.setViewModel(
         {
             import: ['java.util.Map', 'java.util.List'],
@@ -596,11 +597,8 @@ await squared.parseDocument(/* 'mainview' */).then(() => {
                 { name: 'key', type: 'String' }
             ]
         },
-        squared.latest() /* optional: used when there are multiple layouts */
+        sessions[1] /* optional: used when there are multiple layouts */
     );
-});
-
-await squared.parseDocument(/* 'subview' */).then(() => {
     android.setViewModel(
         {
             import: ['java.util.Map'],
@@ -608,7 +606,7 @@ await squared.parseDocument(/* 'subview' */).then(() => {
                 { name: 'map', type: 'Map&lt;String, String>' }
             ]
         },
-        squared.latest()
+        sessions[0]
     );
 });
 
