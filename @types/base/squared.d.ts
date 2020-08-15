@@ -231,6 +231,7 @@ declare module "base" {
     class ResourceUI<T extends NodeUI> extends Resource<T> {
         static readonly STRING_SPACE: string;
         static readonly STORED: ResourceStoredMap;
+        static getBackgroundPosition(value: string, dimension: Dimension, options?: BackgroundPositionOptions): BoxRectPosition;
         static generateId(section: string, name: string, start?: number): string;
         static insertStoredAsset(asset: string, name: string, value: any): string;
         static getOptionArray(element: HTMLSelectElement | HTMLOptGroupElement, showDisabled?: boolean): Undef<string[]>[];

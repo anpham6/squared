@@ -60,7 +60,7 @@ interface LayerData {
 }
 
 const { reduceRGBA } = squared.lib.color;
-const { extractURL, formatPercent, formatPX, getBackgroundPosition } = squared.lib.css;
+const { extractURL, formatPercent, formatPX } = squared.lib.css;
 const { truncate } = squared.lib.math;
 const { delimitString, isEqual, plainMap, resolvePath, spliceArray, splitPair } = squared.lib.util;
 
@@ -836,7 +836,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     if (valid) {
                         const x = backgroundPositionX[i] || backgroundPositionX[i - 1];
                         const y = backgroundPositionY[i] || backgroundPositionY[i - 1];
-                        backgroundPosition[length] = getBackgroundPosition(
+                        backgroundPosition[length] = Resource.getBackgroundPosition(
                             checkBackgroundPosition(x, y, 'left') + ' ' + checkBackgroundPosition(y, x, 'top'),
                             node.actualDimension,
                             {
@@ -873,7 +873,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         images[length] = src;
                         backgroundRepeat[length] = 'no-repeat';
                         backgroundSize[length] = getPixelUnit(image.actualWidth, image.actualHeight);
-                        const position = getBackgroundPosition(
+                        const position = Resource.getBackgroundPosition(
                             image.containerName === 'INPUT_IMAGE' ? getPixelUnit(0, 0) : getPixelUnit(imageDimension.left - bounds.left + node.borderLeftWidth, imageDimension.top - bounds.top + node.borderTopWidth),
                             node.actualDimension,
                             {

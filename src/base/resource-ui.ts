@@ -6,12 +6,12 @@ import { NODE_ALIGNMENT, NODE_RESOURCE } from './lib/enumeration';
 
 const { USER_AGENT, isUserAgent } = squared.lib.client;
 const { parseColor } = squared.lib.color;
-const { CSS_PROPERTIES, calculate, convertAngle, formatPX, getBackgroundPosition, hasComputedStyle, hasCoords, isCalc, isLength, isPercent, parseAngle } = squared.lib.css;
+const { CSS_PROPERTIES, calculate, convertAngle, formatPercent, formatPX, hasComputedStyle, hasCoords, isCalc, isLength, isPercent, parseAngle, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = squared.lib.math;
 const { STRING } = squared.lib.regex;
 const { getElementAsNode } = squared.lib.session;
-const { appendSeparator, convertCamelCase, hasValue, isEqual, isNumber, isString, iterateArray, splitPair, splitPairEnd } = squared.lib.util;
+const { appendSeparator, convertCamelCase, convertFloat, hasValue, isEqual, isNumber, isString, iterateArray, splitPair, splitPairEnd } = squared.lib.util;
 
 const BORDER_TOP = CSS_PROPERTIES.borderTop.value as string[];
 const BORDER_RIGHT = CSS_PROPERTIES.borderRight.value as string[];
@@ -269,6 +269,25 @@ function hasEndingSpace(element: HTMLElement) {
     return length > 0 && textContent.charCodeAt(length - 1) === 32;
 }
 
+function newBoxRectPosition(orientation: string[] = ['left', 'top']) {
+    return {
+        static: true,
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        topAsPercent: 0,
+        leftAsPercent: 0,
+        rightAsPercent: 0,
+        bottomAsPercent: 0,
+        horizontal: 'left',
+        vertical: 'top',
+        orientation
+    } as BoxRectPosition;
+}
+
+const convertLength = (value: string, dimension: number, options?: ParseUnitOptions) => isPercent(value) ? Math.round(convertFloat(value) / 100 * dimension) : parseUnit(value, options);
+const convertPercent = (value: string, dimension: number, options?: ParseUnitOptions) => isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, options) / dimension;
 const checkPreviousSibling = (node: Undef<NodeUI>) => node === undefined || node.lineBreak || node.floating || node.plainText && CHAR_TRAILINGSPACE.test(node.textContent);
 
 export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> implements squared.base.ResourceUI<T> {
@@ -281,6 +300,302 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         colors: new Map(),
         images: new Map()
     };
+
+    public static getBackgroundPosition(value: string, dimension: Dimension, options?: BackgroundPositionOptions) {
+        if (value) {
+            let fontSize: Undef<number>,
+                imageDimension: Undef<Dimension>,
+                imageSize: Undef<string>,
+                screenDimension: Undef<Dimension>;
+            if (options) {
+                ({ fontSize, imageDimension, imageSize, screenDimension } = options);
+            }
+            const { width, height } = dimension;
+            const setImageOffset = (position: string, horizontal: boolean, direction: string, directionAsPercent: string) => {
+                if (imageDimension && !isLength(position)) {
+                    let offset = result[directionAsPercent];
+                    if (imageSize && imageSize !== 'auto' && imageSize !== 'initial') {
+                        const [sizeW, sizeH] = imageSize.split(/\s+/);
+                        if (horizontal) {
+                            let imageWidth = width;
+                            if (isLength(sizeW, true)) {
+                                if (isPercent(sizeW)) {
+                                    imageWidth *= parseFloat(sizeW) / 100;
+                                }
+                                else {
+                                    const unit = parseUnit(sizeW, { fontSize, screenDimension });
+                                    if (unit) {
+                                        imageWidth = unit;
+                                    }
+                                }
+                            }
+                            else if (sizeH) {
+                                let percent = 1;
+                                if (isPercent(sizeH)) {
+                                    percent = (parseFloat(sizeH) / 100 * height) / imageDimension.height;
+                                }
+                                else if (isLength(sizeH)) {
+                                    const unit = parseUnit(sizeH, { fontSize, screenDimension });
+                                    if (unit) {
+                                        percent = unit / imageDimension.height;
+                                    }
+                                }
+                                imageWidth = percent * imageDimension.width;
+                            }
+                            offset *= imageWidth;
+                        }
+                        else {
+                            let imageHeight = height;
+                            if (isLength(sizeH, true)) {
+                                if (isPercent(sizeH)) {
+                                    imageHeight *= parseFloat(sizeH) / 100;
+                                }
+                                else {
+                                    const unit = parseUnit(sizeH, { fontSize, screenDimension });
+                                    if (unit) {
+                                        imageHeight = unit;
+                                    }
+                                }
+                            }
+                            else if (sizeW) {
+                                let percent = 1;
+                                if (isPercent(sizeW)) {
+                                    percent = (parseFloat(sizeW) / 100 * width) / imageDimension.width;
+                                }
+                                else if (isLength(sizeW)) {
+                                    const unit = parseUnit(sizeW, { fontSize, screenDimension });
+                                    if (unit) {
+                                        percent = unit / imageDimension.width;
+                                    }
+                                }
+                                imageHeight = percent * imageDimension.height;
+                            }
+                            offset *= imageHeight;
+                        }
+                    }
+                    else {
+                        offset *= horizontal ? imageDimension.width : imageDimension.height;
+                    }
+                    result[direction] -= offset;
+                }
+            };
+            const orientation = value.split(/\s+/);
+            if (orientation.length === 1) {
+                orientation.push('center');
+            }
+            const result = newBoxRectPosition(orientation);
+            const length = Math.min(orientation.length, 4);
+            if (length === 2) {
+                orientation.sort((a, b) => {
+                    switch (a) {
+                        case 'left':
+                        case 'right':
+                            return -1;
+                        case 'top':
+                        case 'bottom':
+                            return 1;
+                    }
+                    switch (b) {
+                        case 'left':
+                        case 'right':
+                            return 1;
+                        case 'top':
+                        case 'bottom':
+                            return -1;
+                    }
+                    return 0;
+                });
+                let direction: string,
+                    offsetParent: number;
+                for (let i = 0; i < 2; ++i) {
+                    let position = orientation[i];
+                    const horizontal = i === 0;
+                    if (horizontal) {
+                        direction = 'left';
+                        offsetParent = width;
+                    }
+                    else {
+                        direction = 'top';
+                        offsetParent = height;
+                    }
+                    const directionAsPercent = direction + 'AsPercent';
+                    switch (position) {
+                        case '0%':
+                            if (horizontal) {
+                                position = 'left';
+                            }
+                        case 'left':
+                        case 'top':
+                            break;
+                        case '100%':
+                            if (horizontal) {
+                                position = 'right';
+                            }
+                        case 'right':
+                        case 'bottom':
+                            result[direction] = offsetParent;
+                            result[directionAsPercent] = 1;
+                            break;
+                        case '50%':
+                        case 'center':
+                            position = 'center';
+                            result[direction] = offsetParent / 2;
+                            result[directionAsPercent] = 0.5;
+                            break;
+                        default: {
+                            const percent = convertPercent(position, offsetParent, { fontSize, screenDimension });
+                            if (percent > 1) {
+                                orientation[i] = '100%';
+                                position = horizontal ? 'right' : 'bottom';
+                                result[position] = convertLength(formatPercent(percent - 1), offsetParent, { fontSize, screenDimension }) * -1;
+                            }
+                            else {
+                                result[direction] = convertLength(position, offsetParent, { fontSize, screenDimension });
+                            }
+                            result[directionAsPercent] = percent;
+                            break;
+                        }
+                    }
+                    if (horizontal) {
+                        result.horizontal = position;
+                    }
+                    else {
+                        result.vertical = position;
+                    }
+                    setImageOffset(position, horizontal, direction, directionAsPercent);
+                }
+            }
+            else {
+                let horizontal = 0,
+                    vertical = 0;
+                const checkPosition = (position: string, nextPosition?: string) => {
+                    switch (position) {
+                        case 'left':
+                        case 'right':
+                            result.horizontal = position;
+                            ++horizontal;
+                            break;
+                        case 'center':
+                            if (length === 4) {
+                                return false;
+                            }
+                            else {
+                                let centerHorizontal = true;
+                                if (nextPosition === undefined) {
+                                    if (horizontal > 0) {
+                                        result.vertical = position;
+                                        centerHorizontal = false;
+                                    }
+                                    else {
+                                        result.horizontal = position;
+                                    }
+                                }
+                                else {
+                                    switch (nextPosition) {
+                                        case 'left':
+                                        case 'right':
+                                            result.vertical = position;
+                                            centerHorizontal = false;
+                                            break;
+                                        case 'top':
+                                        case 'bottom':
+                                            result.horizontal = position;
+                                            break;
+                                        default:
+                                            return false;
+                                    }
+                                }
+                                if (centerHorizontal) {
+                                    result.left = width / 2;
+                                    result.leftAsPercent = 0.5;
+                                    setImageOffset(position, true, 'left', 'leftAsPercent');
+                                }
+                                else {
+                                    result.top = height / 2;
+                                    result.topAsPercent = 0.5;
+                                    setImageOffset(position, false, 'top', 'topAsPercent');
+                                }
+                            }
+                            break;
+                        case 'top':
+                        case 'bottom':
+                            result.vertical = position;
+                            ++vertical;
+                            break;
+                        default:
+                            return false;
+                    }
+                    return horizontal < 2 && vertical < 2;
+                };
+                for (let i = 0; i < length; ++i) {
+                    const position = orientation[i];
+                    if (isLength(position, true)) {
+                        const alignment = orientation[i - 1];
+                        switch (alignment) {
+                            case 'left':
+                            case 'right': {
+                                const location = convertLength(position, width, { fontSize, screenDimension });
+                                const locationAsPercent = convertPercent(position, width, { fontSize, screenDimension });
+                                if (alignment === 'right') {
+                                    result.right = location;
+                                    result.rightAsPercent = locationAsPercent;
+                                    setImageOffset(position, true, 'right', 'rightAsPercent');
+                                    result.left = width - location;
+                                    result.leftAsPercent = 1 - locationAsPercent;
+                                }
+                                else {
+                                    if (locationAsPercent > 1) {
+                                        const percent = 1 - locationAsPercent;
+                                        result.horizontal = 'right';
+                                        result.right = convertLength(formatPercent(percent), width, { fontSize, screenDimension });
+                                        result.rightAsPercent = percent;
+                                        setImageOffset(position, true, 'right', 'rightAsPercent');
+                                    }
+                                    result.left = location;
+                                    result.leftAsPercent = locationAsPercent;
+                                }
+                                setImageOffset(position, true, 'left', 'leftAsPercent');
+                                break;
+                            }
+                            case 'top':
+                            case 'bottom': {
+                                const location = convertLength(position, height, { fontSize, screenDimension });
+                                const locationAsPercent = convertPercent(position, height, { fontSize, screenDimension });
+                                if (alignment === 'bottom') {
+                                    result.bottom = location;
+                                    result.bottomAsPercent = locationAsPercent;
+                                    setImageOffset(position, false, 'bottom', 'bottomAsPercent');
+                                    result.top = height - location;
+                                    result.topAsPercent = 1 - locationAsPercent;
+                                }
+                                else {
+                                    if (locationAsPercent > 1) {
+                                        const percent = 1 - locationAsPercent;
+                                        result.horizontal = 'bottom';
+                                        result.bottom = convertLength(formatPercent(percent), height, { fontSize, screenDimension });
+                                        result.bottomAsPercent = percent;
+                                        setImageOffset(position, false, 'bottom', 'bottomAsPercent');
+                                    }
+                                    result.top = location;
+                                    result.topAsPercent = locationAsPercent;
+                                }
+                                setImageOffset(position, false, 'top', 'topAsPercent');
+                                break;
+                            }
+                            default:
+                                return newBoxRectPosition();
+                        }
+                    }
+                    else if (!checkPosition(position, orientation[i + 1])) {
+                        return newBoxRectPosition();
+                    }
+                }
+            }
+            result.static = result.top === 0 && result.right === 0 && result.bottom === 0 && result.left === 0;
+            return result;
+        }
+        return newBoxRectPosition();
+    }
 
     public static isBackgroundVisible(object: Undef<BoxStyle>) {
         return !!object && ('backgroundImage' in object || 'borderTop' in object || 'borderRight' in object || 'borderBottom' in object || 'borderLeft' in object);
@@ -471,7 +786,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         }
                         case 'radial': {
                             const position = getGradientPosition(direction);
-                            const center = getBackgroundPosition(position?.[2] || 'center', dimension, { fontSize: node.fontSize, imageDimension, screenDimension });
+                            const center = ResourceUI.getBackgroundPosition(position?.[2] || 'center', dimension, { fontSize: node.fontSize, imageDimension, screenDimension });
                             const { left, top } = center;
                             const { width, height } = dimension;
                             let shape = 'ellipse',
@@ -557,7 +872,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                 type,
                                 dimension,
                                 angle: getAngle(direction),
-                                center: getBackgroundPosition(position?.[2] || 'center', dimension, { fontSize: node.fontSize, imageDimension, screenDimension })
+                                center: ResourceUI.getBackgroundPosition(position?.[2] || 'center', dimension, { fontSize: node.fontSize, imageDimension, screenDimension })
                             } as ConicGradient;
                             gradient.colorStops = parseColorStops(node, gradient, match[4]);
                             break;

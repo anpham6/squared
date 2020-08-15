@@ -1,3 +1,5 @@
+import Resource from './resource';
+
 import { CONTAINER_ANDROID, CONTAINER_ANDROID_X, ELEMENT_ANDROID, LAYOUT_ANDROID, RESERVED_JAVA, STRING_ANDROID } from './lib/constant';
 import { API_ANDROID, DEPRECATED_ANDROID } from './lib/customization';
 import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
@@ -5,7 +7,7 @@ import { getDataSet, isHorizontalAlign, isVerticalAlign, localizeString } from '
 
 type T = android.base.View;
 
-const { CSS_PROPERTIES, CSS_UNIT, formatPX, getBackgroundPosition, isLength, parseTransform } = squared.lib.css;
+const { CSS_PROPERTIES, CSS_UNIT, formatPX, isLength, parseTransform } = squared.lib.css;
 const { getNamedItem, getRangeClientRect } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
 const { capitalize, convertInt, convertWord, fromLastIndexOf, hasKeys, isString, replaceMap, splitPair } = squared.lib.util;
@@ -2419,7 +2421,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                 }
                 if (pivoted && this.has('transformOrigin')) {
-                    const { left, top } = getBackgroundPosition(this.css('transformOrigin'), this.bounds, { fontSize: this.fontSize });
+                    const { left, top } = Resource.getBackgroundPosition(this.css('transformOrigin'), this.bounds, { fontSize: this.fontSize });
                     if (top !== 0) {
                         this.android('transformPivotX', formatPX(top - (offsetX >= 0 ? offsetX : -offsetX * 2)));
                     }

@@ -1,3 +1,5 @@
+import Resource from '../resource';
+
 import { CONTAINER_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 import { createViewAttribute } from '../lib/util';
@@ -6,7 +8,7 @@ import LayoutUI = squared.base.LayoutUI;
 
 type View = android.base.View;
 
-const { formatPX, getBackgroundPosition } = squared.lib.css;
+const { formatPX } = squared.lib.css;
 
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
@@ -98,7 +100,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 if (imageSrc) {
                     const resource = this.resource as android.base.Resource<T>;
                     if (imagePosition) {
-                        ({ top, left } = getBackgroundPosition(imagePosition, node.actualDimension, {
+                        ({ top, left } = Resource.getBackgroundPosition(imagePosition, node.actualDimension, {
                             fontSize: node.fontSize,
                             imageDimension: resource.getImage(imageSrc),
                             screenDimension: node.localSettings.screenDimension
