@@ -3354,14 +3354,14 @@ export function getBackgroundPosition(value: string, dimension: Dimension, optio
     return newBoxRectPosition();
 }
 
-export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
+export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
     const result: ImageSrcSet[] = [];
     const parentElement = element.parentElement as HTMLPictureElement;
     let { srcset, sizes } = element;
     if (parentElement?.tagName === 'PICTURE') {
         iterateArray(parentElement.children, (item: HTMLSourceElement) => {
             if (item.tagName === 'SOURCE') {
-                if (isString(item.srcset) && !(isString(item.media) && !checkMediaRule(item.media)) && (!isString(item.type) || !mimeType || mimeType.includes(item.type.trim().toLowerCase()))) {
+                if (isString(item.srcset) && !(isString(item.media) && !checkMediaRule(item.media)) && (!isString(item.type) || !mimeType || mimeType === '*' || mimeType.includes(item.type.trim().toLowerCase()))) {
                     ({ srcset, sizes } = item);
                     return true;
                 }

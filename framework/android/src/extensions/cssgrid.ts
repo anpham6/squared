@@ -514,7 +514,7 @@ function applyLayout(node: View, parent: View, item: View, mainData: CssGridData
 const getLayoutDimension = (value: string) => value === 'space-between' ? 'match_parent' : 'wrap_content';
 
 export default class CssGrid<T extends View> extends squared.base.extensions.CssGrid<T> {
-    public processNode(node: T, parent: T) {
+    public processNode(node: T, parent: T): Void<ExtensionResult<T>> {
         let container: Undef<T>,
             renderAs: Undef<T>,
             outputAs: Undef<NodeTemplate<T>>,

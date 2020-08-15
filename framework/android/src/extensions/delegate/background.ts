@@ -27,7 +27,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
         return (backgroundColor || backgroundImage) && !isParentVisible(node, parent) && (borderWidth || node.gridElement && (CssGrid.isJustified(node) || CssGrid.isAligned(node))) || isBackgroundSeparate(node, parent, backgroundColor, backgroundImage, backgroundRepeatX, backgroundRepeatY, borderWidth) || backgroundImage && hasMargin(node) || isParentTransfer(parent);
     }
 
-    public processNode(node: T, parent: T) {
+    public processNode(node: T, parent: T): ExtensionResult<T> {
         const controller = this.controller as android.base.Controller<T>;
         const { backgroundColor, backgroundImage, visibleStyle } = node;
         const backgroundSeparate = isBackgroundSeparate(node, parent, visibleStyle.backgroundColor, visibleStyle.backgroundImage, visibleStyle.backgroundRepeatX, visibleStyle.backgroundRepeatY, visibleStyle.borderWidth);

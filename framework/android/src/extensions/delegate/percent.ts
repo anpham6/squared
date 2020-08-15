@@ -54,7 +54,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
         return false;
     }
 
-    public processNode(node: T, parent: T) {
+    public processNode(node: T, parent: T): ExtensionResult<T> {
         const mainData = this.data.get(node) as PercentData;
         let container: Undef<T>;
         if (!parent.layoutConstraint || mainData.percentHeight) {

@@ -20,7 +20,7 @@ export default class Substitute<T extends View> extends squared.base.ExtensionUI
         this.require(EXT_ANDROID.EXTERNAL, true);
     }
 
-    public processNode(node: T, parent: T) {
+    public processNode(node: T, parent: T): Void<ExtensionResult<T>> {
         const data = getDataSet(node.dataset, convertCamelCase(this.name, '.'));
         if (data) {
             const controlName = data.tag;

@@ -15,7 +15,7 @@ const { formatPX } = squared.lib.css;
 const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.enumeration;
 
 export default class <T extends View> extends squared.base.extensions.Sprite<T> {
-    public processNode(node: T, parent: T) {
+    public processNode(node: T, parent: T): Void<ExtensionResult<T>> {
         const drawable = (this.resource as android.base.Resource<T>).addImageSrc(node.backgroundImage);
         if (drawable !== '') {
             const { image, position } = this.data.get(node) as SpriteData;

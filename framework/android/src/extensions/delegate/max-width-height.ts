@@ -70,6 +70,6 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
                     NODE_ALIGNMENT.SINGLE
                 )
             )
-        };
+        } as ExtensionResult<T>;
     }
 }

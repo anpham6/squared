@@ -12,7 +12,7 @@ const { withinRange } = squared.lib.util;
 const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
 export default class Grid <T extends View> extends squared.base.extensions.Grid<T> {
-    public processNode(node: T, parent: T) {
+    public processNode(node: T, parent: T): Void<ExtensionResult<T>> {
         super.processNode(node, parent);
         const columnCount = this.data.get(node) as Undef<number>;
         if (columnCount) {
@@ -32,7 +32,7 @@ export default class Grid <T extends View> extends squared.base.extensions.Grid<
         }
     }
 
-    public processChild(node: T, parent: T) {
+    public processChild(node: T, parent: T): Void<ExtensionResult<T>> {
         const cellData = this.data.get(node) as Undef<GridCellData<T>>;
         if (cellData) {
             const siblings = cellData.siblings?.slice(0);

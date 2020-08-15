@@ -16,7 +16,7 @@ function setLayoutHeight(node: View) {
 }
 
 export default class <T extends View> extends squared.base.extensions.Table<T> {
-    public processNode(node: T, parent: T) {
+    public processNode(node: T, parent: T): Void<ExtensionResult<T>> {
         super.processNode(node, parent);
         const mainData = this.data.get(node) as TableData;
         let requireWidth: Undef<boolean>,

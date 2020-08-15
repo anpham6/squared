@@ -223,7 +223,7 @@ function setLayoutWeight(node: View, horizontal: boolean, dimension: string, att
 const setBoxPercentage = (parent: View, node: View, attr: DimensionAttr) => node.flexbox.basis = (node.bounds[attr] / parent.box[attr] * 100) + '%';
 
 export default class <T extends View> extends squared.base.extensions.Flexbox<T> {
-    public processNode(node: T, parent: T) {
+    public processNode(node: T, parent: T): ExtensionResult<T> {
         super.processNode(node, parent);
         const mainData = this.data.get(node) as FlexboxData<T>;
         if (mainData.row && mainData.rowCount === 1 || mainData.column && mainData.columnCount === 1) {

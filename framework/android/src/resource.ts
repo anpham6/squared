@@ -5,7 +5,7 @@ type View = android.base.View;
 const { findColorShade, parseColor } = squared.lib.color;
 const { extractURL, getSrcSet } = squared.lib.css;
 const { FILE } = squared.lib.regex;
-const { fromLastIndexOf, hasMimeType, isNumber, isPlainObject, isString, resolvePath, spliceArray, trimString } = squared.lib.util;
+const { fromLastIndexOf, hasMimeType, isNumber, isPlainObject, isString, resolvePath, trimString } = squared.lib.util;
 
 const STORED = squared.base.ResourceUI.STORED as AndroidResourceStoredMap;
 
@@ -19,8 +19,8 @@ function formatObject(obj: ObjectMap<Undef<string | StringMap>>, numberAlias?: b
             formatObject(obj, numberAlias);
         }
         else {
-            const value = obj[attr]?.toString();
-            if (value) {
+            const value = obj[attr];
+            if (isString(value)) {
                 switch (attr) {
                     case 'text':
                         if (!value.startsWith('@string/')) {
@@ -177,7 +177,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
             const src = fromLastIndexOf(mdpi, '/');
             const ext = this.getExtension(src);
             const length = ext.length;
-            if (!imageFormat || length === 0 || hasMimeType(imageFormat, ext)) {
+            if (!imageFormat || hasMimeType(imageFormat, ext) || length === 0) {
                 const asset = Resource.insertStoredAsset('images', Resource.formatName(prefix + src.substring(0, src.length - (length > 0 ? length + 1 : 0))).toLowerCase(), images);
                 CACHE_IMAGE[mdpi] = asset;
                 return asset;
@@ -208,7 +208,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
 
     public readonly mapOfStored!: AndroidResourceStoredMap;
 
-    private readonly _imageFormat?: string[];
+    private readonly _imageFormat?: MIMEOrAll;
 
     constructor(
         public application: android.base.Application<T>,
@@ -222,7 +222,9 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         STORED.animators = new Map();
         const mimeType = this.controllerSettings.mimeType.image;
         if (mimeType !== '*') {
-            this._imageFormat = spliceArray(mimeType.slice(0), value => value === 'image/svg+xml');
+            const imageFormat = mimeType.slice(0);
+            imageFormat.splice(imageFormat.findIndex(value => value === 'image/svg+xml'), 1);
+            this._imageFormat = imageFormat;
         }
     }
 

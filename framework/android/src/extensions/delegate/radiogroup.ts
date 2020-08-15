@@ -20,7 +20,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
         return getInputName(node.element as HTMLInputElement) !== '' && !this.data.has(node);
     }
 
-    public processNode(node: T, parent: T) {
+    public processNode(node: T, parent: T): Void<ExtensionResult<T>> {
         const inputName = getInputName(node.element as HTMLInputElement);
         const radiogroup: T[] = [];
         const removeable: T[] = [];

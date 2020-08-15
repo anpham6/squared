@@ -16,7 +16,7 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
         return (node.overflowX && node.hasPX('width') || node.overflowY && node.hasPX('height') && node.hasHeight) && !node.rootElement && node.tagName !== 'TEXTAREA';
     }
 
-    public processNode(node: T, parent: T) {
+    public processNode(node: T, parent: T): Void<ExtensionResult<T>> {
         const overflow: string[] = [];
         const scrollView: T[] = [];
         const horizontalScroll = CONTAINER_ANDROID.HORIZONTAL_SCROLL;

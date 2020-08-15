@@ -143,7 +143,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
         return false;
     }
 
-    public processNode(node: T, parent: T) {
+    public processNode(node: T, parent: T): Void<ExtensionResult<T>> {
         const mainData = this.data.get(node) as PositiveXData;
         const children = mainData.children as T[];
         let container: Undef<T>;

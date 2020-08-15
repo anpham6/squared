@@ -11,7 +11,7 @@ const { formatPX, getBackgroundPosition } = squared.lib.css;
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
 export default class <T extends View> extends squared.base.extensions.List<T> {
-    public processNode(node: T, parent: T) {
+    public processNode(node: T, parent: T): Void<ExtensionResult<T>> {
         const layout = new LayoutUI(parent, node, 0, 0);
         if (layout.linearY) {
             layout.rowCount = node.length;
@@ -34,7 +34,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
         };
     }
 
-    public processChild(node: T, parent: T) {
+    public processChild(node: T, parent: T): Void<ExtensionResult<T>> {
         const mainData = this.data.get(node) as Undef<ListData>;
         if (mainData) {
             const application = this.application;

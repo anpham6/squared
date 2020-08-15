@@ -1746,7 +1746,7 @@ class FileManager implements serve.IFileManager {
             }
             return output;
         }
-}
+    }
     writeBuffer(assets: ExpressAsset[], file: ExpressAsset, filepath: string) {
         const png = Image.findCompress(file.compress);
         if (png && Compress.withinSizeRange(filepath, png.condition)) {

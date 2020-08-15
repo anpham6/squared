@@ -46,24 +46,10 @@ const framework = squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID;
 let application: Null<Application<View>> = null;
 let file: Null<File<View>> = null;
 
-function autoClose() {
-    if (application && !application.initializing && !application.closed && application.userSettings.autoCloseOnWrite) {
-        application.finalize();
-        return true;
-    }
-    return false;
-}
-
+const autoClose = () => application?.userSettings.autoCloseOnWrite && !application.initializing && !application.closed ? application.finalize() : false;
 const checkApplication = () => !!application && (application.closed || autoClose());
 const createAssetsOptions = (options?: FileUniversalOptions, directory?: string, filename?: string): FileUniversalOptions => ({ ...options, directory, filename });
 const checkFileName = (value: Undef<string>) => value || application!.userSettings.outputArchiveName;
-
-const lib = {
-    constant,
-    customization,
-    enumeration,
-    util
-};
 
 const appBase: android.AndroidFramework<View> = {
     base: {
@@ -105,7 +91,12 @@ const appBase: android.AndroidFramework<View> = {
             Svg: ResourceSvg
         }
     },
-    lib,
+    lib: {
+        constant,
+        customization,
+        enumeration,
+        util
+    },
     system: {
         customize(build: number, widget: string, options: ObjectMap<StringMap>) {
             if (customization.API_ANDROID[build]) {
@@ -298,7 +289,7 @@ const appBase: android.AndroidFramework<View> = {
         application = new Application<View>(framework, View, Controller, Resource, squared.base.ExtensionManager);
         file = new File();
         application.resourceHandler.fileHandler = file;
-        application.builtInExtensions = new Map<string, squared.base.Extension<View>>([
+        application.builtInExtensions = new Map<string, squared.base.ExtensionUI<View>>([
             [EN.ACCESSIBILITY, new Accessibility(EN.ACCESSIBILITY, framework)],
             [EA.DELEGATE_BACKGROUND, new DelegateBackground(EA.DELEGATE_BACKGROUND, framework)],
             [EA.DELEGATE_NEGATIVEX, new DelegateNegativeX(EA.DELEGATE_NEGATIVEX, framework)],
@@ -327,7 +318,7 @@ const appBase: android.AndroidFramework<View> = {
             [EA.RESOURCE_DATA, new ResourceData(EA.RESOURCE_DATA, framework)],
             [EA.EXTERNAL, new External(EA.EXTERNAL, framework)],
             [EA.SUBSTITUTE, new Substitute(EA.SUBSTITUTE, framework)]
-        ]) as Map<string, squared.base.ExtensionUI<View>>;
+        ]);
         return {
             application,
             framework,

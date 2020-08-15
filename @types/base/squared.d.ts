@@ -277,7 +277,7 @@ declare module "base" {
         readonly documentBase?: boolean;
         included(element: HTMLElement): boolean;
         is(node: T): boolean;
-        condition(node: T, parent?: T): boolean;
+        condition(node: T, parent: T): boolean;
         processNode(node: T, parent: T): Void<ExtensionResult<T>>;
         processChild(node: T, parent: T): Void<ExtensionResult<T>>;
         addDescendant(node: T): void;

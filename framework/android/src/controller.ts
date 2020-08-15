@@ -668,7 +668,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         },
         mimeType: {
             font: ['font/ttf', 'font/otf'],
-            image: ['image/jpeg', 'image/png', 'image/gif', 'image/bmp', 'image/webp', 'image/svg+xml', 'image/heic', 'image/heif', 'image/x-icon'],
+            image: ['image/png', 'image/jpeg', 'image/gif', 'image/svg+xml', 'image/bmp', 'image/webp', 'image/heic', 'image/heif', 'image/x-icon'],
             audio: ['video/3gpp', 'video/mp4', 'video/mp2t', 'video/x-matroska', 'audio/aac', 'audio/flac', 'audio/gsm', 'audio/midi', 'audio/mpeg', 'audio/wav', 'audio/ogg'],
             video: ['video/3gpp', 'video/mp4', 'video/mp2t', 'video/x-matroska', 'video/webm']
         },
@@ -1474,8 +1474,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const element = node.element as HTMLImageElement;
                 let imageSet: Undef<ImageSrcSet[]>;
                 if (node.actualParent!.tagName === 'PICTURE') {
-                    const mimeType = this.localSettings.mimeType.image;
-                    imageSet = getSrcSet(element, mimeType === '*' ? undefined : mimeType);
+                    imageSet = getSrcSet(element, this.localSettings.mimeType.image);
                     if (imageSet) {
                         const setImageDimension = (width: number, image: Undef<ImageAsset>) => {
                             node.css('width', formatPX(width), true);

@@ -44,7 +44,7 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
         return this._isAll || this.tagNames.includes(node.tagName);
     }
 
-    public condition(node: T, parent?: T) {
+    public condition(node: T, parent: T) {
         return node.use ? this.included(node.element as HTMLElement) : !this._isAll;
     }
 

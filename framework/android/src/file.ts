@@ -183,11 +183,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             itemArray.push({ name, innerText });
         }
         return this.checkFileAssets([
-            replaceTab(
-                applyTemplate('resources', STRING_TMPL, [item]),
-                this.userSettings.insertSpaces,
-                true
-            ),
+            replaceTab(applyTemplate('resources', STRING_TMPL, [item]), this.userSettings.insertSpaces, true),
             this.directory.string,
             'strings.xml'
         ], options);
@@ -204,11 +200,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 });
             }
             return this.checkFileAssets([
-                replaceTab(
-                    applyTemplate('resources', STRINGARRAY_TMPL, [item]),
-                    this.userSettings.insertSpaces,
-                    true
-                ),
+                replaceTab(applyTemplate('resources', STRINGARRAY_TMPL, [item]), this.userSettings.insertSpaces, true),
                 this.directory.string,
                 'string_arrays.xml'
             ], options);
@@ -266,10 +258,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 itemArray.push({ name, innerText });
             }
             return this.checkFileAssets([
-                replaceTab(
-                    applyTemplate('resources', COLOR_TMPL, [item]),
-                    this.userSettings.insertSpaces
-                ),
+                replaceTab(applyTemplate('resources', COLOR_TMPL, [item]), this.userSettings.insertSpaces),
                 this.directory.string,
                 'colors.xml'
             ], options);
@@ -293,10 +282,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 }
             }
             result.push(
-                replaceTab(
-                    applyTemplate('resources', STYLE_TMPL, [item]),
-                    this.userSettings.insertSpaces
-                ),
+                replaceTab(applyTemplate('resources', STYLE_TMPL, [item]), this.userSettings.insertSpaces),
                 this.directory.string,
                 'styles.xml'
             );
@@ -330,10 +316,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     }
                     const value = applyTemplate('resources', STYLE_TMPL, [item]);
                     result.push(
-                        replaceTab(
-                            convertPixels ? value.replace(/>(-?[\d.]+)px</g, (found, ...capture: string[]) => `>${capture[0]}dp<`) : value,
-                            insertSpaces
-                        ),
+                        replaceTab(convertPixels ? value.replace(/>(-?[\d.]+)px</g, (found, ...capture: string[]) => `>${capture[0]}dp<`) : value, insertSpaces),
                         match[1],
                         match[2]
                     );
@@ -369,10 +352,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             const result: string[] = [];
             for (const [name, value] of STORED.drawables.entries()) {
                 result.push(
-                    replaceTab(
-                        convertPixels ? value.replace(/"(-?[\d.]+)px"/g, (match, ...capture: string[]) => `"${capture[0]}dp"`) : value,
-                        insertSpaces
-                    ),
+                    replaceTab(convertPixels ? value.replace(/"(-?[\d.]+)px"/g, (match, ...capture: string[]) => `"${capture[0]}dp"`) : value, insertSpaces),
                     directory,
                     `${name}.xml`
                 );
