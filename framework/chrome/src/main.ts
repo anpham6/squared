@@ -26,8 +26,6 @@ const { util, session } = squared.lib;
 const { isString, isPlainObject } = util;
 const { frameworkNotInstalled } = session;
 
-const framework = squared.base.lib.enumeration.APP_FRAMEWORK.CHROME;
-
 let application: Null<Application<Node>> = null;
 let file: Null<File<Node>> = null;
 
@@ -144,23 +142,23 @@ const appBase: chrome.ChromeFramework<Node> = {
     },
     create() {
         const EC = constant.EXT_CHROME;
-        application = new Application<Node>(framework, squared.base.Node, Controller, Resource, squared.base.ExtensionManager);
+        application = new Application<Node>(squared.base.lib.enumeration.APP_FRAMEWORK.CHROME, squared.base.Node, Controller, Resource, squared.base.ExtensionManager);
         file = new File();
         application.resourceHandler.fileHandler = file;
         application.builtInExtensions = new Map<string, chrome.base.Extension<Node>>([
-            [EC.COMPRESS_BROTLI, new CompressBrotli(EC.COMPRESS_BROTLI, framework)],
-            [EC.COMPRESS_GZIP, new CompressGzip(EC.COMPRESS_GZIP, framework)],
-            [EC.COMPRESS_JPEG, new CompressJpeg(EC.COMPRESS_JPEG, framework)],
-            [EC.COMPRESS_PNG, new CompressPng(EC.COMPRESS_PNG, framework)],
-            [EC.CONVERT_BMP, new ConvertBmp(EC.CONVERT_BMP, framework)],
-            [EC.CONVERT_GIF, new ConvertGif(EC.CONVERT_GIF, framework)],
-            [EC.CONVERT_JPEG, new ConvertJpeg(EC.CONVERT_JPEG, framework)],
-            [EC.CONVERT_PNG, new ConvertPng(EC.CONVERT_PNG, framework)],
-            [EC.CONVERT_TIFF, new ConvertTiff(EC.CONVERT_TIFF, framework)]
+            [EC.COMPRESS_BROTLI, new CompressBrotli(EC.COMPRESS_BROTLI, squared.base.lib.enumeration.APP_FRAMEWORK.CHROME)],
+            [EC.COMPRESS_GZIP, new CompressGzip(EC.COMPRESS_GZIP, squared.base.lib.enumeration.APP_FRAMEWORK.CHROME)],
+            [EC.COMPRESS_JPEG, new CompressJpeg(EC.COMPRESS_JPEG, squared.base.lib.enumeration.APP_FRAMEWORK.CHROME)],
+            [EC.COMPRESS_PNG, new CompressPng(EC.COMPRESS_PNG, squared.base.lib.enumeration.APP_FRAMEWORK.CHROME)],
+            [EC.CONVERT_BMP, new ConvertBmp(EC.CONVERT_BMP, squared.base.lib.enumeration.APP_FRAMEWORK.CHROME)],
+            [EC.CONVERT_GIF, new ConvertGif(EC.CONVERT_GIF, squared.base.lib.enumeration.APP_FRAMEWORK.CHROME)],
+            [EC.CONVERT_JPEG, new ConvertJpeg(EC.CONVERT_JPEG, squared.base.lib.enumeration.APP_FRAMEWORK.CHROME)],
+            [EC.CONVERT_PNG, new ConvertPng(EC.CONVERT_PNG, squared.base.lib.enumeration.APP_FRAMEWORK.CHROME)],
+            [EC.CONVERT_TIFF, new ConvertTiff(EC.CONVERT_TIFF, squared.base.lib.enumeration.APP_FRAMEWORK.CHROME)]
         ]);
         return {
             application,
-            framework,
+            framework: squared.base.lib.enumeration.APP_FRAMEWORK.CHROME,
             userSettings: { ...SETTINGS }
         };
     },
@@ -168,7 +166,7 @@ const appBase: chrome.ChromeFramework<Node> = {
         if (application) {
             return {
                 application,
-                framework,
+                framework: squared.base.lib.enumeration.APP_FRAMEWORK.CHROME,
                 userSettings: application.userSettings
             };
         }

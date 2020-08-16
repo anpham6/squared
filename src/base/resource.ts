@@ -23,9 +23,9 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         return /\.(\w+)\s*$/.exec(value)?.[1] || '';
     }
 
-    private _fileHandler: Undef<squared.base.File<T>>;
-
     public readonly abstract application: squared.base.Application<T>;
+
+    private _fileHandler: Undef<squared.base.File<T>>;
 
     public abstract get userSettings(): UserResourceSettings;
 

@@ -41,14 +41,12 @@ import * as customization from './lib/customization';
 
 import SETTINGS from './settings';
 
-const framework = squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID;
-
 let application: Null<Application<View>> = null;
 let file: Null<File<View>> = null;
 
 const autoClose = () => application?.userSettings.autoCloseOnWrite && !application.initializing && !application.closed ? application.finalize() : false;
-const checkApplication = () => !!application && (application.closed || autoClose());
-const createAssetsOptions = (options?: FileUniversalOptions, directory?: string, filename?: string): FileUniversalOptions => ({ ...options, directory, filename });
+const checkApplication = () => application ? application.closed || autoClose() : false;
+const createAssetsOptions = (options: Undef<FileUniversalOptions>, directory?: string, filename?: string): FileUniversalOptions => ({ ...options, directory, filename });
 const checkFileName = (value: Undef<string>) => value || application!.userSettings.outputArchiveName;
 
 const appBase: android.AndroidFramework<View> = {
@@ -281,42 +279,42 @@ const appBase: android.AndroidFramework<View> = {
     create() {
         const EN = squared.base.lib.constant.EXT_NAME as StringMapChecked;
         const EA = constant.EXT_ANDROID;
-        application = new Application<View>(framework, View, Controller, Resource, squared.base.ExtensionManager);
+        application = new Application<View>(squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID, View, Controller, Resource, squared.base.ExtensionManager);
         file = new File();
         application.resourceHandler.fileHandler = file;
         application.builtInExtensions = new Map<string, squared.base.ExtensionUI<View>>([
-            [EN.ACCESSIBILITY, new Accessibility(EN.ACCESSIBILITY, framework)],
-            [EA.DELEGATE_BACKGROUND, new DelegateBackground(EA.DELEGATE_BACKGROUND, framework)],
-            [EA.DELEGATE_NEGATIVEX, new DelegateNegativeX(EA.DELEGATE_NEGATIVEX, framework)],
-            [EA.DELEGATE_POSITIVEX, new DelegatePositiveX(EA.DELEGATE_POSITIVEX, framework)],
-            [EA.DELEGATE_MAXWIDTHHEIGHT, new DelegateMaxWidthHeight(EA.DELEGATE_MAXWIDTHHEIGHT, framework)],
-            [EA.DELEGATE_PERCENT, new DelegatePercent(EA.DELEGATE_PERCENT, framework)],
-            [EA.DELEGATE_SCROLLBAR, new DelegateScrollBar(EA.DELEGATE_SCROLLBAR, framework)],
-            [EA.DELEGATE_RADIOGROUP, new DelegateRadioGroup(EA.DELEGATE_RADIOGROUP, framework)],
-            [EA.DELEGATE_MULTILINE, new DelegateMultiline(EA.DELEGATE_MULTILINE, framework)],
-            [EN.RELATIVE, new Relative(EN.RELATIVE, framework)],
-            [EN.CSS_GRID, new CssGrid(EN.CSS_GRID, framework)],
-            [EN.FLEXBOX, new Flexbox(EN.FLEXBOX, framework)],
-            [EN.TABLE, new Table(EN.TABLE, framework, { tagNames: ['TABLE'] })],
-            [EN.COLUMN, new Column(EN.COLUMN, framework)],
-            [EN.LIST, new List(EN.LIST, framework)],
-            [EN.GRID, new Grid(EN.GRID, framework, { tagNames: ['DIV', 'FORM', 'UL', 'OL', 'DL', 'NAV', 'SECTION', 'ASIDE', 'MAIN', 'HEADER', 'FOOTER', 'P', 'ARTICLE', 'FIELDSET'] })],
-            [EN.SPRITE, new Sprite(EN.SPRITE, framework)],
-            [EN.WHITESPACE, new squared.base.extensions.WhiteSpace(EN.WHITESPACE, framework)],
-            [EA.RESOURCE_SVG, new ResourceSvg(EA.RESOURCE_SVG, framework)],
-            [EA.RESOURCE_BACKGROUND, new ResourceBackground(EA.RESOURCE_BACKGROUND, framework)],
-            [EA.RESOURCE_STRINGS, new ResourceStrings(EA.RESOURCE_STRINGS, framework)],
-            [EA.RESOURCE_FONTS, new ResourceFonts(EA.RESOURCE_FONTS, framework)],
-            [EA.RESOURCE_DIMENS, new ResourceDimens(EA.RESOURCE_DIMENS, framework)],
-            [EA.RESOURCE_STYLES, new ResourceStyles(EA.RESOURCE_STYLES, framework)],
-            [EA.RESOURCE_INCLUDES, new ResourceIncludes(EA.RESOURCE_INCLUDES, framework)],
-            [EA.RESOURCE_DATA, new ResourceData(EA.RESOURCE_DATA, framework)],
-            [EA.EXTERNAL, new External(EA.EXTERNAL, framework)],
-            [EA.SUBSTITUTE, new Substitute(EA.SUBSTITUTE, framework)]
+            [EN.ACCESSIBILITY, new Accessibility(EN.ACCESSIBILITY, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
+            [EA.DELEGATE_BACKGROUND, new DelegateBackground(EA.DELEGATE_BACKGROUND, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
+            [EA.DELEGATE_NEGATIVEX, new DelegateNegativeX(EA.DELEGATE_NEGATIVEX, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
+            [EA.DELEGATE_POSITIVEX, new DelegatePositiveX(EA.DELEGATE_POSITIVEX, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
+            [EA.DELEGATE_MAXWIDTHHEIGHT, new DelegateMaxWidthHeight(EA.DELEGATE_MAXWIDTHHEIGHT, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
+            [EA.DELEGATE_PERCENT, new DelegatePercent(EA.DELEGATE_PERCENT, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
+            [EA.DELEGATE_SCROLLBAR, new DelegateScrollBar(EA.DELEGATE_SCROLLBAR, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
+            [EA.DELEGATE_RADIOGROUP, new DelegateRadioGroup(EA.DELEGATE_RADIOGROUP, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
+            [EA.DELEGATE_MULTILINE, new DelegateMultiline(EA.DELEGATE_MULTILINE, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
+            [EN.RELATIVE, new Relative(EN.RELATIVE, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
+            [EN.CSS_GRID, new CssGrid(EN.CSS_GRID, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
+            [EN.FLEXBOX, new Flexbox(EN.FLEXBOX, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
+            [EN.TABLE, new Table(EN.TABLE, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID, { tagNames: ['TABLE'] })],
+            [EN.COLUMN, new Column(EN.COLUMN, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
+            [EN.LIST, new List(EN.LIST, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
+            [EN.GRID, new Grid(EN.GRID, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID, { tagNames: ['DIV', 'FORM', 'UL', 'OL', 'DL', 'NAV', 'SECTION', 'ASIDE', 'MAIN', 'HEADER', 'FOOTER', 'P', 'ARTICLE', 'FIELDSET'] })],
+            [EN.SPRITE, new Sprite(EN.SPRITE, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
+            [EN.WHITESPACE, new squared.base.extensions.WhiteSpace(EN.WHITESPACE, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
+            [EA.RESOURCE_SVG, new ResourceSvg(EA.RESOURCE_SVG, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
+            [EA.RESOURCE_BACKGROUND, new ResourceBackground(EA.RESOURCE_BACKGROUND, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
+            [EA.RESOURCE_STRINGS, new ResourceStrings(EA.RESOURCE_STRINGS, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
+            [EA.RESOURCE_FONTS, new ResourceFonts(EA.RESOURCE_FONTS, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
+            [EA.RESOURCE_DIMENS, new ResourceDimens(EA.RESOURCE_DIMENS, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
+            [EA.RESOURCE_STYLES, new ResourceStyles(EA.RESOURCE_STYLES, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
+            [EA.RESOURCE_INCLUDES, new ResourceIncludes(EA.RESOURCE_INCLUDES, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
+            [EA.RESOURCE_DATA, new ResourceData(EA.RESOURCE_DATA, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
+            [EA.EXTERNAL, new External(EA.EXTERNAL, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
+            [EA.SUBSTITUTE, new Substitute(EA.SUBSTITUTE, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)]
         ]);
         return {
             application,
-            framework,
+            framework: squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID,
             userSettings: { ...SETTINGS }
         };
     },
@@ -324,7 +322,7 @@ const appBase: android.AndroidFramework<View> = {
         if (application) {
             return {
                 application,
-                framework,
+                framework: squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID,
                 userSettings: application.userSettings
             };
         }

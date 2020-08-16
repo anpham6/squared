@@ -495,7 +495,7 @@ let Node: serve.INode,
                                         continue;
                                     }
                                 }
-                                return [module, options.startsWith('function') ? eval('(' + options + ')') as FunctionType<string> : new Function('context', 'value', options)];
+                                return [module, options.startsWith('function') ? eval(`(${options})`) as FunctionType<string> : new Function('context', 'value', options)];
                             }
                             break;
                         }

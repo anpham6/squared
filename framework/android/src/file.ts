@@ -194,10 +194,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             const item: ObjectMap<any[]> = { 'string-array': [] };
             const itemArray = item['string-array'];
             for (const [name, values] of Array.from(STORED.arrays.entries()).sort()) {
-                itemArray.push({
-                    name,
-                    item: plainMap(values, innerText => ({ innerText }))
-                });
+                itemArray.push({ name, item: plainMap(values, innerText => ({ innerText })) });
             }
             return this.checkFileAssets([
                 replaceTab(applyTemplate('resources', STRINGARRAY_TMPL, [item]), this.userSettings.insertSpaces, true),

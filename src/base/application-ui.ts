@@ -145,13 +145,13 @@ function setColumnMaxWidth(nodes: NodeUI[], offset: number) {
 const getCounterIncrementValue = (parent: HTMLElement, counterName: string, pseudoElt: string, sessionId: string, fallback?: number) => getCounterValue(getElementCache<CSSStyleDeclaration>(parent, 'styleMap' + pseudoElt, sessionId)?.counterIncrement, counterName, fallback);
 
 export default abstract class ApplicationUI<T extends NodeUI> extends Application<T> implements squared.base.ApplicationUI<T> {
+    public builtInExtensions!: Map<string, ExtensionUI<T>>;
     public readonly session: squared.base.AppSessionUI<T> = {
         active: new Map<string, squared.base.AppProcessing<T>>(),
         unusedStyles: new Set<string>(),
         extensionMap: new Map<number, ExtensionUI<T>[]>(),
         clearMap: new Map<T, string>()
     };
-    public builtInExtensions!: Map<string, ExtensionUI<T>>;
     public readonly extensions: ExtensionUI<T>[] = [];
     public readonly controllerHandler!: ControllerUI<T>;
     public readonly resourceHandler!: ResourceUI<T>;

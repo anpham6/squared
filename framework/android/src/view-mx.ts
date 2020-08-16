@@ -2115,7 +2115,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             if (this.api < BUILD_ANDROID.LATEST) {
                                 for (let attr in obj) {
                                     if (attr === 'id') {
-                                        id = obj[attr];
+                                        id = obj.id;
                                     }
                                     else {
                                         const data: ObjectMap<string | boolean> = {};
@@ -2131,17 +2131,17 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                                 value = data.value;
                                             }
                                         }
-                                        result.push(prefix + `${attr}="${value}"`);
+                                        result.push(`${prefix + attr}="${value}"`);
                                     }
                                 }
                             }
                             else {
                                 for (const attr in obj) {
                                     if (attr === 'id') {
-                                        id = obj[attr];
+                                        id = obj.id;
                                     }
                                     else {
-                                        result.push(prefix + `${attr}="${obj[attr]}"`);
+                                        result.push(`${prefix + attr}="${obj[attr]}"`);
                                     }
                                 }
                             }
@@ -2151,7 +2151,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             prefix = '';
                         default:
                             for (const attr in obj) {
-                                result.push(prefix + `${attr}="${obj[attr]}"`);
+                                result.push(`${prefix + attr}="${obj[attr]}"`);
                             }
                             break;
                     }
@@ -2159,7 +2159,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             result.sort((a, b) => a > b ? 1 : -1);
             if (requireId) {
-                result.unshift(`android:id="${id || '@+id/' + this.controlId}"`);
+                result.unshift(`android:id="${id || `@+id/${this.controlId}`}"`);
             }
             return result;
         }

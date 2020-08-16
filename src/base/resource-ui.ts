@@ -269,7 +269,7 @@ function hasEndingSpace(element: HTMLElement) {
     return length > 0 && textContent.charCodeAt(length - 1) === 32;
 }
 
-function newBoxRectPosition(orientation: string[] = ['left', 'top']) {
+function newBoxRectPosition(orientation = ['left', 'top']) {
     return {
         static: true,
         top: 0,
