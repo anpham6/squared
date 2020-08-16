@@ -19,6 +19,7 @@
   },
   "exclude": [
     "build",
+    "config",
     "dist",
     "html",
     "md5",

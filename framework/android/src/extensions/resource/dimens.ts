@@ -24,7 +24,7 @@ function createNamespaceData(namespace: string, node: View, group: GroupData) {
             const value = obj[attr]!;
             if (value.endsWith('px')) {
                 const name = `${namespace},${attr},${value}`;
-                (group[name] ?? (group[name] = [])).push(node);
+                (group[name] || (group[name] = [])).push(node);
             }
         }
     }
@@ -41,7 +41,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
             const node = rendered[i];
             if (node.visible) {
                 const containerName = node.containerName.toLowerCase();
-                const group: GroupData = groups[containerName] ?? (groups[containerName] = {});
+                const group: GroupData = groups[containerName] || (groups[containerName] = {});
                 createNamespaceData('android', node, group);
                 createNamespaceData('app', node, group);
             }

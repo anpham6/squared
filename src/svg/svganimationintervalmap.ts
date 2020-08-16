@@ -12,7 +12,7 @@ const { sortNumber, splitPairStart } = squared.lib.util;
 
 function insertIntervalValue(intervalMap: IntervalMap, intervalTimes: IntervalTime, keyName: string, time: number, value: string, endTime = 0, animation?: SvgAnimation, start = false, end = false, fillMode = 0, infinite = false, valueFrom?: string) {
     if (value) {
-        (intervalMap[keyName][time] ?? (intervalMap[keyName][time] = [])).push({
+        (intervalMap[keyName][time] || (intervalMap[keyName][time] = [])).push({
             time,
             value,
             animation,

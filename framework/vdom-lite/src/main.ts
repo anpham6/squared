@@ -6,8 +6,7 @@ import SETTINGS from '../../vdom/src/settings';
 
 const framework = squared.base.lib.enumeration.APP_FRAMEWORK.VDOM;
 
-let initialized = false;
-let application: Application<Node>;
+let application: Null<Application<Node>> = null;
 
 const appBase: squared.base.AppFramework<Node> = {
     base: {
@@ -18,7 +17,6 @@ const appBase: squared.base.AppFramework<Node> = {
     system: {},
     create() {
         application = new Application<Node>(framework, Node, (Controller as unknown) as Constructor<Node>);
-        initialized = true;
         return {
             application,
             framework,
@@ -26,7 +24,7 @@ const appBase: squared.base.AppFramework<Node> = {
         };
     },
     cached() {
-        if (initialized) {
+        if (application) {
             return {
                 application,
                 framework,

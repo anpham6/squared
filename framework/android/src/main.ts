@@ -99,15 +99,10 @@ const appBase: android.AndroidFramework<View> = {
     },
     system: {
         customize(build: number, widget: string, options: ObjectMap<StringMap>) {
-            if (customization.API_ANDROID[build]) {
-                const assign = customization.API_ANDROID[build].assign;
-                if (assign[widget]) {
-                    Object.assign(assign[widget], options);
-                }
-                else {
-                    assign[widget] = options;
-                }
-                return assign[widget];
+            const api = customization.API_ANDROID[build];
+            if (api) {
+                const data = api.assign[widget];
+                return data ? Object.assign(data, options) : api.assign[widget] = options;
             }
         },
         addXmlNs(name: string, uri: string) {

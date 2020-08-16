@@ -366,7 +366,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 const item = list[i];
                 if (item.pageFlow) {
                     if (item.floating) {
-                        (floated ?? (floated = new Set<string>())).add(item.float);
+                        (floated || (floated = new Set<string>())).add(item.float);
                     }
                     nodes[n++] = item;
                 }
@@ -635,7 +635,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (this._locked === undefined) {
             this._locked = {};
         }
-        (this._locked[name] ?? (this._locked[name] = {}))[attr] = true;
+        (this._locked[name] || (this._locked[name] = {}))[attr] = true;
     }
 
     public unlockAttr(name: string, attr: string) {
@@ -871,7 +871,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public exclude(options: ExcludeOptions) {
         const { resource, procedure, section } = options;
-        const exclusions = this._exclusions ?? (this._exclusions = [0, 0, 0]);
+        const exclusions = this._exclusions || (this._exclusions = [0, 0, 0]);
         if (resource) {
             exclusions[0] |= resource;
         }
@@ -888,7 +888,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             const dataset = (this._element as HTMLElement).dataset;
             if (hasKeys(dataset)) {
                 const systemName = capitalize(this.localSettings.systemName);
-                const exclusions = this._exclusions ?? (this._exclusions = [0, 0, 0]);
+                const exclusions = this._exclusions || (this._exclusions = [0, 0, 0]);
                 let value = dataset['excludeResource' + systemName] || dataset.excludeResource;
                 if (value) {
                     exclusions[0] |= applyExclusionValue(NODE_RESOURCE, value);
@@ -1816,14 +1816,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         this._siblingsLeading = value;
     }
     get siblingsLeading() {
-        return this._siblingsLeading ?? (this._siblingsLeading = this.previousSiblings({ lineBreak: true, excluded: true }));
+        return this._siblingsLeading || (this._siblingsLeading = this.previousSiblings({ lineBreak: true, excluded: true }));
     }
 
     set siblingsTrailing(value) {
         this._siblingsTrailing = value;
     }
     get siblingsTrailing() {
-        return this._siblingsTrailing ?? (this._siblingsTrailing = this.nextSiblings({ lineBreak: true, excluded: true }));
+        return this._siblingsTrailing || (this._siblingsTrailing = this.nextSiblings({ lineBreak: true, excluded: true }));
     }
 
     get flowElement() {
@@ -1924,11 +1924,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get boxReset() {
-        return this._boxReset ?? (this._boxReset = [0, 0, 0, 0, 0, 0, 0, 0]);
+        return this._boxReset || (this._boxReset = [0, 0, 0, 0, 0, 0, 0, 0]);
     }
 
     get boxAdjustment() {
-        return this._boxAdjustment ?? (this._boxAdjustment = [0, 0, 0, 0, 0, 0, 0, 0]);
+        return this._boxAdjustment || (this._boxAdjustment = [0, 0, 0, 0, 0, 0, 0, 0]);
     }
 
     get textEmpty() {

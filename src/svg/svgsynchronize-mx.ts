@@ -833,7 +833,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                 const groupActive = new Set<string>();
                 let setterTotal = 0;
                 const insertSetter = (item: SvgAnimation) => {
-                    (setterAttributeMap[item.attributeName] ?? (setterAttributeMap[item.attributeName] = [])).push(item);
+                    (setterAttributeMap[item.attributeName] || (setterAttributeMap[item.attributeName] = [])).push(item);
                     ++setterTotal;
                 };
                 {
@@ -1071,7 +1071,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                             }
                             const forwardItem = getForwardItem(forwardMap, attr);
                             if (value !== '' && (!forwardItem || time >= forwardItem.time)) {
-                                (forwardMap[attr] ?? (forwardMap[attr] = [])).push({ key: type, value, time });
+                                (forwardMap[attr] || (forwardMap[attr] = [])).push({ key: type, value, time });
                             }
                             if (item && SvgBuild.isAnimate(item) && !item.fillReplace) {
                                 if (item.fillForwards) {
@@ -1971,7 +1971,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                                 if (animate.type !== SVGTransform.SVG_TRANSFORM_ROTATE) {
                                                     const transformOrigin = transformOriginMap.get(entry[0]);
                                                     if (transformOrigin) {
-                                                        (animate.transformOrigin ?? (animate.transformOrigin = []))[j] = transformOrigin;
+                                                        (animate.transformOrigin || (animate.transformOrigin = []))[j] = transformOrigin;
                                                     }
                                                 }
                                                 entry[0] -= delay;

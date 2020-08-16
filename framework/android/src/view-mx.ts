@@ -655,14 +655,13 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const renderParent = this.renderParent as T;
             const containsWidth = !renderParent.inlineWidth;
             const containsHeight = !renderParent.inlineHeight;
-            const maxDimension = this.support.maxDimension;
             let { layoutWidth, layoutHeight } = this;
             if (layoutWidth === '') {
                 if (this.hasPX('width') && (!this.inlineStatic || this.cssInitial('width') === '')) {
                     const width = this.css('width');
                     let value = -1;
                     if (width.endsWith('%')) {
-                        const expandable = () => width === '100%' && containsWidth && (maxDimension || !this.hasPX('maxWidth'));
+                        const expandable = () => width === '100%' && containsWidth && (this.support.maxDimension || !this.hasPX('maxWidth'));
                         if (this.inputElement) {
                             if (expandable()) {
                                 layoutWidth = getMatchConstraint(this, renderParent);
@@ -698,7 +697,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             }
                         }
                         else if (width === '100%') {
-                            if (!maxDimension && this.hasPX('maxWidth')) {
+                            if (!this.support.maxDimension && this.hasPX('maxWidth')) {
                                 const maxWidth = this.css('maxWidth');
                                 const maxValue = this.parseWidth(maxWidth);
                                 const absoluteParent = this.absoluteParent || actualParent;
@@ -860,7 +859,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             }
                         }
                         else if (height === '100%') {
-                            if (!maxDimension) {
+                            if (!this.support.maxDimension) {
                                 const maxHeight = this.css('maxHeight');
                                 const maxValue = this.parseHeight(maxHeight);
                                 const absoluteParent = this.absoluteParent || actualParent;
@@ -958,7 +957,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     this.android('minHeight', formatPX(this.parseHeight(minHeight) + (this.contentBox ? this.contentBoxHeight : 0)), false);
                 }
             }
-            if (maxDimension) {
+            if (this.support.maxDimension) {
                 const maxWidth = this.css('maxWidth');
                 let maxHeight = this.css('maxHeight'),
                     width = -1;
@@ -2788,7 +2787,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         get constraint() {
-            return this._constraint ?? (this._constraint = { horizontal: false, vertical: false, current: {} });
+            return this._constraint || (this._constraint = { horizontal: false, vertical: false, current: {} });
         }
 
         get layoutFrame() {

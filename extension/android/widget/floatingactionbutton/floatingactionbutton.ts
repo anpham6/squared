@@ -58,7 +58,7 @@ export default class FloatingActionButton<T extends View> extends squared.base.E
                 break;
         }
         if (src) {
-            assignEmptyValue(options.app ?? (options.app = {}), 'srcCompat', `@drawable/${src}`);
+            assignEmptyValue(options.app || (options.app = {}), 'srcCompat', `@drawable/${src}`);
         }
         const controlName = node.api < BUILD_ANDROID.Q ? SUPPORT_ANDROID.FLOATING_ACTION_BUTTON : SUPPORT_ANDROID_X.FLOATING_ACTION_BUTTON;
         node.setControlType(controlName, CONTAINER_NODE.BUTTON);

@@ -219,7 +219,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
             }
             REGEXP_WORD.lastIndex = 0;
             if (partition && words.length <= 1) {
-                (wrapperContainer ?? (wrapperContainer = [])).push(seg);
+                (wrapperContainer || (wrapperContainer = [])).push(seg);
             }
             else {
                 const q = words.length;
@@ -292,7 +292,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                             }
                             container.setCacheValue('marginLeft', marginLeft);
                             container.setCacheValue('marginRight', marginRight);
-                            (wrapperContainer ?? (wrapperContainer = [])).push(container);
+                            (wrapperContainer || (wrapperContainer = [])).push(container);
                             previous = container;
                         }
                     }

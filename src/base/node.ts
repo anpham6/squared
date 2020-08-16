@@ -1479,7 +1479,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             const bounds: BoxRectDimension = parent !== false && this.absoluteParent?.box || this.bounds;
             return (parseFloat(value) / 100) * (dimension === 'height' ? bounds.height : bounds.width);
         }
-        (options ?? (options = {})).fontSize = this.fontSize;
+        (options || (options = {})).fontSize = this.fontSize;
         return parseUnit(value, options);
     }
 
@@ -1906,7 +1906,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 for (let i = 0; i < length; ++i) {
                     const item = children[i];
                     index = item.depth - depth;
-                    (result[index] ?? (result[index] = [])).push(item);
+                    (result[index] || (result[index] = [])).push(item);
                 }
                 if (value) {
                     length = result.length;
@@ -2116,7 +2116,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get dataset(): DOMStringMap {
-        return this._dataset ?? (this._dataset = this.styleElement ? (this._element as HTMLElement).dataset : {});
+        return this._dataset || (this._dataset = this.styleElement ? (this._element as HTMLElement).dataset : {});
     }
 
     get documentBody() {
@@ -2888,7 +2888,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         this._naturalElements = value;
     }
     get naturalElements() {
-        return this._naturalElements ?? (this._naturalElements = this.naturalChildren.filter((item: T) => item.naturalElement));
+        return this._naturalElements || (this._naturalElements = this.naturalChildren.filter((item: T) => item.naturalElement));
     }
 
     get firstChild(): Null<T> {

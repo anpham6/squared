@@ -86,7 +86,7 @@ export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> 
                 const options = createViewAttribute(this.options.navigationView);
                 const menu = Drawer.findNestedElement(node, WIDGET_NAME.MENU)?.dataset['layoutName' + systemName];
                 const headerLayout = Drawer.findNestedElement(node, EXT_ANDROID.EXTERNAL)?.dataset['layoutName' + systemName];
-                const app = options.app ?? (options.app = {});
+                const app = options.app || (options.app = {});
                 if (menu) {
                     assignEmptyValue(app, 'menu', `@menu/${menu}`);
                 }

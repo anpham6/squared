@@ -37,10 +37,10 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                             include: dataset.androidIncludeMerge === 'false'
                         };
                         if (name) {
-                            (open ?? (open = [])).push(data);
+                            (open || (open = [])).push(data);
                         }
                         if (closing) {
-                            (close ?? (close = [])).push(data);
+                            (close || (close = [])).push(data);
                         }
                     }
                 });

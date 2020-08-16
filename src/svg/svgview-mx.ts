@@ -205,7 +205,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                 }
                                 if (value) {
                                     const map = ANIMATION_DEFAULT[attr] ? keyframeMap : attrMap;
-                                    (map[attr] ?? (map[attr] = [])).push({ key, value });
+                                    (map[attr] || (map[attr] = [])).push({ key, value });
                                 }
                             }
                         }
@@ -253,7 +253,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                         default:
                                             return;
                                     }
-                                    const attrData = attrMap[name] ?? (attrMap[name] = []);
+                                    const attrData = attrMap[name] || (attrMap[name] = []);
                                     const index = attrData.findIndex(previous => previous.key === key);
                                     if (index !== -1) {
                                         const indexData = attrData[index];
@@ -393,7 +393,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                     }
                                     const transformOrigin = item.transformOrigin;
                                     if (transformOrigin && SvgBuild.asAnimateTransform(animate)) {
-                                        (animate.transformOrigin ?? (animate.transformOrigin = []))[j] = transformOrigin;
+                                        (animate.transformOrigin || (animate.transformOrigin = []))[j] = transformOrigin;
                                     }
                                 }
                                 if (includeKeySplines && !keySplines.every(value => value === 'linear')) {

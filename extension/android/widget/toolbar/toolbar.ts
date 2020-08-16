@@ -67,7 +67,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
         const backgroundImage = node.has('backgroundImage');
         const appBarChildren: T[] = [];
         const collapsingToolbarChildren: T[] = [];
-        let app = toolbarOptions.app ?? (toolbarOptions.app = {});
+        let app = toolbarOptions.app || (toolbarOptions.app = {});
         iterateArray(element.children, (item: HTMLElement) => {
             const dataset = item.dataset;
             if (item.tagName === 'IMG') {
@@ -166,7 +166,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
             }
             appBarNode.setControlType(appBarName, CONTAINER_NODE.BLOCK);
             if (hasCollapsingToolbar) {
-                app = collapsingToolbarOptions.app ?? (collapsingToolbarOptions.app = {});
+                app = collapsingToolbarOptions.app || (collapsingToolbarOptions.app = {});
                 assignEmptyValue(collapsingToolbarOptions, 'android', 'id', `@+id/${node.controlId}_collapsingtoolbar`);
                 assignEmptyValue(collapsingToolbarOptions, 'android', 'fitsSystemWindows', 'true');
                 if (!backgroundImage) {
@@ -235,7 +235,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
                                 scaleType = 'center';
                                 break;
                         }
-                        app = backgroundImageOptions.app ?? (backgroundImageOptions.app = {});
+                        app = backgroundImageOptions.app || (backgroundImageOptions.app = {});
                         assignEmptyValue(backgroundImageOptions, 'android', 'id', `@+id/${node.controlId}_image`);
                         assignEmptyValue(backgroundImageOptions, 'android', 'src', `@drawable/${src}`);
                         assignEmptyValue(backgroundImageOptions, 'android', 'scaleType', scaleType);
@@ -303,7 +303,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
         const menu = Toolbar.findNestedElement(node, WIDGET_NAME.MENU)?.dataset['layoutName' + capitalize(this.application.systemName)];
         if (menu) {
             const toolbarOptions = createViewAttribute(this.options[node.elementId]?.self);
-            const app = toolbarOptions.app ?? (toolbarOptions.app = {});
+            const app = toolbarOptions.app || (toolbarOptions.app = {});
             assignEmptyValue(app, 'menu', `@menu/${menu}`);
             node.app('menu', app.menu);
         }

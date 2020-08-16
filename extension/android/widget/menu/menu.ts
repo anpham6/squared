@@ -63,7 +63,7 @@ function parseDataSet(validator: ObjectMap<RegExp>, element: HTMLElement, option
                 const match = pattern.exec(value);
                 if (match) {
                     const name = NAMESPACE_APP.includes(attr) ? 'app' : 'android';
-                    (options[name] ?? (options[name] = {}))[attr] = Array.from(new Set(match)).join('|');
+                    (options[name] || (options[name] = {}))[attr] = Array.from(new Set(match)).join('|');
                 }
             }
         }

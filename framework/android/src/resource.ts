@@ -11,7 +11,10 @@ const STORED = squared.base.ResourceUI.STORED as AndroidResourceStoredMap;
 
 const REGEXP_STRINGNAME = /(\\[nt]|<\/?[A-Za-z]+>|&#?[A-Za-z\d]{2,};)/g;
 const REGEXP_STRINGWORD = /[^A-Za-z\d]+/g;
-let CACHE_IMAGE: StringMap = {};
+const CACHE_IMAGE = new Map<string, string>();
+
+let COUNTER_UUID = 0;
+let COUNTER_SYMBOL = 0;
 
 function formatObject(obj: ObjectMap<Undef<string | StringMap>>, numberAlias?: boolean) {
     for (const attr in obj) {
@@ -52,9 +55,6 @@ function formatObject(obj: ObjectMap<Undef<string | StringMap>>, numberAlias?: b
 }
 
 export default class Resource<T extends View> extends squared.base.ResourceUI<T> implements android.base.Resource<T> {
-    private static UUID_COUNTER = 0;
-    private static SYMBOL_COUNTER = 0;
-
     public static formatOptions(options: ViewAttribute, numberAlias?: boolean) {
         for (const namespace in options) {
             const obj: StandardMap = options[namespace];
@@ -150,7 +150,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                 }
                 name = name.toLowerCase();
                 if (!name) {
-                    name = '__symbol' + ++Resource.SYMBOL_COUNTER;
+                    name = '__symbol' + ++COUNTER_SYMBOL;
                 }
                 else if (numeric || /^\d/.test(name) || RESERVED_JAVA.has(name)) {
                     name = '__' + name;
@@ -169,7 +169,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         const mdpi = images.mdpi;
         if (mdpi) {
             if (Object.keys(images).length === 1) {
-                const asset = CACHE_IMAGE[mdpi];
+                const asset = CACHE_IMAGE.get(mdpi);
                 if (asset) {
                     return asset;
                 }
@@ -179,7 +179,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
             const length = ext.length;
             if (!imageFormat || hasMimeType(imageFormat, ext) || length === 0) {
                 const asset = Resource.insertStoredAsset('images', Resource.formatName(prefix + src.substring(0, src.length - (length > 0 ? length + 1 : 0))).toLowerCase(), images);
-                CACHE_IMAGE[mdpi] = asset;
+                CACHE_IMAGE.set(mdpi, asset);
                 return asset;
             }
         }
@@ -229,10 +229,10 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
     }
 
     public reset() {
+        CACHE_IMAGE.clear();
+        COUNTER_UUID = 0;
+        COUNTER_SYMBOL = 0;
         super.reset();
-        CACHE_IMAGE = {};
-        Resource.UUID_COUNTER = 0;
-        Resource.SYMBOL_COUNTER = 0;
     }
 
     public addImageSrc(element: HTMLImageElement | string, prefix = '', imageSet?: ImageSrcSet[]) {
@@ -282,11 +282,11 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
             }
         }
         if (mdpi) {
-            const rawData = this.application.resourceHandler.getRawData(mdpi);
+            const rawData = this.getRawData(mdpi);
             if (rawData) {
                 if (rawData.base64) {
                     const filename = rawData.filename;
-                    this.application.resourceHandler.writeRawImage({
+                    this.writeRawImage({
                         mimeType: rawData.mimeType,
                         filename: prefix + filename,
                         data: rawData.base64,
@@ -308,7 +308,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
     public writeRawImage(options: RawDataOptions) {
         const asset = super.writeRawImage(options);
         if (asset && this.userSettings.compressImages && Resource.canCompressImage(options.filename || '', options.mimeType)) {
-            (asset.compress ?? (asset.compress = [])).unshift({ format: 'png' });
+            (asset.compress || (asset.compress = [])).unshift({ format: 'png' });
         }
         return asset;
     }
@@ -318,6 +318,6 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
     }
 
     get randomUUID() {
-        return '__' + (++Resource.UUID_COUNTER).toString().padStart(5, '0');
+        return '__' + (++COUNTER_UUID).toString().padStart(5, '0');
     }
 }

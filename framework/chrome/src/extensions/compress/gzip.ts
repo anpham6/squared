@@ -18,7 +18,7 @@ export default class Gzip<T extends squared.base.Node> extends Extension<T> {
             }
         }
         if (override) {
-            (data.compress ?? (data.compress = [])).push({ format: 'gz', level: this.options.level, condition: Extension.getCompressOptions(this.options) });
+            (data.compress || (data.compress = [])).push({ format: 'gz', level: this.options.level, condition: Extension.getCompressOptions(this.options) });
             return true;
         }
         return false;

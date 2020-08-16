@@ -124,7 +124,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         let cache: T[] = [];
         this.application.getProcessingCache(sessionId).each(node => {
             if (node.data(Resource.KEY_NAME, 'fontStyle') && node.hasResource(NODE_RESOURCE.FONT_STYLE)) {
-                (nameMap[node.containerName] ?? (nameMap[node.containerName] = [])).push(node);
+                (nameMap[node.containerName] || (nameMap[node.containerName] = [])).push(node);
             }
         });
         for (const tag in nameMap) {
@@ -208,9 +208,9 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         if (j === 3 && convertPixels) {
                             value = truncate(value, floatPrecision) + 'sp';
                         }
-                        const items = sorted[j] ?? (sorted[j] = {});
+                        const items = sorted[j] || (sorted[j] = {});
                         const name = FONT_STYLE[key] + value + '"';
-                        (items[name] ?? (items[name] = [])).push(id);
+                        (items[name] || (items[name] = [])).push(id);
                     }
                 }
             }
@@ -283,7 +283,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                         if (compare.length > 0) {
                                             for (let k = 0, q = ids.length; k < q; ++k) {
                                                 if (compare.includes(ids[k])) {
-                                                    (found[attr] ?? (found[attr] = [])).push(ids[k]);
+                                                    (found[attr] || (found[attr] = [])).push(ids[k]);
                                                 }
                                             }
                                         }
@@ -399,7 +399,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 const ids = group.ids;
                 if (ids) {
                     for (let i = 0, length = ids.length; i < length; ++i) {
-                        (nodeMap[ids[i]] ?? (nodeMap[ids[i]] = [])).push(group.name);
+                        (nodeMap[ids[i]] || (nodeMap[ids[i]] = [])).push(group.name);
                     }
                 }
             }

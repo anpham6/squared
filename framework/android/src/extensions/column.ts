@@ -138,7 +138,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                                     rowReduce = true;
                                 }
                             }
-                            const column = columns[k] ?? (columns[k] = []);
+                            const column = columns[k] || (columns[k] = []);
                             column.push(item);
                             if (j > 0 && /^H\d/.test(item.tagName)) {
                                 if (column.length === 1 && j === q - 2) {

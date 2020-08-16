@@ -183,7 +183,7 @@ function createDataAttribute(node: NodeUI): CssGridData<NodeUI> {
 function setDataRows(rowData: Undef<NodeUI[]>[][], openCells: number[][], rowA: number, rowB: number, colA: number, colB: number, item: NodeUI, placement: number[], length: number, dense: boolean) {
     if (placement.every(value => value > 0)) {
         for (let i = placement[rowA] - 1; i < placement[rowB] - 1; ++i) {
-            const data = rowData[i] ?? (rowData[i] = []);
+            const data = rowData[i] || (rowData[i] = []);
             let cell = openCells[i],
                 j = placement[colA] - 1;
             if (!cell) {
@@ -196,7 +196,7 @@ function setDataRows(rowData: Undef<NodeUI[]>[][], openCells: number[][], rowA: 
                 openCells[i] = cell;
             }
             while (j < placement[colB] - 1) {
-                (data[j] ?? (data[j] = [])).push(item);
+                (data[j] || (data[j] = [])).push(item);
                 cell[j++] = 1;
             }
         }
@@ -346,7 +346,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         case 1:
                             if (command.charAt(0) === '[') {
                                 for (const attr of match[4].split(/\s+/)) {
-                                    (name[attr] ?? (name[attr] = [])).push(i);
+                                    (name[attr] || (name[attr] = [])).push(i);
                                 }
                             }
                             else if (command.startsWith('repeat')) {
@@ -996,7 +996,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 for (let i = 0; i < columnCount; ++i) {
                     const itemData = rowData[i];
                     for (let j = 0, length = itemData.length; j < length; ++j) {
-                        (rowMain[j] ?? (rowMain[j] = []))[i] = itemData[j];
+                        (rowMain[j] || (rowMain[j] = []))[i] = itemData[j];
                     }
                 }
             }

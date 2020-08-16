@@ -18,7 +18,7 @@ export default class Jpeg<T extends squared.base.Node> extends Extension<T> {
             }
         }
         if (override) {
-            (data.compress ?? (data.compress = [])).push({ format: 'png', condition: Extension.getCompressOptions(this.options) }, { format: 'jpeg', level: this.options.level });
+            (data.compress || (data.compress = [])).push({ format: 'png', condition: Extension.getCompressOptions(this.options) }, { format: 'jpeg', level: this.options.level });
             return true;
         }
         return false;
