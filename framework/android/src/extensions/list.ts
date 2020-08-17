@@ -155,7 +155,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 ordinal.childIndex = node.childIndex;
                 ordinal.containerName = node.containerName + '_ORDINAL';
                 ordinal.inherit(node, 'textStyle');
-                if (value?.endsWith('.') === false) {
+                if (value && !value.endsWith('.')) {
                     ordinal.setCacheValue('fontSize', ordinal.fontSize * 0.75);
                 }
                 if (gravity === 'right') {

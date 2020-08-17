@@ -1672,7 +1672,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             if (this.inputElement) {
                 const companion = this.companion;
-                if (companion?.labelFor === this && !companion.visible) {
+                if (companion && companion.labelFor === this && !companion.visible) {
                     const outer: number = companion[dimension][direction];
                     switch (direction) {
                         case 'top':
@@ -1690,7 +1690,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public translateX(value: number, options?: TranslateOptions) {
             const node = this.anchorTarget;
             const renderParent = node.renderParent as Undef<T>;
-            if (renderParent?.layoutConstraint) {
+            if (renderParent && renderParent.layoutConstraint) {
                 let oppose: Undef<boolean>,
                     accumulate: Undef<boolean>,
                     contain: Undef<boolean>;
@@ -1728,7 +1728,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public translateY(value: number, options?: TranslateOptions) {
             const node = this.anchorTarget;
             const renderParent = node.renderParent as Undef<T>;
-            if (renderParent?.layoutConstraint) {
+            if (renderParent && renderParent.layoutConstraint) {
                 let oppose: Undef<boolean>,
                     accumulate: Undef<boolean>,
                     contain: Undef<boolean>;
@@ -1779,7 +1779,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         public hasFlex(direction: "row" | "column") {
             const parent = this.actualParent as T;
-            if (parent?.flexdata[direction]) {
+            if (parent && parent.flexdata[direction]) {
                 if (direction === 'column' && !parent.hasHeight) {
                     const grandParent = parent.actualParent;
                     if (grandParent) {

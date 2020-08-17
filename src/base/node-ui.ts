@@ -686,7 +686,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public hide(options?: HideOptions<T>) {
-        if (options?.remove) {
+        if (options && options.remove) {
             this.removeTry(options);
         }
         this.rendered = true;
@@ -1019,7 +1019,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 for (let i = siblings.length - 1; i >= 0; --i) {
                     const previous = siblings[i];
                     if (previous.pageFlow) {
-                        return previous.blockStatic || cleared?.has(previous) ? NODE_TRAVERSE.VERTICAL : NODE_TRAVERSE.HORIZONTAL;
+                        return previous.blockStatic || cleared && cleared.has(previous) ? NODE_TRAVERSE.VERTICAL : NODE_TRAVERSE.HORIZONTAL;
                     }
                 }
                 return NODE_TRAVERSE.HORIZONTAL;
@@ -1137,13 +1137,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             }
             for (let i = length - 1; i >= 0; --i) {
                 const previous = this.siblingsLeading[i];
-                if (previous.excluded && cleared?.has(previous)) {
+                if (previous.excluded && cleared && cleared.has(previous)) {
                     return NODE_TRAVERSE.FLOAT_CLEAR;
                 }
                 else if (previous.blockStatic || previous.autoMargin.leftRight || (horizontal === false || floating && previous.childIndex === 0) && previous.plainText && previous.multiline) {
                     return NODE_TRAVERSE.VERTICAL;
                 }
-                else if (blockStatic && (!previous.floating || cleared?.has(previous) || i === length - 1 && !previous.pageFlow)) {
+                else if (blockStatic && (!previous.floating || cleared && cleared.has(previous) || i === length - 1 && !previous.pageFlow)) {
                     return NODE_TRAVERSE.VERTICAL;
                 }
                 else if (previous.floating) {
@@ -1438,6 +1438,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     case 'fontSize':
                     case 'lineHeight':
                         cached.baselineHeight = undefined;
+                        break;
+                    case 'baseline':
+                        cached.baselineElement = undefined;
+                        this.actualParent?.unsetCache('baselineElement');
                         break;
                     case 'whiteSpace':
                         cached.preserveWhiteSpace = undefined;
@@ -1977,7 +1981,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 }
                 if (!result) {
                     const parent = this.actualParent;
-                    if (parent?.firstStaticChild === this && hasTextIndent(parent)) {
+                    if (parent && parent.firstStaticChild === this && hasTextIndent(parent)) {
                         result = parent.parseUnit(parent.css('textIndent'));
                     }
                 }

@@ -207,7 +207,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         let value: Undef<string>;
         if (SVG.path(element)) {
             value = getNamedItem(element, 'd');
-            if (parent?.requireRefit) {
+            if (parent && parent.requireRefit) {
                 const commands = SvgBuild.getPathCommands(value);
                 if (commands.length > 0) {
                     const points = SvgBuild.getPathPoints(commands);
@@ -223,7 +223,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 { x: element.x1.baseVal.value, y: element.y1.baseVal.value },
                 { x: element.x2.baseVal.value, y: element.y2.baseVal.value }
             ];
-            if (parent?.requireRefit) {
+            if (parent && parent.requireRefit) {
                 parent.refitPoints(points);
             }
             value = SvgBuild.drawPolyline(points, precision);
@@ -240,7 +240,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 ry = rx;
             }
             const points: SvgPoint[] = [{ x: element.cx.baseVal.value, y: element.cy.baseVal.value, rx, ry }];
-            if (parent?.requireRefit) {
+            if (parent && parent.requireRefit) {
                 parent.refitPoints(points);
             }
             const pt = points[0] as Required<SvgPoint>;
@@ -251,7 +251,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 y = element.y.baseVal.value,
                 width = element.width.baseVal.value,
                 height = element.height.baseVal.value;
-            if (parent?.requireRefit) {
+            if (parent && parent.requireRefit) {
                 x = parent.refitX(x);
                 y = parent.refitY(y);
                 width = parent.refitSize(width);
@@ -261,7 +261,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         }
         else if (SVG.polygon(element) || SVG.polyline(element)) {
             const points = SvgBuild.clonePoints(element.points);
-            if (parent?.requireRefit) {
+            if (parent && parent.requireRefit) {
                 parent.refitPoints(points);
             }
             value = SVG.polygon(element) ? SvgBuild.drawPolygon(points, precision) : SvgBuild.drawPolyline(points, precision);
@@ -285,7 +285,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 if (transformed) {
                     points = SvgBuild.applyTransforms(transforms!, points, parent && TRANSFORM.origin(parent.element));
                 }
-                if (container?.requireRefit) {
+                if (container && container.requireRefit) {
                     container.refitPoints(points);
                 }
                 value = SvgBuild.drawPath(SvgBuild.syncPathPoints(commands, points, transformed), precision);

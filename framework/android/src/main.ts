@@ -44,7 +44,7 @@ import SETTINGS from './settings';
 let application: Null<Application<View>> = null;
 let file: Null<File<View>> = null;
 
-const autoClose = () => application?.userSettings.autoCloseOnWrite && !application.initializing && !application.closed ? application.finalize() : false;
+const autoClose = () => application && !application.initializing && !application.closed && application.userSettings.autoCloseOnWrite ? application.finalize() : false;
 const checkApplication = () => application ? application.closed || autoClose() : false;
 const createAssetsOptions = (options: Undef<FileUniversalOptions>, directory?: string, filename?: string): FileUniversalOptions => ({ ...options, directory, filename });
 const checkFileName = (value: Undef<string>) => value || application!.userSettings.outputArchiveName;

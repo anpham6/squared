@@ -841,7 +841,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             } as RadialGradient;
                             if (radius === 0 && radiusExtent === 0) {
                                 radius = farthestCorner;
-                                const extent = position?.[1]?.split(' ').pop() || '';
+                                const extent = position && position[1]?.split(' ').pop() || '';
                                 switch (extent) {
                                     case 'closest-corner':
                                     case 'closest-side':
@@ -939,7 +939,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             const parent = node.actualParent as NodeUI;
             if (parent.preserveWhiteSpace && parent.ancestors('pre', { startSelf: true }).length > 0) {
                 let nextSibling = node.nextSibling as Undef<NodeUI>;
-                if (nextSibling?.naturalElement) {
+                if (nextSibling && nextSibling.naturalElement) {
                     const textContent = node.textContent;
                     if (isString(textContent)) {
                         const match = REGEXP_TRAILINGINDENT.exec(textContent);
@@ -1085,7 +1085,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 fontStyle: node.css('fontStyle'),
                 fontSize: node.fontSize,
                 fontWeight,
-                color: color?.valueAsRGBA || ''
+                color: color && color.valueAsRGBA || ''
             } as FontAttribute);
         }
     }
@@ -1104,7 +1104,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         case 'radio':
                         case 'checkbox': {
                             const companion = node.companion;
-                            if (companion?.visible === false) {
+                            if (companion && !companion.visible) {
                                 value = companion.textContent.trim();
                             }
                             break;
@@ -1275,7 +1275,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     else if (!node.naturalChild) {
                         if (!node.horizontalRowStart) {
                             const element = node.element;
-                            const previousSibling = element?.previousSibling;
+                            const previousSibling = element && element.previousSibling;
                             if (previousSibling instanceof HTMLElement && !hasEndingSpace(previousSibling) && element!.textContent!.trim().startsWith(value.trim())) {
                                 value = value.replace(CHAR_LEADINGSPACE, ResourceUI.STRING_SPACE);
                                 break;
@@ -1319,13 +1319,13 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     }
                     if (inlined) {
                         const trailingSpace = !node.lineBreakTrailing && CHAR_TRAILINGSPACE.test(value);
-                        if (CHAR_LEADINGSPACE.test(value) && previousSibling?.block === false && !previousSibling.lineBreak && !previousSpaceEnd) {
+                        if (CHAR_LEADINGSPACE.test(value) && previousSibling && !previousSibling.block && !previousSibling.lineBreak && !previousSpaceEnd) {
                             value = ResourceUI.STRING_SPACE + value.trim();
                         }
                         else {
                             value = value.trim();
                         }
-                        if (trailingSpace && nextSibling?.blockStatic === false && !nextSibling.floating) {
+                        if (trailingSpace && nextSibling && !nextSibling.blockStatic && !nextSibling.floating) {
                             value += ResourceUI.STRING_SPACE;
                         }
                     }
@@ -1339,7 +1339,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                 ? ''
                                 : ResourceUI.STRING_SPACE
                             );
-                        value = value.replace(CHAR_TRAILINGSPACE, node.display === 'table-cell' || node.lineBreakTrailing || node.blockStatic || nextSibling?.floating ? '' : ResourceUI.STRING_SPACE);
+                        value = value.replace(CHAR_TRAILINGSPACE, node.display === 'table-cell' || node.lineBreakTrailing || node.blockStatic || nextSibling && nextSibling.floating ? '' : ResourceUI.STRING_SPACE);
                     }
                     else if (!node.inlineText) {
                         return;

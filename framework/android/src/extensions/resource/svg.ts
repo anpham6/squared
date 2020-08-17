@@ -201,7 +201,7 @@ const ATTRIBUTE_ANDROID = {
 };
 
 function getPathInterpolator(keySplines: Null<string[]>, index: number) {
-    const name = keySplines?.[index];
+    const name = keySplines && keySplines[index];
     return name ? INTERPOLATOR_ANDROID[name] as string || createPathInterpolator(name) : '';
 }
 
@@ -664,7 +664,7 @@ function insertFillAfter(propertyName: string, valueType: string, item: SvgAnima
             }
         }
         let previousValue: Undef<string>;
-        if (propertyValues?.length) {
+        if (propertyValues && propertyValues.length > 0) {
             const lastValue = propertyValues[propertyValues.length - 1];
             if (isArray(lastValue.propertyValuesHolder)) {
                 const propertyValue = lastValue.propertyValuesHolder[lastValue.propertyValuesHolder.length - 1];
@@ -1261,7 +1261,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                                 if (valueType === 'floatType') {
                                                                     valueTo = truncate(valueTo, precision);
                                                                 }
-                                                                const origin = transformOrigin?.[l];
+                                                                const origin = transformOrigin && transformOrigin[l];
                                                                 if (origin) {
                                                                     let translateTo = 0,
                                                                         direction: Undef<string>;
@@ -1340,7 +1340,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                     insertFillAfter(propertyName, valueType, item, synchronized, transforming, precision, afterAnimator, transformOrigin, objectAnimator);
                                                 }
                                             }
-                                            if (requireBefore && transformOrigin?.length) {
+                                            if (requireBefore && transformOrigin && transformOrigin.length > 0) {
                                                 resetBeforeValue('translateX', valueType, '0', beforeAnimator, precision);
                                                 resetBeforeValue('translateY', valueType, '0', beforeAnimator, precision);
                                             }
@@ -1492,7 +1492,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
             if (item.visible) {
                 if (SvgBuild.isShape(item)) {
                     const itemPath = item.path;
-                    if (itemPath?.value) {
+                    if (itemPath && itemPath.value) {
                         const [path, groupArray] = this.createPath(item, itemPath);
                         const pathArray: PathData[] = [];
                         if (parseFloat(itemPath.strokeWidth) > 0 && (itemPath.strokeDasharray || itemPath.strokeDashoffset)) {

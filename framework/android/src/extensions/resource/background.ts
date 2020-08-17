@@ -516,7 +516,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             if (stored) {
                 if (node.inputElement) {
                     const companion = node.companion;
-                    if (companion?.tagName === 'LABEL' && !companion.visible) {
+                    if (companion && companion.tagName === 'LABEL' && !companion.visible) {
                         const backgroundColor = companion.data<BoxStyle>(Resource.KEY_NAME, 'boxStyle')?.backgroundColor;
                         if (backgroundColor) {
                             stored.backgroundColor = backgroundColor;
@@ -524,7 +524,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                 }
                 const images = this.getDrawableImages(node, stored);
-                if (node.controlName === CONTAINER_ANDROID.BUTTON && stored.borderRadius?.length === 1 && images?.some(item => item.vectorGradient === true) && node.api >= BUILD_ANDROID.PIE) {
+                if (node.controlName === CONTAINER_ANDROID.BUTTON && stored.borderRadius?.length === 1 && images && images.some(item => item.vectorGradient === true) && node.api >= BUILD_ANDROID.PIE) {
                     node.android('buttonCornerRadius', stored.borderRadius[0]);
                     stored.borderRadius = undefined;
                 }
@@ -659,9 +659,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         if (borderAll) {
             border = borderData;
         }
-        if (border && !isAlternatingBorder(border.style, roundFloat(border.width)) && !(border.style === 'double' && parseInt(border.width) > 1) || !borderData && (corners || images?.length)) {
+        if (border && !isAlternatingBorder(border.style, roundFloat(border.width)) && !(border.style === 'double' && parseInt(border.width) > 1) || !borderData && (corners || images && images.length > 0)) {
             const stroke = border ? getBorderStroke(border) : false;
-            if (images?.length || indentWidth > 0 || borderOnly) {
+            if (images && images.length > 0 || indentWidth > 0 || borderOnly) {
                 layerList = createLayerList(data, images, borderOnly, stroke, corners, indentOffset);
             }
             else {

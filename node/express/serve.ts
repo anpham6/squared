@@ -75,7 +75,7 @@ let Node: serve.INode,
         UNC_READ = unc_read === true || unc_read === 'true';
         UNC_WRITE = unc_write === true || unc_write === 'true';
 
-        if (!process.env.NODE_ENV && env?.startsWith('prod')) {
+        if (!process.env.NODE_ENV && env && env.startsWith('prod')) {
             ENV = 'production';
         }
         if (!process.env.PORT && port) {
@@ -247,7 +247,7 @@ let Node: serve.INode,
         app.use(cors({ origin: argv.cors }));
         app.options('*', cors());
     }
-    else if (CORS?.origin) {
+    else if (CORS && CORS.origin) {
         app.use(cors(CORS));
         app.options('*', cors());
         argv.cors = typeof CORS.origin === 'string' ? CORS.origin : 'true';
@@ -441,7 +441,7 @@ let Node: serve.INode,
             return 0;
         }
         findFormat(compress: Undef<CompressFormat[]>, format: string) {
-            return compress?.find(item => item.format === format);
+            return compress && compress.find(item => item.format === format);
         }
         removeFormat(compress: Undef<CompressFormat[]>, format: string) {
             if (compress) {
@@ -1050,7 +1050,7 @@ class FileManager implements serve.IFileManager {
                 asset = this.assets.find(item => item.uri === location);
             }
         }
-        if (asset?.uri) {
+        if (asset && asset.uri) {
             const requestMain = this.requestMain;
             if (requestMain) {
                 origin = Express.resolvePath(path.join(file.moveTo !== STRING_SERVERROOT && file.rootDir || '', file.pathname, file.filename), requestMain.uri!);
@@ -1068,7 +1068,7 @@ class FileManager implements serve.IFileManager {
                         }
                         else if (requestMain) {
                             const requestMatch = pattern.exec(requestMain.uri!);
-                            if (requestMatch?.[1] === originMatch[1]) {
+                            if (requestMatch && requestMatch[1] === originMatch[1]) {
                                 const [originDir] = Express.getBaseDirectory(baseDir + '/' + file.filename, requestMatch[2]);
                                 return '../'.repeat(originDir.length - 1) + Express.getFullUri(asset);
                             }

@@ -428,7 +428,7 @@ function appendPartialKeyTimes(map: SvgAnimationIntervalMap, forwardMap: Forward
                                 }
                                 const q = keyTimes.length;
                                 if (!(resultTime === keyTimes[q - 1] && splitValue === values[q - 1])) {
-                                    const keySpline = joined || resultTime === 0 ? subKeySplines?.[index] || sub.timingFunction : '';
+                                    const keySpline = joined || resultTime === 0 ? subKeySplines && subKeySplines[index] || sub.timingFunction : '';
                                     if (evaluateStart) {
                                         if (!joined && resultTime > 0 && subTime === maxTime) {
                                             resultTime += 1 / 1000;
@@ -544,7 +544,7 @@ function insertInterpolator(item: SvgAnimate, time: number, keySplines: Null<str
         }
         --index;
     }
-    const value = keySplines?.[index];
+    const value = keySplines && keySplines[index];
     if (value) {
         map.set(time, value);
     }
@@ -593,7 +593,7 @@ function setTransformOrigin(map: TransformOriginMap, item: SvgAnimateTransform, 
 
 function getForwardItem(forwardMap: ForwardMap, attr: string): Undef<ForwardValue> {
     const map = forwardMap[attr];
-    return map?.[map.length - 1];
+    return map ? map[map.length - 1] : undefined;
 }
 
 function setSetterValue(baseMap: Map<number, AnimateValue>, item: SvgAnimation, transforming: boolean, time?: number, value?: AnimateValue) {
@@ -720,7 +720,7 @@ function removeAnimations(animations: SvgAnimation[], values: SvgAnimation[]) {
 }
 
 const getItemTime = (delay: number, duration: number, keyTimes: number[], iteration: number, index: number) => Math.round(delay + (keyTimes[index] + iteration) * duration);
-const convertToString = (value: Undef<AnimateValue>) => Array.isArray(value) ? plainMap(value, pt => `${pt.x},${pt.y}`).join(' ') : value?.toString() || '';
+const convertToString = (value: Undef<AnimateValue>) => Array.isArray(value) ? plainMap(value, pt => `${pt.x},${pt.y}`).join(' ') : value !== undefined ? value.toString() : '';
 const isKeyTimeFormat = (transforming: boolean, keyTimeMode: number) => hasBit(keyTimeMode, transforming ? SYNCHRONIZE_MODE.KEYTIME_TRANSFORM : SYNCHRONIZE_MODE.KEYTIME_ANIMATE);
 const isFromToFormat = (transforming: boolean, keyTimeMode: number) => hasBit(keyTimeMode, transforming ? SYNCHRONIZE_MODE.FROMTO_TRANSFORM : SYNCHRONIZE_MODE.FROMTO_ANIMATE);
 const playableAnimation = (item: SvgAnimate) => item.playable || item.animationElement && item.duration !== -1;
@@ -1658,7 +1658,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                     }
                                 }
                             }
-                            if (previousComplete?.fillReplace && infiniteMap[attr] === undefined) {
+                            if (previousComplete && previousComplete.fillReplace && infiniteMap[attr] === undefined) {
                                 let key = 0,
                                     value: Undef<AnimateValue>;
                                 if (forwardMap[attr]) {

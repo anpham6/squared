@@ -93,7 +93,7 @@ The primary function "parseDocument" can be called on multiple elements and mult
 
 #### Example: vdom / chrome
 
-VDOM is a minimal framework with slightly better performance when you are only looking for a better HTMLElement and performing cached selector queries. The "lite" version is about half the bundle size and recommended for most browser applications. Chrome is used with NodeJS and is better for bundling assets.
+VDOM is a minimal framework with slightly better performance when you are only looking for a better HTMLElement and performing cached selector queries. The "lite" version is about half the bundle size and recommended for most browser applications. Chrome uses Express to provide a simple way for bundling assets that is adequate for most applications.
 
 ```javascript
 <script src="/dist/squared.min.js"></script>
@@ -413,21 +413,6 @@ squared.system.saveAudioAssets(filename?: string, options?: {})
 squared.system.saveFontAssets(filename?: string, options?: {})
 ```
 
-### ALL: Excluding Procedures / Applied Attributes
-
-Most attributes can be excluded from the generated XML using the dataset feature in HTML. One or more can be applied to any tag using the OR "|" operator. These may cause warnings when you compile your project and should only be used in cases when an extension has their custom attributes overwritten.
-
-```xml
-<div data-exclude-section="DOM_TRAVERSE | EXTENSION | RENDER | ALL"
-     data-exclude-procedure="LAYOUT | ALIGNMENT | OPTIMIZATION | CUSTOMIZATION | ACCESSIBILITY | LOCALIZATION | ALL"
-     data-exclude-resource="BOX_STYLE | BOX_SPACING | FONT_STYLE | VALUE_STRING | IMAGE_SOURCE | ASSET | ALL">
-</div>
-<div>
-    <span data-exclude-resource="FONT_STYLE">content</span>
-    <input id="cb1" type="checkbox" data-exclude-procedure="ACCESSIBILITY"><label for="cb1">checkbox text</label>
-</div>
-```
-
 ### ALL: Extension Configuration (example: android)
 
 Layout rendering can also be customized using extensions as the program was built to be nearly completely modular. Some of the common layouts already have built-in extensions which you can load or unload based on your preference.
@@ -579,12 +564,27 @@ document.querySelectorAll('img').forEach(element => {
 chrome.saveAsWebPage();
 ```
 
+### UI: Excluding Procedures / Applied Attributes (framework: android)
+
+Most attributes can be excluded from the generated XML using the dataset feature in HTML. One or more can be applied to any tag using the OR "|" operator. These may cause warnings when you compile your project and should only be used in cases when an extension has their custom attributes overwritten.
+
+```xml
+<div data-exclude-section="DOM_TRAVERSE | EXTENSION | RENDER | ALL"
+     data-exclude-procedure="LAYOUT | ALIGNMENT | OPTIMIZATION | CUSTOMIZATION | ACCESSIBILITY | LOCALIZATION | ALL"
+     data-exclude-resource="BOX_STYLE | BOX_SPACING | FONT_STYLE | VALUE_STRING | IMAGE_SOURCE | ASSET | ALL">
+</div>
+<div>
+    <span data-exclude-resource="FONT_STYLE">content</span>
+    <input id="cb1" type="checkbox" data-exclude-procedure="ACCESSIBILITY"><label for="cb1">checkbox text</label>
+</div>
+```
+
 ### ANDROID: Layouts and binding expressions
 
 View model data can be applied to most HTML elements using the dataset attribute. Different view models can be used for every "parseDocument" session. Leaving the sessionId empty sets the default view model for the entire project.
 
 ```javascript
-await squared.parseDocument(/* 'mainview' */, /* 'subview' */).then(() => {
+squared.parseDocument(/* 'mainview' */, /* 'subview' */).then(() => {
     const sessions = squared.latest(2).split(',');
     android.setViewModel(
         {
@@ -608,10 +608,9 @@ await squared.parseDocument(/* 'mainview' */, /* 'subview' */).then(() => {
         },
         sessions[0]
     );
+    squared.close();
+    squared.saveToArchive();
 });
-
-squared.close();
-squared.saveToArchive();
 ```
 
 Two additional output parameters are required with the "data-viewmodel" prefix. 

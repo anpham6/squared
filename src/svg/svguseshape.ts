@@ -28,7 +28,7 @@ export default class SvgUseShape extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$M
 
     public build(options?: SvgBuildOptions) {
         super.build(options);
-        this.setPaint(this.path && [this.path.value], options?.precision);
+        this.setPaint(this.path && [this.path.value], options && options.precision);
     }
 
     public synchronize(options?: SvgSynchronizeOptions) {

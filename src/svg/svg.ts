@@ -78,7 +78,7 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
     }
 
     public build(options: SvgBuildOptions) {
-        this.precision = options?.precision;
+        this.precision = options && options.precision;
         this.setRect();
         super.build(options);
     }

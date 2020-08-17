@@ -279,8 +279,8 @@ function checkCalculateOperator(operand: Undef<string>, operator: Undef<string>)
 }
 
 const fromFontNamedValue = (index: number, fixedWidth?: boolean) => (!fixedWidth ? DOCUMENT_FONTMAP[index] : DOCUMENT_FIXEDMAP[index]).toPrecision(8) + 'rem';
-const getInnerWidth = (dimension: Undef<Dimension>) => dimension?.width || window.innerWidth;
-const getInnerHeight = (dimension: Undef<Dimension>) => dimension?.height || window.innerHeight;
+const getInnerWidth = (dimension: Undef<Dimension>) => dimension && dimension.width || window.innerWidth;
+const getInnerHeight = (dimension: Undef<Dimension>) => dimension && dimension.height || window.innerHeight;
 const isColor = (value: string) => /(rgb|hsl)a?/.test(value);
 const formatVar = (value: number) => !isNaN(value) ? value + 'px' : '';
 const formatDecimal = (value: number) => !isNaN(value) ? value.toString() : '';
@@ -2806,7 +2806,7 @@ export function getInheritedStyle(element: Element, attr: string, options?: Inhe
         current = element.parentElement;
     while (current && (tagNames === undefined || !tagNames.includes(current.tagName))) {
         value = getStyle(current)[attr];
-        if (value === 'inherit' || exclude?.test(value)) {
+        if (value === 'inherit' || exclude && exclude.test(value)) {
             value = '';
         }
         else if (value) {
@@ -2888,7 +2888,7 @@ export function calculateVarAsString(element: CSSElement, value: string, options
                 for (let i = 0, j = 0; i < length; ++i) {
                     let output = calc[i];
                     if (isCalc(output)) {
-                        if (orderedSize?.[j] !== undefined) {
+                        if (orderedSize && orderedSize[j] !== undefined) {
                             optionsVar.boundingSize = orderedSize[j++];
                         }
                         else if (dimension) {
@@ -3038,7 +3038,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
     const result: ImageSrcSet[] = [];
     const parentElement = element.parentElement as HTMLPictureElement;
     let { srcset, sizes } = element;
-    if (parentElement?.tagName === 'PICTURE') {
+    if (parentElement && parentElement.tagName === 'PICTURE') {
         iterateArray(parentElement.children, (item: HTMLSourceElement) => {
             if (item.tagName === 'SOURCE') {
                 if (isString(item.srcset) && !(isString(item.media) && !checkMediaRule(item.media)) && (!mimeType || mimeType === '*' || !isString(item.type) || mimeType.includes(item.type.trim().toLowerCase()))) {
@@ -3486,13 +3486,13 @@ export function parseUnit(value: string, options?: ParseUnitOptions) {
                 result /= 2;
             case 'em':
             case 'ch': {
-                const fontSize = options?.fontSize;
+                const fontSize = options && options.fontSize;
                 if (fontSize !== undefined) {
                     return result * fontSize;
                 }
             }
             case 'rem':
-                return result * (options?.fixedWidth ? DOCUMENT_FIXEDSIZE : DOCUMENT_FONTSIZE);
+                return result * (options && options.fixedWidth ? DOCUMENT_FIXEDSIZE : DOCUMENT_FONTSIZE);
             case 'pc':
                 result *= 12;
             case 'pt':
@@ -3510,11 +3510,11 @@ export function parseUnit(value: string, options?: ParseUnitOptions) {
             case 'vh':
                 return result * getInnerHeight(options?.screenDimension) / 100;
             case 'vmin': {
-                const screenDimension = options?.screenDimension;
+                const screenDimension = options && options.screenDimension;
                 return result * Math.min(getInnerWidth(screenDimension), getInnerHeight(screenDimension)) / 100;
             }
             case 'vmax': {
-                const screenDimension = options?.screenDimension;
+                const screenDimension = options && options.screenDimension;
                 return result * Math.max(getInnerWidth(screenDimension), getInnerHeight(screenDimension)) / 100;
             }
         }

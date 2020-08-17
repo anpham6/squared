@@ -150,7 +150,7 @@ export function setHostname(value: string) {
         const fileHandler = main.resourceHandler?.fileHandler;
         if (fileHandler) {
             const match = regex.FILE.PROTOCOL.exec(value);
-            if (match?.[1].startsWith('http')) {
+            if (match && match[1].startsWith('http')) {
                 fileHandler.hostname = match[1] + match[2] + (match[3] || '');
             }
         }
@@ -259,11 +259,11 @@ export function parseDocumentSync(...elements: (HTMLElement | string)[]) {
 
 export function include(value: ExtensionRequest, options?: squared.FrameworkOptions) {
     if (typeof value === 'string') {
-        value = main?.builtInExtensions.get(value) || retrieve(value);
+        value = main && main.builtInExtensions.get(value) || retrieve(value);
     }
     if (value instanceof squared.base.Extension) {
         extensionsExternal.add(value);
-        if (!(extensionManager?.include(value) === true)) {
+        if (extensionManager && !extensionManager.include(value)) {
             extensionsQueue.add(value);
         }
         if (options) {
@@ -314,7 +314,7 @@ export function configure(value: ExtensionRequest, options: squared.FrameworkOpt
             return result;
         };
         if (typeof value === 'string') {
-            const extension = extensionManager?.retrieve(value) || util.findSet(extensionsQueue, item => item.name === value);
+            const extension = extensionManager && extensionManager.retrieve(value) || util.findSet(extensionsQueue, item => item.name === value);
             if (!extension) {
                 optionsQueue.set(value, mergeSettings(value));
                 return true;

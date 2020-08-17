@@ -36,7 +36,7 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
         options?: ExtensionUIOptions)
     {
         super(name, framework, options);
-        this.tagNames = options?.tagNames || [];
+        this.tagNames = options && options.tagNames || [];
         this._isAll = this.tagNames.length === 0;
     }
 

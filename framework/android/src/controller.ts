@@ -1869,7 +1869,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             case CONTAINER_ANDROID.EDIT:
                 if (!node.companion && node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
                     [node.previousSibling, node.nextSibling].some((sibling: T) => {
-                        if (sibling?.visible && sibling.pageFlow) {
+                        if (sibling && sibling.visible && sibling.pageFlow) {
                             const id = node.elementId;
                             if (id !== '' && id === sibling.toElementString('htmlFor').trim()) {
                                 sibling.android('labelFor', node.documentId);
@@ -2040,7 +2040,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     const bottomTop = current.alignSibling('bottomTop');
                     if (bottomTop !== '') {
                         const next = nodes.find(item => item.documentId === bottomTop);
-                        if (next?.alignSibling('topBottom') === current.documentId) {
+                        if (next && next.alignSibling('topBottom') === current.documentId) {
                             if (next.alignParent('bottom')) {
                                 break;
                             }
@@ -2306,7 +2306,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                     if (node.floating) {
                         const nextSibling = node.nextSibling;
-                        if (nextSibling?.floating && nextSibling.float !== node.float && nextSibling.hasWidth) {
+                        if (nextSibling && nextSibling.floating && nextSibling.float !== node.float && nextSibling.hasWidth) {
                             boxWidth = Math.max(boxWidth, node.actualParent!.box.width - nextSibling.linear.width);
                             if (boxWidth > node.width && !node.visibleStyle.background && !node.hasPX('maxWidth')) {
                                 node.css('width', formatPX(boxWidth), true);
@@ -2403,7 +2403,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                         if (textNewRow ||
                             Math.ceil(item.bounds.top) >= Math.floor(previous.bounds.bottom) && (item.blockStatic || item.blockDimension && item.baseline || floating && previous.float === item.float || node.preserveWhiteSpace) ||
-                            !floating && (previous.blockStatic || item.siblingsLeading.some(sibling => sibling.excluded && sibling.blockStatic) || siblings?.some(element => causesLineBreak(element))) ||
+                            !floating && (previous.blockStatic || item.siblingsLeading.some(sibling => sibling.excluded && sibling.blockStatic) || siblings && siblings.some(element => causesLineBreak(element))) ||
                             floating && !currentFloated && item.float === 'right' && item.previousSibling?.multiline ||
                             previous.autoMargin.horizontal ||
                             !emptyMap && clearMap.has(item) ||
@@ -2451,7 +2451,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 rowsAll[rowsAll.length - 1][2] = true;
                             }
                             items.push(item);
-                            if (siblings?.some(element => !!getElementAsNode(element, item.sessionId) || causesLineBreak(element))) {
+                            if (siblings && siblings.some(element => !!getElementAsNode(element, item.sessionId) || causesLineBreak(element))) {
                                 const betweenStart = getRangeClientRect(siblings[0]);
                                 if (betweenStart && !betweenStart.numberOfLines) {
                                     const betweenEnd = siblings.length > 1 && getRangeClientRect(siblings.pop()!);
@@ -3180,7 +3180,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 if (Math.ceil(item.linear.bottom) >= Math.floor(node.box.bottom)) {
                                     item.anchor('bottom', 'parent');
                                 }
-                                else if (textBottom || baseline?.textElement === false) {
+                                else if (textBottom || baseline && !baseline.textElement) {
                                     constraintAlignTop(item, boxTop);
                                 }
                                 else {
@@ -3277,7 +3277,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if (baseline) {
             baseline.constraint.horizontal = true;
             baseline.baselineActive = baselineCount > 0;
-            if (tallest?.textElement === false && baseline.textElement && getMaxHeight(tallest) > getMaxHeight(baseline)) {
+            if (tallest && !tallest.textElement && baseline.textElement && getMaxHeight(tallest) > getMaxHeight(baseline)) {
                 switch (tallest.css('verticalAlign')) {
                     case 'top':
                     case 'text-top':

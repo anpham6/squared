@@ -32,7 +32,7 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                         if (!node.rightAligned && !node.centerAligned) {
                             const id = node.elementId;
                             [node.nextSibling, node.previousSibling].some((sibling: Null<T>) => {
-                                if (sibling?.pageFlow && !sibling.visibleStyle.backgroundImage && sibling.visible) {
+                                if (sibling && sibling.pageFlow && !sibling.visibleStyle.backgroundImage && sibling.visible) {
                                     let valid: Undef<boolean>;
                                     if (id && id === sibling.toElementString('htmlFor')) {
                                         valid = true;

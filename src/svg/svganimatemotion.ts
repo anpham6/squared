@@ -437,7 +437,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     set parent(value) {
         this._parent = value;
         const container = this.parentContainer;
-        if (container?.requireRefit && this.path) {
+        if (container && container.requireRefit && this.path) {
             this.path = SvgBuild.transformRefit(this.path, { container });
        }
     }

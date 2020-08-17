@@ -401,7 +401,7 @@ export default class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
                                             inheritedBottom: Undef<boolean>;
                                         while (validAboveChild(inherit, true)) {
                                             let bottomChild = getBottomChild(inherit);
-                                            if (bottomChild?.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] === 0) {
+                                            if (bottomChild && bottomChild.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] === 0) {
                                                 let childBottom = bottomChild.marginBottom,
                                                     currentChild = bottomChild;
                                                 while (currentChild.bounds.height === 0 && !currentChild.pseudoElement) {
@@ -609,10 +609,10 @@ export default class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
                     }
                 }
                 if (pageFlow && hasOverflowXY(node) && node.tagName !== 'FIELDSET') {
-                    if (firstChild?.naturalElement) {
+                    if (firstChild && firstChild.naturalElement) {
                         applyMarginCollapse(node, firstChild, true);
                     }
-                    if (lastChild?.naturalElement) {
+                    if (lastChild && lastChild.naturalElement) {
                         applyMarginCollapse(node, lastChild, false);
                         if (lastChild.marginTop < 0) {
                             const offset = lastChild.bounds.height + lastChild.marginBottom + lastChild.marginTop;
@@ -770,7 +770,7 @@ export default class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
             if (node.naturalChild && node.styleElement && node.inlineVertical && node.pageFlow && !node.positioned && !node.actualParent!.layoutElement) {
                 const outerWrapper = node.outerMostWrapper;
                 const renderParent = outerWrapper.renderParent;
-                if (renderParent?.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) === false) {
+                if (renderParent && !renderParent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
                     if (node.blockDimension && !node.floating) {
                         if (renderParent.layoutVertical) {
                             const renderChildren = renderParent.renderChildren;
@@ -778,13 +778,13 @@ export default class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
                             if (index !== -1) {
                                 if (!node.lineBreakLeading && !node.baselineAltered) {
                                     const previous = renderChildren[index - 1];
-                                    if (previous?.pageFlow) {
+                                    if (previous && previous.pageFlow) {
                                         setSpacingOffset(outerWrapper, BOX_STANDARD.MARGIN_TOP, previous.actualRect('bottom'), previous.getBox(BOX_STANDARD.MARGIN_BOTTOM)[1]);
                                     }
                                 }
                                 if (!node.lineBreakTrailing) {
                                     const next = renderChildren[index + 1];
-                                    if (next?.pageFlow && next.styleElement && !next.inlineVertical) {
+                                    if (next && next.pageFlow && next.styleElement && !next.inlineVertical) {
                                         setSpacingOffset(outerWrapper, BOX_STANDARD.MARGIN_BOTTOM, next.actualRect('top'), next.getBox(BOX_STANDARD.MARGIN_TOP)[1]);
                                     }
                                 }
@@ -864,7 +864,7 @@ export default class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
                         const documentId = outerWrapper.alignSibling('leftRight');
                         if (documentId !== '') {
                             const previousSibling = renderParent.renderChildren.find(item => item.documentId === documentId);
-                            if (previousSibling?.inlineVertical && previousSibling.bounds.width > 0) {
+                            if (previousSibling && previousSibling.inlineVertical && previousSibling.bounds.width > 0) {
                                 setSpacingOffset(outerWrapper, BOX_STANDARD.MARGIN_LEFT, previousSibling.actualRect('right'));
                             }
                         }

@@ -266,7 +266,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
                         svg = new squared.svg.SvgImage(item, target);
                     }
                     else if (SVG.shape(target)) {
-                        const pattern = viewport?.findFill(item);
+                        const pattern = viewport && viewport.findFill(item);
                         if (pattern) {
                             svg = new squared.svg.SvgUseShapePattern(target, item, pattern);
                             setAspectRatio(parent, svg as SvgGroup);
@@ -281,7 +281,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
                 svg = new squared.svg.SvgImage(item);
             }
             else if (SVG.shape(item)) {
-                const target = viewport?.findFill(item);
+                const target = viewport && viewport.findFill(item);
                 if (target) {
                     svg = new squared.svg.SvgShapePattern(item, target);
                     setAspectRatio(parent, svg as SvgGroup);

@@ -66,7 +66,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                 if (url) {
                     this.clipPath = url;
                 }
-                else if (d?.length) {
+                else if (d && d.length > 0) {
                     for (const name in REGEXP_CACHE) {
                         const match = REGEXP_CACHE[name].exec(clipPath);
                         if (match) {

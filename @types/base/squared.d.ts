@@ -697,7 +697,6 @@ declare module "base" {
         get firstLineStyle(): Null<StringMap>;
         get firstLetterStyle(): Null<StringMap>;
         get textAlignLast(): string;
-        constructor(id: number, sessionId?: string, element?: Element);
     }
 
     class NodeGroupUI extends NodeUI {}

@@ -20,7 +20,7 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewR
     public build(options?: SvgBuildOptions) {
         this.setRect();
         super.build({ ...options, targetElement: this.symbolElement });
-        this.setPaint(this.getPathAll(), options?.precision);
+        this.setPaint(this.getPathAll(), options && options.precision);
     }
 
     public synchronize(options?: SvgSynchronizeOptions) {

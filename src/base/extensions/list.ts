@@ -67,7 +67,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                 return false;
             }
         }
-        return blockStatic || inlineVertical || blockAlternate || floated?.size === 1;
+        return blockStatic || inlineVertical || blockAlternate || !!floated && floated.size === 1;
     }
 
     public processNode(node: T) {

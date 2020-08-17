@@ -434,7 +434,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     const actualParent = node.actualParent as T;
                     let parent: Null<T> = actualParent,
                         previousParent: Undef<T>;
-                    while (parent?.tagName === 'P' && !parent.documentRoot) {
+                    while (parent && parent.tagName === 'P' && !parent.documentRoot) {
                         previousParent = parent;
                         parent = parent.actualParent as Null<T>;
                     }

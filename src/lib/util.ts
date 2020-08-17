@@ -388,7 +388,7 @@ export function formatXml(value: string, closeEmpty?: boolean, startIndent = -1,
                 single = next.closing && line.tagName === next.tagName;
                 if (!/\/>\n*$/.exec(line.tag)) {
                     if (closeEmpty && !isString(line.value)) {
-                        if (next?.closing && next.tagName === line.tagName) {
+                        if (next && next.closing && next.tagName === line.tagName) {
                             line.tag = line.tag.replace(/\s*>$/, ' />');
                             ++i;
                         }

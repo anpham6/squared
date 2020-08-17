@@ -269,7 +269,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         const to = this.to;
         if (to) {
             this.values = [this.from, to];
-            if (keyTimes?.length === 2) {
+            if (keyTimes && keyTimes.length === 2) {
                 const keyTimesBase = this.keyTimes;
                 if (keyTimesBase.length !== 2 || keyTimesBase[0] === 0 && keyTimesBase[1] <= 1) {
                     this.keyTimes = keyTimes;
@@ -449,7 +449,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
 
     set keySplines(value) {
-        if (value?.length) {
+        if (value && value.length > 0) {
             const minSegment = this.keyTimes.length - 1;
             if (value.length >= minSegment && !value.every(spline => spline === '' || spline === KEYSPLINE_NAME.linear)) {
                 const keySplines: string[] = [];
@@ -538,7 +538,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
 
     get valueTo() {
         const values = this._values;
-        return values?.[values.length - 1] || '';
+        return values ? values[values.length - 1] : '';
     }
 
     get valueFrom() {

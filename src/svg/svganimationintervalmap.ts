@@ -147,7 +147,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                                         const itemB = dataB[j];
                                         if (itemB.start) {
                                             const animation = itemB.animation;
-                                            if (animation?.animationElement) {
+                                            if (animation && animation.animationElement) {
                                                 previous.push(animation);
                                             }
                                         }
@@ -163,7 +163,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                                         }
                                         else if (itemB.end) {
                                             const animation = itemB.animation;
-                                            if (animation?.animationElement && animation.group.id < animationA.group.id) {
+                                            if (animation && animation.animationElement && animation.group.id < animationA.group.id) {
                                                 dataB.splice(j--, 1);
                                             }
                                         }
@@ -238,7 +238,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
     public has(attr: string, time?: number, animation?: SvgAnimation) {
         const map = this.map[attr];
         if (time !== undefined) {
-            if (map?.has(time)) {
+            if (map && map.has(time)) {
                 if (!animation) {
                     return true;
                 }

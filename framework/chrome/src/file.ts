@@ -175,7 +175,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 value = resolvePath(relocate, location.href);
             }
         }
-        if (!local && !relocate && options?.preserveCrossOrigin) {
+        if (!local && !relocate && options && options.preserveCrossOrigin) {
             return;
         }
         const match = FILE.PROTOCOL.exec(value);
@@ -301,7 +301,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         if (element) {
             file = element.dataset.chromeFile;
         }
-        if (!isString(file) && saveAs?.filename) {
+        if (!isString(file) && saveAs && saveAs.filename) {
             file = fromLastIndexOf(saveAs.filename, '/', '\\');
             format = saveAs.format;
         }
@@ -344,7 +344,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     outerHTML: Undef<string>,
                     preserve: Undef<boolean>,
                     data: Undef<ChromeAsset>;
-                if (!isString(file) && saveAs?.filename) {
+                if (!isString(file) && saveAs && saveAs.filename) {
                     file = appendSeparator(saveAs.pathname || '', saveAs.filename);
                     format = saveAs.format;
                     outerHTML = element.outerHTML;
@@ -413,7 +413,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                         }
                     }
                 }
-                if (!isString(file) && saveAs?.filename && (mimeType === 'text/css' || element instanceof HTMLStyleElement)) {
+                if (!isString(file) && saveAs && saveAs.filename && (mimeType === 'text/css' || element instanceof HTMLStyleElement)) {
                     file = appendSeparator(saveAs.pathname || '', saveAs.filename);
                     format = saveAs.format;
                     preserve = saveAs.preserve;
@@ -447,7 +447,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         for (const [uri, rawData] of Resource.ASSETS.rawData.entries()) {
             const mimeType = rawData.mimeType;
             if (mimeType === 'text/css') {
-                const data = File.parseUri(resolvePath(uri), { preserveCrossOrigin, format: saveAs?.format });
+                const data = File.parseUri(resolvePath(uri), { preserveCrossOrigin, format: saveAs && saveAs.format });
                 if (this.validFile(data)) {
                     data.mimeType = mimeType;
                     processExtensions.call(this, data, []);
@@ -529,7 +529,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 if (base64) {
                     if (saveAs) {
                         const format = saveAs.format;
-                        if (format && mimeType?.startsWith('image/')) {
+                        if (format && mimeType && mimeType.startsWith('image/')) {
                             switch (format) {
                                 case 'png':
                                 case 'jpeg':
@@ -578,7 +578,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     public getFontAssets(options?: FileActionAttribute) {
-        const preserveCrossOrigin = options?.preserveCrossOrigin;
+        const preserveCrossOrigin = options && options.preserveCrossOrigin;
         const result: ChromeAsset[] = [];
         for (const fonts of Resource.ASSETS.fonts.values()) {
             for (let i = 0, length = fonts.length; i < length; ++i) {
@@ -618,7 +618,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     protected getRawAssets(tagName: "video" | "audio" | "object" | "embed", options?: FileActionAttribute) {
-        const preserveCrossOrigin = options?.preserveCrossOrigin;
+        const preserveCrossOrigin = options && options.preserveCrossOrigin;
         const result: ChromeAsset[] = [];
         document.querySelectorAll(tagName).forEach(element => {
             const items = new Map<HTMLElement, string>();
@@ -643,7 +643,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
 
     protected combineAssets(options?: ChromeFileArchivingOptions) {
         const result = this.getHtmlPage(options).concat(this.getLinkAssets(options));
-        if (options?.saveAsWebPage) {
+        if (options && options.saveAsWebPage) {
             for (let i = 0, length = result.length; i < length; ++i) {
                 const item = result[i];
                 const mimeType = item.mimeType;

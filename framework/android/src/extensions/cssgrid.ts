@@ -579,7 +579,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                         const data = rowData[i];
                         for (let j = 0, length = data.length; j < length; ++j) {
                             const cell = data[j];
-                            if (cell?.length === 1) {
+                            if (cell && cell.length === 1) {
                                 nodes.push(cell[0]);
                             }
                             else {
@@ -1080,7 +1080,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
 
     private isFlexibleContainer(node: T) {
         const parent = node.actualParent as Null<T>;
-        if (parent?.gridElement) {
+        if (parent && parent.gridElement) {
             const mainData = this.data.get(parent) as Undef<CssGridData<T>>;
             const cellData = this.data.get(node) as Undef<CssGridCellData>;
             if (mainData && cellData) {

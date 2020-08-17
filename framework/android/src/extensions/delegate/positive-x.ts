@@ -31,7 +31,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
             contentBox = true;
             aboveInvalid = true;
         }
-        if (lastStaticChild?.lineBreak && lastStaticChild.previousSibling?.blockStatic) {
+        if (lastStaticChild && lastStaticChild.lineBreak && lastStaticChild.previousSibling?.blockStatic) {
             contentBox = true;
             belowInvalid = true;
         }

@@ -74,7 +74,7 @@ function getPseudoQuoteValue(element: HTMLElement, pseudoElt: string, outside: s
     let current: Null<HTMLElement> = element,
         found = 0,
         i = 0, j = -1;
-    while (current?.tagName === 'Q') {
+    while (current && current.tagName === 'Q') {
         const quotes = getElementCache<CSSStyleDeclaration>(current, `styleMap`, sessionId)?.quotes || getComputedStyle(current).quotes;
         if (quotes) {
             const match = REGEXP_PSEUDOQUOTE.exec(quotes);

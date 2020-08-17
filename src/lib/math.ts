@@ -125,7 +125,7 @@ export function multipleOf(values: number[], min = 0, offset?: Null<number[]>) {
     const length = values.length;
     if (length > 1) {
         const increment = Math.min(...values);
-        if (offset?.length === length) {
+        if (offset && offset.length === length) {
             for (let i = 0; i < length; ++i) {
                 min = Math.max(min, offset[i] + values[i]);
             }
@@ -138,7 +138,7 @@ export function multipleOf(values: number[], min = 0, offset?: Null<number[]>) {
         while (value < min) {
             value += increment;
         }
-        const start = offset?.[0] || 0;
+        const start = offset && offset[0] || 0;
         let valid: Undef<boolean>;
         while (!valid) {
             const total = start + value;
