@@ -380,7 +380,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                             child = previousNode;
                             elements[k++] = previousNode;
                         }
-                        else if (element.nodeName.charAt(0) === '#') {
+                        else if (element.nodeName[0] === '#') {
                             if (this.visibleText(parent, element)) {
                                 child = this.insertNode(element, sessionId);
                                 if (child) {
@@ -440,7 +440,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             for (let i = 0; i < length; ++i) {
                 const element = childNodes[i] as HTMLElement;
                 let child: Undef<T>;
-                if (element.nodeName.charAt(0) === '#') {
+                if (element.nodeName[0] === '#') {
                     if (this.visibleText(node, element)) {
                         child = this.insertNode(element, sessionId);
                         if (child) {
@@ -549,7 +549,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const hasExactValue = (attr: string, value: string) => new RegExp(`\\b${attr}[\\s\\n]*:[\\s\\n]*(?:${value})[\\s\\n]*;?`).test(cssText);
                 const hasPartialValue = (attr: string, value: string) => new RegExp(`\\b${attr}[\\s\\n]*:[^;]*?${value}[^;]*;?`).test(cssText);
                 for (const attr of Array.from(cssStyle)) {
-                    if (attr.charAt(0) === '-') {
+                    if (attr[0] === '-') {
                         continue;
                     }
                     const baseAttr = convertCamelCase(attr);

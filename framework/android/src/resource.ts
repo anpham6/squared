@@ -86,7 +86,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         }
         const filename = `${path}/${file}`;
         const storedFile = themes.get(filename) || new Map<string, StyleAttribute>();
-        if (name === '' || name.charAt(0) === '.') {
+        if (name === '' || name[0] === '.') {
             found: {
                 for (const data of themes.values()) {
                     for (const style of data.values()) {
@@ -104,7 +104,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         else {
             appTheme = name;
         }
-        name = appTheme + (name.charAt(0) === '.' ? name : '');
+        name = appTheme + (name[0] === '.' ? name : '');
         theme.name = name;
         Resource.formatOptions(items as ViewAttribute);
         const storedTheme = storedFile.get(name) as StyleAttribute;

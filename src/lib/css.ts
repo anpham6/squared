@@ -1605,14 +1605,14 @@ export function getRemSize(fixedWidth?: boolean) {
 }
 
 export function getFontSize(element: Element) {
-    if (element.nodeName.charAt(0) === '#') {
+    if (element.nodeName[0] === '#') {
         element = element.parentElement || DOCUMENT_ELEMENT;
     }
     return parseFloat(getStyle(element).getPropertyValue('font-size'));
 }
 
 export function hasComputedStyle(element: Element): element is HTMLElement {
-    return element.nodeName.charAt(0) !== '#' && (element instanceof HTMLElement || element instanceof SVGElement);
+    return element.nodeName[0] !== '#' && (element instanceof HTMLElement || element instanceof SVGElement);
 }
 
 export function parseSelectorText(value: string, document?: boolean) {
@@ -1657,7 +1657,7 @@ export function getSpecificity(value: string) {
     while (match = CSS.SELECTOR_G.exec(value)) {
         let segment = match[1];
         if (segment.length === 1) {
-            switch (segment.charAt(0)) {
+            switch (segment[0]) {
                 case '+':
                 case '~':
                 case '>':
@@ -1715,7 +1715,7 @@ export function getSpecificity(value: string) {
         }
         while (subMatch = CSS.SELECTOR_LABEL.exec(segment)) {
             const command = subMatch[0];
-            switch (command.charAt(0)) {
+            switch (command[0]) {
                 case '#':
                     result += 100;
                     break;
@@ -3233,14 +3233,16 @@ export function calculate(value: string, options?: CalculateOptions) {
     if (value === '') {
         return NaN;
     }
-    if (!value.startsWith('(') || !value.endsWith(')')) {
+    let length = value.length;
+    if (value[0] !== '(' || value[length - 1] !== ')') {
         value = `(${value})`;
+        length += 2;
     }
     let opened = 0;
     const opening: boolean[] = [];
     const closing: number[] = [];
-    for (let i = 0, length = value.length; i < length; ++i) {
-        switch (value.charAt(i)) {
+    for (let i = 0; i < length; ++i) {
+        switch (value[i]) {
             case '(':
                 ++opened;
                 opening[i] = true;
@@ -3282,7 +3284,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                     const seg: number[] = [];
                     const evaluate: string[] = [];
                     const operation = value.substring(j + 1, closing[i]).split(REGEXP_CALCOPERATION);
-                    for (let k = 0, length = operation.length; k < length; ++k) {
+                    for (let k = 0, q = operation.length; k < q; ++k) {
                         const partial = operation[k].trim();
                         switch (partial) {
                             case '+':

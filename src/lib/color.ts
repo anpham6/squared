@@ -975,7 +975,7 @@ export function parseColor(value: string, opacity = 1, transparency?: boolean) {
         }
         let key = '',
             rgba: Undef<RGBA>;
-        if (value.charAt(0) === '#') {
+        if (value[0] === '#') {
             rgba = parseRGBA(value);
         }
         else {
@@ -1103,12 +1103,12 @@ export function parseRGBA(value: string) {
         let a = 255;
         switch (value.length) {
             case 4:
-                a = parseInt(value.charAt(3).repeat(2), 16);
+                a = parseInt(value[3].repeat(2), 16);
             case 3:
-                value = value.charAt(0).repeat(2) + value.charAt(1).repeat(2) + value.charAt(2).repeat(2);
+                value = value[0].repeat(2) + value[1].repeat(2) + value[2].repeat(2);
                 break;
             case 5:
-                value += value.charAt(4);
+                value += value[4];
                 break;
             default:
                 if (value.length >= 8) {

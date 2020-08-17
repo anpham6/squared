@@ -611,7 +611,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                     inlineText = false;
                 }
-                else if (element.nodeName.charAt(0) === '#') {
+                else if (element.nodeName[0] === '#') {
                     if (this.visibleText(node, element)) {
                         child = this.insertNode(element, sessionId);
                         child.cssApply(node.textStyle);
@@ -1513,7 +1513,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         const childNodes = element.childNodes;
                         for (let i = 0, length = childNodes.length; i < length; ++i) {
                             const child = childNodes[i] as Element;
-                            if (child.nodeName.charAt(0) === '#') {
+                            if (child.nodeName[0] === '#') {
                                 if (child.nodeName === '#text' && isString(child.textContent!)) {
                                     break;
                                 }

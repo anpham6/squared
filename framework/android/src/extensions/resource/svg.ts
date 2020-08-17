@@ -33,7 +33,7 @@ type SvgView = squared.svg.SvgView;
 const { extractURL, formatPX } = squared.lib.css;
 const { truncate } = squared.lib.math;
 const { FILE } = squared.lib.regex;
-const { convertCamelCase, convertInt, convertWord, formatString, hasKeys, isArray, isNumber, partitionArray, plainMap, replaceMap } = squared.lib.util;
+const { convertCamelCase, convertInt, convertWord, formatString, hasKeys, isArray, isNumber, lastItemOf, partitionArray, plainMap, replaceMap } = squared.lib.util;
 
 const { KEYSPLINE_NAME, SYNCHRONIZE_MODE } = squared.svg.lib.constant;
 const { MATRIX, SVG, TRANSFORM, getAttribute, getRootOffset } = squared.svg.lib.util;
@@ -488,7 +488,7 @@ function createFillGradient(gradient: Gradient, path: SvgPath, precision?: numbe
         case 'radial': {
             const { cxAsString, cyAsString, rAsString, spreadMethod } = gradient as SvgRadialGradient;
             const element = path.element;
-            const getRadiusPercent = (value: string) => value.endsWith('%') ? parseFloat(value) / 100 : 0.5;
+            const getRadiusPercent = (value: string) => lastItemOf(value) === '%' ? parseFloat(value) / 100 : 0.5;
             let points: Point[] = [],
                 cx!: number,
                 cy!: number,
@@ -539,7 +539,7 @@ function createFillGradient(gradient: Gradient, path: SvgPath, precision?: numbe
             }
             result.centerX = (cx + cxDiameter * getRadiusPercent(cxAsString)).toString();
             result.centerY = (cy + cyDiameter * getRadiusPercent(cyAsString)).toString();
-            result.gradientRadius = (((cxDiameter + cyDiameter) / 2) * (rAsString.endsWith('%') ? parseFloat(rAsString) / 100 : 1)).toString();
+            result.gradientRadius = (((cxDiameter + cyDiameter) / 2) * (lastItemOf(rAsString) === '%' ? parseFloat(rAsString) / 100 : 1)).toString();
             if (spreadMethod) {
                 result.tileMode = getTileMode(spreadMethod);
             }
@@ -687,10 +687,10 @@ function insertFillAfter(propertyName: string, valueType: string, item: SvgAnima
             }
         }
         if (transformOrigin) {
-            if (propertyName.endsWith('X')) {
+            if (lastItemOf(propertyName) === 'X') {
                 afterAnimator.push(createPropertyValue('translateX', valueType, '0', '1', precision));
             }
-            else if (propertyName.endsWith('Y')) {
+            else if (lastItemOf(propertyName) === 'Y') {
                 afterAnimator.push(createPropertyValue('translateY', valueType, '0', '1', precision));
             }
         }
@@ -1265,11 +1265,11 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                                 if (origin) {
                                                                     let translateTo = 0,
                                                                         direction: Undef<string>;
-                                                                    if (propertyName.endsWith('X')) {
+                                                                    if (lastItemOf(propertyName) === 'X') {
                                                                         translateTo = origin.x;
                                                                         direction = 'translateX';
                                                                     }
-                                                                    else if (propertyName.endsWith('Y')) {
+                                                                    else if (lastItemOf(propertyName) === 'Y') {
                                                                         translateTo = origin.y;
                                                                         direction = 'translateY';
                                                                     }
@@ -1877,7 +1877,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
             const keyTimeMode = this._synchronizeMode;
             const { transformExclude: exclude, floatPrecision: precision } = this.options;
             clipPath.split(';').forEach((value, index, array) => {
-                if (value.charAt(0) === '#') {
+                if (value[0] === '#') {
                     const element = (definitions.clipPath.get(value) as unknown) as SVGGElement;
                     if (element) {
                         const g = new SvgG(element);

@@ -23,7 +23,7 @@ function parseFileAs(attr: string, value: Undef<string>): Undef<[string, Undef<s
 function getFilePath(value: string, saveTo?: boolean): [Undef<string>, string, string] {
     value = value.replace(/\\/g, '/');
     let moveTo: Undef<string>;
-    if (value.charAt(0) === '/') {
+    if (value[0] === '/') {
         moveTo = STRING_SERVERROOT;
     }
     else if (value.startsWith('../')) {
@@ -204,7 +204,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     let index = 0;
                     length = Math.min(length, prefix.length);
                     for (let i = 0; i < length; ++i) {
-                        if (path.charAt(i) === prefix.charAt(i)) {
+                        if (path[i] === prefix[i]) {
                             index = i;
                         }
                         else {

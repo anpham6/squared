@@ -437,7 +437,7 @@ export function hasKeys(obj: PlainObject) {
 }
 
 export function capitalize(value: string, upper?: boolean) {
-    return upper === false ? value.charAt(0).toLowerCase() + value.substring(1) : value.charAt(0).toUpperCase() + value.substring(1).toLowerCase();
+    return upper === false ? value[0].toLowerCase() + value.substring(1) : value[0].toUpperCase() + value.substring(1).toLowerCase();
 }
 
 export function upperCaseString(value: string) {
@@ -448,7 +448,7 @@ export function upperCaseString(value: string) {
         if (result === undefined) {
             result = value.split('');
         }
-        result[match.index!] = match[1].charAt(0).toUpperCase();
+        result[match.index!] = match[1][0].toUpperCase();
     }
     return result ? result.join('') : value;
 }
@@ -495,7 +495,7 @@ export function convertHyphenated(value: string, char = '-') {
     let result = value[0].toLowerCase(),
         lower = true;
     for (let i = 1, length = value.length; i < length; ++i) {
-        const ch = value.charAt(i);
+        const ch = value[i];
         const upper = ch === ch.toUpperCase();
         result += lower && upper && ch !== char ? char + ch.toLowerCase() : ch;
         lower = !upper;
@@ -524,7 +524,7 @@ export function convertCamelCase(value: string, char = '-') {
         previous = '';
     const length = value.length;
     while (i < length) {
-        const ch = value.charAt(i++);
+        const ch = value[i++];
         if (ch !== char) {
             result += previous === char ? ch.toUpperCase() : ch;
         }
@@ -554,7 +554,7 @@ export function convertAlpha(value: number) {
         while (value >= length) {
             const base = Math.floor(value / length);
             if (base > 1 && base <= length) {
-                result += alphabet.charAt(base - 1);
+                result += alphabet[base - 1];
                 value -= base * length;
             }
             else if (base > 0) {
@@ -564,10 +564,10 @@ export function convertAlpha(value: number) {
                 return result;
             }
             const index = value % length;
-            result += alphabet.charAt(index);
+            result += alphabet[index];
             value -= index + length;
         }
-        return alphabet.charAt(value) + result;
+        return alphabet[value] + result;
     }
     return value.toString();
 }
@@ -590,7 +590,7 @@ export function randomUUID(separator = '-') {
             result += separator;
         }
         for (let i = 0; i < length; ++i) {
-            result += alpha.charAt(Math.floor(Math.random() * 16));
+            result += alpha[Math.floor(Math.random() * 16)];
         }
     }
     return result;
@@ -703,7 +703,7 @@ export function splitEnclosing(value: string, prefix?: string, separator = '', o
         }
         let found: Undef<boolean>;
         for (let i = index + (prefixed ? prefix.length : 0) + 1, open = 1, close = 0; i < length; ++i) {
-            switch (value.charAt(i)) {
+            switch (value[i]) {
                 case opening:
                     ++open;
                     break;
@@ -714,7 +714,7 @@ export function splitEnclosing(value: string, prefix?: string, separator = '', o
             if (open === close) {
                 if (separator) {
                     for ( ; i < length; ++i) {
-                        if (value.charAt(i) === separator) {
+                        if (value[i] === separator) {
                             break;
                         }
                     }
@@ -749,6 +749,10 @@ export function splitEnclosing(value: string, prefix?: string, separator = '', o
         }
     }
     return result;
+}
+
+export function lastItemOf<T>(value: ArrayLike<T>): Undef<T> {
+    return value[value.length - 1];
 }
 
 export function hasBit(value: number, offset: number) {
@@ -877,7 +881,7 @@ export function resolvePath(value: string, href?: string) {
         const pathname = (href?.replace(location.origin, '') || location.pathname).replace(/\\/g, '/').split('/');
         pathname.pop();
         value = value.replace(/\\/g, '/');
-        if (value.charAt(0) === '/') {
+        if (value[0] === '/') {
             return location.origin + value;
         }
         else if (value.startsWith('../')) {
@@ -974,9 +978,9 @@ export function searchObject(obj: StringMap, value: string | StringMap) {
         const search =
             /^\*.+\*$/.test(value)
                 ? (a: string) => a.includes(value.replace(/^\*/, '').replace(/\*$/, ''))
-            : value.startsWith('*')
+            : value[0] === '*'
                 ? (a: string) => a.endsWith(value.replace(/^\*/, ''))
-            : value.endsWith('*')
+            : lastItemOf(value) === '*'
                 ? (a: string) => a.startsWith(value.replace(/\*$/, ''))
                 : (a: string) => a === value;
         for (const attr in obj) {

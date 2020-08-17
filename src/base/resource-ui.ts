@@ -84,7 +84,7 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
             const color = match[1];
             const lastIndex = colorPattern.lastIndex;
             const index = lastIndex - color.length;
-            if (/[a-z]/.test(color.charAt(0)) && /\d/.test(value.charAt(index - 1))) {
+            if (/[a-z]/.test(color[0]) && /\d/.test(value[index - 1])) {
                 continue;
             }
             if (colors.length > 0) {

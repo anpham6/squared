@@ -5,7 +5,7 @@ const { CSS_PROPERTIES, CSS_TRAITS, CSS_UNIT, PROXY_INLINESTYLE, SVG_PROPERTIES,
 const { assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { CSS, FILE } = squared.lib.regex;
 const { getElementData, getElementAsNode, getElementCache, setElementCache } = squared.lib.session;
-const { convertCamelCase, convertFloat, convertInt, flatArray, hasBit, hasValue, isNumber, isObject, iterateArray, iterateReverseArray, spliceString, splitEnclosing, splitPair } = squared.lib.util;
+const { convertCamelCase, convertFloat, convertInt, flatArray, hasBit, hasValue, isNumber, isObject, iterateArray, iterateReverseArray, lastItemOf, spliceString, splitEnclosing, splitPair } = squared.lib.util;
 
 const { SELECTOR_ATTR, SELECTOR_G, SELECTOR_LABEL, SELECTOR_PSEUDO_CLASS } = CSS;
 
@@ -45,7 +45,7 @@ function setStyleCache(element: HTMLElement, attr: string, sessionId: string, va
 }
 
 function parseLineHeight(lineHeight: string, fontSize: number) {
-    if (lineHeight.endsWith('%')) {
+    if (lastItemOf(lineHeight) === '%') {
         return parseFloat(lineHeight) / 100 * fontSize;
     }
     else if (isNumber(lineHeight)) {
@@ -74,10 +74,10 @@ function hasTextAlign(node: T, ...values: string[]) {
     return value !== '' && values.includes(value) && (node.blockStatic ? node.textElement && !node.hasPX('width', { initial: true }) && !node.hasPX('maxWidth', { initial: true }) : node.display.startsWith('inline'));
 }
 
-function setDimension(node: T, styleMap: StringMap, attr: DimensionAttr, attrMin: string, attrMax: string) {
+function setDimension(node: T, styleMap: StringMap, attr: DimensionAttr) {
     const options: NodeParseUnitOptions = { dimension: attr };
     const value = styleMap[attr];
-    const min = styleMap[attrMin];
+    const min = styleMap[attr[0] === 'w' ? 'minWidth' : 'minHeight'];
     const baseValue = value ? node.parseUnit(value, options) : 0;
     let result = Math.max(baseValue, min ? node.parseUnit(min, options) : 0);
     if (result === 0 && node.styleElement) {
@@ -101,7 +101,7 @@ function setDimension(node: T, styleMap: StringMap, attr: DimensionAttr, attrMin
                 if (size !== '') {
                     result = isNumber(size) ? parseFloat(size) : node.parseUnit(size, options);
                     if (result > 0) {
-                        node.css(attr, size.endsWith('%') ? size : size + 'px');
+                        node.css(attr, lastItemOf(size) === '%' ? size : size + 'px');
                     }
                 }
                 break;
@@ -109,6 +109,7 @@ function setDimension(node: T, styleMap: StringMap, attr: DimensionAttr, attrMin
         }
     }
     if (baseValue > 0 && !node.imageElement) {
+        const attrMax = attr[0] === 'w' ? 'maxWidth' : 'maxHeight';
         const max = styleMap[attrMax];
         if (max) {
             if (value === max) {
@@ -205,7 +206,7 @@ function convertPosition(node: T, attr: string) {
         if (unit.endsWith('px')) {
             return parseFloat(unit);
         }
-        else if (unit.endsWith('%')) {
+        else if (lastItemOf(unit) === '%') {
             return node.styleElement ? convertFloat(node.style[attr]) : 0;
         }
         return node.parseUnit(unit, attr === 'top' || attr === 'bottom' ? { dimension: 'height' } : undefined);
@@ -554,7 +555,7 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
         for (let i = 0, length = notList.length; i < length; ++i) {
             const not = notList[i];
             const notData: QueryData = {};
-            switch (not.charAt(0)) {
+            switch (not[0]) {
                 case '.':
                     notData.classList = [not];
                     break;
@@ -1467,7 +1468,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (value.endsWith('px')) {
             return parseFloat(value);
         }
-        else if (value.endsWith('%')) {
+        else if (lastItemOf(value) === '%') {
             let parent: Undef<boolean>,
                 dimension: Undef<DimensionAttr>;
             if (options) {
@@ -1664,7 +1665,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             segment = match[1];
                             all = false;
                             if (segment.length === 1) {
-                                const ch = segment.charAt(0);
+                                const ch = segment[0];
                                 switch (ch) {
                                     case '+':
                                     case '~':
@@ -1716,7 +1717,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                         case -1:
                                             break;
                                         case 1:
-                                            if (key.charAt(0) === '*') {
+                                            if (key[0] === '*') {
                                                 endsWith = true;
                                                 key = key.substring(2);
                                                 break;
@@ -1763,7 +1764,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                 }
                                 while (subMatch = SELECTOR_LABEL.exec(segment)) {
                                     const label = subMatch[0];
-                                    switch (label.charAt(0)) {
+                                    switch (label[0]) {
                                         case '#':
                                             id = label.substring(1);
                                             break;
@@ -2000,7 +2001,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         const result = this._cached.tagName;
         if (result === undefined) {
             const element = this._element;
-            return this._cached.tagName = element ? element.nodeName.charAt(0) === '#' ? element.nodeName : element.tagName : '';
+            return this._cached.tagName = element ? element.nodeName[0] === '#' ? element.nodeName : element.tagName : '';
         }
         return result;
     }
@@ -2077,7 +2078,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get plainText() {
-        return this.tagName.charAt(0) === '#';
+        return this.tagName[0] === '#';
     }
 
     get styleText() {
@@ -2211,11 +2212,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get width() {
         const result = this._cached.width;
-        return result === undefined ? this._cached.width = setDimension(this, this._styleMap, 'width', 'minWidth', 'maxWidth') : result;
+        return result === undefined ? this._cached.width = setDimension(this, this._styleMap, 'width') : result;
     }
     get height() {
         const result = this._cached.height;
-        return result === undefined ? this._cached.height = setDimension(this, this._styleMap, 'height', 'minHeight', 'maxHeight') : result;
+        return result === undefined ? this._cached.height = setDimension(this, this._styleMap, 'height') : result;
     }
 
     get hasWidth() {
@@ -2447,10 +2448,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 const width = this.valueOf('width');
                 const minWidth = this.valueOf('minWidth');
                 let percent = 0;
-                if (width.endsWith('%')) {
+                if (lastItemOf(width) === '%') {
                     percent = parseFloat(width);
                 }
-                if (minWidth.endsWith('%')) {
+                if (lastItemOf(minWidth) === '%') {
                     percent = Math.max(parseFloat(minWidth), percent);
                 }
                 if (percent > 0) {
@@ -2876,8 +2877,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get lastChild() {
         const children = this.naturalElements;
-        const length = children.length;
-        return length ? children[length - 1] : null;
+        return lastItemOf(children) || null;
     }
 
     get previousSibling() {
@@ -2969,7 +2969,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                     const fontSize = parent.valueOf('fontSize');
                                     if (fontSize !== '' && fontSize !== 'inherit') {
                                         value = checkFontSizeValue(fontSize);
-                                        if (value.endsWith('%')) {
+                                        if (lastItemOf(value) === '%') {
                                             emRatio *= parseFloat(value) / 100;
                                         }
                                         else if (isEm(value)) {
@@ -2994,7 +2994,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     else if (value.endsWith('px')) {
                         result = parseFloat(value);
                     }
-                    else if (value.endsWith('%')) {
+                    else if (lastItemOf(value) === '%') {
                         const parent = this.actualParent;
                         result = parent ? parseFloat(value) / 100 * parent.fontSize : getRemSize();
                     }

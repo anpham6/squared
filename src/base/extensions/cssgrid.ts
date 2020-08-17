@@ -27,7 +27,7 @@ interface RepeatItem {
 }
 
 const { formatPercent, formatPX, isLength } = squared.lib.css;
-const { isNumber, splitPairEnd, trimString, withinRange } = squared.lib.util;
+const { isNumber, lastItemOf, splitPairEnd, trimString, withinRange } = squared.lib.util;
 
 const PATTERN_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
 const PATTERN_MINMAX = 'minmax\\(\\s*([^,]+),\\s+([^)]+)\\s*\\)';
@@ -78,7 +78,7 @@ function setAutoFill(data: CssGridDirectionData, dimension: number) {
         const unitMin = data.unitMin;
         let sizeMin = 0;
         for (const value of [unit[0], unitMin[0]]) {
-            if (value.endsWith('%')) {
+            if (lastItemOf(value) === '%') {
                 sizeMin = Math.max(parseFloat(value) / 100 * dimension, sizeMin);
             }
             else if (isLength(value)) {
@@ -108,7 +108,7 @@ function setFlexibleDimension(dimension: number, gap: number, count: number, uni
         else if (value.endsWith('fr')) {
             fractional += parseFloat(value);
         }
-        else if (value.endsWith('%')) {
+        else if (lastItemOf(value) === '%') {
             percent -= parseFloat(value) / 100;
         }
     }
@@ -240,7 +240,7 @@ function applyLayout(node: NodeUI, data: CssGridDirectionData, dataCount: number
     const length = unit.length;
     for (let i = 0; i < length; ++i) {
         const value = unit[i];
-        if (value.endsWith('%')) {
+        if (lastItemOf(value) === '%') {
             percent -= parseFloat(value) / 100;
         }
         else if (value.endsWith('fr')) {
@@ -344,7 +344,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     switch (index) {
                         case 0:
                         case 1:
-                            if (command.charAt(0) === '[') {
+                            if (command[0] === '[') {
                                 for (const attr of match[4].split(/\s+/)) {
                                     (name[attr] || (name[attr] = [])).push(i);
                                 }
@@ -571,7 +571,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             node.css('gridTemplateAreas').split(/"[\s\n]+"/).forEach((template, rowStart) => {
                 if (template !== 'none') {
                     trimString(template.trim(), '"').split(/\s+/).forEach((area, columnStart) => {
-                        if (area.charAt(0) !== '.') {
+                        if (area[0] !== '.') {
                             const templateArea = templateAreas[area];
                             if (templateArea) {
                                 templateArea.rowSpan = (rowStart - templateArea.rowStart) + 1;

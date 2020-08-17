@@ -9,7 +9,7 @@ type View = android.base.View;
 
 const { formatPercent, formatPX, isLength } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { conditionArray, flatArray, isArray } = squared.lib.util;
+const { conditionArray, flatArray, lastItemOf, isArray } = squared.lib.util;
 
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.enumeration;
 
@@ -224,7 +224,7 @@ function getCellDimensions(node: View, horizontal: boolean, section: string[], i
             rowWeight = weight;
         }
     }
-    else if (section.every(value => value.endsWith('%'))) {
+    else if (section.every(value => lastItemOf(value) === '%')) {
         const percent = formatPercent((section.reduce((a, b) => a + parseFloat(b), 0) + insideGap / (horizontal ? node.actualWidth : node.actualHeight)) / 100);
         if (horizontal) {
             width = percent;
@@ -258,7 +258,7 @@ function requireDirectionSpacer(data: CssGridDirectionData, dimension: number) {
         if (value.endsWith('px')) {
             size += parseFloat(value);
         }
-        else if (value.endsWith('%')) {
+        else if (lastItemOf(value) === '%') {
             percent += parseFloat(value);
         }
         else if (value.endsWith('fr')) {
@@ -360,7 +360,7 @@ function applyLayout(node: View, parent: View, item: View, mainData: CssGridData
             }
             size = 0;
         }
-        else if (value.endsWith('%')) {
+        else if (lastItemOf(value) === '%') {
             if (sizeWeight === -1) {
                 sizeWeight = 0;
             }
@@ -1089,7 +1089,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 let valid = false;
                 for (let i = 0; i < columnSpan; ++i) {
                     const value = unit[columnStart + i];
-                    if (value.endsWith('fr') || value.endsWith('%')) {
+                    if (value.endsWith('fr') || lastItemOf(value) === '%') {
                         valid = true;
                     }
                     else if (value === 'auto') {

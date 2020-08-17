@@ -289,7 +289,7 @@ export function replaceCharacterData(value: string, tab?: number) {
         .replace(/&(?!#?[A-Za-z\d]{2,};)/g, '&amp;');
     const char: { i: number; text: string }[] = [];
     for (let i = 0, length = value.length; i < length; ++i) {
-        switch (value.charAt(i)) {
+        switch (value[i]) {
             case "'":
                 char.push({ i, text: "\\'" });
                 break;

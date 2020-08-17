@@ -1351,7 +1351,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (!tagName) {
             tagName = this.tagName;
         }
-        const style: StringMap = tagName.charAt(0) === '#'
+        const style: StringMap = tagName[0] === '#'
             ? {}
             : this.cssAsObject(
                 'paddingTop',
@@ -1645,7 +1645,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (result === undefined) {
             const element = this.element as HTMLInputElement;
             if (element) {
-                if (element.nodeName.charAt(0) === '#') {
+                if (element.nodeName[0] === '#') {
                     result = 'PLAINTEXT';
                 }
                 else if (element.tagName === 'INPUT') {

@@ -260,6 +260,7 @@ declare module "lib" {
         function splitPairStart(value: string, char: string, trim?: boolean): string;
         function splitPairEnd(value: string, char: string, trim?: boolean): string;
         function splitEnclosing(value: string, prefix?: string, separator?: string, opening?: string, closing?: string): string[];
+        function lastItemOf<T>(value: ArrayLike<T>): Undef<T>;
         function hasBit(value: number, offset: number): boolean;
         function isNumber(value: string): boolean;
         function isString(value: any): value is string;
