@@ -682,7 +682,7 @@ function ascendQuerySelector(node: T, selectors: QueryData[], i: number, index: 
     for (let j = 0, q = nodes.length; j < q; ++j) {
         const child = nodes[j];
         if (adjacent) {
-            const parent = child.actualParent as T;
+            const parent = child.actualParent!;
             if (adjacent === '>') {
                 if (validateQuerySelector(node, parent, selector, i, last, adjacent)) {
                     next.push(parent);
@@ -717,14 +717,13 @@ function ascendQuerySelector(node: T, selectors: QueryData[], i: number, index: 
             }
         }
         else if (child.depth - depth >= length - index) {
-            let parent = child.actualParent as T;
-            do {
+            let parent = child.actualParent;
+            while (parent) {
                 if (validateQuerySelector(node, parent, selector, i, last)) {
                     next.push(parent);
                 }
-                parent = parent.actualParent as T;
+                parent = parent.actualParent;
             }
-            while (parent);
         }
     }
     if (next.length === 0) {
@@ -760,7 +759,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     public documentRoot = false;
     public depth = -1;
     public childIndex = Infinity;
-
     public queryMap?: T[][];
 
     protected _parent: Null<T> = null;
@@ -776,16 +774,15 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     protected _initial?: InitialData<T>;
     protected _naturalChildren?: T[];
     protected _naturalElements?: T[];
-
     protected readonly _element: Null<Element> = null;
 
-    private _data = {};
     private _inlineText = false;
     private _style?: CSSStyleDeclaration;
     private _dataset?: DOMStringMap;
     private _textStyle?: StringMap;
     private _elementData?: ElementData;
     private _pseudoElt?: string;
+    private readonly _data = {};
 
     constructor(
         public readonly id: number,
@@ -2773,7 +2770,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     get actualParent() {
         const result = this._cached.actualParent;
         if (result === undefined) {
-            const parentElement = this._element?.parentElement;
+            const parentElement = this.element?.parentElement;
             return this._cached.actualParent = parentElement ? getElementAsNode<T>(parentElement, this.sessionId) : null;
         }
         return result;

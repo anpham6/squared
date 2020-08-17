@@ -591,9 +591,9 @@ function setTransformOrigin(map: TransformOriginMap, item: SvgAnimateTransform, 
     }
 }
 
-function getForwardItem(forwardMap: ForwardMap, attr: string): Undef<ForwardValue> {
-    const map = forwardMap[attr];
-    return map ? map[map.length - 1] : undefined;
+function getForwardItem(forwardMap: ForwardMap, attr: string) {
+    const map = forwardMap[attr] as Undef<ForwardValue[]>;
+    return map && map[map.length - 1];
 }
 
 function setSetterValue(baseMap: Map<number, AnimateValue>, item: SvgAnimation, transforming: boolean, time?: number, value?: AnimateValue) {

@@ -78,8 +78,12 @@
       },
       "terser": {
         "minify": {
-          "toplevel": true,
-          "keep_classnames": true
+          "toplevel": true
+        }
+      },
+      "uglify-js": {
+        "es5-minify": {
+          "toplevel": true
         }
       }
     }

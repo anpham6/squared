@@ -509,6 +509,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public contentAltered = false;
     public visible = true;
     public renderChildren: T[] = [];
+    public actualParent!: Null<T>;
     public documentChildren?: T[];
     public horizontalRowStart?: boolean;
     public horizontalRowEnd?: boolean;
@@ -1041,7 +1042,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         }
                         else if (Math.ceil(this.bounds.top) >= previous.bounds.bottom) {
                             if (siblings.every(item => item.inlineDimension)) {
-                                const actualParent = this.actualParent as T;
+                                const actualParent = this.actualParent!;
                                 if (actualParent.ascend({ condition: item => !item.inline && item.hasWidth, error: (item: T) => item.layoutElement, startSelf: true })) {
                                     const length = siblings.length;
                                     if (actualParent.naturalChildren.filter((item: T) => item.visible && item.pageFlow).length === length + 1) {
@@ -1823,14 +1824,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
     get controlName() {
         return this._controlName || '';
-    }
-
-    set actualParent(value) {
-        this._cached.actualParent = value;
-    }
-    get actualParent(): Null<T> {
-        const result = this._cached.actualParent;
-        return result === undefined ? this._cached.actualParent = super.actualParent as Null<T> || this.innerMostWrapped.actualParent : result;
     }
 
     set siblingsLeading(value) {

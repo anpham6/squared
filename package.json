@@ -8,7 +8,7 @@
     "express-r": "node ./serve.js --disk-read --unc-read",
     "express-w": "node ./serve.js --disk-write --unc-write",
     "express-rw": "node ./serve.js --access-all",
-    "install-chrome": "npm i @babel/core --save-dev && npm i @babel/preset-env --save-dev && npm i terser@4.8.0 --save-dev && npm i prettier --save-dev && npm i clean-css --save-dev && npm i html-minifier-terser --save-dev",
+    "install-chrome": "npm i @babel/core --save-dev && npm i @babel/preset-env --save-dev && npm i terser@4.8.0 --save-dev && npm i prettier --save-dev && npm i clean-css --save-dev && npm i html-minifier-terser --save-dev && npm i uglify-js --save-dev",
     "watch": "tsc -w -p ./config/tsconfig.dev.json",
     "lint": "eslint **/*.ts --no-ignore",
     "bundles": "node bundle.js -f android -o ./dist/bundles/squared.android.bundle.$npm_package_version.js && node bundle.js -f android -m svg -o ./dist/bundles/squared+svg.android.bundle.$npm_package_version.js && node bundle.js -f android -e android.widget.* -o ./dist/bundles/squared.android+widget.bundle.$npm_package_version.js && node bundle.js -f android -m svg -e android.widget.* -o ./dist/bundles/squared+svg.android+widget.bundle.$npm_package_version.js && node bundle.js -f chrome -o ./dist/bundles/squared.chrome.bundle.$npm_package_version.js && node bundle.js -f chrome -m svg -o ./dist/bundles/squared+svg.chrome.bundle.$npm_package_version.js && node bundle.js -f vdom -o ./dist/bundles/squared.vdom.bundle.$npm_package_version.js && node bundle.js -f vdom -m svg -o ./dist/bundles/squared+svg.vdom.bundle.$npm_package_version.js && node bundle.js -f vdom-lite -o ./dist/bundles/squared.vdom-lite.bundle.$npm_package_version.js",
@@ -142,6 +142,7 @@
     "rollup-plugin-terser": "^7.0.0",
     "terser": "^4.8.0",
     "ts-node": "^8.10.2",
-    "typescript": "^3.9.7"
+    "typescript": "^3.9.7",
+    "uglify-js": "^3.10.1"
   }
 }

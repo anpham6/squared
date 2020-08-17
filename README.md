@@ -776,12 +776,14 @@ JS and CSS files can be optimized further using these settings (node-express):
 * beautify
 * minify
 * es5 (Babel)
+* es5-minify (UglifyJS)
 * custom name
 
 You can also define your own optimizations in squared.settings.json:
 
 * npm i @babel/core --save-dev && npm i @babel/preset-env --save-dev (<https://github.com/babel/babel>)
 * npm i terser@4.8 --save-dev (<https://github.com/terser/terser> - <b>NOTE</b>: Incompatible with 5.0+)
+* npm i uglify-js --save-dev (<https://github.com/mishoo/UglifyJS>)
 * npm i prettier --save-dev (<https://github.com/prettier/prettier>)
 * npm i clean-css --save-dev (<https://github.com/jakubpawlowicz/clean-css>)
 * npm i html-minifier-terser --save-dev (<https://github.com/DanielRuf/html-minifier-terser>)
@@ -849,7 +851,7 @@ The entire page can similarly be included using the "saveAs" attribute in option
 const options = {
     saveAs: { // All attributes are optional
         html: { filename: 'index.html', format: 'beautify' }
-        script: { pathname: '../js', filename: 'bundle.js', format: 'es5+minify' },
+        script: { pathname: '../js', filename: 'bundle.js', format: 'es5+es5-minify' },
         link: { pathname: 'css', filename: 'bundle.css', preserve: true },
         base64: { format: 'png' }
     }

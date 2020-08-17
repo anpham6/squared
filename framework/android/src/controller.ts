@@ -45,8 +45,8 @@ function sortHorizontalFloat(list: View[]) {
 }
 
 function doOrderStandard(above: View, below: View): number {
-    const parentA = above.actualParent as View;
-    const parentB = below.actualParent as View;
+    const parentA = above.actualParent;
+    const parentB = below.actualParent;
     if (above === parentB) {
         return -1;
     }
@@ -294,7 +294,7 @@ function flattenContainer(node: View) {
 }
 
 function getBoxWidth(node: View) {
-    const parent = node.actualParent as View;
+    const parent = node.actualParent!;
     if (node.naturalElement && node.inlineStatic && parent.blockStatic && parent === node.renderParent) {
         return parent.box.width - (node.linear.left - parent.box.left);
     }
@@ -436,7 +436,7 @@ export function setVerticalAlignment(node: View, onlyChild = true, biasOnly?: bo
         }
     }
     else {
-        const parent = node.actualParent as View;
+        const parent = node.actualParent!;
         if (parent.display === 'table-cell') {
             switch (parent.css('verticalAlign')) {
                 case 'middle':

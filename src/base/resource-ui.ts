@@ -936,7 +936,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
 
     public static checkPreIndent(node: NodeUI): Undef<[string, NodeUI]> {
         if (node.plainText) {
-            const parent = node.actualParent as NodeUI;
+            const parent = node.actualParent!;
             if (parent.preserveWhiteSpace && parent.ancestors('pre', { startSelf: true }).length > 0) {
                 let nextSibling = node.nextSibling as Undef<NodeUI>;
                 if (nextSibling && nextSibling.naturalElement) {

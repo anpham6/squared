@@ -630,7 +630,7 @@ export default class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
                 const previousSiblings = node.previousSiblings({ floating: false });
                 const q = previousSiblings.length;
                 if (q > 0) {
-                    const actualParent = node.actualParent as T;
+                    const actualParent = node.actualParent!;
                     const nextSiblings = node.siblingsTrailing;
                     const r = nextSiblings.length;
                     if (r > 0) {

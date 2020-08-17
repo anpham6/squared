@@ -7,7 +7,7 @@ export default class ViewGroup<T extends View> extends View$MX(squared.base.Node
         super(id, node.sessionId);
         this.depth = node.depth;
         this.containerName = node.containerName + '_GROUP';
-        this.actualParent = node.actualParent;
+        this.actualParent = node.actualParent as Null<T>;
         this.documentParent = node.documentParent;
         this.dir = this.actualParent?.dir || '';
         this.retainAs(children, node, parent);

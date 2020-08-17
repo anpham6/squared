@@ -598,6 +598,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public api = BUILD_ANDROID.LATEST;
+        public actualParent!: Null<T>;
         public renderChildren!: T[];
         public renderParent?: T;
         public horizontalRows?: T[][];
@@ -651,7 +652,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     this.hide({ collapse: true });
                     break;
             }
-            const actualParent = this.actualParent as Undef<T> || this.documentParent;
+            const actualParent = this.actualParent || this.documentParent;
             const renderParent = this.renderParent as T;
             const containsWidth = !renderParent.inlineWidth;
             const containsHeight = !renderParent.inlineHeight;
@@ -1778,7 +1779,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public hasFlex(direction: "row" | "column") {
-            const parent = this.actualParent as T;
+            const parent = this.actualParent;
             if (parent && parent.flexdata[direction]) {
                 if (direction === 'column' && !parent.hasHeight) {
                     const grandParent = parent.actualParent;

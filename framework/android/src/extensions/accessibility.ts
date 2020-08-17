@@ -38,7 +38,7 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                                         valid = true;
                                     }
                                     else if (sibling.textElement) {
-                                        const parent = sibling.actualParent as T;
+                                        const parent = sibling.actualParent!;
                                         if (parent.tagName === 'LABEL') {
                                             parent.renderAs = node;
                                             valid = true;

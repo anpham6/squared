@@ -101,7 +101,7 @@ export default class Grid <T extends View> extends squared.base.extensions.Grid<
             node.renderEach((item: T) => {
                 const cellData = this.data.get(item) as Undef<GridCellData<T>>;
                 if (cellData) {
-                    const parent = item.actualParent as Null<T>;
+                    const parent = item.actualParent;
                     if (parent && !parent.visible) {
                         const marginTop = parent.getBox(BOX_STANDARD.MARGIN_TOP)[0] === 0 ? parent.marginTop : 0;
                         const marginBottom = parent.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] === 0 ? parent.marginBottom : 0;

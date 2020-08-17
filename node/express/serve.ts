@@ -489,7 +489,7 @@ let Node: serve.INode,
                             if (options !== '') {
                                 if (options.startsWith('./')) {
                                     try {
-                                        options = fs.readFileSync(path.resolve(options)).toString('utf8').trim();
+                                        options = fs.readFileSync(path.resolve(options), 'utf8').trim();
                                     }
                                     catch {
                                         continue;
@@ -714,16 +714,17 @@ let Node: serve.INode,
                                 break;
                             case 'minify':
                                 module = 'terser';
-                                options = {
-                                    toplevel: true,
-                                    keep_classnames: true
-                                };
+                                options = { toplevel: true };
                                 break;
                             case 'es5':
                                 module = '@babel/core';
                                 options = {
                                     presets: ['@babel/preset-env']
                                 };
+                                break;
+                            case 'es5-minify':
+                                module = 'uglify-js';
+                                options = { toplevel: true };
                                 break;
                         }
                     }
@@ -740,6 +741,17 @@ let Node: serve.INode,
                         }
                         else {
                             switch (module) {
+                                case '@babel/core': {
+                                    const result = require('@babel/core').transformSync(value, options).code;
+                                    if (result) {
+                                        if (j === length - 1) {
+                                            return result;
+                                        }
+                                        value = result;
+                                        valid = true;
+                                    }
+                                    break;
+                                }
                                 case 'prettier': {
                                     options.plugins = this.getPrettierParser(options.parser);
                                     const result = require('prettier').format(value, options);
@@ -752,19 +764,9 @@ let Node: serve.INode,
                                     }
                                     break;
                                 }
-                                case 'terser': {
-                                    const result = require('terser').minify(value, options).code;
-                                    if (result) {
-                                        if (j === length - 1) {
-                                            return result;
-                                        }
-                                        value = result;
-                                        valid = true;
-                                    }
-                                    break;
-                                }
-                                case '@babel/core': {
-                                    const result = require('@babel/core').transformSync(value, options).code;
+                                case 'terser':
+                                case 'uglify-js': {
+                                    const result = require(module).minify(value, options).code;
                                     if (result) {
                                         if (j === length - 1) {
                                             return result;
@@ -798,20 +800,20 @@ let Node: serve.INode,
             }
         }
         removeCss(source: string, styles: string[]) {
-            let found: Undef<boolean>,
-                output: Undef<string>,
+            let output: Undef<string>,
                 pattern: Undef<RegExp>,
                 match: Null<RegExpExecArray>;
             for (let value of styles) {
+                let modified = false;
                 value = value.replace(/\./g, '\\.');
                 pattern = new RegExp(`^\\s*${value}[\\s\\n]*\\{[\\s\\S]*?\\}\\n*`, 'gm');
                 while (match = pattern.exec(source)) {
                     output = (output || source).replace(match[0], '');
-                    found = true;
+                    modified = true;
                 }
-                if (found) {
+                if (modified) {
                     source = output!;
-                    found = false;
+                    modified = false;
                 }
                 pattern = new RegExp(`^[^,]*(,?[\\s\\n]*${value}[\\s\\n]*[,{](\\s*)).*?\\{?`, 'gm');
                 while (match = pattern.exec(source)) {
@@ -824,11 +826,10 @@ let Node: serve.INode,
                         replaceWith = ', ';
                     }
                     output = (output || source).replace(match[0], match[0].replace(segment, replaceWith));
-                    found = true;
+                    modified = true;
                 }
-                if (found) {
+                if (modified) {
                     source = output!;
-                    found = false;
                 }
             }
             return output;
@@ -1243,10 +1244,10 @@ class FileManager implements serve.IFileManager {
             case '@application/xhtml+xml': {
                 const minifySpace = (value: string) => value.replace(/[\s\n]+/g, '');
                 const getOuterHTML = (script: boolean, value: string) => script ? `<script type="text/javascript" src="${value}"></script>` : `<link rel="stylesheet" type="text/css" href="${value}" />`;
-                const saved = new Set<string>();
                 const baseUri = file.uri!;
-                let html = fs.readFileSync(filepath).toString('utf8'),
-                    source = html,
+                const saved = new Set<string>();
+                let html = fs.readFileSync(filepath, 'utf8'),
+                    source: Undef<string>,
                     pattern = /(\s*)<(script|link|style)[^>]*?([\s\n]+data-chrome-file="\s*(save|export)As:\s*((?:[^"]|\\")+)")[^>]*>(?:[\s\S]*?<\/\2>\n*)?/ig,
                     match: Null<RegExpExecArray>;
                 while (match = pattern.exec(html)) {
@@ -1258,22 +1259,22 @@ class FileManager implements serve.IFileManager {
                         appending = new RegExp(`<${script ? 'script' : 'link'}[^>]+?(?:${script ? 'src' : 'href'}=(["'])${location}\\1|data-chrome-file="saveAs:${location}[:"])[^>]*>`, 'i').test(html);
                     }
                     if (saved.has(location) || appending) {
-                        source = source.replace(segment, '');
+                        source = (source || html).replace(segment, '');
                     }
                     else if (match[4] === 'save') {
                         const content = segment.replace(match[3], '');
                         const src = new RegExp(`\\s+${script ? 'src' : 'href'}="(?:[^"]|\\\\")+"`, 'i').exec(content) || new RegExp(`\\s+${script ? 'src' : 'href'}='(?:[^']|\\\\')+'`, 'i').exec(content);
                         if (src) {
-                            source = source.replace(segment, content.replace(src[0], `${script ? ' src' : ' href'}="${location}"`));
+                            source = (source || html).replace(segment, content.replace(src[0], `${script ? ' src' : ' href'}="${location}"`));
                             saved.add(location);
                         }
                     }
                     else {
-                        source = source.replace(segment, match[1] + getOuterHTML(script, location));
+                        source = (source || html).replace(segment, match[1] + getOuterHTML(script, location));
                         saved.add(location);
                     }
                 }
-                if (saved.size > 0) {
+                if (source) {
                     html = source;
                 }
                 pattern = /(\s*)<(script|style)[^>]*>([\s\S]*?)<\/\2>\n*/ig;
@@ -1285,51 +1286,57 @@ class FileManager implements serve.IFileManager {
                     if (bundleIndex !== undefined) {
                         const outerHTML = item.outerHTML;
                         if (outerHTML) {
-                            const original = source;
-                            let replaceWith = '';
+                            const original = source || html;
+                            let replaceWith = '',
+                                replaced: string;
                             if (bundleIndex === 0 || bundleIndex === Infinity) {
                                 replaceWith = getOuterHTML(item.mimeType === 'text/javascript', Express.getFullUri(item));
-                                source = source.replace(outerHTML, replaceWith);
+                                replaced = original.replace(outerHTML, replaceWith);
                             }
                             else {
-                                source = source.replace(new RegExp(`\\s*${outerHTML}\\n*`), '');
+                                replaced = original.replace(new RegExp(`\\s*${outerHTML}\\n*`), '');
                             }
-                            if (original === source) {
-                                const content = item.content ? minifySpace(item.content) : undefined;
+                            if (replaced === original) {
+                                const content = item.content && minifySpace(item.content);
                                 const outerContent = minifySpace(outerHTML);
                                 while (match = pattern.exec(html)) {
                                     if (outerContent === minifySpace(match[0]) || content && content === minifySpace(match[3])) {
-                                        source = source.replace(match[0], (replaceWith ? match[1] : '') + replaceWith);
+                                        source = original.replace(match[0], (replaceWith ? match[1] : '') + replaceWith);
+                                        html = source;
                                         break;
                                     }
                                 }
                                 pattern.lastIndex = 0;
                             }
+                            else {
+                                source = replaced;
+                                html = source;
+                            }
                         }
                     }
                     if (trailingContent) {
-                        const content = [];
-                        for (const trailing of trailingContent) {
-                            content.push(minifySpace(trailing.value));
-                        }
+                        const content = trailingContent.map(trailing => minifySpace(trailing.value));
+                        let modified = false;
                         while (match = pattern.exec(html)) {
-                            const value = minifySpace(match[3]);
-                            if (content.includes(value)) {
-                                source = source.replace(match[0], '');
+                            if (content.includes(minifySpace(match[3]))) {
+                                source = (source || html).replace(match[0], '');
+                                modified = true;
                             }
+                        }
+                        if (modified) {
+                            html = source!;
                         }
                         pattern.lastIndex = 0;
                     }
-                    html = source;
                 }
                 for (const item of assets) {
                     if (item.excluded) {
                         continue;
                     }
                     if (item.base64) {
-                        const replacement = this.replacePath(source, item.base64.replace(/\+/g, '\\+'), Express.getFullUri(item), true);
-                        if (replacement) {
-                            source = replacement;
+                        const replaced = this.replacePath(source || html, item.base64.replace(/\+/g, '\\+'), Express.getFullUri(item), true);
+                        if (replaced) {
+                            source = replaced;
                             html = source;
                         }
                         continue;
@@ -1338,21 +1345,26 @@ class FileManager implements serve.IFileManager {
                         continue;
                     }
                     const value = Express.getFullUri(item);
+                    let modified = false;
                     if (item.rootDir || Express.fromSameOrigin(baseUri, item.uri)) {
                         pattern = new RegExp(`(["'\\s\\n,=])(((?:\\.\\.)?(?:[\\\\/]\\.\\.|\\.\\.[\\\\/]|[\\\\/])*)?${path.join(item.pathname, item.filename).replace(/[\\/]/g, '[\\\\/]')})`, 'g');
                         while (match = pattern.exec(html)) {
                             if (match[2] !== value && item.uri === Express.resolvePath(match[2], baseUri)) {
-                                source = source.replace(match[0], match[1] + value);
+                                source = (source || html).replace(match[0], match[1] + value);
+                                modified = true;
                             }
                         }
                     }
-                    const replacement = this.replacePath(source, item.uri, value);
-                    if (replacement) {
-                        source = replacement;
+                    const replaced = this.replacePath(source || html, item.uri, value);
+                    if (replaced) {
+                        source = replaced;
+                        modified = true;
                     }
-                    html = source;
+                    if (modified) {
+                        html = source!;
+                    }
                 }
-                source = source
+                source = (source || html)
                     .replace(/\s*<(script|link|style)[^>]+?data-chrome-file="exclude"[^>]*>[\s\S]*?<\/\1>\n*/ig, '')
                     .replace(/\s*<(script|link)[^>]+?data-chrome-file="exclude"[^>]*>\n*/ig, '')
                     .replace(/\s+data-(?:use|chrome-[\w-]+)="([^"]|\\")+?"/g, '');
@@ -1362,7 +1374,7 @@ class FileManager implements serve.IFileManager {
             case 'text/html':
             case 'application/xhtml+xml': {
                 if (format) {
-                    const result = Chrome.minifyHtml(format, fs.readFileSync(filepath).toString('utf8'));
+                    const result = Chrome.minifyHtml(format, fs.readFileSync(filepath, 'utf8'));
                     if (result) {
                         fs.writeFileSync(filepath, result);
                     }
@@ -1385,7 +1397,7 @@ class FileManager implements serve.IFileManager {
                     }
                     break;
                 }
-                const content = fs.readFileSync(filepath).toString('utf8');
+                const content = fs.readFileSync(filepath, 'utf8');
                 let source: Undef<string>;
                 if (unusedStyles) {
                     const result = Chrome.removeCss(content, unusedStyles);
@@ -1437,7 +1449,7 @@ class FileManager implements serve.IFileManager {
                     }
                     break;
                 }
-                const content = fs.readFileSync(filepath).toString('utf8');
+                const content = fs.readFileSync(filepath, 'utf8');
                 let source: Undef<string>;
                 if (format) {
                     const result = Chrome.minifyJs(format, content);
@@ -1817,7 +1829,7 @@ class FileManager implements serve.IFileManager {
             if (file.bundleIndex !== undefined) {
                 if (file.bundleIndex === 0) {
                     if (Compress.getFileSize(filepath) > 0 && !file.excluded) {
-                        const content = this.appendContent(file, fs.readFileSync(filepath).toString('utf8'), true);
+                        const content = this.appendContent(file, fs.readFileSync(filepath, 'utf8'), true);
                         if (content) {
                             try {
                                 fs.writeFileSync(filepath, content, 'utf8');

@@ -431,7 +431,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         cache.each(node => {
             if (node.floating) {
                 if (node.float === 'left') {
-                    const actualParent = node.actualParent as T;
+                    const actualParent = node.actualParent as Null<T>;
                     let parent: Null<T> = actualParent,
                         previousParent: Undef<T>;
                     while (parent && parent.tagName === 'P' && !parent.documentRoot) {
