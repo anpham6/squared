@@ -461,7 +461,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     case 'absolute': {
                         if (node.autoPosition) {
                             if (!node.siblingsLeading.some(item => item.multiline || item.excluded && !item.blockStatic)) {
-                                node.cssApply({ display: 'inline-block', verticalAlign: 'top' }, true);
+                                node.cssApply({ display: 'inline-block', verticalAlign: 'top' }, true, true);
                             }
                             else {
                                 node.autoPosition = false;

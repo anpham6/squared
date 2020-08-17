@@ -393,7 +393,7 @@ declare module "base" {
         cssParent(attr: string, value?: string, cache?: boolean): string;
         cssAsTuple(...attrs: string[]): string[];
         cssAsObject(...attrs: string[]): StringMap;
-        cssApply(values: StringMap, cache?: boolean): this;
+        cssApply(values: StringMap, overwrite?: boolean, cache?: boolean): this;
         cssCopy(node: Node, ...attrs: string[]): void;
         cssCopyIfEmpty(node: Node, ...attrs: string[]): void;
         cssPseudoElement(name: string): Null<StringMap>;

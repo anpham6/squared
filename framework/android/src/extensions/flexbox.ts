@@ -278,7 +278,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         marginBottom: '0px',
                         marginLeft: '0px',
                         display: 'block'
-                    }, true);
+                    });
                     container.saveAsInitial();
                     container.setCacheValue('flexbox', node.flexbox);
                     mainData.children[index] = container;

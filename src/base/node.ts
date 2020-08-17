@@ -13,6 +13,19 @@ const BORDER_TOP = CSS_PROPERTIES.borderTop.value as string[];
 const BORDER_RIGHT = CSS_PROPERTIES.borderRight.value as string[];
 const BORDER_BOTTOM = CSS_PROPERTIES.borderBottom.value as string[];
 const BORDER_LEFT = CSS_PROPERTIES.borderLeft.value as string[];
+const TEXT_STYLE = [
+    'fontFamily',
+    'fontWeight',
+    'fontStyle',
+    'fontVariant',
+    'fontStretch',
+    'color',
+    'whiteSpace',
+    'textDecoration',
+    'textTransform',
+    'letterSpacing',
+    'wordSpacing'
+];
 
 const REGEXP_BACKGROUND = /\s*(url|[a-z-]+gradient)/;
 const REGEXP_QUERYNTH = /^:nth(-last)?-(child|of-type)\((.+)\)$/;
@@ -21,7 +34,8 @@ const REGEXP_QUERYNTHPOSITION = /^(-)?(\d+)?n\s*([+-]\d+)?$/;
 function setStyleCache(element: HTMLElement, attr: string, sessionId: string, value: string, current: string) {
     if (current !== value) {
         element.style.setProperty(attr, value);
-        if (validateCssSet(value, element.style.getPropertyValue(attr))) {
+        const newValue = element.style.getPropertyValue(attr);
+        if (current !== newValue) {
             setElementCache(element, attr, sessionId, value !== 'auto' ? current : '');
             return 2;
         }
@@ -47,7 +61,6 @@ function isFontFixedWidth(node: T) {
 
 const aboveRange = (a: number, b: number, offset = 1) => a + offset > b;
 const belowRange = (a: number, b: number, offset = 1) => a - offset < b;
-const validateCssSet = (value: string, actualValue: string) => value === actualValue || actualValue.endsWith('px') && isLength(value, true);
 const sortById = (a: T, b: T) => a.id < b.id ? -1 : 1;
 const isInlineVertical = (value: string) => value.startsWith('inline') || value === 'table-cell';
 
@@ -406,13 +419,8 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
                                 }
                                 break;
                             case 'radio':
-                                if (element.checked) {
+                                if (element.checked || element.name && iterateArray((child.ascend({ condition: item => item.tagName === 'FORM' })[0]?.element || document).querySelectorAll(`input[type=radio][name="${element.name}"`), (item: HTMLInputElement) => item.checked) === Infinity) {
                                     return false;
-                                }
-                                else if (element.name) {
-                                    if (iterateArray((child.ascend({ condition: item => item.tagName === 'FORM' })[0]?.element || document).querySelectorAll(`input[type=radio][name="${element.name}"`), (item: HTMLInputElement) => item.checked) === Infinity) {
-                                        return false;
-                                    }
                                 }
                                 break;
                             default:
@@ -732,20 +740,6 @@ function ascendQuerySelector(node: T, selectors: QueryData[], i: number, index: 
 const canTextAlign = (node: T) => node.naturalChild && (node.length === 0 || isInlineVertical(node.display)) && !node.floating && node.autoMargin.horizontal !== true;
 
 export default class Node extends squared.lib.base.Container<T> implements squared.base.Node {
-    public static readonly TEXT_STYLE = [
-        'fontFamily',
-        'fontWeight',
-        'fontStyle',
-        'fontVariant',
-        'fontStretch',
-        'color',
-        'whiteSpace',
-        'textDecoration',
-        'textTransform',
-        'letterSpacing',
-        'wordSpacing'
-    ];
-
     public static sanitizeCss(element: HTMLElement, styleMap: StringMap, writingMode?: string) {
         const result: StringMap = {};
         for (let attr in styleMap) {
@@ -970,7 +964,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         else if (attr.startsWith('background')) {
                             cached.visibleStyle = undefined;
                         }
-                        else if (Node.TEXT_STYLE.includes(attr)) {
+                        else if (TEXT_STYLE.includes(attr)) {
                             cached.lineHeight = undefined;
                             this._textStyle = undefined;
                         }
@@ -1183,8 +1177,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     public css(attr: string, value?: string, cache = true): string {
         if (value && this.styleElement) {
+            const previousValue = this.style[attr];
             this.style[attr] = value;
-            if (validateCssSet(value, this.style[attr])) {
+            if (previousValue !== this.style[attr]) {
                 this._styleMap[attr] = value;
                 if (cache) {
                     this.unsetCache(attr);
@@ -1195,11 +1190,18 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return this._styleMap[attr] as string || this.naturalChild && this.style[attr] as string || '';
     }
 
-    public cssApply(values: StringMap, cache = true) {
-        for (const attr in values) {
-            const value = values[attr];
-            if (this.css(attr, value, cache) === value && cache) {
-                this.unsetCache(attr);
+    public cssApply(values: StringMap, overwrite = true, cache = true) {
+        if (overwrite) {
+            for (const attr in values) {
+                this.css(attr, values[attr], cache);
+            }
+        }
+        else {
+            const styleMap = this._styleMap;
+            for (const attr in values) {
+                if (!styleMap[attr]) {
+                    this.css(attr, values[attr], cache);
+                }
             }
         }
         return this;
@@ -1388,7 +1390,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         const styleMap = this._styleMap;
         for (let i = 0, length = attrs.length; i < length; ++i) {
             const attr = attrs[i];
-            if (!hasValue(styleMap[attr])) {
+            if (!styleMap[attr]) {
                 styleMap[attr] = node.css(attr);
             }
         }
@@ -3052,8 +3054,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get textStyle() {
-        const result = this._textStyle;
-        return result === undefined ? this._textStyle = this.cssAsObject(...Node.TEXT_STYLE) : result;
+        let result = this._textStyle;
+        if (result === undefined) {
+            result = this.cssAsObject(...TEXT_STYLE);
+            result.fontSize = 'inherit';
+            this._textStyle = result;
+        }
+        return result;
     }
 
     get elementData() {

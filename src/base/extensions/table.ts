@@ -541,7 +541,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     borderRightWidth: '0px',
                     borderBottomWidth: '0px',
                     borderLeftWidth: '0px'
-                }, true);
+                }, true, true);
             }
         }
         mainData.rowCount = rowCount + (caption ? 1 : 0);

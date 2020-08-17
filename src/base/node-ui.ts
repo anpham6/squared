@@ -1472,10 +1472,23 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return this._styleMap[attr] as string || this.naturalChild && this.style[attr] as string || '';
     }
 
-    public cssApply(values: StringMap, cache?: boolean) {
-        Object.assign(this._styleMap, values);
-        if (cache) {
-            this.unsetCache(...Object.keys(values));
+    public cssApply(values: StringMap, overwrite = true, cache?: boolean) {
+        if (overwrite) {
+            Object.assign(this._styleMap, values);
+            if (cache) {
+                this.unsetCache(...Object.keys(values));
+            }
+        }
+        else {
+            const styleMap = this._styleMap;
+            for (const attr in values) {
+                if (!styleMap[attr]) {
+                    styleMap[attr] = values[attr];
+                    if (cache) {
+                        this.unsetCache(attr);
+                    }
+                }
+            }
         }
         return this;
     }
@@ -1738,16 +1751,20 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get leftTopAxis() {
-        const result = this._cached.leftTopAxis;
+        let result = this._cached.leftTopAxis;
         if (result === undefined) {
             switch (this.cssInitial('position')) {
                 case 'absolute':
-                    return this._cached.leftTopAxis = this.absoluteParent === this.documentParent;
+                    result = this.absoluteParent === this.documentParent;
+                    break;
                 case 'fixed':
-                    return this._cached.leftTopAxis = true;
+                    result = true;
+                    break;
                 default:
-                    return this._cached.leftTopAxis = false;
+                    result = false;
+                    break;
             }
+            this._cached.leftTopAxis = result;
         }
         return result;
     }

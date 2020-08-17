@@ -19,9 +19,6 @@ const REGEXP_PSEUDOCOUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s+([
 const REGEXP_PSEUDOCOUNTERVALUE = /\b([^\-\d][^\-\d]?[^\s]*)\s+(-?\d+)\b/g;
 const REGEXP_PSEUDOQUOTE = /("(?:[^"]|\\")+"|[^\s]+)\s+("(?:[^"]|\\")+"|[^\s]+)(?:\s+("(?:[^"]|\\")+"|[^\s]+)\s+("(?:[^"]|\\")+"|[^\s]+))?/;
 
-const TEXT_STYLE = NodeUI.TEXT_STYLE.slice(0);
-TEXT_STYLE.push('fontSize');
-
 function getFloatAlignmentType(nodes: NodeUI[]) {
     let result = 0,
         right = true,
@@ -600,6 +597,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     child = this.insertNode(beforeElement, sessionId, cascadeAll, '::before');
                     node.innerBefore = child;
                     if (!child.textEmpty) {
+                        child.cssApply(node.textStyle, false);
                         child.inlineText = true;
                     }
                     inlineText = false;
@@ -608,6 +606,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     child = this.insertNode(afterElement, sessionId, cascadeAll, '::after');
                     node.innerAfter = child;
                     if (!child.textEmpty) {
+                        child.cssApply(node.textStyle, false);
                         child.inlineText = true;
                     }
                     inlineText = false;
@@ -1546,15 +1545,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                     while (current);
                 }
-                const style = getStyle(element);
-                let tagName = '',
-                    content = '';
-                for (let i = 0; i < 12; ++i) {
-                    const attr = TEXT_STYLE[i];
-                    if (!styleMap[attr]) {
-                        styleMap[attr] = style[attr];
-                    }
-                }
+                let content = '',
+                    tagName: Undef<string>;
                 switch (value) {
                     case 'normal':
                     case 'none':
@@ -1578,15 +1570,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     default: {
                         const url = resolveURL(value);
                         if (url) {
-                            content = url;
                             if (hasMimeType(this._controllerSettings.mimeType.image, url)) {
                                 tagName = 'img';
-                            }
-                            else {
-                                content = '';
+                                content = url;
                             }
                         }
                         else {
+                            const style = getStyle(element);
                             let found: Undef<boolean>,
                                 match: Null<RegExpExecArray>;
                             while (match = REGEXP_PSEUDOCOUNTER.exec(value)) {
@@ -1715,8 +1705,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (!styleMap.display) {
                     styleMap.display = 'inline';
                 }
-                if (content || value === '""') {
-                    if (tagName === '') {
+                if (content !== '' || value === '""') {
+                    if (!tagName) {
                         tagName = /^(inline|table)/.test(styleMap.display) ? 'span' : 'div';
                     }
                     const pseudoElement = document.createElement(tagName);
@@ -1728,20 +1718,22 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     else {
                         element.appendChild(pseudoElement);
                     }
-                    if (tagName === 'img') {
-                        (pseudoElement as HTMLImageElement).src = content;
-                        const image = this.resourceHandler.getImage(content);
-                        if (image) {
-                            if (!styleMap.width && image.width > 0) {
-                                styleMap.width = formatPX(image.width);
-                            }
-                            if (!styleMap.height && image.height > 0) {
-                                styleMap.height = formatPX(image.height);
+                    if (content !== '') {
+                        if (tagName === 'img') {
+                            (pseudoElement as HTMLImageElement).src = content;
+                            const image = this.resourceHandler.getImage(content);
+                            if (image) {
+                                if (!styleMap.width && image.width > 0) {
+                                    styleMap.width = formatPX(image.width);
+                                }
+                                if (!styleMap.height && image.height > 0) {
+                                    styleMap.height = formatPX(image.height);
+                                }
                             }
                         }
-                    }
-                    else if (value !== '""') {
-                        pseudoElement.innerText = content;
+                        else {
+                            pseudoElement.innerText = content;
+                        }
                     }
                     for (const attr in styleMap) {
                         if (attr !== 'display') {
