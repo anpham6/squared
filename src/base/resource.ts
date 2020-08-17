@@ -162,8 +162,10 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         return Resource.ASSETS.rawData.get(uri);
     }
 
-    public addUnsafeData(name: ResourceAssetType, uri: string, data: any) {
-        Resource.ASSETS[name].set(uri, data);
+    public addImageData(uri: string, width = 0, height = 0) {
+        if (uri !== '' && (width > 0 && height > 0 || !this.getImage(uri))) {
+            Resource.ASSETS.image.set(uri, { width, height, uri });
+        }
     }
 
     set fileHandler(value: Undef<squared.base.File<T>>) {

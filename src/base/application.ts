@@ -19,20 +19,6 @@ const REGEXP_FONTURL = /\s*(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*for
 const REGEXP_DATAURI = new RegExp(`url\\("?(${STRING.DATAURI})"?\\),?\\s*`, 'g');
 const CSS_SHORTHANDNONE = getPropertiesAsTraits(CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE);
 
-function addImageSrc(resourceHandler: squared.base.Resource<Node>, uri: string, width = 0, height = 0) {
-    if (uri !== '' && (width > 0 && height > 0 || !resourceHandler.getImage(uri))) {
-        resourceHandler.addUnsafeData('image', uri, { width, height, uri });
-    }
-}
-
-function parseSrcSet(resourceHandler: squared.base.Resource<Node>, value: string) {
-    if (value !== '') {
-        for (const uri of value.split(',')) {
-            addImageSrc(resourceHandler, resolvePath(splitPairStart(uri.trim(), ' ')));
-        }
-    }
-}
-
 export default abstract class Application<T extends Node> implements squared.base.Application<T> {
     public static readonly KEY_NAME = 'squared.application';
 
@@ -155,21 +141,28 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
         const resourceHandler = this._resourceHandler;
         const preloadItems: PreloadItem[] = [];
-        let preloadImages: Undef<boolean>,
-            preloadFonts: Undef<boolean>,
-            preloaded: Undef<HTMLImageElement[]>;
+        let preloaded: Undef<HTMLImageElement[]>,
+            preloadImages: Undef<boolean>,
+            preloadFonts: Undef<boolean>;
         if (resourceHandler) {
             ({ preloadImages, preloadFonts } = resourceHandler.userSettings);
         }
+        const parseSrcSet = (value: string) => {
+            if (value !== '') {
+                for (const uri of value.split(',')) {
+                    resourceHandler!.addImageData(resolvePath(splitPairStart(uri.trim(), ' ')));
+                }
+            }
+        };
         if (resourceHandler) {
             for (const element of rootElements) {
-                element.querySelectorAll('picture > source').forEach((source: HTMLSourceElement) => parseSrcSet(resourceHandler, source.srcset));
-                element.querySelectorAll('video').forEach((source: HTMLVideoElement) => addImageSrc(resourceHandler, source.poster));
-                element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => addImageSrc(resourceHandler, image.src, image.width, image.height));
+                element.querySelectorAll('picture > source').forEach((source: HTMLSourceElement) => parseSrcSet(source.srcset));
+                element.querySelectorAll('video').forEach((source: HTMLVideoElement) => resourceHandler.addImageData(source.poster));
+                element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => resourceHandler.addImageData(image.src, image.width, image.height));
                 element.querySelectorAll('object, embed').forEach((source: HTMLObjectElement & HTMLEmbedElement) => {
                     const src = source.data || source.src;
                     if (src && (source.type.startsWith('image/') || parseMimeType(src).startsWith('image/'))) {
-                        addImageSrc(resourceHandler, src.trim());
+                        resourceHandler.addImageData(src.trim());
                     }
                 });
                 element.querySelectorAll('svg use').forEach((use: SVGUseElement) => {
@@ -177,7 +170,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     if (href && href.indexOf('#') > 0) {
                         const src = resolvePath(splitPairStart(href, '#'));
                         if (FILE.SVG.test(src)) {
-                            addImageSrc(resourceHandler, src);
+                            resourceHandler.addImageData(src);
                         }
                     }
                 });
@@ -245,7 +238,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         if (resourceHandler) {
             for (const element of rootElements) {
                 element.querySelectorAll('img').forEach((image: HTMLImageElement) => {
-                    parseSrcSet(resourceHandler, image.srcset);
+                    parseSrcSet(image.srcset);
                     if (!preloadImages) {
                         resourceHandler.addImage(image);
                     }
@@ -507,9 +500,8 @@ export default abstract class Application<T extends Node> implements squared.bas
         for (let i = 0; i < length; ++i) {
             const childMap = elements[i].queryMap;
             if (childMap) {
-                for (let j = 0, q = childMap.length; j < q; ++j) {
-                    const k = j + 1;
-                    result[k] = result[k]?.concat(childMap[j] as T[]) || childMap[j];
+                for (let j = 0, k = 1, q = childMap.length; j < q; ++j) {
+                    result[k] = result[k++]?.concat(childMap[j] as T[]) || childMap[j];
                 }
             }
         }
@@ -542,7 +534,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                 const uri = resolvePath(match[3], styleSheetHref);
                                 if (uri !== '') {
                                     if (resourceHandler) {
-                                        addImageSrc(resourceHandler, uri);
+                                        resourceHandler.addImageData(uri);
                                     }
                                     result = (result || value).replace(match[0], `url("${uri}")`);
                                 }
