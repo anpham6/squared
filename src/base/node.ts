@@ -77,7 +77,7 @@ function hasTextAlign(node: T, ...values: string[]) {
 function setDimension(node: T, styleMap: StringMap, attr: DimensionAttr) {
     const options: NodeParseUnitOptions = { dimension: attr };
     const value = styleMap[attr];
-    const min = styleMap[attr[0] === 'w' ? 'minWidth' : 'minHeight'];
+    const min = styleMap[attr === 'width' ? 'minWidth' : 'minHeight'];
     const baseValue = value ? node.parseUnit(value, options) : 0;
     let result = Math.max(baseValue, min ? node.parseUnit(min, options) : 0);
     if (result === 0 && node.styleElement) {
@@ -109,7 +109,7 @@ function setDimension(node: T, styleMap: StringMap, attr: DimensionAttr) {
         }
     }
     if (baseValue > 0 && !node.imageElement) {
-        const attrMax = attr[0] === 'w' ? 'maxWidth' : 'maxHeight';
+        const attrMax = attr === 'width' ? 'maxWidth' : 'maxHeight';
         const max = styleMap[attrMax];
         if (max) {
             if (value === max) {
@@ -2624,7 +2624,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return result === undefined ? this._cached.multiline = (this.plainText || this.styleElement && this.inlineText && (this.inline || this.naturalElements.length === 0 || isInlineVertical(this.display) || this.floating || !this.pageFlow)) && this.textBounds?.numberOfLines as number > 1 : result;
     }
 
-    get backgroundColor() {
+    get backgroundColor(): string {
         let result = this._cached.backgroundColor;
         if (result === undefined) {
             if (!this.plainText) {
@@ -2632,35 +2632,42 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 switch (result) {
                     case 'transparent':
                     case 'rgba(0, 0, 0, 0)':
-                        result = '';
                         if (this.inputElement) {
-                            if (this.tagName === 'BUTTON') {
-                                result = 'rgba(0, 0, 0, 0)';
-                            }
-                            else {
+                            if (this.tagName !== 'BUTTON') {
                                 switch (this.toElementString('type')) {
                                     case 'button':
                                     case 'submit':
                                     case 'reset':
                                     case 'image':
-                                        result = 'rgba(0, 0, 0, 0)';
+                                        break;
+                                    default:
+                                        result = '';
                                         break;
                                 }
                             }
                         }
+                        else {
+                            result = '';
+                        }
                         break;
                     default:
-                        if (result !== '' && this.styleElement && !this.inputElement && (this._initial === undefined || this.valueOf('backgroundColor') === result)) {
+                        if (result !== '' && this.styleElement && this.pageFlow && !this.inputElement && this.css('opacity') === '1') {
                             let parent = this.actualParent;
-                            while (parent) {
-                                const color = parent.valueOf('backgroundColor', { modified: true });
-                                if (color !== '') {
-                                    if (color === result && parent.backgroundColor === '') {
-                                        result = '';
+                            while (parent && !REGEXP_BACKGROUND.test(parent.css('background'))) {
+                                const backgroundImage = parent.valueOf('backgroundImage');
+                                if (backgroundImage === '' || backgroundImage === 'none') {
+                                    const color = parent.backgroundColor;
+                                    if (color !== '') {
+                                        if (color === result && parent.css('opacity') === '1') {
+                                            result = '';
+                                        }
+                                        break;
                                     }
+                                    parent = parent.actualParent;
+                                }
+                                else {
                                     break;
                                 }
-                                parent = parent.actualParent;
                             }
                         }
                         break;

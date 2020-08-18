@@ -788,7 +788,7 @@ You can also define your own optimizations in squared.settings.json:
 * npm i clean-css --save-dev (<https://github.com/jakubpawlowicz/clean-css>)
 * npm i html-minifier-terser --save-dev (<https://github.com/DanielRuf/html-minifier-terser>)
 
-These particular plugins can be configured using a plain object literal. You have to manually install these packages [<b>npm run install-chrome</b>] since this feature is only relevant to the Chrome framework. Transpiling with Babel is also configurable with a .babelrc file in the base folder for any presets and additional settings. Other non-builtin minifiers can similarly be applied by defining a custom string-based synchronous function.
+These particular plugins can be configured using a plain object literal. These packages have to manually be installed [<b>npm run install-chrome</b>] since it is only relevant to the Chrome framework. Transpiling with Babel is also configurable with a .babelrc file in the base folder for any presets and additional settings. Other non-builtin minifiers can similarly be applied and chained by defining a custom string-based synchronous function.
 
 ```xml
 external -> html | js | css -> npm package name -> custom name
