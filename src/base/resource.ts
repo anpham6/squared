@@ -5,7 +5,7 @@ const { fromLastIndexOf, fromMimeType, hasMimeType, randomUUID } = squared.lib.u
 const REGEXP_DATAURI = new RegExp(`^${STRING.DATAURI}$`);
 
 export default abstract class Resource<T extends squared.base.Node> implements squared.base.Resource<T> {
-    public static readonly KEY_NAME = 'squared.resource';
+    public static readonly KEY_NAME = 'squared.base.resource';
 
     public static readonly ASSETS: ResourceAssetMap = {
         fonts: new Map(),

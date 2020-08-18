@@ -532,11 +532,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     protected _boxReset?: number[];
     protected _boxAdjustment?: number[];
     protected _boxRegister?: ObjectIndex<T>;
+
     protected abstract _namespaces: ObjectMap<StringMapChecked>;
 
     private _childIndex = Infinity;
     private _containerIndex = Infinity;
-    private _renderAs: Null<T> = null;
+    private _renderAs?: T;
     private _locked?: ObjectMapNested<boolean>;
     private _siblingsLeading?: T[];
     private _siblingsTrailing?: T[];
@@ -1680,9 +1681,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     set renderAs(value) {
-        if (value && !value.renderParent && !this.rendered) {
-            this._renderAs = value;
-        }
+        this._renderAs = !this.rendered && value && !value.renderParent ? value : undefined;
     }
     get renderAs() {
         return this._renderAs;

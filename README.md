@@ -781,12 +781,12 @@ JS and CSS files can be optimized further using these settings (node-express):
 
 You can also define your own optimizations in squared.settings.json:
 
-* npm i @babel/core --save-dev && npm i @babel/preset-env --save-dev (<https://github.com/babel/babel>)
-* npm i terser@4.8 --save-dev (<https://github.com/terser/terser> - <b>NOTE</b>: Incompatible with 5.0+)
-* npm i uglify-js --save-dev (<https://github.com/mishoo/UglifyJS>)
-* npm i prettier --save-dev (<https://github.com/prettier/prettier>)
-* npm i clean-css --save-dev (<https://github.com/jakubpawlowicz/clean-css>)
-* npm i html-minifier-terser --save-dev (<https://github.com/DanielRuf/html-minifier-terser>)
+* [npm i @babel/core --save-dev && npm i @babel/preset-env --save-dev](https://github.com/babel/babel)
+* [npm i terser@4.8 --save-dev](https://github.com/terser/terser) - <b>NOTE</b>: Incompatible with 5.0+
+* [npm i uglify-js --save-dev](https://github.com/mishoo/UglifyJS)
+* [npm i prettier --save-dev](https://github.com/prettier/prettier)
+* [npm i clean-css --save-dev](https://github.com/jakubpawlowicz/clean-css)
+* [npm i html-minifier-terser --save-dev](https://github.com/DanielRuf/html-minifier-terser)
 
 These particular plugins can be configured using a plain object literal. These packages have to manually be installed [<b>npm run install-chrome</b>] since it is only relevant to the Chrome framework. Transpiling with Babel is also configurable with a .babelrc file in the base folder for any presets and additional settings. Other non-builtin minifiers can similarly be applied and chained by defining a custom string-based synchronous function.
 

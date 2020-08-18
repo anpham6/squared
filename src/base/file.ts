@@ -22,10 +22,11 @@ export default abstract class File<T extends squared.base.Node> implements squar
         setTimeout(() => window.URL.revokeObjectURL(url), 1);
     }
 
-    private _hostname = '';
-
     public readonly assets: RawAsset[] = [];
+
     public abstract resource: squared.base.Resource<T>;
+
+    private _hostname = '';
 
     public abstract copyToDisk(directory: string, options?: FileCopyingOptions): Promise<ResultOfFileAction | void>;
     public abstract appendToArchive(pathname: string, options?: FileArchivingOptions): Promise<ResultOfFileAction | void>;

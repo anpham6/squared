@@ -6,7 +6,7 @@ type PreloadItem = HTMLImageElement | string;
 
 const { CSS_PROPERTIES, CSS_TRAITS, checkMediaRule, getSpecificity, hasComputedStyle, insertStyleSheetRule, getPropertiesAsTraits, parseSelectorText } = squared.lib.css;
 const { FILE, STRING } = squared.lib.regex;
-const { frameworkNotInstalled, getElementCache, newSessionInit, resetSessionAll, setElementCache } = squared.lib.session;
+const { getElementCache, newSessionInit, resetSessionAll, setElementCache } = squared.lib.session;
 const { capitalize, convertCamelCase, flatArray, isEmptyString, parseMimeType, resolvePath, splitPair, splitPairStart, trimBoth } = squared.lib.util;
 
 const REGEXP_IMPORTANT = /\s*([a-z-]+):[^!;]+!important;/g;
@@ -19,8 +19,10 @@ const REGEXP_FONTURL = /\s*(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*for
 const REGEXP_DATAURI = new RegExp(`url\\("?(${STRING.DATAURI})"?\\),?\\s*`, 'g');
 const CSS_SHORTHANDNONE = getPropertiesAsTraits(CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE);
 
+const operationNotSupported = (): Promise<void> => Promise.reject(new Error('Operation not supported.'));
+
 export default abstract class Application<T extends Node> implements squared.base.Application<T> {
-    public static readonly KEY_NAME = 'squared.application';
+    public static readonly KEY_NAME = 'squared.base.application';
 
     public static prioritizeExtensions<T extends Node>(value: string, extensions: squared.base.Extension<T>[]) {
         const included = value.trim().split(/\s*,\s*/);
@@ -39,15 +41,16 @@ export default abstract class Application<T extends Node> implements squared.bas
         return result.length > 0 ? flatArray<squared.base.Extension<T>>(result, 0).concat(untagged) : extensions;
     }
 
-    public builtInExtensions!: Map<string, squared.base.Extension<T>>;
     public extensions: squared.base.Extension<T>[] = [];
     public closed = false;
+    public builtInExtensions!: Map<string, squared.base.Extension<T>>;
     public readonly Node: Constructor<T>;
     public readonly elementMap = new Map<Element, T>();
     public readonly session: squared.base.AppSession<T> = {
         active: new Map<string, squared.base.AppProcessing<T>>(),
         unusedStyles: new Set<string>()
     };
+
     public abstract userSettings: UserSettings;
     public abstract readonly systemName: string;
 
@@ -55,8 +58,8 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     private _nextId = 0;
     private readonly _controllerHandler: squared.base.Controller<T>;
-    private readonly _resourceHandler?: squared.base.Resource<T>;
-    private readonly _extensionManager?: squared.base.ExtensionManager<T>;
+    private readonly _resourceHandler: Null<squared.base.Resource<T>> = null;
+    private readonly _extensionManager: Null<squared.base.ExtensionManager<T>> = null;
 
     protected constructor(
         public readonly framework: number,
@@ -92,24 +95,23 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     public copyToDisk(directory: string, options?: FileActionOptions) {
-        return this._resourceHandler?.fileHandler?.copyToDisk(directory, options) || frameworkNotInstalled();
+        return this._resourceHandler?.fileHandler?.copyToDisk(directory, options) || operationNotSupported();
     }
 
     public appendToArchive(pathname: string, options?: FileActionOptions) {
-        return this._resourceHandler?.fileHandler?.appendToArchive(pathname, options) || frameworkNotInstalled();
+        return this._resourceHandler?.fileHandler?.appendToArchive(pathname, options) || operationNotSupported();
     }
 
     public saveToArchive(filename?: string, options?: FileActionOptions) {
-        const resourceHandler = this._resourceHandler;
-        return resourceHandler && resourceHandler.fileHandler?.saveToArchive(filename || resourceHandler.userSettings.outputArchiveName, options) || frameworkNotInstalled();
+        return this._resourceHandler?.fileHandler?.saveToArchive(filename || this._resourceHandler.userSettings.outputArchiveName, options) || operationNotSupported();
     }
 
     public createFrom(format: string, options: FileActionOptions) {
-        return this._resourceHandler?.fileHandler?.createFrom(format, options) || frameworkNotInstalled();
+        return this._resourceHandler?.fileHandler?.createFrom(format, options) || operationNotSupported();
     }
 
     public appendFromArchive(filename: string, options: FileActionOptions) {
-        return this._resourceHandler?.fileHandler?.appendFromArchive(filename, options) || frameworkNotInstalled();
+        return this._resourceHandler?.fileHandler?.appendFromArchive(filename, options) || operationNotSupported();
     }
 
     public finalize() {
@@ -290,11 +292,19 @@ export default abstract class Application<T extends Node> implements squared.bas
                 return this.resumeSessionThread(processing, rootElements, elements.length, documentRoot, preloaded);
             })
             .catch((error: Error | Event | HTMLImageElement) => {
-                if (error instanceof Event) {
-                    error = error.target as HTMLImageElement;
+                let message: Undef<string>;
+                if (error instanceof Error) {
+                    message = error.message;
                 }
-                const message = error instanceof HTMLImageElement ? error.src : '';
-                return message === '' || !this.userSettings.showErrorMessages || confirm(`FAIL: ${message}`) ? this.resumeSessionThread(processing, rootElements, elements.length, documentRoot, preloaded) : Promise.reject(message);
+                else {
+                    if (error instanceof Event) {
+                        error = error.target as HTMLImageElement;
+                    }
+                    if (error instanceof HTMLImageElement) {
+                        message = error.src;
+                    }
+                }
+                return !message || !this.userSettings.showErrorMessages || confirm(`FAIL: ${message}`) ? this.resumeSessionThread(processing, rootElements, elements.length, documentRoot, preloaded) : Promise.reject(message);
             });
         }
         return Promise.resolve(this.resumeSessionThread(processing, rootElements, elements.length));
@@ -548,7 +558,9 @@ export default abstract class Application<T extends Node> implements squared.bas
                 };
                 const hasExactValue = (attr: string, value: string) => new RegExp(`\\b${attr}[\\s\\n]*:[\\s\\n]*(?:${value})[\\s\\n]*;?`).test(cssText);
                 const hasPartialValue = (attr: string, value: string) => new RegExp(`\\b${attr}[\\s\\n]*:[^;]*?${value}[^;]*;?`).test(cssText);
-                for (const attr of Array.from(cssStyle)) {
+                const items = Array.from(cssStyle);
+                for (let i = 0, length = items.length; i < length; ++i) {
+                    const attr = items[i];
                     if (attr[0] === '-') {
                         continue;
                     }

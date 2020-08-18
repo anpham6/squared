@@ -107,8 +107,8 @@ declare module "base" {
         appendFromArchive(filename: string, options: FileArchivingOptions): Promise<ResultOfFileAction | void>;
         get mainElement(): Element;
         get controllerHandler(): Controller<T>;
-        get resourceHandler(): Undef<Resource<T>>;
-        get extensionManager(): Undef<ExtensionManager<T>>;
+        get resourceHandler(): Null<Resource<T>>;
+        get extensionManager(): Null<ExtensionManager<T>>;
         get extensionsAll(): Extension<T>[];
         get extensionsCascade(): Extension<T>[];
         get childrenAll(): T[];
@@ -294,7 +294,7 @@ declare module "base" {
         set application(value);
         get application(): ApplicationUI<T>;
         get controller(): ControllerUI<T>;
-        get resource(): Undef<ResourceUI<T>>;
+        get resource(): Null<ResourceUI<T>>;
         constructor(name: string, framework: number, options?: ExtensionUIOptions);
     }
 
@@ -623,7 +623,7 @@ declare module "base" {
         set documentParent(value);
         get documentParent(): NodeUI;
         set renderAs(value);
-        get renderAs(): Null<NodeUI>;
+        get renderAs(): Undef<NodeUI>;
         set containerName(value);
         get containerName(): string;
         set autoPosition(value);

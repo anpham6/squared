@@ -27,13 +27,13 @@ function getFloatAlignmentType(nodes: NodeUI[]) {
         const item = nodes[i];
         if (!item.floating) {
             if (!right) {
-                break;
+                return 0;
             }
             floating = false;
         }
         if (!item.rightAligned) {
             if (!floating) {
-                break;
+                return 0;
             }
             right = false;
         }
@@ -54,19 +54,17 @@ function checkPseudoDimension(styleMap: StringMapChecked, after: boolean, absolu
         case 'inline':
         case 'inherit':
         case 'initial':
-            break;
+            if ((after || !parseFloat(styleMap.width)) && !parseFloat(styleMap.height)) {
+                for (const attr in styleMap) {
+                    if (/(padding|Width|Height)/.test(attr) && parseFloat(styleMap[attr]) > 0 || !absolute && attr.startsWith('margin') && parseFloat(styleMap[attr])) {
+                        return true;
+                    }
+                }
+                return false;
+            }
         default:
             return true;
     }
-    if ((after || !parseFloat(styleMap.width)) && !parseFloat(styleMap.height)) {
-        for (const attr in styleMap) {
-            if (/(padding|Width|Height)/.test(attr) && parseFloat(styleMap[attr]) > 0 || !absolute && attr.startsWith('margin') && parseFloat(styleMap[attr])) {
-                return true;
-            }
-        }
-        return false;
-    }
-    return true;
 }
 
 function getPseudoQuoteValue(element: HTMLElement, pseudoElt: string, outside: string, inside: string, sessionId: string) {
@@ -154,6 +152,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public readonly resourceHandler!: ResourceUI<T>;
     public readonly extensionManager!: squared.base.ExtensionManager<T>;
     public readonly fileHandler?: File<T>;
+
     public abstract userSettings: UserSettingsUI;
 
     private readonly _layouts: LayoutAsset[] = [];

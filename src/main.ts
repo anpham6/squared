@@ -144,6 +144,7 @@ async function findElementAllAsync(query: NodeListOf<Element>, length: number) {
 
 const checkWritable = (app: Null<Main>): app is Main => app ? !app.initializing && app.length > 0 : false;
 const checkFrom = (value: string, options: FileActionOptions) => checkWritable(main) && util.isString(value) && util.isPlainObject<FileActionOptions>(options) && options.assets && options.assets.length > 0;
+const promiseRejectMessage = (value: string): Promise<void> => Promise.reject(new Error(value));
 
 export function setHostname(value: string) {
     if (main) {
@@ -241,7 +242,7 @@ export function parseDocument(...elements: (HTMLElement | string)[]) {
             return main.parseDocument(...elements);
         }
     }
-    return session.frameworkNotInstalled<void>();
+    return session.frameworkNotInstalled();
 }
 
 export function parseDocumentSync(...elements: (HTMLElement | string)[]) {
@@ -410,31 +411,42 @@ export function ready() {
 }
 
 export function close() {
-    if (checkWritable(main)) {
-        main.finalize();
-        return true;
-    }
-    return false;
+    return checkWritable(main) && main.finalize();
 }
 
 export function copyToDisk(value: string, options?: FileActionOptions) {
-    return util.isString(value) && close() ? main!.copyToDisk(value, options) : session.frameworkNotInstalled();
+    if (main) {
+        return util.isString(value) && close() ? main.copyToDisk(value, options) : promiseRejectMessage('Unable to finalize document.');
+    }
+    return session.frameworkNotInstalled();
 }
 
 export function appendToArchive(value: string, options?: FileActionOptions) {
-    return util.isString(value) && close() ? main!.appendToArchive(value, options) : session.frameworkNotInstalled();
+    if (main) {
+        return util.isString(value) && close() ? main.appendToArchive(value, options) : promiseRejectMessage('Unable to finalize document.');
+    }
+    return session.frameworkNotInstalled();
 }
 
 export function saveToArchive(value?: string, options?: FileActionOptions) {
-    return close() ? main!.saveToArchive(value, options) : session.frameworkNotInstalled();
+    if (main) {
+        return close() ? main.saveToArchive(value, options) : promiseRejectMessage('Unable to finalize document.');
+    }
+    return session.frameworkNotInstalled();
 }
 
 export function createFrom(value: string, options: FileActionOptions) {
-    return checkFrom(value, options) ? main!.createFrom(value, options) : session.frameworkNotInstalled();
+    if (main) {
+        return checkFrom(value, options) ? main.createFrom(value, options) : promiseRejectMessage('Invalid asset request.');
+    }
+    return session.frameworkNotInstalled();
 }
 
 export function appendFromArchive(value: string, options: FileActionOptions) {
-    return checkFrom(value, options) ? main!.appendFromArchive(value, options) : session.frameworkNotInstalled();
+    if (main) {
+        return checkFrom(value, options) ? main.appendFromArchive(value, options) : promiseRejectMessage('Invalid asset request.');
+    }
+    return session.frameworkNotInstalled();
 }
 
 export function getElementById(value: string, sync = false, cache = true) {

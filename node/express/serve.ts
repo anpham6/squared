@@ -536,8 +536,9 @@ let Node: serve.INode,
                     return [require('prettier/parser-typescript')];
                 case 'yaml':
                     return [require('prettier/parser-yaml')];
+                default:
+                    return [];
             }
-            return [];
         }
         minifyHtml(format: string, value: string) {
             const html = this.external?.html;
@@ -697,8 +698,8 @@ let Node: serve.INode,
         minifyJs(format: string, value: string) {
             const js = this.external?.js;
             if (js) {
-                let valid: Undef<boolean>;
                 const formatters = format.split('+');
+                let modified: Undef<boolean>;
                 for (let j = 0, length = formatters.length; j < length; ++j) {
                     const name = formatters[j].trim();
                     let [module, options] = this.findExternalPlugin(js, name);
@@ -718,9 +719,7 @@ let Node: serve.INode,
                                 break;
                             case 'es5':
                                 module = '@babel/core';
-                                options = {
-                                    presets: ['@babel/preset-env']
-                                };
+                                options = { presets: ['@babel/preset-env'] };
                                 break;
                             case 'es5-minify':
                                 module = 'uglify-js';
@@ -736,7 +735,7 @@ let Node: serve.INode,
                                     return result;
                                 }
                                 value = result;
-                                valid = true;
+                                modified = true;
                             }
                         }
                         else {
@@ -748,7 +747,7 @@ let Node: serve.INode,
                                             return result;
                                         }
                                         value = result;
-                                        valid = true;
+                                        modified = true;
                                     }
                                     break;
                                 }
@@ -760,7 +759,7 @@ let Node: serve.INode,
                                             return result;
                                         }
                                         value = result;
-                                        valid = true;
+                                        modified = true;
                                     }
                                     break;
                                 }
@@ -772,7 +771,7 @@ let Node: serve.INode,
                                             return result;
                                         }
                                         value = result;
-                                        valid = true;
+                                        modified = true;
                                     }
                                     break;
                                 }
@@ -783,7 +782,7 @@ let Node: serve.INode,
                         Node.writeFail(`External: ${module} [npm run install-chrome]`, err);
                     }
                 }
-                if (valid) {
+                if (modified) {
                     return value;
                 }
             }
@@ -801,10 +800,10 @@ let Node: serve.INode,
         }
         removeCss(source: string, styles: string[]) {
             let output: Undef<string>,
+                modified: Undef<boolean>,
                 pattern: Undef<RegExp>,
                 match: Null<RegExpExecArray>;
             for (let value of styles) {
-                let modified = false;
                 value = value.replace(/\./g, '\\.');
                 pattern = new RegExp(`^\\s*${value}[\\s\\n]*\\{[\\s\\S]*?\\}\\n*`, 'gm');
                 while (match = pattern.exec(source)) {
@@ -830,6 +829,7 @@ let Node: serve.INode,
                 }
                 if (modified) {
                     source = output!;
+                    modified = false;
                 }
             }
             return output;
@@ -1234,7 +1234,7 @@ class FileManager implements serve.IFileManager {
         }
     }
     transformBuffer(assets: ExpressAsset[], file: ExpressAsset, filepath: string) {
-        const mimeType = file.mimeType as string;
+        const mimeType = file.mimeType;
         if (!mimeType || mimeType[0] === '&') {
             return;
         }

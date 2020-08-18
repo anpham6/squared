@@ -26,7 +26,7 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
 
     protected _application!: squared.base.ApplicationUI<T>;
     protected _controller!: squared.base.ControllerUI<T>;
-    protected _resource?: squared.base.ResourceUI<T>;
+    protected _resource: Null<squared.base.ResourceUI<T>> = null;
 
     private readonly _isAll: boolean;
 

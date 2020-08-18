@@ -110,7 +110,9 @@ export function getRangeClientRect(element: Element) {
 }
 
 export function removeElementsByClassName(className: string) {
-    for (const element of Array.from(document.getElementsByClassName(className))) {
+    const elements = Array.from(document.getElementsByClassName(className));
+    for (let i = 0, length = elements.length; i < length; ++i) {
+        const element = elements[i];
         element.parentElement?.removeChild(element);
     }
 }
