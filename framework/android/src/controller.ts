@@ -14,7 +14,7 @@ const { CSS_UNIT, formatPX, getSrcSet, hasCoords, hasComputedStyle } = squared.l
 const { getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
-const { assignEmptyValue, convertWord, hasBit, hasMimeType, isString, iterateArray, parseMimeType, partitionArray, plainMap, withinRange } = squared.lib.util;
+const { assignEmptyValue, capitalize, convertWord, hasBit, hasMimeType, isString, iterateArray, parseMimeType, partitionArray, plainMap, withinRange } = squared.lib.util;
 
 const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
@@ -733,7 +733,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             height: userSettings.resolutionScreenHeight * dpiRatio
         };
         this._defaultViewSettings = {
-            systemName: this.application.systemName,
+            systemName: capitalize(this.application.systemName),
             screenDimension: this._screenDimension,
             supportRTL: userSettings.supportRTL,
             lineHeightAdjust: userSettings.lineHeightAdjust,

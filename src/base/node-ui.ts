@@ -8,7 +8,7 @@ const { CSS_PROPERTIES, isLength } = squared.lib.css;
 const { createElement, getRangeClientRect } = squared.lib.dom;
 const { equal } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
-const { capitalize, cloneObject, convertWord, hasBit, hasKeys, isArray, isEmptyString, iterateArray, searchObject, withinRange } = squared.lib.util;
+const { cloneObject, convertWord, hasBit, hasKeys, isArray, isEmptyString, iterateArray, searchObject, withinRange } = squared.lib.util;
 
 const CSS_SPACING = new Map<number, number>([
     [BOX_STANDARD.MARGIN_TOP, 0],
@@ -889,7 +889,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (this.naturalElement) {
             const dataset = (this._element as HTMLElement).dataset;
             if (hasKeys(dataset)) {
-                const systemName = capitalize(this.localSettings.systemName);
+                const systemName = this.localSettings.systemName;
                 const exclusions = this._exclusions || (this._exclusions = [0, 0, 0]);
                 let value = dataset['excludeResource' + systemName] || dataset.excludeResource;
                 if (value) {
@@ -2142,11 +2142,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     set use(value) {
         const use = this.use;
-        this.dataset['use' + capitalize(this.localSettings.systemName)] = (use ? use + ', ' : '') + value;
+        this.dataset['use' + this.localSettings.systemName] = (use ? use + ', ' : '') + value;
     }
     get use() {
         const dataset = this.dataset;
-        return dataset['use' + capitalize(this.localSettings.systemName)] || dataset.use;
+        return dataset['use' + this.localSettings.systemName] || dataset.use;
     }
 
     get extensions() {

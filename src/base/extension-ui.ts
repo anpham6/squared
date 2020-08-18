@@ -2,12 +2,12 @@ import Extension from './extension';
 
 type NodeUI = squared.base.NodeUI;
 
-const { capitalize, includes } = squared.lib.util;
+const { includes } = squared.lib.util;
 
 export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T> implements squared.base.ExtensionUI<T> {
     public static findNestedElement(node: NodeUI, name: string) {
         if (node.styleElement) {
-            const systemName = capitalize(node.localSettings.systemName);
+            const systemName = node.localSettings.systemName;
             const children = (node.element as HTMLElement).children;
             for (let i = 0, length = children.length; i < length; ++i) {
                 const item = children[i] as HTMLElement;

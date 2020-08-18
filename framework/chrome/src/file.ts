@@ -597,7 +597,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
 
     public getDataMap(options: ChromeFileActionOptions) {
         if (options.removeUnusedStyles) {
-            return { unusedStyles: Array.from(this.application.session.unusedStyles) };
+            return { unusedStyles: Array.from(this.application.session.unusedStyles!) };
         }
     }
 

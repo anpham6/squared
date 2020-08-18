@@ -46,7 +46,7 @@ declare module "base" {
 
     interface AppSession<T extends Node> {
         active: Map<string, AppProcessing<T>>,
-        unusedStyles: Set<string>;
+        unusedStyles?: Set<string>;
     }
 
     interface AppProcessing<T extends Node> {
@@ -86,6 +86,8 @@ declare module "base" {
         readonly extensions: Extension<T>[];
         readonly initializing: boolean;
         readonly Node: Constructor<T>;
+        init(): void;
+        finalize(): boolean;
         reset(): void;
         parseDocument(...elements: (string | HTMLElement)[]): Promise<T | T[]>;
         parseDocumentSync(...elements: (string | HTMLElement)[]): Undef<T | T[]>;
@@ -98,13 +100,12 @@ declare module "base" {
         getProcessingCache(sessionId: string): NodeList<T>;
         getDatasetName(attr: string, element: HTMLElement): Undef<string>;
         setDatasetName(attr: string, element: HTMLElement, value: string): void;
-        finalize(): boolean;
-        toString(): string;
         copyToDisk(directory: string, options?: FileCopyingOptions): Promise<ResultOfFileAction | void>;
         appendToArchive(pathname: string, options?: FileCopyingOptions): Promise<ResultOfFileAction | void>;
         saveToArchive(filename?: string, options?: FileArchivingOptions): Promise<ResultOfFileAction | void>;
         createFrom(format: string, options: FileArchivingOptions): Promise<ResultOfFileAction | void>;
         appendFromArchive(filename: string, options: FileArchivingOptions): Promise<ResultOfFileAction | void>;
+        toString(): string;
         get mainElement(): Element;
         get controllerHandler(): Controller<T>;
         get resourceHandler(): Null<Resource<T>>;

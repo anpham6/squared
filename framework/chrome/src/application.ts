@@ -6,6 +6,15 @@ export default class Application<T extends squared.base.Node> extends squared.ba
     public readonly resourceHandler!: chrome.base.Resource<T>;
     public readonly systemName = 'chrome';
 
+    public init() {
+        this.session.unusedStyles = new Set<string>();
+    }
+
+    public reset() {
+        super.reset();
+        this.session.unusedStyles!.clear();
+    }
+
     public insertNode(element: Element, sessionId: string) {
         if (element.nodeName[0] === '#') {
             if (this.userSettings.excludePlainText) {
