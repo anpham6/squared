@@ -28,7 +28,6 @@ const REGEXP_TRAILINGINDENT = /\n([^\S\n]*)?$/;
 const CHAR_EMPTYSTRING = /^[\s\n]+$/;
 const CHAR_LEADINGSPACE = /^\s+/;
 const CHAR_TRAILINGSPACE = /\s+$/;
-const CHAR_SEPARATOR = /\s*,\s*/;
 
 function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
     const { width, height } = gradient.dimension as Dimension;
@@ -95,7 +94,7 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
         let expanded = '';
         for (const item of colors) {
             const color = item[0];
-            for (const unit of value.substring(item[1], item[2]).replace(/\s*,\s*$/, '').trim().split(CHAR_SEPARATOR)) {
+            for (const unit of value.substring(item[1], item[2]).replace(/\s*,\s*$/, '').trim().split(/\s*,\s*/)) {
                 expanded += (expanded !== '' ? ', ' : '') + color + ' ' + unit;
             }
         }
@@ -690,7 +689,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
 
     public static parseBackgroundImage(node: NodeUI, backgroundImage: string, screenDimension?: Dimension) {
         if (backgroundImage !== '') {
-            const backgroundSize = node.css('backgroundSize').split(CHAR_SEPARATOR);
+            const backgroundSize = node.css('backgroundSize').split(/\s*,\s*/);
             const images: (string | Gradient)[] = [];
             const getGradientPosition = (value: string) => isString(value) ? value.includes('at ') ? /(.+?)?\s*at (.+?)\s*$/.exec(value) : [value, value] as RegExpExecArray : null;
             const getAngle = (value: string, fallback = 0) => {

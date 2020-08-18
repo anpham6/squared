@@ -765,13 +765,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     protected _cached: CachedValue<T> = {};
     protected _preferInitial = false;
     protected _styleMap!: StringMap;
-    protected _cssStyle?: StringMap;
+    protected _bounds: Null<BoxRectDimension> = null;
+    protected _box: Null<BoxRectDimension> = null;
+    protected _linear: Null<BoxRectDimension> = null;
     protected _textBounds?: Null<BoxRectDimension>;
-    protected _box?: BoxRectDimension;
-    protected _bounds?: BoxRectDimension;
-    protected _linear?: BoxRectDimension;
     protected _fontSize?: number;
     protected _initial?: InitialData<T>;
+    protected _cssStyle?: StringMap;
     protected _naturalChildren?: T[];
     protected _naturalElements?: T[];
     protected readonly _element: Null<Element> = null;
@@ -779,7 +779,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     private _inlineText = false;
     private _style?: CSSStyleDeclaration;
     private _dataset?: DOMStringMap;
-    private _textStyle?: StringMap;
     private _elementData?: ElementData;
     private _pseudoElt?: string;
     private readonly _data = {};
@@ -908,7 +907,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     case 'float':
                     case 'tagName':
                         this._cached = {};
-                        return;
+                        break;
                     case 'width':
                         cached.actualWidth = undefined;
                         cached.percentWidth = undefined;
@@ -959,7 +958,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         }
                         else if (TEXT_STYLE.includes(attr)) {
                             cached.lineHeight = undefined;
-                            this._textStyle = undefined;
+                            cached.textStyle = undefined;
                         }
                         break;
                 }
@@ -970,7 +969,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         }
         else {
             this._cached = {};
-            this._textStyle = undefined;
         }
         if (!this._preferInitial) {
             let parent: T;
@@ -1205,14 +1203,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public cssInitial(attr: string, options?: CssInitialOptions) {
-        const value = (this._initial?.styleMap || this._styleMap)[attr];
-        if (value) {
-            return value;
-        }
-        else if (options) {
-            return options.modified && this._styleMap[attr] as string || options.computed && this.style[attr] as string || '';
-        }
-        return '';
+        return (this._initial?.styleMap || this._styleMap)[attr] || options && (options.modified && this._styleMap[attr] as string || options.computed && this.style[attr] as string) || '';
     }
 
     public cssAscend(attr: string, options?: CssAscendOptions) {
@@ -1356,7 +1347,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     if (value !== undefined) {
                         element.style.setProperty(attrs, value);
                     }
-                    elementData[attrs] = undefined;
                 }
                 else {
                     for (const attr in attrs) {
@@ -1364,7 +1354,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         if (value !== undefined) {
                             element.style.setProperty(attr, value);
                         }
-                        elementData[attr] = undefined;
                     }
                 }
             }
@@ -1432,12 +1421,12 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return null;
     }
 
-    public toInt(attr: string, fallback = NaN, initial = false) {
+    public toInt(attr: string, fallback = NaN, initial?: boolean) {
         const value = parseInt((initial && this._initial?.styleMap || this._styleMap)[attr]!);
         return !isNaN(value) ? value : fallback;
     }
 
-    public toFloat(attr: string, fallback = NaN, initial = false) {
+    public toFloat(attr: string, fallback = NaN, initial?: boolean) {
         const value = parseFloat((initial && this._initial?.styleMap || this._styleMap)[attr]!);
         return !isNaN(value) ? value : fallback;
     }
@@ -1461,20 +1450,17 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return (this._element?.[attr] as Undef<string> ?? fallback).toString();
     }
 
-    public parseUnit(value: string, options?: NodeParseUnitOptions) {
+    public parseUnit(value: string, options: NodeParseUnitOptions = {}) {
         if (value.endsWith('px')) {
             return parseFloat(value);
         }
         else if (lastItemOf(value) === '%') {
-            let parent: Undef<boolean>,
-                dimension: Undef<DimensionAttr>;
-            if (options) {
-                ({ parent, dimension } = options);
-            }
-            const bounds: BoxRectDimension = parent !== false && this.absoluteParent?.box || this.bounds;
-            return (parseFloat(value) / 100) * (dimension === 'height' ? bounds.height : bounds.width);
+            const bounds: BoxRectDimension = options.parent !== false && this.absoluteParent?.box || this.bounds;
+            return (parseFloat(value) / 100) * (options.dimension === 'height' ? bounds.height : bounds.width);
         }
-        (options || (options = {})).fontSize = this.fontSize;
+        if (options.fontSize === undefined) {
+            options.fontSize = this.fontSize;
+        }
         return parseUnit(value, options);
     }
 
@@ -1531,16 +1517,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     public setBounds(cache = true) {
         let bounds: Undef<BoxRectDimension>;
         if (this.styleElement) {
-            const elementData = this._elementData;
-            if (elementData) {
-                if (!cache) {
-                    elementData.clientRect = undefined;
-                }
-                bounds = assignRect(elementData.clientRect || this._element!.getBoundingClientRect());
-            }
-            else {
-                bounds = assignRect(this._element!.getBoundingClientRect());
-            }
+            bounds = assignRect(cache && this._elementData?.clientRect || this._element!.getBoundingClientRect());
             this._bounds = bounds;
         }
         else if (this.plainText) {
@@ -1556,17 +1533,17 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         }
         if (bounds) {
             if (!cache) {
-                this._box = undefined;
-                this._linear = undefined;
+                this._box = null;
+                this._linear = null;
             }
             return bounds;
         }
     }
 
     public resetBounds() {
-        this._bounds = undefined;
-        this._box = undefined;
-        this._linear = undefined;
+        this._bounds = null;
+        this._box = null;
+        this._linear = null;
         this._textBounds = undefined;
         this._cached.multiline = undefined;
     }
@@ -2119,11 +2096,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get bounds() {
-        return this._bounds || this.setBounds(false) || assignRect(this.boundingClientRect);
+        return this._bounds || this.setBounds(false) || this.boundingClientRect as BoxRectDimension || newBoxRectDimension();
     }
 
     get linear() {
-        if (this._linear === undefined) {
+        if (this._linear === null) {
             const bounds = this.bounds;
             if (bounds) {
                 if (this.styleElement) {
@@ -2147,7 +2124,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get box() {
-        if (this._box === undefined) {
+        if (this._box === null) {
             const bounds = this.bounds;
             if (bounds) {
                 if (this.styleElement && this.naturalChildren.length > 0) {
@@ -2224,11 +2201,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         const result = this._cached.hasHeight;
         if (result === undefined) {
             const value = this.css('height');
-            return this._cached.hasHeight = isPercent(value)
-                ? this.pageFlow
-                    ? this.actualParent?.hasHeight || this.documentBody
-                    : this.css('position') === 'fixed' || this.hasPX('top') || this.hasPX('bottom')
-                : this.height > 0 || this.hasPX('height', { percent: false });
+            return this._cached.hasHeight = isPercent(value) ? this.pageFlow ? this.actualParent?.hasHeight || this.documentBody : this.css('position') === 'fixed' || this.hasPX('top') || this.hasPX('bottom') : this.height > 0 || this.hasPX('height', { percent: false });
         }
         return result;
     }
@@ -2931,7 +2904,17 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get boundingClientRect() {
-        return this.styleElement && this._element!.getBoundingClientRect() || this._bounds as DOMRect || null;
+        if (this.styleElement) {
+            return this._element!.getBoundingClientRect();
+        }
+        const bounds = this._bounds || this.setBounds(false);
+        if (bounds) {
+            const domRect = assignRect(bounds) as DOMRect;
+            domRect.x = domRect.left;
+            domRect.y = domRect.top;
+            return domRect;
+        }
+        return null;
     }
 
     get preserveWhiteSpace() {
@@ -3035,11 +3018,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get textStyle() {
-        let result = this._textStyle;
+        let result = this._cached.textStyle;
         if (result === undefined) {
             result = this.cssAsObject(...TEXT_STYLE);
             result.fontSize = 'inherit';
-            this._textStyle = result;
+            this._cached.textStyle = result;
         }
         return result;
     }

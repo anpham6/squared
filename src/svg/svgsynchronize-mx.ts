@@ -329,7 +329,7 @@ function getItemSplitValue(fraction: number, previousFraction: number, previousV
     return previousValue;
 }
 
-function insertSplitValue(item: SvgAnimate, actualTime: number, baseValue: AnimateValue, keyTimes: number[], values: string[], keySplines: Null<string[]>, delay: number, iteration: number, index: number, time: number, keyTimeMode: number, timelineMap: TimelineIndex, interpolatorMap: InterpolatorMap, transformOriginMap?: TransformOriginMap): [number, AnimateValue] {
+function insertSplitValue(item: SvgAnimate, actualTime: number, baseValue: AnimateValue, keyTimes: number[], values: string[], keySplines: Null<string[]>, delay: number, iteration: number, index: number, time: number, keyTimeMode: number, timelineMap: TimelineIndex, interpolatorMap: InterpolatorMap, transformOriginMap: Null<TransformOriginMap>): [number, AnimateValue] {
     if (delay < 0) {
         actualTime -= delay;
         delay = 0;
@@ -537,7 +537,7 @@ function setTimelineValue(map: TimelineIndex, time: number, value: AnimateValue,
     return time;
 }
 
-function insertInterpolator(item: SvgAnimate, time: number, keySplines: Null<string[]>, index: number, keyTimeMode: number, map: InterpolatorMap, transformOriginMap?: TransformOriginMap) {
+function insertInterpolator(item: SvgAnimate, time: number, keySplines: Null<string[]>, index: number, keyTimeMode: number, map: InterpolatorMap, transformOriginMap: Null<TransformOriginMap>) {
     if (!isKeyTimeFormat(SvgBuild.isAnimateTransform(item), keyTimeMode)) {
         if (index === 0) {
             return;
@@ -893,12 +893,12 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                     const intervalMap = new SvgAnimationIntervalMap(mergeable);
                     const repeatingMap: TimelineMap = {};
                     const repeatingInterpolatorMap = new Map<number, string>();
-                    const repeatingTransformOriginMap = transforming ? new Map<number, Point>() : undefined;
+                    const repeatingTransformOriginMap = transforming ? new Map<number, Point>() : null;
                     const repeatingMaxTime: ObjectMap<number> = {};
                     const repeatingAnimations = new Set<SvgAnimate>();
                     const infiniteMap: ObjectMap<SvgAnimate> = {};
                     const infiniteInterpolatorMap = new Map<number, string>();
-                    const infiniteTransformOriginMap = transforming ? new Map<number, Point>() : undefined;
+                    const infiniteTransformOriginMap = transforming ? new Map<number, Point>() : null;
                     const baseValueMap: ObjectMap<AnimateValue> = {};
                     const forwardMap: ForwardMap = {};
                     const animateTimeRangeMap = new Map<number, number>();

@@ -257,7 +257,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
 
     public reset() {
         super.reset();
-        this._outputFileExclusions = undefined;
+        delete this._outputFileExclusions;
     }
 
     public copyToDisk(directory: string, options?: ChromeFileCopyingOptions) {

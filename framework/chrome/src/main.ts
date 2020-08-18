@@ -31,20 +31,14 @@ let file: Null<File<Node>> = null;
 
 function createAssetsOptions(assets: ChromeAsset[], options?: FileOptions, directory?: string, filename?: string): FileOptions {
     if (isPlainObject<FileOptions>(options)) {
-        const items = options.assets;
-        if (items) {
-            assets = assets.concat(items);
+        if (options.assets) {
+            assets = assets.concat(options.assets);
         }
     }
     else {
-        options = undefined;
+        options = {};
     }
-    return {
-        ...options,
-        assets,
-        directory,
-        filename
-    };
+    return Object.assign(options, { assets, directory, filename });
 }
 
 const checkFileName = (value: Undef<string>) => value || application!.userSettings.outputArchiveName;

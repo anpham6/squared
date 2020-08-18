@@ -262,6 +262,7 @@ else if (host && data && browserName && snapshot) {
                         catch (err) {
                             failMessage(tempDir, err);
                         }
+                        console.log(`${chalk.blue('VERSION')}: ${browserName![0].toUpperCase() + browserName!.substring(1)} ${chalk.bold(browser.version())}\n`);
                         for (const row of csv) {
                             const [flag, filename, url] = row;
                             const id = parseInt(flag);

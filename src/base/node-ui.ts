@@ -509,11 +509,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public contentAltered = false;
     public visible = true;
     public renderChildren: T[] = [];
+    public renderParent: Null<T> = null;
     public actualParent!: Null<T>;
     public documentChildren?: T[];
     public horizontalRowStart?: boolean;
     public horizontalRowEnd?: boolean;
-    public renderParent?: T;
     public outerWrapper?: T;
     public innerWrapped?: T;
     public innerBefore?: T;
@@ -629,7 +629,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public unset(name: string) {
-        delete this['_' + name];
+        this['_' + name] = null;
     }
 
     public lockAttr(name: string, attr: string) {
@@ -653,7 +653,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return this._locked?.[name]?.[attr] === true;
     }
 
-    public render(parent?: T) {
+    public render(parent: T) {
         this.renderParent = parent;
         this.rendered = true;
     }
@@ -978,7 +978,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                             this.documentRoot = false;
                                         }
                                         replaceWith.depth = this.depth;
-                                        this.renderParent = undefined;
+                                        this.renderParent = null;
                                         return template;
                                     }
                                 }
@@ -989,7 +989,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                 beforeReplace(this, undefined);
                             }
                             renderChildren.splice(index, 1);
-                            this.renderParent = undefined;
+                            this.renderParent = null;
                             return renderTemplates.splice(index, 1)[0];
                         }
                     }

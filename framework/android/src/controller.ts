@@ -380,7 +380,7 @@ function sortTemplateInvalid(a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>)
 const getVerticalLayout = (layout: LayoutUI<View>) => isConstraintLayout(layout, true) ? CONTAINER_NODE.CONSTRAINT : layout.some(item => item.positionRelative || !item.pageFlow && item.autoPosition) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR;
 const getVerticalAlignedLayout = (layout: LayoutUI<View>) => isConstraintLayout(layout, true) ? CONTAINER_NODE.CONSTRAINT : layout.some(item => item.positionRelative) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR;
 const sortTemplateStandard = (a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>) => doOrderStandard(a.node.innerMostWrapped as View, b.node.innerMostWrapped as View);
-const getAnchorDirection = (reverse = false): AnchorPosition[] => reverse ? ['right', 'left', 'rightLeft', 'leftRight'] : ['left', 'right', 'leftRight', 'rightLeft'];
+const getAnchorDirection = (reverse?: boolean): AnchorPosition[] => reverse ? ['right', 'left', 'rightLeft', 'leftRight'] : ['left', 'right', 'leftRight', 'rightLeft'];
 const getAnchorBaseline = (node: View) => isBottomAligned(node) ? 'baseline' : 'bottom';
 const hasCleared = (layout: LayoutUI<View>, clearMap: Map<View, string>, ignoreFirst = true) => clearMap.size > 0 && layout.some((node, index) => (index > 0 || !ignoreFirst) && clearMap.has(node));
 const isUnknownParent = (node: View, containerType: number, length: number) => node.containerType === containerType && node.length === length && (node.alignmentType === 0 || node.hasAlign(NODE_ALIGNMENT.UNKNOWN));
@@ -2494,7 +2494,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                             item.css(attr, firstLineStyle[attr]);
                         }
-                        item.unset('textStyle');
+                        item.unsetCache('textStyle');
                     }
                 };
                 const isMultilineSegment = (item: T) => item.contentAltered && !item.naturalChild && item.inlineText;

@@ -479,7 +479,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             for (let i = 0, q = items.length; i < q; ++i) {
                 const item = items[i];
                 const lowerKey = key.toLowerCase();
-                const commandA = lowerKey === 'a' ? item.splice(0, 5) : undefined;
+                const commandA = lowerKey === 'a' ? item.splice(0, 5) : null;
                 const relative = key === lowerKey;
                 const itemCount = item.length;
                 const points: SvgPoint[] = new Array(itemCount / 2);
@@ -774,7 +774,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         }
     }
 
-    public static minMaxPoints(values: SvgPoint[], radius = false): BoxRect {
+    public static minMaxPoints(values: SvgPoint[], radius?: boolean): BoxRect {
         let { x: minX, y: minY } = values[0];
         let maxX = minX,
             maxY = minY;

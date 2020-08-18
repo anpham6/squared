@@ -477,7 +477,7 @@ function getGravityValues(node: T, attr: string, value?: string) {
     }
 }
 
-const hasFlexibleContainer = (renderParent: Undef<T>) => !!renderParent && (renderParent.layoutConstraint || renderParent.layoutGrid);
+const hasFlexibleContainer = (renderParent: Null<T>) => !!renderParent && (renderParent.layoutConstraint || renderParent.layoutGrid);
 const getMatchConstraint = (node: T, parent: T) => parent.layoutConstraint && !parent.flexibleWidth && (!parent.inlineWidth || node.rendering) && !node.onlyChild && !(parent.documentRoot && node.blockStatic) && (node.alignParent('left') && node.alignParent('right') && !node.textElement && !node.inputElement && !node.controlElement || node.hasPX('minWidth') && (parent.inlineWidth || parent.layoutWidth === '' && !parent.blockStatic && !parent.hasPX('width')) || node.alignSibling('leftRight') !== '' || node.alignSibling('rightLeft') !== '') ? '0px' : 'match_parent';
 
 export default (Base: Constructor<squared.base.NodeUI>) => {
@@ -528,14 +528,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             else {
                 let flexible: Undef<boolean>;
                 if (node.hasFlex(horizontal ? 'row' : 'column')) {
-                    flexible = setFlexGrow(
-                        node.hasPX(dimension, { percent: false })
-                            ? horizontal
-                                ? node.actualWidth
-                                : node.actualHeight
-                            : 0,
-                        shrink
-                    );
+                    flexible = setFlexGrow(node.hasPX(dimension, { percent: false }) ? horizontal ? node.actualWidth : node.actualHeight : 0, shrink);
                     if (flexible) {
                         setLayoutDimension(node, '0px', horizontal, true);
                     }
@@ -600,7 +593,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public api = BUILD_ANDROID.LATEST;
         public actualParent!: Null<T>;
         public renderChildren!: T[];
-        public renderParent?: T;
+        public renderParent!: Null<T>;
         public horizontalRows?: T[][];
 
         protected _namespaces: ObjectMap<StringMapChecked> = { android: {} };

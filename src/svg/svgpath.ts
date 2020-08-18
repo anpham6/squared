@@ -857,7 +857,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                                 values.push(time);
                                             }
                                         };
-                                        const setFinalValue = (offset: number, checkInvert = false) => {
+                                        const setFinalValue = (offset: number, checkInvert?: boolean) => {
                                             finalValue = (offsetRemaining - offset) / extendedLength;
                                             if (checkInvert) {
                                                 const value = truncateFraction(finalValue);

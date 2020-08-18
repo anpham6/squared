@@ -1,7 +1,7 @@
 interface InitialData<T> extends PlainObject {
     styleMap?: StringMap;
     children?: T[];
-    bounds?: BoxRectDimension;
+    bounds?: Null<BoxRectDimension>;
 }
 
 interface CachedValue<T> {
@@ -61,6 +61,7 @@ interface CachedValue<T> {
     backgroundColor?: string;
     backgroundImage?: string;
     visibleStyle?: VisibleStyle;
+    textStyle?: StringMap;
     extensions?: string[];
 }
 

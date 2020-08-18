@@ -170,11 +170,11 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
     return result;
 }
 
-function getBorderStroke(border: BorderAttribute, direction = -1, hasInset = false, isInset = false) {
+function getBorderStroke(border: BorderAttribute, direction = -1, hasInset?: boolean, isInset?: boolean) {
     let result: StandardMap;
     if (isAlternatingBorder(border.style)) {
         const width = parseFloat(border.width);
-        result = getBorderStyle(border, direction, !isInset);
+        result = getBorderStyle(border, direction, isInset !== true);
         result.width = isInset ? formatPX(Math.ceil(width / 2) * 2) : formatPX(hasInset ? Math.ceil(width / 2) : width);
     }
     else {
@@ -526,7 +526,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 const images = this.getDrawableImages(node, stored);
                 if (node.controlName === CONTAINER_ANDROID.BUTTON && stored.borderRadius?.length === 1 && images && images.some(item => item.vectorGradient === true) && node.api >= BUILD_ANDROID.PIE) {
                     node.android('buttonCornerRadius', stored.borderRadius[0]);
-                    stored.borderRadius = undefined;
+                    delete stored.borderRadius;
                 }
                 const outline = stored.outline;
                 let indentWidth = 0;

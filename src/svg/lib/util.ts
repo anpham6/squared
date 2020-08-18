@@ -184,7 +184,7 @@ export const TRANSFORM = {
             while (match = pattern.exec(value)) {
                 const method = match[1];
                 const isX = method.endsWith('X');
-                const isY = method.endsWith('Y');
+                const isY = !isX && method.endsWith('Y');
                 if (method.startsWith('translate')) {
                     const translate = REGEXP_TRANSFORM.TRANSLATE.exec(match[0]);
                     if (translate) {
@@ -218,9 +218,9 @@ export const TRANSFORM = {
                 else if (method.startsWith('scale')) {
                     const scale = REGEXP_TRANSFORM.SCALE.exec(match[0]);
                     if (scale) {
-                        const x = isY ? undefined : parseFloat(scale[2]);
-                        const y = isY ? parseFloat(scale[2]) : !isX && scale[3] ? parseFloat(scale[3]) : x;
-                        result.push(TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SCALE, MATRIX.scale(x, isX ? undefined : y), 0, !isY, !isX));
+                        const x = isY ? 1 : parseFloat(scale[2]);
+                        const y = isX ? 1 : isY ? parseFloat(scale[2]) : !isX && scale[3] ? parseFloat(scale[3]) : x;
+                        result.push(TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SCALE, MATRIX.scale(x, y), 0, !isY, !isX));
                     }
                 }
                 else if (method.startsWith('skew')) {

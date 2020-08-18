@@ -272,7 +272,7 @@ function residualHandler(element: SVGGraphicsElement, transforms: SvgTransform[]
     );
 }
 
-function groupTransforms(element: SVGGraphicsElement, transforms: SvgTransform[], ignoreClient = false): [SvgTransform[][], SvgTransform[]] {
+function groupTransforms(element: SVGGraphicsElement, transforms: SvgTransform[], ignoreClient?: boolean): [SvgTransform[][], SvgTransform[]] {
     if (transforms.length > 0) {
         const host: SvgTransform[][] = [];
         const client: SvgTransform[] = [];
@@ -595,7 +595,7 @@ function insertTargetAnimation(data: AnimatedVectorTemplate[], name: string, tar
         targetSetTemplate['xmlns:android'] = XMLNS_ANDROID.android;
         if (modified) {
             targetSetTemplate['android:ordering'] = targetSetTemplate.ordering;
-            targetSetTemplate.ordering = undefined;
+            delete targetSetTemplate.ordering;
         }
         const targetData: AnimatedVectorTarget = {
             name,

@@ -66,7 +66,7 @@ export default class ExtensionManager<T extends squared.base.Node> implements sq
         return checkBuiltIn && this.application.builtInExtensions.get(name) || null;
     }
 
-    public optionValue<T = unknown>(name: string, attr: string, fallback = undefined): Undef<T> {
+    public optionValue<T = unknown>(name: string, attr: string, fallback?: T): Undef<T> {
         const options = this.retrieve(name)?.options;
         return isObject(options) ? options[attr] as T : fallback;
     }

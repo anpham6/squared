@@ -1998,7 +1998,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
         case 'gap':
         case 'gridGap':
         case 'perspectiveOrigin':
-            return calculateVarAsString(element, value, { dimension: ['width', 'height'], boundingBox, min: attr === 'perspectiveOrigin' ? undefined : 0, parent: false });
+            return calculateVarAsString(element, value, { dimension: ['width', 'height'], boundingBox, min: attr === 'perspectiveOrigin' ? -Infinity : 0, parent: false });
         case 'borderImageOutset':
         case 'borderImageWidth':
             return calculateVarAsString(element, value, { dimension: ['height', 'width', 'height', 'width'], boundingBox, min: 0, parent: false });
@@ -2281,19 +2281,10 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
                             const q = cubic.length;
                             if (q === 4) {
                                 calc = '';
-                                const options: CalculateVarOptions = { unitType: CSS_UNIT.DECIMAL, supportPercent: false };
                                 for (let j = 0; j < q; ++j) {
                                     let bezier = cubic[j];
                                     if (isCalc(bezier)) {
-                                        if (j % 2 === 0) {
-                                            options.min = 0;
-                                            options.max = 1;
-                                        }
-                                        else {
-                                            options.min = undefined;
-                                            options.max = undefined;
-                                        }
-                                        const p = calculateVar(element, bezier, options);
+                                        const p = calculateVar(element, bezier, j % 2 === 0 ? { unitType: CSS_UNIT.DECIMAL, supportPercent: false, min: 0, max: 1 } : undefined);
                                         if (!isNaN(p)) {
                                             bezier = p.toString();
                                         }
@@ -2893,10 +2884,10 @@ export function calculateVarAsString(element: CSSElement, value: string, options
                         }
                         else if (dimension) {
                             optionsVar.dimension = dimension[j++];
-                            optionsVar.boundingSize = undefined;
+                            delete optionsVar.boundingSize;
                         }
                         else if (orderedSize) {
-                            optionsVar.boundingSize = undefined;
+                            delete optionsVar.boundingSize;
                         }
                         const k = calculateVar(element, output, optionsVar);
                         if (!isNaN(k)) {

@@ -545,9 +545,9 @@ declare module "base" {
         lineBreakLeading: boolean;
         lineBreakTrailing: boolean;
         floatContainer: boolean;
+        renderParent: Null<NodeUI>;
         localSettings: LocalSettingsUI;
         documentChildren?: NodeUI[];
-        renderParent?: NodeUI;
         renderExtension?: Extension<NodeUI>[];
         renderTemplates?: NodeTemplate<NodeUI>[];
         renderedAs?: NodeTemplate<NodeUI>;
@@ -596,7 +596,7 @@ declare module "base" {
         replaceTry(options: ReplaceTryOptions<NodeUI>): boolean;
         removeTry(options?: RemoveTryOptions<NodeUI>): Undef<NodeTemplate<NodeUI>>;
         sort(predicate?: (a: NodeUI, b: NodeUI) => number): this;
-        render(parent?: NodeUI): void;
+        render(parent: NodeUI): void;
         renderEach(predicate: IteratorPredicate<NodeUI, void>): this;
         parseWidth(value: string, parent?: boolean): number;
         parseHeight(value: string, parent?: boolean): number;
