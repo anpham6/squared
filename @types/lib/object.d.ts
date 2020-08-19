@@ -45,5 +45,3 @@ interface ElementData {
     'styleSpecificity::first-letter'?: StringMap;
     'styleSpecificity::first-line'?: StringMap;
 }
-
-type MIMEOrAll = string[] | "*";

@@ -19,17 +19,25 @@ export default class Pattern implements squared.lib.base.Pattern {
     }
 
     public find(start?: number) {
-        if (start !== undefined) {
-            this.reset();
-            start = Math.max(0, start);
-        }
-        else {
-            start = 0;
-        }
-        while (this._current = this._matcher.exec(this._input)) {
-            ++this.found;
-            if (start-- === 0) {
-                return true;
+        if (this._input) {
+            if (start !== undefined) {
+                if (start < 0) {
+                    return false;
+                }
+                this.reset();
+                while (this._current = this._matcher.exec(this._input)) {
+                    ++this.found;
+                    if (start-- === 0) {
+                        return true;
+                    }
+                }
+            }
+            else {
+                this._current = this._matcher.exec(this._input);
+                if (this._current) {
+                    ++this.found;
+                    return true;
+                }
             }
         }
         return false;
@@ -99,19 +107,38 @@ export default class Pattern implements squared.lib.base.Pattern {
         return this._current?.length || 0;
     }
 
-    public map<U>(predicate: IteratorPredicate<string, U>, start = 0, end?: number): U[] {
+    public map<T>(predicate: IteratorPredicate<string, T>, start = 0, end?: number): T[] {
         const current = this._current;
         if (current) {
             if (end === undefined) {
                 end = current.length;
             }
-            const result: U[] = new Array(end - start);
+            const result: T[] = new Array(end - start);
             for (let i = 0; start < end; ++start) {
                 result[i++] = predicate(current[start], start, current);
             }
             return result;
         }
         return [];
+    }
+
+    public replaceAll(replacement: string | PatternGroupPredicate, replaceCount = Infinity) {
+        const stringAs = typeof replacement === 'string';
+        const input = this._input;
+        let index = this._matcher.lastIndex,
+            output = index > 0 ? input.substring(0, index) : '';
+        while (replaceCount > 0 && this.find()) {
+            const current = this._current!;
+            output += input.substring(index, current.index) + (stringAs ? replacement as string : (replacement as PatternGroupPredicate)(current, current[0]));
+            index = current.index + current[0].length;
+            --replaceCount;
+        }
+        output += input.substring(index);
+        return output;
+    }
+
+    public replaceFirst(replacement: string | PatternGroupPredicate) {
+        return this.replaceAll(replacement, 1);
     }
 
     public usePattern(expression: string | RegExp, flags?: string) {

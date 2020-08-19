@@ -1,6 +1,8 @@
 import { INSTANCE_TYPE } from './lib/constant';
 import { MATRIX, SVG, TRANSFORM, createPath } from './lib/util';
 
+import Pattern = squared.lib.base.Pattern;
+
 type Svg = squared.svg.Svg;
 type SvgAnimate = squared.svg.SvgAnimate;
 type SvgAnimateMotion = squared.svg.SvgAnimateMotion;
@@ -27,9 +29,10 @@ const { absoluteAngle, offsetAngleY, relativeAngle, truncate, truncateFraction, 
 const { STRING } = squared.lib.regex;
 const { convertWord, hasBit, isArray, plainMap, splitPair } = squared.lib.util;
 
-const REGEXP_DECIMAL = new RegExp(STRING.DECIMAL, 'g');
-const REGEXP_PATHCOMMAND = /([A-Za-z])([^A-Za-z]+)?/g;
 const NAME_GRAPHICS = new Map<string, number>();
+
+const RE_DECIMAL = new Pattern(STRING.DECIMAL);
+const RE_PATHCOMMAND = new Pattern(/([A-Za-z])([^A-Za-z]+)?/g);
 
 export default class SvgBuild implements squared.svg.SvgBuild {
     public static isUse(object: SvgElement): object is SvgUse {
@@ -385,26 +388,27 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static getPathCommands(value: string) {
         const result: SvgPathCommand[] = [];
-        let first = true,
-            match: Null<RegExpExecArray>;
-        while (match = REGEXP_PATHCOMMAND.exec(value.trim())) {
-            let key = match[1];
-            if (first && key.toUpperCase() !== 'M') {
+        let n = 0;
+        RE_PATHCOMMAND.matcher(value.trim());
+        while (RE_PATHCOMMAND.find()) {
+            let key = RE_PATHCOMMAND.group(1)!;
+            if (n === 0 && key.toUpperCase() !== 'M') {
                 break;
             }
-            const coordinates = match[2] ? SvgBuild.parseCoordinates(match[2].trim()) : [];
+            const values = RE_PATHCOMMAND.group(2);
+            const coordinates = values ? SvgBuild.parseCoordinates(values.trim()) : [];
             const items: number[][] = [];
             let length = coordinates.length,
                 previousCommand: Undef<string>,
                 previousPoint: Undef<Point>;
-            if (!first) {
-                const previous = result[result.length - 1];
+            if (n > 0) {
+                const previous = result[n - 1];
                 previousCommand = previous.key.toUpperCase();
                 previousPoint = previous.end;
             }
             switch (key.toUpperCase()) {
                 case 'M':
-                    if (first) {
+                    if (n === 0) {
                         key = 'M';
                     }
                 case 'L':
@@ -428,7 +432,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     }
                     break;
                 case 'Z':
-                    if (!first) {
+                    if (n > 0) {
                         items.push(result[0].coordinates.slice(0, 2));
                         key = 'Z';
                     }
@@ -510,9 +514,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 result.push(data);
                 previousPoint = data.end;
             }
-            first = false;
+            n = result.length;
         }
-        REGEXP_PATHCOMMAND.lastIndex = 0;
         return result;
     }
 
@@ -846,14 +849,15 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static parseCoordinates(value: string) {
         const result: number[] = [];
-        let match: Null<RegExpExecArray>;
-        while (match = REGEXP_DECIMAL.exec(value)) {
-            const coord = parseFloat(match[0]);
-            if (!isNaN(coord)) {
-                result.push(coord);
+        if (value !== '') {
+            RE_DECIMAL.matcher(value);
+            while (RE_DECIMAL.find()) {
+                const coord = parseFloat(RE_DECIMAL.group()!);
+                if (!isNaN(coord)) {
+                    result.push(coord);
+                }
             }
         }
-        REGEXP_DECIMAL.lastIndex = 0;
         return result;
     }
 

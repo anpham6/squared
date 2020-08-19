@@ -62,6 +62,8 @@ declare module "lib" {
             groups(start?: number, end?: number): string[];
             groupCount(): number;
             map<U>(predicate: IteratorPredicate<string, U>, start?: number, end?: number): U[];
+            replaceAll(replacement: string | PatternGroupPredicate, replaceCount?: number): string;
+            replaceFirst(replacement: string | PatternGroupPredicate): string;
             usePattern(expression: string | RegExp, flags?: string): void;
             pattern(): string;
             reset(input?: string): void;
