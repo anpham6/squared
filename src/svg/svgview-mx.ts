@@ -7,6 +7,8 @@ import SvgBuild from './svgbuild';
 import { KEYSPLINE_NAME } from './lib/constant';
 import { TRANSFORM, calculateStyle, getAttribute } from './lib/util';
 
+import Pattern = squared.lib.base.Pattern;
+
 type SvgElement = squared.svg.SvgElement;
 type AttributeMap = ObjectMap<AttributeData[]>;
 
@@ -29,17 +31,16 @@ const ANIMATION_DEFAULT = {
 };
 
 const MAP_KEYFRAMES = getKeyframesRules();
-const REGEXP_TIMINGFUNCTION = new RegExp(`(ease|ease-in|ease-out|ease-in-out|linear|step-(?:start|end)|steps\\(\\d+,\\s+(?:start|end)\\)|${SvgAnimate.PATTERN_CUBICBEZIER}),?\\s*`, 'g');
+const RE_TIMINGFUNCTION = new Pattern(`(ease|ease-in|ease-out|ease-in-out|linear|step-(?:start|end)|steps\\(\\d+,\\s+(?:start|end)\\)|${SvgAnimate.PATTERN_CUBICBEZIER}),?\\s*`);
 
 function parseAttribute(element: SVGElement, attr: string) {
     const value = getAttribute(element, attr);
     if (attr === 'animation-timing-function') {
         const result: string[] = [];
-        let match: Null<RegExpMatchArray>;
-        while (match = REGEXP_TIMINGFUNCTION.exec(value)) {
-            result.push(match[1]);
+        RE_TIMINGFUNCTION.matcher(value);
+        while (RE_TIMINGFUNCTION.find()) {
+            result.push(RE_TIMINGFUNCTION.group(1)!);
         }
-        REGEXP_TIMINGFUNCTION.lastIndex = 0;
         return result;
     }
     return value.split(/\s*,\s*/);

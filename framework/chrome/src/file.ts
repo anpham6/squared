@@ -1,5 +1,7 @@
 import Resource from './resource';
 
+import Pattern = squared.lib.base.Pattern;
+
 type Node = squared.base.Node;
 type Extension = chrome.base.Extension<Node>;
 type BundleIndex = ObjectMap<ChromeAsset[]>;
@@ -8,7 +10,8 @@ const { FILE } = squared.lib.regex;
 const { appendSeparator, convertWord, fromLastIndexOf, isString, iterateReverseArray, parseMimeType, partitionLastIndexOf, randomUUID, resolvePath, splitPairStart, trimEnd } = squared.lib.util;
 
 const STRING_SERVERROOT = '__serverroot__';
-const REGEXP_IMGSRCSET = /[\s\n]*(.+?\.[^\s,]+)(\s+[\d.]+[wx]\s*)?,?/g;
+
+const RE_SRCSET = new Pattern(/[\s\n]*(.+?\.[^\s,]+)(\s+[\d.]+[wx]\s*)?,?/g);
 
 function parseFileAs(attr: string, value: Undef<string>): Undef<[string, Undef<string>, boolean]> {
     if (value) {
@@ -503,11 +506,10 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             }
         });
         document.querySelectorAll('img[srcset], picture > source[srcset]').forEach((element: HTMLImageElement) => {
-            let match: Null<RegExpExecArray>;
-            while (match = REGEXP_IMGSRCSET.exec(element.srcset.trim())) {
-                processUri(element, resolvePath(match[1]));
+            RE_SRCSET.matcher(element.srcset.trim());
+            while (RE_SRCSET.find()) {
+                processUri(element, resolvePath(RE_SRCSET.group(1)!));
             }
-            REGEXP_IMGSRCSET.lastIndex = 0;
         });
         document.querySelectorAll('object, embed').forEach((element: HTMLObjectElement & HTMLEmbedElement) => {
             const src = element.data || element.src;

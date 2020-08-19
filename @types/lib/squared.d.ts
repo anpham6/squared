@@ -49,6 +49,25 @@ declare module "lib" {
             previousIndex(): number;
             constructor(children: T[]);
         }
+
+        class Pattern {
+            found: number;
+            matcher(input: string): void;
+            find(start?: number): boolean;
+            lookingAt(): boolean;
+            matches(): boolean;
+            start(index?: number): number;
+            end(index?: number): number;
+            group(index?: NumString): Undef<string>;
+            groups(start?: number, end?: number): string[];
+            groupCount(): number;
+            map<U>(predicate: IteratorPredicate<string, U>, start?: number, end?: number): U[];
+            usePattern(expression: string | RegExp, flags?: string): void;
+            pattern(): string;
+            reset(input?: string): void;
+            get input(): string;
+            constructor(expression: string | RegExp, flags?: string);
+        }
     }
 
     namespace color {

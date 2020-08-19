@@ -1,9 +1,14 @@
+import Pattern = squared.lib.base.Pattern;
+
 const { CSS_UNIT, calculateStyle: calculateCssStyle, calculateVar, calculateVarAsString, convertAngle, getFontSize, isEmBased, isLength, isPercent, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { clamp, convertRadian, hypotenuse } = squared.lib.math;
 const { TRANSFORM: REGEXP_TRANSFORM } = squared.lib.regex;
 const { getElementCache } = squared.lib.session;
-const { convertCamelCase, convertFloat, resolvePath, splitPair } = squared.lib.util;
+const { convertCamelCase, resolvePath, splitPair } = squared.lib.util;
+
+const RE_PARSE = new Pattern(/(\w+)\([^)]+\)/g);
+const RE_ROTATE = new Pattern(/rotate\((-?[\d.]+)(?:,?\s+(-?[\d.]+))?(?:,?\s+(-?[\d.]+))?\)/g);
 
 function setOriginPosition(element: Element, point: Point, attr: string, value: string, dimension: number) {
     if (isLength(value)) {
@@ -179,14 +184,13 @@ export const TRANSFORM = {
         }
         if (value) {
             const result: SvgTransform[] = [];
-            const pattern = /(\w+)\([^)]+\)/g;
-            let match: Null<RegExpExecArray>;
-            while (match = pattern.exec(value)) {
-                const method = match[1];
+            RE_PARSE.matcher(value);
+            while (RE_PARSE.find()) {
+                const [transform, method] = RE_PARSE.groups();
                 const isX = method.endsWith('X');
                 const isY = !isX && method.endsWith('Y');
                 if (method.startsWith('translate')) {
-                    const translate = REGEXP_TRANSFORM.TRANSLATE.exec(match[0]);
+                    const translate = REGEXP_TRANSFORM.TRANSLATE.exec(transform);
                     if (translate) {
                         const arg1 = parseUnit(translate[2], createParseUnitOptions(element, translate[2]));
                         const arg2 = !isX && translate[3] ? parseUnit(translate[3], createParseUnitOptions(element, translate[3])) : 0;
@@ -196,7 +200,7 @@ export const TRANSFORM = {
                     }
                 }
                 else if (method.startsWith('rotate')) {
-                    const rotate = REGEXP_TRANSFORM.ROTATE.exec(match[0]);
+                    const rotate = REGEXP_TRANSFORM.ROTATE.exec(transform);
                     if (rotate) {
                         const angle = convertAngle(rotate[2], rotate[3]);
                         if (!isNaN(angle)) {
@@ -216,7 +220,7 @@ export const TRANSFORM = {
                     }
                 }
                 else if (method.startsWith('scale')) {
-                    const scale = REGEXP_TRANSFORM.SCALE.exec(match[0]);
+                    const scale = REGEXP_TRANSFORM.SCALE.exec(transform);
                     if (scale) {
                         const x = isY ? 1 : parseFloat(scale[2]);
                         const y = isX ? 1 : isY ? parseFloat(scale[2]) : !isX && scale[3] ? parseFloat(scale[3]) : x;
@@ -224,7 +228,7 @@ export const TRANSFORM = {
                     }
                 }
                 else if (method.startsWith('skew')) {
-                    const skew = REGEXP_TRANSFORM.SKEW.exec(match[0]);
+                    const skew = REGEXP_TRANSFORM.SKEW.exec(transform);
                     if (skew) {
                         const angle = convertAngle(skew[2], skew[3], 0);
                         const x = isY ? 0 : angle;
@@ -245,7 +249,7 @@ export const TRANSFORM = {
                     }
                 }
                 else if (method.startsWith('matrix')) {
-                    const matrix = TRANSFORM.matrix(element, match[0]);
+                    const matrix = TRANSFORM.matrix(element, transform);
                     if (matrix) {
                         result.push(TRANSFORM.create(SVGTransform.SVG_TRANSFORM_MATRIX, matrix));
                     }
@@ -348,16 +352,11 @@ export const TRANSFORM = {
         const value = getNamedItem(element, attr);
         const result: SvgPoint[] = [];
         if (value !== '') {
-            const pattern = /rotate\((-?[\d.]+)(?:,?\s+(-?[\d.]+))?(?:,?\s+(-?[\d.]+))?\)/g;
-            let match: Null<RegExpExecArray>;
-            while (match = pattern.exec(value)) {
-                const angle = parseFloat(match[1]);
+            RE_ROTATE.matcher(value);
+            while (RE_ROTATE.find()) {
+                const [angle, x, y] = RE_ROTATE.map(group => parseFloat(group) || 0, 1);
                 if (angle !== 0) {
-                    result.push({
-                        angle,
-                        x: convertFloat(match[2]),
-                        y: convertFloat(match[3])
-                    });
+                    result.push({ angle, x, y });
                 }
             }
         }

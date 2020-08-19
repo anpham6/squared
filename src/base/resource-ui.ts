@@ -11,7 +11,7 @@ const { getNamedItem } = squared.lib.dom;
 const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = squared.lib.math;
 const { STRING } = squared.lib.regex;
 const { getElementAsNode } = squared.lib.session;
-const { appendSeparator, convertCamelCase, convertFloat, hasValue, isEqual, isNumber, isString, iterateArray, splitPair, splitPairEnd } = squared.lib.util;
+const { appendSeparator, convertCamelCase, hasValue, isEqual, isNumber, isString, iterateArray, splitPair, splitPairEnd } = squared.lib.util;
 
 const BORDER_TOP = CSS_PROPERTIES.borderTop.value as string[];
 const BORDER_RIGHT = CSS_PROPERTIES.borderRight.value as string[];
@@ -285,7 +285,7 @@ function newBoxRectPosition(orientation = ['left', 'top']) {
     } as BoxRectPosition;
 }
 
-const convertLength = (value: string, dimension: number, options?: ParseUnitOptions) => isPercent(value) ? Math.round(convertFloat(value) / 100 * dimension) : parseUnit(value, options);
+const convertLength = (value: string, dimension: number, options?: ParseUnitOptions) => isPercent(value) ? Math.round((parseFloat(value) || 0) / 100 * dimension) : parseUnit(value, options);
 const convertPercent = (value: string, dimension: number, options?: ParseUnitOptions) => isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, options) / dimension;
 const checkPreviousSibling = (node: Undef<NodeUI>) => node === undefined || node.lineBreak || node.floating || node.plainText && CHAR_TRAILINGSPACE.test(node.textContent);
 

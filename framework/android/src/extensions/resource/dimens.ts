@@ -1,9 +1,13 @@
 import Resource from '../../resource';
 
+import Pattern = squared.lib.base.Pattern;
+
 type View = android.base.View;
 type GroupData = ObjectMap<View[]>;
 
 const { convertHyphenated, fromLastIndexOf } = squared.lib.util;
+
+const RE_DIMENS = new Pattern(/:(\w+)="(-?[\d.]+px)"/g);
 
 function getResourceName(map: Map<string, string>, name: string, value: string) {
     if (map.get(name) === value) {
@@ -62,20 +66,20 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
     public afterFinalize() {
         if (this.controller.hasAppendProcessing()) {
             const dimens = (Resource.STORED as AndroidResourceStoredMap).dimens;
-            const pattern = /:(\w+)="(-?[\d.]+px)"/g;
             for (const layout of this.application.layouts) {
-                let content = layout.content!,
-                    match: Null<RegExpExecArray>;
-                while (match = pattern.exec(layout.content!)) {
-                    const [original, name, value] = match;
+                let content = layout.content!;
+                RE_DIMENS.matcher(content);
+                while (RE_DIMENS.find()) {
+                    const [original, name, value] = RE_DIMENS.groups();
                     if (name !== 'text') {
                         const key = getResourceName(dimens, 'custom_' + convertHyphenated(name, '_'), value);
                         content = content.replace(original, original.replace(value, `@dimen/${key}`));
                         dimens.set(key, value);
                     }
                 }
-                pattern.lastIndex = 0;
-                layout.content = content;
+                if (RE_DIMENS.found > 0) {
+                    layout.content = content;
+                }
             }
         }
     }

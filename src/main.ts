@@ -10,6 +10,7 @@ import * as util from './lib/util';
 import Container from './lib/base/container';
 import ArrayIterator from './lib/base/arrayiterator';
 import ListIterator from './lib/base/listiterator';
+import Pattern from './lib/base/pattern';
 
 type Node = squared.base.Node;
 type Main = squared.base.Application<Node>;
@@ -49,7 +50,7 @@ function extendPrototype(proto: any, offset: number) {
         if (value === 0 || util.hasBit(value, offset)) {
             for (const method in functionMap) {
                 const item = functionMap[method];
-                if (typeof item === 'object') {
+                if (util.isPlainObject(item)) {
                     const property: ObjectMap<FunctionType<any>> = {};
                     let valid: Undef<boolean>;
                     if (typeof item.get === 'function') {
@@ -71,7 +72,7 @@ function extendPrototype(proto: any, offset: number) {
     }
 }
 
-function initializeExtensions() {
+function loadExtensions() {
     if (extensionManager) {
         if (extensionsQueue.size > 0) {
             for (const item of extensionsQueue) {
@@ -233,7 +234,7 @@ export function setFramework(value: Framework, options?: squared.FrameworkOption
 
 export function parseDocument(...elements: (HTMLElement | string)[]) {
     if (main) {
-        initializeExtensions();
+        loadExtensions();
         if (!main.closed) {
             return main.parseDocument(...elements);
         }
@@ -247,7 +248,7 @@ export function parseDocument(...elements: (HTMLElement | string)[]) {
 
 export function parseDocumentSync(...elements: (HTMLElement | string)[]) {
     if (main) {
-        initializeExtensions();
+        loadExtensions();
         if (!main.closed) {
             return main.parseDocumentSync(...elements);
         }
@@ -522,7 +523,8 @@ const lib = {
     base: {
         Container,
         ArrayIterator,
-        ListIterator
+        ListIterator,
+        Pattern
     },
     client,
     color,
