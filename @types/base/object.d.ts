@@ -8,6 +8,3 @@
 /// <reference path="file.d.ts" />
 /// <reference path="node.d.ts" />
 /// <reference path="options.d.ts" />
-
-type BoxType = "bounds" | "box" | "linear";
-type ResourceAssetType = "image" | "audio" | "video" | "fonts" | "rawData";
