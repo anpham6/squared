@@ -341,7 +341,7 @@ declare module "svg" {
         getBaseValue(attr: string, fallback?: any): any;
         refitBaseValue(x: number, y: number, precision?: number, scaleX?: number, scaleY?: number): void;
         verifyBaseValue(attr: string, value?: any): Undef<boolean>;
-        extract(exclude?: number[]): void;
+        renderStatic(exclude?: number[]): void;
         getTransforms(element?: SVGGraphicsElement): SvgTransform[];
         getAnimations(element?: SVGGraphicsElement): SvgAnimation[];
         getTitle(lang?: string): string;

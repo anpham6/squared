@@ -1254,11 +1254,7 @@ class FileManager implements serve.IFileManager {
                     const segment = match[0];
                     const script = match[2].toLowerCase() === 'script';
                     const location = Express.getAbsoluteUrl(match[5].split('::')[0].trim(), baseUri);
-                    let appending: Undef<boolean>;
-                    if (match[4] === 'export') {
-                        appending = new RegExp(`<${script ? 'script' : 'link'}[^>]+?(?:${script ? 'src' : 'href'}=(["'])${location}\\1|data-chrome-file="saveAs:${location}[:"])[^>]*>`, 'i').test(html);
-                    }
-                    if (saved.has(location) || appending) {
+                    if (saved.has(location) || match[4] === 'export' && new RegExp(`<${script ? 'script' : 'link'}[^>]+?(?:${script ? 'src' : 'href'}=(["'])${location}\\1|data-chrome-file="saveAs:${location}[:"])[^>]*>`, 'i').test(html)) {
                         source = (source || html).replace(segment, '');
                     }
                     else if (match[4] === 'save') {

@@ -36,7 +36,7 @@ export default class Pattern implements squared.lib.base.Pattern {
     }
 
     public lookingAt() {
-        return this.find(0) && this._matcher.lastIndex === 0;
+        return this.find(0) && this._current!.index === 0;
     }
 
     public matches() {

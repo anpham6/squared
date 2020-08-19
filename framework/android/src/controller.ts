@@ -2451,7 +2451,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 rowsAll[rowsAll.length - 1][2] = true;
                             }
                             items.push(item);
-                            if (siblings && siblings.some(element => !!getElementAsNode(element, item.sessionId) || causesLineBreak(element))) {
+                            if (siblings && siblings.some(element => !!getElementAsNode<T>(element, item.sessionId) || causesLineBreak(element))) {
                                 const betweenStart = getRangeClientRect(siblings[0]);
                                 if (betweenStart && !betweenStart.numberOfLines) {
                                     const betweenEnd = siblings.length > 1 && getRangeClientRect(siblings.pop()!);

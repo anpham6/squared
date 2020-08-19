@@ -125,7 +125,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return false;
     }
 
-    public extract(predicate: IteratorPredicate<T, boolean>, options?: ContainerCascadeOptions<T>): T[] {
+    public removeAll(predicate: IteratorPredicate<T, boolean>, options?: ContainerCascadeOptions<T>): T[] {
         let also: Undef<BindGeneric<T, void>>,
             error: Undef<IteratorPredicate<T, boolean>>;
         if (options) {

@@ -28,7 +28,7 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
         this.setRect();
     }
 
-    public extract(exclude?: number[]) {
+    public renderStatic(exclude?: number[]) {
         let { x, y, width, height, parent: container } = this;
         const transforms = exclude ? SvgBuild.filterTransforms(this.transforms, exclude) : this.transforms;
         const length = transforms.length;
@@ -85,8 +85,7 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
             height = container.refitSize(height);
             do {
                 if (SvgBuild.asSvg(container) || SvgBuild.isUse(container)) {
-                    const offsetX = container.x;
-                    const offsetY = container.y;
+                    const { x: offsetX, y: offsetY } = container;
                     container = container.parent;
                     if (container) {
                         if (offsetX !== 0) {

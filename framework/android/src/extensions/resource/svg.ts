@@ -1552,7 +1552,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 }
                 else if (SvgBuild.asImage(item)) {
                     if (!SvgBuild.asPattern(group)) {
-                        item.extract(this.options.transformExclude.image);
+                        item.renderStatic(this.options.transformExclude.image);
                         this._imageData.push(item);
                     }
                 }
