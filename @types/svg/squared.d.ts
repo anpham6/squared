@@ -33,7 +33,7 @@ declare module "svg" {
         static toOffsetPath(value: string, rotation?: string): SvgOffsetPath[];
         static toPathCommands(value: string): SvgPathCommand[];
         static toPathPoints(values: SvgPathCommand[]): SvgPoint[];
-        static syncPathPoints(values: SvgPathCommand[], points: SvgPoint[], transformed?: boolean): SvgPathCommand[];
+        static syncPath(values: SvgPathCommand[], points: SvgPoint[], transformed?: boolean): SvgPathCommand[];
         static filterTransforms(transforms: SvgTransform[], exclude?: number[]): SvgTransform[];
         static applyTransforms(transforms: SvgTransform[], values: Point[], aspectRatio?: SvgAspectRatio, origin?: Point): SvgPoint[];
         static convertTransforms(transforms: SVGTransformList): SvgTransform[];
@@ -44,8 +44,6 @@ declare module "svg" {
         static boxRectOf(value: string): BoxRect;
         static parsePoints(value: string): Point[];
         static parseCoordinates(value: string): number[];
-        static setName(element: SVGElement): string;
-        static resetNameCache(): void;
     }
 
     interface SvgBaseVal extends SvgElement {
@@ -737,6 +735,7 @@ declare module "svg" {
         }
 
         namespace util {
+            const CACHE_VIEWNAME: Map<string, number>;
             const MATRIX: {
                 applyX(matrix: SvgMatrix | DOMMatrix, x: number, y: number): number;
                 applyY(matrix: SvgMatrix | DOMMatrix, x: number, y: number): number;

@@ -42,6 +42,8 @@ function getStyleValue(element: Element, attr: string) {
 const getViewportArea = (viewBox: DOMRect, min?: boolean) => min ? Math.min(viewBox.width, viewBox.height) : hypotenuse(viewBox.width, viewBox.height);
 const createParseUnitOptions = (element: Element, value: string): Undef<ParseUnitOptions> => isEmBased(value) ? { fontSize: getFontSize(element) } : undefined;
 
+export const CACHE_VIEWNAME = new Map<string, number>();
+
 export const SVG = {
     svg: (element: Element): element is SVGSVGElement => {
         return element.tagName === 'svg';

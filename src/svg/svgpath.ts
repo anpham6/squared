@@ -262,10 +262,10 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                 this.transformed = transforms;
                             }
                         }
-                        this.baseValue = SvgBuild.drawPath(SvgBuild.syncPathPoints(requireRefit ? cloneArray(commands, [], true) : commands, requireRefit ? cloneArray(points, [], true) : points, !!this.transformed), precision);
+                        this.baseValue = SvgBuild.drawPath(SvgBuild.syncPath(requireRefit ? cloneArray(commands, [], true) : commands, requireRefit ? cloneArray(points, [], true) : points, !!this.transformed), precision);
                         if (requireRefit) {
                             parent.refitPoints(points);
-                            d = SvgBuild.drawPath(SvgBuild.syncPathPoints(commands, points, !!this.transformed), precision);
+                            d = SvgBuild.drawPath(SvgBuild.syncPath(commands, points, !!this.transformed), precision);
                         }
                         else {
                             d = this.baseValue;

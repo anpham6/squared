@@ -58,4 +58,4 @@ export const KEYSPLINE_NAME = {
     'step-end': '1 0 1 0'
 };
 
-export const PATTERN_CUBICBEZIER = 'cubic-bezier\\(([01](?:\\.\\d+)?),\\s+(-?\\d+(?:\\.\\d+)?),\\s+([01](?:\\.\\d+)?),\\s+(-?\\d+(?:\\.\\d+)?)\\)';
+export const PATTERN_CUBICBEZIER = '([01](?:\\.\\d+)?),?\\s+(-?\\d+(?:\\.\\d+)?),?\\s+([01](?:\\.\\d+)?),?\\s+(-?\\d+(?:\\.\\d+)?)';

@@ -69,7 +69,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                         const commands = SvgBuild.toPathCommands(value);
                         const points = SvgBuild.toPathPoints(commands);
                         adjustPoints(points, x, y, scaleX, scaleY);
-                        baseVal[attr] = SvgBuild.drawPath(SvgBuild.syncPathPoints(commands, points), precision);
+                        baseVal[attr] = SvgBuild.drawPath(SvgBuild.syncPath(commands, points), precision);
                     }
                 }
                 else if (typeof value === 'number') {

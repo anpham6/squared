@@ -27,9 +27,7 @@ const { isAngle, parseAngle } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { absoluteAngle, offsetAngleY, relativeAngle, truncate, truncateFraction, truncateString } = squared.lib.math;
 const { STRING } = squared.lib.regex;
-const { convertWord, hasBit, isArray, plainMap, splitPair } = squared.lib.util;
-
-const NAME_GRAPHICS = new Map<string, number>();
+const { hasBit, isArray, plainMap, splitPair } = squared.lib.util;
 
 const RE_DECIMAL = new Pattern(STRING.DECIMAL);
 const RE_PATHCOMMAND = new Pattern(/([A-Za-z])([^A-Za-z]+)?/g);
@@ -216,7 +214,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     const points = SvgBuild.toPathPoints(commands);
                     if (points.length > 0) {
                         parent.refitPoints(points);
-                        value = SvgBuild.drawPath(SvgBuild.syncPathPoints(commands, points), precision);
+                        value = SvgBuild.drawPath(SvgBuild.syncPath(commands, points), precision);
                     }
                 }
             }
@@ -291,7 +289,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 if (container && container.requireRefit) {
                     container.refitPoints(points);
                 }
-                value = SvgBuild.drawPath(SvgBuild.syncPathPoints(commands, points, transformed), precision);
+                value = SvgBuild.drawPath(SvgBuild.syncPath(commands, points, transformed), precision);
             }
         }
         return value;
@@ -549,7 +547,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
-    public static syncPathPoints(values: SvgPathCommand[], points: SvgPoint[], transformed?: boolean) {
+    public static syncPath(values: SvgPathCommand[], points: SvgPoint[], transformed?: boolean) {
         invalid: {
             let location: Undef<Point>;
             for (let i = 0, length = values.length; i < length; ++i) {
@@ -867,34 +865,5 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             }
         }
         return result;
-    }
-
-    public static setName(element: SVGElement) {
-        let value: Undef<string>,
-            tagName: Undef<string>;
-        let id = element.id.trim();
-        if (id !== '') {
-            id = convertWord(id, true);
-            if (!NAME_GRAPHICS.has(id)) {
-                value = id;
-            }
-            tagName = id;
-        }
-        else {
-            tagName = element.tagName;
-        }
-        let index = NAME_GRAPHICS.get(tagName) || 0;
-        if (value) {
-            NAME_GRAPHICS.set(value, index);
-            return value;
-        }
-        else {
-            NAME_GRAPHICS.set(tagName, ++index);
-            return tagName + '_' + index;
-        }
-    }
-
-    public static resetNameCache() {
-        NAME_GRAPHICS.clear();
     }
 }

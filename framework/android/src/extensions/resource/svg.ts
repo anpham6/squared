@@ -36,7 +36,7 @@ const { FILE } = squared.lib.regex;
 const { convertCamelCase, convertInt, convertWord, formatString, hasKeys, isArray, isNumber, lastItemOf, partitionArray, plainMap, replaceMap } = squared.lib.util;
 
 const { KEYSPLINE_NAME, SYNCHRONIZE_MODE } = squared.svg.lib.constant;
-const { MATRIX, SVG, TRANSFORM, getAttribute, getRootOffset } = squared.svg.lib.util;
+const { CACHE_VIEWNAME, MATRIX, SVG, TRANSFORM, getAttribute, getRootOffset } = squared.svg.lib.util;
 
 const NodeUI = squared.base.NodeUI;
 
@@ -726,7 +726,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
 
     public beforeParseDocument() {
         if (SvgBuild) {
-            SvgBuild.resetNameCache();
+            CACHE_VIEWNAME.clear();
             this.controller.localSettings.use.svg = true;
         }
     }

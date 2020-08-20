@@ -5,7 +5,7 @@ import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 
 import { KEYSPLINE_NAME, PATTERN_CUBICBEZIER } from './lib/constant';
-import { TRANSFORM, calculateStyle, getAttribute } from './lib/util';
+import { CACHE_VIEWNAME, TRANSFORM, calculateStyle, getAttribute } from './lib/util';
 
 import Pattern = squared.lib.base.Pattern;
 
@@ -18,7 +18,7 @@ interface AttributeData extends NumberValue {
 
 const { isAngle, isCustomProperty, hasCalc, getKeyframesRules, parseAngle, parseVar } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
-const { iterateArray, replaceMap, sortNumber, splitPairEnd } = squared.lib.util;
+const { convertWord, iterateArray, replaceMap, sortNumber, splitPairEnd } = squared.lib.util;
 
 const ANIMATION_DEFAULT = {
     'animation-delay': '0s',
@@ -30,7 +30,7 @@ const ANIMATION_DEFAULT = {
     'animation-timing-function': 'ease'
 };
 
-const RE_TIMINGFUNCTION = new Pattern(`(ease|ease-in|ease-out|ease-in-out|linear|step-(?:start|end)|steps\\(\\d+,\\s+(?:start|end)\\)|${PATTERN_CUBICBEZIER}),?\\s*`);
+const RE_TIMINGFUNCTION = new Pattern(`(ease|ease-in|ease-out|ease-in-out|linear|step-(?:start|end)|steps\\(\\d+,\\s+(?:start|end)\\)|cubic-bezier\\(${PATTERN_CUBICBEZIER}\\)),?\\s*`);
 
 function parseAttribute(element: SVGElement, attr: string) {
     const value = getAttribute(element, attr);
@@ -471,7 +471,32 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
         }
         get name() {
             const result = this._name;
-            return result === undefined ? this._name = SvgBuild.setName(this.element) : result;
+            if (result === undefined) {
+                const element = this.element;
+                let id = element.id.trim(),
+                    value: Undef<string>,
+                    tagName: Undef<string>;
+                if (id !== '') {
+                    id = convertWord(id, true);
+                    if (!CACHE_VIEWNAME.has(id)) {
+                        value = id;
+                    }
+                    tagName = id;
+                }
+                else {
+                    tagName = element.tagName;
+                }
+                let index = CACHE_VIEWNAME.get(tagName) || 0;
+                if (value) {
+                    CACHE_VIEWNAME.set(value, index);
+                    return this._name = value;
+                }
+                else {
+                    CACHE_VIEWNAME.set(tagName, ++index);
+                    return this._name = tagName + '_' + index;
+                }
+            }
+            return result;
         }
 
         get transforms() {
