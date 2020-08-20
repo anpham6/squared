@@ -97,7 +97,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         inheritStyles(thead, false);
         inheritStyles(tfoot, true);
         const borderCollapse = mainData.borderCollapse;
-        const [horizontal, vertical] = !borderCollapse ? replaceMap(node.css('borderSpacing').split(' '), (value: string, index) => index === 0 ? node.parseWidth(value) : node.parseHeight(value)) : [0, 0];
+        const [horizontal, vertical] = !borderCollapse ? replaceMap(node.css('borderSpacing').split(' '), (value, index) => index === 0 ? node.parseWidth(value) : node.parseHeight(value)) : [0, 0];
         const spacingWidth = horizontal > 1 ? Math.round(horizontal / 2) : horizontal;
         const spacingHeight = vertical > 1 ? Math.round(vertical / 2) : vertical;
         const hasWidth = node.hasWidth;
@@ -256,7 +256,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             columnCount = Math.max(columnCount, row.length);
         }
         if (node.hasPX('width', { percent: false }) && mapWidth.some(value => lastItemOf(value) === '%')) {
-            replaceMap(mapWidth, (value: string, index) => {
+            replaceMap(mapWidth, (value, index) => {
                 if (value === 'auto') {
                     const dimension = mapBounds[index];
                     if (dimension > 0) {
@@ -269,7 +269,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         if (mapWidth.every(value => lastItemOf(value) === '%')) {
             if (mapWidth.reduce((a, b) => a + parseFloat(b), 0) > 1) {
                 let percentTotal = 100;
-                replaceMap(mapWidth, (value: string) => {
+                replaceMap(mapWidth, value => {
                     const percent = parseFloat(value);
                     if (percentTotal <= 0) {
                         value = '0px';
@@ -290,7 +290,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             const width = mapWidth.reduce((a, b) => a + parseFloat(b), 0);
             if (node.hasWidth) {
                 if (width < node.width) {
-                    replaceMap(mapWidth, (value: string) => value !== '0px' ? ((parseFloat(value) / width) * 100) + '%' : value);
+                    replaceMap(mapWidth, value => value !== '0px' ? ((parseFloat(value) / width) * 100) + '%' : value);
                 }
                 else if (width > node.width) {
                     node.css('width', 'auto');

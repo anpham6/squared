@@ -1161,18 +1161,18 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                 case 'intType':
                                                     values = plainMap(item.values, value => convertInt(value).toString());
                                                     if (requireBefore && item.baseValue) {
-                                                        beforeValues = replaceMap(SvgBuild.parseCoordinates(item.baseValue), (value: number) => Math.trunc(value).toString());
+                                                        beforeValues = replaceMap(SvgBuild.parseCoordinates(item.baseValue), value => Math.trunc(value).toString());
                                                     }
                                                     break;
                                                 case 'floatType':
                                                     if (item.attributeName === 'stroke-dasharray') {
-                                                        values = plainMap(item.values, value => replaceMap(value.split(' '), (fraction: string) => parseFloat(fraction)));
+                                                        values = plainMap(item.values, value => replaceMap(value.split(' '), fraction => parseFloat(fraction)));
                                                     }
                                                     else {
                                                         values = item.values;
                                                     }
                                                     if (requireBefore && item.baseValue) {
-                                                        beforeValues = replaceMap(SvgBuild.parseCoordinates(item.baseValue), (value: number) => value.toString());
+                                                        beforeValues = replaceMap(SvgBuild.parseCoordinates(item.baseValue), value => value.toString());
                                                     }
                                                     break;
                                                 default:

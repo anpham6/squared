@@ -110,7 +110,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
             iterateArray(element.children, (item: SVGElement) => {
                 if (item instanceof SVGAnimationElement) {
                     const begin = getNamedItem(item, 'begin');
-                    const times = begin !== '' ? sortNumber(replaceMap(begin.split(';'), (value: string) => SvgAnimation.parseClockTime(value)).filter(value => !isNaN(value))) : [0];
+                    const times = begin !== '' ? sortNumber(replaceMap(begin.split(';'), value => SvgAnimation.parseClockTime(value)).filter(value => !isNaN(value))) : [0];
                     if (times.length === 0) {
                         return;
                     }
@@ -386,8 +386,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                 keyTimes[j] = key;
                                 values[j] = value;
                                 if (includeKeySplines && j < q - 1) {
-                                    const spline = keyframeData['animation-timing-function']?.find(timing => timing.key === key);
-                                    keySplines.push(spline?.value || timingFunction);
+                                    keySplines.push(keyframeData['animation-timing-function']?.find(timing => timing.key === key)?.value || timingFunction);
                                 }
                                 const transformOrigin = item.transformOrigin;
                                 if (transformOrigin && SvgBuild.asAnimateTransform(animate)) {
@@ -404,9 +403,9 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                     if (j < r - 1) {
                                         const keySpline = keySplines[j];
                                         if (value !== '' && keySpline.startsWith('step')) {
-                                            const steps = SvgAnimate.asStepTimingFunction(element, name, keySpline, keyTimes, values, j);
-                                            if (steps) {
-                                                const [stepTime, stepValue] = steps;
+                                            const stepData = SvgAnimate.fromStepTimingFunction(element, name, keySpline, keyTimes, values, j);
+                                            if (stepData) {
+                                                const [stepTime, stepValue] = stepData;
                                                 const stepDuration = (keyTimes[j + 1] - time) * duration;
                                                 const s = stepTime.length - (keyTimes[j + 1] === 1 ? 1 : 0);
                                                 for (let k = 0; k < s; ++k) {

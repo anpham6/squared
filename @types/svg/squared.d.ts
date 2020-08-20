@@ -598,7 +598,7 @@ declare module "svg" {
     class SvgAnimate extends SvgAnimation {
         static getSplitValue(value: number, next: number, percent: number): number;
         static findTimingFunction(value: string): string;
-        static asStepTimingFunction(element: SVGElement, attributeName: string, keyTimes: number[], values: string[], keySpline: string, index: number): Undef<[number[], string[]]>;
+        static fromStepTimingFunction(element: SVGElement, attributeName: string, keyTimes: number[], values: string[], keySpline: string, index: number): Undef<[number[], string[]]>;
         static toFractionList(value: string, delimiter?: string, ordered?: boolean): number[];
         type: number;
         from: string;

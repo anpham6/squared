@@ -246,7 +246,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                 return;
         }
         if (values) {
-            this.values = replaceMap(values, (array: number[]) => array.join(' '));
+            this.values = replaceMap(values, array => array.join(' '));
         }
         this.baseValue = TRANSFORM.typeAsValue(this.type);
     }

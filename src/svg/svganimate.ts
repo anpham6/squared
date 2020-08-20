@@ -32,7 +32,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         return match ? match[1] + ' ' + match[2] + ' ' + match[3] + ' ' + match[4] : KEYSPLINE_NAME.ease;
     }
 
-    public static asStepTimingFunction(element: SVGElement, attributeName: string, timingFunction: string, keyTimes: number[], values: string[], index: number): Undef<[number[], string[]]> {
+    public static fromStepTimingFunction(element: SVGElement, attributeName: string, timingFunction: string, keyTimes: number[], values: string[], index: number): Undef<[number[], string[]]> {
         const valueA = values[index];
         const valueB = values[index + 1];
         let currentValue: Undef<any[]>,
@@ -55,8 +55,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             case 'rotate':
             case 'scale':
             case 'translate':
-                currentValue = replaceMap(valueA.trim().split(/\s+/), (value: string) => parseFloat(value));
-                nextValue = replaceMap(valueB.trim().split(/\s+/), (value: string) => parseFloat(value));
+                currentValue = replaceMap(valueA.trim().split(/\s+/), value => parseFloat(value));
+                nextValue = replaceMap(valueB.trim().split(/\s+/), value => parseFloat(value));
                 break;
             default: {
                 const checkOptions = (value: string) => isEmBased(value) ? { fontSize: getFontSize(element) } : undefined;
@@ -160,7 +160,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
 
     public static toFractionList(value: string, delimiter = ';', ordered = true) {
         let previous = 0;
-        const result = replaceMap(value.split(delimiter), (seg: string) => {
+        const result = replaceMap(value.split(delimiter), seg => {
             const fraction = parseFloat(seg);
             if (!isNaN(fraction) && (!ordered || fraction >= previous && fraction <= 1)) {
                 previous = fraction;
@@ -242,7 +242,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                         let keyTimes: number[] = [],
                             values: string[] = [];
                         for (let i = 0, length = keyTimesBase.length - 1; i < length; ++i) {
-                            const result = SvgAnimate.asStepTimingFunction(animationElement, attributeName || this.attributeName, 'step-end', keyTimesBase, valuesBase, i);
+                            const result = SvgAnimate.fromStepTimingFunction(animationElement, attributeName || this.attributeName, 'step-end', keyTimesBase, valuesBase, i);
                             if (result) {
                                 keyTimes = keyTimes.concat(result[0]);
                                 values = values.concat(result[1]);
@@ -260,7 +260,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                     this._keySplines = null;
                     break;
                 case 'spline':
-                    this.keySplines = replaceMap(getNamedItem(animationElement, 'keySplines').split(';'), (value: string) => value.trim()).filter(value => value !== '');
+                    this.keySplines = replaceMap(getNamedItem(animationElement, 'keySplines').split(';'), value => value.trim()).filter(value => value !== '');
                 case 'linear': {
                     const keyTimesBase = this.keyTimes;
                     if (keyTimesBase[0] !== 0 && keyTimesBase[keyTimesBase.length - 1] !== 1) {
@@ -342,7 +342,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         const animationElement = this.animationElement;
         const end = animationElement && getNamedItem(animationElement, 'end');
         if (end) {
-            const endTime = sortNumber(replaceMap(end.split(';'), (time: string) => SvgAnimation.parseClockTime(time)).filter(time => !isNaN(time)))[0];
+            const endTime = sortNumber(replaceMap(end.split(';'), time => SvgAnimation.parseClockTime(time)).filter(time => !isNaN(time)))[0];
             if (!isNaN(endTime)) {
                 const { duration, iterationCount } = this;
                 if (iterationCount === -1 || duration > 0 && endTime < duration * iterationCount) {
@@ -467,7 +467,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             if (value.length >= minSegment && !value.every(spline => spline === '' || spline === KEYSPLINE_NAME.linear)) {
                 const keySplines: string[] = [];
                 for (let i = 0; i < minSegment; ++i) {
-                    const points = replaceMap(value[i].split(/\s+/), (pt: string) => parseFloat(pt));
+                    const points = replaceMap(value[i].split(/\s+/), pt => parseFloat(pt));
                     if (points.length === 4 && !points.some(pt => isNaN(pt)) && points[0] >= 0 && points[0] <= 1 && points[2] >= 0 && points[2] <= 1) {
                         keySplines.push(points.join(' '));
                     }
@@ -507,7 +507,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             if (keySplinesBase) {
                 const keySplines: string[] = [];
                 for (let i = keySplinesBase.length - 1; i >= 0; --i) {
-                    const points = replaceMap(keySplinesBase[i].split(' '), (pt: string) => parseFloat(pt));
+                    const points = replaceMap(keySplinesBase[i].split(' '), pt => parseFloat(pt));
                     keySplines.push(points.length === 4 ? invertControlPoint(points[2]) + ' ' + invertControlPoint(points[3]) + ' ' + invertControlPoint(points[0]) + ' ' + invertControlPoint(points[1]) : KEYSPLINE_NAME.linear);
                 }
                 this._keySplines = keySplines;

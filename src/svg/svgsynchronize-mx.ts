@@ -250,8 +250,8 @@ function getItemValue(item: SvgAnimate, values: string[], iteration: number, ind
     switch (item.attributeName) {
         case 'transform':
             if (item.additiveSum && typeof baseValue === 'string') {
-                const baseArray = replaceMap(baseValue.split(' '), (value: string) => parseFloat(value));
-                const valuesArray = plainMap(values, (value: string) => replaceMap(value.trim().split(' '), (pt: string) => parseFloat(pt)));
+                const baseArray = replaceMap(baseValue.split(' '), value => parseFloat(value));
+                const valuesArray = plainMap(values, value => replaceMap(value.trim().split(' '), pt => parseFloat(pt)));
                 const length = baseArray.length;
                 if (valuesArray.every(value => value.length === length)) {
                     const result = valuesArray[index];
@@ -302,8 +302,8 @@ function getItemSplitValue(fraction: number, previousFraction: number, previousV
             return SvgAnimate.getSplitValue(previousValue, nextValue, (fraction - previousFraction) / (nextFraction - previousFraction));
         }
         else if (typeof previousValue === 'string' && typeof nextValue === 'string') {
-            const previousArray = replaceMap(previousValue.split(' '), (value: string) => parseFloat(value));
-            const nextArray = replaceMap(nextValue.split(' '), (value: string) => parseFloat(value));
+            const previousArray = replaceMap(previousValue.split(' '), value => parseFloat(value));
+            const nextArray = replaceMap(nextValue.split(' '), value => parseFloat(value));
             const length = previousArray.length;
             if (length === nextArray.length) {
                 let result = '';
@@ -2076,7 +2076,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                             if (pathData) {
                                                 object = new SvgAnimate();
                                                 object.attributeName = 'd';
-                                                object.values = replaceMap(pathData, (item: NumberValue) => item.value.toString());
+                                                object.values = replaceMap(pathData, item => item.value.toString());
                                             }
                                             else {
                                                 continue;

@@ -2012,7 +2012,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const renderParent = node.renderParent as Undef<T>;
             if (renderParent) {
                 if (renderParent.layoutConstraint) {
-                    node.delete('app', ...replaceMap(position, (value: string) => this.localizeString(LAYOUT_CONSTRAINT[value])));
+                    node.delete('app', ...replaceMap(position, value => this.localizeString(LAYOUT_CONSTRAINT[value])));
                 }
                 else if (renderParent.layoutRelative) {
                     const layout: string[] = [];

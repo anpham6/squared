@@ -308,16 +308,16 @@ declare module "lib" {
         function assignEmptyProperty(dest: PlainObject, source: PlainObject): PlainObject;
         function assignEmptyValue(dest: PlainObject, ...attrs: string[]): void;
         function sortNumber(values: number[], ascending?: boolean): number[];
-        function findSet<T = unknown>(list: Set<T>, predicate: IteratorPredicate<T, boolean, Set<T>>): Undef<T>;
-        function sortArray<T = any>(list: T[], ascending: boolean, ...attrs: string[]): T[];
-        function flatArray<T = unknown>(list: any[], depth?: number): T[];
-        function spliceArray<T = unknown>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>, deleteCount?: number): T[];
-        function partitionArray<T = unknown>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>): [T[], T[]];
-        function sameArray<T = unknown>(list: ArrayLike<T>, predicate: IteratorPredicate<T, any>): boolean;
-        function joinArray<T = unknown>(list: ArrayLike<T>, predicate: IteratorPredicate<T, string>, char?: string, trailing?: boolean): string;
-        function iterateArray<T = unknown>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start?: number, end?: number): number;
-        function iterateReverseArray<T = unknown>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start?: number, end?: number): number;
-        function conditionArray<T = unknown>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, any>): void;
+        function findSet<T>(list: Set<T>, predicate: IteratorPredicate<T, boolean, Set<T>>): Undef<T>;
+        function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]): T[];
+        function flatArray<T>(list: any[], depth?: number): T[];
+        function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>, deleteCount?: number): T[];
+        function partitionArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>): [T[], T[]];
+        function sameArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, any>): boolean;
+        function joinArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, string>, char?: string, trailing?: boolean): string;
+        function iterateArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start?: number, end?: number): number;
+        function iterateReverseArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start?: number, end?: number): number;
+        function conditionArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, any>): void;
         function replaceMap<T, U>(list: (T | U)[], predicate: IteratorPredicate<T, U>): U[];
         function plainMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>): U[];
     }

@@ -55,7 +55,7 @@ function compareRange(operation: string, unit: number, range: number) {
 
 function calculatePosition(element: CSSElement, value: string, boundingBox?: Dimension) {
     const alignment: string[] = [];
-    for (const seg of replaceMap(splitEnclosing(value.trim(), 'calc'), (item: string) => item.trim())) {
+    for (const seg of replaceMap(splitEnclosing(value.trim(), 'calc'), item => item.trim())) {
         if (seg.includes(' ') && !isCalc(seg)) {
             alignment.push(...seg.split(CHAR_SPACE));
         }
@@ -1655,7 +1655,7 @@ export function parseSelectorText(value: string, document?: boolean) {
             }
             return result.length ? result : [value];
         }
-        return replaceMap(value.split(CHAR_SEPARATOR), (selector: string) => trimSelector(selector));
+        return replaceMap(value.split(CHAR_SEPARATOR), selector => trimSelector(selector));
     }
     return [value];
 }
