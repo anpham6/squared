@@ -377,44 +377,30 @@ export default abstract class Application<T extends Node> implements squared.bas
                     depth = -1;
                 while (currentElement) {
                     const previousElement = previousNode.element!;
-                    const childNodes = currentElement.childNodes;
-                    const length = childNodes.length;
-                    const children: T[] = new Array(length);
-                    const parent = new this.Node(id--, sessionId, currentElement, children);
+                    const children = currentElement.children;
+                    const length = children.length;
+                    const elements: T[] = new Array(length);
+                    const parent = new this.Node(id--, sessionId, currentElement, elements);
                     this._afterInsertNode(parent);
-                    const elements: T[] = new Array(currentElement.childElementCount);
-                    let j = 0, k = 0;
+                    let j = 0;
                     for (let i = 0; i < length; ++i) {
-                        const element = childNodes[i] as HTMLElement;
+                        const element = children[i] as HTMLElement;
                         let child: Undef<T>;
                         if (element === previousElement) {
                             child = previousNode;
-                            elements[k++] = previousNode;
-                        }
-                        else if (element.nodeName[0] === '#') {
-                            if (this.visibleText(parent, element)) {
-                                child = this.insertNode(element, sessionId);
-                                if (child) {
-                                    child.cssApply(parent.textStyle);
-                                }
-                            }
                         }
                         else {
                             child = this.insertNode(element, sessionId);
-                            if (child) {
-                                elements[k++] = child;
-                            }
                         }
                         if (child) {
                             child.init(parent, depth + 1, j);
                             child.actualParent = parent;
-                            children[j++] = child;
+                            elements[j++] = child;
                         }
                     }
-                    children.length = j;
-                    elements.length = k;
-                    parent.naturalChildren = children.slice(0);
-                    parent.naturalElements = elements;
+                    elements.length = j;
+                    parent.naturalChildren = elements.slice(0);
+                    parent.naturalElements = parent.naturalChildren;
                     if (currentElement === document.documentElement) {
                         processing.documentElement = parent;
                         break;

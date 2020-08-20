@@ -1051,7 +1051,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         let invalid: Undef<boolean>;
         const recurse = (parent: T) => {
             let result: T[] = [];
-            const children = parent.children;
+            const children = parent.naturalElements;
             for (let i = 0, length = children.length; i < length; ++i) {
                 const item = children[i];
                 if (error && error(item) || item === excluding) {
@@ -1926,10 +1926,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 return item === including;
             };
             if (reverse) {
-                iterateReverseArray(this.actualParent!.naturalChildren, filterPredicate, 0, this.childIndex);
+                iterateReverseArray(this.actualParent!.naturalElements, filterPredicate, 0, this.childIndex);
             }
             else {
-                iterateArray(this.actualParent!.naturalChildren, filterPredicate, this.childIndex + 1);
+                iterateArray(this.actualParent!.naturalElements, filterPredicate, this.childIndex + 1);
             }
             if (value) {
                 const ancestors: T[] = this.ascend();
