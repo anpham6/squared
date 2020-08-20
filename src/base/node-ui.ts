@@ -660,6 +660,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public parseUnit(value: string, options?: NodeParseUnitOptions) {
+        if (value === '') {
+            return 0;
+        }
         if (REGEXP_PARSEUNIT.test(value)) {
             if (!options) {
                 options = {};
@@ -672,11 +675,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public parseWidth(value: string, parent = true) {
-        return super.parseUnit(value, REGEXP_PARSEUNIT.test(value) ? { parent, screenDimension: this.localSettings.screenDimension } : undefined);
+        return value === '' ? 0 : super.parseUnit(value, REGEXP_PARSEUNIT.test(value) ? { parent, screenDimension: this.localSettings.screenDimension } : undefined);
     }
 
     public parseHeight(value: string, parent = true) {
-        return super.parseUnit(value, REGEXP_PARSEUNIT.test(value) ? { dimension: 'height', parent, screenDimension: this.localSettings.screenDimension } : undefined);
+        return value === '' ? 0 : super.parseUnit(value, REGEXP_PARSEUNIT.test(value) ? { dimension: 'height', parent, screenDimension: this.localSettings.screenDimension } : undefined);
     }
 
     public renderEach(predicate: IteratorPredicate<T, void>) {
@@ -836,7 +839,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 break;
             case 'textStyle':
                 this.cssApply(data);
-                this.setCacheValue('fontSize', parseFloat(data.fontSize));
                 break;
             case 'boxStyle':
                 this.cssApply(data);

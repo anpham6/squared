@@ -1,7 +1,7 @@
 type T = Node;
 
 const { USER_AGENT, isUserAgent } = squared.lib.client;
-const { CSS_PROPERTIES, CSS_TRAITS, CSS_UNIT, PROXY_INLINESTYLE, SVG_PROPERTIES, checkFontSizeValue, checkStyleValue, checkWritingMode, formatPX, getRemSize, getStyle, hasComputedStyle, isAngle, isEm, isLength, isPercent, isTime, parseSelectorText, parseUnit } = squared.lib.css;
+const { CSS_PROPERTIES, CSS_TRAITS, CSS_UNIT, PROXY_INLINESTYLE, SVG_PROPERTIES, checkFontSizeValue, checkStyleValue, checkWritingMode, formatPX, getRemSize, getStyle, isAngle, isEm, isLength, isPercent, isTime, parseSelectorText, parseUnit } = squared.lib.css;
 const { assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { CSS, FILE } = squared.lib.regex;
 const { getElementData, getElementAsNode, getElementCache, setElementCache } = squared.lib.session;
@@ -769,7 +769,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     protected _box: Null<BoxRectDimension> = null;
     protected _linear: Null<BoxRectDimension> = null;
     protected _textBounds?: Null<BoxRectDimension>;
-    protected _fontSize?: number;
     protected _initial?: InitialData<T>;
     protected _cssStyle?: StringMap;
     protected _naturalChildren?: T[];
@@ -1451,7 +1450,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public parseUnit(value: string, options: NodeParseUnitOptions = {}) {
-        if (value.endsWith('px')) {
+        if (value === '') {
+            return 0;
+        }
+        else if (value.endsWith('px')) {
             return parseFloat(value);
         }
         else if (lastItemOf(value) === '%') {
@@ -2934,7 +2936,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get fontSize(): number {
-        let result = this._fontSize;
+        let result = this._cached.fontSize;
         if (result === undefined) {
             if (this.naturalChild) {
                 if (this.styleElement) {
@@ -2996,15 +2998,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 }
             }
             else {
-                result = parseUnit(this.css('fontSize'));
-                if (result === 0) {
-                    const element = this.element;
-                    result = element && hasComputedStyle(element)
-                        ? getElementAsNode<T>(element, this.sessionId)?.fontSize ?? parseFloat(getStyle(element).getPropertyValue('font-size'))
-                        : this.ascend({ condition: item => item.fontSize > 0 })[0]?.fontSize ?? parseUnit('1rem', isFontFixedWidth(this) ? { fixedWidth: true } : undefined);
-                }
+                const options = isFontFixedWidth(this) ? { fixedWidth: true } : undefined;
+                result = parseUnit(this.css('fontSize'), options) || (this.ascend({ condition: item => item.fontSize > 0 })[0]?.fontSize ?? parseUnit('1rem', options));
             }
-            this._fontSize = result;
+            this._cached.fontSize = result;
         }
         return result;
     }

@@ -136,10 +136,11 @@ export default class Grid <T extends View> extends squared.base.extensions.Grid<
                     }
                 }
             });
-            node.modifyBox(BOX_STANDARD.PADDING_TOP, paddingTop);
-            node.modifyBox(BOX_STANDARD.PADDING_RIGHT, paddingRight);
-            node.modifyBox(BOX_STANDARD.PADDING_BOTTOM, paddingBottom);
-            node.modifyBox(BOX_STANDARD.PADDING_LEFT, paddingLeft);
+            const boxAdjustment = node.boxAdjustment;
+            boxAdjustment[4] += paddingTop;
+            boxAdjustment[5] += paddingRight;
+            boxAdjustment[6] += paddingBottom;
+            boxAdjustment[7] += paddingLeft;
         }
         if (!node.hasWidth) {
             let maxRight = -Infinity;

@@ -9,7 +9,7 @@ type View = android.base.View;
 
 const { formatPercent, formatPX, isLength } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { conditionArray, flatArray, lastItemOf, isArray } = squared.lib.util;
+const { flatArray, lastItemOf } = squared.lib.util;
 
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.enumeration;
 
@@ -51,12 +51,14 @@ function getGridSize(mainData: CssGridData<View>, node: View, horizontal: boolea
                 value += parseFloat(unitPX);
             }
             else {
+                const rowData = mainData.rowData[i];
                 let size = 0;
-                conditionArray(
-                    mainData.rowData[i] as View[][],
-                    item => isArray(item),
-                    item => size = Math.min(size, ...item.map(child => child.bounds[dimension]))
-                );
+                for (let j = 0, q = rowData.length; j < q; ++j) {
+                    const item = rowData[j];
+                    if (item) {
+                        size = Math.min(size, ...item.map(child => child.bounds[dimension]));
+                    }
+                }
                 value += size;
             }
         }
@@ -1099,10 +1101,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 return valid;
             }
         }
-        else if (node.hasFlex('row') && node.flexbox.grow > 0) {
-            return true;
-        }
-        return false;
+        return node.hasFlex('row') && node.flexbox.grow > 0;
     }
 
     private checkRowSpan(mainData: CssGridData<T>, node: T, rowSpan: number, rowStart: number) {

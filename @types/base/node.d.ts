@@ -62,6 +62,7 @@ interface CachedValue<T> {
     backgroundImage?: string;
     visibleStyle?: VisibleStyle;
     textStyle?: StringMap;
+    fontSize?: number;
     extensions?: string[];
 }
 

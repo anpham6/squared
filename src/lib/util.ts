@@ -1193,18 +1193,6 @@ export function iterateReverseArray<T>(list: ArrayLike<T>, predicate: IteratorPr
     return length;
 }
 
-export function conditionArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, any>) {
-    for (let i = 0, length = list.length; i < length; ++i) {
-        const item = list[i];
-        if (predicate(item, i, list)) {
-            const value = callback(item, i, list);
-            if (value === false) {
-                break;
-            }
-        }
-    }
-}
-
 export function replaceMap<T, U>(list: (T | U)[], predicate: IteratorPredicate<T, U>) {
     for (let i = 0, length = list.length; i < length; ++i) {
         list[i] = predicate(list[i] as T, i, list as T[]);

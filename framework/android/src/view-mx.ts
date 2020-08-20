@@ -2511,10 +2511,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         renderParent.renderChildren = this.renderChildren;
                         renderParent.renderTemplates = renderTemplates;
                         const { boxReset, boxAdjustment } = this;
-                        renderParent.modifyBox(BOX_STANDARD.PADDING_TOP, (boxReset[0] === 0 ? this.marginTop : 0) + (boxReset[4] === 0 ? this.paddingTop : 0) + boxAdjustment[0] + boxAdjustment[4]);
-                        renderParent.modifyBox(BOX_STANDARD.PADDING_RIGHT, (boxReset[1] === 0 ? this.marginRight : 0) + (boxReset[5] === 0 ? this.paddingRight : 0) + boxAdjustment[1] + boxAdjustment[5]);
-                        renderParent.modifyBox(BOX_STANDARD.PADDING_BOTTOM, (boxReset[2] === 0 ? this.marginBottom : 0) + (boxReset[6] === 0 ? this.paddingBottom : 0) + boxAdjustment[2] + boxAdjustment[6]);
-                        renderParent.modifyBox(BOX_STANDARD.PADDING_LEFT, (boxReset[3] === 0 ? this.marginLeft : 0) + (boxReset[7] === 0 ? this.paddingLeft : 0) + boxAdjustment[3] + boxAdjustment[7]);
+                        const renderAdjustment = renderParent.boxAdjustment;
+                        renderAdjustment[4] += (boxReset[0] === 0 ? this.marginTop : 0) + (boxReset[4] === 0 ? this.paddingTop : 0) + boxAdjustment[0] + boxAdjustment[4];
+                        renderAdjustment[5] += (boxReset[1] === 0 ? this.marginRight : 0) + (boxReset[5] === 0 ? this.paddingRight : 0) + boxAdjustment[1] + boxAdjustment[5];
+                        renderAdjustment[6] += (boxReset[2] === 0 ? this.marginBottom : 0) + (boxReset[6] === 0 ? this.paddingBottom : 0) + boxAdjustment[2] + boxAdjustment[6];
+                        renderAdjustment[7] += (boxReset[3] === 0 ? this.marginLeft : 0) + (boxReset[7] === 0 ? this.paddingLeft : 0) + boxAdjustment[3] + boxAdjustment[7];
                     }
                 }
             }

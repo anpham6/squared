@@ -1,5 +1,9 @@
-interface AccessibilityOptions {
+interface ExtensionAccessibilityOptions {
     displayLabel: boolean;
+}
+
+interface ExtensionListOptions {
+    ordinalFontSizeAdjust: number;
 }
 
 interface ResourceSvgOptions {
