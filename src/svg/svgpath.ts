@@ -133,7 +133,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             }
             else if (pathData) {
                 if (!commands) {
-                    commands = SvgBuild.getPathCommands(pathData);
+                    commands = SvgBuild.toPathCommands(pathData);
                 }
                 const value = parseFloat(values[i]);
                 if (!isNaN(value)) {
@@ -246,9 +246,9 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         if (SVG.path(element)) {
             d = this.getBaseValue<string>('d')!;
             if (transforms && transforms.length > 0 || requireRefit || patternRefit) {
-                const commands = SvgBuild.getPathCommands(d);
+                const commands = SvgBuild.toPathCommands(d);
                 if (commands.length > 0) {
-                    let points = SvgBuild.getPathPoints(commands);
+                    let points = SvgBuild.toPathPoints(commands);
                     if (points.length > 0) {
                         if (patternRefit) {
                             patternParent.patternRefitPoints(points);
@@ -426,7 +426,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 case 'path':
                 case 'line':
                 case 'polyline': {
-                    const commands = SvgBuild.getPathCommands(this.value);
+                    const commands = SvgBuild.toPathCommands(this.value);
                     const length = commands.length;
                     if (length > 0) {
                         const pathStart = commands[0];
@@ -790,7 +790,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                     if (flattenData.leading > 0 || flattenData.trailing > 0) {
                                         this.extendLength(flattenData, precision);
                                         if (flattenData.path) {
-                                            const boxRect = SvgBuild.getBoxRect([this.value]);
+                                            const boxRect = SvgBuild.boxRectOf([this.value]);
                                             extendedLength = truncateFraction(getPathLength(flattenData.path));
                                             extendedRatio = extendedLength / totalLength;
                                             flattenData.extendedLength = this.pathLength;

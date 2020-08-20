@@ -66,8 +66,8 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                 const value = baseVal[attr];
                 if (typeof value === 'string') {
                     if (attr === 'd') {
-                        const commands = SvgBuild.getPathCommands(value);
-                        const points = SvgBuild.getPathPoints(commands);
+                        const commands = SvgBuild.toPathCommands(value);
+                        const points = SvgBuild.toPathPoints(commands);
                         adjustPoints(points, x, y, scaleX, scaleY);
                         baseVal[attr] = SvgBuild.drawPath(SvgBuild.syncPathPoints(commands, points), precision);
                     }

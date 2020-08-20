@@ -211,9 +211,9 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         if (SVG.path(element)) {
             value = getNamedItem(element, 'd');
             if (parent && parent.requireRefit) {
-                const commands = SvgBuild.getPathCommands(value);
+                const commands = SvgBuild.toPathCommands(value);
                 if (commands.length > 0) {
-                    const points = SvgBuild.getPathPoints(commands);
+                    const points = SvgBuild.toPathPoints(commands);
                     if (points.length > 0) {
                         parent.refitPoints(points);
                         value = SvgBuild.drawPath(SvgBuild.syncPathPoints(commands, points), precision);
@@ -280,9 +280,9 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         if (options) {
             ({ transforms, parent, container, precision } = options);
         }
-        const commands = SvgBuild.getPathCommands(value);
+        const commands = SvgBuild.toPathCommands(value);
         if (commands.length > 0) {
-            let points = SvgBuild.getPathPoints(commands);
+            let points = SvgBuild.toPathPoints(commands);
             if (points.length > 0) {
                 const transformed = isArray(transforms);
                 if (transformed) {
@@ -297,7 +297,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return value;
     }
 
-    public static getOffsetPath(value: string, rotation = 'auto 0deg') {
+    public static toOffsetPath(value: string, rotation = 'auto 0deg') {
         const element = createPath(value);
         const totalLength = Math.ceil(element.getTotalLength());
         const result: SvgOffsetPath[] = [];
@@ -314,7 +314,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 rotateFixed = parseAngle(rotation, 0);
             }
             else {
-                for (const item of SvgBuild.getPathCommands(value)) {
+                for (const item of SvgBuild.toPathCommands(value)) {
                     switch (item.key.toUpperCase()) {
                         case 'M':
                         case 'L':
@@ -351,7 +351,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                         if (endPoint) {
                             rotating = rotatingPoints[index + 1];
                             if (rotating) {
-                                center = SvgBuild.centerPoints(keyPoints[index], endPoint);
+                                center = SvgBuild.centerOf(keyPoints[index], endPoint);
                                 rotateFixed = 0;
                             }
                             else {
@@ -386,7 +386,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
-    public static getPathCommands(value: string) {
+    public static toPathCommands(value: string) {
         const result: SvgPathCommand[] = [];
         let n = 0;
         RE_PATHCOMMAND.matcher(value.trim());
@@ -519,7 +519,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
-    public static getPathPoints(values: SvgPathCommand[]) {
+    public static toPathPoints(values: SvgPathCommand[]) {
         const result: SvgPoint[] = [];
         let x = 0,
             y = 0;
@@ -751,6 +751,18 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
+    public static convertPoints(values: number[]) {
+        const length = values.length;
+        if (length % 2 === 0) {
+            const result: Point[] = new Array(length / 2);
+            for (let i = 0, j = 0; i < length; i += 2) {
+                result[j++] = { x: values[i], y: values[i] };
+            }
+            return result;
+        }
+        return [];
+    }
+
     public static clonePoints(values: SvgPoint[] | SVGPointList) {
         if (Array.isArray(values)) {
             const length = values.length;
@@ -777,7 +789,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         }
     }
 
-    public static minMaxPoints(values: SvgPoint[], radius?: boolean): BoxRect {
+    public static minMaxOf(values: SvgPoint[], radius?: boolean): BoxRect {
         let { x: minX, y: minY } = values[0];
         let maxX = minX,
             maxY = minY;
@@ -823,21 +835,17 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return { top: minY, right: maxX, bottom: maxY, left: minX };
     }
 
-    public static centerPoints(...values: SvgPoint[]): SvgPoint {
-        const result = this.minMaxPoints(values);
+    public static centerOf(...values: SvgPoint[]): SvgPoint {
+        const result = this.minMaxOf(values);
         return { x: (result.left + result.right) / 2, y: (result.top + result.bottom) / 2 };
     }
 
-    public static convertPoints(values: number[]) {
-        const length = values.length;
-        if (length % 2 === 0) {
-            const result: Point[] = new Array(length / 2);
-            for (let i = 0, j = 0; i < length; i += 2) {
-                result[j++] = { x: values[i], y: values[i] };
-            }
-            return result;
+    public static boxRectOf(values: string[]) {
+        let points: SvgPoint[] = [];
+        for (let i = 0, length = values.length; i < length; ++i) {
+            points = points.concat(SvgBuild.toPathPoints(SvgBuild.toPathCommands(values[i])));
         }
-        return [];
+        return this.minMaxOf(points, true);
     }
 
     public static parsePoints(value: string) {
@@ -859,14 +867,6 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             }
         }
         return result;
-    }
-
-    public static getBoxRect(values: string[]) {
-        let points: SvgPoint[] = [];
-        for (let i = 0, length = values.length; i < length; ++i) {
-            points = points.concat(SvgBuild.getPathPoints(SvgBuild.getPathCommands(values[i])));
-        }
-        return this.minMaxPoints(points, true);
     }
 
     public static setName(element: SVGElement) {

@@ -70,7 +70,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                     for (const name in REGEXP_CACHE) {
                         const match = REGEXP_CACHE[name].exec(clipPath);
                         if (match) {
-                            const { top, right, bottom, left } = SvgBuild.getBoxRect(d);
+                            const { top, right, bottom, left } = SvgBuild.boxRectOf(d);
                             const width = right - left;
                             const height = bottom - top;
                             const parent = this.parent;

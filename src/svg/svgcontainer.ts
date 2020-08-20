@@ -307,7 +307,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
             }
         }
         else if (requireClip && this.hasViewBox() && (aspectRatio.x !== 0 || aspectRatio.y !== 0)) {
-            const { left, top } = SvgBuild.getBoxRect(this.getPathAll(false));
+            const { left, top } = SvgBuild.boxRectOf(this.getPathAll(false));
             const x = this.refitX(aspectRatio.x);
             const y = this.refitY(aspectRatio.y);
             if (left < x || top < y) {
@@ -369,7 +369,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
         if (SvgBuild.asSvg(this) && this.aspectRatio.meetOrSlice) {
             const { align, alignX, alignY, parent } = this.aspectRatio;
             const { width, height } = this;
-            const { top, right, bottom, left } = SvgBuild.minMaxPoints(values, true);
+            const { top, right, bottom, left } = SvgBuild.minMaxOf(values, true);
             let x1 = 0,
                 y1 = 0;
             if (alignX) {

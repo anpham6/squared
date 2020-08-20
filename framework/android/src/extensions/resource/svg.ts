@@ -496,7 +496,7 @@ function createFillGradient(gradient: Gradient, path: SvgPath, precision?: numbe
                 cyDiameter!: number;
             switch (element.tagName) {
                 case 'path':
-                    for (const command of SvgBuild.getPathCommands(path.value)) {
+                    for (const command of SvgBuild.toPathCommands(path.value)) {
                         points = points.concat(command.value);
                     }
                 case 'polygon':
@@ -506,7 +506,7 @@ function createFillGradient(gradient: Gradient, path: SvgPath, precision?: numbe
                     if (points.length === 0) {
                         return;
                     }
-                    ({ left: cx, top: cy, right: cxDiameter, bottom: cyDiameter } = SvgBuild.minMaxPoints(points));
+                    ({ left: cx, top: cy, right: cxDiameter, bottom: cyDiameter } = SvgBuild.minMaxOf(points));
                     cxDiameter -= cx;
                     cyDiameter -= cy;
                     break;

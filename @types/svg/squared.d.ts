@@ -30,20 +30,20 @@ declare module "svg" {
         static drawPath(values: SvgPathCommand[], precision?: number): string;
         static drawRefit(element: SVGGraphicsElement, parent?: SvgContainer, precision?: number): string;
         static transformRefit(value: string, options?: SvgTransformRefitOptions): string;
-        static getOffsetPath(value: string, rotation?: string): SvgOffsetPath[];
-        static getPathCommands(value: string): SvgPathCommand[];
+        static toOffsetPath(value: string, rotation?: string): SvgOffsetPath[];
+        static toPathCommands(value: string): SvgPathCommand[];
+        static toPathPoints(values: SvgPathCommand[]): SvgPoint[];
+        static syncPathPoints(values: SvgPathCommand[], points: SvgPoint[], transformed?: boolean): SvgPathCommand[];
         static filterTransforms(transforms: SvgTransform[], exclude?: number[]): SvgTransform[];
         static applyTransforms(transforms: SvgTransform[], values: Point[], aspectRatio?: SvgAspectRatio, origin?: Point): SvgPoint[];
         static convertTransforms(transforms: SVGTransformList): SvgTransform[];
-        static getPathPoints(values: SvgPathCommand[]): SvgPoint[];
-        static syncPathPoints(values: SvgPathCommand[], points: SvgPoint[], transformed?: boolean): SvgPathCommand[];
-        static clonePoints(values: SvgPoint[] | SVGPointList): SvgPoint[];
-        static minMaxPoints(values: SvgPoint[]): BoxRect;
-        static centerPoints(...values: Point[]): Point[];
         static convertPoints(values: number[]): Point[];
+        static clonePoints(values: SvgPoint[] | SVGPointList): SvgPoint[];
+        static minMaxOf(values: SvgPoint[]): BoxRect;
+        static centerOf(...values: Point[]): Point[];
+        static boxRectOf(value: string): BoxRect;
         static parsePoints(value: string): Point[];
         static parseCoordinates(value: string): number[];
-        static getBoxRect(value: string): BoxRect;
         static setName(element: SVGElement): string;
         static resetNameCache(): void;
     }
@@ -554,7 +554,7 @@ declare module "svg" {
     }
 
     class SvgAnimation {
-        static convertClockTime(value: string): number;
+        static parseClockTime(value: string): number;
         fillMode: number;
         paused: boolean;
         synchronizeState: number;
@@ -596,10 +596,9 @@ declare module "svg" {
     }
 
     class SvgAnimate extends SvgAnimation {
-        static PATTERN_CUBICBEZIER: string;
         static getSplitValue(value: number, next: number, percent: number): number;
-        static convertTimingFunction(value: string): string;
-        static convertStepTimingFunction(element: SVGElement, attributeName: string, keyTimes: number[], values: string[], keySpline: string, index: number): Undef<[number[], string[]]>;
+        static findTimingFunction(value: string): string;
+        static asStepTimingFunction(element: SVGElement, attributeName: string, keyTimes: number[], values: string[], keySpline: string, index: number): Undef<[number[], string[]]>;
         static toFractionList(value: string, delimiter?: string, ordered?: boolean): number[];
         type: number;
         from: string;
@@ -725,7 +724,6 @@ declare module "svg" {
                 USER_SPACE_ON_USE = 1,
                 OBJECT_BOUNDING_BOX
             }
-
             const KEYSPLINE_NAME: {
                 'ease': string;
                 'ease-in': string;
@@ -735,6 +733,7 @@ declare module "svg" {
                 'step-start': string;
                 'step-end': string;
             };
+            const PATTERN_CUBICBEZIER: string;
         }
 
         namespace util {

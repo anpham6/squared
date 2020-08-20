@@ -44,6 +44,7 @@
     "md5-webkit-rebase": "node md5sum.js -z -c ./md5/webkit/master ./temp/webkit",
     "md5-webkit-svg-rebase": "node md5sum.js -z -c ./md5/webkit/master-svg ./temp/webkit-svg",
     "md5-webkit-all-rebase": "node md5sum.js -z -c ./md5/webkit/master ./temp/webkit && node md5sum.js -z -c ./md5/webkit/master-raw ./temp/webkit-raw && node md5sum.js -z -c ./md5/webkit/master-svg ./temp/webkit-svg",
+    "dev-base": "tsc -p ./config/tsconfig.dev.json && rollup -c ./config/rollup.config.dev.js",
     "dev-android": "tsc -p ./config/tsconfig.android.json && rollup -c ./config/rollup.config.dev-base.js && rollup -c ./framework/android/rollup.config.dev.js",
     "dev-android-framework": "tsc -p ./config/tsconfig.android.json && rollup -c ./framework/android/rollup.config.dev.js",
     "dev-chrome": "tsc -p ./config/tsconfig.chrome.json && rollup -c ./config/rollup.config.dev-base.js && rollup -c ./framework/chrome/rollup.config.dev.js",

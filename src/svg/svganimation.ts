@@ -27,7 +27,7 @@ function setFillMode(this: SvgAnimation, mode: boolean, value: number) {
 }
 
 export default class SvgAnimation implements squared.svg.SvgAnimation {
-    public static convertClockTime(value: string) {
+    public static parseClockTime(value: string) {
         value = value.trim();
         let match = REGEXP_TIME.exec(value);
         if (match) {
@@ -103,7 +103,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
             this.setAttribute('fill', 'freeze');
             const dur = getNamedItem(animationElement, 'dur');
             if (dur !== '' && dur !== 'indefinite') {
-                const value = SvgAnimation.convertClockTime(dur);
+                const value = SvgAnimation.parseClockTime(dur);
                 this.duration = !isNaN(value) && value > 0 ? value : 0;
             }
         }
