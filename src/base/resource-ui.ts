@@ -614,7 +614,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     break;
                 }
                 else {
-                    result = `${name}_${++start}`;
+                    result = name + '_' + ++start;
                 }
             }
             while (true);
@@ -640,7 +640,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 }
                 let i = 0;
                 do {
-                    result = i === 0 ? name : `${name}_${i}`;
+                    result = i === 0 ? name : name + '_' + i;
                     if (!stored.has(result)) {
                         stored.set(result, value);
                         break;

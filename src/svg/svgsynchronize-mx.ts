@@ -720,7 +720,7 @@ function removeAnimations(animations: SvgAnimation[], values: SvgAnimation[]) {
 }
 
 const getItemTime = (delay: number, duration: number, keyTimes: number[], iteration: number, index: number) => Math.round(delay + (keyTimes[index] + iteration) * duration);
-const convertToString = (value: Undef<AnimateValue>) => Array.isArray(value) ? plainMap(value, pt => `${pt.x},${pt.y}`).join(' ') : value !== undefined ? value.toString() : '';
+const convertToString = (value: Undef<AnimateValue>) => Array.isArray(value) ? plainMap(value, pt => pt.x + ',' + pt.y).join(' ') : value !== undefined ? value.toString() : '';
 const isKeyTimeFormat = (transforming: boolean, keyTimeMode: number) => hasBit(keyTimeMode, transforming ? SYNCHRONIZE_MODE.KEYTIME_TRANSFORM : SYNCHRONIZE_MODE.KEYTIME_ANIMATE);
 const isFromToFormat = (transforming: boolean, keyTimeMode: number) => hasBit(keyTimeMode, transforming ? SYNCHRONIZE_MODE.FROMTO_TRANSFORM : SYNCHRONIZE_MODE.FROMTO_ANIMATE);
 const playableAnimation = (item: SvgAnimate) => item.playable || item.animationElement && item.duration !== -1;

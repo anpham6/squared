@@ -169,6 +169,7 @@ declare module "svg" {
     class Svg extends SvgContainer implements SvgViewBox {
         precision?: number;
         transformed?: Null<SvgTransform[]>;
+        keyframesMap?: KeyframesMap;
         readonly element: SVGSVGElement;
         readonly documentRoot: boolean;
         readonly definitions: SvgDefinitions;

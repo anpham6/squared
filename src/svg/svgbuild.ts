@@ -166,13 +166,13 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         if (precision) {
             for (let i = 0; i < length; ++i) {
                 const { x, y } = values[i];
-                result += ` ${truncate(x, precision)},${truncate(y, precision)}`;
+                result += ' ' + truncate(x, precision) + ',' + truncate(y, precision);
             }
         }
         else {
             for (let i = 0; i < length; ++i) {
                 const { x, y } = values[i];
-                result += ` ${x},${y}`;
+                result += ' ' + x + ',' + y;
             }
         }
         return result;

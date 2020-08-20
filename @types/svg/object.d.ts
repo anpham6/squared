@@ -132,6 +132,7 @@ interface SvgBuildOptions {
     precision?: number;
     initialize?: boolean;
     targetElement?: SvgUseElement;
+    keyframesMap?: KeyframesMap;
     contentMap?: StringMap;
 }
 

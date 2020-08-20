@@ -73,10 +73,10 @@ interface FillData extends SetOrdering {
 
 interface PropertyValueHolder {
     propertyName: string;
-    keyframe: KeyFrame[];
+    keyframe: Keyframe[];
 }
 
-interface KeyFrame {
+interface Keyframe {
     interpolator: string;
     fraction: string;
     value: string;
@@ -354,13 +354,13 @@ function groupTransforms(element: SVGGraphicsElement, transforms: SvgTransform[]
     return [[], transforms];
 }
 
-function getPropertyValue(values: string[] | (NumString)[][], index: number, propertyIndex: number, keyFrames?: boolean, baseValue?: string) {
+function getPropertyValue(values: string[] | (NumString)[][], index: number, propertyIndex: number, keyframes?: boolean, baseValue?: string) {
     const property = values[index];
     let value: Undef<string>;
     if (property) {
         value = Array.isArray(property) ? property[propertyIndex].toString() : property;
     }
-    else if (!keyFrames && index === 0) {
+    else if (!keyframes && index === 0) {
         value = baseValue;
     }
     return value || '';
@@ -699,7 +699,7 @@ function insertFillAfter(propertyName: string, valueType: string, item: SvgAnima
 
 const getTemplateFilename = (templateName: string, length: number, prefix?: string, suffix?: string) => templateName + (prefix ? '_' + prefix : '') + (length ? '_vector' : '') + (suffix ? '_' + suffix.toLowerCase() : '');
 const isColorType = (attr: string) => attr === 'fill' || attr === 'stroke';
-const getVectorName = (target: SvgView, section: string, index = -1) => `${target.name}_${section + (index !== -1 ? '_' + (index + 1) : '')}`;
+const getVectorName = (target: SvgView, section: string, index = -1) => target.name + '_' + section + (index !== -1 ? '_' + (index + 1) : '');
 const getDrawableSrc = (name: string) => `@drawable/${name}`;
 const getFillData = (ordering = ''): FillData => ({ ordering, objectAnimator: [] });
 
@@ -739,9 +739,10 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     contentMap[uri] = data.content;
                 }
             }
+            const { cache, keyframesMap } = this.application.getProcessing(sessionId)!;
             let parentElement: UndefNull<HTMLElement>,
                 element: UndefNull<SVGSVGElement>;
-            this.application.getProcessingCache(sessionId).each(node => {
+            cache.each(node => {
                 if (node.imageElement) {
                     [parentElement, element] = this.createSvgElement(node, node.toElementString('src'));
                 }
@@ -749,7 +750,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     element = node.element as SVGSVGElement;
                 }
                 if (element) {
-                    const drawable = this.createSvgDrawable(node, element, contentMap);
+                    const drawable = this.createSvgDrawable(node, element, keyframesMap, contentMap);
                     if (drawable) {
                         if (node.api >= BUILD_ANDROID.LOLLIPOP) {
                             node.android('src', getDrawableSrc(drawable));
@@ -820,12 +821,12 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         return [];
     }
 
-    public createSvgDrawable(node: T, element: SVGSVGElement, contentMap?: StringMap) {
+    public createSvgDrawable(node: T, element: SVGSVGElement, keyframesMap?: KeyframesMap, contentMap?: StringMap) {
         const { transformExclude: exclude, floatPrecision: precision, floatPrecisionKeyTime } = this.options;
         const svg = new Svg(element);
         svg.contentMap = contentMap;
-        const supportedKeyFrames = node.api >= BUILD_ANDROID.MARSHMALLOW;
-        const keyTimeMode = SYNCHRONIZE_MODE.FROMTO_ANIMATE | (supportedKeyFrames ? SYNCHRONIZE_MODE.KEYTIME_TRANSFORM : SYNCHRONIZE_MODE.IGNORE_TRANSFORM);
+        const supportedKeyframes = node.api >= BUILD_ANDROID.MARSHMALLOW;
+        const keyTimeMode = SYNCHRONIZE_MODE.FROMTO_ANIMATE | (supportedKeyframes ? SYNCHRONIZE_MODE.KEYTIME_TRANSFORM : SYNCHRONIZE_MODE.IGNORE_TRANSFORM);
         const animateData = this._animateData;
         const imageData = this._imageData;
         this._svgInstance = svg;
@@ -835,9 +836,10 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         imageData.length = 0;
         this._namespaceAapt = false;
         this._synchronizeMode = keyTimeMode;
-        const templateName = `${node.tagName}_${convertWord(node.controlId, true)}_viewbox`.toLowerCase();
+        const templateName = (node.tagName + '_' + convertWord(node.controlId, true) + '_viewbox').toLowerCase();
         svg.build({
             contentMap,
+            keyframesMap,
             exclude,
             residualHandler,
             precision
@@ -948,7 +950,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                     if (item.iterationCount === -1) {
                                         isolatedData.push(item);
                                     }
-                                    else if ((!item.fromToType || SvgBuild.isAnimateTransform(item) && item.transformOrigin) && !(supportedKeyFrames && getValueType(item.attributeName) !== 'pathType')) {
+                                    else if ((!item.fromToType || SvgBuild.isAnimateTransform(item) && item.transformOrigin) && !(supportedKeyframes && getValueType(item.attributeName) !== 'pathType')) {
                                         togetherTargets.push([item]);
                                     }
                                     else if (item.fillReplace) {
@@ -995,13 +997,13 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                             let ordering = '',
                                 synchronized: Undef<boolean>,
                                 checkBefore: Undef<boolean>,
-                                useKeyFrames = true;
+                                useKeyframes = true;
                             if (index <= 1 && items.some((item: SvgAnimate) => !!item.synchronized && item.synchronized.value !== '')) {
                                 if (!SvgBuild.isAnimateTransform(items[0])) {
                                     ordering = 'sequentially';
                                 }
                                 synchronized = true;
-                                useKeyFrames = false;
+                                useKeyframes = false;
                             }
                             else if (index <= 1 && items.some((item: SvgAnimate) => !!item.synchronized && item.synchronized.value === '')) {
                                 ordering = 'sequentially';
@@ -1201,13 +1203,13 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                 if (resetBefore && beforeValues) {
                                                     resetBeforeValue(propertyName, valueType, beforeValues[k], beforeAnimator, precision);
                                                 }
-                                                if (useKeyFrames && r > 1) {
-                                                    if (supportedKeyFrames && valueType !== 'pathType') {
+                                                if (useKeyframes && r > 1) {
+                                                    if (supportedKeyframes && valueType !== 'pathType') {
                                                         if (!resetBefore && requireBefore && beforeValues) {
                                                             resetBeforeValue(propertyName, valueType, beforeValues[k], beforeAnimator, precision);
                                                         }
                                                         const propertyValuesHolder = animatorMap.get(keyName) || [];
-                                                        const keyframe: KeyFrame[] = [];
+                                                        const keyframe: Keyframe[] = [];
                                                         for (let l = 0; l < r; ++l) {
                                                             let value = getPropertyValue(values, l, k, true);
                                                             if (value && valueType === 'floatType') {
@@ -1517,7 +1519,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                     for (let i = 0, q = strokeDash.length; i < q; ++i) {
                                         const strokePath = i === 0 ? path : { ...path };
                                         const dash = strokeDash[i];
-                                        strokePath.name = `${name}_${i}`;
+                                        strokePath.name = name + '_' + i;
                                         if (animateData) {
                                             this._animateData.set(strokePath.name, {
                                                 element: animateData.element,

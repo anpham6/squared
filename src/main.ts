@@ -171,7 +171,7 @@ export function setFramework(value: Framework, options?: squared.FrameworkOption
     const mergeSettings = (baseSettings: UserSettings, frameworkId: number) => {
         if (loadAs) {
             try {
-                const storedSettings = localStorage.getItem(`${loadAs}-${frameworkId}`);
+                const storedSettings = localStorage.getItem(loadAs + '-' + frameworkId);
                 if (storedSettings) {
                     Object.assign(baseSettings, JSON.parse(storedSettings));
                 }
@@ -187,7 +187,7 @@ export function setFramework(value: Framework, options?: squared.FrameworkOption
         }
         if (saveAs) {
             try {
-                localStorage.setItem(`${saveAs}-${frameworkId}`, JSON.stringify(baseSettings));
+                localStorage.setItem(saveAs + '-' + frameworkId, JSON.stringify(baseSettings));
             }
             catch {
             }
@@ -297,7 +297,7 @@ export function configure(value: ExtensionRequest, options: squared.FrameworkOpt
             const result: PlainObject = {};
             if (loadAs) {
                 try {
-                    const storedSettings = localStorage.getItem(`${loadAs}-${name}`);
+                    const storedSettings = localStorage.getItem(loadAs + '-' + name);
                     if (storedSettings) {
                         Object.assign(result, JSON.parse(storedSettings));
                     }
@@ -308,7 +308,7 @@ export function configure(value: ExtensionRequest, options: squared.FrameworkOpt
             Object.assign(result, options.settings);
             if (saveAs) {
                 try {
-                    localStorage.setItem(`${saveAs}-${name}`, JSON.stringify(result));
+                    localStorage.setItem(saveAs + '-' + name, JSON.stringify(result));
                 }
                 catch {
                 }

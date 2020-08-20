@@ -8,7 +8,7 @@ import { INSTANCE_TYPE } from './lib/constant';
 import { SVG, getParentAttribute, getTargetElement } from './lib/util';
 
 const { parseColor } = squared.lib.color;
-const { extractURL } = squared.lib.css;
+const { extractURL, getKeyframesRules } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { cloneObject } = squared.lib.util;
 
@@ -60,6 +60,7 @@ function createRadialGradient(element: SVGRadialGradientElement): SvgGradient {
 
 export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer)))) implements squared.svg.Svg {
     public precision?: number;
+    public keyframesMap?: KeyframesMap;
     public readonly definitions: SvgDefinitions = {
         clipPath: new Map<string, SVGClipPathElement>(),
         pattern: new Map<string, SVGPatternElement>(),
@@ -78,7 +79,10 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
     }
 
     public build(options: SvgBuildOptions) {
-        this.precision = options && options.precision;
+        if (this.documentRoot) {
+            this.keyframesMap = options.keyframesMap || getKeyframesRules();
+        }
+        this.precision = options.precision;
         this.setRect();
         super.build(options);
     }

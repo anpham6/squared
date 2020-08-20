@@ -2,7 +2,8 @@ import { hasBit } from './util';
 
 export const enum PLATFORM {
     WINDOWS = 1,
-    MAC = 1 << 1
+    MAC = 1 << 1,
+    LINUX = 1 << 2
 }
 
 export const enum USER_AGENT {
@@ -14,10 +15,7 @@ export const enum USER_AGENT {
 
 export function isPlatform(value: NumString) {
     const platform = navigator.platform.toLowerCase();
-    if (typeof value === 'string') {
-        return platform.includes(value.toLowerCase());
-    }
-    return hasBit(value, PLATFORM.WINDOWS) && platform.includes('win') || hasBit(value, PLATFORM.MAC) && /(mac|iphone|ipad|ipod)/.test(platform);
+    return typeof value === 'string' ? platform.includes(value.toLowerCase()) : hasBit(value, PLATFORM.WINDOWS) && platform.includes('win') || hasBit(value, PLATFORM.MAC) && /(mac|iphone|ipad|ipod)/.test(platform) || hasBit(value, PLATFORM.LINUX) && platform.includes('linux');
 }
 
 export function isUserAgent(value: NumString) {
@@ -33,18 +31,18 @@ export function isUserAgent(value: NumString) {
         client = USER_AGENT.EDGE;
     }
     if (typeof value === 'string') {
-        const name = value.toUpperCase();
+        const name = value.toLowerCase();
         value = 0;
-        if (name.includes('CHROME')) {
+        if (name.includes('chrome')) {
             value |= USER_AGENT.CHROME;
         }
-        if (name.includes('SAFARI')) {
+        if (name.includes('safari')) {
             value |= USER_AGENT.SAFARI;
         }
-        if (name.includes('FIREFOX')) {
+        if (name.includes('firefox')) {
             value |= USER_AGENT.FIREFOX;
         }
-        if (name.includes('EDGE')) {
+        if (name.includes('edge')) {
             value |= USER_AGENT.EDGE;
         }
     }

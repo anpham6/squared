@@ -4,7 +4,7 @@ import NodeList from './nodelist';
 type FileActionOptions = squared.base.FileActionOptions;
 type PreloadItem = HTMLImageElement | string;
 
-const { CSS_PROPERTIES, CSS_TRAITS, checkMediaRule, getSpecificity, hasComputedStyle, insertStyleSheetRule, getPropertiesAsTraits, parseSelectorText } = squared.lib.css;
+const { CSS_PROPERTIES, CSS_TRAITS, checkMediaRule, getSpecificity, hasComputedStyle, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText } = squared.lib.css;
 const { FILE, STRING } = squared.lib.regex;
 const { getElementCache, newSessionInit, resetSessionAll, setElementCache } = squared.lib.session;
 const { capitalize, convertCamelCase, flatArray, isEmptyString, parseMimeType, resolvePath, splitPair, splitPairStart, trimBoth } = squared.lib.util;
@@ -324,7 +324,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         return node;
     }
 
-    public setStyleMap(sessionId: string) {
+    public setStyleMap(sessionId: string, processing: squared.base.AppProcessing<T>) {
         const styleSheets = document.styleSheets;
         for (let i = 0, length = styleSheets.length; i < length; ++i) {
             const styleSheet = styleSheets[i];
@@ -335,7 +335,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             catch {
             }
             if (!mediaText || checkMediaRule(mediaText)) {
-                this.applyStyleSheet(styleSheet, sessionId);
+                this.applyStyleSheet(styleSheet, sessionId, processing);
             }
         }
     }
@@ -692,7 +692,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
     }
 
-    protected applyStyleSheet(item: CSSStyleSheet, sessionId: string) {
+    protected applyStyleSheet(item: CSSStyleSheet, sessionId: string, processing: squared.base.AppProcessing<T>) {
         try {
             const cssRules = item.cssRules;
             if (cssRules) {
@@ -711,7 +711,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                     this._resourceHandler.addRawData(uri, 'text/css', undefined, { encoding: 'utf8' });
                                 }
                             }
-                            this.applyStyleSheet((rule as CSSImportRule).styleSheet, sessionId);
+                            this.applyStyleSheet((rule as CSSImportRule).styleSheet, sessionId, processing);
                             break;
                         case CSSRule.MEDIA_RULE:
                             if (checkMediaRule((rule as CSSConditionRule).conditionText || parseConditionText('media', rule.cssText))) {
@@ -723,6 +723,19 @@ export default abstract class Application<T extends Node> implements squared.bas
                                 this.applyCSSRuleList((rule as CSSConditionRule).cssRules, sessionId);
                             }
                             break;
+                        case CSSRule.KEYFRAMES_RULE: {
+                            const value = parseKeyframes((rule as CSSKeyframesRule).cssRules);
+                            if (value) {
+                                const name = (rule as CSSKeyframesRule).name;
+                                const keyframe = processing.keyframesMap.get(name);
+                                if (keyframe) {
+                                    Object.assign(keyframe, value);
+                                }
+                                else {
+                                    processing.keyframesMap.set(name, value);
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -751,11 +764,12 @@ export default abstract class Application<T extends Node> implements squared.bas
             excluded: new NodeList<T>(undefined, sessionId),
             rootElements,
             elementMap: newSessionInit(sessionId),
+            keyframesMap: new Map<string, KeyframeData>(),
             initializing: false
         };
         this.session.active.set(sessionId, processing);
         this._controllerHandler.init();
-        this.setStyleMap(sessionId);
+        this.setStyleMap(sessionId, processing);
         const length = elements.length;
         if (length === 0) {
             rootElements.add(this.mainElement);

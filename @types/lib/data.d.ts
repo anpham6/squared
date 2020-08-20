@@ -5,7 +5,7 @@ interface CssPropertyData {
     readonly valueOfNone?: string;
 }
 
-interface KeyframesData extends ObjectMap<StringMap> {}
+interface KeyframeData extends ObjectMap<StringMap> {}
 
 interface FontFaceData {
     fontFamily: string;

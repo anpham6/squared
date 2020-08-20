@@ -860,15 +860,13 @@ const options = {
 
 There are a few ways to save the entire page or portions using the system methods.
 
-```xml
-<script>
-    chrome.saveAsWebPage('index', { // default is false
-        format: 'zip', // optional
-        removeUnusedStyles: true, // Use only when you are not switching classnames with JavaScript
-        productionRelease: true, // Ignore local url rewriting and load assets using absolute paths
-        preserveCrossOrigin: true // Ignore downloading a local copy of assets hosted on other domains
-    }); 
-</script>
+```javascript
+chrome.saveAsWebPage('index', { // default is false
+    format: 'zip', // optional
+    removeUnusedStyles: true, // Use only when you are not switching classnames with JavaScript
+    productionRelease: true, // Ignore local url rewriting and load assets using absolute paths
+    preserveCrossOrigin: true // Ignore downloading a local copy of assets hosted on other domains
+}); 
 ```
 
 You can exclude unnecessary processing files using the dataset attribute in &lt;script|link|style&gt; tags.

@@ -493,7 +493,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         };
         const setDrawableBackground = (node: T, value: string) => {
             if (value !== '') {
-                const drawable = `@drawable/${Resource.insertStoredAsset('drawables', `${node.containerName.toLowerCase()}_${node.controlId}`, value)}`;
+                const drawable = `@drawable/${Resource.insertStoredAsset('drawables', node.containerName.toLowerCase() + '_' + node.controlId, value)}`;
                 if (!themeBackground) {
                     if (node.tagName === 'HTML') {
                         setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, drawable);

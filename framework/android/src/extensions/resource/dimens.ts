@@ -27,7 +27,7 @@ function createNamespaceData(namespace: string, node: View, group: GroupData) {
         if (attr !== 'text') {
             const value = obj[attr]!;
             if (value.endsWith('px')) {
-                const name = `${namespace},${attr},${value}`;
+                const name = namespace + ',' + attr + ',' + value;
                 (group[name] || (group[name] = [])).push(node);
             }
         }
@@ -54,7 +54,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
             const group = groups[containerName] as ObjectMap<T[]>;
             for (const name in group) {
                 const [namespace, attr, value] = name.split(',');
-                const key = getResourceName(dimens, `${fromLastIndexOf(containerName, '.')}_${convertHyphenated(attr, '_')}`, value);
+                const key = getResourceName(dimens, fromLastIndexOf(containerName, '.') + '_' + convertHyphenated(attr, '_'), value);
                 for (const node of group[name]) {
                     node.attr(namespace, attr, `@dimen/${key}`);
                 }

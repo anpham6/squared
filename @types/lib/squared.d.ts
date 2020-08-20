@@ -61,7 +61,7 @@ declare module "lib" {
             group(index?: NumString): Undef<string>;
             groups(start?: number, end?: number): string[];
             groupCount(): number;
-            map<U>(predicate: IteratorPredicate<string, U>, start?: number, end?: number): U[];
+            map<T>(predicate: IteratorPredicate<string, T>, start?: number, end?: number): T[];
             replaceAll(replacement: string | PatternGroupPredicate, replaceCount?: number): string;
             replaceFirst(replacement: string | PatternGroupPredicate): string;
             usePattern(expression: string | RegExp, flags?: string): void;
@@ -89,7 +89,8 @@ declare module "lib" {
     namespace client {
         const enum PLATFORM {
             WINDOWS = 1,
-            MAC = 1 << 1
+            MAC = 1 << 1,
+            LINUX = 1 << 2
         }
         const enum USER_AGENT {
             CHROME = 1,
@@ -138,15 +139,14 @@ declare module "lib" {
         function checkMediaRule(value: string, fontSize?: number): boolean;
         function parseSelectorText(value: string, document?: boolean): string[];
         function getSpecificity(value: string): number;
-        function getKeyframesRules(): ObjectMap<KeyframesData>;
-        function parseKeyframes(rules: CSSRuleList): KeyframesData;
+        function parseKeyframes(rules: CSSRuleList): Undef<KeyframeData>;
+        function getKeyframesRules(): KeyframesMap;
         function getInheritedStyle(element: Element, attr: string, options?: InheritedStyleOptions): string;
         function calculate(value: string, options?: CalculateOptions): number;
         function calculateVar(element: CSSElement, value: string, options?: CalculateVarOptions): number;
         function calculateVarAsString(element: CSSElement, value: string, options?: CalculateVarAsStringOptions): string;
         function calculateStyle(element: CSSElement, attr: string, value: string, boundingBox?: Dimension): string;
         function parseVar(element: CSSElement, value: string): string;
-        function getContentBoxDimension(element: Null<CSSElement>): Dimension;
         function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll): Undef<ImageSrcSet[]>;
         function convertListStyle(name: string, value: number, valueAsDefault?: boolean): string;
         function extractURL(value: string): Undef<string>;

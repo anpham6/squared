@@ -231,7 +231,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     if (uri) {
                         this.addAsset({
                             pathname: outputDirectory + pathname,
-                            filename: `${fontName}.${Resource.getExtension(splitPairStart(uri, '?')).toLowerCase() || 'ttf'}`,
+                            filename: fontName + '.' + (Resource.getExtension(splitPairStart(uri, '?')).toLowerCase() || 'ttf'),
                             uri
                         });
                     }
@@ -385,8 +385,8 @@ export default class File<T extends View> extends squared.base.File<T> implement
                         const value = images[dpi]!;
                         result.push(
                             value,
-                            `${imageDirectory}-${dpi}`,
-                            `${name}.${Resource.getExtension(value).toLowerCase() || 'unknown'}`
+                            imageDirectory + '-' + dpi,
+                            name + '.' + (Resource.getExtension(value).toLowerCase() || 'unknown')
                         );
                     }
                 }
@@ -396,7 +396,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                         result.push(
                             value,
                             imageDirectory,
-                            `${name}.${Resource.getExtension(value).toLowerCase() || 'unknown'}`
+                            name + '.' + (Resource.getExtension(value).toLowerCase() || 'unknown')
                         );
                     }
                 }

@@ -3,7 +3,7 @@ import { USER_AGENT, getDeviceDPI, isUserAgent } from './client';
 import { clamp, truncate, truncateFraction } from './math';
 import { CSS, STRING, TRANSFORM } from './regex';
 import { getElementCache, setElementCache } from './session';
-import { convertAlpha, convertFloat, convertHyphenated, convertRoman, hasBit, hasKeys, isNumber, isString, iterateArray, replaceMap, resolvePath, spliceString, splitEnclosing, splitPair, trimBoth } from './util';
+import { convertAlpha, convertFloat, convertHyphenated, convertRoman, hasBit, isNumber, isString, iterateArray, replaceMap, resolvePath, spliceString, splitEnclosing, splitPair, trimBoth } from './util';
 
 const DOCUMENT_ELEMENT = document.documentElement;
 const DOCUMENT_FIXEDMAP = [9/13, 10/13, 12/13, 16/13, 20/13, 2, 3];
@@ -276,6 +276,15 @@ function checkCalculateOperator(operand: Undef<string>, operator: Undef<string>)
         }
     }
     return true;
+}
+
+function getContentBoxDimension(element: Null<CSSElement>) {
+    if (element) {
+        const style = getStyle(element);
+        const { width, height } = element.getBoundingClientRect();
+        return { width: Math.max(0, width - getContentBoxWidth(style)), height: Math.max(0, height - getContentBoxHeight(style)) };
+    }
+    return { width: 0, height: 0 };
 }
 
 const fromFontNamedValue = (index: number, fixedWidth?: boolean) => (!fixedWidth ? DOCUMENT_FONTMAP[index] : DOCUMENT_FIXEDMAP[index]).toPrecision(8) + 'rem';
@@ -2615,8 +2624,8 @@ export function checkFontSizeValue(value: string, fixedWidth?: boolean) {
     }
 }
 
-export function getKeyframesRules(): ObjectMap<KeyframesData> {
-    const result: ObjectMap<KeyframesData> = {};
+export function getKeyframesRules(): KeyframesMap {
+    const result = new Map<string, KeyframeData>();
     violation: {
         const styleSheets = document.styleSheets;
         for (let i = 0, length = styleSheets.length; i < length; ++i) {
@@ -2628,13 +2637,13 @@ export function getKeyframesRules(): ObjectMap<KeyframesData> {
                             const item = cssRules[j] as CSSKeyframesRule;
                             if (item.type === CSSRule.KEYFRAMES_RULE) {
                                 const value = parseKeyframes(item.cssRules);
-                                if (hasKeys(value)) {
-                                    const name = item.name;
-                                    if (result[name]) {
-                                        Object.assign(result[name], value);
+                                if (value) {
+                                    const data = result.get(item.name);
+                                    if (data) {
+                                        Object.assign(data, value);
                                     }
                                     else {
-                                        result[name] = value;
+                                        result.set(item.name, value);
                                     }
                                 }
                             }
@@ -2653,7 +2662,8 @@ export function getKeyframesRules(): ObjectMap<KeyframesData> {
 }
 
 export function parseKeyframes(rules: CSSRuleList) {
-    const result: KeyframesData = {};
+    const result: KeyframeData = {};
+    let valid = false;
     for (let i = 0, length = rules.length; i < length; ++i) {
         const item = rules[i];
         const match = REGEXP_KEYFRAMES.exec(item.cssText);
@@ -2677,10 +2687,13 @@ export function parseKeyframes(rules: CSSRuleList) {
                     }
                 }
                 result[percent] = keyframe;
+                valid = true;
             }
         }
     }
-    return result;
+    if (valid) {
+        return result;
+    }
 }
 
 export function checkMediaRule(value: string, fontSize?: number) {
@@ -3014,15 +3027,6 @@ export function calculateVar(element: CSSElement, value: string, options: Calcul
         return result;
     }
     return NaN;
-}
-
-export function getContentBoxDimension(element: Null<CSSElement>) {
-    if (element) {
-        const style = getStyle(element);
-        const { width, height } = element.getBoundingClientRect();
-        return { width: Math.max(0, width - getContentBoxWidth(style)), height: Math.max(0, height - getContentBoxHeight(style)) };
-    }
-    return { width: 0, height: 0 };
 }
 
 export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {

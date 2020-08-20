@@ -56,6 +56,7 @@ declare module "base" {
         rootElements: Set<HTMLElement>;
         initializing: boolean;
         elementMap: Map<Element, ElementData>;
+        keyframesMap: KeyframesMap;
         node?: T;
         documentElement?: T;
     }
@@ -92,7 +93,7 @@ declare module "base" {
         parseDocument(...elements: (string | HTMLElement)[]): Promise<T | T[]>;
         parseDocumentSync(...elements: (string | HTMLElement)[]): Undef<T | T[]>;
         createCache(documentRoot: HTMLElement, sessionId: string): Undef<T>;
-        setStyleMap(sessionId: string): void;
+        setStyleMap(sessionId: string, processing: AppProcessing<T>): void;
         createNode(sessionId: string, options: CreateNodeOptions): T;
         insertNode(element: Element, sessionId: string): Undef<T>;
         afterCreateCache(node: T): void;
