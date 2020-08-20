@@ -319,7 +319,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 const heightA = a.baselineHeight;
                 const heightB = b.baselineHeight;
                 if (!equal(heightA, heightB)) {
-                    return heightA > heightB ? -1 : 1;
+                    return heightB - heightA;
                 }
                 else if (!imageA && !imageB) {
                     const textA = a.textElement;
@@ -339,7 +339,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         }
                     }
                     else if (a.containerType !== b.containerType && a.inputElement && b.inputElement) {
-                        return a.containerType > b.containerType ? -1 : 1;
+                        return b.containerType - a.containerType;
                     }
                     else if (textA && !textB && a.childIndex < b.childIndex) {
                         return -1;
@@ -1004,7 +1004,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             super.sort(predicate);
         }
         else {
-            this.children.sort((a: T, b: T) => a.containerIndex < b.containerIndex ? -1 : 1);
+            this.children.sort((a: T, b: T) => a.containerIndex - b.containerIndex);
         }
         return this;
     }

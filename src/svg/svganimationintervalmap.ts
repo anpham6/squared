@@ -39,12 +39,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
     public map: SvgAnimationIntervalAttributeMap<SvgAnimation>;
 
     constructor(animations: SvgAnimation[], ...attrs: string[]) {
-        animations = (attrs.length > 0 ? animations.filter(item => attrs.includes(item.attributeName)) : animations.slice(0)).sort((a, b) => {
-            if (a.delay === b.delay) {
-                return a.group.id < b.group.id ? 1 : -1;
-            }
-            return a.delay < b.delay ? -1 : 1;
-        }) as SvgAnimate[];
+        animations = (attrs.length > 0 ? animations.filter(item => attrs.includes(item.attributeName)) : animations.slice(0)).sort((a, b) => a.delay === b.delay ? b.group.id - a.group.id : a.delay - b.delay) as SvgAnimate[];
         attrs.length = 0;
         const length = animations.length;
         for (let i = 0; i < length; ++i) {
@@ -63,7 +58,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
             intervalMap[keyName] = {};
             intervalTimes[keyName] = new Set<number>();
             const attributeName = splitPairStart(keyName, ':');
-            const backwards = animations.filter(item => item.fillBackwards && item.attributeName === attributeName).sort((a, b) => a.group.id < b.group.id ? 1 : -1)[0] as SvgAnimate;
+            const backwards = animations.filter(item => item.fillBackwards && item.attributeName === attributeName).sort((a, b) => b.group.id - a.group.id)[0] as SvgAnimate;
             if (backwards) {
                 const delay = backwards.delay;
                 insertIntervalValue(intervalMap, intervalTimes, keyName, 0, backwards.values[0], delay, backwards, delay === 0, false, FILL_MODE.BACKWARDS);
@@ -120,15 +115,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                     }
                 }
                 if (values.length > 0) {
-                    values.sort((a, b) => {
-                        if (a.animation && b.animation) {
-                            if (a.fillMode === b.fillMode) {
-                                return a.animation.group.id < b.animation.group.id ? 1 : -1;
-                            }
-                            return a.fillMode < b.fillMode ? 1 : -1;
-                        }
-                        return 0;
-                    });
+                    values.sort((a, b) => a.animation && b.animation ? a.fillMode === b.fillMode ? b.animation.group.id - a.animation.group.id : b.fillMode - a.fillMode : 0);
                     map[keyName].set(time, values);
                 }
             }

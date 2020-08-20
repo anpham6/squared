@@ -1793,7 +1793,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 ++index;
             }
         }
-        const replaceData = Array.from(fillReplaceMap.values()).sort((a, b) => a.time < b.time ? -1 : 1);
+        const replaceData = Array.from(fillReplaceMap.values()).sort((a, b) => a.time - b.time);
         for (let i = 0, length = replaceData.length; i < length; ++i) {
             const item = replaceData[i];
             if (!item.reset || item.to !== previousPathData) {

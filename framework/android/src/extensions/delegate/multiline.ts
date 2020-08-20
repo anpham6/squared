@@ -76,7 +76,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                     let remaining = minCount - node.length;
                     if (remaining > 0) {
                         const nodes: MultilineData<T> = [];
-                        const breakable = children.filter((child: T) => isTextElement(child) && checkBreakable(child, false) && child.css('columnSpan') !== 'all').sort((a, b) => a.textContent.length >= b.textContent.length ? -1 : 1);
+                        const breakable = children.filter((child: T) => isTextElement(child) && checkBreakable(child, false) && child.css('columnSpan') !== 'all').sort((a, b) => b.textContent.length - a.textContent.length);
                         const q = breakable.length;
                         const maxCount = Math.ceil(q / remaining);
                         for (let i = 0; i < q; ++i) {

@@ -45,15 +45,6 @@ function parseAttribute(element: SVGElement, attr: string) {
     return value.split(/\s*,\s*/);
 }
 
-function sortAttribute(value: NumberValue[]) {
-    return value.sort((a, b) => {
-        if (a.key !== b.key) {
-            return a.key < b.key ? -1 : 1;
-        }
-        return 0;
-    });
-}
-
 function convertRotate(value: string) {
     if (value === 'reverse') {
         return 'auto 180deg';
@@ -81,6 +72,8 @@ function getTextContent(element: SVGElement, attr: string, lang?: string) {
     }
     return element.querySelector(`:scope > ${attr}`)?.textContent!.trim() || '';
 }
+
+const sortAttribute = (value: NumberValue[]) => value.sort((a, b) => a.key - b.key);
 
 export default <T extends Constructor<SvgElement>>(Base: T) => {
     return class extends Base implements squared.svg.SvgView {

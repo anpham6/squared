@@ -1044,7 +1044,7 @@ export function assignEmptyValue(dest: PlainObject | ObjectIndex<any>, ...attrs:
 }
 
 export function sortNumber(values: number[], ascending = true) {
-    return ascending ? values.sort((a, b) => a < b ? -1 : 1) : values.sort((a, b) => a > b ? -1 : 1);
+    return ascending ? values.sort((a, b) => a - b) : values.sort((a, b) => b - a);
 }
 
 export function findSet<T>(list: Set<T>, predicate: IteratorPredicate<T, boolean, Set<T>>) {

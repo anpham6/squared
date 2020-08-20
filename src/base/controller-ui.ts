@@ -713,10 +713,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             if (a.parent === b.parent) {
                                 const zA = a.zIndex;
                                 const zB = b.zIndex;
-                                if (zA === zB) {
-                                    return a.id < b.id ? -1 : 1;
-                                }
-                                return zA < zB ? -1 : 1;
+                                return zA === zB ? a.id - b.id : zA - zB;
                             }
                             return 0;
                         });
@@ -739,7 +736,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     public sortInitialCache(cache: squared.base.NodeList<T>) {
         cache.sort((a, b) => {
             if (a.depth !== b.depth) {
-                return a.depth < b.depth ? -1 : 1;
+                return a.depth - b.depth;
             }
             else {
                 const parentA = a.documentParent;
@@ -748,12 +745,12 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     const depthA = parentA.depth;
                     const depthB = parentB.depth;
                     if (depthA !== depthB) {
-                        return depthA < depthB ? -1 : 1;
+                        return depthA - depthB;
                     }
                     else if (parentA.actualParent === parentB.actualParent) {
-                        return parentA.childIndex < parentB.childIndex ? -1 : 1;
+                        return parentA.childIndex - parentB.childIndex;
                     }
-                    return parentA.id < parentB.id ? -1 : 1;
+                    return parentA.id - parentB.id;
                 }
             }
             return 0;

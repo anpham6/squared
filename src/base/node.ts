@@ -5,7 +5,7 @@ const { CSS_PROPERTIES, CSS_TRAITS, CSS_UNIT, PROXY_INLINESTYLE, SVG_PROPERTIES,
 const { assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { CSS, FILE } = squared.lib.regex;
 const { getElementData, getElementAsNode, getElementCache, setElementCache } = squared.lib.session;
-const { convertCamelCase, convertFloat, convertInt, flatArray, hasBit, hasValue, isNumber, isObject, iterateArray, iterateReverseArray, lastItemOf, spliceString, splitEnclosing, splitPair } = squared.lib.util;
+const { convertCamelCase, convertFloat, convertInt, hasBit, hasValue, isNumber, isObject, iterateArray, iterateReverseArray, lastItemOf, spliceString, splitEnclosing, splitPair } = squared.lib.util;
 
 const { SELECTOR_ATTR, SELECTOR_G, SELECTOR_LABEL, SELECTOR_PSEUDO_CLASS } = CSS;
 
@@ -61,7 +61,7 @@ function isFontFixedWidth(node: T) {
 
 const aboveRange = (a: number, b: number, offset = 1) => a + offset > b;
 const belowRange = (a: number, b: number, offset = 1) => a - offset < b;
-const sortById = (a: T, b: T) => a.id < b.id ? -1 : 1;
+const sortById = (a: T, b: T) => a.id - b.id;
 const isInlineVertical = (value: string) => value.startsWith('inline') || value === 'table-cell';
 
 function getFlexValue(node: T, attr: string, fallback: number, parent?: Null<Node>): number {
@@ -1853,25 +1853,29 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public ancestors(value?: string, options?: AscendOptions<T>) {
-        const result: T[][] = [];
-        let depth = NaN;
-        iterateReverseArray(this.ascend(options), (item: T) => {
-            if (!isNaN(depth)) {
-                for (let i = item.depth - 1; i > depth; --i) {
-                    result.push([]);
+        const result = this.ascend(options);
+        if (value && result.length > 0) {
+            const customMap: T[][] = [];
+            let depth = NaN;
+            iterateReverseArray(result, (item: T) => {
+                if (!isNaN(depth)) {
+                    for (let i = item.depth - 1; i > depth; --i) {
+                        customMap.push([]);
+                    }
                 }
-            }
-            result.push([item]);
-            depth = item.depth;
-        });
-        return result.length > 0 ? value ? this.querySelectorAll(value, result, -Infinity) : flatArray<T>(result, Infinity) : ((result as unknown) as T[]);
+                customMap.push([item]);
+                depth = item.depth;
+            });
+            return this.querySelectorAll(value, customMap, -Infinity);
+        }
+        return result.sort(sortById);
     }
 
     public descendants(value?: string, options?: DescendOptions<T>) {
         if (options || !this.queryMap) {
             const children: T[] = this.descend(options);
             let length = children.length;
-            if (length > 0) {
+            if (value && length > 0) {
                 const result: T[][] = [];
                 const depth = this.depth + 1;
                 let index: number;
@@ -1880,18 +1884,15 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     index = item.depth - depth;
                     (result[index] || (result[index] = [])).push(item);
                 }
-                if (value) {
-                    length = result.length;
-                    for (let i = 0; i < length; ++i) {
-                        if (result[i] === undefined) {
-                            result[i] = [];
-                        }
+                length = result.length;
+                for (let i = 0; i < length; ++i) {
+                    if (result[i] === undefined) {
+                        result[i] = [];
                     }
-                    return this.querySelectorAll(value, result);
                 }
-                return flatArray<T>(result, Infinity);
+                return this.querySelectorAll(value, result);
             }
-            return children;
+            return children.sort(sortById);
         }
         return this.querySelectorAll(value || '*');
     }

@@ -1653,14 +1653,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                 }
             }
-            return result.sort((a, b) => {
-                const orderA = a.order;
-                const orderB = b.order;
-                if (orderA === orderB) {
-                    return 0;
-                }
-                return orderA < orderB ? -1 : 1;
-            });
+            return result.sort((a, b) => a.order - b.order);
         }
     }
 }

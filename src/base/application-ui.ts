@@ -1074,7 +1074,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (a.depth === b.depth) {
                 if (!a.naturalChild || !b.naturalChild) {
                     if (a.nodeGroup && b.nodeGroup) {
-                        return a.id < b.id ? -1 : 1;
+                        return a.id - b.id;
                     }
                     else if (a.nodeGroup) {
                         return -1;
@@ -1099,7 +1099,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
                 return 0;
             }
-            return a.depth < b.depth ? -1 : 1;
+            return a.depth - b.depth;
         });
         for (let i = 0; i < length; ++i) {
             const ext = extensions[i];
@@ -1287,7 +1287,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 for (let j = 1; j < itemCount; ++j) {
                     grouping = grouping.concat(segments[j]);
                 }
-                grouping.sort((a: T, b: T) => a.childIndex < b.childIndex ? -1 : 1);
+                grouping.sort((a: T, b: T) => a.childIndex - b.childIndex);
                 const node = layout.node;
                 if (node.layoutVertical) {
                     floatgroup = node;
@@ -1877,7 +1877,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     return 1;
                 }
                 else if (indexA !== undefined && indexB !== undefined) {
-                    return indexA < indexB ? -1 : 1;
+                    return indexA - indexB;
                 }
             }
             return 0;

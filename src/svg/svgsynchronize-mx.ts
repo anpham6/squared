@@ -610,12 +610,7 @@ function sortSetterData(data: SvgAnimation[], item?: SvgAnimation) {
     if (item) {
         data.push(item);
     }
-    data.sort((a, b) => {
-        if (a.delay === b.delay) {
-            return a.group.id < b.group.id ? -1 : 1;
-        }
-        return a.delay < b.delay ? -1 : 1;
-    });
+    data.sort((a, b) => a.delay === b.delay ? a.group.id - b.group.id : a.delay - b.delay);
     for (let i = 0; i < data.length - 1; ++i) {
         if (data[i].delay === data[i + 1].delay) {
             data.splice(i--, 1);
@@ -652,10 +647,7 @@ function sortIncomplete(incomplete: SvgAnimation[], maxTime = Infinity) {
                 return -1;
             }
         }
-        if (delayA !== delayB) {
-            return delayA > delayB ? -1 : 1;
-        }
-        return a.group.id > b.group.id ? -1 : 1;
+        return delayA !== delayB ? delayB - delayA : b.group.id - a.group.id;
     });
 }
 
@@ -683,7 +675,7 @@ function sortEvaluateStart(incomplete: SvgAnimate[], maxTime: number) {
         const delayA = a.delay;
         const delayB = b.delay;
         if (delayA === delayB) {
-            return a.group.id < b.group.id ? 1 : -1;
+            return b.group.id - a.group.id;
         }
         else if (delayA === maxTime) {
             return -1;
@@ -692,9 +684,9 @@ function sortEvaluateStart(incomplete: SvgAnimate[], maxTime: number) {
             return 1;
         }
         else if (delayA < maxTime && delayB < maxTime) {
-            return delayA > delayB ? -1 : 1;
+            return delayB - delayA;
         }
-        return delayA < delayB ? -1 : 1;
+        return delayA - delayB;
     });
 }
 
@@ -1694,12 +1686,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                 maxTime = time;
                             }
                             repeatingEndTime = Math.max(repeatingEndTime, maxTime);
-                            forwardMap[attr]?.sort((a, b) => {
-                                if (a.time === b.time) {
-                                    return 0;
-                                }
-                                return a.time < b.time ? -1 : 1;
-                            });
+                            forwardMap[attr]?.sort((a, b) => a.time - b.time);
                         }
                         if (hasKeys(infiniteMap)) {
                             const delay: number[] = [];

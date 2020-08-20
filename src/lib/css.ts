@@ -3074,14 +3074,14 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
             const pxB = b.pixelRatio;
             if (pxA > 0 && pxB > 0) {
                 if (pxA !== pxB) {
-                    return pxA < pxB ? -1 : 1;
+                    return pxA - pxB;
                 }
             }
             else {
                 const widthA = a.width;
                 const widthB = b.width;
                 if (widthA !== widthB && widthA > 0 && widthB > 0) {
-                    return widthA < widthB ? -1 : 1;
+                    return widthA - widthB;
                 }
             }
             return 0;

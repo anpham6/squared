@@ -239,10 +239,10 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     }
                 }
                 if (maxA !== maxB) {
-                    return maxA > maxB ? -1 : 1;
+                    return maxB - maxA;
                 }
                 else if (countA !== countB) {
-                    return countA > countB ? -1 : 1;
+                    return countB - countA;
                 }
                 return 0;
             });

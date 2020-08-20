@@ -438,10 +438,10 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 const linearA = a.linear;
                 const linearB = b.linear;
                 if (!withinRange(linearA.top, linearB.top)) {
-                    return linearA.top < linearB.top ? -1 : 1;
+                    return linearA.top - linearB.top;
                 }
                 else if (!withinRange(linearA.left, linearB.left)) {
-                    return linearA.left < linearB.left ? -1 : 1;
+                    return linearA.left - linearB.left;
                 }
                 return 0;
             });
@@ -451,10 +451,10 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 const linearA = a.linear;
                 const linearB = b.linear;
                 if (!withinRange(linearA.left, linearB.left)) {
-                    return linearA.left < linearB.left ? -1 : 1;
+                    return linearA.left - linearB.left;
                 }
                 else if (!withinRange(linearA.top, linearB.top)) {
-                    return linearA.top < linearB.top ? -1 : 1;
+                    return linearA.top - linearB.top;
                 }
                 return 0;
             });

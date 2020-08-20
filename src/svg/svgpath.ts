@@ -661,7 +661,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                     const sorted = animations.slice(0).sort((a, b) => {
                         if (a.attributeName.startsWith('stroke-dash') && b.attributeName.startsWith('stroke-dash')) {
                             if (a.delay !== b.delay) {
-                                return a.delay < b.delay ? -1 : 1;
+                                return a.delay - b.delay;
                             }
                             else if (SvgBuild.asSet(a) && SvgBuild.asAnimate(b) || !a.animationElement && b.animationElement) {
                                 return -1;

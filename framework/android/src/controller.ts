@@ -62,9 +62,9 @@ function doOrderStandard(above: View, below: View): number {
         return zB >= 0 ? -1 : 1;
     }
     else if (zA === zB) {
-        return above.childIndex < below.childIndex ? -1 : 1;
+        return above.childIndex - below.childIndex;
     }
-    return zA < zB ? -1 : 1;
+    return zA - zB;
 }
 
 function setBaselineItems(parent: View, baseline: View, items: View[], index: number) {
@@ -170,7 +170,7 @@ function getTextBottom<T extends View>(nodes: T[]): T[] {
         if (a.baselineHeight === b.baselineHeight) {
             return a.tagName === 'SELECT' ? 1 : 0;
         }
-        return a.baselineHeight > b.baselineHeight ? -1 : 1;
+        return b.baselineHeight - a.baselineHeight;
     });
 }
 
@@ -372,9 +372,9 @@ function sortTemplateInvalid(a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>)
                 return doOrderStandard(parentA, parentB);
             }
         }
-        return above.id < below.id ? -1 : 1;
+        return above.id - below.id;
     }
-    return depthA < depthB ? -1 : 1;
+    return depthA - depthB;
 }
 
 const getVerticalLayout = (layout: LayoutUI<View>) => isConstraintLayout(layout, true) ? CONTAINER_NODE.CONSTRAINT : layout.some(item => item.positionRelative || !item.pageFlow && item.autoPosition) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR;
