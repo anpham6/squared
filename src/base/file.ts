@@ -23,7 +23,6 @@ export default abstract class File<T extends squared.base.Node> implements squar
     }
 
     public readonly assets: RawAsset[] = [];
-
     public abstract resource: squared.base.Resource<T>;
 
     private _hostname = '';

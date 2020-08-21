@@ -107,7 +107,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
 
     public transformFrom?: string;
     public transformOrigin?: Point[];
-    public readonly attributeName = 'transform';
+    public readonly instanceType = INSTANCE_TYPE.SVG_ANIMATE_TRANSFORM;
 
     constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimateTransformElement) {
         super(element, animationElement);
@@ -251,7 +251,8 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
         this.baseValue = TRANSFORM.typeAsValue(this.type);
     }
 
-    get instanceType() {
-        return INSTANCE_TYPE.SVG_ANIMATE_TRANSFORM;
+    set attributeName(value) {}
+    get attributeName() {
+        return 'transform';
     }
 }

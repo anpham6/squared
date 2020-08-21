@@ -12,6 +12,7 @@ const { resolvePath } = squared.lib.util;
 export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgElement))) implements squared.svg.SvgImage {
     public rotateAngle?: number;
     public readonly imageElement: Null<SVGImageElement> = null;
+    public readonly instanceType = INSTANCE_TYPE.SVG_IMAGE;
 
     constructor(
         public readonly element: SVGImageElement | SVGUseElement,
@@ -147,9 +148,5 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
 
     get animations() {
         return !this._animations ? this._animations = this.imageElement ? super.animations.concat(this.getAnimations(this.imageElement)) : super.animations : this._animations;
-    }
-
-    get instanceType() {
-        return INSTANCE_TYPE.SVG_IMAGE;
     }
 }

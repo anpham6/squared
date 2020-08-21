@@ -17,7 +17,7 @@ const getPercent = (value: string) => isPercent(value) ? parseFloat(value) / 100
 
 export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer))) implements squared.svg.SvgShapePattern {
     public drawRegion?: BoxRect;
-
+    public readonly instanceType = INSTANCE_TYPE.SVG_SHAPE_PATTERN;
     public readonly patternUnits: number;
     public readonly patternContentUnits: number;
 
@@ -211,9 +211,5 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
     get tileHeight() {
         const baseVal = this.patternElement.height.baseVal;
         return this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX ? this.patternHeight * getPercent(baseVal.valueAsString) : baseVal.value;
-    }
-
-    get instanceType() {
-        return INSTANCE_TYPE.SVG_SHAPE_PATTERN;
     }
 }

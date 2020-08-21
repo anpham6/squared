@@ -19,6 +19,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     public rotateData?: NumberValue[];
     public framesPerSecond?: number;
     public readonly type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
+    public readonly instanceType = INSTANCE_TYPE.SVG_ANIMATE_MOTION;
 
     private _offsetLength = 0;
     private _keyPoints: number[] = [];
@@ -464,9 +465,5 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
 
     get offsetLength() {
         return this._offsetLength === 0 && this.path ? getPathLength(this.path) : this._offsetLength;
-    }
-
-    get instanceType() {
-        return INSTANCE_TYPE.SVG_ANIMATE_MOTION;
     }
 }

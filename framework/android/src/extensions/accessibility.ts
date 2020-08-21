@@ -7,10 +7,10 @@ const { formatPX } = squared.lib.css;
 const { NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.enumeration;
 
 export default class <T extends View> extends squared.base.extensions.Accessibility<T> {
-    public readonly eventOnly = true;
     public readonly options: ExtensionAccessibilityOptions = {
         displayLabel: false
     };
+    public readonly eventOnly = true;
 
     public beforeBaseLayout(sessionId: string) {
         const cache = this.application.getProcessingCache(sessionId);

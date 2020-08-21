@@ -11,7 +11,7 @@ type SvgAnimation = squared.svg.SvgAnimation;
 type SvgPath = squared.svg.SvgPath;
 type SvgView = squared.svg.SvgView;
 type AnimateValue = NumString | Point[];
-type TimelineValue = Map<any, AnimateValue>;
+type TimelineValue = Map<string | number, AnimateValue>;
 type TimelineIndex = Map<number, AnimateValue>;
 type TimelineMap = ObjectMap<TimelineIndex>;
 type KeyTimeMap = Map<number, TimelineValue>;
@@ -942,7 +942,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                             }
                             else {
                                 value = this[attr];
-                                if (value === undefined && typeof this['getBaseValue'] === 'function') {
+                                if (value === undefined && 'getBaseValue' in this) {
                                     value = ((this as unknown) as squared.svg.SvgBaseVal).getBaseValue(attr);
                                 }
                             }

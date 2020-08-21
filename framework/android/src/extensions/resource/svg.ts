@@ -1,5 +1,7 @@
 import Resource from '../../resource';
 
+import NodeUI = squared.base.NodeUI;
+
 import { convertColorStops } from './background';
 
 import { XMLNS_ANDROID } from '../../lib/constant';
@@ -29,16 +31,6 @@ type SvgAnimation = squared.svg.SvgAnimation;
 type SvgGroup = squared.svg.SvgGroup;
 type SvgImage = squared.svg.SvgImage;
 type SvgView = squared.svg.SvgView;
-
-const { extractURL, formatPX } = squared.lib.css;
-const { truncate } = squared.lib.math;
-const { FILE } = squared.lib.regex;
-const { convertCamelCase, convertInt, convertWord, formatString, hasKeys, isArray, isNumber, lastItemOf, partitionArray, plainMap, replaceMap } = squared.lib.util;
-
-const { KEYSPLINE_NAME, SYNCHRONIZE_MODE } = squared.svg.lib.constant;
-const { CACHE_VIEWNAME, MATRIX, SVG, TRANSFORM, getAttribute, getRootOffset } = squared.svg.lib.util;
-
-const NodeUI = squared.base.NodeUI;
 
 type AnimateCompanion = NumberValue<SvgAnimation>;
 
@@ -141,6 +133,14 @@ interface AnimateGroup {
     animate: SvgAnimation[];
     pathData?: string;
 }
+
+const { extractURL, formatPX } = squared.lib.css;
+const { truncate } = squared.lib.math;
+const { FILE } = squared.lib.regex;
+const { convertCamelCase, convertInt, convertWord, formatString, hasKeys, isArray, isNumber, lastItemOf, partitionArray, plainMap, replaceMap } = squared.lib.util;
+
+const { KEYSPLINE_NAME, SYNCHRONIZE_MODE } = squared.svg.lib.constant;
+const { CACHE_VIEWNAME, MATRIX, SVG, TRANSFORM, getAttribute, getRootOffset } = squared.svg.lib.util;
 
 const INTERPOLATOR_ANDROID = {
     accelerate_decelerate: '@android:anim/accelerate_decelerate_interpolator',

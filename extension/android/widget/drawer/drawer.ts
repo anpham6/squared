@@ -15,11 +15,7 @@ const Resource = android.base.Resource;
 export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly documentBase = true;
 
-    constructor(
-        name: string,
-        framework: number,
-        options?: ExtensionUIOptions)
-    {
+    constructor(name: string, framework: number, options?: ExtensionUIOptions) {
         super(name, framework, options);
         this.require(EXT_ANDROID.EXTERNAL, true);
         this.require(WIDGET_NAME.MENU);

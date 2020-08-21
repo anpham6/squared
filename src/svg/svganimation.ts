@@ -71,6 +71,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     public baseValue?: string;
     public companion?: NumberValue<SvgAnimation>;
     public readonly animationElement: Null<SVGAnimationElement> = null;
+    public readonly instanceType = INSTANCE_TYPE.SVG_ANIMATION;
 
     protected _to = '';
     protected _duration = -1;
@@ -267,9 +268,5 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
 
     get dataset() {
         return this._dataset;
-    }
-
-    get instanceType() {
-        return INSTANCE_TYPE.SVG_ANIMATION;
     }
 }

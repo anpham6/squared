@@ -1,4 +1,3 @@
-
 import Resource from './resource';
 import NodeUI from './node-ui';
 
@@ -623,7 +622,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     }
 
     public static insertStoredAsset(asset: string, name: string, value: any) {
-        const stored: Map<string, any> = ResourceUI.STORED[asset];
+        const stored: Map<string, unknown> = ResourceUI.STORED[asset];
         if (stored && hasValue(value)) {
             let result = '';
             if (stored) {

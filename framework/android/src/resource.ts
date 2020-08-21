@@ -206,8 +206,6 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         return '';
     }
 
-    public readonly mapOfStored!: AndroidResourceStoredMap;
-
     private readonly _imageFormat?: MIMEOrAll;
 
     constructor(

@@ -1,3 +1,5 @@
+import NodeUI = squared.base.NodeUI;
+
 import { CONTAINER_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
@@ -6,8 +8,6 @@ type View = android.base.View;
 const { getElementAsNode } = squared.lib.session;
 
 const { NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
-
-const NodeUI = squared.base.NodeUI;
 
 const getInputName = (element: HTMLInputElement) => element.name?.trim() || '';
 

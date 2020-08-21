@@ -148,30 +148,24 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         clearMap: new Map<T, string>()
     };
     public readonly extensions: ExtensionUI<T>[] = [];
-    public readonly controllerHandler!: ControllerUI<T>;
-    public readonly resourceHandler!: ResourceUI<T>;
-    public readonly extensionManager!: squared.base.ExtensionManager<T>;
     public readonly fileHandler?: File<T>;
-
     public abstract userSettings: UserSettingsUI;
 
+    private _controllerSettings!: ControllerSettingsUI;
+    private _layoutFileExtension!: RegExp;
+    private _excludedElements!: Set<string>;
     private readonly _layouts: LayoutAsset[] = [];
-    private readonly _controllerSettings: ControllerSettingsUI;
-    private readonly _layoutFileExtension: RegExp;
-    private readonly _conditionExcluded: Set<string>;
 
-    protected constructor(
-        framework: number,
-        nodeConstructor: Constructor<T>,
-        ControllerConstructor: Constructor<T>,
-        ResourceConstructor: Constructor<T>,
-        ExtensionManagerConstructor: Constructor<T>)
-    {
-        super(framework, nodeConstructor, ControllerConstructor, ResourceConstructor, ExtensionManagerConstructor);
+    public abstract get controllerHandler(): ControllerUI<T>;
+    public abstract get resourceHandler(): ResourceUI<T>;
+    public abstract get extensionManager(): squared.base.ExtensionManager<T>;
+
+    public init() {
+        super.init();
         const localSettings = this.controllerHandler.localSettings;
         this._controllerSettings = localSettings;
         this._layoutFileExtension = new RegExp(`\\.${localSettings.layout.fileExtension}$`);
-        this._conditionExcluded = localSettings.unsupported.excluded;
+        this._excludedElements = localSettings.unsupported.excluded;
     }
 
     public finalize() {
@@ -274,7 +268,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     public conditionElement(element: HTMLElement, sessionId: string, cascadeAll?: boolean, pseudoElt?: string) {
-        if (!this._conditionExcluded.has(element.tagName)) {
+        if (!this._excludedElements.has(element.tagName)) {
             if (this.controllerHandler.visibleElement(element, sessionId, pseudoElt) || cascadeAll) {
                 return true;
             }

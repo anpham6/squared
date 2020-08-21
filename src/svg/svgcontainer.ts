@@ -198,6 +198,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
     };
     public parent?: SvgContainer;
     public viewport?: Svg;
+    public readonly instanceType = INSTANCE_TYPE.SVG_CONTAINER;
 
     private _clipRegion: string[] = [];
 
@@ -496,9 +497,5 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
     get requireRefit() {
         const aspectRatio = this.aspectRatio;
         return aspectRatio.x !== 0 || aspectRatio.y !== 0 || aspectRatio.unit !== 1 || aspectRatio.position.x !== 0 || aspectRatio.position.y !== 0 || aspectRatio.parent.x !== 0 || aspectRatio.parent.y !== 0;
-    }
-
-    get instanceType() {
-        return INSTANCE_TYPE.SVG_CONTAINER;
     }
 }

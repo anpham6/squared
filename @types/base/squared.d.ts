@@ -364,7 +364,6 @@ declare module "base" {
         static readonly TEXT_STYLE: string[];
         static sanitizeCss(element: HTMLElement, styleMap: StringMap, writingMode?: string): StringMap;
         depth: number;
-        childIndex: number;
         documentRoot: boolean;
         sessionId: string;
         queryMap?: Node[][];
@@ -422,6 +421,8 @@ declare module "base" {
         get parent(): Null<Node>;
         set actualParent(value);
         get actualParent(): Null<Node>;
+        set childIndex(value);
+        get childIndex(): number;
         set naturalChildren(value);
         get naturalChildren(): Node[];
         set naturalElements(value);
@@ -548,17 +549,14 @@ declare module "base" {
         lineBreakTrailing: boolean;
         floatContainer: boolean;
         renderParent: Null<NodeUI>;
-        localSettings: LocalSettingsUI;
         documentChildren?: NodeUI[];
         renderExtension?: Extension<NodeUI>[];
         renderTemplates?: NodeTemplate<NodeUI>[];
         renderedAs?: NodeTemplate<NodeUI>;
         outerWrapper?: NodeUI;
-        innerWrapped?: NodeUI;
         innerBefore?: NodeUI;
         innerAfter?: NodeUI;
         companion?: NodeUI;
-        labelFor?: NodeUI;
         horizontalRowStart?: boolean;
         horizontalRowEnd?: boolean;
         horizontalRows?: NodeUI[][];
@@ -644,8 +642,6 @@ declare module "base" {
         get siblingsLeading(): NodeUI[];
         set siblingsTrailing(value);
         get siblingsTrailing(): NodeUI[];
-        set childIndex(value);
-        get childIndex(): number;
         set containerIndex(value);
         get containerIndex(): number;
         set containerType(value: number);
@@ -658,8 +654,14 @@ declare module "base" {
         get textIndent(): number;
         set renderExclude(value: boolean);
         get renderExclude(): boolean;
+        set labelFor(value);
+        get labelFor(): Undef<NodeUI>;
+        set innerWrapped(value);
+        get innerWrapped(): Undef<NodeUI>;
         set use(value: Undef<string>);
         get use(): Undef<string>;
+        set localSettings(value);
+        get localSettings(): LocalSettingsUI;
         get extensions(): string[];
         get scrollElement(): boolean;
         get controlElement(): boolean;

@@ -7,6 +7,8 @@ import SvgShape from './svgshape';
 import { INSTANCE_TYPE } from './lib/constant';
 
 export default class SvgUseShape extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgShape))) implements squared.svg.SvgUseShape {
+    public readonly instanceType = INSTANCE_TYPE.SVG_USE_SHAPE;
+
     constructor(
         public readonly element: SVGGeometryElement,
         public readonly useElement: SVGUseElement,
@@ -39,15 +41,11 @@ export default class SvgUseShape extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$M
         super.synchronize(options);
     }
 
-    get transforms() {
-        return this._transforms || (this._transforms = this.getTransforms(this.useElement).concat(super.transforms));
+    public getTransforms() {
+        return super.getTransforms(this.useElement).concat(super.getTransforms());
     }
 
-    get animations() {
-        return this._animations || (this._animations = this.getAnimations(this.useElement).concat(super.animations));
-    }
-
-    get instanceType() {
-        return INSTANCE_TYPE.SVG_USE_SHAPE;
+    public getAnimations() {
+        return super.getAnimations(this.useElement).concat(super.getAnimations());
     }
 }

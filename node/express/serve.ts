@@ -2017,7 +2017,7 @@ class FileManager implements serve.IFileManager {
                 const { width, height } = file;
                 if (width && height) {
                     ++this.delayed;
-                    new jimp({ width, height, data: Uint8Array.from(file.bytes) }, (err: any, img: jimp) => {
+                    new jimp({ width, height, data: Uint8Array.from(file.bytes) }, (err: unknown, img: jimp) => {
                         if (!err) {
                             img.write(filepath, error => {
                                 if (error) {

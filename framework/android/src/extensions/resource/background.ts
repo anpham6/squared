@@ -1,6 +1,8 @@
 import Resource from '../../resource';
 import ResourceSvg from './svg';
 
+import NodeUI = squared.base.NodeUI;
+
 import { CONTAINER_ANDROID, EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X, XMLNS_ANDROID } from '../../lib/constant';
 import { BUILD_ANDROID, CONTAINER_NODE } from '../../lib/enumeration';
 import { applyTemplate } from '../../lib/util';
@@ -65,8 +67,6 @@ const { truncate } = squared.lib.math;
 const { delimitString, isEqual, plainMap, resolvePath, spliceArray, splitPair } = squared.lib.util;
 
 const { BOX_STANDARD, NODE_RESOURCE } = squared.base.lib.enumeration;
-
-const NodeUI = squared.base.NodeUI;
 
 const CHAR_SEPARATOR = /\s*,\s*/;
 

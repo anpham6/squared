@@ -11,8 +11,6 @@ declare namespace base {
         userSettings: ChromeUserSettings;
         builtInExtensions: Map<string, Extension<T>>;
         readonly extensions: Extension<T>[];
-        readonly controllerHandler: Controller<T>;
-        readonly resourceHandler: Resource<T>;
         createNode(sessionId: string, options: CreateNodeOptions): T;
     }
 
@@ -44,7 +42,6 @@ declare namespace base {
     class Extension<T extends Node> extends squared.base.Extension<T> {
         static getConvertOptions(name: string, options: ConvertOptions): Undef<string>;
         static getCompressOptions(name: string, options: CompressOptions): string;
-        application: Application<T>;
         processFile(data: ChromeAsset, override?: boolean): boolean;
     }
 }

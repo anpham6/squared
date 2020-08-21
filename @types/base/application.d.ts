@@ -120,7 +120,6 @@ interface NodeIncludeTemplate<T> extends NodeTemplate<T> {
 interface LayoutType {
     containerType: number;
     alignmentType: number;
-    renderType?: number;
 }
 
 interface ResourceAssetMap {

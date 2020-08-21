@@ -6,6 +6,8 @@ import SvgPath from './svgpath';
 import { INSTANCE_TYPE } from './lib/constant';
 
 export default class SvgShape extends SvgSynchronize$MX(SvgView$MX(SvgElement)) implements squared.svg.SvgShape {
+    public readonly instanceType = INSTANCE_TYPE.SVG_SHAPE;
+
     private _path?: SvgPath;
 
     constructor(
@@ -53,9 +55,5 @@ export default class SvgShape extends SvgSynchronize$MX(SvgView$MX(SvgElement)) 
     }
     get path() {
         return this._path;
-    }
-
-    get instanceType() {
-        return INSTANCE_TYPE.SVG_SHAPE;
     }
 }

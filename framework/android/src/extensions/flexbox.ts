@@ -1,8 +1,9 @@
 import View from '../view';
 
-import { CONTAINER_NODE } from '../lib/enumeration';
-
+import NodeUI = squared.base.NodeUI;
 import LayoutUI = squared.base.LayoutUI;
+
+import { CONTAINER_NODE } from '../lib/enumeration';
 
 interface FlexBasis {
     item: View;
@@ -17,47 +18,6 @@ const { truncate } = squared.lib.math;
 const { capitalize, iterateReverseArray, sameArray, withinRange } = squared.lib.util;
 
 const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
-
-const NodeUI = squared.base.NodeUI;
-
-interface OrientationMap {
-    orientation: OrientationAttr;
-    orientationInverse: OrientationAttr;
-    WHL: DimensionAttr;
-    HWL: DimensionAttr;
-    LT: AnchorPosition;
-    TL: AnchorPosition;
-    RB: AnchorPosition;
-    BR: AnchorPosition;
-    LRTB: AnchorPosition;
-    RLBT: AnchorPosition;
-}
-
-const MAP_HORIZONAL: OrientationMap = {
-    orientation: 'horizontal',
-    orientationInverse: 'vertical',
-    WHL: 'width',
-    HWL: 'height',
-    LT: 'left',
-    TL: 'top',
-    RB: 'right',
-    BR: 'bottom',
-    LRTB: 'leftRight',
-    RLBT: 'rightLeft'
-};
-
-const MAP_VERTICAL: OrientationMap = {
-    orientation: 'vertical',
-    orientationInverse: 'horizontal',
-    WHL: 'height',
-    HWL: 'width',
-    LT: 'top',
-    TL: 'left',
-    RB: 'bottom',
-    BR: 'right',
-    LRTB: 'topBottom',
-    RLBT: 'bottomTop'
-};
 
 function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
     const horizontal = attr === 'width';
@@ -374,6 +334,18 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
             else {
                 chainVertical[0] = children;
             }
+            let orientation: OrientationAttr,
+                orientationInverse: OrientationAttr,
+                WHL: DimensionAttr,
+                HWL: DimensionAttr,
+                LT: AnchorPosition,
+                TL: AnchorPosition,
+                RB: AnchorPosition,
+                BR: AnchorPosition,
+                LRTB: AnchorPosition,
+                RLBT: AnchorPosition,
+                dimension: boolean,
+                dimensionInverse: boolean;
             for (let i = 0; i < 2; ++i) {
                 const horizontal = i === 0;
                 const partition = horizontal ? chainHorizontal : chainVertical;
@@ -381,14 +353,31 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 if (length === 0) {
                     continue;
                 }
-                const { orientation, orientationInverse, WHL, HWL, LT, TL, RB, BR, LRTB, RLBT } = horizontal ? MAP_HORIZONAL : MAP_VERTICAL;
-                let dimension: boolean,
-                    dimensionInverse: boolean;
                 if (horizontal) {
+                    orientation = 'horizontal';
+                    orientationInverse = 'vertical';
+                    WHL = 'width';
+                    HWL = 'height';
+                    LT = 'left';
+                    TL = 'top';
+                    RB = 'right';
+                    BR = 'bottom';
+                    LRTB = 'leftRight';
+                    RLBT = 'rightLeft';
                     dimension = node.hasHeight;
                     dimensionInverse = node.hasWidth;
                 }
                 else {
+                    orientation = 'vertical';
+                    orientationInverse = 'horizontal';
+                    WHL = 'height';
+                    HWL = 'width';
+                    LT = 'top';
+                    TL = 'left';
+                    RB = 'bottom';
+                    BR = 'right';
+                    LRTB = 'topBottom';
+                    RLBT = 'bottomTop';
                     dimension = node.hasWidth;
                     dimensionInverse = node.hasHeight;
                 }

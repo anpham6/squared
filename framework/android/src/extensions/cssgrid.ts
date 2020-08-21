@@ -1,22 +1,22 @@
 import Resource from '../resource';
 
+import LayoutUI = squared.base.LayoutUI;
+
 import { CONTAINER_ANDROID, STRING_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 
-import LayoutUI = squared.base.LayoutUI;
-
 type View = android.base.View;
+
+interface AndroidCssGridData<T> extends CssGridData<T> {
+    unsetContentBox?: boolean;
+    constraintData?: T[][];
+}
 
 const { formatPercent, formatPX, isLength } = squared.lib.css;
 const { truncate } = squared.lib.math;
 const { flatArray, lastItemOf } = squared.lib.util;
 
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.enumeration;
-
-interface AndroidCssGridData<T> extends CssGridData<T> {
-    unsetContentBox?: boolean;
-    constraintData?: T[][];
-}
 
 const REGEXP_ALIGNSELF = /start|end|center|baseline/;
 const REGEXP_JUSTIFYSELF = /start|center|end|baseline|right|left/;
@@ -38,13 +38,11 @@ function getRowData(mainData: CssGridData<View>, horizontal: boolean) {
     return rowData;
 }
 
-function getGridSize(mainData: CssGridData<View>, node: View, horizontal: boolean, maxScreenWidth: number, maxScreenHeight: number) {
-    const data = horizontal ? mainData.column : mainData.row;
+function getRemainingSize(mainData: CssGridData<View>, data: CssGridDirectionData, node: View, dimension: DimensionAttr, maxScreenWidth: number, maxScreenHeight: number) {
     const unit = data.unit;
     const length = unit.length;
     let value = 0;
     if (length > 0) {
-        const dimension = horizontal ? 'width' : 'height';
         for (let i = 0; i < length; ++i) {
             const unitPX = unit[i];
             if (unitPX.endsWith('px')) {
@@ -70,7 +68,7 @@ function getGridSize(mainData: CssGridData<View>, node: View, horizontal: boolea
         }
     }
     value += data.gap * (data.length - 1);
-    if (horizontal) {
+    if (dimension === 'width') {
         value += node.contentBox ? node.borderLeftWidth + node.borderRightWidth : node.contentBoxWidth;
         return (maxScreenWidth > value ? Math.min(maxScreenWidth, node.actualWidth) : node.actualWidth) - value;
     }
@@ -85,17 +83,32 @@ function getMarginSize(value: number, gridSize: number) {
     return [size, gridSize - (size * value)];
 }
 
-function setContentSpacing(mainData: CssGridData<View>, node: View, alignment: string, horizontal: boolean, dimension: string, wrapped: boolean, MARGIN_START: number, MARGIN_END: number, maxScreenWidth: number, maxScreenHeight: number) {
-    const data = horizontal ? mainData.column : mainData.row;
+function setContentSpacing(mainData: AndroidCssGridData<View>, data: CssGridDirectionData, node: View, horizontal: boolean, maxScreenWidth: number, maxScreenHeight: number) {
+    let alignment: string,
+        dimension: DimensionAttr,
+        MARGIN_START: number,
+        MARGIN_END: number;
+    if (horizontal) {
+        alignment = mainData.justifyContent;
+        dimension = 'width';
+        MARGIN_START = BOX_STANDARD.MARGIN_LEFT;
+        MARGIN_END = BOX_STANDARD.MARGIN_RIGHT;
+    }
+    else {
+        alignment = mainData.alignContent;
+        dimension = 'height';
+        MARGIN_START = BOX_STANDARD.MARGIN_TOP;
+        MARGIN_END = BOX_STANDARD.MARGIN_BOTTOM;
+    }
     if (alignment.startsWith('space')) {
-        const gridSize = getGridSize(mainData, node, horizontal, maxScreenWidth, maxScreenHeight);
-        if (gridSize > 0) {
+        const offset = getRemainingSize(mainData, data, node, dimension, maxScreenWidth, maxScreenHeight);
+        if (offset > 0) {
             const rowData = getRowData(mainData, horizontal);
             const itemCount = data.length;
             const adjusted = new Set<View>();
             switch (alignment) {
                 case 'space-around': {
-                    const [marginSize, marginExcess] = getMarginSize(itemCount * 2, gridSize);
+                    const [marginSize, marginExcess] = getMarginSize(itemCount * 2, offset);
                     for (let i = 0; i < itemCount; ++i) {
                         for (const item of new Set(flatArray<View>(rowData[i], Infinity))) {
                             const marginStart = (i > 0 && i <= marginExcess ? 1 : 0) + marginSize;
@@ -105,7 +118,7 @@ function setContentSpacing(mainData: CssGridData<View>, node: View, alignment: s
                                 adjusted.add(item);
                             }
                             else {
-                                item.cssPX(dimension, gridSize / itemCount, true);
+                                item.cssPX(dimension, offset / itemCount, true);
                             }
                         }
                     }
@@ -113,7 +126,7 @@ function setContentSpacing(mainData: CssGridData<View>, node: View, alignment: s
                 }
                 case 'space-between':
                     if (itemCount > 1) {
-                        const [marginSize, marginExcess] = getMarginSize(itemCount - 1, gridSize);
+                        const [marginSize, marginExcess] = getMarginSize(itemCount - 1, offset);
                         for (let i = 0; i < itemCount; ++i) {
                             for (const item of new Set(flatArray<View>(rowData[i], Infinity))) {
                                 if (i < itemCount - 1) {
@@ -144,7 +157,8 @@ function setContentSpacing(mainData: CssGridData<View>, node: View, alignment: s
                     }
                     break;
                 case 'space-evenly': {
-                    const [marginSize, marginExcess] = getMarginSize(itemCount + 1, gridSize);
+                    const [marginSize, marginExcess] = getMarginSize(itemCount + 1, offset);
+                    const wrapped = mainData.unsetContentBox;
                     for (let i = 0; i < itemCount; ++i) {
                         for (const item of new Set(flatArray<View>(rowData[i], Infinity))) {
                             let marginEnd = marginSize + (i < marginExcess ? 1 : 0);
@@ -172,18 +186,18 @@ function setContentSpacing(mainData: CssGridData<View>, node: View, alignment: s
             }
         }
     }
-    else if (!wrapped) {
-        let gridSize = getGridSize(mainData, node, horizontal, maxScreenWidth, maxScreenHeight);
-        if (gridSize > 0) {
+    else if (!mainData.unsetContentBox) {
+        let offset = getRemainingSize(mainData, data, node, dimension, maxScreenWidth, maxScreenHeight);
+        if (offset > 0) {
             switch (alignment) {
                 case 'center':
-                    gridSize /= 2;
+                    offset /= 2;
                     if (horizontal) {
-                        node.modifyBox(BOX_STANDARD.PADDING_LEFT, Math.floor(gridSize));
+                        node.modifyBox(BOX_STANDARD.PADDING_LEFT, Math.floor(offset));
                     }
                     else {
-                        node.modifyBox(BOX_STANDARD.PADDING_TOP, Math.floor(gridSize));
-                        node.modifyBox(BOX_STANDARD.PADDING_BOTTOM, Math.ceil(gridSize));
+                        node.modifyBox(BOX_STANDARD.PADDING_TOP, Math.floor(offset));
+                        node.modifyBox(BOX_STANDARD.PADDING_BOTTOM, Math.ceil(offset));
                     }
                     break;
                 case 'right':
@@ -192,7 +206,7 @@ function setContentSpacing(mainData: CssGridData<View>, node: View, alignment: s
                     }
                 case 'end':
                 case 'flex-end':
-                    node.modifyBox(horizontal ? BOX_STANDARD.PADDING_LEFT : BOX_STANDARD.PADDING_TOP, gridSize);
+                    node.modifyBox(horizontal ? BOX_STANDARD.PADDING_LEFT : BOX_STANDARD.PADDING_TOP, offset);
                     break;
             }
         }
@@ -729,7 +743,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
             const wrapped = mainData.unsetContentBox === true;
             const insertId = children[children.length - 1].id;
             if (CssGrid.isJustified(node)) {
-                setContentSpacing(mainData, node, mainData.justifyContent, true, 'width', wrapped, BOX_STANDARD.MARGIN_LEFT, BOX_STANDARD.MARGIN_RIGHT, controller.userSettings.resolutionScreenWidth - node.bounds.left, 0);
+                setContentSpacing(mainData, column, node, true, controller.userSettings.resolutionScreenWidth - node.bounds.left, 0);
                 switch (mainData.justifyContent) {
                     case 'center':
                     case 'space-around':
@@ -794,7 +808,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 }
             }
             if (CssGrid.isAligned(node)) {
-                setContentSpacing(mainData, node, mainData.alignContent, false, 'height', wrapped, BOX_STANDARD.MARGIN_TOP, BOX_STANDARD.MARGIN_BOTTOM, 0, (this.controller as android.base.Controller<T>).userSettings.resolutionScreenHeight);
+                setContentSpacing(mainData, row, node, false, 0, controller.userSettings.resolutionScreenHeight);
                 if (wrapped) {
                     switch (mainData.alignContent) {
                         case 'center':

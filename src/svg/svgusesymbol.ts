@@ -8,6 +8,8 @@ import SvgContainer from './svgcontainer';
 import { INSTANCE_TYPE } from './lib/constant';
 
 export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer))))) implements squared.svg.SvgUseSymbol {
+    public readonly instanceType = INSTANCE_TYPE.SVG_USE_SYMBOL;
+
     constructor(
         public readonly symbolElement: SVGSymbolElement,
         public readonly useElement: SVGUseElement)
@@ -32,9 +34,5 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewR
 
     get viewBox() {
         return this.symbolElement.viewBox.baseVal || { x: 0, y: 0, width: 0, height: 0 };
-    }
-
-    get instanceType() {
-        return INSTANCE_TYPE.SVG_USE_SYMBOL;
     }
 }

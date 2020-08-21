@@ -16,8 +16,6 @@ declare namespace base {
 
     class Application<T extends View> extends squared.base.ApplicationUI<T> {
         readonly userSettings: AndroidUserSettingsUI;
-        readonly controllerHandler: Controller<T>;
-        readonly resourceHandler: Resource<T>;
         setViewModel(data: AppViewModel, sessionId?: string): void;
         getViewModel(sessionId: string): Undef<AppViewModel>;
         resolveTarget(sessionId: string, target: Null<HTMLElement | string>): Undef<T>;
@@ -51,7 +49,6 @@ declare namespace base {
         static addColor(value: Undef<ColorData | string>, transparency?: boolean): string;
         readonly application: Application<T>;
         get userSettings(): AndroidUserSettingsUI;
-        get mapOfStored(): AndroidResourceStoredMap;
         addImageSrc(element: HTMLImageElement | string, prefix?: string, imageSet?: ImageSrcSet[]): string;
         addImageSet(images: StringMap, prefix?: string): string;
     }
@@ -82,7 +79,6 @@ declare namespace base {
         static availablePercent<T extends View>(nodes: T[], dimension: DimensionAttr, boxSize: number): number;
         static getControlName(containerType: number, api?: number): string;
         api: number;
-        readonly documentId: string;
         android(attr: string, value?: string, overwrite?: boolean): string;
         app(attr: string, value?: string, overwrite?: boolean): string;
         clone(id: number, options?: AndroidCloneOptions): View;
@@ -106,6 +102,7 @@ declare namespace base {
         get anchored(): boolean;
         set localSettings(value);
         get localSettings(): AndroidLocalSettingsUI;
+        get documentId(): string;
         get anchorTarget(): View;
         get constraint(): Constraint;
         get layoutFrame(): boolean;

@@ -21,8 +21,6 @@ export default abstract class Extension<T extends squared.base.Node> extends squ
         return name + (result !== '(0,*)' ? result : '') + (opacity > 0 && opacity < 1 ? `|${opacity}|` : '') + ':';
     }
 
-    public application!: chrome.base.Application<T>;
-
     public processFile(data: ChromeAsset, override?: boolean) {
         return false;
     }

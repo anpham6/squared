@@ -218,6 +218,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
     public baseValue = '';
     public transformed?: Null<SvgTransform[]>;
     public transformResidual?: SvgTransform[][];
+    public readonly instanceType = INSTANCE_TYPE.SVG_PATH;
 
     private _transforms?: SvgTransform[];
 
@@ -1026,9 +1027,5 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
 
     get totalLength() {
         return this.element.getTotalLength();
-    }
-
-    get instanceType() {
-        return INSTANCE_TYPE.SVG_PATH;
     }
 }

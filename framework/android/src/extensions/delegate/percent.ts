@@ -1,15 +1,10 @@
 import Controller from '../../controller';
 import View from '../../view';
 
-import { LAYOUT_ANDROID, STRING_ANDROID } from '../../lib/constant';
-import { CONTAINER_NODE } from '../../lib/enumeration';
-
 import LayoutUI = squared.base.LayoutUI;
 
-const { CSS_UNIT, formatPX } = squared.lib.css;
-const { truncate } = squared.lib.math;
-
-const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
+import { LAYOUT_ANDROID, STRING_ANDROID } from '../../lib/constant';
+import { CONTAINER_NODE } from '../../lib/enumeration';
 
 interface PercentData {
     percentWidth?: boolean;
@@ -17,6 +12,11 @@ interface PercentData {
     marginHorizontal?: boolean;
     marginVertical?: boolean;
 }
+
+const { CSS_UNIT, formatPX } = squared.lib.css;
+const { truncate } = squared.lib.math;
+
+const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
 const validPercent = (value: string) => value.endsWith('%') && parseFloat(value) > 0;
 

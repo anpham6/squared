@@ -1,6 +1,6 @@
-import { CONTAINER_NODE } from '../../lib/enumeration';
-
 import LayoutUI = squared.base.LayoutUI;
+
+import { CONTAINER_NODE } from '../../lib/enumeration';
 
 type View = android.base.View;
 

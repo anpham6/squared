@@ -1,8 +1,8 @@
 import View from '../view';
 
-import { CONTAINER_NODE } from '../lib/enumeration';
-
 import LayoutUI = squared.base.LayoutUI;
+
+import { CONTAINER_NODE } from '../lib/enumeration';
 
 const { formatPX } = squared.lib.css;
 const { trimEnd } = squared.lib.util;

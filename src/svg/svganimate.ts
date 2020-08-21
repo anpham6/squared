@@ -178,6 +178,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public by?: number;
     public end?: number;
     public synchronized?: NumberValue;
+    public readonly instanceType = INSTANCE_TYPE.SVG_ANIMATE;
 
     protected _reverse = false;
     protected _alternate = false;
@@ -580,9 +581,5 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     get evaluateEnd() {
         const keyTimes = this.keyTimes;
         return keyTimes.length > 0 && keyTimes[keyTimes.length - 1] < 1;
-    }
-
-    get instanceType() {
-        return INSTANCE_TYPE.SVG_ANIMATE;
     }
 }

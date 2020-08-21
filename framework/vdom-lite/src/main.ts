@@ -4,8 +4,6 @@ import Node from '../../../src/base/node';
 
 import SETTINGS from '../../vdom/src/settings';
 
-const framework = squared.base.lib.enumeration.APP_FRAMEWORK.VDOM;
-
 let application: Null<Application<Node>> = null;
 
 const appBase: squared.base.AppFramework<Node> = {
@@ -16,10 +14,10 @@ const appBase: squared.base.AppFramework<Node> = {
     extensions: {},
     system: {},
     create() {
-        application = new Application<Node>(framework, Node, (Controller as unknown) as Constructor<Node>);
+        application = new Application<Node>(squared.base.lib.enumeration.APP_FRAMEWORK.VDOM, Node, (Controller as unknown) as Constructor<Node>);
         return {
             application,
-            framework,
+            framework: squared.base.lib.enumeration.APP_FRAMEWORK.VDOM,
             userSettings: { ...SETTINGS }
         };
     },
@@ -27,7 +25,7 @@ const appBase: squared.base.AppFramework<Node> = {
         if (application) {
             return {
                 application,
-                framework,
+                framework: squared.base.lib.enumeration.APP_FRAMEWORK.VDOM,
                 userSettings: application.userSettings
             };
         }

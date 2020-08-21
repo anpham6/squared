@@ -11,27 +11,24 @@ interface CreateNodeUIOptions<T> extends CreateNodeOptions {
     cascade?: boolean;
 }
 
-interface CreateNodeGroupUIOptions {
+interface CreateNodeGroupUIOptions extends Partial<LayoutType> {
     delegate?: boolean;
     cascade?: boolean;
 }
 
-interface CreateNodeWrapperUIOptions<T> extends ExcludeOptions {
+interface CreateNodeWrapperUIOptions<T> extends Partial<LayoutType>, ExcludeOptions {
     children?: T[];
-    containerType?: number;
-    alignmentType?: number;
     cascade?: boolean;
 }
 
 interface LayoutOptions<T> extends Partial<LayoutType> {
     parent: T;
     node: T;
-    containerType?: number;
-    alignmentType?: number;
     children?: T[];
     itemCount?: number;
     rowCount?: number;
     columnCount?: number;
+    renderType?: number;
 }
 
 interface ExtensionOptions {

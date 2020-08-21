@@ -209,7 +209,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         if (STORED.fonts.size > 0) {
             const resource = this.resource;
             const { insertSpaces, targetAPI } = this.userSettings;
-            const xmlns = targetAPI < BUILD_ANDROID.OREO ? XMLNS_ANDROID.app : XMLNS_ANDROID.android;
+            const xmlns = XMLNS_ANDROID[targetAPI < BUILD_ANDROID.OREO ? 'app' : 'android'];
             const outputDirectory = getOutputDirectory(this.userSettings.outputDirectory);
             const pathname = this.directory.font;
             const result: string[] = [];

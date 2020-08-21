@@ -21,11 +21,7 @@ const Resource = android.base.Resource;
 const PREFIX_MENU = 'ic_menu_';
 
 export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T> {
-    constructor(
-        name: string,
-        framework: number,
-        options?: ExtensionUIOptions)
-    {
+    constructor(name: string, framework: number, options?: ExtensionUIOptions) {
         super(name, framework, options);
         this.require(WIDGET_NAME.MENU);
     }

@@ -101,8 +101,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                 for (let i = 0; i < length; ++i) {
                     const seg = rows[i];
                     maxCount = Math.max(seg.length, maxCount);
-                    const group = controller.createNodeGroup(seg[0], seg, node, { delegate: true, cascade: true });
-                    group.addAlign(NODE_ALIGNMENT.SEGMENTED);
+                    const group = controller.createNodeGroup(seg[0], seg, node, { alignmentType: NODE_ALIGNMENT.SEGMENTED, delegate: true, cascade: true });
                     group.box[size] = boxSize;
                     group.containerIndex = i;
                 }

@@ -61,6 +61,7 @@ function createRadialGradient(element: SVGRadialGradientElement): SvgGradient {
 export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer)))) implements squared.svg.Svg {
     public precision?: number;
     public keyframesMap?: KeyframesMap;
+    public readonly instanceType = INSTANCE_TYPE.SVG;
     public readonly definitions: SvgDefinitions = {
         clipPath: new Map<string, SVGClipPathElement>(),
         pattern: new Map<string, SVGPatternElement>(),
@@ -189,9 +190,5 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
 
     get viewBox() {
         return this.element.viewBox.baseVal || { x: 0, y: 0, width: 0, height: 0 };
-    }
-
-    get instanceType() {
-        return INSTANCE_TYPE.SVG;
     }
 }

@@ -758,7 +758,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     public documentRoot = false;
     public depth = -1;
-    public childIndex = Infinity;
     public queryMap?: T[][];
 
     protected _parent: Null<T> = null;
@@ -773,6 +772,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     protected _cssStyle?: StringMap;
     protected _naturalChildren?: T[];
     protected _naturalElements?: T[];
+    protected _childIndex = Infinity;
     protected readonly _element: Null<Element> = null;
 
     private _inlineText = false;
@@ -1458,7 +1458,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         }
         else if (lastItemOf(value) === '%') {
             const bounds: BoxRectDimension = options.parent !== false && this.absoluteParent?.box || this.bounds;
-            return (parseFloat(value) / 100) * (options.dimension === 'height' ? bounds.height : bounds.width);
+            return (parseFloat(value) / 100) * bounds[options.dimension || 'width'];
         }
         if (options.fontSize === undefined) {
             options.fontSize = this.fontSize;
@@ -2835,6 +2835,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get actualDimension() {
         return { width: this.actualWidth, height: this.actualHeight };
+    }
+
+    set childIndex(value) {
+        this._childIndex = value;
+    }
+    get childIndex() {
+        return this._childIndex;
     }
 
     set naturalChildren(value) {

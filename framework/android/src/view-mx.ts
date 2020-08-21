@@ -1,5 +1,7 @@
 import Resource from './resource';
 
+import ResourceUI = squared.base.ResourceUI;
+
 import { CONTAINER_ANDROID, CONTAINER_ANDROID_X, ELEMENT_ANDROID, LAYOUT_ANDROID, RESERVED_JAVA, STRING_ANDROID } from './lib/constant';
 import { API_ANDROID, DEPRECATED_ANDROID } from './lib/customization';
 import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
@@ -14,8 +16,6 @@ const { capitalize, convertInt, convertWord, fromLastIndexOf, hasKeys, isString,
 
 const { EXT_NAME } = squared.base.lib.constant;
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE } = squared.base.lib.enumeration;
-
-const ResourceUI = squared.base.ResourceUI;
 
 const BOX_MARGIN = CSS_PROPERTIES.margin.value as string[];
 const BOX_PADDING = CSS_PROPERTIES.padding.value as string[];
@@ -591,7 +591,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public api = BUILD_ANDROID.LATEST;
-        public actualParent!: Null<T>;
         public renderChildren!: T[];
         public renderParent!: Null<T>;
         public horizontalRows?: T[][];

@@ -510,16 +510,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public visible = true;
     public renderChildren: T[] = [];
     public renderParent: Null<T> = null;
-    public actualParent!: Null<T>;
     public documentChildren?: T[];
     public horizontalRowStart?: boolean;
     public horizontalRowEnd?: boolean;
     public outerWrapper?: T;
-    public innerWrapped?: T;
     public innerBefore?: T;
     public innerAfter?: T;
     public companion?: T;
-    public labelFor?: T;
     public renderExtension?: squared.base.ExtensionUI<T>[];
     public renderTemplates?: NodeTemplate<T>[];
     public renderedAs?: NodeTemplate<T>;
@@ -535,7 +532,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     protected abstract _namespaces: ObjectMap<StringMapChecked>;
 
-    private _childIndex = Infinity;
     private _containerIndex = Infinity;
     private _renderAs?: T;
     private _locked?: ObjectMapNested<boolean>;
@@ -558,6 +554,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public abstract translateY(value: number, options?: TranslateOptions): boolean;
     public abstract localizeString(value: string): string;
 
+    public abstract set actualParent(value);
+    public abstract get actualParent(): Null<T>;
+    public abstract set labelFor(value);
+    public abstract get labelFor(): Undef<T>;
+    public abstract set innerWrapped(value);
+    public abstract get innerWrapped(): Undef<T>;
     public abstract set containerType(value: number);
     public abstract get containerType(): number;
     public abstract set controlId(name: string);

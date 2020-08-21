@@ -90,11 +90,7 @@ const hasInputType = (node: View, value: string) => node.some(item => item.toEle
 export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly cascadeAll = true;
 
-    constructor(
-        name: string,
-        framework: number,
-        options?: ExtensionUIOptions)
-    {
+    constructor(name: string, framework: number, options?: ExtensionUIOptions) {
         super(name, framework, options);
         this.require(EXT_ANDROID.EXTERNAL, true);
     }

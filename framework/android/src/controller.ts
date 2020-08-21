@@ -2,11 +2,12 @@ import Resource from './resource';
 import View from './view';
 import ViewGroup from './viewgroup';
 
+import NodeUI = squared.base.NodeUI;
+import LayoutUI = squared.base.LayoutUI;
+
 import { CONTAINER_ANDROID, CONTAINER_ANDROID_X } from './lib/constant';
 import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
 import { adjustAbsolutePaddingOffset, createViewAttribute, getDocumentId, getRootNs, isUnstyled, replaceTab } from './lib/util';
-
-import LayoutUI = squared.base.LayoutUI;
 
 const { PLATFORM, isPlatform } = squared.lib.client;
 const { parseColor } = squared.lib.color;
@@ -17,8 +18,6 @@ const { getElementAsNode } = squared.lib.session;
 const { assignEmptyValue, capitalize, convertWord, hasBit, hasMimeType, isString, iterateArray, parseMimeType, partitionArray, plainMap, withinRange } = squared.lib.util;
 
 const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
-
-const NodeUI = squared.base.NodeUI;
 
 const REGEXP_TEXTSYMBOL = /^[^\w\s\n]+[\s\n]+$/;
 
@@ -803,9 +802,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         text: Undef<T>,
                         length = title.length;
                     if (length > 1) {
-                        rt = this.createNodeGroup(title[0], title, node, { delegate: true });
-                        rt.setControlType(CONTAINER_ANDROID.RELATIVE, CONTAINER_NODE.RELATIVE);
-                        rt.addAlign(NODE_ALIGNMENT.HORIZONTAL);
+                        rt = this.createNodeGroup(title[0], title, node, { containerType: CONTAINER_NODE.RELATIVE, alignmentType: NODE_ALIGNMENT.HORIZONTAL, delegate: true });
                         rt.css('whiteSpace', 'nowrap');
                         rt.setLayoutWidth('wrap_content');
                     }
@@ -814,9 +811,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                     length = content.length;
                     if (length > 1) {
-                        text = this.createNodeGroup(content[0], content, node, { delegate: true });
-                        text.setControlType(CONTAINER_ANDROID.RELATIVE, CONTAINER_NODE.RELATIVE);
-                        text.addAlign(NODE_ALIGNMENT.HORIZONTAL);
+                        text = this.createNodeGroup(content[0], content, node, { containerType: CONTAINER_NODE.RELATIVE, alignmentType: NODE_ALIGNMENT.HORIZONTAL, delegate: true });
                         text.css('whiteSpace', 'nowrap');
                         text.setLayoutWidth('wrap_content');
                     }
@@ -824,9 +819,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         text = content[0];
                     }
                     if (rt && text) {
-                        const group = this.createNodeGroup(rt, [rt, text], node, { delegate: true });
-                        group.setControlType(CONTAINER_ANDROID.LINEAR, CONTAINER_NODE.LINEAR);
-                        group.addAlign(NODE_ALIGNMENT.VERTICAL);
+                        const group = this.createNodeGroup(rt, [rt, text], node, { containerType: CONTAINER_NODE.LINEAR, alignmentType: NODE_ALIGNMENT.VERTICAL, delegate: true });
                         group.setLayoutWidth('wrap_content');
                         group.setLayoutHeight('wrap_content');
                         group.mergeGravity('gravity', 'center_horizontal');
@@ -1536,7 +1529,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                     }
                     else {
-                        src = this.application.resourceHandler.addImageSrc(element, '', imageSet);
+                        src = (this.application.resourceHandler as android.base.Resource<T>).addImageSrc(element, '', imageSet);
                     }
                     if (src) {
                         node.android('src', `@drawable/${src}`);
@@ -2103,25 +2096,33 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public createNodeGroup(node: T, children: T[], parent?: T, options?: CreateNodeGroupUIOptions) {
-        let delegate: Undef<boolean>,
+        let containerType: Undef<number>,
+            alignmentType: Undef<number>,
+            delegate: Undef<boolean>,
             cascade: Undef<boolean>;
         if (options) {
-            ({ delegate, cascade } = options);
+            ({ containerType, alignmentType, delegate, cascade } = options);
         }
-        const group = new ViewGroup(this.application.nextId, node, children, parent) as T;
-        this.afterInsertNode(group);
+        const container = new ViewGroup(this.application.nextId, node, children, parent) as T;
+        if (containerType) {
+            container.setControlType(View.getControlName(containerType, node.api), containerType);
+        }
+        if (alignmentType) {
+            container.addAlign(alignmentType);
+        }
+        this.afterInsertNode(container);
         if (parent) {
-            if (!parent.contains(group)) {
-                parent.add(group);
-                group.init(parent, node.depth);
-                group.containerIndex = parent.length - 1;
+            if (!parent.contains(container)) {
+                parent.add(container);
+                container.init(parent, node.depth);
+                container.containerIndex = parent.length - 1;
             }
         }
         else {
-            group.containerIndex = node.containerIndex;
+            container.containerIndex = node.containerIndex;
         }
-        this.application.getProcessingCache(node.sessionId).add(group, delegate === true, cascade === true);
-        return group;
+        this.application.getProcessingCache(node.sessionId).add(container, delegate === true, cascade === true);
+        return container;
     }
 
     public createNodeWrapper(node: T, parent: T, options: AndroidCreateNodeWrapperUIOptions<T> = {}) {
@@ -2844,9 +2845,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             const lastRowAligned = i === length - 1 && textAlignLast !== '' && textAlignLast !== 'justify';
                             if (centerAligned || lastRowAligned) {
                                 const application = this.application;
-                                baseline = this.createNodeGroup(items[0], items, node);
-                                baseline.setControlType(CONTAINER_ANDROID.RELATIVE, CONTAINER_NODE.RELATIVE);
-                                baseline.addAlign(NODE_ALIGNMENT.HORIZONTAL);
+                                baseline = this.createNodeGroup(items[0], items, node, { containerType: CONTAINER_NODE.RELATIVE, alignmentType: NODE_ALIGNMENT.HORIZONTAL });
                                 baseline.render(node);
                                 if (lastRowAligned) {
                                     switch (textAlignLast) {
@@ -3740,9 +3739,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if (!node.leftTopAxis && documentParent.rootElement) {
             const renderParent = node.renderParent;
             if (documentParent.ascend({ condition: item => item === renderParent, attr: 'renderParent' }).length > 0) {
-                location = horizontal
-                    ? !opposing ? documentParent.marginLeft : documentParent.marginRight
-                    : !opposing ? documentParent.marginTop : documentParent.marginBottom;
+                location = horizontal ? documentParent[!opposing ? 'marginLeft' : 'marginRight'] : documentParent[!opposing ? 'marginTop' : 'marginBottom'];
             }
         }
         if (percent) {

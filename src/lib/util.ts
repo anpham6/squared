@@ -1143,10 +1143,10 @@ export function partitionArray<T>(list: ArrayLike<T>, predicate: IteratorPredica
     return [valid, invalid];
 }
 
-export function sameArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, any>) {
+export function sameArray<T, U = unknown>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>) {
     const length = list.length;
     if (length > 0) {
-        let baseValue!: any;
+        let baseValue!: U;
         for (let i = 0; i < length; ++i) {
             const value = predicate(list[i], i, list);
             if (i === 0) {

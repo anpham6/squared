@@ -49,7 +49,6 @@ export default abstract class Application<T extends Node> implements squared.bas
     public readonly session: squared.base.AppSession<T> = {
         active: new Map<string, squared.base.AppProcessing<T>>()
     };
-
     public abstract userSettings: UserSettings;
     public abstract readonly systemName: string;
 

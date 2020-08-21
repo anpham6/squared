@@ -119,9 +119,9 @@ declare module "svg" {
         parent?: SvgContainer;
         viewport?: Svg;
         readonly element: SVGGraphicsElement;
+        readonly instanceType: number;
         build(options?: SvgBuildOptions): void;
         synchronize(options?: SvgSynchronizeOptions): void;
-        get instanceType(): number;
         constructor(element: SVGGraphicsElement);
     }
 
@@ -130,6 +130,7 @@ declare module "svg" {
         parent?: SvgContainer;
         viewport?: Svg;
         readonly element: SvgContainerElement;
+        readonly instanceType: number;
         add(item: SvgView, viewport?: Svg): this;
         refitX(value: number): number;
         refitY(value: number): number;
@@ -143,7 +144,6 @@ declare module "svg" {
         set clipRegion(value);
         get clipRegion(): string;
         get requireRefit(): boolean;
-        get instanceType(): number;
         constructor(element: SvgContainerElement);
     }
 
@@ -389,6 +389,7 @@ declare module "svg" {
         transformed?: Null<SvgTransform[]>;
         transformResidual?: SvgTransform[][];
         readonly element: SVGGeometryElement;
+        readonly instanceType: number;
         setPaint(d?: string[], precision?: number): void;
         setAttribute(attr: string, computed?: boolean, inherited?: boolean): void;
         getAttribute(attr: string, computed?: boolean, inherited?: boolean): string;
@@ -409,7 +410,6 @@ declare module "svg" {
         get transforms(): SvgTransform[];
         get pathLength(): number;
         get totalLength(): number;
-        get instanceType(): number;
         constructor(element: SVGGeometryElement);
     }
 
@@ -562,6 +562,7 @@ declare module "svg" {
         companion?: NumberValue<SvgAnimation>;
         readonly element: Null<SVGGraphicsElement>;
         readonly animationElement: Null<SVGAnimationElement>;
+        readonly instanceType: number;
         setAttribute(attr: string, equality?: string): void;
         addState(...values: number[]): void;
         removeState(...values: number[]): void;
@@ -588,7 +589,6 @@ declare module "svg" {
         get group(): SvgAnimationGroup;
         get parentContainer(): Undef<SvgContainer>;
         get fillReplace(): boolean;
-        get instanceType(): number;
         get dataset(): SvgDataSet;
         constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimationElement);
     }
