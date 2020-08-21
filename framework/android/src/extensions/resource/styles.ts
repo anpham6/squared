@@ -16,10 +16,13 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
         const rendered = options.rendered;
         for (let i = 0, length = rendered.length; i < length; ++i) {
             next: {
-                const node = rendered[i];
-                const q = node.renderChildren.length;
-                if (q > 1 && node.controlId !== '') {
-                    const renderChildren = node.renderChildren;
+                const renderChildren = rendered[i].renderChildren;
+                const q = renderChildren.length;
+                if (q > 1) {
+                    const controlId = rendered[i].controlId;
+                    if (controlId === '') {
+                        continue;
+                    }
                     const attrMap: ObjectMap<number> = {};
                     let style = '';
                     for (let j = 0; j < q; ++j) {
@@ -65,7 +68,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                                 attrs.push(match[2]);
                             }
                         }
-                        const name = (style !== '' ? style + '.' : '') + capitalize(node.controlId);
+                        const name = (style !== '' ? style + '.' : '') + capitalize(controlId);
                         if (!styles.has(name)) {
                             items.sort((a, b) => a.key < b.key ? -1 : 1);
                             styles.set(name, Object.assign(createStyleAttribute(), { name, items }));

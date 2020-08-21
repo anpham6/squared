@@ -34,55 +34,55 @@ export default abstract class NodeGroupUI extends NodeUI {
         if (this.hasAlign(NODE_ALIGNMENT.BLOCK)) {
             return false;
         }
-        const result = this._cached.inline;
-        return result === undefined ? this._cached.inline = this.every(node => node.inline) : result;
+        const result = this._cache.inline;
+        return result === undefined ? this._cache.inline = this.every(node => node.inline) : result;
     }
 
     get inlineStatic() {
         if (this.hasAlign(NODE_ALIGNMENT.BLOCK)) {
             return false;
         }
-        const result = this._cached.inlineStatic;
-        return result === undefined ? this._cached.inlineStatic = this.every(node => node.inlineStatic) : result;
+        const result = this._cache.inlineStatic;
+        return result === undefined ? this._cache.inlineStatic = this.every(node => node.inlineStatic) : result;
     }
 
     get inlineVertical() {
         if (this.hasAlign(NODE_ALIGNMENT.BLOCK)) {
             return false;
         }
-        const result = this._cached.inlineVertical;
-        return result === undefined ? this._cached.inlineVertical = this.every((node: NodeUI) => node.inlineVertical) : result;
+        const result = this._cache.inlineVertical;
+        return result === undefined ? this._cache.inlineVertical = this.every((node: NodeUI) => node.inlineVertical) : result;
     }
 
     get inlineFlow() {
         if (this.hasAlign(NODE_ALIGNMENT.BLOCK)) {
             return false;
         }
-        const result = this._cached.inlineFlow;
-        return result === undefined ? this._cached.inlineFlow = this.every((node: NodeUI) => node.inlineFlow) : result;
+        const result = this._cache.inlineFlow;
+        return result === undefined ? this._cache.inlineFlow = this.every((node: NodeUI) => node.inlineFlow) : result;
     }
 
     get inlineDimension() {
         if (this.hasAlign(NODE_ALIGNMENT.BLOCK)) {
             return false;
         }
-        const result = this._cached.inlineDimension;
-        return result === undefined ? this._cached.inlineDimension = this.every((node: NodeUI) => node.inlineDimension) : result;
+        const result = this._cache.inlineDimension;
+        return result === undefined ? this._cache.inlineDimension = this.every((node: NodeUI) => node.inlineDimension) : result;
     }
 
     get block() {
         if (this.hasAlign(NODE_ALIGNMENT.BLOCK)) {
             return true;
         }
-        const result = this._cached.block;
-        return result === undefined ? this._cached.block = this.some(node => node.block) : result;
+        const result = this._cache.block;
+        return result === undefined ? this._cache.block = this.some(node => node.block) : result;
     }
 
     get blockStatic() {
         if (this.hasAlign(NODE_ALIGNMENT.BLOCK)) {
             return true;
         }
-        let result = this._cached.blockStatic;
+        let result = this._cache.blockStatic;
         if (result === undefined) {
             const documentParent = this.actualParent || this.documentParent;
             result =
@@ -91,43 +91,43 @@ export default abstract class NodeGroupUI extends NodeUI {
                 this.some(node => node.blockStatic || node.percentWidth > 0) ||
                 documentParent.percentWidth > 0;
             if (result || this.containerType !== 0) {
-                this._cached.blockStatic = result;
+                this._cache.blockStatic = result;
             }
         }
         return result;
     }
 
     get blockDimension() {
-        const result = this._cached.blockDimension;
-        return result === undefined ? this._cached.blockDimension = this.every((node: NodeUI) => node.blockDimension) : result;
+        const result = this._cache.blockDimension;
+        return result === undefined ? this._cache.blockDimension = this.every((node: NodeUI) => node.blockDimension) : result;
     }
 
     get blockVertical() {
-        const result = this._cached.blockVertical;
-        return result === undefined ? this._cached.blockVertical = this.every((node: NodeUI) => node.blockVertical) : result;
+        const result = this._cache.blockVertical;
+        return result === undefined ? this._cache.blockVertical = this.every((node: NodeUI) => node.blockVertical) : result;
     }
 
     get pageFlow() {
-        const result = this._cached.pageFlow;
-        return result === undefined ? this._cached.pageFlow = !hasCoords(this.css('position')) : result;
+        const result = this._cache.pageFlow;
+        return result === undefined ? this._cache.pageFlow = !hasCoords(this.css('position')) : result;
     }
 
     set baseline(value) {
-        this._cached.baseline = value;
+        this._cache.baseline = value;
     }
     get baseline() {
-        const result = this._cached.baseline;
-        return result === undefined ? this._cached.baseline = this.every((node: NodeUI) => node.baselineElement) : result;
+        const result = this._cache.baseline;
+        return result === undefined ? this._cache.baseline = this.every((node: NodeUI) => node.baselineElement) : result;
     }
 
     get float() {
-        const result = this._cached.float;
-        return result === undefined ? this._cached.float = !this.floating ? 'none' : this.hasAlign(NODE_ALIGNMENT.RIGHT) ? 'right' : 'left' : result;
+        const result = this._cache.float;
+        return result === undefined ? this._cache.float = !this.floating ? 'none' : this.hasAlign(NODE_ALIGNMENT.RIGHT) ? 'right' : 'left' : result;
     }
 
     get floating() {
-        const result = this._cached.floating;
-        return result === undefined ? this._cached.floating = this.hasAlign(NODE_ALIGNMENT.FLOAT) || this.every((node: NodeUI) => node.floating) : result;
+        const result = this._cache.floating;
+        return result === undefined ? this._cache.floating = this.hasAlign(NODE_ALIGNMENT.FLOAT) || this.every((node: NodeUI) => node.floating) : result;
     }
 
     get display() {
@@ -155,16 +155,16 @@ export default abstract class NodeGroupUI extends NodeUI {
     }
 
     get centerAligned() {
-        const result = this._cached.centerAligned;
-        return result === undefined ? this._cached.centerAligned = this.every(node => node.centerAligned) : result;
+        const result = this._cache.centerAligned;
+        return result === undefined ? this._cache.centerAligned = this.every(node => node.centerAligned) : result;
     }
 
     get rightAligned() {
         if (this.hasAlign(NODE_ALIGNMENT.RIGHT)) {
             return true;
         }
-        const result = this._cached.rightAligned;
-        return result === undefined ? this._cached.rightAligned = this.every(node => node.rightAligned) : result;
+        const result = this._cache.rightAligned;
+        return result === undefined ? this._cache.rightAligned = this.every(node => node.rightAligned) : result;
     }
 
     get tagName() {

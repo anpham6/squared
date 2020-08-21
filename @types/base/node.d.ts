@@ -4,11 +4,7 @@ interface InitialData<T> extends PlainObject {
     bounds?: Null<BoxRectDimension>;
 }
 
-interface CachedValue<T> {
-    htmlElement?: boolean;
-    svgElement?: boolean;
-    naturalElement?: boolean;
-    naturalChild?: boolean;
+interface CacheValue {
     pageFlow?: boolean;
     positionStatic?: boolean;
     positionRelative?: boolean;
@@ -46,15 +42,11 @@ interface CachedValue<T> {
     hasWidth?: boolean;
     hasHeight?: boolean;
     lineHeight?: number;
-    dir?: string;
     tagName?: string;
-    actualParent?: Null<T>;
-    absoluteParent?: Null<T>;
     actualWidth?: number;
     actualHeight?: number;
     percentWidth?: number;
     percentHeight?: number;
-    attributes?: StringMap;
     flexdata?: FlexData;
     flexbox?: FlexBox;
     autoMargin?: AutoMargin;
@@ -63,13 +55,11 @@ interface CachedValue<T> {
     visibleStyle?: VisibleStyle;
     textStyle?: StringMap;
     fontSize?: number;
-    extensions?: string[];
 }
 
-interface CachedValueUI<T> extends CachedValue<T> {
+interface CacheValueUI extends CacheValue {
     float?: string;
     floating?: boolean;
-    textContent?: string;
     baselineElement?: boolean;
     contentBox?: boolean;
     imageElement?: boolean;
@@ -92,11 +82,28 @@ interface CachedValueUI<T> extends CachedValue<T> {
     overflow?: number;
     textIndent?: number;
     textWidth?: number;
-    textEmpty?: boolean;
-    containerName?: string;
     baselineHeight?: number;
+}
+
+interface CacheState<T> {
+    htmlElement?: boolean;
+    svgElement?: boolean;
+    naturalElement?: boolean;
+    naturalChild?: boolean;
+    actualParent?: Null<T>;
+    absoluteParent?: Null<T>;
+    inlineText?: boolean;
+    textContent?: string;
+    textEmpty?: boolean;
     firstLineStyle?: Null<StringMap>;
     firstLetterStyle?: Null<StringMap>;
+    dir?: string;
+    attributes?: StringMap;
+    extensions?: string[];
+}
+
+interface CacheStateUI<T> extends CacheState<T> {
+    containerName?: string;
 }
 
 interface LocalSettingsUI {

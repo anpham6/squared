@@ -373,6 +373,7 @@ declare module "base" {
         saveAsInitial(): void;
         data<T = unknown>(name: string, attr: string, value?: any, overwrite?: boolean): Undef<T>;
         unsetCache(...attrs: string[]): void;
+        unsetState(...attrs: string[]) : void;
         ascend(options?: AscendOptions<Node>): Node[];
         descend(options?: DescendOptions<Node>): Node[];
         intersectX(rect: BoxRectDimension, options?: CoordsXYOptions): boolean;
@@ -615,6 +616,7 @@ declare module "base" {
         registerBox(region: number, node?: NodeUI): Undef<NodeUI>;
         extractAttributes(depth: number): string;
         setCacheValue(attr: string, value: any): void;
+        setCacheState(attr: string, value: any): void;
         cssSet(attr: string, value: string, cache?: boolean): string;
         translateX(value: number, options?: TranslateOptions): boolean;
         translateY(value: number, options?: TranslateOptions): boolean;

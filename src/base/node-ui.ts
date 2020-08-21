@@ -20,6 +20,7 @@ const CSS_SPACING = new Map<number, number>([
     [BOX_STANDARD.PADDING_BOTTOM, 6],
     [BOX_STANDARD.PADDING_LEFT, 7]
 ]);
+
 const CSS_SPACINGINDEX = [BOX_STANDARD.MARGIN_TOP, BOX_STANDARD.MARGIN_RIGHT, BOX_STANDARD.MARGIN_BOTTOM, BOX_STANDARD.MARGIN_LEFT, BOX_STANDARD.PADDING_TOP, BOX_STANDARD.PADDING_RIGHT, BOX_STANDARD.PADDING_BOTTOM, BOX_STANDARD.PADDING_LEFT];
 const REGEXP_PARSEUNIT = /(?:%|vw|vh|vmin|vmax)$/;
 
@@ -523,7 +524,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public horizontalRows?: T[][];
 
     protected _preferInitial = true;
-    protected _cached!: CachedValueUI<T>;
+    protected _cache!: CacheValueUI;
+    protected _cacheState!: CacheStateUI<T>;
     protected _documentParent?: T;
     protected _controlName?: string;
     protected _boxReset?: number[];
@@ -748,7 +750,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 case 'textStyle':
                     result = node.textStyle;
                     result.fontSize = node.fontSize + 'px';
-                    this.inheritApply('textStyle', result);
+                    this.cssApply(result);
                     break;
                 case 'boxStyle': {
                     if (this.naturalChild) {
@@ -1422,49 +1424,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             node.retainAs(this.toArray());
         }
         node.inherit(this, 'initial', 'base', 'alignment', 'styleMap', 'textStyle');
-        Object.assign(node.unsafe<CachedValueUI<T>>('cached'), this._cached);
-    }
-
-    public unsetCache(...attrs: string[]) {
-        const length = attrs.length;
-        if (length > 0) {
-            const cached = this._cached;
-            for (let i = 0; i < length; ++i) {
-                switch (attrs[i]) {
-                    case 'top':
-                    case 'right':
-                    case 'bottom':
-                    case 'left':
-                        cached.autoPosition = undefined;
-                        cached.positiveAxis = undefined;
-                        break;
-                    case 'float':
-                        cached.floating = undefined;
-                        break;
-                    case 'fontSize':
-                    case 'lineHeight':
-                        cached.baselineHeight = undefined;
-                        break;
-                    case 'baseline':
-                        cached.baselineElement = undefined;
-                        this.actualParent?.unsetCache('baselineElement');
-                        break;
-                    case 'whiteSpace':
-                        cached.preserveWhiteSpace = undefined;
-                        cached.textEmpty = undefined;
-                        break;
-                    case 'width':
-                    case 'height':
-                    case 'maxWidth':
-                    case 'maxHeight':
-                    case 'overflowX':
-                    case 'overflowY':
-                        cached.overflow = undefined;
-                        break;
-                }
-            }
-        }
-        super.unsetCache(...attrs);
+        Object.assign(node.unsafe<CacheValueUI>('cache'), this._cache);
+        Object.assign(node.unsafe<CacheStateUI<T>>('cacheState'), this._cacheState);
     }
 
     public css(attr: string, value?: string, cache = false) {
@@ -1508,7 +1469,49 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public setCacheValue(attr: string, value: any) {
-        this._cached[attr] = value;
+        this._cache[attr] = value;
+    }
+
+    public setCacheState(attr: string, value: any) {
+        this._cacheState[attr] = value;
+    }
+
+    public unsetCache(...attrs: string[]) {
+        const length = attrs.length;
+        if (length > 0) {
+            const cache = this._cache;
+            for (let i = 0; i < length; ++i) {
+                switch (attrs[i]) {
+                    case 'top':
+                    case 'right':
+                    case 'bottom':
+                    case 'left':
+                        cache.autoPosition = undefined;
+                        cache.positiveAxis = undefined;
+                        break;
+                    case 'float':
+                        cache.floating = undefined;
+                        break;
+                    case 'fontSize':
+                    case 'lineHeight':
+                        cache.baselineHeight = undefined;
+                        break;
+                    case 'baseline':
+                        cache.baselineElement = undefined;
+                        this.actualParent?.unsetCache('baselineElement');
+                        break;
+                    case 'width':
+                    case 'height':
+                    case 'maxWidth':
+                    case 'maxHeight':
+                    case 'overflowX':
+                    case 'overflowY':
+                        cache.overflow = undefined;
+                        break;
+                }
+            }
+        }
+        super.unsetCache(...attrs);
     }
 
     get element() {
@@ -1516,13 +1519,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     set naturalChild(value) {
-        this._cached.naturalChild = value;
+        this._cacheState.naturalChild = value;
     }
     get naturalChild() {
-        const result = this._cached.naturalChild;
+        const result = this._cacheState.naturalChild;
         if (result === undefined) {
             const element = this._element;
-            return this._cached.naturalChild = element !== null && (!!element.parentElement || element === document.documentElement);
+            return this._cacheState.naturalChild = element !== null && (!!element.parentElement || element === document.documentElement);
         }
         return result;
     }
@@ -1532,7 +1535,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get scrollElement() {
-        let result = this._cached.scrollElement;
+        let result = this._cache.scrollElement;
         if (result === undefined) {
             if (this.htmlElement) {
                 switch (this.tagName) {
@@ -1573,67 +1576,67 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         break;
                 }
             }
-            return this._cached.scrollElement = result || false;
+            return this._cache.scrollElement = result || false;
         }
         return result;
     }
 
     get layoutElement() {
-        const result = this._cached.layoutElement;
-        return result === undefined ? this._cached.layoutElement = this.flexElement || this.gridElement : result;
+        const result = this._cache.layoutElement;
+        return result === undefined ? this._cache.layoutElement = this.flexElement || this.gridElement : result;
     }
 
     get imageElement() {
-        const result = this._cached.imageElement;
-        return result === undefined ? this._cached.imageElement = super.imageElement : result;
+        const result = this._cache.imageElement;
+        return result === undefined ? this._cache.imageElement = super.imageElement : result;
     }
 
     get flexElement() {
-        const result = this._cached.flexElement;
-        return result === undefined ? this._cached.flexElement = super.flexElement : result;
+        const result = this._cache.flexElement;
+        return result === undefined ? this._cache.flexElement = super.flexElement : result;
     }
 
     get gridElement() {
-        const result = this._cached.gridElement;
-        return result === undefined ? this._cached.gridElement = super.gridElement : result;
+        const result = this._cache.gridElement;
+        return result === undefined ? this._cache.gridElement = super.gridElement : result;
     }
 
     get tableElement() {
-        const result = this._cached.tableElement;
-        return result === undefined ? this._cached.tableElement = super.tableElement : result;
+        const result = this._cache.tableElement;
+        return result === undefined ? this._cache.tableElement = super.tableElement : result;
     }
 
     get inputElement() {
-        const result = this._cached.inputElement;
-        return result === undefined ? this._cached.inputElement = super.inputElement : result;
+        const result = this._cache.inputElement;
+        return result === undefined ? this._cache.inputElement = super.inputElement : result;
     }
 
     get floating() {
-        const result = this._cached.floating;
-        return result === undefined ? this._cached.floating = super.floating : result;
+        const result = this._cache.floating;
+        return result === undefined ? this._cache.floating = super.floating : result;
     }
 
     get float() {
-        const result = this._cached.float;
-        return result === undefined ? this._cached.float = super.float : result;
+        const result = this._cache.float;
+        return result === undefined ? this._cache.float = super.float : result;
     }
 
     set textContent(value) {
-        this._cached.textContent = value;
+        this._cacheState.textContent = value;
     }
     get textContent() {
-        const result = this._cached.textContent;
-        return result === undefined ? this._cached.textContent = super.textContent : result;
+        const result = this._cacheState.textContent;
+        return result === undefined ? this._cacheState.textContent = super.textContent : result;
     }
 
     get contentBox() {
-        const result = this._cached.contentBox;
-        return result === undefined ? this._cached.contentBox = super.contentBox : result;
+        const result = this._cache.contentBox;
+        return result === undefined ? this._cache.contentBox = super.contentBox : result;
     }
 
     get positionRelative() {
-        const result = this._cached.positionRelative;
-        return result === undefined ? this._cached.positionRelative = super.positionRelative : result;
+        const result = this._cache.positionRelative;
+        return result === undefined ? this._cache.positionRelative = super.positionRelative : result;
     }
 
     set documentParent(value) {
@@ -1644,10 +1647,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     set containerName(value) {
-        this._cached.containerName = value.toUpperCase();
+        this._cacheState.containerName = value.toUpperCase();
     }
     get containerName() {
-        let result = this._cached.containerName;
+        let result = this._cacheState.containerName;
         if (result === undefined) {
             const element = this.element as HTMLInputElement;
             if (element) {
@@ -1661,7 +1664,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     result = element.tagName.toUpperCase();
                 }
             }
-            return this._cached.containerName = result || '';
+            return this._cacheState.containerName = result || '';
         }
         return result;
     }
@@ -1692,25 +1695,25 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get inlineVertical() {
-        const result = this._cached.inlineVertical;
+        const result = this._cache.inlineVertical;
         if (result === undefined) {
-            if ((this.naturalElement || this.pseudoElement) && !this.floating) {
+            if (this.naturalElement || this.pseudoElement) {
                 const value = this.display;
-                return this._cached.inlineVertical = (value.startsWith('inline') || value === 'table-cell') && this._element !== document.documentElement;
+                return this._cache.inlineVertical = (value.startsWith('inline') || value === 'table-cell') && !this.floating && this._element !== document.documentElement;
             }
-            return this._cached.inlineVertical = false;
+            return this._cache.inlineVertical = false;
         }
         return result;
     }
 
     get inlineDimension() {
-        const result = this._cached.inlineDimension;
-        return result === undefined ? this._cached.inlineDimension = (this.naturalElement || this.pseudoElement) && (this.display.startsWith('inline-') || this.floating) : result;
+        const result = this._cache.inlineDimension;
+        return result === undefined ? this._cache.inlineDimension = (this.naturalElement || this.pseudoElement) && (this.display.startsWith('inline-') || this.floating) : result;
     }
 
     get inlineFlow() {
-        const result = this._cached.inlineFlow;
-        return result === undefined ? this._cached.inlineFlow = (this.inline || this.inlineDimension || this.inlineVertical || this.floating || this.imageElement || this.svgElement && this.hasPX('width', { percent: false }) || this.tableElement && this.previousSibling?.floating === true) && this.pageFlow : result;
+        const result = this._cache.inlineFlow;
+        return result === undefined ? this._cache.inlineFlow = (this.inline || this.inlineDimension || this.inlineVertical || this.floating || this.imageElement || this.svgElement && this.hasPX('width', { percent: false }) || this.tableElement && this.previousSibling?.floating === true) && this.pageFlow : result;
     }
 
     get blockStatic() {
@@ -1718,13 +1721,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get blockDimension() {
-        const result = this._cached.blockDimension;
+        const result = this._cache.blockDimension;
         return result === undefined ? this.block || this.inlineDimension || this.imageElement || this.svgElement || this.display === 'table' : result;
     }
 
     get blockVertical() {
-        const result = this._cached.blockVertical;
-        return result === undefined ? this._cached.blockVertical = this.blockDimension && this.hasHeight : result;
+        const result = this._cache.blockVertical;
+        return result === undefined ? this._cache.blockVertical = this.blockDimension && this.hasHeight : result;
     }
 
     get rightAligned() {
@@ -1732,34 +1735,34 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get verticalAligned() {
-        const result = this._cached.verticalAligned;
-        return result === undefined ? this._cached.verticalAligned = isLength(this.cssInitial('verticalAlign'), true) && this.verticalAlign !== 0 : result;
+        const result = this._cache.verticalAligned;
+        return result === undefined ? this._cache.verticalAligned = isLength(this.cssInitial('verticalAlign'), true) && this.verticalAlign !== 0 : result;
     }
 
     set autoPosition(value) {
-        this._cached.autoPosition = value;
+        this._cache.autoPosition = value;
     }
     get autoPosition() {
-        const result = this._cached.autoPosition;
+        const result = this._cache.autoPosition;
         if (result === undefined) {
             if (this.pageFlow) {
-                return this._cached.autoPosition = false;
+                return this._cache.autoPosition = false;
             }
             else {
                 const { top, right, bottom, left } = this._styleMap;
-                return this._cached.autoPosition = (!top || top === 'auto') && (!left || left === 'auto') && (!right || right === 'auto') && (!bottom || bottom === 'auto');
+                return this._cache.autoPosition = (!top || top === 'auto') && (!left || left === 'auto') && (!right || right === 'auto') && (!bottom || bottom === 'auto');
             }
         }
         return result;
     }
 
     get positiveAxis() {
-        const result = this._cached.positiveAxis;
-        return result === undefined ? this._cached.positiveAxis = (!this.positionRelative || this.positionRelative && this.top >= 0 && this.left >= 0 && (this.right <= 0 || this.hasPX('left')) && (this.bottom <= 0 || this.hasPX('top'))) && this.marginTop >= 0 && this.marginLeft >= 0 && this.marginRight >= 0 : result;
+        const result = this._cache.positiveAxis;
+        return result === undefined ? this._cache.positiveAxis = (!this.positionRelative || this.positionRelative && this.top >= 0 && this.left >= 0 && (this.right <= 0 || this.hasPX('left')) && (this.bottom <= 0 || this.hasPX('top'))) && this.marginTop >= 0 && this.marginLeft >= 0 && this.marginRight >= 0 : result;
     }
 
     get leftTopAxis() {
-        let result = this._cached.leftTopAxis;
+        let result = this._cache.leftTopAxis;
         if (result === undefined) {
             switch (this.cssInitial('position')) {
                 case 'absolute':
@@ -1772,13 +1775,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     result = false;
                     break;
             }
-            this._cached.leftTopAxis = result;
+            this._cache.leftTopAxis = result;
         }
         return result;
     }
 
     get baselineElement(): boolean {
-        let result = this._cached.baselineElement;
+        let result = this._cache.baselineElement;
         if (result === undefined) {
             if (this.css('verticalAlign') === 'baseline' && !this.floating) {
                 const children = this.naturalChildren;
@@ -1807,14 +1810,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     result = this.inlineText && this.textElement || this.plainText && !this.multiline || this.inputElement || this.imageElement || this.svgElement;
                 }
             }
-            return this._cached.baselineElement = result || false;
+            return this._cache.baselineElement = result || false;
         }
         return result;
     }
 
     set multiline(value) {
-        this._cached.multiline = value;
-        this._cached.baselineElement = undefined;
+        this._cache.multiline = value;
+        this._cache.baselineElement = undefined;
     }
     get multiline() {
         return super.multiline;
@@ -1924,18 +1927,18 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get overflowX() {
-        let result = this._cached.overflow;
+        let result = this._cache.overflow;
         if (result === undefined) {
             result = setOverflow(this);
-            this._cached.overflow = result;
+            this._cache.overflow = result;
         }
         return hasBit(result, NODE_ALIGNMENT.HORIZONTAL);
     }
     get overflowY() {
-        let result = this._cached.overflow;
+        let result = this._cache.overflow;
         if (result === undefined) {
             result = setOverflow(this);
-            this._cached.overflow = result;
+            this._cache.overflow = result;
         }
         return hasBit(result, NODE_ALIGNMENT.VERTICAL);
     }
@@ -1949,22 +1952,22 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get textEmpty() {
-        const result = this._cached.textEmpty;
+        const result = this._cacheState.textEmpty;
         if (result === undefined) {
             if (this.styleElement && !this.imageElement && !this.svgElement && !this.inputElement) {
                 const value = this.textContent;
-                return this._cached.textEmpty = value === '' || !this.preserveWhiteSpace && isEmptyString(value);
+                return this._cacheState.textEmpty = value === '' || !this.preserveWhiteSpace && isEmptyString(value);
             }
-            return this._cached.textEmpty = false;
+            return this._cacheState.textEmpty = false;
         }
         return result;
     }
 
     set textIndent(value) {
-        this._cached.textIndent = value;
+        this._cache.textIndent = value;
     }
     get textIndent() {
-        let result = this._cached.textIndent;
+        let result = this._cache.textIndent;
         if (result === undefined) {
             if (this.naturalChild) {
                 const hasTextIndent = (node: T) => node.blockDimension || node.display === 'table-cell';
@@ -1972,7 +1975,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     const value = this.css('textIndent');
                     result = this.parseUnit(value);
                     if (value === '100%' || result + this.bounds.width < 0) {
-                        return this._cached.textIndent = NaN;
+                        return this._cache.textIndent = NaN;
                     }
                 }
                 if (!result) {
@@ -1982,21 +1985,21 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     }
                 }
             }
-            return this._cached.textIndent = result || 0;
+            return this._cache.textIndent = result || 0;
         }
         return result;
     }
 
     get textWidth() {
-        const result = this._cached.textWidth;
+        const result = this._cache.textWidth;
         if (result === undefined) {
             if (this.styleText && !this.hasPX('width')) {
                 const textBounds = this.textBounds;
                 if (textBounds && (textBounds.numberOfLines as number > 1 || Math.ceil(textBounds.width) < this.box.width)) {
-                    return this._cached.textWidth = textBounds.width;
+                    return this._cache.textWidth = textBounds.width;
                 }
             }
-            return this._cached.textWidth = this.bounds.width;
+            return this._cache.textWidth = this.bounds.width;
         }
         return result;
     }
@@ -2098,13 +2101,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get firstLetterStyle() {
-        const result = this._cached.firstLetterStyle;
-        return result === undefined ? this._cached.firstLetterStyle = this.cssPseudoElement('first-letter') : result;
+        const result = this._cacheState.firstLetterStyle;
+        return result === undefined ? this._cacheState.firstLetterStyle = this.cssPseudoElement('first-letter') : result;
     }
 
     get firstLineStyle() {
-        const result = this._cached.firstLineStyle;
-        return result === undefined ? this._cached.firstLineStyle = this.cssPseudoElement('first-line') : result;
+        const result = this._cacheState.firstLineStyle;
+        return result === undefined ? this._cacheState.firstLineStyle = this.cssPseudoElement('first-line') : result;
     }
 
     get textAlignLast() {
@@ -2154,10 +2157,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get extensions() {
-        const result = this._cached.extensions;
+        const result = this._cacheState.extensions;
         if (result === undefined) {
             const use = this.use?.trim();
-            return this._cached.extensions = use ? use.split(/\s*,\s*/) : [];
+            return this._cacheState.extensions = use ? use.split(/\s*,\s*/) : [];
         }
         return result;
     }

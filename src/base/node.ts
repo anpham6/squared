@@ -9,10 +9,6 @@ const { convertCamelCase, convertFloat, convertInt, hasBit, hasValue, isNumber, 
 
 const { SELECTOR_ATTR, SELECTOR_G, SELECTOR_LABEL, SELECTOR_PSEUDO_CLASS } = CSS;
 
-const BORDER_TOP = CSS_PROPERTIES.borderTop.value as string[];
-const BORDER_RIGHT = CSS_PROPERTIES.borderRight.value as string[];
-const BORDER_BOTTOM = CSS_PROPERTIES.borderBottom.value as string[];
-const BORDER_LEFT = CSS_PROPERTIES.borderLeft.value as string[];
 const TEXT_STYLE = [
     'fontFamily',
     'fontWeight',
@@ -26,6 +22,11 @@ const TEXT_STYLE = [
     'letterSpacing',
     'wordSpacing'
 ];
+
+const BORDER_TOP = CSS_PROPERTIES.borderTop.value as string[];
+const BORDER_RIGHT = CSS_PROPERTIES.borderRight.value as string[];
+const BORDER_BOTTOM = CSS_PROPERTIES.borderBottom.value as string[];
+const BORDER_LEFT = CSS_PROPERTIES.borderLeft.value as string[];
 
 const REGEXP_BACKGROUND = /\s*(url|[a-z-]+gradient)/;
 const REGEXP_QUERYNTH = /^:nth(-last)?-(child|of-type)\((.+)\)$/;
@@ -58,11 +59,6 @@ function isFontFixedWidth(node: T) {
     const [fontFirst, fontSecond] = splitPair(node.css('fontFamily'), ',', true);
     return fontFirst.toLowerCase() === 'monospace' && !(fontSecond !== '' && fontSecond.toLowerCase() === 'monospace');
 }
-
-const aboveRange = (a: number, b: number, offset = 1) => a + offset > b;
-const belowRange = (a: number, b: number, offset = 1) => a - offset < b;
-const sortById = (a: T, b: T) => a.id - b.id;
-const isInlineVertical = (value: string) => value.startsWith('inline') || value === 'table-cell';
 
 function getFlexValue(node: T, attr: string, fallback: number, parent?: Null<Node>): number {
     const value = (parent || node).css(attr);
@@ -732,6 +728,10 @@ function ascendQuerySelector(node: T, selectors: QueryData[], i: number, index: 
     return ++index === length ? true : ascendQuerySelector(node, selectors, i, index, selector.adjacent, next);
 }
 
+const aboveRange = (a: number, b: number, offset = 1) => a + offset > b;
+const belowRange = (a: number, b: number, offset = 1) => a - offset < b;
+const sortById = (a: T, b: T) => a.id - b.id;
+const isInlineVertical = (value: string) => value.startsWith('inline') || value === 'table-cell';
 const canTextAlign = (node: T) => node.naturalChild && (node.length === 0 || isInlineVertical(node.display)) && !node.floating && node.autoMargin.horizontal !== true;
 
 export default class Node extends squared.lib.base.Container<T> implements squared.base.Node {
@@ -761,7 +761,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     public queryMap?: T[][];
 
     protected _parent: Null<T> = null;
-    protected _cached: CachedValue<T> = {};
+    protected _cache: CacheValue = {};
+    protected _cacheState: CacheState<T> = {};
     protected _preferInitial = false;
     protected _styleMap!: StringMap;
     protected _bounds: Null<BoxRectDimension> = null;
@@ -775,12 +776,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     protected _childIndex = Infinity;
     protected readonly _element: Null<Element> = null;
 
-    private _inlineText = false;
     private _style?: CSSStyleDeclaration;
     private _dataset?: DOMStringMap;
     private _elementData?: ElementData;
     private _pseudoElt?: string;
-    private readonly _data = {};
+    private _data?: StandardMap;
 
     constructor(
         public readonly id: number,
@@ -847,7 +847,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 }
                 this._cssStyle = styleMap;
                 if (cache) {
-                    this._cached = {};
+                    this._cache = {};
                 }
                 return true;
             }
@@ -864,7 +864,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public data<T = unknown>(name: string, attr: string, value?: any, overwrite = true): Undef<T> {
-        const data = this._data;
+        const data = this._data ?? (this._data = {});
         if (value === null) {
             if (data[name]) {
                 delete data[name][attr];
@@ -890,7 +890,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     public unsetCache(...attrs: string[]) {
         const length = attrs.length;
         if (length > 0) {
-            const cached = this._cached;
+            const cache = this._cache;
             for (let i = 0; i < length; ++i) {
                 const attr = attrs[i];
                 switch (attr) {
@@ -898,78 +898,83 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         if (!this._preferInitial) {
                             this.cascade(item => {
                                 if (!item.pageFlow) {
-                                    item.unsetCache('absoluteParent');
+                                    item.unsetState('absoluteParent');
                                 }
                             });
                         }
                     case 'display':
                     case 'float':
                     case 'tagName':
-                        this._cached = {};
+                        this._cache = {};
                         break;
                     case 'width':
-                        cached.actualWidth = undefined;
-                        cached.percentWidth = undefined;
+                        cache.actualWidth = undefined;
+                        cache.percentWidth = undefined;
                     case 'minWidth':
-                        cached.width = undefined;
+                        cache.width = undefined;
                         break;
                     case 'height':
-                        cached.actualHeight = undefined;
-                        cached.percentHeight = undefined;
+                        cache.actualHeight = undefined;
+                        cache.percentHeight = undefined;
                     case 'minHeight':
-                        cached.height = undefined;
+                        cache.height = undefined;
                         if (!this._preferInitial) {
                             this.unsetCache('blockVertical');
                             this.each(item => item.unsetCache());
                         }
                         break;
                     case 'verticalAlign':
-                        cached.baseline = undefined;
+                        cache.baseline = undefined;
                         break;
                     case 'left':
                     case 'right':
                     case 'textAlign':
-                        cached.rightAligned = undefined;
-                        cached.centerAligned = undefined;
+                        cache.rightAligned = undefined;
+                        cache.centerAligned = undefined;
                         break;
                     case 'top':
                     case 'bottom':
-                        cached.bottomAligned = undefined;
+                        cache.bottomAligned = undefined;
                         break;
+                    case 'whiteSpace':
+                        cache.preserveWhiteSpace = undefined;
+                        cache.textStyle = undefined;
+                        this._cacheState.textEmpty = undefined;
+                        continue;
                     default:
                         if (attr.startsWith('margin')) {
-                            cached.autoMargin = undefined;
-                            cached.rightAligned = undefined;
-                            cached.centerAligned = undefined;
-                            cached.bottomAligned = undefined;
+                            cache.autoMargin = undefined;
+                            cache.rightAligned = undefined;
+                            cache.centerAligned = undefined;
+                            cache.bottomAligned = undefined;
                         }
                         else if (attr.startsWith('padding')) {
-                            cached.contentBoxWidth = undefined;
-                            cached.contentBoxHeight = undefined;
+                            cache.contentBoxWidth = undefined;
+                            cache.contentBoxHeight = undefined;
                         }
                         else if (attr.startsWith('border')) {
-                            cached.visibleStyle = undefined;
-                            cached.contentBoxWidth = undefined;
-                            cached.contentBoxHeight = undefined;
+                            cache.visibleStyle = undefined;
+                            cache.contentBoxWidth = undefined;
+                            cache.contentBoxHeight = undefined;
                         }
                         else if (attr.startsWith('background')) {
-                            cached.visibleStyle = undefined;
+                            cache.visibleStyle = undefined;
                         }
                         else if (TEXT_STYLE.includes(attr)) {
-                            cached.lineHeight = undefined;
-                            cached.textStyle = undefined;
+                            cache.lineHeight = undefined;
+                            cache.textStyle = undefined;
                         }
                         break;
                 }
-                if (attr in cached) {
-                    cached[attr] = undefined;
+                if (attr in cache) {
+                    cache[attr] = undefined;
                 }
             }
         }
         else {
-            this._cached = {};
+            this._cache = {};
         }
-        if (!this._preferInitial) {
+        if (!this._preferInitial && this.naturalChild) {
             let parent: T;
             if (attrs.some(value => hasBit(CSS_PROPERTIES[value].trait, CSS_TRAITS.LAYOUT))) {
                 parent = this.pageFlow && this.ascend({ condition: item => item.documentRoot })[0] || this;
@@ -993,6 +998,40 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             else {
                 this.cascade(item => item.resetBounds());
             }
+        }
+    }
+
+    public unsetState(...attrs: string[]) {
+        let reset: Undef<boolean>;
+        const length = attrs.length;
+        if (length > 0) {
+            const cacheState = this._cacheState;
+            for (let i = 0; i < length; ++i) {
+                const attr = attrs[i];
+                if (attr in cacheState) {
+                    switch (attr) {
+                        case 'actualParent':
+                            cacheState.absoluteParent = undefined;
+                            reset = true;
+                            break;
+                        case 'absoluteParent':
+                            reset = true;
+                            break;
+                        case 'textContent':
+                            cacheState.textEmpty = undefined;
+                            reset = true;
+                            break;
+                    }
+                    cacheState[attr] = undefined;
+                }
+            }
+        }
+        else {
+            this._cacheState = {};
+            reset = true;
+        }
+        if (reset && !this._preferInitial && this.naturalChild) {
+            this.resetBounds();
         }
     }
 
@@ -1528,7 +1567,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 const lines = rect.numberOfLines || 1;
                 rect.numberOfLines = lines;
                 this._textBounds = bounds;
-                this._cached.multiline = lines > 1;
+                this._cache.multiline = lines > 1;
             }
             bounds = rect || newBoxRectDimension();
             this._bounds = bounds;
@@ -1547,7 +1586,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         this._box = null;
         this._linear = null;
         this._textBounds = undefined;
-        this._cached.multiline = undefined;
+        this._cache.multiline = undefined;
     }
 
     public min(attr: string, options?: MinMaxOptions) {
@@ -1975,10 +2014,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get tagName() {
-        const result = this._cached.tagName;
+        const result = this._cache.tagName;
         if (result === undefined) {
             const element = this._element;
-            return this._cached.tagName = element ? element.nodeName[0] === '#' ? element.nodeName : element.tagName : '';
+            return this._cache.tagName = element ? element.nodeName[0] === '#' ? element.nodeName : element.tagName : '';
         }
         return result;
     }
@@ -1992,13 +2031,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get htmlElement() {
-        const result = this._cached.htmlElement;
-        return result === undefined ? this._cached.htmlElement = this._element instanceof HTMLElement : result;
+        const result = this._cacheState.htmlElement;
+        return result === undefined ? this._cacheState.htmlElement = this._element instanceof HTMLElement : result;
     }
 
     get svgElement() {
-        const result = this._cached.svgElement;
-        return result === undefined ? this._cached.svgElement = !this.plainText && (!this.htmlElement && this._element instanceof SVGElement || this.imageElement && FILE.SVG.test(this.toElementString('src'))) : result;
+        const result = this._cacheState.svgElement;
+        return result === undefined ? this._cacheState.svgElement = !this.plainText && (!this.htmlElement && this._element instanceof SVGElement || this.imageElement && FILE.SVG.test(this.toElementString('src'))) : result;
     }
 
     get styleElement() {
@@ -2010,8 +2049,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get naturalElement() {
-        const result = this._cached.naturalElement;
-        return result === undefined ? this._cached.naturalElement = this.naturalChild && this.styleElement && !this.pseudoElement : result;
+        const result = this._cacheState.naturalElement;
+        return result === undefined ? this._cacheState.naturalElement = this.naturalChild && this.styleElement && !this.pseudoElement : result;
     }
 
     get parentElement() {
@@ -2148,12 +2187,12 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get flexdata() {
-        const result = this._cached.flexdata;
+        const result = this._cache.flexdata;
         if (result === undefined) {
             if (this.flexElement) {
                 const { flexWrap, flexDirection, alignContent, justifyContent } = this.cssAsObject('flexWrap', 'flexDirection', 'alignContent', 'justifyContent') as StringMapChecked;
                 const row = flexDirection.startsWith('row');
-                return this._cached.flexdata = {
+                return this._cache.flexdata = {
                     row,
                     column: !row,
                     reverse: flexDirection.endsWith('reverse'),
@@ -2163,17 +2202,17 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     justifyContent
                 };
             }
-            return this._cached.flexdata = {};
+            return this._cache.flexdata = {};
         }
         return result;
     }
 
     get flexbox() {
-        const result = this._cached.flexbox;
+        const result = this._cache.flexbox;
         if (result === undefined) {
             if (this.styleElement && this.actualParent?.flexElement) {
                 const [alignSelf, justifySelf, basis] = this.cssAsTuple('alignSelf', 'justifySelf', 'flexBasis');
-                return this._cached.flexbox = {
+                return this._cache.flexbox = {
                     alignSelf: alignSelf === 'auto' ? this.cssParent('alignItems') : alignSelf,
                     justifySelf: justifySelf === 'auto' ? this.cssParent('justifyItems') : justifySelf,
                     basis,
@@ -2182,35 +2221,35 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     order: this.toInt('order', 0)
                 };
             }
-            return this._cached.flexbox = {} as FlexBox;
+            return this._cache.flexbox = {} as FlexBox;
         }
         return result;
     }
 
     get width() {
-        const result = this._cached.width;
-        return result === undefined ? this._cached.width = setDimension(this, this._styleMap, 'width') : result;
+        const result = this._cache.width;
+        return result === undefined ? this._cache.width = setDimension(this, this._styleMap, 'width') : result;
     }
     get height() {
-        const result = this._cached.height;
-        return result === undefined ? this._cached.height = setDimension(this, this._styleMap, 'height') : result;
+        const result = this._cache.height;
+        return result === undefined ? this._cache.height = setDimension(this, this._styleMap, 'height') : result;
     }
 
     get hasWidth() {
-        const result = this._cached.hasWidth;
-        return result === undefined ? this._cached.hasWidth = this.width > 0 : result;
+        const result = this._cache.hasWidth;
+        return result === undefined ? this._cache.hasWidth = this.width > 0 : result;
     }
     get hasHeight(): boolean {
-        const result = this._cached.hasHeight;
+        const result = this._cache.hasHeight;
         if (result === undefined) {
             const value = this.css('height');
-            return this._cached.hasHeight = isPercent(value) ? this.pageFlow ? this.actualParent?.hasHeight || this.documentBody : this.css('position') === 'fixed' || this.hasPX('top') || this.hasPX('bottom') : this.height > 0 || this.hasPX('height', { percent: false });
+            return this._cache.hasHeight = isPercent(value) ? this.pageFlow ? this.actualParent?.hasHeight || this.documentBody : this.css('position') === 'fixed' || this.hasPX('top') || this.hasPX('bottom') : this.height > 0 || this.hasPX('height', { percent: false });
         }
         return result;
     }
 
     get lineHeight() {
-        let result = this._cached.lineHeight;
+        let result = this._cache.lineHeight;
         if (result === undefined) {
             if (!this.imageElement && !this.svgElement) {
                 let hasOwnStyle = this.has('lineHeight'),
@@ -2242,13 +2281,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 }
                 result = hasOwnStyle || value > this.height || this.multiline || this.block && this.naturalChildren.some((node: T) => node.textElement) ? value : 0;
             }
-            return this._cached.lineHeight = result || 0;
+            return this._cache.lineHeight = result || 0;
         }
         return result;
     }
 
     get positionStatic() {
-        let result = this._cached.positionStatic;
+        let result = this._cache.positionStatic;
         if (result === undefined) {
             switch (this.css('position')) {
                 case 'absolute':
@@ -2257,83 +2296,83 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     break;
                 case 'relative':
                     result = !this.documentBody && this.toFloat('top', 0) === 0 && this.toFloat('right', 0) === 0 && this.toFloat('bottom', 0) === 0 && this.toFloat('left', 0) === 0;
-                    this._cached.positionRelative = !result;
+                    this._cache.positionRelative = !result;
                     break;
                 default:
                     result = true;
                     break;
             }
-            this._cached.positionStatic = result;
+            this._cache.positionStatic = result;
         }
         return result;
     }
 
     get top() {
-        const result = this._cached.top;
-        return result === undefined ? this._cached.top = convertPosition(this, 'top') : result;
+        const result = this._cache.top;
+        return result === undefined ? this._cache.top = convertPosition(this, 'top') : result;
     }
     get right() {
-        const result = this._cached.right;
-        return result === undefined ? this._cached.right = convertPosition(this, 'right') : result;
+        const result = this._cache.right;
+        return result === undefined ? this._cache.right = convertPosition(this, 'right') : result;
     }
     get bottom() {
-        const result = this._cached.bottom;
-        return result === undefined ? this._cached.bottom = convertPosition(this, 'bottom') : result;
+        const result = this._cache.bottom;
+        return result === undefined ? this._cache.bottom = convertPosition(this, 'bottom') : result;
     }
     get left() {
-        const result = this._cached.left;
-        return result === undefined ? this._cached.left = convertPosition(this, 'left') : result;
+        const result = this._cache.left;
+        return result === undefined ? this._cache.left = convertPosition(this, 'left') : result;
     }
 
     get marginTop() {
-        const result = this._cached.marginTop;
-        return result === undefined ? this._cached.marginTop = this.inlineStatic ? 0 : convertBox(this, 'marginTop', true) : result;
+        const result = this._cache.marginTop;
+        return result === undefined ? this._cache.marginTop = this.inlineStatic ? 0 : convertBox(this, 'marginTop', true) : result;
     }
     get marginRight() {
-        const result = this._cached.marginRight;
-        return result === undefined ? this._cached.marginRight = convertBox(this, 'marginRight', true) : result;
+        const result = this._cache.marginRight;
+        return result === undefined ? this._cache.marginRight = convertBox(this, 'marginRight', true) : result;
     }
     get marginBottom() {
-        const result = this._cached.marginBottom;
-        return result === undefined ? this._cached.marginBottom = this.inlineStatic ? 0 : convertBox(this, 'marginBottom', true) : result;
+        const result = this._cache.marginBottom;
+        return result === undefined ? this._cache.marginBottom = this.inlineStatic ? 0 : convertBox(this, 'marginBottom', true) : result;
     }
     get marginLeft() {
-        const result = this._cached.marginLeft;
-        return result === undefined ? this._cached.marginLeft = convertBox(this, 'marginLeft', true) : result;
+        const result = this._cache.marginLeft;
+        return result === undefined ? this._cache.marginLeft = convertBox(this, 'marginLeft', true) : result;
     }
 
     get borderTopWidth() {
-        const result = this._cached.borderTopWidth;
-        return result === undefined ? this._cached.borderTopWidth = convertBorderWidth(this, 'height', BORDER_TOP) : result;
+        const result = this._cache.borderTopWidth;
+        return result === undefined ? this._cache.borderTopWidth = convertBorderWidth(this, 'height', BORDER_TOP) : result;
     }
     get borderRightWidth() {
-        const result = this._cached.borderRightWidth;
-        return result === undefined ? this._cached.borderRightWidth = convertBorderWidth(this, 'height', BORDER_RIGHT) : result;
+        const result = this._cache.borderRightWidth;
+        return result === undefined ? this._cache.borderRightWidth = convertBorderWidth(this, 'height', BORDER_RIGHT) : result;
     }
     get borderBottomWidth() {
-        const result = this._cached.borderBottomWidth;
-        return result === undefined ? this._cached.borderBottomWidth = convertBorderWidth(this, 'width', BORDER_BOTTOM) : result;
+        const result = this._cache.borderBottomWidth;
+        return result === undefined ? this._cache.borderBottomWidth = convertBorderWidth(this, 'width', BORDER_BOTTOM) : result;
     }
     get borderLeftWidth() {
-        const result = this._cached.borderLeftWidth;
-        return result === undefined ? this._cached.borderLeftWidth = convertBorderWidth(this, 'width', BORDER_LEFT) : result;
+        const result = this._cache.borderLeftWidth;
+        return result === undefined ? this._cache.borderLeftWidth = convertBorderWidth(this, 'width', BORDER_LEFT) : result;
     }
 
     get paddingTop() {
-        const result = this._cached.paddingTop;
-        return result === undefined ? this._cached.paddingTop = convertBox(this, 'paddingTop', false) : result;
+        const result = this._cache.paddingTop;
+        return result === undefined ? this._cache.paddingTop = convertBox(this, 'paddingTop', false) : result;
     }
     get paddingRight() {
-        const result = this._cached.paddingRight;
-        return result === undefined ? this._cached.paddingRight = convertBox(this, 'paddingRight', false) : result;
+        const result = this._cache.paddingRight;
+        return result === undefined ? this._cache.paddingRight = convertBox(this, 'paddingRight', false) : result;
     }
     get paddingBottom() {
-        const result = this._cached.paddingBottom;
-        return result === undefined ? this._cached.paddingBottom = convertBox(this, 'paddingBottom', false) : result;
+        const result = this._cache.paddingBottom;
+        return result === undefined ? this._cache.paddingBottom = convertBox(this, 'paddingBottom', false) : result;
     }
     get paddingLeft() {
-        const result = this._cached.paddingLeft;
-        return result === undefined ? this._cached.paddingLeft = convertBox(this, 'paddingLeft', false) : result;
+        const result = this._cache.paddingLeft;
+        return result === undefined ? this._cache.paddingLeft = convertBox(this, 'paddingLeft', false) : result;
     }
 
     get contentBox() {
@@ -2341,23 +2380,23 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get contentBoxWidth() {
-        const result = this._cached.contentBoxWidth;
-        return result === undefined ? this._cached.contentBoxWidth = this.tableElement && this.css('borderCollapse') === 'collapse' ? 0 : this.borderLeftWidth + this.paddingLeft + this.paddingRight + this.borderRightWidth : result;
+        const result = this._cache.contentBoxWidth;
+        return result === undefined ? this._cache.contentBoxWidth = this.tableElement && this.css('borderCollapse') === 'collapse' ? 0 : this.borderLeftWidth + this.paddingLeft + this.paddingRight + this.borderRightWidth : result;
     }
 
     get contentBoxHeight() {
-        const result = this._cached.contentBoxHeight;
-        return result === undefined ? this._cached.contentBoxHeight = this.tableElement && this.css('borderCollapse') === 'collapse' ? 0 : this.borderTopWidth + this.paddingTop + this.paddingBottom + this.borderBottomWidth : result;
+        const result = this._cache.contentBoxHeight;
+        return result === undefined ? this._cache.contentBoxHeight = this.tableElement && this.css('borderCollapse') === 'collapse' ? 0 : this.borderTopWidth + this.paddingTop + this.paddingBottom + this.borderBottomWidth : result;
     }
 
     get inline() {
-        const result = this._cached.inline;
-        return result === undefined ? this._cached.inline = this.display === 'inline' : result;
+        const result = this._cache.inline;
+        return result === undefined ? this._cache.inline = this.display === 'inline' : result;
     }
 
     get inlineStatic() {
-        const result = this._cached.inlineStatic;
-        return result === undefined ? this._cached.inlineStatic = this.inline && this.pageFlow && !this.floating && !this.imageElement : result;
+        const result = this._cache.inlineStatic;
+        return result === undefined ? this._cache.inlineStatic = this.inline && this.pageFlow && !this.floating && !this.imageElement : result;
     }
 
     set inlineText(value) {
@@ -2372,22 +2411,22 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             case 'PROGRESS':
             case 'METER':
             case 'CANVAS':
-                this._inlineText = false;
+                this._cacheState.inlineText = false;
                 break;
             case 'BUTTON':
-                this._inlineText = this.textContent.trim() !== '';
+                this._cacheState.inlineText = this.textContent.trim() !== '';
                 break;
             default:
-                this._inlineText = value;
+                this._cacheState.inlineText = value;
                 break;
         }
     }
     get inlineText() {
-        return this._inlineText;
+        return this._cacheState.inlineText ?? false;
     }
 
     get block() {
-        let result = this._cached.block;
+        let result = this._cache.block;
         if (result === undefined) {
             switch (this.display) {
                 case 'block':
@@ -2405,17 +2444,17 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     result = false;
                     break;
             }
-            this._cached.block = result;
+            this._cache.block = result;
         }
         return result;
     }
 
     get blockStatic() {
-        const result = this._cached.blockStatic;
+        const result = this._cache.blockStatic;
         if (result === undefined) {
             const pageFlow = this.pageFlow;
             if (pageFlow && (this.block && !this.floating || this.lineBreak)) {
-                return this._cached.blockStatic = true;
+                return this._cache.blockStatic = true;
             }
             else if (!pageFlow || !this.inline && !this.display.startsWith('table-') && !this.hasPX('maxWidth')) {
                 const width = this.valueOf('width');
@@ -2430,36 +2469,36 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 if (percent > 0) {
                     const marginLeft = this.valueOf('marginLeft');
                     const marginRight = this.valueOf('marginRight');
-                    return this._cached.blockStatic = percent + (isPercent(marginLeft) ? parseFloat(marginLeft) : 0) + (isPercent(marginRight) ? parseFloat(marginRight) : 0) >= 100;
+                    return this._cache.blockStatic = percent + (isPercent(marginLeft) ? parseFloat(marginLeft) : 0) + (isPercent(marginRight) ? parseFloat(marginRight) : 0) >= 100;
                 }
             }
-            return this._cached.blockStatic = false;
+            return this._cache.blockStatic = false;
         }
         return result;
     }
 
     get pageFlow() {
-        const result = this._cached.pageFlow;
-        return result === undefined ? this._cached.pageFlow = this.positionStatic || this.positionRelative || this.lineBreak : result;
+        const result = this._cache.pageFlow;
+        return result === undefined ? this._cache.pageFlow = this.positionStatic || this.positionRelative || this.lineBreak : result;
     }
 
     get centerAligned() {
-        const result = this._cached.centerAligned;
-        return result === undefined ? this._cached.centerAligned = !this.pageFlow ? this.hasPX('left') && this.hasPX('right') : this.autoMargin.leftRight || canTextAlign(this) && hasTextAlign(this, 'center') : result;
+        const result = this._cache.centerAligned;
+        return result === undefined ? this._cache.centerAligned = !this.pageFlow ? this.hasPX('left') && this.hasPX('right') : this.autoMargin.leftRight || canTextAlign(this) && hasTextAlign(this, 'center') : result;
     }
 
     get rightAligned() {
-        const result = this._cached.rightAligned;
-        return result === undefined ? this._cached.rightAligned = !this.pageFlow ? this.hasPX('right') && !this.hasPX('left') : this.float === 'right' || this.autoMargin.left || canTextAlign(this) && hasTextAlign(this, 'right', this.dir === 'rtl' ? 'start' : 'end') : result;
+        const result = this._cache.rightAligned;
+        return result === undefined ? this._cache.rightAligned = !this.pageFlow ? this.hasPX('right') && !this.hasPX('left') : this.float === 'right' || this.autoMargin.left || canTextAlign(this) && hasTextAlign(this, 'right', this.dir === 'rtl' ? 'start' : 'end') : result;
     }
 
     get bottomAligned() {
-        const result = this._cached.bottomAligned;
-        return result === undefined ? this._cached.bottomAligned = !this.pageFlow ? this.hasPX('bottom') && !this.hasPX('top') : this.actualParent?.hasHeight === true && this.autoMargin.top === true : result;
+        const result = this._cache.bottomAligned;
+        return result === undefined ? this._cache.bottomAligned = !this.pageFlow ? this.hasPX('bottom') && !this.hasPX('top') : this.actualParent?.hasHeight === true && this.autoMargin.top === true : result;
     }
 
     get autoMargin() {
-        const result = this._cached.autoMargin;
+        const result = this._cache.autoMargin;
         if (result === undefined) {
             if (!this.pageFlow || this.blockStatic || this.display === 'table') {
                 const styleMap = this._styleMap;
@@ -2467,7 +2506,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 const right = styleMap.marginRight === 'auto' && (this.pageFlow || this.hasPX('left'));
                 const top = styleMap.marginTop === 'auto' && (this.pageFlow || this.hasPX('bottom'));
                 const bottom = styleMap.marginBottom === 'auto' && (this.pageFlow || this.hasPX('top'));
-                return this._cached.autoMargin = {
+                return this._cache.autoMargin = {
                     horizontal: left || right,
                     left: left && !right,
                     right: !left && right,
@@ -2478,28 +2517,28 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     topBottom: top && bottom
                 };
             }
-            return this._cached.autoMargin = {};
+            return this._cache.autoMargin = {};
         }
         return result;
     }
 
     get baseline() {
-        const result = this._cached.baseline;
+        const result = this._cache.baseline;
         if (result === undefined) {
             if (this.pageFlow && !this.floating && !this.tableElement) {
                 const display = this.display;
                 if (display.startsWith('inline') || display === 'list-item') {
                     const verticalAlign = this.css('verticalAlign');
-                    return this._cached.baseline = verticalAlign === 'baseline' || isLength(verticalAlign, true);
+                    return this._cache.baseline = verticalAlign === 'baseline' || isLength(verticalAlign, true);
                 }
             }
-            return this._cached.baseline = false;
+            return this._cache.baseline = false;
         }
         return result;
     }
 
     get verticalAlign() {
-        let result = this._cached.verticalAlign;
+        let result = this._cache.verticalAlign;
         if (result === undefined) {
             if (this.pageFlow) {
                 const value = this.css('verticalAlign');
@@ -2539,7 +2578,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     }
                 }
             }
-            return this._cached.verticalAlign = result || 0;
+            return this._cache.verticalAlign = result || 0;
         }
         return result;
     }
@@ -2596,12 +2635,12 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get multiline() {
-        const result = this._cached.multiline;
-        return result === undefined ? this._cached.multiline = (this.plainText || this.styleElement && this.inlineText && (this.inline || this.naturalElements.length === 0 || isInlineVertical(this.display) || this.floating || !this.pageFlow)) && this.textBounds?.numberOfLines as number > 1 : result;
+        const result = this._cache.multiline;
+        return result === undefined ? this._cache.multiline = (this.plainText || this.styleElement && this.inlineText && (this.inline || this.naturalElements.length === 0 || isInlineVertical(this.display) || this.floating || !this.pageFlow)) && this.textBounds?.numberOfLines as number > 1 : result;
     }
 
     get backgroundColor(): string {
-        let result = this._cached.backgroundColor;
+        let result = this._cache.backgroundColor;
         if (result === undefined) {
             if (!this.plainText) {
                 result = this.css('backgroundColor');
@@ -2649,13 +2688,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         break;
                 }
             }
-            return this._cached.backgroundColor = result || '';
+            return this._cache.backgroundColor = result || '';
         }
         return result;
     }
 
     get backgroundImage() {
-        let result = this._cached.backgroundImage;
+        let result = this._cache.backgroundImage;
         if (result === undefined) {
             result = '';
             if (!this.plainText) {
@@ -2676,30 +2715,30 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     }
                 }
             }
-            this._cached.backgroundImage = result;
+            this._cache.backgroundImage = result;
         }
         return result;
     }
 
     get percentWidth() {
-        const result = this._cached.percentWidth;
+        const result = this._cache.percentWidth;
         if (result === undefined) {
             const value = this.valueOf('width');
-            return this._cached.percentWidth = isPercent(value) ? parseFloat(value) / 100 : 0;
+            return this._cache.percentWidth = isPercent(value) ? parseFloat(value) / 100 : 0;
         }
         return result;
     }
     get percentHeight() {
-        const result = this._cached.percentHeight;
+        const result = this._cache.percentHeight;
         if (result === undefined) {
             const value = this.valueOf('height');
-            return this._cached.percentHeight = isPercent(value) && (this.actualParent?.hasHeight || this.css('position') === 'fixed') ? parseFloat(value) / 100 : 0;
+            return this._cache.percentHeight = isPercent(value) && (this.actualParent?.hasHeight || this.css('position') === 'fixed') ? parseFloat(value) / 100 : 0;
         }
         return result;
     }
 
     get visibleStyle() {
-        const result = this._cached.visibleStyle;
+        const result = this._cache.visibleStyle;
         if (result === undefined) {
             if (!this.plainText) {
                 const borderWidth = this.borderTopWidth > 0 || this.borderRightWidth > 0 || this.borderBottomWidth > 0 || this.borderLeftWidth > 0;
@@ -2718,7 +2757,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         }
                     }
                 }
-                return this._cached.visibleStyle = {
+                return this._cache.visibleStyle = {
                     background: borderWidth || backgroundImage || backgroundColor,
                     borderWidth,
                     backgroundImage,
@@ -2728,13 +2767,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     backgroundRepeatY
                 };
             }
-            return this._cached.visibleStyle = {} as VisibleStyle;
+            return this._cache.visibleStyle = {} as VisibleStyle;
         }
         return result;
     }
 
     get absoluteParent() {
-        let result = this._cached.absoluteParent;
+        let result = this._cacheState.absoluteParent;
         if (result === undefined) {
             result = this.actualParent;
             if (!this.pageFlow && !this.documentBody) {
@@ -2742,19 +2781,19 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     result = result.actualParent;
                 }
             }
-            this._cached.absoluteParent = result;
+            this._cacheState.absoluteParent = result;
         }
         return result;
     }
 
     set actualParent(value) {
-        this._cached.actualParent = value;
+        this._cacheState.actualParent = value;
     }
     get actualParent() {
-        const result = this._cached.actualParent;
+        const result = this._cacheState.actualParent;
         if (result === undefined) {
             const parentElement = this.element?.parentElement;
-            return this._cached.actualParent = parentElement ? getElementAsNode<T>(parentElement, this.sessionId) : null;
+            return this._cacheState.actualParent = parentElement ? getElementAsNode<T>(parentElement, this.sessionId) : null;
         }
         return result;
     }
@@ -2776,7 +2815,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get actualWidth() {
-        let result = this._cached.actualWidth;
+        let result = this._cache.actualWidth;
         if (result === undefined) {
             if (this.plainText) {
                 const bounds = this.bounds;
@@ -2806,13 +2845,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     result = this.bounds.width;
                 }
             }
-            this._cached.actualWidth = result;
+            this._cache.actualWidth = result;
         }
         return result;
     }
 
     get actualHeight() {
-        let result = this._cached.actualHeight;
+        let result = this._cache.actualHeight;
         if (result === undefined) {
             if (this.inlineStatic || this.display === 'table-cell' || this.actualParent?.flexdata.column === true) {
                 result = this.bounds.height;
@@ -2828,7 +2867,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     result = this.bounds.height;
                 }
             }
-            this._cached.actualHeight = result;
+            this._cache.actualHeight = result;
         }
         return result;
     }
@@ -2898,7 +2937,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get attributes() {
-        let result = this._cached.attributes;
+        let result = this._cacheState.attributes;
         if (result === undefined) {
             result = {};
             if (this.styleElement) {
@@ -2908,7 +2947,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     result[item.name] = item.value;
                 }
             }
-            this._cached.attributes = result;
+            this._cacheState.attributes = result;
         }
         return result;
     }
@@ -2928,22 +2967,22 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get preserveWhiteSpace() {
-        const result = this._cached.preserveWhiteSpace;
+        const result = this._cache.preserveWhiteSpace;
         if (result === undefined) {
             switch (this.css('whiteSpace')) {
                 case 'pre':
                 case 'pre-wrap':
                 case 'break-spaces':
-                    return this._cached.preserveWhiteSpace = true;
+                    return this._cache.preserveWhiteSpace = true;
                 default:
-                    return this._cached.preserveWhiteSpace = false;
+                    return this._cache.preserveWhiteSpace = false;
             }
         }
         return result;
     }
 
     get fontSize(): number {
-        let result = this._cached.fontSize;
+        let result = this._cache.fontSize;
         if (result === undefined) {
             if (this.naturalChild) {
                 if (this.styleElement) {
@@ -3008,7 +3047,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 const options = isFontFixedWidth(this) ? { fixedWidth: true } : undefined;
                 result = parseUnit(this.css('fontSize'), options) || (this.ascend({ condition: item => item.fontSize > 0 })[0]?.fontSize ?? parseUnit('1rem', options));
             }
-            this._cached.fontSize = result;
+            this._cache.fontSize = result;
         }
         return result;
     }
@@ -3023,11 +3062,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get textStyle() {
-        let result = this._cached.textStyle;
+        let result = this._cache.textStyle;
         if (result === undefined) {
             result = this.cssAsObject(...TEXT_STYLE);
             result.fontSize = 'inherit';
-            this._cached.textStyle = result;
+            this._cache.textStyle = result;
         }
         return result;
     }
@@ -3041,10 +3080,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     set dir(value) {
-        this._cached.dir = value;
+        this._cacheState.dir = value;
     }
     get dir(): string {
-        let result = this._cached.dir;
+        let result = this._cacheState.dir;
         if (result === undefined) {
             result = this.naturalElement ? (this._element as HTMLElement).dir : '';
             if (result === '') {
@@ -3057,7 +3096,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     parent = parent.actualParent;
                 }
             }
-            this._cached.dir = result;
+            this._cacheState.dir = result;
         }
         return result;
     }

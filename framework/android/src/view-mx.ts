@@ -598,7 +598,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         protected _namespaces: ObjectMap<StringMapChecked> = { android: {} };
         protected _containerType = 0;
         protected _controlName = '';
-        protected _cached!: AndroidCachedValueUI<T>;
+        protected _cache!: AndroidCacheValueUI;
         protected _localSettings!: AndroidLocalSettingsUI;
         protected _boxReset?: number[];
         protected _boxAdjustment?: number[];
@@ -2635,7 +2635,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         get support() {
-            let result = this._cached.support;
+            let result = this._cache.support;
             if (result === undefined) {
                 result = {
                     positionTranslation: this.layoutConstraint,
@@ -2643,17 +2643,17 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     maxDimension: this.textElement || this.imageContainer
                 };
                 if (this.containerType !== 0) {
-                    this._cached.support = result;
+                    this._cache.support = result;
                 }
             }
             return result;
         }
 
         set renderExclude(value) {
-            this._cached.renderExclude = value;
+            this._cache.renderExclude = value;
         }
         get renderExclude(): boolean {
-            let result = this._cached.renderExclude;
+            let result = this._cache.renderExclude;
             if (result === undefined) {
                 const excludeHorizontal = (node: T) => node.bounds.width === 0 && node.contentBoxWidth === 0 && node.marginLeft === 0 && node.marginRight === 0 && !node.visibleStyle.background;
                 const excludeVertical = (node: T) => node.bounds.height === 0 && node.contentBoxHeight === 0 && (node.marginTop === 0 && node.marginBottom === 0 || node.css('overflow') === 'hidden');
@@ -2693,13 +2693,13 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                     }
                 }
-                return this._cached.renderExclude = result || false;
+                return this._cache.renderExclude = result || false;
             }
             return result;
         }
 
         get baselineHeight() {
-            let result = this._cached.baselineHeight;
+            let result = this._cache.baselineHeight;
             if (result === undefined) {
                 if (this.plainText) {
                     const { height, numberOfLines } = this.bounds;
@@ -2739,7 +2739,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                     result += this.marginBottom + this.getBox(BOX_STANDARD.MARGIN_TOP)[1];
                 }
-                this._cached.baselineHeight = result;
+                this._cache.baselineHeight = result;
             }
             return result;
         }

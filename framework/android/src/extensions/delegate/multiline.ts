@@ -224,14 +224,15 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
             else {
                 const q = words.length;
                 if (q > 1) {
-                    const { textStyle, fontSize, lineHeight, naturalElement } = seg;
+                    const { fontSize, lineHeight, naturalElement } = seg;
                     const depth = seg.depth + (seg === node ? 1 : 0);
-                    const fontFamily = seg.css('fontFamily');
+                    const fontFamily = seg.textStyle.fontFamily!;
                     const initialData: InitialData<T> = Object.freeze({ styleMap: { ...seg.unsafe<StringMap>('styleMap'), lineHeight: undefined } });
                     const cssData: StringMap = {
                         position: 'static',
                         display: partition ? seg.display : 'inline',
-                        verticalAlign: 'baseline'
+                        verticalAlign: 'baseline',
+                        ...seg.textStyle
                     };
                     const bounds = !seg.hasPX('width') && seg.textBounds || seg.bounds;
                     const boxRect: Partial<BoxRectDimension> = {
@@ -252,11 +253,10 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                         container.actualParent = parentContainer;
                         container.unsafe('element', element);
                         container.unsafe('initial', initialData);
-                        container.setCacheValue('naturalElement', naturalElement && !isNaN(columns));
+                        container.setCacheState('naturalElement', naturalElement && !isNaN(columns));
                         container.setCacheValue('tagName', tagName);
                         container.setCacheValue('fontSize', fontSize);
                         container.setCacheValue('lineHeight', lineHeight);
-                        container.inheritApply('textStyle', textStyle);
                         container.cssApply(cssData);
                         const textBounds = { ...boxRect, width: measureTextWidth(value, fontFamily, fontSize) + (value.length * adjustment) } as BoxRectDimension;
                         container.textBounds = textBounds;
