@@ -91,9 +91,10 @@
             background-color: #ccc;
         }
     </style>
-    <script src="/common/system.js"></script>
-    <script src="/common/transform.js"></script>
-    <script src="/common/babel-transform.js"></script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/chrome.framework.js"></script>
+    <script src="/dist/vdom.framework.js"></script>
     <script>
         const query = 'form[name=entry].form2#form1:nth-child(2):nth-child(1n+1):nth-child(even):nth-child(n+1):nth-child(-n+5):nth-child(0n+2):nth-of-type(1n+1) > ul:last-child:not(:first-child) li div label > input[type=Radio i][title="c2,birth"], label + input[type=checkbox]';
         let time = 0;
@@ -103,49 +104,46 @@
                 console.log(description + ': ' + (performance.now() - time));
             }
         }
-        System.import('/build/src/main.js').then(result => {
-            squared = result;
-            System.import('/build/src/base/main.js').then(result => {
-                squared.base = result;
-                System.import('/build/framework/chrome/src/main.js').then(async result => {
-                    chrome = result.default;
-                    System.import('/build/framework/vdom/src/main.js').then(async result => {
-                        vdom = result.default;
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log(document.getElementById('squared_ui').querySelectorAll(query));
 
-                        console.log(document.getElementById('squared_ui').querySelectorAll(query));
+            squared.setFramework(chrome);
+            searchQuery(await squared.fromElement(document.documentElement));
 
-                        squared.setFramework(chrome);
-                        searchQuery(await squared.fromElement(document.documentElement));
+            time = performance.now();
+            searchQuery(await squared.fromElement(document.documentElement), 'chrome #1');
 
-                        time = performance.now();
-                        searchQuery(await squared.fromElement(document.documentElement), 'chrome #1');
+            time = performance.now();
+            console.log(await squared.querySelectorAll(query));
+            console.log('chrome #2 :' + (performance.now() - time));
 
-                        time = performance.now();
-                        console.log(await squared.querySelectorAll(query, false));
-                        console.log('chrome #2 :' + (performance.now() - time));
+            time = performance.now();
+            searchQuery(await squared.parseDocument(), 'chrome #3');
 
-                        time = performance.now();
-                        searchQuery(await squared.parseDocument(), 'chrome #3');
+            time = performance.now();
+            searchQuery(squared.parseDocumentSync(), 'chrome sync #4');
 
-                        time = performance.now();
-                        searchQuery(squared.parseDocumentSync(), 'chrome sync #4');
+            time = performance.now();
+            console.log(squared.querySelectorAll(query, true));
+            console.log('chrome sync #5:' + (performance.now() - time));
 
-                        squared.setFramework(vdom);
-                        time = performance.now();
-                        searchQuery(await squared.fromElement(document.documentElement), 'vdom #1');
+            squared.setFramework(vdom);
+            time = performance.now();
+            searchQuery(await squared.fromElement(document.documentElement), 'vdom #1');
 
-                        time = performance.now();
-                        console.log(await squared.querySelectorAll(query, false));
-                        console.log('vdom #2: ' + (performance.now() - time));
+            time = performance.now();
+            console.log(await squared.querySelectorAll(query, false));
+            console.log('vdom #2: ' + (performance.now() - time));
 
-                        time = performance.now();
-                        searchQuery(await squared.parseDocument(), 'vdom #3');
+            time = performance.now();
+            searchQuery(await squared.parseDocument(), 'vdom #3');
 
-                        time = performance.now();
-                        searchQuery(squared.parseDocumentSync(), 'vdom sync #4');
-                    });
-                });
-            });
+            time = performance.now();
+            searchQuery(squared.parseDocumentSync(), 'vdom sync #4');
+
+            time = performance.now();
+            console.log(squared.querySelectorAll(query, true));
+            console.log('vdom sync #5: ' + (performance.now() - time));
         });
     </script>
 </head>

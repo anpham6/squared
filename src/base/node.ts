@@ -193,7 +193,7 @@ function convertBox(node: T, attr: string, margin: boolean) {
             }
             break;
     }
-    return node.parseUnit(node.css(attr), { parent: !(node.actualParent?.gridElement === true) });
+    return node.parseUnit(node.css(attr), node.actualParent?.gridElement ? { parent: false } : undefined);
 }
 
 function convertPosition(node: T, attr: string) {
@@ -210,7 +210,7 @@ function convertPosition(node: T, attr: string) {
     return 0;
 }
 
-function validateQuerySelector(node: T, child: T, selector: QueryData, index: number, last: boolean, adjacent?: string) {
+function validateQuerySelector(node: T, child: T, selector: QueryData, last: boolean, adjacent?: string) {
     if (selector.all) {
         return true;
     }
@@ -468,22 +468,22 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
                         if (match[1]) {
                             children = children.slice(0).reverse();
                         }
-                        const j = match[2] === 'child' ? children.indexOf(child) + 1 : children.filter((item: T) => item.tagName === tagName).indexOf(child) + 1;
-                        if (j > 0) {
+                        const index = match[2] === 'child' ? children.indexOf(child) + 1 : children.filter((item: T) => item.tagName === tagName).indexOf(child) + 1;
+                        if (index > 0) {
                             if (isNumber(placement)) {
-                                if (parseInt(placement) !== j) {
+                                if (parseInt(placement) !== index) {
                                     return false;
                                 }
                             }
                             else {
                                 switch (placement) {
                                     case 'even':
-                                        if (j % 2 !== 0) {
+                                        if (index % 2 !== 0) {
                                             return false;
                                         }
                                         break;
                                     case 'odd':
-                                        if (j % 2 === 0) {
+                                        if (index % 2 === 0) {
                                             return false;
                                         }
                                         break;
@@ -497,30 +497,30 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
                                                 }
                                                 const increment = parseInt(subMatch[2]);
                                                 if (increment !== 0) {
-                                                    if (j !== modifier) {
-                                                        for (let k = increment; ; k += increment) {
+                                                    if (index !== modifier) {
+                                                        for (let j = increment; ; j += increment) {
                                                             const total = increment + modifier;
-                                                            if (total === j) {
+                                                            if (total === index) {
                                                                 break;
                                                             }
-                                                            else if (total > j) {
+                                                            else if (total > index) {
                                                                 return false;
                                                             }
                                                         }
                                                     }
                                                 }
-                                                else if (j !== modifier) {
+                                                else if (index !== modifier) {
                                                     return false;
                                                 }
                                             }
                                             else if (subMatch[3]) {
                                                 if (modifier > 0) {
                                                     if (subMatch[1]) {
-                                                        if (j > modifier) {
+                                                        if (index > modifier) {
                                                             return false;
                                                         }
                                                     }
-                                                    else if (j < modifier) {
+                                                    else if (index < modifier) {
                                                         return false;
                                                     }
                                                 }
@@ -591,7 +591,7 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
                     }
                     break;
             }
-            if (validateQuerySelector(node, child, notData, index, last)) {
+            if (validateQuerySelector(node, child, notData, last)) {
                 return false;
             }
         }
@@ -669,18 +669,18 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
     return true;
 }
 
-function ascendQuerySelector(node: T, selectors: QueryData[], i: number, index: number, adjacent: Undef<string>, nodes: T[]): boolean {
+function ascendQuerySelector(node: T, selectors: QueryData[], i: number, j: number, nodes: T[], adjacent: Undef<string>): boolean {
     const depth = node.depth;
-    const selector = selectors[index];
+    const selector = selectors[j];
     const length = selectors.length;
-    const last = index === length - 1;
+    const last = j === length - 1;
     const next: T[] = [];
-    for (let j = 0, q = nodes.length; j < q; ++j) {
-        const child = nodes[j];
+    for (let k = 0, q = nodes.length; k < q; ++k) {
+        const child = nodes[k];
         if (adjacent) {
             const parent = child.actualParent!;
             if (adjacent === '>') {
-                if (validateQuerySelector(node, parent, selector, i, last, adjacent)) {
+                if (validateQuerySelector(node, parent, selector, last, adjacent)) {
                     next.push(parent);
                 }
             }
@@ -688,22 +688,22 @@ function ascendQuerySelector(node: T, selectors: QueryData[], i: number, index: 
                 const children = parent.naturalElements;
                 switch (adjacent) {
                     case '+': {
-                        const k = children.indexOf(child) - 1;
-                        if (k >= 0) {
-                            const sibling = children[k];
-                            if (validateQuerySelector(node, sibling, selector, i, last, adjacent)) {
+                        const l = children.indexOf(child) - 1;
+                        if (l >= 0) {
+                            const sibling = children[l];
+                            if (validateQuerySelector(node, sibling, selector, last, adjacent)) {
                                 next.push(sibling);
                             }
                         }
                         break;
                     }
                     case '~': {
-                        for (let k = 0, r = children.length; k < r; ++k) {
-                            const sibling = children[k];
+                        for (let l = 0, r = children.length; l < r; ++l) {
+                            const sibling = children[l];
                             if (sibling === child) {
                                 break;
                             }
-                            else if (validateQuerySelector(node, sibling, selector, i, last, adjacent)) {
+                            else if (validateQuerySelector(node, sibling, selector, last, adjacent)) {
                                 next.push(sibling);
                             }
                         }
@@ -712,10 +712,10 @@ function ascendQuerySelector(node: T, selectors: QueryData[], i: number, index: 
                 }
             }
         }
-        else if (child.depth - depth >= length - index) {
+        else if (child.depth - depth >= length - j) {
             let parent = child.actualParent;
             while (parent) {
-                if (validateQuerySelector(node, parent, selector, i, last)) {
+                if (validateQuerySelector(node, parent, selector, last)) {
                     next.push(parent);
                 }
                 parent = parent.actualParent;
@@ -725,7 +725,7 @@ function ascendQuerySelector(node: T, selectors: QueryData[], i: number, index: 
     if (next.length === 0) {
         return false;
     }
-    return ++index === length ? true : ascendQuerySelector(node, selectors, i, index, selector.adjacent, next);
+    return ++j === length ? true : ascendQuerySelector(node, selectors, i, j, next, selector.adjacent);
 }
 
 const aboveRange = (a: number, b: number, offset = 1) => a + offset > b;
@@ -1488,7 +1488,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return (this._element?.[attr] as Undef<string> ?? fallback).toString();
     }
 
-    public parseUnit(value: string, options: NodeParseUnitOptions = {}) {
+    public parseUnit(value: string, options?: NodeParseUnitOptions) {
         if (value === '') {
             return 0;
         }
@@ -1496,10 +1496,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             return parseFloat(value);
         }
         else if (lastItemOf(value) === '%') {
-            const bounds: BoxRectDimension = options.parent !== false && this.absoluteParent?.box || this.bounds;
-            return (parseFloat(value) / 100) * bounds[options.dimension || 'width'];
+            const bounds: BoxRectDimension = (!options || options.parent !== false) && this.absoluteParent?.box || this.bounds;
+            return (parseFloat(value) / 100) * bounds[options && options.dimension || 'width'];
         }
-        if (options.fontSize === undefined) {
+        if (!options) {
+            options = { fontSize: this.fontSize };
+        }
+        else if (options.fontSize === undefined) {
             options.fontSize = this.fontSize;
         }
         return parseUnit(value, options);
@@ -1833,7 +1836,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             else {
                                 for (let k = 0, r = children.length; k < r; ++k) {
                                     const node = children[k];
-                                    if ((currentCount === 0 || !result.includes(node)) && validateQuerySelector(this, node, dataEnd, i, lastEnd)) {
+                                    if ((currentCount === 0 || !result.includes(node)) && validateQuerySelector(this, node, dataEnd, lastEnd)) {
                                         pending.push(node);
                                     }
                                 }
@@ -1845,7 +1848,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         let count = currentCount;
                         for (let j = 0, r = pending.length; j < r; ++j) {
                             const node = pending[j];
-                            if ((currentCount === 0 || !result.includes(node)) && ascendQuerySelector(this, selectors, i, 0, dataEnd.adjacent, [node])) {
+                            if ((currentCount === 0 || !result.includes(node)) && ascendQuerySelector(this, selectors, i, 0, [node], dataEnd.adjacent)) {
                                 result.push(node);
                                 if (++count === resultCount) {
                                     return result.sort(sortById);
