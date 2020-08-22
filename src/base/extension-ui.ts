@@ -30,11 +30,7 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
 
     private readonly _isAll: boolean;
 
-    constructor(
-        name: string,
-        framework: number,
-        options?: ExtensionUIOptions)
-    {
+    constructor(name: string, framework: number, options?: ExtensionUIOptions) {
         super(name, framework, options);
         this.tagNames = options && options.tagNames || [];
         this._isAll = this.tagNames.length === 0;
@@ -78,7 +74,7 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
     public afterFinalize() {}
 
     public beforeBaseLayout(sessionId: string) {}
-    public beforeDocumentWrite(options: DocumentWriteExtensionUIOptions<T>) {}
+    public beforeDocumentWrite(data: DocumentWriteDataExtensionUI<T>) {}
 
     set application(value) {
         this._application = value;

@@ -2,11 +2,11 @@ type CSSElement = HTMLElement | SVGElement;
 type PositionAttr = "top" | "right" | "bottom" | "left";
 type DimensionAttr = "width" | "height";
 
-interface BoxRect {
-    top: number;
-    right: number;
-    bottom: number;
-    left: number;
+interface BoxRect<T = number> {
+    top: T;
+    right: T;
+    bottom: T;
+    left: T;
 }
 
 interface BoxRectDimension extends BoxRect, Dimension {

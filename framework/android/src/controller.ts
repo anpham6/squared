@@ -379,7 +379,7 @@ function sortTemplateInvalid(a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>)
 const getVerticalLayout = (layout: LayoutUI<View>) => isConstraintLayout(layout, true) ? CONTAINER_NODE.CONSTRAINT : layout.some(item => item.positionRelative || !item.pageFlow && item.autoPosition) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR;
 const getVerticalAlignedLayout = (layout: LayoutUI<View>) => isConstraintLayout(layout, true) ? CONTAINER_NODE.CONSTRAINT : layout.some(item => item.positionRelative) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR;
 const sortTemplateStandard = (a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>) => doOrderStandard(a.node.innerMostWrapped as View, b.node.innerMostWrapped as View);
-const getAnchorDirection = (reverse?: boolean): AnchorPosition[] => reverse ? ['right', 'left', 'rightLeft', 'leftRight'] : ['left', 'right', 'leftRight', 'rightLeft'];
+const getAnchorDirection = (reverse?: boolean): AnchorPositionAttr[] => reverse ? ['right', 'left', 'rightLeft', 'leftRight'] : ['left', 'right', 'leftRight', 'rightLeft'];
 const getAnchorBaseline = (node: View) => isBottomAligned(node) ? 'baseline' : 'bottom';
 const hasCleared = (layout: LayoutUI<View>, clearMap: Map<View, string>, ignoreFirst = true) => clearMap.size > 0 && layout.some((node, index) => (index > 0 || !ignoreFirst) && clearMap.has(node));
 const isUnknownParent = (node: View, containerType: number, length: number) => node.containerType === containerType && node.length === length && (node.alignmentType === 0 || node.hasAlign(NODE_ALIGNMENT.UNKNOWN));
@@ -475,8 +475,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     public static anchorPosition<T extends View>(node: T, parent: T, horizontal: boolean, modifyAnchor = true) {
         let orientation: string,
             dimension: string,
-            posA: AnchorPosition,
-            posB: AnchorPosition,
+            posA: AnchorPositionAttr,
+            posB: AnchorPositionAttr,
             marginA: number,
             marginB: number,
             paddingA: number,
@@ -1927,9 +1927,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         return this.getEnclosingXmlTag(controlName, this.userSettings.showAttributes ? node.extractAttributes(1) : undefined, attrs.content);
     }
 
-    public renderSpace(options: RenderSpaceAttribute) {
-        const android = options.android;
-        let { width, height } = options;
+    public renderSpace(attrs: RenderSpaceAttribute) {
+        const android = attrs.android;
+        let { width, height } = attrs;
         if (width) {
             if (width.endsWith('%')) {
                 android.layout_columnWeight = truncate(parseFloat(width) / 100, this.localSettings.floatPrecision);
@@ -1948,21 +1948,21 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         else {
             height = 'wrap_content';
         }
-        if (options.column !== undefined) {
-            android.layout_column = options.column.toString();
+        if (attrs.column !== undefined) {
+            android.layout_column = attrs.column.toString();
         }
-        if (options.columnSpan) {
-            android.layout_columnSpan = options.columnSpan.toString();
+        if (attrs.columnSpan) {
+            android.layout_columnSpan = attrs.columnSpan.toString();
         }
-        if (options.row !== undefined) {
-            android.layout_row = options.row.toString();
+        if (attrs.row !== undefined) {
+            android.layout_row = attrs.row.toString();
         }
-        if (options.rowSpan) {
-            android.layout_rowSpan = options.rowSpan.toString();
+        if (attrs.rowSpan) {
+            android.layout_rowSpan = attrs.rowSpan.toString();
         }
-        const result: RenderSpaceAttribute = { android, app: options.app };
+        const result: ViewAttribute = { android, app: attrs.app };
         const output = this.renderNodeStatic({ controlName: CONTAINER_ANDROID.SPACE, width, height }, result);
-        options.documentId = result.documentId;
+        attrs.documentId = result.documentId;
         return output;
     }
 
@@ -2503,7 +2503,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     const [currentFloated, rows, floating] = rowsAll[i];
                     if (currentFloated) {
                         node.floatContainer = true;
-                        currentFloated.anchor(currentFloated.float as AnchorPosition, 'true');
+                        currentFloated.anchor(currentFloated.float as AnchorPositionAttr, 'true');
                         setLayoutBelow(currentFloated);
                         float = currentFloated.float;
                     }
@@ -2969,7 +2969,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     }
                                 }
                                 else if (baseline.floating) {
-                                    baseline.anchor(baseline.float as AnchorPosition, 'true');
+                                    baseline.anchor(baseline.float as AnchorPositionAttr, 'true');
                                 }
                                 else if (textAlignLast !== '' && i === length - 1) {
                                     switch (textAlignLast) {
@@ -3579,8 +3579,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             documentParent = parent;
         }
         const horizontal = axis === 'horizontal';
-        let LT: AnchorPosition,
-            RB: AnchorPosition;
+        let LT: AnchorPositionAttr,
+            RB: AnchorPositionAttr;
         if (horizontal) {
             if (!opposing) {
                 LT = 'left';
@@ -3646,7 +3646,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     if (itemA.pageFlow || item.constraint[axis]) {
                         const { linear: linearA, bounds: boundsA } = itemA;
                         let offset = NaN,
-                            position: Undef<AnchorPosition>;
+                            position: Undef<AnchorPositionAttr>;
                         if (withinRange(bounds[LT], boundsA[LT])) {
                             position = LT;
                         }
@@ -3690,7 +3690,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                 }
                 const TL = horizontal ? 'top' : 'left';
-                const setAnchorOffset = (documentId: string, position: AnchorPosition, adjustment: number) => {
+                const setAnchorOffset = (documentId: string, position: AnchorPositionAttr, adjustment: number) => {
                     node.anchor(position, documentId, true);
                     node.setBox(horizontal ? BOX_STANDARD.MARGIN_LEFT : BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment });
                     node.constraint[axis] = true;

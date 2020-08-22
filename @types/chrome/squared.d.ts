@@ -3,7 +3,7 @@ import * as squared from '../squared';
 type Node = squared.base.Node;
 
 declare interface ChromeFramework<T extends Node> extends squared.base.AppFramework<T> {
-    saveAsWebPage: (filename?: string, options?: squared.base.FileArchivingOptions) => Promise<Node[] | void>;
+    saveAsWebPage: (filename?: string, options?: squared.base.FileArchivingOptions) => Promise<Node>;
 }
 
 declare namespace base {

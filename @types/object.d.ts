@@ -32,7 +32,7 @@ interface Point {
     y: number;
 }
 
-interface Dimension {
-    width: number;
-    height: number;
+interface Dimension<T = number> {
+    width: T;
+    height: T;
 }

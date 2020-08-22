@@ -322,7 +322,7 @@ const validAboveChild = (node: NodeUI, children: boolean) => !node.hasHeight && 
 const validBelowChild = (node: NodeUI, children: boolean) => !node.hasHeight && node.borderTopWidth === 0 && node.paddingTop === 0 && canResetChild(node, children);
 const hasOverflowXY = (node: NodeUI) => checkOverflowValue(node.cssInitial('overflowY')) || checkOverflowValue(node.cssInitial('overflowX'));
 
-export default class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
+export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
     public readonly eventOnly = true;
 
     public afterBaseLayout(sessionId: string) {

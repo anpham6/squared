@@ -1770,7 +1770,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return super.removeTry(options);
         }
 
-        public hasFlex(direction: "row" | "column") {
+        public hasFlex(direction: FlowDirectionAttr) {
             const parent = this.actualParent;
             if (parent && parent.flexdata[direction]) {
                 if (direction === 'column' && !parent.hasHeight) {
@@ -1859,7 +1859,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
         }
 
-        public anchor(position: AnchorPosition, documentId = '', overwrite?: boolean) {
+        public anchor(position: AnchorPositionAttr, documentId = '', overwrite?: boolean) {
             const node = this.anchorTarget;
             const renderParent = node.renderParent as Undef<T>;
             if (renderParent && node.documentId !== documentId) {
@@ -2006,7 +2006,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return result;
         }
 
-        public anchorDelete(...position: AnchorPosition[]) {
+        public anchorDelete(...position: AnchorPositionAttr[]) {
             const node = this.anchorTarget;
             const renderParent = node.renderParent as Undef<T>;
             if (renderParent) {
@@ -2059,7 +2059,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     else if (update) {
                         transferLayoutAlignment(update);
                     }
-                    node.anchorDelete(...Object.keys(LAYOUT_CONSTRAINT) as AnchorPosition[]);
+                    node.anchorDelete(...Object.keys(LAYOUT_CONSTRAINT) as AnchorPositionAttr[]);
                     node.delete('app', 'layout_constraintHorizontal_bias', 'layout_constraintHorizontal_chainStyle', 'layout_constraintVertical_bias', 'layout_constraintVertical_chainStyle');
                 }
                 else if (renderParent.layoutRelative) {
@@ -2069,8 +2069,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     else if (update) {
                         transferLayoutAlignment(update);
                     }
-                    node.anchorDelete(...Object.keys(LAYOUT_RELATIVE_PARENT) as AnchorPosition[]);
-                    node.anchorDelete(...Object.keys(LAYOUT_RELATIVE) as AnchorPosition[]);
+                    node.anchorDelete(...Object.keys(LAYOUT_RELATIVE_PARENT) as AnchorPositionAttr[]);
+                    node.anchorDelete(...Object.keys(LAYOUT_RELATIVE) as AnchorPositionAttr[]);
                 }
             }
         }

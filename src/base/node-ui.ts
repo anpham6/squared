@@ -355,7 +355,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return result[0] || null;
     }
 
-    public static linearData<T extends NodeUI>(list: T[], cleared?: Map<T, string>): LinearData<T> {
+    public static linearData<T extends NodeUI>(list: T[], cleared?: Map<T, string>): LinearData {
         let linearX = false,
             linearY = false,
             floated: Undef<Set<string>>;

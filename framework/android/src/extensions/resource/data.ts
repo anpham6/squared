@@ -7,10 +7,10 @@ const { capitalize } = squared.lib.util;
 export default class ResourceData<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
 
-    public beforeDocumentWrite(options: DocumentWriteExtensionUIOptions<T>) {
-        const application = this.application as android.base.Application<T>;
-        if (application.viewModel.size > 0) {
-            const { rendered, documentRoot } = options;
+    public beforeDocumentWrite(data: DocumentWriteDataExtensionUI<T>) {
+        const viewModel = (this.application as android.base.Application<T>).viewModel;
+        if (viewModel.size > 0) {
+            const { rendered, documentRoot } = data;
             const controller = this.controller;
             const applied = new Set<T>();
             for (let i = 0, length = rendered.length; i < length; ++i) {
@@ -30,11 +30,11 @@ export default class ResourceData<T extends View> extends squared.base.Extension
             if (applied.size > 0) {
                 for (let i = 0, length = documentRoot.length; i < length; ++i) {
                     const node = documentRoot[i].node;
-                    const data = application.getViewModel(node.sessionId) || application.getViewModel('0');
-                    if (data) {
+                    const viewData = viewModel.get(node.sessionId) || viewModel.get('0');
+                    if (viewData) {
                         for (const child of applied) {
                             if (child.ascend({ condition: item => item === node, attr: 'renderParent'}).length > 0) {
-                                const { import: importing, variable } = data;
+                                const { import: importing, variable } = viewData;
                                 const { depth, id } = node;
                                 const indentA = '\t'.repeat(depth);
                                 const indentB = '\t'.repeat(depth + 1);

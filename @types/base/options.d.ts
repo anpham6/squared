@@ -39,16 +39,9 @@ interface ExtensionUIOptions extends ExtensionOptions {
     tagNames?: string[];
 }
 
-interface DocumentWriteExtensionUIOptions<T extends squared.base.NodeUI> {
-    rendered: T[];
-    documentRoot: squared.base.LayoutRoot<T>[];
-}
-
-interface RawDataOptions {
+interface RawDataOptions extends Partial<Dimension> {
     mimeType?: string;
     data?: any;
-    width?: number;
-    height?: number;
     encoding?: string;
     filename?: string;
 }

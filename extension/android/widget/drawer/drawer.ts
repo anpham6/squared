@@ -121,7 +121,7 @@ export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> 
     }
 
     public setStyleTheme(api: number) {
-        const settings = this.application.userSettings as AndroidUserSettingsUI;
+        const settings = this.application.userSettings as AndroidUserResourceSettingsUI;
         const options = createStyleAttribute(this.options.resource);
         assignEmptyValue(options, 'name', settings.manifestThemeName);
         assignEmptyValue(options, 'parent', settings.manifestParentThemeName);

@@ -1,5 +1,6 @@
 type Node = squared.base.Node;
 type ExtensionRequest = squared.base.Extension<Node> | string;
+type PromiseResult = Promise<Void<PlainObject>>;
 
 export interface FrameworkOptions {
     settings?: StandardMap;
@@ -18,13 +19,13 @@ export function include(value: ExtensionRequest, options?: FrameworkOptions): bo
 export function exclude(value: ExtensionRequest | string): boolean;
 export function configure(value: ExtensionRequest | string, options: FrameworkOptions): boolean;
 export function retrieve(value: string): Null<PlainObject>;
-export function parseDocument(...elements: (string | HTMLElement)[]): Promise<Node | Node[] | void>;
+export function parseDocument(...elements: (string | HTMLElement)[]): Promise<Void<Node | Node[]>>;
 export function parseDocumentSync(...elements: (string | HTMLElement)[]): Undef<Node | Node[]>;
-export function copyToDisk(value: string, options?: PlainObject): Promise<PlainObject | void>;
-export function appendToArchive(value: string, options?: PlainObject): Promise<PlainObject | void>;
-export function saveToArchive(value?: string, options?: PlainObject): Promise<PlainObject | void>;
-export function createFrom(value: string, options: PlainObject): Promise<PlainObject | void>;
-export function appendFromArchive(value: string, options: PlainObject): Promise<PlainObject | void>;
+export function copyToDisk(value: string, options?: PlainObject): PromiseResult;
+export function appendToArchive(value: string, options?: PlainObject): PromiseResult;
+export function saveToArchive(value?: string, options?: PlainObject): PromiseResult;
+export function createFrom(value: string, options: PlainObject): PromiseResult;
+export function appendFromArchive(value: string, options: PlainObject): PromiseResult;
 export function get(...elements: (string | Element)[]): Undef<Node[] | Map<Element, Node[]>>;
 export function latest(value?: number): string;
 export function ready(): boolean;

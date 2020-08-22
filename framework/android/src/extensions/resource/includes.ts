@@ -15,8 +15,8 @@ const { NODE_TEMPLATE } = squared.base.lib.enumeration;
 export default class ResourceIncludes<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
 
-    public beforeDocumentWrite(options: DocumentWriteExtensionUIOptions<T>) {
-        const rendered = options.rendered;
+    public beforeDocumentWrite(data: DocumentWriteDataExtensionUI<T>) {
+        const rendered = data.rendered;
         for (let i = 0, length = rendered.length; i < length; ++i) {
             const node = rendered[i];
             if (node.rendering) {
@@ -30,17 +30,17 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                         if (item.documentRoot) {
                             return;
                         }
-                        const data: NodeIndex = {
+                        const indexData: NodeIndex = {
                             item,
                             name,
                             index,
                             include: dataset.androidIncludeMerge === 'false'
                         };
                         if (name) {
-                            (open || (open = [])).push(data);
+                            (open || (open = [])).push(indexData);
                         }
                         if (closing) {
-                            (close || (close = [])).push(data);
+                            (close || (close = [])).push(indexData);
                         }
                     }
                 });

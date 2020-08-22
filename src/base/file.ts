@@ -27,9 +27,9 @@ export default abstract class File<T extends squared.base.Node> implements squar
 
     private _hostname = '';
 
-    public abstract copyToDisk(directory: string, options?: FileCopyingOptions): Promise<ResultOfFileAction | void>;
-    public abstract appendToArchive(pathname: string, options?: FileArchivingOptions): Promise<ResultOfFileAction | void>;
-    public abstract saveToArchive(filename: string, options?: FileArchivingOptions): Promise<ResultOfFileAction | void>;
+    public abstract copyToDisk(directory: string, options?: FileCopyingOptions): FileActionResult;
+    public abstract appendToArchive(pathname: string, options?: FileArchivingOptions): FileActionResult;
+    public abstract saveToArchive(filename: string, options?: FileArchivingOptions): FileActionResult;
 
     public abstract get userSettings(): UserResourceSettings;
 

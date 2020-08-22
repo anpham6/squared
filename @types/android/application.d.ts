@@ -1,4 +1,4 @@
-interface AndroidUserSettingsUI extends UserSettingsUI {
+interface AndroidUserResourceSettingsUI extends UserResourceSettingsUI {
     targetAPI: number;
     resolutionDPI: number;
     resolutionScreenWidth: number;
@@ -33,20 +33,16 @@ interface AndroidResourceStoredMap extends ResourceStoredMap {
     animators: Map<string, string>;
 }
 
-interface RenderSpaceAttribute extends ViewAttribute {
-    width?: string;
-    height?: string;
+interface RenderSpaceAttribute extends ViewAttribute, Partial<Dimension<string>> {
     column?: number;
     columnSpan?: number;
     row?: number;
     rowSpan?: number;
 }
 
-interface RenderNodeStaticAttribute {
+interface RenderNodeStaticAttribute extends Partial<Dimension<string>> {
     controlName?: string;
     controlType?: number;
-    width?: string;
-    height?: string;
     content?: string;
 }
 

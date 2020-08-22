@@ -100,11 +100,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
     public readonly resource!: android.base.Resource<T>;
 
     public copyToDisk(directory: string, options?: FileCopyingOptions) {
-        return this.copying({
-            ...options,
-            assets: this.combineAssets(options?.assets),
-            directory
-        });
+        return this.copying({ ...options, assets: this.combineAssets(options?.assets), directory });
     }
 
     public appendToArchive(pathname: string, options?: FileArchivingOptions) {
@@ -117,11 +113,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     public saveToArchive(filename: string, options?: FileArchivingOptions) {
-        return this.archiving({
-            ...options,
-            assets: this.combineAssets(options?.assets),
-            filename
-        });
+        return this.archiving({ ...options, assets: this.combineAssets(options?.assets), filename });
     }
 
     public resourceAllToXml(options: FileUniversalOptions = {}) {

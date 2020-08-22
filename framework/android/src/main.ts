@@ -15,6 +15,7 @@ import Relative from './extensions/relative';
 import Sprite from './extensions/sprite';
 import Substitute from './extensions/substitute';
 import Table from './extensions/table';
+import WhiteSpace from './extensions/whitespace';
 
 import DelegateBackground from './extensions/delegate/background';
 import DelegateMaxWidthHeight from './extensions/delegate/max-width-height';
@@ -68,6 +69,7 @@ const appBase: android.AndroidFramework<View> = {
         Sprite,
         Substitute,
         Table,
+        WhiteSpace,
         delegate: {
             Background: DelegateBackground,
             MaxWidthHeight: DelegateMaxWidthHeight,
@@ -300,7 +302,7 @@ const appBase: android.AndroidFramework<View> = {
             [EN.LIST, new List(EN.LIST, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
             [EN.GRID, new Grid(EN.GRID, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID, { tagNames: ['DIV', 'FORM', 'UL', 'OL', 'DL', 'NAV', 'SECTION', 'ASIDE', 'MAIN', 'HEADER', 'FOOTER', 'P', 'ARTICLE', 'FIELDSET'] })],
             [EN.SPRITE, new Sprite(EN.SPRITE, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
-            [EN.WHITESPACE, new squared.base.extensions.WhiteSpace(EN.WHITESPACE, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
+            [EN.WHITESPACE, new WhiteSpace(EN.WHITESPACE, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
             [EA.RESOURCE_SVG, new ResourceSvg(EA.RESOURCE_SVG, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
             [EA.RESOURCE_BACKGROUND, new ResourceBackground(EA.RESOURCE_BACKGROUND, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
             [EA.RESOURCE_STRINGS, new ResourceStrings(EA.RESOURCE_STRINGS, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],

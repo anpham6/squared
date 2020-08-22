@@ -2,7 +2,7 @@ type AppViewModel = android.base.AppViewModel;
 type View = android.base.View;
 
 export default class Application<T extends View> extends squared.base.ApplicationUI<T> implements android.base.Application<T> {
-    public userSettings!: AndroidUserSettingsUI;
+    public userSettings!: AndroidUserResourceSettingsUI;
     public readonly systemName = 'android';
 
     private _viewModel = new Map<string, AppViewModel>();

@@ -271,7 +271,7 @@ function applyLayout(node: NodeUI, data: CssGridDirectionData, dataCount: number
 
 const convertLength = (node: NodeUI, value: string, index: number) => isLength(value) ? formatPX(node.parseUnit(value, { dimension: index !== 0 ? 'width' : 'height' })) : value;
 
-export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
+export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
     public static isAligned(node: NodeUI) {
         return node.hasHeight && /^space-|center|flex-end|end/.test(node.css('alignContent'));
     }

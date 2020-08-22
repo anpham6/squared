@@ -37,9 +37,9 @@ function createNamespaceData(namespace: string, node: View, group: GroupData) {
 export default class ResourceDimens<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
 
-    public beforeDocumentWrite(options: DocumentWriteExtensionUIOptions<T>) {
+    public beforeDocumentWrite(data: DocumentWriteDataExtensionUI<T>) {
         const dimens = (Resource.STORED as AndroidResourceStoredMap).dimens;
-        const rendered = options.rendered;
+        const rendered = data.rendered;
         const groups: ObjectMapNested<T[]> = {};
         for (let i = 0, length = rendered.length; i < length; ++i) {
             const node = rendered[i];

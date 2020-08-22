@@ -149,7 +149,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     };
     public readonly extensions: ExtensionUI<T>[] = [];
     public readonly fileHandler?: File<T>;
-    public abstract userSettings: UserSettingsUI;
+    public abstract userSettings: UserResourceSettingsUI;
 
     private _controllerSettings!: ControllerSettingsUI;
     private _layoutFileExtension!: RegExp;
@@ -218,9 +218,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
         }
-        const documentWriteOptions: DocumentWriteExtensionUIOptions<T> = { rendered, documentRoot };
+        const documentWriteData: DocumentWriteDataExtensionUI<T> = { rendered, documentRoot };
         for (let i = 0; i < length; ++i) {
-            extensions[i].beforeDocumentWrite(documentWriteOptions);
+            extensions[i].beforeDocumentWrite(documentWriteData);
         }
         for (let i = 0, q = documentRoot.length; i < q; ++i) {
             const { node, layoutName, renderTemplates } = documentRoot[i];

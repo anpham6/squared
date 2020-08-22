@@ -13,7 +13,7 @@ interface UserResourceSettings extends UserSettings {
     outputArchiveName: string;
 }
 
-interface UserSettingsUI extends UserResourceSettings {
+interface UserResourceSettingsUI extends UserResourceSettings {
     framesPerSecond: number;
     supportNegativeLeftTop: boolean;
     showAttributes: boolean;
@@ -134,7 +134,7 @@ interface ResourceStoredMap {
     ids: Map<string, string[]>;
     strings: Map<string, string>;
     arrays: Map<string, string[]>;
-    fonts: Map<string, ObjectMap<string>>;
+    fonts: Map<string, StringMap>;
     colors: Map<string, string>;
     images: Map<string, StringMap>;
 }

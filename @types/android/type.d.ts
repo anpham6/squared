@@ -1,1 +1,2 @@
-type AnchorPosition = "left" | "top" | "right" | "bottom" | "baseline" | "leftRight" | "rightLeft" | "topBottom" | "bottomTop" | "centerHorizontal" | "centerVertical";
+type AnchorPositionAttr = PositionAttr | "baseline" | "leftRight" | "rightLeft" | "topBottom" | "bottomTop" | "centerHorizontal" | "centerVertical";
+type FlowDirectionAttr = "row" | "column";

@@ -24,8 +24,8 @@ function parseFileAs(attr: string, value: Undef<string>): Undef<[string, Undef<s
 }
 
 function getFilePath(value: string, saveTo?: boolean): [Undef<string>, string, string] {
-    value = value.replace(/\\/g, '/');
     let moveTo: Undef<string>;
+    value = value.replace(/\\/g, '/');
     if (value[0] === '/') {
         moveTo = STRING_SERVERROOT;
     }
@@ -264,34 +264,26 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     public copyToDisk(directory: string, options?: ChromeFileCopyingOptions) {
-        return this.copying({
-            ...options,
-            assets: this.combineAssets().concat(options?.assets || []) as FileAsset[],
-            directory
-        });
+        return this.copying({ ...options, assets: this.appendAssetsFromOptions(options), directory });
     }
 
     public appendToArchive(pathname: string, options?: ChromeFileArchivingOptions) {
         return this.archiving({
             filename: this.userSettings.outputArchiveName,
             ...options,
-            assets: this.combineAssets(options).concat(options?.assets || []) as FileAsset[],
+            assets: this.appendAssetsFromOptions(options),
             appendTo: pathname
         });
     }
 
     public saveToArchive(filename: string, options?: ChromeFileArchivingOptions) {
-        return this.archiving({
-            ...options,
-            assets: this.combineAssets(options).concat(options?.assets || []) as FileAsset[],
-            filename
-        });
+        return this.archiving({ ...options, assets: this.appendAssetsFromOptions(options), filename });
     }
 
     public getHtmlPage(options?: FileActionAttribute) {
         let name: Undef<string>,
-            saveAs: Undef<SaveAsOptions>,
-            preserveCrossOrigin: Undef<boolean>;
+            preserveCrossOrigin: Undef<boolean>,
+            saveAs: Undef<SaveAsOptions>;
         if (options) {
             ({ name, preserveCrossOrigin } = options);
             saveAs = options.saveAs?.html;
@@ -331,8 +323,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     public getScriptAssets(options?: FileActionAttribute) {
-        let saveAs: Undef<SaveAsOptions>,
-            preserveCrossOrigin: Undef<boolean>;
+        let preserveCrossOrigin: Undef<boolean>,
+            saveAs: Undef<SaveAsOptions>;
         if (options) {
             preserveCrossOrigin = options.preserveCrossOrigin;
             saveAs = options.saveAs?.script;
@@ -482,8 +474,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     public getImageAssets(options?: FileActionAttribute) {
-        let saveAs: Undef<SaveAsOptions>,
-            preserveCrossOrigin: Undef<boolean>;
+        let preserveCrossOrigin: Undef<boolean>,
+            saveAs: Undef<SaveAsOptions>;
         if (options) {
             preserveCrossOrigin = options.preserveCrossOrigin;
             saveAs = options.saveAs?.base64;
@@ -685,6 +677,11 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             .concat(this.getRawAssets('object', options))
             .concat(this.getRawAssets('embed', options))
             .concat(this.getFontAssets(options));
+    }
+
+    private appendAssetsFromOptions(options?: squared.base.FileActionOptions) {
+        const assets = this.combineAssets(options);
+        return options && options.assets ? assets.concat(options.assets) : assets;
     }
 
     get outputFileExclusions() {

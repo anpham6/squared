@@ -1,29 +1,14 @@
+
 interface InitialData<T> extends PlainObject {
     styleMap?: StringMap;
     children?: T[];
     bounds?: Null<BoxRectDimension>;
 }
 
-interface CacheValue {
+interface CacheValue extends Partial<BoxModel>, Partial<Dimension>, Partial<BoxRect> {
     pageFlow?: boolean;
     positionStatic?: boolean;
     positionRelative?: boolean;
-    top?: number;
-    right?: number;
-    bottom?: number;
-    left?: number;
-    marginTop?: number;
-    marginRight?: number;
-    marginBottom?: number;
-    marginLeft?: number;
-    paddingTop?: number;
-    paddingRight?: number;
-    paddingBottom?: number;
-    paddingLeft?: number;
-    borderTopWidth?: number;
-    borderRightWidth?: number;
-    borderBottomWidth?: number;
-    borderLeftWidth?: number;
     contentBoxWidth?: number;
     contentBoxHeight?: number;
     inline?: boolean;
@@ -37,8 +22,6 @@ interface CacheValue {
     rightAligned?: boolean;
     bottomAligned?: boolean;
     preserveWhiteSpace?: boolean;
-    width?: number;
-    height?: number;
     hasWidth?: boolean;
     hasHeight?: boolean;
     lineHeight?: number;
@@ -60,7 +43,6 @@ interface CacheValue {
 interface CacheValueUI extends CacheValue {
     float?: string;
     floating?: boolean;
-    baselineElement?: boolean;
     contentBox?: boolean;
     imageElement?: boolean;
     flexElement?: boolean;
@@ -69,8 +51,9 @@ interface CacheValueUI extends CacheValue {
     tableElement?: boolean;
     layoutElement?: boolean;
     scrollElement?: boolean;
-    leftTopAxis?: boolean;
+    baselineElement?: boolean;
     autoPosition?: boolean;
+    leftTopAxis?: boolean;
     positiveAxis?: boolean;
     renderExclude?: boolean;
     inlineFlow?: boolean;
@@ -126,18 +109,14 @@ interface VisibleStyle {
     backgroundRepeatY: boolean;
 }
 
-interface AutoMargin {
+interface AutoMargin extends Partial<BoxRect<boolean>> {
     horizontal?: boolean;
-    left?: boolean;
-    right?: boolean;
     leftRight?: boolean;
     vertical?: boolean;
-    top?: boolean;
-    bottom?: boolean;
     topBottom?: boolean;
 }
 
-interface LinearData<T> {
+interface LinearData {
     linearX: boolean;
     linearY: boolean;
     floated?: Set<string>;

@@ -338,12 +338,12 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 orientationInverse: OrientationAttr,
                 WHL: DimensionAttr,
                 HWL: DimensionAttr,
-                LT: AnchorPosition,
-                TL: AnchorPosition,
-                RB: AnchorPosition,
-                BR: AnchorPosition,
-                LRTB: AnchorPosition,
-                RLBT: AnchorPosition,
+                LT: AnchorPositionAttr,
+                TL: AnchorPositionAttr,
+                RB: AnchorPositionAttr,
+                BR: AnchorPositionAttr,
+                LRTB: AnchorPositionAttr,
+                RLBT: AnchorPositionAttr,
                 dimension: boolean,
                 dimensionInverse: boolean;
             for (let i = 0; i < 2; ++i) {

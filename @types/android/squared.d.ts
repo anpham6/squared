@@ -15,7 +15,7 @@ declare namespace base {
     }
 
     class Application<T extends View> extends squared.base.ApplicationUI<T> {
-        readonly userSettings: AndroidUserSettingsUI;
+        readonly userSettings: AndroidUserResourceSettingsUI;
         setViewModel(data: AppViewModel, sessionId?: string): void;
         getViewModel(sessionId: string): Undef<AppViewModel>;
         resolveTarget(sessionId: string, target: Null<HTMLElement | string>): Undef<T>;
@@ -26,7 +26,7 @@ declare namespace base {
         static anchorPosition<T extends View>(node: T, parent: T, horizontal: boolean, modifyAnchor?: boolean): Partial<BoxRect>;
         readonly application: Application<T>;
         renderNodeStatic(attrs: RenderNodeStaticAttribute, options?: ViewAttribute): string;
-        renderSpace(options: RenderSpaceAttribute): string;
+        renderSpace(attrs: RenderSpaceAttribute): string;
         checkFrameHorizontal(data: LayoutUI<T>): boolean;
         checkConstraintFloat(data: LayoutUI<T>): boolean;
         checkConstraintHorizontal(data: LayoutUI<T>): boolean;
@@ -35,7 +35,7 @@ declare namespace base {
         addBarrier(nodes: T[], barrierDirection: string): string;
         evaluateAnchors(nodes: T[]): void;
         createNodeWrapper(node: T, parent: T, options?: AndroidCreateNodeWrapperUIOptions<T>): T;
-        get userSettings(): AndroidUserSettingsUI;
+        get userSettings(): AndroidUserResourceSettingsUI;
         get screenDimension(): Dimension;
     }
 
@@ -48,14 +48,14 @@ declare namespace base {
         static addImage(images: StringMap, prefix?: string, imageFormat?: MIMEOrAll): string;
         static addColor(value: Undef<ColorData | string>, transparency?: boolean): string;
         readonly application: Application<T>;
-        get userSettings(): AndroidUserSettingsUI;
+        get userSettings(): AndroidUserResourceSettingsUI;
         addImageSrc(element: HTMLImageElement | string, prefix?: string, imageSet?: ImageSrcSet[]): string;
         addImageSet(images: StringMap, prefix?: string): string;
     }
 
     class File<T extends View> extends squared.base.File<T> {
         resource: Resource<T>;
-        get userSettings(): AndroidUserSettingsUI;
+        get userSettings(): AndroidUserResourceSettingsUI;
         get directory(): { string: string; image: string; video: string; audio: string; font: string };
         resourceAllToXml(options?: FileUniversalOptions): PlainObject;
         resourceStringToXml(options?: FileUniversalOptions): string[];
@@ -86,18 +86,18 @@ declare namespace base {
         applyCustomizations(overwrite?: boolean): void;
         formatted(value: string, overwrite?: boolean): void;
         mergeGravity(attr: string, alignment: string, overwrite?: boolean): void;
-        anchor(position: AnchorPosition, documentId?: string, overwrite?: boolean): boolean;
+        anchor(position: AnchorPositionAttr, documentId?: string, overwrite?: boolean): boolean;
         anchorChain(direction: PositionAttr): View[];
         anchorParent(orientation: OrientationAttr, bias?: number, style?: string, overwrite?: boolean): boolean;
         anchorStyle(orientation: OrientationAttr, bias: number, style?: string, overwrite?: boolean): void;
-        anchorDelete(...position: AnchorPosition[]): void;
+        anchorDelete(...position: AnchorPositionAttr[]): void;
         anchorClear(update?: View | true): void;
         supported(obj: string, attr: string, result?: PlainObject): boolean;
         combine(...objs: string[]): string[];
         setLayoutWidth(value: string, overwrite?: boolean): void;
         setLayoutHeight(value: string, overwrite?: boolean): void;
         setSingleLine(maxLines: boolean, ellipsize?: boolean): void;
-        hasFlex(direction: "row" | "column"): boolean;
+        hasFlex(direction: FlowDirectionAttr): boolean;
         set anchored(value);
         get anchored(): boolean;
         set localSettings(value);
@@ -365,7 +365,6 @@ declare namespace lib {
             android: string;
             app: string;
             aapt: string;
-            tools: string;
         };
         const STRING_ANDROID: {
             MARGIN: string;

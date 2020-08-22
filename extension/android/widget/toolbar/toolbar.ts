@@ -52,7 +52,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
     public processNode(node: T, parent: T) {
         const application = this.application;
         const resource = this.resource as android.base.Resource<T>;
-        const settings = application.userSettings as AndroidUserSettingsUI;
+        const settings = application.userSettings as AndroidUserResourceSettingsUI;
         const element = node.element as HTMLElement;
         const options: StandardMap = { ...this.options[element.id.trim()] };
         const toolbarOptions = createViewAttribute(options.self);
@@ -309,7 +309,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
             const optionsActionBar = createStyleAttribute({ name: '.NoActionBar', output: options.output });
             const optionsAppBar = createStyleAttribute({ name: '.AppBarOverlay', output: options.output });
             const optionsPopup = createStyleAttribute({ name: '.PopupOverlay', output: options.output });
-            assignEmptyValue(options, 'name', (this.application.userSettings as AndroidUserSettingsUI).manifestThemeName);
+            assignEmptyValue(options, 'name', (this.application.userSettings as AndroidUserResourceSettingsUI).manifestThemeName);
             assignEmptyValue(options, 'parent', 'Theme.AppCompat.Light.DarkActionBar');
             assignEmptyValue(optionsActionBar.items as StringMap, 'windowActionBar', 'false');
             assignEmptyValue(optionsActionBar.items as StringMap, 'windowNoTitle', 'true');

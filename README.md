@@ -388,7 +388,7 @@ squared.system.customize(squared.settings.targetAPI, 'Button', {
 ```
 
 ```javascript
-squared.system.addXmlNs('aapt', 'http://schemas.android.com/aapt');
+squared.system.addXmlNs('tools', 'http://schemas.android.com/tools');
 ```
 
 ### CHROME: Public Methods

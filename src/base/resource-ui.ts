@@ -955,7 +955,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         }
     }
 
-    public abstract get userSettings(): UserSettingsUI;
+    public abstract get userSettings(): UserResourceSettingsUI;
 
     public finalize(layouts: FileAsset[]) {}
 

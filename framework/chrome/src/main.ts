@@ -175,7 +175,7 @@ const appBase: chrome.ChromeFramework<Node> = {
             settings.preloadImages = false;
             settings.preloadFonts = false;
             application.reset();
-            return application.parseDocument(document.body).then((response: Node[]) => {
+            return application.parseDocument(document.body).then((response: Node) => {
                 file!.saveToArchive(filename || settings.outputArchiveName, options);
                 settings.preloadImages = preloadImages;
                 settings.preloadFonts = preloadFonts;

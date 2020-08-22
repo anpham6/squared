@@ -17,11 +17,11 @@ declare module "base" {
     }
 
     interface FileActionAsync {
-        copyToDisk(directory: string, options?: FileActionOptions): Promise<ResultOfFileAction | void>;
-        appendToArchive(pathname: string, options?: FileActionOptions): Promise<ResultOfFileAction | void>;
-        saveToArchive(filename?: string, options?: FileActionOptions): Promise<ResultOfFileAction | void>;
-        createFrom(format: string, options: FileActionOptions): Promise<ResultOfFileAction | void>;
-        appendFromArchive(filename: string, options: FileActionOptions): Promise<ResultOfFileAction | void>;
+        copyToDisk(directory: string, options?: FileActionOptions): FileActionResult;
+        appendToArchive(pathname: string, options?: FileActionOptions): FileActionResult;
+        saveToArchive(filename?: string, options?: FileActionOptions): FileActionResult;
+        createFrom(format: string, options: FileActionOptions): FileActionResult;
+        appendFromArchive(filename: string, options: FileActionOptions): FileActionResult;
     }
 
     interface AppBase<T extends Node> {
@@ -101,11 +101,11 @@ declare module "base" {
         getProcessingCache(sessionId: string): NodeList<T>;
         getDatasetName(attr: string, element: HTMLElement): Undef<string>;
         setDatasetName(attr: string, element: HTMLElement, value: string): void;
-        copyToDisk(directory: string, options?: FileCopyingOptions): Promise<ResultOfFileAction | void>;
-        appendToArchive(pathname: string, options?: FileCopyingOptions): Promise<ResultOfFileAction | void>;
-        saveToArchive(filename?: string, options?: FileArchivingOptions): Promise<ResultOfFileAction | void>;
-        createFrom(format: string, options: FileArchivingOptions): Promise<ResultOfFileAction | void>;
-        appendFromArchive(filename: string, options: FileArchivingOptions): Promise<ResultOfFileAction | void>;
+        copyToDisk(directory: string, options?: FileCopyingOptions): FileActionResult;
+        appendToArchive(pathname: string, options?: FileCopyingOptions): FileActionResult;
+        saveToArchive(filename?: string, options?: FileArchivingOptions): FileActionResult;
+        createFrom(format: string, options: FileArchivingOptions): FileActionResult;
+        appendFromArchive(filename: string, options: FileArchivingOptions): FileActionResult;
         toString(): string;
         get mainElement(): Element;
         get controllerHandler(): Controller<T>;
@@ -126,7 +126,7 @@ declare module "base" {
     }
 
     class ApplicationUI<T extends NodeUI> extends Application<T> {
-        userSettings: UserSettingsUI;
+        userSettings: UserResourceSettingsUI;
         builtInExtensions: Map<string, ExtensionUI<T>>;
         readonly fileHandler?: File<T>;
         readonly session: AppSessionUI<T>;
@@ -195,7 +195,7 @@ declare module "base" {
         hasAppendProcessing(id?: number): boolean;
         writeDocument(templates: NodeTemplate<T>[], depth: number, showAttributes: boolean): string;
         getEnclosingXmlTag(controlName: string, attributes?: string, content?: string): string;
-        get userSettings(): UserSettingsUI;
+        get userSettings(): UserResourceSettingsUI;
         get screenDimension(): Dimension;
         get containerTypeHorizontal(): LayoutType;
         get containerTypeVertical(): LayoutType;
@@ -249,7 +249,7 @@ declare module "base" {
         setValueString(node: T): void;
         removeExcludedFromText(node: T, element: Element): string;
         get controllerSettings(): ControllerSettingsUI;
-        get userSettings(): UserSettingsUI;
+        get userSettings(): UserResourceSettingsUI;
         get mapOfStored(): ResourceStoredMap;
     }
 
@@ -291,7 +291,7 @@ declare module "base" {
         afterConstraints(sessionId: string): void;
         afterResources(sessionId: string): void;
         beforeBaseLayout(sessionId: string): void;
-        beforeDocumentWrite(options: DocumentWriteExtensionUIOptions<T>): void;
+        beforeDocumentWrite(data: DocumentWriteDataExtensionUI<T>): void;
         afterFinalize(): void;
         set application(value);
         get application(): ApplicationUI<T>;
@@ -319,13 +319,13 @@ declare module "base" {
         readonly assets: FileAsset[];
         addAsset(asset: Partial<RawAsset>): void;
         reset(): void;
-        copying(options: FileCopyingOptions): Promise<ResultOfFileAction | void>;
-        archiving(options: FileArchivingOptions): Promise<ResultOfFileAction | void>;
-        copyToDisk(directory: string, options?: FileCopyingOptions): Promise<ResultOfFileAction | void>;
-        appendToArchive(pathname: string, options?: FileCopyingOptions): Promise<ResultOfFileAction | void>;
-        saveToArchive(filename: string, options?: FileArchivingOptions): Promise<ResultOfFileAction | void>;
-        createFrom(format: string, options: FileArchivingOptions): Promise<ResultOfFileAction | void>;
-        appendFromArchive(filename: string, options: FileArchivingOptions): Promise<ResultOfFileAction | void>;
+        copying(options: FileCopyingOptions): FileActionResult;
+        archiving(options: FileArchivingOptions): FileActionResult;
+        copyToDisk(directory: string, options?: FileCopyingOptions): FileActionResult;
+        appendToArchive(pathname: string, options?: FileCopyingOptions): FileActionResult;
+        saveToArchive(filename: string, options?: FileArchivingOptions): FileActionResult;
+        createFrom(format: string, options: FileArchivingOptions): FileActionResult;
+        appendFromArchive(filename: string, options: FileArchivingOptions): FileActionResult;
         getDataMap(options: FileActionOptions): Void<StandardMap>;
         getCopyQueryParameters(options: FileCopyingOptions): string;
         getArchiveQueryParameters(options: FileArchivingOptions): string;
@@ -535,7 +535,7 @@ declare module "base" {
     class NodeUI extends Node implements LayoutType {
         static justified<T>(node: T): boolean;
         static refitScreen<T>(node: T, value: Dimension): Dimension;
-        static linearData<T>(list: T[], cleared?: Map<T, string>): LinearData<T>;
+        static linearData<T>(list: T[], cleared?: Map<T, string>): LinearData;
         static outerRegion<T>(node: T): BoxRectDimension;
         static baseline<T>(list: T[], text?: boolean, image?: boolean): Null<T>;
         static partitionRows<T>(list: T[], cleared?: Map<T, string>): T[][];
@@ -577,8 +577,8 @@ declare module "base" {
         cloneBase(node: NodeUI): void;
         is(containerType: number): boolean;
         of(containerType: number, ...alignmentType: number[]): boolean;
-        namespace(name: string): StringMapChecked;
-        namespaces(): [string, StringMapChecked][];
+        namespace(name: string): StringMap;
+        namespaces(): [string, StringMap][];
         unsafe<T = unknown>(name: string, value?: any): Undef<T>;
         unset(name: string): void;
         delete(name: string, ...attrs: string[]): void;
