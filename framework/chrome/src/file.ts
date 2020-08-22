@@ -340,40 +340,59 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         const result: ChromeAsset[] = [];
         const bundleIndex: BundleIndex = {};
         document.querySelectorAll('script').forEach(element => {
-            const src = element.src.trim();
-            let file = element.dataset.chromeFile;
-            if (file !== 'exclude') {
-                let format: Undef<string>,
-                    outerHTML: Undef<string>,
-                    preserve: Undef<boolean>,
-                    data: Undef<ChromeAsset>;
-                if (!isString(file) && saveAs && saveAs.filename) {
-                    file = appendSeparator(saveAs.pathname || '', saveAs.filename);
-                    format = saveAs.format;
-                    outerHTML = element.outerHTML;
-                }
-                if (src !== '') {
-                    data = File.parseUri(resolvePath(src), { preserveCrossOrigin, saveAs: file, format });
-                }
-                else if (isString(file)) {
-                    if (!outerHTML) {
-                        const command = parseFileAs('exportAs', file);
-                        if (command) {
-                            [file, format, preserve] = command;
+            const template = element.dataset.chromeTemplate;
+            if (template) {
+                if (element.type === 'text/template') {
+                    const [category, module, name] = template.split('::').map((value, index) => (index === 0 ? value.toLowerCase() : value).trim());
+                    if (category && module && name) {
+                        switch (category) {
+                            case 'html':
+                            case 'js':
+                            case 'css': {
+                                const data = this.application.session.transpileMap[category];
+                                (data[module] ?? (data[module] = {}))[name] = element.textContent!.trim();
+                                break;
+                            }
                         }
                     }
-                    if (file) {
-                        data = createBundleAsset(result, element, file, format, preserve);
-                    }
                 }
-                if (this.validFile(data)) {
-                    setBundleData(bundleIndex, data);
-                    data.mimeType = element.type.trim() || data.uri && parseMimeType(data.uri) || 'text/javascript';
-                    if (outerHTML) {
-                        data.outerHTML = outerHTML;
+            }
+            else {
+                let file = element.dataset.chromeFile;
+                if (file !== 'exclude') {
+                    const src = element.src.trim();
+                    let format: Undef<string>,
+                        outerHTML: Undef<string>,
+                        preserve: Undef<boolean>,
+                        data: Undef<ChromeAsset>;
+                    if (!isString(file) && saveAs && saveAs.filename) {
+                        file = appendSeparator(saveAs.pathname, saveAs.filename);
+                        format = saveAs.format;
+                        outerHTML = element.outerHTML;
                     }
-                    processExtensions.call(this, data, getExtensions(element));
-                    result.push(data);
+                    if (src !== '') {
+                        data = File.parseUri(resolvePath(src), { preserveCrossOrigin, saveAs: file, format });
+                    }
+                    else if (isString(file)) {
+                        if (!outerHTML) {
+                            const command = parseFileAs('exportAs', file);
+                            if (command) {
+                                [file, format, preserve] = command;
+                            }
+                        }
+                        if (file) {
+                            data = createBundleAsset(result, element, file, format, preserve);
+                        }
+                    }
+                    if (this.validFile(data)) {
+                        setBundleData(bundleIndex, data);
+                        data.mimeType = element.type.trim() || data.uri && parseMimeType(data.uri) || 'text/javascript';
+                        if (outerHTML) {
+                            data.outerHTML = outerHTML;
+                        }
+                        processExtensions.call(this, data, getExtensions(element));
+                        result.push(data);
+                    }
                 }
             }
         });
@@ -417,7 +436,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     }
                 }
                 if (!isString(file) && saveAs && saveAs.filename && (mimeType === 'text/css' || element instanceof HTMLStyleElement)) {
-                    file = appendSeparator(saveAs.pathname || '', saveAs.filename);
+                    file = appendSeparator(saveAs.pathname, saveAs.filename);
                     format = saveAs.format;
                     preserve = saveAs.preserve;
                     outerHTML = element.outerHTML;
@@ -598,9 +617,10 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     public getDataMap(options: ChromeFileActionOptions) {
-        if (options.removeUnusedStyles) {
-            return { unusedStyles: Array.from(this.application.session.unusedStyles!) };
-        }
+        return {
+            unusedStyles: options.removeUnusedStyles ? Array.from(this.application.session.unusedStyles!) : undefined,
+            transpileMap: this.application.session.transpileMap
+        };
     }
 
     public getCopyQueryParameters(options: ChromeFileCopyingOptions) {

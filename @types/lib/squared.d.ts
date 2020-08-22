@@ -299,7 +299,7 @@ declare module "lib" {
         function trimString(value: string, pattern: string): string;
         function trimStart(value: string, pattern: string): string;
         function trimEnd(value: string, pattern: string): string;
-        function appendSeparator(preceding: string, value: string, separator?: string): string;
+        function appendSeparator(preceding?: string, value?: string, separator?: string): string;
         function fromLastIndexOf(value: string, ...char: string[]): string;
         function partitionLastIndexOf(value: string, ...char: string[]): [string, string];
         function searchObject(obj: StringMap, value: string | StringMap): [string, string][];

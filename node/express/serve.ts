@@ -475,7 +475,33 @@ let Node: serve.INode,
         constructor(public external: Undef<ExternalModules>) {
         }
 
-        findExternalPlugin(data: ObjectMap<StandardMap>, name: string): [string, StandardMap | FunctionType<string>] {
+        configureTranspiler(config: ObjectMap<StandardMap>, name: string, category: "html" | "css" | "js", transpileMap?: TranspileMap): [Null<string>, StandardMap | FunctionType<string>] {
+            if (transpileMap) {
+                const data = transpileMap[category];
+                for (const attr in data) {
+                    if (data[attr][name]) {
+                        const result = this.createTranspilerFunction(data[attr]![name]!);
+                        if (result) {
+                            return [attr, result];
+                        }
+                        break;
+                    }
+                }
+            }
+            return this.findExternalPlugin(config, name);
+        }
+        createTranspilerFunction(value: string): Null<FunctionType<string>> {
+            if (value.startsWith('./')) {
+                try {
+                    value = fs.readFileSync(path.resolve(value), 'utf8').trim();
+                }
+                catch {
+                    return null;
+                }
+            }
+            return value.startsWith('function') ? eval(`(${value})`) : new Function('context', 'value', value);
+        }
+        findExternalPlugin(data: ObjectMap<StandardMap>, name: string): [Null<string>, StandardMap | FunctionType<string>] {
             for (const module in data) {
                 const plugin = data[module];
                 for (const custom in plugin) {
@@ -487,15 +513,11 @@ let Node: serve.INode,
                         else if (typeof options === 'string') {
                             options = options.trim();
                             if (options !== '') {
-                                if (options.startsWith('./')) {
-                                    try {
-                                        options = fs.readFileSync(path.resolve(options), 'utf8').trim();
-                                    }
-                                    catch {
-                                        continue;
-                                    }
+                                const result = this.createTranspilerFunction(options);
+                                if (result === null) {
+                                    continue;
                                 }
-                                return [module, options.startsWith('function') ? eval(`(${options})`) as FunctionType<string> : new Function('context', 'value', options)];
+                                return [module, result];
                             }
                             break;
                         }
@@ -506,7 +528,7 @@ let Node: serve.INode,
                     }
                 }
             }
-            return ['', {}];
+            return [null, {}];
         }
         getPrettierParser(name: string): NodeModule[] {
             switch (name.toLowerCase()) {
@@ -540,79 +562,56 @@ let Node: serve.INode,
                     return [];
             }
         }
-        minifyHtml(format: string, value: string) {
+        minifyHtml(format: string, value: string, transpileMap?: TranspileMap) {
             const html = this.external?.html;
             if (html) {
                 let valid: Undef<boolean>;
                 const formatters = format.split('+');
                 for (let j = 0, length = formatters.length; j < length; ++j) {
-                    const name = formatters[j].trim();
-                    let [module, options] = this.findExternalPlugin(html, name);
-                    if (!module) {
-                        switch (name) {
-                            case 'beautify':
-                                module = 'prettier';
-                                options = {
-                                    parser: 'html',
-                                    width: 120,
-                                    tabWidth: 4
-                                };
-                                break;
-                            case 'minify':
-                                module = 'html-minifier-terser';
-                                options = {
-                                    collapseWhitespace: true,
-                                    collapseBooleanAttributes: true,
-                                    removeEmptyAttributes: true,
-                                    removeRedundantAttributes: true,
-                                    removeScriptTypeAttributes: true,
-                                    removeStyleLinkTypeAttributes: true,
-                                    removeComments: true
-                                };
-                                break;
-                        }
-                    }
-                    try {
-                        if (typeof options === 'function') {
-                            const result = options(require(module), value);
-                            if (typeof result === 'string' && result !== '') {
-                                if (j === length - 1) {
-                                    return result;
+                    const [module, options] = this.configureTranspiler(html, formatters[j].trim(), 'html', transpileMap);
+                    if (module) {
+                        try {
+                            if (typeof options === 'function') {
+                                const result = options(require(module), value);
+                                if (typeof result === 'string' && result !== '') {
+                                    if (j === length - 1) {
+                                        return result;
+                                    }
+                                    value = result;
+                                    valid = true;
                                 }
-                                value = result;
-                                valid = true;
                             }
-                        }
-                        else {
-                            switch (module) {
-                                case 'prettier': {
-                                    options.plugins = this.getPrettierParser(options.parser);
-                                    const result = require('prettier').format(value, options);
-                                    if (result) {
-                                        if (j === length - 1) {
-                                            return result;
+                            else {
+                                switch (module) {
+                                    case 'prettier': {
+                                        options.plugins = this.getPrettierParser(options.parser);
+                                        const result = require('prettier').format(value, options);
+                                        if (result) {
+                                            if (j === length - 1) {
+                                                return result;
+                                            }
+                                            value = result;
+                                            valid = true;
                                         }
-                                        value = result;
-                                        valid = true;
+                                        break;
                                     }
-                                    break;
-                                }
-                                case 'html-minifier-terser': {
-                                    const result = require('html-minifier-terser').minify(value, options);
-                                    if (result) {
-                                        if (j === length - 1) {
-                                            return result;
+                                    case 'html-minifier-terser': {
+                                        const result = require('html-minifier-terser').minify(value, options);
+                                        if (result) {
+                                            if (j === length - 1) {
+                                                return result;
+                                            }
+                                            value = result;
+                                            valid = true;
                                         }
-                                        value = result;
-                                        valid = true;
+                                        break;
                                     }
-                                    break;
                                 }
                             }
                         }
-                    }
-                    catch (err) {
-                        Node.writeFail(`External: ${module} [npm run install-chrome]`, err);
+                        catch (err) {
+                            Node.writeFail(`External: ${module} [npm run install-chrome]`, err);
+                        }
                     }
                 }
                 if (valid) {
@@ -620,74 +619,57 @@ let Node: serve.INode,
                 }
             }
         }
-        minifyCss(format: string, value: string) {
+        minifyCss(format: string, value: string, transpileMap?: TranspileMap) {
             const css = this.external?.css;
             if (css) {
                 let valid: Undef<boolean>;
                 const formatters = format.split('+');
                 for (let j = 0, length = formatters.length; j < length; ++j) {
-                    const name = formatters[j].trim();
-                    let [module, options] = this.findExternalPlugin(css, name);
-                    if (!module) {
-                        switch (name) {
-                            case 'beautify':
-                                module = 'prettier';
-                                options = {
-                                    parser: 'css',
-                                    tabWidth: 4
-                                };
-                                break;
-                            case 'minify':
-                                module = 'clean-css';
-                                options = {
-                                    level: 1,
-                                    inline: ['none']
-                                };
-                                break;
-                        }
-                    }
-                    try {
-                        if (typeof options === 'function') {
-                            const result = options(require(module), value);
-                            if (typeof result === 'string' && result !== '') {
-                                if (j === length - 1) {
-                                    return result;
+                    const [module, options] = this.configureTranspiler(css, formatters[j].trim(), 'css', transpileMap);
+                    if (module) {
+                        try {
+                            if (typeof options === 'function') {
+                                const result = options(require(module), value);
+                                if (typeof result === 'string' && result !== '') {
+                                    if (j === length - 1) {
+                                        return result;
+                                    }
+                                    value = result;
+                                    valid = true;
                                 }
-                                value = result;
-                                valid = true;
                             }
-                        }
-                        else {
-                            switch (module) {
-                                case 'prettier': {
-                                    options.plugins = this.getPrettierParser(options.parser);
-                                    const result = require('prettier').format(value, options);
-                                    if (result) {
-                                        if (j === length - 1) {
-                                            return result;
+                            else {
+                                switch (module) {
+                                    case 'prettier': {
+                                        options.plugins = this.getPrettierParser(options.parser);
+                                        const result = require('prettier').format(value, options);
+                                        if (result) {
+                                            if (j === length - 1) {
+                                                return result;
+                                            }
+                                            value = result;
+                                            valid = true;
                                         }
-                                        value = result;
-                                        valid = true;
+                                        break;
                                     }
-                                    break;
-                                }
-                                case 'clean-css': {
-                                    const clean_css = require('clean-css');
-                                    const result = new clean_css(options).minify(value).styles;
-                                    if (result) {
-                                        if (j === length - 1) {
-                                            return result;
+                                    case 'clean-css': {
+                                        const clean_css = require('clean-css');
+                                        const result = new clean_css(options).minify(value).styles;
+                                        if (result) {
+                                            if (j === length - 1) {
+                                                return result;
+                                            }
+                                            value = result;
+                                            valid = true;
                                         }
-                                        value = result;
-                                        valid = true;
+                                        break;
                                     }
-                                    break;
                                 }
                             }
                         }
-                    }
-                    catch (err) {
-                        Node.writeFail(`External: ${module} [npm run install-chrome]`, err);
+                        catch (err) {
+                            Node.writeFail(`External: ${module} [npm run install-chrome]`, err);
+                        }
                     }
                 }
                 if (valid) {
@@ -695,91 +677,68 @@ let Node: serve.INode,
                 }
             }
         }
-        minifyJs(format: string, value: string) {
+        minifyJs(format: string, value: string, transpileMap?: TranspileMap) {
             const js = this.external?.js;
             if (js) {
                 const formatters = format.split('+');
                 let modified: Undef<boolean>;
                 for (let j = 0, length = formatters.length; j < length; ++j) {
-                    const name = formatters[j].trim();
-                    let [module, options] = this.findExternalPlugin(js, name);
-                    if (!module) {
-                        switch (name) {
-                            case 'beautify':
-                                module = 'prettier';
-                                options = {
-                                    parser: 'babel',
-                                    width: 100,
-                                    tabWidth: 4
-                                };
-                                break;
-                            case 'minify':
-                                module = 'terser';
-                                options = { toplevel: true };
-                                break;
-                            case 'es5':
-                                module = '@babel/core';
-                                options = { presets: ['@babel/preset-env'] };
-                                break;
-                            case 'es5-minify':
-                                module = 'uglify-js';
-                                options = { toplevel: true };
-                                break;
-                        }
-                    }
-                    try {
-                        if (typeof options === 'function') {
-                            const result = options(require(module), value);
-                            if (typeof result === 'string' && result !== '') {
-                                if (j === length - 1) {
-                                    return result;
+                    const [module, options] = this.configureTranspiler(js, formatters[j].trim(), 'js', transpileMap);
+                    if (module) {
+                        try {
+                            if (typeof options === 'function') {
+                                const result = options(require(module), value);
+                                if (typeof result === 'string' && result !== '') {
+                                    if (j === length - 1) {
+                                        return result;
+                                    }
+                                    value = result;
+                                    modified = true;
                                 }
-                                value = result;
-                                modified = true;
                             }
-                        }
-                        else {
-                            switch (module) {
-                                case '@babel/core': {
-                                    const result = require('@babel/core').transformSync(value, options).code;
-                                    if (result) {
-                                        if (j === length - 1) {
-                                            return result;
+                            else {
+                                switch (module) {
+                                    case '@babel/core': {
+                                        const result = require('@babel/core').transformSync(value, options).code;
+                                        if (result) {
+                                            if (j === length - 1) {
+                                                return result;
+                                            }
+                                            value = result;
+                                            modified = true;
                                         }
-                                        value = result;
-                                        modified = true;
+                                        break;
                                     }
-                                    break;
-                                }
-                                case 'prettier': {
-                                    options.plugins = this.getPrettierParser(options.parser);
-                                    const result = require('prettier').format(value, options);
-                                    if (result) {
-                                        if (j === length - 1) {
-                                            return result;
+                                    case 'prettier': {
+                                        options.plugins = this.getPrettierParser(options.parser);
+                                        const result = require('prettier').format(value, options);
+                                        if (result) {
+                                            if (j === length - 1) {
+                                                return result;
+                                            }
+                                            value = result;
+                                            modified = true;
                                         }
-                                        value = result;
-                                        modified = true;
+                                        break;
                                     }
-                                    break;
-                                }
-                                case 'terser':
-                                case 'uglify-js': {
-                                    const result = require(module).minify(value, options).code;
-                                    if (result) {
-                                        if (j === length - 1) {
-                                            return result;
+                                    case 'terser':
+                                    case 'uglify-js': {
+                                        const result = require(module).minify(value, options).code;
+                                        if (result) {
+                                            if (j === length - 1) {
+                                                return result;
+                                            }
+                                            value = result;
+                                            modified = true;
                                         }
-                                        value = result;
-                                        modified = true;
+                                        break;
                                     }
-                                    break;
                                 }
                             }
                         }
-                    }
-                    catch (err) {
-                        Node.writeFail(`External: ${module} [npm run install-chrome]`, err);
+                        catch (err) {
+                            Node.writeFail(`External: ${module} [npm run install-chrome]`, err);
+                        }
                     }
                 }
                 if (modified) {
@@ -787,15 +746,15 @@ let Node: serve.INode,
                 }
             }
         }
-        formatContent(value: string, mimeType: string, format: string) {
+        formatContent(value: string, mimeType: string, format: string, transpileMap?: TranspileMap) {
             if (mimeType.endsWith('text/html') || mimeType.endsWith('application/xhtml+xml')) {
-                return this.minifyHtml(format, value);
+                return this.minifyHtml(format, value, transpileMap);
             }
             else if (mimeType.endsWith('text/css')) {
-                return this.minifyCss(format, value);
+                return this.minifyCss(format, value, transpileMap);
             }
             else if (mimeType.endsWith('text/javascript')) {
-                return this.minifyJs(format, value);
+                return this.minifyJs(format, value, transpileMap);
             }
         }
         removeCss(source: string, styles: string[]) {
@@ -1132,7 +1091,7 @@ class FileManager implements serve.IFileManager {
                     }
                 }
                 if (format) {
-                    const result = Chrome.formatContent(content, mimeType, format);
+                    const result = Chrome.formatContent(content, mimeType, format, this.dataMap?.transpileMap);
                     if (result) {
                         content = result;
                     }
@@ -1239,6 +1198,7 @@ class FileManager implements serve.IFileManager {
             return;
         }
         const format = file.format;
+        const transpileMap = this.dataMap?.transpileMap;
         switch (mimeType) {
             case '@text/html':
             case '@application/xhtml+xml': {
@@ -1362,15 +1322,16 @@ class FileManager implements serve.IFileManager {
                 }
                 source = (source || html)
                     .replace(/\s*<(script|link|style)[^>]+?data-chrome-file="exclude"[^>]*>[\s\S]*?<\/\1>\n*/ig, '')
+                    .replace(/\s*<script[^>]*?data-chrome-template="([^"]|\\")+?"[^>]*>[\s\S]*?<\/script>\n*/ig, '')
                     .replace(/\s*<(script|link)[^>]+?data-chrome-file="exclude"[^>]*>\n*/ig, '')
                     .replace(/\s+data-(?:use|chrome-[\w-]+)="([^"]|\\")+?"/g, '');
-                fs.writeFileSync(filepath, format && Chrome.minifyHtml(format, source) || source);
+                fs.writeFileSync(filepath, format && Chrome.minifyHtml(format, source, transpileMap) || source);
                 break;
             }
             case 'text/html':
             case 'application/xhtml+xml': {
                 if (format) {
-                    const result = Chrome.minifyHtml(format, fs.readFileSync(filepath, 'utf8'));
+                    const result = Chrome.minifyHtml(format, fs.readFileSync(filepath, 'utf8'), transpileMap);
                     if (result) {
                         fs.writeFileSync(filepath, result);
                     }
@@ -1408,7 +1369,7 @@ class FileManager implements serve.IFileManager {
                     }
                 }
                 if (format) {
-                    const result = Chrome.minifyCss(format, source || content);
+                    const result = Chrome.minifyCss(format, source || content, transpileMap);
                     if (result) {
                         source = result;
                     }
@@ -1448,7 +1409,7 @@ class FileManager implements serve.IFileManager {
                 const content = fs.readFileSync(filepath, 'utf8');
                 let source: Undef<string>;
                 if (format) {
-                    const result = Chrome.minifyJs(format, content);
+                    const result = Chrome.minifyJs(format, content, transpileMap);
                     if (result) {
                         source = result;
                     }
@@ -1674,6 +1635,7 @@ class FileManager implements serve.IFileManager {
         const trailingContent = file.trailingContent;
         if (trailingContent) {
             const unusedStyles = this.dataMap?.unusedStyles;
+            const transpileMap = this.dataMap?.transpileMap;
             const mimeType = file.mimeType;
             let output = '';
             for (const item of trailingContent) {
@@ -1694,7 +1656,7 @@ class FileManager implements serve.IFileManager {
                         }
                     }
                     if (item.format) {
-                        const result = Chrome.formatContent(value, mimeType, item.format);
+                        const result = Chrome.formatContent(value, mimeType, item.format, transpileMap);
                         if (result) {
                             output += '\n' + result;
                             continue;

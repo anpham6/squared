@@ -57,12 +57,14 @@ interface IImage {
 
 interface IChrome {
     readonly external: Undef<ExternalModules>;
-    findExternalPlugin(data: ObjectMap<StandardMap>, name: string): [string, StandardMap];
+    configureTranspiler(config: ObjectMap<StandardMap>, name: string, category: "html" | "css" | "js", transpileMap?: TranspileMap): [Null<string>, StandardMap | FunctionType<string>];
+    createTranspilerFunction(value: string): Null<FunctionType<string>>;
+    findExternalPlugin(data: ObjectMap<StandardMap>, name: string): [Null<string>, StandardMap | FunctionType<string>];
     getPrettierParser(name: string): NodeModule[];
-    minifyHtml(format: string, value: string): Undef<string>;
-    minifyCss(format: string, value: string): Undef<string>;
-    minifyJs(format: string, value: string): Undef<string>;
-    formatContent(value: string, mimeType: string, format: string): Undef<string>;
+    minifyHtml(format: string, value: string, transpileMap?: TranspileMap): Undef<string>;
+    minifyCss(format: string, value: string, transpileMap?: TranspileMap): Undef<string>;
+    minifyJs(format: string, value: string, transpileMap?: TranspileMap): Undef<string>;
+    formatContent(value: string, mimeType: string, format: string, transpileMap?: TranspileMap): Undef<string>;
     removeCss(source: string, styles: string[]): Undef<string>;
 }
 

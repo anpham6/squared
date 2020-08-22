@@ -7,6 +7,13 @@ interface ExpressAsset extends ChromeAsset, RawAsset {
 
 interface DataMap {
     unusedStyles?: string[];
+    transpileMap?: TranspileMap;
+}
+
+interface TranspileMap {
+    html: ObjectMap<StringMap>;
+    js: ObjectMap<StringMap>;
+    css: ObjectMap<StringMap>
 }
 
 interface ExternalModules {

@@ -926,7 +926,7 @@ export function trimEnd(value: string, pattern: string) {
     return value.replace(new RegExp(`(${pattern})+$`), '');
 }
 
-export function appendSeparator(preceding: string, value: string, separator = '/') {
+export function appendSeparator(preceding = '', value = '', separator = '/') {
     preceding = preceding.trim();
     value = value.trim();
     switch (separator) {

@@ -7,9 +7,14 @@ declare interface ChromeFramework<T extends Node> extends squared.base.AppFramew
 }
 
 declare namespace base {
+    interface ChromeAppSession<T extends Node> extends squared.base.AppSession<T> {
+        transpileMap: { html: ObjectMap<StringMap>; js: ObjectMap<StringMap>; css: ObjectMap<StringMap> };
+    }
+
     class Application<T extends Node> extends squared.base.Application<T> {
         userSettings: ChromeUserSettings;
         builtInExtensions: Map<string, Extension<T>>;
+        readonly session: ChromeAppSession<T>;
         readonly extensions: Extension<T>[];
         createNode(sessionId: string, options: CreateNodeOptions): T;
     }

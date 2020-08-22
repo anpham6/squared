@@ -163,7 +163,7 @@
     <script data-chrome-file="saveAs:js/modules1.js::beautify" src="/common/system.js"></script>
     <script src="/common/transform.js"></script>
     <script src="/common/babel-transform.js"></script>
-    <script data-chrome-file="exportAs:js/modules3.js::minify">
+    <script data-chrome-file="exportAs:js/modules3.js::es5-script+minify">
         System.import('/build/src/main.js').then(result => {
             squared = result;
             System.import('/build/src/base/main.js').then(result => {
@@ -204,6 +204,12 @@
                 });
             });
         });
+    </script>
+    <script type="text/template" data-chrome-template="js::@babel/core::es5-script">
+        function (context, value) {
+            const options = { presets: ['@babel/preset-env'] };
+            return context.transformSync(value, options).code;
+        }
     </script>
 </head>
 <body>

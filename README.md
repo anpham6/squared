@@ -830,6 +830,19 @@ function (context, value) {
 }
 ```
 
+The same concept can also be used locally anywhere in the HTML page using a &lt;script&gt; tag with the type attribute set to "text/template". The script template will be removed from the final output.
+
+```javascript
+// "es5-example" is a custom name and cannot be chained
+
+<script type="text/template" data-chrome-template="js::@babel/core::es5-example">
+    function (context, value) {
+        const options = { presets: ['@babel/preset-env'] };
+        return context.transformSync(value, options).code;
+    }
+</script>
+```
+
 JS and CSS files can be bundled together with the "saveAs" or "exportAs" action. Multiple transformations per asset can be chained together using the "+" symbol. The "preserve" command will prevent unused styles from being deleted.
 
 ```xml
