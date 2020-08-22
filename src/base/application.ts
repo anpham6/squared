@@ -38,7 +38,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 untagged.push(ext);
             }
         }
-        return result.length > 0 ? flatArray<squared.base.Extension<T>>(result, 0).concat(untagged) : extensions;
+        return result.length ? flatArray<squared.base.Extension<T>>(result, 0).concat(untagged) : extensions;
     }
 
     public extensions: squared.base.Extension<T>[] = [];
@@ -189,7 +189,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 else if (item.width === 0 || item.height === 0) {
                     const element = document.createElement('img');
                     element.src = uri;
-                    if (element.naturalWidth > 0 && element.naturalHeight > 0) {
+                    if (element.naturalWidth && element.naturalHeight) {
                         item.width = element.naturalWidth;
                         item.height = element.naturalHeight;
                     }
@@ -215,7 +215,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     const element = document.createElement('img');
                     element.src = src;
                     const { naturalWidth: width, naturalHeight: height } = element;
-                    if (width > 0 && height > 0) {
+                    if (width && height) {
                         data.width = width;
                         data.height = height;
                         image.set(uri, { width, height, uri: data.filename });
@@ -256,7 +256,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 });
             }
         }
-        if (preloadItems.length > 0) {
+        if (preloadItems.length) {
             processing.initializing = true;
             return Promise.all(preloadItems.map(item => {
                 return new Promise((resolve, reject) => {
@@ -362,7 +362,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     protected createRootNode(rootElement: HTMLElement, sessionId: string) {
         const processing = this.getProcessing(sessionId)!;
         const extensions = this.extensionsCascade;
-        const node = this.cascadeParentNode(processing.cache, processing.excluded, rootElement, sessionId, 0, extensions.length > 0 ? extensions : undefined, processing.rootElements.size > 1 ? processing.rootElements : undefined);
+        const node = this.cascadeParentNode(processing.cache, processing.excluded, rootElement, sessionId, 0, extensions.length ? extensions : undefined, processing.rootElements.size > 1 ? processing.rootElements : undefined);
         if (node) {
             node.documentRoot = true;
             processing.node = node;
@@ -480,7 +480,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 node.inlineText = inlineText;
             }
             node.retainAs(children);
-            if (k > 0 && this.userSettings.createQuerySelectorMap) {
+            if (k && this.userSettings.createQuerySelectorMap) {
                 node.queryMap = this.createQueryMap(elements, k);
             }
         }

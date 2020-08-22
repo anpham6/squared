@@ -174,7 +174,7 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
                     const endChild = (direction ? child.firstStaticChild : child.lastStaticChild) as NodeUI;
                     if (endChild && endChild[marginName] === 0 && endChild[borderWidth] === 0 && !endChild.visibleStyle.background && canResetChild(endChild)) {
                         const value = endChild[paddingName];
-                        if (value > 0) {
+                        if (value) {
                             if (value >= node[paddingName]) {
                                 node.setBox(direction ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.PADDING_BOTTOM, { reset: 1 });
                             }
@@ -360,10 +360,10 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             }
                         }
                         if (isBlockElement(current, true)) {
-                            if (i > 0) {
+                            if (i) {
                                 const previousSiblings = current.previousSiblings({ floating: false });
                                 const q = previousSiblings.length;
-                                if (q > 0) {
+                                if (q) {
                                     const previous = previousSiblings[q - 1];
                                     let inheritedTop: Undef<boolean>;
                                     if (isBlockElement(previous, false)) {
@@ -420,7 +420,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                             childBottom = sibling.marginBottom;
                                                             currentChild = sibling;
                                                         }
-                                                        else if (sibling.bounds.height > 0) {
+                                                        else if (sibling.bounds.height) {
                                                             break;
                                                         }
                                                         else {
@@ -470,7 +470,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                             childTop = sibling.marginTop;
                                                             currentChild = sibling;
                                                         }
-                                                        else if (sibling.bounds.height > 0) {
+                                                        else if (sibling.bounds.height) {
                                                             break;
                                                         }
                                                         else {
@@ -629,11 +629,11 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                 let valid: Undef<boolean>;
                 const previousSiblings = node.previousSiblings({ floating: false });
                 const q = previousSiblings.length;
-                if (q > 0) {
+                if (q) {
                     const actualParent = node.actualParent!;
                     const nextSiblings = node.siblingsTrailing;
                     const r = nextSiblings.length;
-                    if (r > 0) {
+                    if (r) {
                         let above = previousSiblings[q - 1],
                             below = nextSiblings[r - 1],
                             lineHeight = 0,
@@ -674,7 +674,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 if (above.has('lineHeight')) {
                                     value = above.lineHeight;
                                 }
-                                else if (above.length > 0) {
+                                else if (above.length) {
                                     if (above.layoutVertical) {
                                         value = above.lastStaticChild?.lineHeight;
                                     }
@@ -694,7 +694,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 if (below.has('lineHeight')) {
                                     value = below.lineHeight;
                                 }
-                                else if (below.length > 0) {
+                                else if (below.length) {
                                     if (below.layoutVertical) {
                                         value = below.firstStaticChild?.lineHeight;
                                     }
@@ -741,7 +741,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                     }
                     else if (actualParent.visible && !actualParent.preserveWhiteSpace && actualParent.tagName !== 'CODE' && !actualParent.documentRoot && !actualParent.documentBody) {
                         const previousStart = previousSiblings[previousSiblings.length - 1];
-                        const rect = previousStart.bounds.height === 0 && previousStart.length > 0 ? NodeUI.outerRegion(previousStart) : previousStart.linear;
+                        const rect = previousStart.bounds.height === 0 && previousStart.length ? NodeUI.outerRegion(previousStart) : previousStart.linear;
                         const offset = actualParent.box.bottom - (previousStart.lineBreak || previousStart.excluded ? rect.top : rect.bottom);
                         if (offset !== 0) {
                             if (previousStart.rendered || actualParent.visibleStyle.background) {
@@ -802,7 +802,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                         const q = row.length;
                                         for (let j = 0; j < q; ++j) {
                                             if (outerWrapper === row[j]) {
-                                                if (i > 0) {
+                                                if (i) {
                                                     setSpacingOffset(outerWrapper, BOX_STANDARD.MARGIN_TOP, maxBottom);
                                                 }
                                                 else {
@@ -864,7 +864,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                         const documentId = outerWrapper.alignSibling('leftRight');
                         if (documentId !== '') {
                             const previousSibling = renderParent.renderChildren.find(item => item.documentId === documentId);
-                            if (previousSibling && previousSibling.inlineVertical && previousSibling.bounds.width > 0) {
+                            if (previousSibling && previousSibling.inlineVertical && previousSibling.bounds.width) {
                                 setSpacingOffset(outerWrapper, BOX_STANDARD.MARGIN_LEFT, previousSibling.actualRect('right'));
                             }
                         }
@@ -872,7 +872,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             let current = node;
                             while (true) {
                                 const siblingsLeading = current.siblingsLeading;
-                                if (siblingsLeading.length > 0 && !siblingsLeading.some(item => item.lineBreak || item.excluded && item.blockStatic)) {
+                                if (siblingsLeading.length && !siblingsLeading.some(item => item.lineBreak || item.excluded && item.blockStatic)) {
                                     const previousSibling = siblingsLeading[0] as T;
                                     if (previousSibling.inlineVertical) {
                                         setSpacingOffset(outerWrapper, BOX_STANDARD.MARGIN_LEFT, previousSibling.actualRect('right'));
@@ -898,7 +898,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                     }
                     if (!item.floating) {
                         const q = floating.length;
-                        if (q > 0) {
+                        if (q) {
                             const outerWrapper = item.outerMostWrapper;
                             let renderParent = outerWrapper.renderParent;
                             if (renderParent) {

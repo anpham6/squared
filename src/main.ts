@@ -74,14 +74,14 @@ function extendPrototype(proto: any, offset: number) {
 
 function loadExtensions() {
     if (extensionManager) {
-        if (extensionsQueue.size > 0) {
+        if (extensionsQueue.size) {
             for (const item of extensionsQueue) {
                 extensionManager.include(item);
             }
             extensionsQueue.clear();
         }
     }
-    if (optionsQueue.size > 0) {
+    if (optionsQueue.size) {
         for (const [name, options] of optionsQueue.entries()) {
             configure(name, options);
         }
@@ -394,7 +394,7 @@ export function get(...elements: (Element | string)[]) {
 export function latest(value = 1) {
     if (main && value > 0) {
         const active = main.session.active;
-        if (active.size > 0) {
+        if (active.size) {
             return Array.from(active.keys()).slice(Math.max(0, active.size - value)).reverse().join(',');
         }
     }
@@ -474,7 +474,7 @@ export function querySelectorAll(value: string, sync = false, cache = true) {
     if (main) {
         const query = document.querySelectorAll(value);
         const length = query.length;
-        if (length > 0) {
+        if (length) {
             if (sync) {
                 if (length === 1) {
                     return [findElement(query[0] as HTMLElement, true, cache) as Node];

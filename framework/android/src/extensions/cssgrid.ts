@@ -42,7 +42,7 @@ function getRemainingSize(mainData: CssGridData<View>, data: CssGridDirectionDat
     const unit = data.unit;
     const length = unit.length;
     let value = 0;
-    if (length > 0) {
+    if (length) {
         for (let i = 0; i < length; ++i) {
             const unitPX = unit[i];
             if (unitPX.endsWith('px')) {
@@ -260,7 +260,7 @@ function getCellDimensions(node: View, horizontal: boolean, section: string[], i
 
 function checkAutoDimension(data: CssGridDirectionData, horizontal: boolean) {
     const unit = data.unit;
-    if (unit.length > 0 && unit.every(value => value === 'auto')) {
+    if (unit.length && unit.every(value => value === 'auto')) {
         data.unit = new Array(length).fill(horizontal ? '1fr' : '');
     }
 }
@@ -282,10 +282,10 @@ function requireDirectionSpacer(data: CssGridDirectionData, dimension: number) {
         }
     }
     const content = Math.ceil(size + (data.length - 1) * data.gap);
-    if (percent > 0) {
+    if (percent) {
         return percent + (content / dimension * 100);
     }
-    else if (size > 0) {
+    else if (size) {
         return content < dimension ? -1 : 0;
     }
     return 0;
@@ -399,17 +399,17 @@ function applyLayout(node: View, parent: View, item: View, mainData: CssGridData
     }
     if (cellSpan > 1) {
         const value = (cellSpan - 1) * data.gap;
-        if (size > 0 && minSize === 0) {
+        if (size && minSize === 0) {
             size += value;
         }
-        else if (minSize > 0) {
+        else if (minSize) {
             minSize += value;
         }
-        if (minUnitSize > 0) {
+        if (minUnitSize) {
             minUnitSize += value;
         }
     }
-    if (minUnitSize > 0) {
+    if (minUnitSize) {
         if (data.autoFill && size === 0 && (horizontal ? row.length : column.length) === 1) {
             size = Math.max(node.actualWidth, minUnitSize);
             sizeWeight = 0;
@@ -418,7 +418,7 @@ function applyLayout(node: View, parent: View, item: View, mainData: CssGridData
             minSize = minUnitSize;
         }
     }
-    if (minSize > 0 && !item.hasPX(minDimension)) {
+    if (minSize && !item.hasPX(minDimension)) {
         item.css(minDimension, formatPX(minSize), true);
     }
     if (parent.layoutConstraint) {
@@ -444,7 +444,7 @@ function applyLayout(node: View, parent: View, item: View, mainData: CssGridData
             item.positioned = true;
         }
         else if (!item.hasPX('height', { percent: false })) {
-            if (sizeWeight > 0) {
+            if (sizeWeight) {
                 if (row.length === 1) {
                     item.setLayoutHeight('match_parent');
                 }
@@ -453,7 +453,7 @@ function applyLayout(node: View, parent: View, item: View, mainData: CssGridData
                     item.setLayoutHeight('0px');
                 }
             }
-            else if (size > 0) {
+            else if (size) {
                 if (item.contentBox) {
                     size -= item.contentBoxHeight;
                 }
@@ -488,7 +488,7 @@ function applyLayout(node: View, parent: View, item: View, mainData: CssGridData
                 }
             }
         }
-        else if (size > 0) {
+        else if (size) {
             const maxDimension = horizontal ? 'maxWidth' : 'maxHeight';
             if (fitContent && !item.hasPX(maxDimension)) {
                 item.css(maxDimension, formatPX(size), true);
@@ -584,7 +584,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 rowCount: row.length,
                 columnCount
             });
-            if (!node.hasWidth && !node.rootElement && mainData.rowSpanMultiple.length === 0 && unit.length === columnCount && unit.every(value => value.endsWith('fr')) && node.ascend({ condition: (item: T) => this.isFlexibleContainer(item), error: item => item.hasWidth }).length > 0) {
+            if (!node.hasWidth && !node.rootElement && mainData.rowSpanMultiple.length === 0 && unit.length === columnCount && unit.every(value => value.endsWith('fr')) && node.ascend({ condition: (item: T) => this.isFlexibleContainer(item), error: item => item.hasWidth }).length) {
                 const rowData = mainData.rowData;
                 const rowCount = rowData.length;
                 const constraintData: T[][] = new Array(rowCount);
@@ -796,7 +796,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                     }
                 }
                 if (wrapped) {
-                    if (node.contentBoxWidth > 0 && node.hasPX('width', { percent: false })) {
+                    if (node.contentBoxWidth && node.hasPX('width', { percent: false })) {
                         node.anchorParent('horizontal', 0.5, '', true);
                     }
                     else if (length === 1) {
@@ -847,7 +847,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                     }
                 }
                 if (wrapped) {
-                    if (node.contentBoxHeight > 0 && node.hasPX('height', { percent: false })) {
+                    if (node.contentBoxHeight && node.hasPX('height', { percent: false })) {
                         node.anchorParent('vertical', 0.5, '', true);
                     }
                     else {
@@ -993,14 +993,8 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                                 rowSpan,
                                 columnSpan,
                                 android: {
-                                    [horizontal ? node.localizeString(STRING_ANDROID.MARGIN_RIGHT) : 'bottom']:
-                                        gapSize > 0 && (k + l) < unitData.length
-                                            ? `@dimen/${Resource.insertStoredAsset('dimens', `${node.controlId}_cssgrid_${horizontal ? 'column' : 'row'}_gap`, formatPX(gapSize))}`
-                                            : '',
-                                    [horizontal ? 'bottom' : node.localizeString(STRING_ANDROID.MARGIN_RIGHT)]:
-                                        opposingMargin > 0
-                                            ? `@dimen/${Resource.insertStoredAsset('dimens', `${node.controlId}_cssgrid_${horizontal ? 'row' : 'column'}_gap`, formatPX(opposingMargin))}`
-                                            : '',
+                                    [horizontal ? node.localizeString(STRING_ANDROID.MARGIN_RIGHT) : 'bottom']: gapSize && (k + l) < unitData.length ? `@dimen/${Resource.insertStoredAsset('dimens', `${node.controlId}_cssgrid_${horizontal ? 'column' : 'row'}_gap`, formatPX(gapSize))}` : '',
+                                    [horizontal ? 'bottom' : node.localizeString(STRING_ANDROID.MARGIN_RIGHT)]: opposingMargin ? `@dimen/${Resource.insertStoredAsset('dimens', `${node.controlId}_cssgrid_${horizontal ? 'row' : 'column'}_gap`, formatPX(opposingMargin))}` : '',
                                     layout_row,
                                     layout_column,
                                     layout_rowWeight,
@@ -1036,7 +1030,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                     if (emptyRow) {
                         for (let j = 0, q = emptyRow.length; j < q; ++j) {
                             const value = emptyRow[j];
-                            if (value > 0) {
+                            if (value) {
                                 k = j;
                                 const { unit: unitOpposing, gap: gapOpposing } = horizontal ? row : column;
                                 const dimensions = getCellDimensions(node, !horizontal, [unitOpposing[horizontal ? j : i]], 0);

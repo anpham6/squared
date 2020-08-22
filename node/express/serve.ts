@@ -341,7 +341,7 @@ let Node: serve.INode,
         getBaseDirectory(location: string, asset: string): [string[], string[]] {
             const locationDir = location.split(/[\\/]/);
             const assetDir = asset.split(/[\\/]/);
-            while (locationDir.length > 0 && assetDir.length > 0) {
+            while (locationDir.length && assetDir.length) {
                 if (locationDir[0] === assetDir[0]) {
                     locationDir.shift();
                     assetDir.shift();
@@ -843,7 +843,7 @@ let Node: serve.INode,
                     }
                 }
             }
-            if (result.size > 0) {
+            if (result.size) {
                 return Array.from(result);
             }
         }
@@ -1710,7 +1710,7 @@ class FileManager implements serve.IFileManager {
                     const asset = assets.find(item => item.uri === url && !item.excluded);
                     if (asset) {
                         const count = file.pathname.split(/[\\/]/).length;
-                        output = (output || content).replace(match[0], `url(${(count > 0 ? '../'.repeat(count) : '') + Express.getFullUri(asset)})`);
+                        output = (output || content).replace(match[0], `url(${(count ? '../'.repeat(count) : '') + Express.getFullUri(asset)})`);
                     }
                 }
             }
@@ -1786,7 +1786,7 @@ class FileManager implements serve.IFileManager {
         const processQueue = (file: ExpressAsset, filepath: string, bundleMain?: ExpressAsset) => {
             if (file.bundleIndex !== undefined) {
                 if (file.bundleIndex === 0) {
-                    if (Compress.getFileSize(filepath) > 0 && !file.excluded) {
+                    if (Compress.getFileSize(filepath) && !file.excluded) {
                         const content = this.appendContent(file, fs.readFileSync(filepath, 'utf8'), true);
                         if (content) {
                             try {
@@ -1815,7 +1815,7 @@ class FileManager implements serve.IFileManager {
                 if (queue) {
                     const uri = queue.uri;
                     const verifyBundle = (value: string) => {
-                        if (Compress.getFileSize(filepath) > 0) {
+                        if (Compress.getFileSize(filepath)) {
                             this.appendContent(queue, value);
                         }
                         else {
@@ -1858,7 +1858,7 @@ class FileManager implements serve.IFileManager {
                     }
                     processQueue(queue, filepath, !bundleMain || bundleMain.excluded ? !file.excluded && file || queue : bundleMain);
                 }
-                else if (Compress.getFileSize(filepath) > 0) {
+                else if (Compress.getFileSize(filepath)) {
                     this.compressFile(assets, bundleMain || file, filepath);
                 }
                 else {
@@ -2108,7 +2108,7 @@ class FileManager implements serve.IFileManager {
         }
         return promisify<void>(() => {
             const replaced = this.assets.filter(item => item.originalName);
-            if (replaced.length > 0 || release) {
+            if (replaced.length || release) {
                 for (const item of this.assets) {
                     if (item.excluded) {
                         continue;

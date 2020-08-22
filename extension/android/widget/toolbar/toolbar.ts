@@ -331,8 +331,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
     }
 
     public createPlaceholder(node: T, children: T[], target?: Null<HTMLElement>) {
-        const delegate = children.length > 0;
-        const container = this.application.createNode(node.sessionId, { parent: node, children, delegate, cascade: true });
+        const container = this.application.createNode(node.sessionId, { parent: node, children, delegate: children.length > 0, cascade: true });
         container.inherit(node, 'base');
         if (target) {
             container.dataset.androidTarget = target.id;

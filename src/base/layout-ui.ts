@@ -125,7 +125,7 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
         if (result === undefined) {
             const children = this.children;
             const length = children.length;
-            if (length > 0) {
+            if (length) {
                 if (length > 1) {
                     let previousBottom = Infinity;
                     for (let i = 0; i < length; ++i) {

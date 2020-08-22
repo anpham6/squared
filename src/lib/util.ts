@@ -378,7 +378,7 @@ export function formatXml(value: string, closeEmpty?: boolean, startIndent = -1,
     for (let i = 0, length = lines.length; i < length; ++i) {
         const line = lines[i];
         let previous = indent;
-        if (i > 0) {
+        if (i) {
             let single: Undef<boolean>;
             if (line.closing) {
                 --indent;
@@ -460,7 +460,7 @@ export function lowerCaseString(value: string) {
     while (match = pattern.exec(value)) {
         entities.push(match[0]);
     }
-    if (entities.length > 0) {
+    if (entities.length) {
         let result = '';
         const segments = value.split(pattern);
         for (let i = 0, length = segments.length; i < length; ++i) {
@@ -557,7 +557,7 @@ export function convertAlpha(value: number) {
                 result += alphabet[base - 1];
                 value -= base * length;
             }
-            else if (base > 0) {
+            else if (base) {
                 result += 'Z';
                 value -= Math.pow(length, 2);
                 result += convertAlpha(value);
@@ -1096,7 +1096,7 @@ export function flatArray<T>(list: T[], depth = 1, current = 0): T[] {
     for (let i = 0, length = list.length; i < length; ++i) {
         const item = list[i];
         if (current < depth && Array.isArray(item)) {
-            if (item.length > 0) {
+            if (item.length) {
                 result = result.concat(flatArray<T>(item, depth, current + 1));
             }
         }
@@ -1145,7 +1145,7 @@ export function partitionArray<T>(list: ArrayLike<T>, predicate: IteratorPredica
 
 export function sameArray<T, U = unknown>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>) {
     const length = list.length;
-    if (length > 0) {
+    if (length) {
         let baseValue!: U;
         for (let i = 0; i < length; ++i) {
             const value = predicate(list[i], i, list);

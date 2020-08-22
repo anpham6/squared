@@ -1641,7 +1641,7 @@ export function parseSelectorText(value: string, document?: boolean) {
         while (match = CSS.SELECTOR_ATTR.exec(normalized)) {
             const index = match.index;
             const length = match[0].length;
-            normalized = (index > 0 ? normalized.substring(0, index) : '') + '_'.repeat(length) + normalized.substring(index + length);
+            normalized = (index ? normalized.substring(0, index) : '') + '_'.repeat(length) + normalized.substring(index + length);
             found = true;
         }
         if (found) {
@@ -2357,7 +2357,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
                             if (prefix === 'circle') {
                                 if (radius.includes('%')) {
                                     const { width, height } = boundingBox || getContentBoxDimension(element.parentElement);
-                                    if (width > 0 && height > 0) {
+                                    if (width && height) {
                                         options.boundingSize = Math.min(width, height);
                                     }
                                     else {
@@ -2895,7 +2895,7 @@ export function calculateVarAsString(element: CSSElement, value: string, options
         if (seg !== '') {
             const calc = splitEnclosing(seg, 'calc');
             const length = calc.length;
-            if (length > 0) {
+            if (length) {
                 let partial = '';
                 for (let i = 0, j = 0; i < length; ++i) {
                     let output = calc[i];
@@ -3080,7 +3080,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
         result.sort((a, b) => {
             const pxA = a.pixelRatio;
             const pxB = b.pixelRatio;
-            if (pxA > 0 && pxB > 0) {
+            if (pxA && pxB) {
                 if (pxA !== pxB) {
                     return pxA - pxB;
                 }
@@ -3088,7 +3088,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
             else {
                 const widthA = a.width;
                 const widthB = b.width;
-                if (widthA !== widthB && widthA > 0 && widthB > 0) {
+                if (widthA !== widthB && widthA && widthB) {
                     return widthA - widthB;
                 }
             }

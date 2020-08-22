@@ -16,7 +16,7 @@ export default abstract class Column<T extends squared.base.NodeUI> extends Exte
         const rows: T[][] = [items];
         node.each((item: T) => {
             if (item.css('columnSpan') === 'all') {
-                if (items.length > 0) {
+                if (items.length) {
                     rows.push([item]);
                 }
                 else {
@@ -48,11 +48,11 @@ export default abstract class Column<T extends squared.base.NodeUI> extends Exte
         let columnGap = node.parseWidth(node.css('columnGap')),
             columnSized: number;
         const getColumnSizing = () => isNaN(columnCount) && columnWidth > 0 ? boxWidth / (columnWidth + columnGap) : Infinity;
-        if (columnGap > 0) {
+        if (columnGap) {
             columnSized = Math.floor(getColumnSizing());
         }
         else {
-            columnGap = (columnWidth > 0 && !isNaN(maxSize) && maxSize !== Infinity ? Math.max(maxSize - columnWidth, 0) : 0) + 16;
+            columnGap = (columnWidth && !isNaN(maxSize) && maxSize !== Infinity ? Math.max(maxSize - columnWidth, 0) : 0) + 16;
             columnSized = Math.ceil(getColumnSizing());
         }
         this.data.set(node, {

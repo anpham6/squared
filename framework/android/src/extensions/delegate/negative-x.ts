@@ -19,12 +19,13 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
 
     public condition(node: T) {
         const children = node.children.filter((item: T) => {
-            if (item.pageFlow) {
-                return item.marginLeft < 0 && item === node.firstStaticChild && Math.abs(item.marginLeft) <= node.marginLeft + node.paddingLeft && item.inlineFlow && !item.centerAligned && !item.rightAligned && !node.floatContainer;
-            }
-            return item.leftTopAxis && (item.left < 0 || !item.hasPX('left') && item.right < 0);
+            return (
+                item.pageFlow
+                    ? item.marginLeft < 0 && item === node.firstStaticChild && Math.abs(item.marginLeft) <= node.marginLeft + node.paddingLeft && item.inlineFlow && !item.centerAligned && !item.rightAligned && !node.floatContainer
+                    : item.leftTopAxis && (item.left < 0 || !item.hasPX('left') && item.right < 0)
+            );
         });
-        if (children.length > 0) {
+        if (children.length) {
             this.data.set(node, { children, offsetLeft: node.marginLeft + node.paddingLeft });
             return true;
         }

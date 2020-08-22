@@ -20,7 +20,7 @@ export default class SvgUseShapePattern extends SvgSynchronize$MX(SvgViewRect$MX
     public synchronize(options?: SvgSynchronizeOptions) {
         const animations = this.animations.filter(item => item.attributeName === 'x' || item.attributeName === 'y' || this.verifyBaseValue(item.attributeName, 0) === undefined);
         const transforms = this.getAnimateTransform(options);
-        if (animations.length > 0 || transforms.length > 0) {
+        if (animations.length || transforms.length) {
             this.animateSequentially(this.getAnimateViewRect(animations), transforms, undefined, options);
         }
         super.synchronize(options);

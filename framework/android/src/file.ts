@@ -26,7 +26,7 @@ const STORED = Resource.STORED as AndroidResourceStoredMap;
 
 function getFileAssets(pathname: string, items: string[]) {
     const length = items.length;
-    if (length > 0) {
+    if (length) {
         const result: FileAsset[] = new Array(length / 3);
         for (let i = 0, j = 0; i < length; i += 3) {
             result[j++] = {
@@ -42,7 +42,7 @@ function getFileAssets(pathname: string, items: string[]) {
 
 function getImageAssets(pathname: string, items: string[], convertExt: string, compress: boolean) {
     const length = items.length;
-    if (length > 0) {
+    if (length) {
         convertExt = convertExt.toLowerCase();
         let mimeTypeTo = parseMimeType(convertExt);
         if (!mimeTypeTo.startsWith('image/')) {
@@ -76,7 +76,7 @@ function getImageAssets(pathname: string, items: string[], convertExt: string, c
 
 function getRawAssets(pathname: string, items: string[]) {
     const length = items.length;
-    if (length > 0) {
+    if (length) {
         const result: FileAsset[] = new Array(length / 3);
         for (let i = 0, j = 0; i < length; i += 3) {
             result[j++] = {
@@ -182,7 +182,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     public resourceStringArrayToXml(options: FileUniversalOptions = {}): string[] {
-        if (STORED.arrays.size > 0) {
+        if (STORED.arrays.size) {
             const item: ObjectMap<any[]> = { 'string-array': [] };
             const itemArray = item['string-array'];
             for (const [name, values] of Array.from(STORED.arrays.entries()).sort()) {
@@ -198,7 +198,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     public resourceFontToXml(options: FileUniversalOptions = {}): string[] {
-        if (STORED.fonts.size > 0) {
+        if (STORED.fonts.size) {
             const resource = this.resource;
             const { insertSpaces, targetAPI } = this.userSettings;
             const xmlns = XMLNS_ANDROID[targetAPI < BUILD_ANDROID.OREO ? 'app' : 'android'];
@@ -240,7 +240,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     public resourceColorToXml(options: FileUniversalOptions = {}): string[] {
-        if (STORED.colors.size > 0) {
+        if (STORED.colors.size) {
             const item: ObjectMap<ItemValue[]> = { color: [] };
             const itemArray = item.color;
             for (const [innerText, name] of Array.from(STORED.colors.entries()).sort()) {
@@ -257,7 +257,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
 
     public resourceStyleToXml(options: FileUniversalOptions = {}): string[] {
         const result: string[] = [];
-        if (STORED.styles.size > 0) {
+        if (STORED.styles.size) {
             const item: ObjectMap<any[]> = { style: [] };
             const itemArray = item.style;
             for (const style of Array.from(STORED.styles.values()).sort((a, b) => a.name.toString().toLowerCase() >= b.name.toString().toLowerCase() ? 1 : -1)) {
@@ -276,7 +276,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 'styles.xml'
             );
         }
-        if (STORED.themes.size > 0) {
+        if (STORED.themes.size) {
             const userSettings = this.userSettings;
             const { insertSpaces, manifestThemeName } = userSettings;
             const convertPixels = userSettings.convertPixels === 'dp';
@@ -316,7 +316,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     public resourceDimenToXml(options: FileUniversalOptions = {}): string[] {
-        if (STORED.dimens.size > 0) {
+        if (STORED.dimens.size) {
             const convertPixels = this.userSettings.convertPixels === 'dp';
             const item: ObjectMap<ItemValue[]> = { dimen: [] };
             const itemArray = item.dimen;
@@ -333,7 +333,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     public resourceDrawableToXml(options: FileUniversalOptions = {}): string[] {
-        if (STORED.drawables.size > 0) {
+        if (STORED.drawables.size) {
             const userSettings = this.userSettings;
             const insertSpaces = userSettings.insertSpaces;
             const convertPixels = userSettings.convertPixels === 'dp';
@@ -352,7 +352,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     public resourceAnimToXml(options: FileUniversalOptions = {}): string[] {
-        if (STORED.animators.size > 0) {
+        if (STORED.animators.size) {
             const insertSpaces = this.userSettings.insertSpaces;
             const result: string[] = [];
             for (const [name, value] of STORED.animators.entries()) {
@@ -368,7 +368,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     public resourceDrawableImageToString(options: FileUniversalOptions = {}): string[] {
-        if (STORED.images.size > 0) {
+        if (STORED.images.size) {
             const imageDirectory = this.directory.image;
             const result: string[] = [];
             for (const [name, images] of STORED.images.entries()) {
@@ -409,7 +409,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     public resourceRawVideoToString(options: FileUniversalOptions = {}): string[] {
-        if (Resource.ASSETS.video.size > 0) {
+        if (Resource.ASSETS.video.size) {
             const result: string[] = [];
             for (const video of Resource.ASSETS.video.values()) {
                 const uri = video.uri!;
@@ -431,7 +431,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     public resourceRawAudioToString(options: FileUniversalOptions = {}): string[] {
-        if (Resource.ASSETS.audio.size > 0) {
+        if (Resource.ASSETS.audio.size) {
             const result: string[] = [];
             for (const audio of Resource.ASSETS.audio.values()) {
                 const uri = audio.uri!;

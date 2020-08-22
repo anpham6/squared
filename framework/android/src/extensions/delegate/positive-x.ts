@@ -55,7 +55,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
             const fixedPosition = fixed && item.autoPosition;
             if (item.hasPX('left') || fixedPosition) {
                 if (documentBody && (item.css('width') === '100%' || item.css('minWidth') === '100%')) {
-                    if (paddingLeft > 0 || paddingRight > 0) {
+                    if (paddingLeft || paddingRight) {
                         children.add(item);
                     }
                     right = true;
@@ -96,7 +96,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
             }
             if (item.hasPX('top') || fixedPosition) {
                 if (documentBody && (item.css('height') === '100%' || item.css('minHeight') === '100%')) {
-                    if (paddingTop > 0 || paddingBottom > 0) {
+                    if (paddingTop || paddingBottom) {
                         children.add(item);
                     }
                     bottom = true;
@@ -136,7 +136,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                 children.add(item);
             }
         });
-        if (children.size > 0 || right || bottom) {
+        if (children.size || right || bottom) {
             this.data.set(node, { children: Array.from(children), right, bottom });
             return true;
         }
@@ -147,7 +147,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
         const mainData = this.data.get(node) as PositiveXData;
         const children = mainData.children as T[];
         let container: Undef<T>;
-        if (children.length > 0) {
+        if (children.length) {
             container = (this.controller as android.base.Controller<T>).createNodeWrapper(node, parent, {
                 alignmentType: NODE_ALIGNMENT.VERTICAL,
                 children,

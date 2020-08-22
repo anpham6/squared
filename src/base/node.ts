@@ -96,7 +96,7 @@ function setDimension(node: T, styleMap: StringMap, attr: DimensionAttr) {
                 const size = getNamedItem(element, attr);
                 if (size !== '') {
                     result = isNumber(size) ? parseFloat(size) : node.parseUnit(size, options);
-                    if (result > 0) {
+                    if (result) {
                         node.css(attr, lastItemOf(size) === '%' ? size : size + 'px');
                     }
                 }
@@ -104,7 +104,7 @@ function setDimension(node: T, styleMap: StringMap, attr: DimensionAttr) {
             }
         }
     }
-    if (baseValue > 0 && !node.imageElement) {
+    if (baseValue && !node.imageElement) {
         const attrMax = attr === 'width' ? 'maxWidth' : 'maxHeight';
         const max = styleMap[attrMax];
         if (max) {
@@ -113,7 +113,7 @@ function setDimension(node: T, styleMap: StringMap, attr: DimensionAttr) {
             }
             else {
                 const maxValue = node.parseUnit(max, { dimension: attr });
-                if (maxValue > 0) {
+                if (maxValue) {
                     if (maxValue <= baseValue && value && isLength(value)) {
                         styleMap[attr] = max;
                         delete styleMap[attrMax];
@@ -152,7 +152,7 @@ function convertBorderWidth(node: T, dimension: DimensionAttr, border: string[])
                     result = isLength(width, true) ? node.parseUnit(width, { dimension }) : convertFloat(node.style[border[0]]);
                     break;
             }
-            if (result > 0) {
+            if (result) {
                 return Math.max(Math.round(result), 1);
             }
         }
@@ -266,7 +266,7 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, last: boo
                 case ':nth-last-child(n)':
                     break;
                 case ':empty':
-                    if ((child.element as HTMLElement).childNodes.length > 0) {
+                    if ((child.element as HTMLElement).childNodes.length) {
                         return false;
                     }
                     break;
@@ -469,7 +469,7 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, last: boo
                             children = children.slice(0).reverse();
                         }
                         const index = match[2] === 'child' ? children.indexOf(child) + 1 : children.filter((item: T) => item.tagName === tagName).indexOf(child) + 1;
-                        if (index > 0) {
+                        if (index) {
                             if (isNumber(placement)) {
                                 if (parseInt(placement) !== index) {
                                     return false;
@@ -830,7 +830,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     if (!this.pseudoElement) {
                         const items = Array.from(element.style);
                         const length = items.length;
-                        if (length > 0) {
+                        if (length) {
                             for (let i = 0; i < length; ++i) {
                                 const attr = items[i];
                                 styleMap[convertCamelCase(attr)] = element.style.getPropertyValue(attr);
@@ -858,7 +858,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     public saveAsInitial() {
         this._initial = {
             styleMap: { ...this._styleMap },
-            children: this.length > 0 ? this.toArray() : undefined,
+            children: this.length ? this.toArray() : undefined,
             bounds: this._bounds
         };
     }
@@ -889,7 +889,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     public unsetCache(...attrs: string[]) {
         const length = attrs.length;
-        if (length > 0) {
+        if (length) {
             const cache = this._cache;
             for (let i = 0; i < length; ++i) {
                 const attr = attrs[i];
@@ -1004,7 +1004,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     public unsetState(...attrs: string[]) {
         let reset: Undef<boolean>;
         const length = attrs.length;
-        if (length > 0) {
+        if (length) {
             const cacheState = this._cacheState;
             for (let i = 0; i < length; ++i) {
                 const attr = attrs[i];
@@ -1125,7 +1125,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public intersectX(rect: BoxRectDimension, options?: CoordsXYOptions) {
-        if (rect.width > 0) {
+        if (rect.width) {
             const { left, right } = this[options?.dimension || 'linear'];
             const { left: leftA, right: rightA } = rect;
             return (
@@ -1139,7 +1139,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public intersectY(rect: BoxRectDimension, options?: CoordsXYOptions) {
-        if (rect.height > 0) {
+        if (rect.height) {
             const { top, bottom } = this[options?.dimension || 'linear'];
             const { top: topA, bottom: bottomA } = rect;
             return (
@@ -1153,7 +1153,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public withinX(rect: BoxRectDimension, options?: OffsetXYOptions) {
-        if (rect.width > 0 || this.pageFlow) {
+        if (rect.width || this.pageFlow) {
             let dimension: Undef<BoxType>,
                 offset: Undef<number>;
             if (options) {
@@ -1166,7 +1166,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public withinY(rect: BoxRectDimension, options?: OffsetXYOptions) {
-        if (rect.height > 0 || this.pageFlow) {
+        if (rect.height || this.pageFlow) {
             let dimension: Undef<BoxType>,
                 offset: Undef<number>;
             if (options) {
@@ -1179,7 +1179,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public outsideX(rect: BoxRectDimension, options?: OffsetXYOptions) {
-        if (rect.width > 0 || this.pageFlow) {
+        if (rect.width || this.pageFlow) {
             let dimension: Undef<BoxType>,
                 offset: Undef<number>;
             if (options) {
@@ -1192,7 +1192,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public outsideY(rect: BoxRectDimension, options?: OffsetXYOptions) {
-        if (rect.height > 0 || this.pageFlow) {
+        if (rect.height || this.pageFlow) {
             let dimension: Undef<BoxType>,
                 offset: Undef<number>;
             if (options) {
@@ -1335,7 +1335,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     public cssTry(attr: string, value: string, callback?: FunctionSelf<this>) {
         if (this.styleElement) {
             const element = this._element as HTMLElement;
-            if (setStyleCache(element, attr, this.sessionId, value, (!this.pseudoElement ? this.style : getStyle(element)).getPropertyValue(attr)) > 0) {
+            if (setStyleCache(element, attr, this.sessionId, value, (!this.pseudoElement ? this.style : getStyle(element)).getPropertyValue(attr))) {
                 if (callback) {
                     callback.call(this, attr);
                     this.cssFinally(attr);
@@ -1818,7 +1818,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     offset = 0;
                 }
                 const q = queryMap.length;
-                if (selectors.length > 0 && offset !== -1 && offset < q) {
+                if (selectors.length && offset !== -1 && offset < q) {
                     const dataEnd = selectors.pop() as QueryData;
                     const lastEnd = selectors.length === 0;
                     const currentCount = result.length;
@@ -1843,7 +1843,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             }
                         }
                     }
-                    if (selectors.length > 0 && (dataEnd.adjacent || resultCount !== -Infinity)) {
+                    if (selectors.length && (dataEnd.adjacent || resultCount !== -Infinity)) {
                         selectors.reverse();
                         let count = currentCount;
                         for (let j = 0, r = pending.length; j < r; ++j) {
@@ -1898,7 +1898,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     public ancestors(value?: string, options?: AscendOptions<T>) {
         const result = this.ascend(options);
-        if (value && result.length > 0) {
+        if (value && result.length) {
             const customMap: T[][] = [];
             let depth = NaN;
             iterateReverseArray(result, (item: T) => {
@@ -1919,7 +1919,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (options || !this.queryMap) {
             const children: T[] = this.descend(options);
             let length = children.length;
-            if (value && length > 0) {
+            if (value && length) {
                 const result: T[][] = [];
                 const depth = this.depth + 1;
                 let index: number;
@@ -2172,7 +2172,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (this._box === null) {
             const bounds = this.bounds;
             if (bounds) {
-                if (this.styleElement && this.naturalChildren.length > 0) {
+                if (this.styleElement && this.naturalChildren.length) {
                     return this._box = {
                         top: bounds.top + (this.paddingTop + this.borderTopWidth),
                         right: bounds.right - (this.paddingRight + this.borderRightWidth),
@@ -2268,7 +2268,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     let parent = this.ascend({ condition: item => item.has('lineHeight', { initial: true, not: 'inherit' }) })[0];
                     if (parent) {
                         value = parseLineHeight(parent.css('lineHeight'), this.fontSize);
-                        if (value > 0) {
+                        if (value) {
                             if (parent !== this.actualParent || isEm(this.valueOf('fontSize')) || this.multiline) {
                                 this.css('lineHeight', value + 'px');
                             }
@@ -2469,7 +2469,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 if (lastItemOf(minWidth) === '%') {
                     percent = Math.max(parseFloat(minWidth), percent);
                 }
-                if (percent > 0) {
+                if (percent) {
                     const marginLeft = this.valueOf('marginLeft');
                     const marginRight = this.valueOf('marginRight');
                     return this._cache.blockStatic = percent + (isPercent(marginLeft) ? parseFloat(marginLeft) : 0) + (isPercent(marginRight) ? parseFloat(marginRight) : 0) >= 100;
@@ -2596,10 +2596,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 if (this.textElement) {
                     return this._textBounds = getRangeClientRect(this._element as Element) || null;
                 }
-                else if (this.length > 0) {
+                else if (this.length) {
                     const children = this.naturalChildren;
                     const length = children.length;
-                    if (length > 0) {
+                    if (length) {
                         let top = Infinity,
                             right = -Infinity,
                             bottom = -Infinity,
@@ -2618,7 +2618,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                 }
                             }
                         }
-                        if (numberOfLines > 0) {
+                        if (numberOfLines) {
                             return this._textBounds = {
                                 top,
                                 right,
@@ -2839,7 +2839,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             }
             else {
                 result = this.width;
-                if (result > 0) {
+                if (result) {
                     if (this.contentBox && !this.tableElement) {
                         result += this.contentBoxWidth;
                     }
@@ -2861,7 +2861,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             }
             else {
                 result = this.height;
-                if (result > 0) {
+                if (result) {
                     if (this.contentBox && !this.tableElement) {
                         result += this.contentBoxHeight;
                     }

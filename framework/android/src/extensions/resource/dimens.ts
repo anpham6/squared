@@ -77,7 +77,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
                         dimens.set(key, value);
                     }
                 }
-                if (RE_DIMENS.found > 0) {
+                if (RE_DIMENS.found) {
                     layout.content = content;
                 }
             }

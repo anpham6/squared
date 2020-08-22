@@ -160,7 +160,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                     distance = result.length;
                 }
                 const fps = framesPerSecond ? 1000 / framesPerSecond : 0;
-                if (keyPoints.length > 0) {
+                if (keyPoints.length) {
                     const length = distance - 1;
                     const keyTimes = super.keyTimes;
                     const result: SvgOffsetPath[] = [];

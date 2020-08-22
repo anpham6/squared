@@ -178,7 +178,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
             const ext = this.getExtension(src);
             const length = ext.length;
             if (!imageFormat || hasMimeType(imageFormat, ext) || length === 0) {
-                const asset = Resource.insertStoredAsset('images', Resource.formatName(prefix + src.substring(0, src.length - (length > 0 ? length + 1 : 0))).toLowerCase(), images);
+                const asset = Resource.insertStoredAsset('images', Resource.formatName(prefix + src.substring(0, src.length - (length ? length + 1 : 0))).toLowerCase(), images);
                 CACHE_IMAGE.set(mdpi, asset);
                 return asset;
             }
@@ -250,7 +250,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                 for (let i = 0, length = imageSet.length; i < length; ++i) {
                     const image = imageSet[i];
                     const pixelRatio = image.pixelRatio;
-                    if (pixelRatio > 0) {
+                    if (pixelRatio) {
                         const src = image.src;
                         if (pixelRatio < 1) {
                             result.ldpi = src;

@@ -37,7 +37,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                         }
                         else if (cellData.percent) {
                             const value = parseFloat(cellData.percent) / 100;
-                            if (value > 0) {
+                            if (value) {
                                 item.setLayoutWidth('0px');
                                 item.android('layout_columnWeight', trimEnd(value.toPrecision(3), '0'));
                                 requireWidth = true;
@@ -67,7 +67,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
         else {
             const item = node.item(0) as Undef<T>;
             if (item) {
-                if (item.percentWidth > 0 && !node.hasWidth) {
+                if (item.percentWidth && !node.hasWidth) {
                     item.setLayoutWidth('wrap_content');
                     requireWidth = true;
                 }
@@ -150,7 +150,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
 
     public postOptimize(node: T) {
         const layoutWidth = parseInt(node.layoutWidth);
-        if (layoutWidth > 0) {
+        if (layoutWidth) {
             if (node.bounds.width > layoutWidth) {
                 node.setLayoutWidth(formatPX(node.bounds.width));
             }

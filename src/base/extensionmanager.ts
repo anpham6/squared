@@ -22,7 +22,7 @@ export default class ExtensionManager<T extends squared.base.Node> implements sq
         }
         else {
             const { framework, dependencies } = ext;
-            if (framework > 0) {
+            if (framework) {
                 for (let i = 0, length = dependencies.length; i < length; ++i) {
                     const item = dependencies[i];
                     if (item.preload) {

@@ -33,7 +33,7 @@ export default class SvgShape extends SvgSynchronize$MX(SvgView$MX(SvgElement)) 
     }
 
     public synchronize(options?: SvgSynchronizeOptions) {
-        if (this.animations.length > 0) {
+        if (this.animations.length) {
             const path = this.path;
             if (path) {
                 const element = options && options.element;

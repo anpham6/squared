@@ -85,7 +85,7 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
             if (/[a-z]/.test(color[0]) && /\d/.test(value[index - 1])) {
                 continue;
             }
-            if (colors.length > 0) {
+            if (colors.length) {
                 colors[colors.length - 1][2] = index;
             }
             colors.push([color, lastIndex, length]);
@@ -262,9 +262,8 @@ function setBackgroundOffset(node: NodeUI, boxStyle: BoxStyle, attr: "background
 }
 
 function hasEndingSpace(element: HTMLElement) {
-    const textContent = element.textContent!;
-    const length = textContent.length;
-    return length > 0 && textContent.charCodeAt(length - 1) === 32;
+    const value = element.textContent!;
+    return value.charCodeAt(value.length - 1) === 32;
 }
 
 function newBoxRectPosition(orientation = ['left', 'top']) {
@@ -480,7 +479,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             else {
                                 let centerHorizontal = true;
                                 if (nextPosition === undefined) {
-                                    if (horizontal > 0) {
+                                    if (horizontal) {
                                         result.vertical = position;
                                         centerHorizontal = false;
                                     }
@@ -715,7 +714,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     const repeating = !!match[1];
                     const type = match[2];
                     const direction = match[3];
-                    const imageDimension = backgroundSize.length > 0 ? ResourceUI.getBackgroundSize(node, backgroundSize[i % backgroundSize.length], screenDimension) : undefined;
+                    const imageDimension = backgroundSize.length ? ResourceUI.getBackgroundSize(node, backgroundSize[i % backgroundSize.length], screenDimension) : undefined;
                     const dimension = NodeUI.refitScreen(node, imageDimension || node.actualDimension);
                     let gradient: Undef<Gradient>;
                     switch (type) {
@@ -881,7 +880,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 ++i;
             }
             REGEXP_BACKGROUNDIMAGE.lastIndex = 0;
-            if (images.length > 0) {
+            if (images.length) {
                 return images;
             }
         }
@@ -916,13 +915,13 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 break;
             }
         }
-        if (width > 0 && height > 0) {
+        if (width && height) {
             return { width: Math.round(width), height: Math.round(height) };
         }
     }
 
     public static hasLineBreak(node: NodeUI, lineBreak?: boolean, trim?: boolean) {
-        if (node.naturalElements.length > 0) {
+        if (node.naturalElements.length) {
             return node.naturalElements.some(item => item.lineBreak);
         }
         else if (!lineBreak && node.naturalChild) {
@@ -935,7 +934,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     public static checkPreIndent(node: NodeUI): Undef<[string, NodeUI]> {
         if (node.plainText) {
             const parent = node.actualParent!;
-            if (parent.preserveWhiteSpace && parent.ancestors('pre', { startSelf: true }).length > 0) {
+            if (parent.preserveWhiteSpace && parent.ancestors('pre', { startSelf: true }).length) {
                 let nextSibling = node.nextSibling as Undef<NodeUI>;
                 if (nextSibling && nextSibling.naturalElement) {
                     const textContent = node.textContent;
@@ -1003,16 +1002,16 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 backgroundColor = node.backgroundColor,
                 backgroundImage: Undef<(string | Gradient)[]>;
             if (borderWidth) {
-                if (node.borderTopWidth > 0) {
+                if (node.borderTopWidth) {
                     setBorderStyle(node, boxStyle, 'borderTop', BORDER_TOP);
                 }
-                if (node.borderRightWidth > 0) {
+                if (node.borderRightWidth) {
                     setBorderStyle(node, boxStyle, 'borderRight', BORDER_RIGHT);
                 }
-                if (node.borderBottomWidth > 0) {
+                if (node.borderBottomWidth) {
                     setBorderStyle(node, boxStyle, 'borderBottom', BORDER_BOTTOM);
                 }
-                if (node.borderLeftWidth > 0) {
+                if (node.borderLeftWidth) {
                     setBorderStyle(node, boxStyle, 'borderLeft', BORDER_LEFT);
                 }
             }
@@ -1045,7 +1044,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         borderRadius.length = radius === '0px' || radius === '' ? 0 : 1;
                     }
                     const length = borderRadius.length;
-                    if (length > 0) {
+                    if (length) {
                         const dimension = horizontal ? 'width' : 'height';
                         for (let i = 0; i < length; ++i) {
                             borderRadius[i] = formatPX(node.parseUnit(borderRadius[i], { dimension, parent: false }));

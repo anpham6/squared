@@ -9,10 +9,7 @@ export const prettier_options = {
 
 export const terser_options = {
     compress: {
-        loops: false,
-        booleans: false,
-        conditionals: false,
-        switches: false
+        unused: false
     },
     keep_classnames: true
 };

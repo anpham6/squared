@@ -239,14 +239,14 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         }
                     }
                 }
-                if (td.length > 0 || td.inlineText) {
+                if (td.length || td.inlineText) {
                     rowWidth[i] += width + horizontal;
                 }
-                if (spacingWidth > 0) {
+                if (spacingWidth) {
                     td.modifyBox(BOX_STANDARD.MARGIN_LEFT, j === 0 ? horizontal : spacingWidth);
                     td.modifyBox(BOX_STANDARD.MARGIN_RIGHT, index === 0 ? spacingWidth : horizontal);
                 }
-                if (spacingHeight > 0) {
+                if (spacingHeight) {
                     td.modifyBox(BOX_STANDARD.MARGIN_TOP, i === 0 ? vertical : spacingHeight);
                     td.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, i + rowSpan < rowCount ? spacingHeight : vertical);
                 }
@@ -259,7 +259,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             replaceMap(mapWidth, (value, index) => {
                 if (value === 'auto') {
                     const dimension = mapBounds[index];
-                    if (dimension > 0) {
+                    if (dimension) {
                         return formatPX(dimension);
                     }
                 }
@@ -397,7 +397,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                                     setBoundsWidth(td);
                                 }
                             }
-                            else if (isLength(columnWidth) && parseInt(columnWidth) > 0) {
+                            else if (isLength(columnWidth) && parseInt(columnWidth)) {
                                 if (td.bounds.width >= parseInt(columnWidth)) {
                                     setBoundsWidth(td);
                                     cellData.expand = false;

@@ -192,7 +192,7 @@ if (master) {
                     stderr.write(chalk.bgBlue.black('?'));
                 }
             }
-            if (errors.length > 0 || notFound.length > 0) {
+            if (errors.length || notFound.length) {
                 stderr.write('\n\n');
                 if (data && host) {
                     parse(fs.readFileSync(path.resolve(__dirname, data)), (err, csv: string[][]) => {

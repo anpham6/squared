@@ -210,9 +210,9 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             value = getNamedItem(element, 'd');
             if (parent && parent.requireRefit) {
                 const commands = SvgBuild.toPathCommands(value);
-                if (commands.length > 0) {
+                if (commands.length) {
                     const points = SvgBuild.toPathPoints(commands);
-                    if (points.length > 0) {
+                    if (points.length) {
                         parent.refitPoints(points);
                         value = SvgBuild.drawPath(SvgBuild.syncPath(commands, points), precision);
                     }
@@ -279,9 +279,9 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             ({ transforms, parent, container, precision } = options);
         }
         const commands = SvgBuild.toPathCommands(value);
-        if (commands.length > 0) {
+        if (commands.length) {
             let points = SvgBuild.toPathPoints(commands);
-            if (points.length > 0) {
+            if (points.length) {
                 const transformed = isArray(transforms);
                 if (transformed) {
                     points = SvgBuild.applyTransforms(transforms!, points, parent && TRANSFORM.origin(parent.element));
@@ -299,7 +299,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         const element = createPath(value);
         const totalLength = Math.ceil(element.getTotalLength());
         const result: SvgOffsetPath[] = [];
-        if (totalLength > 0) {
+        if (totalLength) {
             let keyPoints: Point[] = [],
                 rotatingPoints: boolean[] = [],
                 rotateFixed = 0,
@@ -338,7 +338,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             }
             for (let key = 0; key < totalLength; ++key) {
                 const nextPoint = element.getPointAtLength(key);
-                if (keyPoints.length > 0) {
+                if (keyPoints.length) {
                     const index = keyPoints.findIndex((pt: Point) => {
                         const x = pt.x.toString();
                         const y = pt.y.toString();

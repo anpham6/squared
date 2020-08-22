@@ -103,7 +103,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
                     const radio = radiogroup[i];
                     const parents = radio.ascend({ condition: (item: T) => item.layoutLinear, error: (item: T) => item.controlName === controlName, every: true }) as T[];
                     const q = parents.length;
-                    if (q > 0) {
+                    if (q) {
                         for (let j = 0; j < q; ++j) {
                             const item = parents[j];
                             data.set(item, (data.get(item) || 0) + 1);

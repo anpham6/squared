@@ -61,7 +61,7 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
             }
         }
         const length = overflow.length;
-        if (length > 0) {
+        if (length) {
             for (let i = 0; i < length; ++i) {
                 const container = this.application.createNode(node.sessionId, { parent });
                 if (i === 0) {
@@ -142,7 +142,7 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                     item.innerWrapped = parent;
                 }
             }
-            while (scrollView.length > 0);
+            while (scrollView.length);
             node.exclude({ resource: NODE_RESOURCE.BOX_STYLE });
             node.resetBox(BOX_STANDARD.MARGIN, item);
             node.parent = parent;

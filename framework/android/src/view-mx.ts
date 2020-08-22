@@ -163,7 +163,7 @@ function setLineHeight(node: T, lineHeight: number, inlineStyle: boolean, top: b
             if (node.textElement) {
                 setBoxPadding(getLineSpacingExtra(node, lineHeight));
             }
-            else if (height > 0) {
+            else if (height) {
                 const offset = (lineHeight / 2) - node.paddingTop;
                 if (offset > 0) {
                     node.modifyBox(BOX_STANDARD.PADDING_TOP, offset);
@@ -227,7 +227,7 @@ function getLineSpacingExtra(node: T, lineHeight: number) {
 function constraintMinMax(node: T, horizontal: boolean) {
     if (!node.hasPX(horizontal ? 'width' : 'height', { percent: false })) {
         const minWH = node.cssInitial(horizontal ? 'minWidth' : 'minHeight', { modified: true });
-        if (isLength(minWH, true) && parseFloat(minWH) > 0 && minWH !== '100%') {
+        if (minWH !== '' && minWH !== '100%' && parseFloat(minWH) > 0 && isLength(minWH, true)) {
             if (horizontal) {
                 if (ascendFlexibleWidth(node)) {
                     node.setLayoutWidth('0px', false);
@@ -248,11 +248,11 @@ function constraintMinMax(node: T, horizontal: boolean) {
     }
     if (horizontal || !node.support.maxDimension) {
         const maxWH = node.cssInitial(horizontal ? 'maxWidth' : 'maxHeight', { modified: true });
-        if (isLength(maxWH, true) && maxWH !== '100%') {
+        if (maxWH !== '' && maxWH !== '100%' && isLength(maxWH, true)) {
             if (horizontal) {
                 if (ascendFlexibleWidth(node)) {
                     const value = node.parseWidth(maxWH);
-                    if (value > node.width || node.percentWidth > 0) {
+                    if (value > node.width || node.percentWidth) {
                         node.setLayoutWidth('0px');
                         node.app('layout_constraintWidth_max', formatPX(value + (node.contentBox ? node.contentBoxWidth : 0)));
                         node.css('maxWidth', 'auto');
@@ -261,7 +261,7 @@ function constraintMinMax(node: T, horizontal: boolean) {
             }
             else if (ascendFlexibleHeight(node)) {
                 const value = node.parseHeight(maxWH);
-                if (value > node.height || node.percentHeight > 0) {
+                if (value > node.height || node.percentHeight) {
                     node.setLayoutHeight('0px');
                     node.app('layout_constraintHeight_max', formatPX(value + (node.contentBox ? node.contentBoxHeight : 0)));
                     node.css('maxHeight', 'auto');
@@ -290,7 +290,7 @@ function setConstraintPercent(node: T, value: number, horizontal: boolean, perce
             value = 1 - marginPercent;
         }
         else {
-            if (boxPercent > 0) {
+            if (boxPercent) {
                 if (percent < boxPercent) {
                     boxPercent = Math.max(percent, 0);
                     percent = 0;
@@ -330,12 +330,12 @@ function setConstraintPercent(node: T, value: number, horizontal: boolean, perce
 
 function constraintPercentValue(node: T, horizontal: boolean, percent: number) {
     const value = horizontal ? node.percentWidth : node.percentHeight;
-    return value > 0 ? setConstraintPercent(node, value, horizontal, percent) : percent;
+    return value ? setConstraintPercent(node, value, horizontal, percent) : percent;
 }
 
 function constraintPercentWidth(node: T, percent = 1) {
     const value = node.percentWidth;
-    if (value > 0) {
+    if (value) {
         if (node.renderParent!.hasPX('width', { percent: false }) && !(node.actualParent || node.documentParent).layoutElement) {
             if (value < 1) {
                 node.setLayoutWidth(formatPX(node.actualWidth));
@@ -353,7 +353,7 @@ function constraintPercentWidth(node: T, percent = 1) {
 
 function constraintPercentHeight(node: T, percent = 1) {
     const value = node.percentHeight;
-    if (value > 0) {
+    if (value) {
         if (node.renderParent!.hasPX('height', { percent: false }) && !(node.actualParent || node.documentParent).layoutElement) {
             if (value < 1) {
                 node.setLayoutHeight(formatPX(node.actualHeight));
@@ -376,7 +376,7 @@ function ascendFlexibleWidth(node: T) {
     let parent = node.renderParent as Undef<T>,
         i = 0;
     while (parent) {
-        if (!parent.inlineWidth && (parent.hasWidth || parseInt(parent.layoutWidth) > 0 || parent.of(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.BLOCK) || parent.documentRoot && (parent.blockWidth || parent.blockStatic))) {
+        if (!parent.inlineWidth && (parent.hasWidth || parseInt(parent.layoutWidth) || parent.of(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.BLOCK) || parent.documentRoot && (parent.blockWidth || parent.blockStatic))) {
             return true;
         }
         else if (parent.flexibleWidth) {
@@ -702,7 +702,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                         value = Math.min(this.actualWidth, maxValue);
                                     }
                                 }
-                                else if (maxValue > 0) {
+                                else if (maxValue) {
                                     if (this.blockDimension) {
                                         value = Math.min(this.actualWidth, maxValue);
                                     }
@@ -726,7 +726,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         layoutWidth = formatPX(value);
                     }
                 }
-                else if (this.length > 0) {
+                else if (this.length) {
                     switch (this.cssInitial('width')) {
                         case 'max-content':
                         case 'fit-content':
@@ -752,7 +752,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 }
                             });
                             const length = nodes.length;
-                            if (length > 0 && maxWidth > 0) {
+                            if (length && maxWidth) {
                                 const width = formatPX(maxWidth);
                                 for (let i = 0; i < length; ++i) {
                                     const node = nodes[i];
@@ -864,7 +864,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                         value = Math.min(this.actualHeight, maxValue);
                                     }
                                 }
-                                else if (maxValue > 0) {
+                                else if (maxValue) {
                                     if (this.blockDimension) {
                                         value = Math.min(this.actualHeight, maxValue);
                                     }
@@ -978,7 +978,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         width = this.parseWidth(maxWidth);
                     }
                 }
-                else if (!this.pageFlow && this.multiline && this.inlineWidth && !this.preserveWhiteSpace && (this.ascend({ condition: item => item.hasPX('width') }).length > 0 || !this.textContent.includes('\n'))) {
+                else if (!this.pageFlow && this.multiline && this.inlineWidth && !this.preserveWhiteSpace && (this.ascend({ condition: item => item.hasPX('width') }).length || !this.textContent.includes('\n'))) {
                     const maxLines = this.textBounds?.numberOfLines || 1;
                     if (maxLines > 1) {
                         this.android('maxLines', maxLines.toString());
@@ -2224,7 +2224,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                         break;
                     default:
-                        if (this.length > 0 && (this.layoutFrame || this.layoutConstraint || this.layoutRelative && this.layoutHorizontal || this.layoutGrid) || this.is(CONTAINER_NODE.TEXT) && this.textEmpty || this.controlElement) {
+                        if (this.length && (this.layoutFrame || this.layoutConstraint || this.layoutRelative && this.layoutHorizontal || this.layoutGrid) || this.is(CONTAINER_NODE.TEXT) && this.textEmpty || this.controlElement) {
                             return;
                         }
                         break;
@@ -2267,7 +2267,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             const renderParent = this.renderParent!;
             const lineHeight = this.lineHeight;
-            if (lineHeight > 0) {
+            if (lineHeight) {
                 const hasOwnStyle = this.has('lineHeight', { initial: true });
                 if (this.multiline) {
                     setMultiline(this, lineHeight, hasOwnStyle);
@@ -2276,7 +2276,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     if (this.layoutVertical || this.layoutFrame) {
                         this.renderEach((item: T) => {
                             const value = getLineHeight(item, lineHeight);
-                            if (value > 0) {
+                            if (value) {
                                 setLineHeight(item, value, true, true, true);
                             }
                         });
@@ -2325,7 +2325,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             }
                             else if (onlyChild) {
                                 const item = row[0];
-                                if (item.multiline && item.lineHeight > 0) {
+                                if (item.multiline && item.lineHeight) {
                                     continue;
                                 }
                                 else {
@@ -2336,7 +2336,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 for (let j = 0; j < r; ++j) {
                                     const item = row[j];
                                     const value = getLineHeight(item, lineHeight);
-                                    if (value > 0) {
+                                    if (value) {
                                         setLineHeight(item, value, false, top, bottom);
                                     }
                                 }

@@ -60,7 +60,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 adjustPadding = true;
             }
             if (adjustPadding) {
-                minWidth += parent.paddingLeft > 0 ? parent.paddingLeft : parent.marginLeft;
+                minWidth += parent.paddingLeft ? parent.paddingLeft : parent.marginLeft;
             }
             let ordinal = !value && node.find((item: T) => item.float === 'left' && item.marginLeft < 0 && Math.abs(item.marginLeft) <= item.documentParent.marginLeft) as Undef<T>,
                 containerType: Undef<number>;
@@ -110,7 +110,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         }));
                         if (node.marginLeft < 0) {
                             if (adjustPadding) {
-                                const marginOffset = node.marginLeft + (parent.paddingLeft > 0 ? parent.paddingLeft : parent.marginLeft);
+                                const marginOffset = node.marginLeft + (parent.paddingLeft ? parent.paddingLeft : parent.marginLeft);
                                 if (marginOffset < 0) {
                                     const storedOffset = this.data.get(parent) as Undef<number> ?? Infinity;
                                     if (marginOffset < storedOffset) {
@@ -200,9 +200,9 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     ordinal.cssApply({
                         minWidth: minWidth > 0 ? formatPX(minWidth) : '',
                         marginLeft: marginLeft > 0 ? formatPX(marginLeft) : '',
-                        paddingTop: paddingTop > 0 && node.getBox(BOX_STANDARD.PADDING_TOP)[0] === 0 && containerType !== CONTAINER_NODE.LINEAR ? formatPX(paddingTop) : '',
-                        paddingRight: paddingRight > 0 ? formatPX(paddingRight) : '',
-                        lineHeight: lineHeight > 0 ? formatPX(lineHeight) : ''
+                        paddingTop: paddingTop && node.getBox(BOX_STANDARD.PADDING_TOP)[0] === 0 && containerType !== CONTAINER_NODE.LINEAR ? formatPX(paddingTop) : '',
+                        paddingRight: paddingRight ? formatPX(paddingRight) : '',
+                        lineHeight: lineHeight ? formatPX(lineHeight) : ''
                     });
                     ordinal.apply(options);
                     ordinal.modifyBox(BOX_STANDARD.PADDING_LEFT, 2);
@@ -234,12 +234,12 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             if (marginTop !== 0) {
                 ordinal.modifyBox(BOX_STANDARD.MARGIN_TOP, marginTop);
             }
-            if (ordinal.paddingTop > 0 && parent.layoutGrid || marginTop !== 0) {
+            if (ordinal.paddingTop && parent.layoutGrid || marginTop !== 0) {
                 ordinal.companion = target;
                 this.subscribers.add(ordinal);
             }
             node.setBox(BOX_STANDARD.MARGIN_LEFT, { reset: 1 });
-            if (columnCount > 0 && node.ascend({ condition: item => !item.blockStatic && !item.hasWidth, error: item => item.hasWidth, startSelf: node.naturalElement }).length === 0) {
+            if (columnCount && node.ascend({ condition: item => !item.blockStatic && !item.hasWidth, error: item => item.hasWidth, startSelf: node.naturalElement }).length === 0) {
                 target.setLayoutWidth('0px');
                 target.android('layout_columnWeight', '1');
             }
@@ -265,7 +265,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
 
     public postConstraints(node: T) {
         if (node.naturalChild) {
-            node.setBox(node.paddingLeft > 0 ? BOX_STANDARD.PADDING_LEFT : BOX_STANDARD.MARGIN_LEFT, { reset: 1 });
+            node.setBox(node.paddingLeft ? BOX_STANDARD.PADDING_LEFT : BOX_STANDARD.MARGIN_LEFT, { reset: 1 });
             const marginOffset = this.data.get(node) as Undef<number> || 0;
             if (marginOffset < 0) {
                 node.modifyBox(BOX_STANDARD.MARGIN_LEFT, marginOffset);

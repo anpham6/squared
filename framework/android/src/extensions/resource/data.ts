@@ -9,7 +9,7 @@ export default class ResourceData<T extends View> extends squared.base.Extension
 
     public beforeDocumentWrite(data: DocumentWriteDataExtensionUI<T>) {
         const viewModel = (this.application as android.base.Application<T>).viewModel;
-        if (viewModel.size > 0) {
+        if (viewModel.size) {
             const { rendered, documentRoot } = data;
             const controller = this.controller;
             const applied = new Set<T>();
@@ -27,13 +27,13 @@ export default class ResourceData<T extends View> extends squared.base.Extension
                     }
                 }
             }
-            if (applied.size > 0) {
+            if (applied.size) {
                 for (let i = 0, length = documentRoot.length; i < length; ++i) {
                     const node = documentRoot[i].node;
                     const viewData = viewModel.get(node.sessionId) || viewModel.get('0');
                     if (viewData) {
                         for (const child of applied) {
-                            if (child.ascend({ condition: item => item === node, attr: 'renderParent'}).length > 0) {
+                            if (child.ascend({ condition: item => item === node, attr: 'renderParent'}).length) {
                                 const { import: importing, variable } = viewData;
                                 const { depth, id } = node;
                                 const indentA = '\t'.repeat(depth);

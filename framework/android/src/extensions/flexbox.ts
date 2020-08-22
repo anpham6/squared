@@ -56,7 +56,7 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
             let growPercent: Undef<boolean>;
             if (grow > 0 || shrink !== 1) {
                 const value = item.parseUnit(basis === 'auto' ? item.css(attr) : basis, { dimension: attr });
-                if (value > 0) {
+                if (value) {
                     let largest: Undef<boolean>;
                     if (dimension < value) {
                         if (isNaN(maxRatio) || shrink < maxRatio) {
@@ -112,7 +112,7 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
                     if (item === maxBasis || basis === maxBasisUnit && (growShrinkType === 1 && maxRatio === data.shrink || growShrinkType === 2 && maxRatio === data.grow)) {
                         item.flexbox.grow = 1;
                     }
-                    else if (basis > 0) {
+                    else if (basis) {
                         item.flexbox.grow = ((data.dimension / basis) / (maxDimension / maxBasisUnit)) * basis / maxBasisUnit;
                     }
                 }
@@ -267,7 +267,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
         if (mainData) {
             const controller = this.controller as android.base.Controller<T>;
             const { row, column, reverse, wrap, wrapReverse, alignContent, justifyContent, children } = mainData;
-            const parentBottom = node.hasPX('height', { percent: false }) || node.percentHeight > 0 ? node.linear.bottom : 0;
+            const parentBottom = node.hasPX('height', { percent: false }) || node.percentHeight ? node.linear.bottom : 0;
             const chainHorizontal: T[][] = [];
             const chainVertical: T[][] = [];
             const segmented: T[] = [];
@@ -277,7 +277,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 node.each((item: T) => {
                     if (item.hasAlign(NODE_ALIGNMENT.SEGMENTED)) {
                         const pageFlow = item.renderChildren.filter(child => child.pageFlow) as T[];
-                        if (pageFlow.length > 0) {
+                        if (pageFlow.length) {
                             if (row) {
                                 item.setLayoutWidth('match_parent');
                                 chainHorizontal.push(pageFlow);
@@ -629,7 +629,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                     setLayoutWeightOpposing(chain, 'match_parent', horizontal);
                                                 }
                                                 else if (isNaN(maxSize)) {
-                                                    if (!horizontal && !wrap && chain.length > 0 || dimension && alignContent === 'normal') {
+                                                    if (!horizontal && !wrap && chain.length || dimension && alignContent === 'normal') {
                                                         setLayoutWeightOpposing(chain, dimension ? '0px' : 'match_parent', horizontal);
                                                     }
                                                     else {

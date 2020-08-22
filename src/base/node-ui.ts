@@ -274,7 +274,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 continue;
             }
             if (item.baseline && !item.baselineAltered && (!text || item.textElement)) {
-                if (item.naturalElements.length > 0) {
+                if (item.naturalElements.length) {
                     if (item.baselineElement) {
                         result[j++] = item;
                     }
@@ -375,14 +375,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     nodes[n++] = item;
                 }
             }
-            if (n > 0) {
+            if (n) {
                 nodes.length = n;
                 const siblings = [nodes[0]];
                 let x = 1,
                     y = 1;
                 for (let i = 1; i < n; ++i) {
                     const node = nodes[i];
-                    if (node.alignedVertically(siblings, floated ? cleared : undefined) > 0) {
+                    if (node.alignedVertically(siblings, floated ? cleared : undefined)) {
                         ++y;
                     }
                     else {
@@ -447,7 +447,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 }
             }
         }
-        else if (length > 0) {
+        else if (length) {
             linearY = list[0].blockStatic;
             linearX = !linearY;
         }
@@ -463,7 +463,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             let active = node;
             if (!node.naturalChild) {
                 if (node.nodeGroup) {
-                    if (row.length > 0) {
+                    if (row.length) {
                         result.push(row);
                     }
                     result.push([node]);
@@ -480,8 +480,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 row.push(node);
                 siblings.push(active);
             }
-            else if (active.alignedVertically(siblings, cleared) > 0) {
-                if (row.length > 0) {
+            else if (active.alignedVertically(siblings, cleared)) {
+                if (row.length) {
                     result.push(row);
                 }
                 row = [node];
@@ -492,7 +492,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 siblings.push(active);
             }
         }
-        if (row.length > 0) {
+        if (row.length) {
             result.push(row);
         }
         return result;
@@ -909,14 +909,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 if (value) {
                     exclusions[2] |= applyExclusionValue(APP_SECTION, value);
                 }
-                if (this.length > 0) {
+                if (this.length) {
                     value = dataset['excludeResourceChild' + systemName] || dataset.excludeResourceChild;
-                    const resource = value ? applyExclusionValue(NODE_RESOURCE, value) : 0;
+                    const resource = value ? applyExclusionValue(NODE_RESOURCE, value) : undefined;
                     value = dataset['excludeProcedureChild' + systemName] || dataset.excludeProcedureChild;
-                    const procedure = value ? applyExclusionValue(NODE_PROCEDURE, value) : 0;
+                    const procedure = value ? applyExclusionValue(NODE_PROCEDURE, value) : undefined;
                     value = dataset['excludeSectionChild' + systemName] || dataset.excludeSectionChild;
-                    const section = value ? applyExclusionValue(APP_SECTION, value) : 0;
-                    if (resource > 0 || procedure > 0 || section > 0) {
+                    const section = value ? applyExclusionValue(APP_SECTION, value) : undefined;
+                    if (resource || procedure || section) {
                         const data: ExcludeOptions = { resource, procedure, section };
                         this.each((node: T) => node.exclude(data));
                     }
@@ -1040,7 +1040,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             if (isArray(siblings)) {
                 const previous = siblings[siblings.length - 1];
                 if (cleared) {
-                    if (cleared.size > 0 && (cleared.has(this) || this.siblingsLeading.some(item => item.excluded && cleared.has(item)))) {
+                    if (cleared.size && (cleared.has(this) || this.siblingsLeading.some(item => item.excluded && cleared.has(item)))) {
                         return NODE_TRAVERSE.FLOAT_CLEAR;
                     }
                     else if (floating && previous.floating) {
@@ -1079,7 +1079,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         }
                         else if (!this.display.startsWith('inline-')) {
                             let { top, bottom } = this.bounds;
-                            if (this.textElement && cleared.size > 0 && siblings.some(item => cleared.has(item)) && siblings.some(item => Math.floor(top) < item.bounds.top && Math.ceil(bottom) > item.bounds.bottom)) {
+                            if (this.textElement && cleared.size && siblings.some(item => cleared.has(item)) && siblings.some(item => Math.floor(top) < item.bounds.top && Math.ceil(bottom) > item.bounds.bottom)) {
                                 return NODE_TRAVERSE.FLOAT_INTERSECT;
                             }
                             else if (siblings[0].floating) {
@@ -1420,7 +1420,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         node.renderParent = this.renderParent;
         node.renderedAs = this.renderedAs;
         node.rootElement = this.rootElement;
-        if (this.length > 0) {
+        if (this.length) {
             node.retainAs(this.toArray());
         }
         node.inherit(this, 'initial', 'base', 'alignment', 'styleMap', 'textStyle');
@@ -1478,7 +1478,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public unsetCache(...attrs: string[]) {
         const length = attrs.length;
-        if (length > 0) {
+        if (length) {
             const cache = this._cache;
             for (let i = 0; i < length; ++i) {
                 switch (attrs[i]) {
@@ -1785,7 +1785,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (result === undefined) {
             if (this.css('verticalAlign') === 'baseline' && !this.floating) {
                 const children = this.naturalChildren;
-                if (children.length > 0) {
+                if (children.length) {
                     result = children.every((node: T) => {
                         do {
                             if (node.css('verticalAlign') === 'baseline' && !node.floating) {
@@ -2059,7 +2059,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 }
                 while (wrapped);
             }
-            else if (this.length > 0 && !this.naturalChild) {
+            else if (this.length && !this.naturalChild) {
                 return this._containerIndex = (this.min('containerIndex', { self: true }) as NodeUI).containerIndex;
             }
         }

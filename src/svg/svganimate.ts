@@ -390,7 +390,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 if (this.to === '') {
                     const by = getNamedItem(animationElement, 'by');
                     const byCoords = SvgBuild.parseCoordinates(by);
-                    if (byCoords.length > 0) {
+                    if (byCoords.length) {
                         if (value === '') {
                             value = this.baseValue || '';
                         }
@@ -407,7 +407,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                         }
                     }
                 }
-                if (SvgBuild.parseCoordinates(this.to).length > 0) {
+                if (SvgBuild.parseCoordinates(this.to).length) {
                     this.setAttribute('additive', 'sum');
                 }
             }
@@ -464,7 +464,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
 
     set keySplines(value) {
-        if (value && value.length > 0) {
+        if (value && value.length) {
             const minSegment = this.keyTimes.length - 1;
             if (value.length >= minSegment && !value.every(spline => spline === '' || spline === KEYSPLINE_NAME.linear)) {
                 const keySplines: string[] = [];
@@ -496,7 +496,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
 
     set reverse(value) {
-        if (this.length > 0 && value !== this._reverse) {
+        if (this.length && value !== this._reverse) {
             const keyTimesBase = this.keyTimes;
             const keySplinesBase = this._keySplines;
             const length = keyTimesBase.length;

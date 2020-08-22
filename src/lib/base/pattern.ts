@@ -56,7 +56,7 @@ export default class Pattern implements squared.lib.base.Pattern {
         if (current && index >= 0) {
             let pos = current.index,
                 i = 0;
-            while (index > 0) {
+            while (index) {
                 if (current[i]) {
                     pos += current[i++].length;
                     --index;
@@ -75,7 +75,7 @@ export default class Pattern implements squared.lib.base.Pattern {
         if (current && index >= 0) {
             let pos = current.index + current[0].length,
                 i = 1;
-            while (index > 0) {
+            while (index) {
                 if (current[i]) {
                     pos += current[i++].length;
                     --index;
@@ -126,8 +126,8 @@ export default class Pattern implements squared.lib.base.Pattern {
         const stringAs = typeof replacement === 'string';
         const input = this._input;
         let index = this._matcher.lastIndex,
-            output = index > 0 ? input.substring(0, index) : '';
-        while (replaceCount > 0 && this.find()) {
+            output = index ? input.substring(0, index) : '';
+        while (replaceCount && this.find()) {
             const current = this._current!;
             output += input.substring(index, current.index) + (stringAs ? replacement as string : (replacement as PatternGroupPredicate)(current, current[0]));
             index = current.index + current[0].length;

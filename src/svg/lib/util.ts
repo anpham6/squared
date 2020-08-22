@@ -258,7 +258,7 @@ export const TRANSFORM = {
                 }
             }
             const length = result.length;
-            if (length > 0) {
+            if (length) {
                 for (let i = 0; i < length; ++i) {
                     result[i].fromStyle = true;
                 }

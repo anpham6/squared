@@ -115,10 +115,10 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                 let percentWidth = node.percentWidth,
                     leftPercent = validPercent(marginLeft) ? parseFloat(marginLeft) / 100 : 0,
                     rightPercent = validPercent(marginRight) ? parseFloat(marginRight) / 100 : 0;
-                if (percentWidth > 0) {
+                if (percentWidth) {
                     if (rightAligned) {
                         if (percentWidth + rightPercent < 1) {
-                        leftPercent = 1 - (percentWidth + rightPercent);
+                            leftPercent = 1 - (percentWidth + rightPercent);
                         }
                     }
                     else if (percentWidth + leftPercent < 1) {
@@ -201,14 +201,14 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                     node.setLayoutWidth('0px');
                     node.setCacheValue('contentBoxWidth', 0);
                 }
-                else if (percentWidth > 0) {
+                else if (percentWidth) {
                     let percentTotal = percentWidth + leftPercent + rightPercent;
                     if (percentTotal >= 1) {
                         percentWidth -= percentTotal - 1;
                     }
                     else {
                         const boxPercent = node.contentBox && !node.tableElement ? node.contentBoxWidth / renderParent.box.width : 0;
-                        if (boxPercent > 0) {
+                        if (boxPercent) {
                             percentTotal += boxPercent;
                             if (percentTotal >= 1) {
                                 percentWidth = 1 - (leftPercent + rightPercent);
@@ -230,7 +230,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                 let percentHeight = node.percentHeight,
                     topPercent = validPercent(marginTop) ? parseFloat(marginTop) / 100 : 0,
                     bottomPercent = validPercent(marginBottom) ? parseFloat(marginBottom) / 100 : 0;
-                if (percentHeight > 0) {
+                if (percentHeight) {
                     if (bottomAligned) {
                         if (percentHeight + bottomPercent < 1) {
                             topPercent = 1 - (percentHeight + bottomPercent);
@@ -315,14 +315,14 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                     node.setLayoutHeight('0px');
                     node.setCacheValue('contentBoxHeight', 0);
                 }
-                else if (percentHeight > 0) {
+                else if (percentHeight) {
                     let percentTotal = percentHeight + topPercent + bottomPercent;
                     if (percentTotal >= 1) {
                         percentHeight -= percentTotal - 1;
                     }
                     else {
                         const boxPercent = node.contentBox && !node.tableElement ? node.contentBoxHeight / renderParent.box.height : 0;
-                        if (boxPercent > 0) {
+                        if (boxPercent) {
                             percentTotal += boxPercent;
                             if (percentTotal >= 1) {
                                 percentHeight = 1 - (topPercent + bottomPercent);

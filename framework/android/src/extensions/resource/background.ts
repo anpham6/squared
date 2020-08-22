@@ -231,7 +231,7 @@ function isAlternatingBorder(value: string, width = 0) {
 function insertDoubleBorder(items: StandardMap[], border: BorderAttribute, top: boolean, right: boolean, bottom: boolean, left: boolean, indentWidth = 0, corners?: StringMap) {
     const width = roundFloat(border.width);
     const borderWidth = Math.max(1, Math.floor(width / 3));
-    const indentOffset = indentWidth > 0 ? formatPX(indentWidth) : '';
+    const indentOffset = indentWidth ? formatPX(indentWidth) : '';
     let hideOffset = '-' + formatPX(borderWidth + indentWidth + 1);
     items.push({
         top: top ? indentOffset : hideOffset,
@@ -593,7 +593,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
 
     public getDrawableBorder(data: BoxStyle, images: Undef<BackgroundImageData[]>, indentWidth: number, borderOnly = false, outline?: BorderAttribute): [Null<StandardMap[]>, Null<LayerList[]>] {
         const borderVisible: boolean[] = new Array(4);
-        const indentOffset = indentWidth > 0 ? formatPX(indentWidth) : '';
+        const indentOffset = indentWidth ? formatPX(indentWidth) : '';
         let shapeData: Null<StandardMap[]> = null,
             layerList: Null<LayerList[]> = null,
             borderStyle = true,
@@ -659,9 +659,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         if (borderAll) {
             border = borderData;
         }
-        if (border && !isAlternatingBorder(border.style, roundFloat(border.width)) && !(border.style === 'double' && parseInt(border.width) > 1) || !borderData && (corners || images && images.length > 0)) {
+        if (border && !isAlternatingBorder(border.style, roundFloat(border.width)) && !(border.style === 'double' && parseInt(border.width) > 1) || !borderData && (corners || images && images.length)) {
             const stroke = border ? getBorderStroke(border) : false;
-            if (images && images.length > 0 || indentWidth > 0 || borderOnly) {
+            if (images && images.length || indentWidth || borderOnly) {
                 layerList = createLayerList(data, images, borderOnly, stroke, corners, indentOffset);
             }
             else {
@@ -1060,7 +1060,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     case '100% 100%':
                     case '100% auto':
                     case 'auto 100%':
-                        if (node.ascend({ condition: item => item.hasPX('width'), startSelf: true }).length > 0) {
+                        if (node.ascend({ condition: item => item.hasPX('width'), startSelf: true }).length) {
                             gravityX = '';
                             gravityY = '';
                         }
@@ -1239,10 +1239,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             }
                             break;
                         default:
-                            if (width === 0 && height > 0) {
+                            if (width === 0 && height) {
                                 width = getImageWidth();
                             }
-                            if (height === 0 && width > 0) {
+                            if (height === 0 && width) {
                                 height = getImageHeight();
                             }
                             break;
@@ -1444,7 +1444,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 gravityY = '';
                                 break;
                             case 'bottom':
-                                if (width > 0 && !unsizedWidth) {
+                                if (width && !unsizedWidth) {
                                     tileModeX = '';
                                 }
                                 else if (unsizedHeight) {
@@ -1474,7 +1474,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 break;
                             case 'right':
                             case 'end':
-                                if (height > 0 && !unsizedHeight) {
+                                if (height && !unsizedHeight) {
                                     tileModeY = '';
                                 }
                                 else if (unsizedWidth) {
@@ -1643,10 +1643,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 imageData[node.localizeString('right')] = formatPX(negativeOffset);
                             }
                         }
-                        if (width > 0) {
+                        if (width) {
                             imageData.width = formatPX(width);
                         }
-                        if (height > 0) {
+                        if (height) {
                             imageData.height = formatPX(height);
                         }
                         result.push(imageData);

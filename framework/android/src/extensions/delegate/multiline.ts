@@ -65,13 +65,13 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
             }
         }
         const length = node.length;
-        if (length > 0) {
+        if (length) {
             const children = node.children as T[];
             if (node.has('columnWidth') || node.has('columnCount')) {
                 const columnCount = node.toInt('columnCount', Infinity);
                 const columnWidth = node.parseWidth(node.css('columnWidth'));
                 const columnGap = node.parseWidth(node.css('columnGap'));
-                const minCount = columnWidth > 0 ? Math.min(Math.floor(node.box.width / (columnWidth + columnGap)), columnCount) : columnCount;
+                const minCount = columnWidth ? Math.min(Math.floor(node.box.width / (columnWidth + columnGap)), columnCount) : columnCount;
                 if (minCount !== Infinity) {
                     let remaining = minCount - node.length;
                     if (remaining > 0) {
@@ -104,7 +104,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                                 }
                             }
                         }
-                        if (nodes.length > 0) {
+                        if (nodes.length) {
                             this.data.set(node, nodes);
                             return true;
                         }
@@ -141,7 +141,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                                 ++j;
                                 nodes.push([1, child]);
                             }
-                            else if (j + k++ > 0 || valid) {
+                            else if (j + k++ || valid) {
                                 nodes.push([1, child]);
                             }
                             else {
@@ -162,7 +162,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                     }
                 }
             }
-            if (j > 0 && (k > 0 || l > 1 || valid || floatHeight > 0 && textHeight > floatHeight) || checkWidth && j + k > 1 && Math.floor(textWidth) > Math.ceil(node.actualBoxWidth()) || (k > 1 || m > 0 && n > 1) && (valid || (node.textBounds?.numberOfLines || 0) > 1)) {
+            if (j && (k || l > 1 || valid || floatHeight && textHeight > floatHeight) || checkWidth && j + k > 1 && Math.floor(textWidth) > Math.ceil(node.actualBoxWidth()) || (k > 1 || m && n > 1) && (valid || (node.textBounds?.numberOfLines || 0) > 1)) {
                 if (leading) {
                     nodes.unshift([1, leading]);
                 }

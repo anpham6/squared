@@ -706,7 +706,7 @@ function insertAnimate(animations: SvgAnimation[], item: SvgAnimate, repeating: 
 }
 
 function removeAnimations(animations: SvgAnimation[], values: SvgAnimation[]) {
-    if (values.length > 0) {
+    if (values.length) {
         spliceArray(animations, (item: SvgAnimation) => values.includes(item));
     }
 }
@@ -1030,7 +1030,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                             return replaceValue;
                         };
                         const checkIncomplete = (delayIndex?: number, itemIndex?: number) => {
-                            if (incomplete.length > 0) {
+                            if (incomplete.length) {
                                 spliceArray(
                                     incomplete,
                                     previous => previous.getTotalDuration() <= actualMaxTime,
@@ -1141,7 +1141,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                             }
                             for (let i = 0; i < groupDelay.length; ++i) {
                                 const data = groupData[i];
-                                if (removeable.length > 0) {
+                                if (removeable.length) {
                                     for (let j = 0; j < data.length; ++j) {
                                         if (removeable.includes(data[j])) {
                                             data.splice(j--, 1);
@@ -1243,7 +1243,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                         iterationTotal = Math.ceil(iterationCount);
                                         iterationFraction = iterationCount - Math.floor(iterationCount);
                                     }
-                                    if (setterData.length > 0 && actualMaxTime > 0 && actualMaxTime < delay) {
+                                    if (setterData.length && actualMaxTime > 0 && actualMaxTime < delay) {
                                         checkSetterDelay(actualMaxTime, delay);
                                     }
                                     if (maxTime !== -1 && maxTime < delay) {
@@ -1293,7 +1293,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                             const value = groupDelay[k];
                                             if (value !== Infinity) {
                                                 const dataA = groupData[k];
-                                                if (dataA.length > 0 && !dataA.every(next => next.hasState(SYNCHRONIZE_STATE.COMPLETE, SYNCHRONIZE_STATE.INVALID))) {
+                                                if (dataA.length && !dataA.every(next => next.hasState(SYNCHRONIZE_STATE.COMPLETE, SYNCHRONIZE_STATE.INVALID))) {
                                                     nextDelayTime = value;
                                                     break;
                                                 }
@@ -1304,7 +1304,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                     let startTime = maxTime + 1,
                                         maxThreadTime = Math.min(nextDelayTime, item.end || Infinity),
                                         setterInterrupt: Undef<SvgAnimation>;
-                                    if (item.animationElement && setterData.length > 0) {
+                                    if (item.animationElement && setterData.length) {
                                         const interruptTime = Math.min(nextDelayTime, totalDuration, maxThreadTime);
                                         setterInterrupt = setterData.find(set => set.delay >= actualMaxTime && set.delay <= interruptTime);
                                         if (setterInterrupt) {
@@ -1369,7 +1369,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                                         }
                                                     }
                                                     if (item.evaluateEnd) {
-                                                        if (item.getIntervalEndTime(actualMaxTime) < maxThreadTime && (incomplete.length > 0 || j < r - 1)) {
+                                                        if (item.getIntervalEndTime(actualMaxTime) < maxThreadTime && (incomplete.length || j < r - 1)) {
                                                             const pending = incomplete.filter(previous => !!previous.animationElement);
                                                             for (let l = j + 1; l < r; ++l) {
                                                                 const previous = data[l];
@@ -1380,7 +1380,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                                                     queueIncomplete(incomplete, previous);
                                                                 }
                                                             }
-                                                            if (pending.length > 0) {
+                                                            if (pending.length) {
                                                                 sortIncomplete(pending, actualMaxTime);
                                                                 [keyTimes, values, keySplines] = appendPartialKeyTimes(intervalMap, forwardMap, baseValueMap, k, item, keyTimes, values, keySplines, baseValue, pending, false);
                                                             }
@@ -1552,7 +1552,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                                 dataA.length = 0;
                                             }
                                         }
-                                        if (incomplete.length > 0 && actualMaxTime < nextDelayTime) {
+                                        if (incomplete.length && actualMaxTime < nextDelayTime) {
                                             sortIncomplete(incomplete);
                                             const resume = incomplete.find(next => next.delay <= actualMaxTime);
                                             if (resume) {
@@ -1570,9 +1570,9 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                     }
                                 }
                             }
-                            if (incomplete.length > 0) {
+                            if (incomplete.length) {
                                 sortIncomplete(incomplete);
-                                while (incomplete.length > 0) {
+                                while (incomplete.length) {
                                     const item = incomplete.shift() as SvgAnimate;
                                     const { delay, duration } = item;
                                     const durationTotal = maxTime - delay;
@@ -1580,7 +1580,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                     const insertKeyTimes = () => {
                                         let [keyTimes, values, keySplines] = cloneKeyTimes(item);
                                         const interval = getStartIteration(actualMaxTime, delay, duration);
-                                        if (incomplete.length > 0) {
+                                        if (incomplete.length) {
                                             if (item.evaluateStart) {
                                                 const pending = incomplete.slice(0);
                                                 sortEvaluateStart(pending, actualMaxTime);

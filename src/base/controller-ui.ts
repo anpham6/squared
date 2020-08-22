@@ -63,7 +63,7 @@ function pushIndentArray(values: string[], depth: number, char = '\t', separator
         const indent = char.repeat(depth);
         let result = '';
         for (let i = 0, length = values.length; i < length; ++i) {
-            result += (i > 0 ? separator : '') + pushIndent(values[i], depth, char, indent);
+            result += (i ? separator : '') + pushIndent(values[i], depth, char, indent);
         }
         return result;
     }
@@ -427,7 +427,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             width = 1;
             height = 1;
         }
-        if (width > 0 && height > 0) {
+        if (width && height) {
             return style.getPropertyValue('visibility') === 'visible' || !hasCoords(style.getPropertyValue('position'));
         }
         else if (!pseudoElt && (element.tagName === 'IMG' && style.getPropertyValue('display') !== 'none' || iterateArray(element.children, (item: HTMLElement) => this.visibleElement(item, sessionId)) === Infinity)) {
@@ -488,7 +488,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             parent = absoluteParent;
                             if (this.userSettings.supportNegativeLeftTop && !(node.hasPX('top') && node.hasPX('bottom') || node.hasPX('left') && node.hasPX('right'))) {
                                 let outside: Undef<boolean>;
-                                while (parent && parent.bounds.height > 0) {
+                                while (parent && parent.bounds.height) {
                                     if (parent.layoutElement) {
                                         parent = absoluteParent;
                                         break;
@@ -720,7 +720,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 }
             });
             const length = layers.length;
-            if (length > 0) {
+            if (length) {
                 let children: T[] = [];
                 for (let i = 0, j = 1; i < length; ++i) {
                     const order = layers[i];
@@ -838,7 +838,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             }
             else {
                 const image = this.application.resourceHandler?.getImage((element as HTMLImageElement).src);
-                if (image && image.width > 0 && image.height > 0) {
+                if (image && image.width && image.height) {
                     const value = styleMap[opposing];
                     if (value && isLength(value)) {
                         const attrMax = 'max' + capitalize(attr);

@@ -61,13 +61,13 @@ export function getRangeClientRect(element: Element) {
     const clientRects = range.getClientRects();
     for (let i = 0, length = clientRects.length; i < length; ++i) {
         const item = clientRects.item(i) as ClientRect;
-        if (Math.round(item.width) > 0 && !withinRange(item.left, item.right, 0.5)) {
+        if (Math.round(item.width) && !withinRange(item.left, item.right, 0.5)) {
             domRect.push(item);
         }
     }
     let bounds: Undef<BoxRectDimension>;
     let length = domRect.length;
-    if (length > 0) {
+    if (length) {
         let numberOfLines = 1,
             overflow = false;
         bounds = assignRect(domRect[0]);

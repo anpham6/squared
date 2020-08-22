@@ -203,7 +203,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             else {
                 prefix = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
                 let length = path.length;
-                if (length > 0) {
+                if (length) {
                     let index = 0;
                     length = Math.min(length, prefix.length);
                     for (let i = 0; i < length; ++i) {

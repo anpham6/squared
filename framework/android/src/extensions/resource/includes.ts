@@ -50,7 +50,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                     const renderTemplates = node.renderTemplates!;
                     const q = Math.min(open.length, close.length);
                     const excess = close.length - q;
-                    if (excess > 0) {
+                    if (excess) {
                         close.splice(0, excess);
                     }
                     for (let j = q - 1; j >= 0; --j) {
