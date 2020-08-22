@@ -219,7 +219,7 @@ function getLineSpacingExtra(node: T, lineHeight: number) {
         }
     }
     if (!height && node.styleText) {
-        node.cssTryAll(OPTIONS_LINEHEIGHT, function(this: T) { height = getRangeClientRect(this.element!)?.height; });
+        node.cssTryAll(!node.pseudoElement ? OPTIONS_LINEHEIGHT : { ...OPTIONS_LINEHEIGHT, display: 'inline-block' }, function(this: T) { height = getRangeClientRect(this.element!)?.height; });
     }
     return height ? (lineHeight - height) / 2 : 0;
 }

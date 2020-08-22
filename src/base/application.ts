@@ -59,7 +59,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     private readonly _resourceHandler: Null<squared.base.Resource<T>> = null;
     private readonly _extensionManager: Null<squared.base.ExtensionManager<T>> = null;
 
-    protected constructor(
+    constructor(
         public readonly framework: number,
         nodeConstructor: Constructor<T>,
         ControllerConstructor: Constructor<T>,

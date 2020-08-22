@@ -1335,7 +1335,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     public cssTry(attr: string, value: string, callback?: FunctionSelf<this>) {
         if (this.styleElement) {
             const element = this._element as HTMLElement;
-            if (setStyleCache(element, attr, this.sessionId, value, getStyle(element).getPropertyValue(attr)) > 0) {
+            if (setStyleCache(element, attr, this.sessionId, value, (!this.pseudoElement ? this.style : getStyle(element)).getPropertyValue(attr)) > 0) {
                 if (callback) {
                     callback.call(this, attr);
                     this.cssFinally(attr);
@@ -1351,7 +1351,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             const result: StringMap = {};
             const sessionId = this.sessionId;
             const element = this._element as HTMLElement;
-            const style = getStyle(element);
+            const style = !this.pseudoElement ? this.style : getStyle(element);
             for (const attr in values) {
                 const value = values[attr]!;
                 switch (setStyleCache(element, attr, sessionId, value, style.getPropertyValue(attr))) {
@@ -3057,7 +3057,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get style() {
         const result = this._style;
-        return result === undefined ? this._style = this.naturalChild && this.styleElement ? !this._pseudoElt ? getStyle(this._element!) : getStyle(this._element!.parentElement!, this._pseudoElt) : PROXY_INLINESTYLE : result;
+        return result === undefined ? this._style = this.styleElement ? !this._pseudoElt ? getStyle(this._element!) : getStyle(this._element!.parentElement!, this._pseudoElt) : PROXY_INLINESTYLE : result;
     }
 
     get cssStyle() {

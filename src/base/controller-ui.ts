@@ -73,11 +73,11 @@ function pushIndentArray(values: string[], depth: number, char = '\t', separator
 export default abstract class ControllerUI<T extends NodeUI> extends Controller<T> implements squared.base.ControllerUI<T> {
     public abstract readonly localSettings: ControllerSettingsUI;
 
+    private _beforeOutside = new Map<number, string[]>();
+    private _beforeInside = new Map<number, string[]>();
+    private _afterInside = new Map<number, string[]>();
+    private _afterOutside = new Map<number, string[]>();
     private _requireFormat = false;
-    private _beforeOutside: ObjectIndex<string[]> = {};
-    private _beforeInside: ObjectIndex<string[]> = {};
-    private _afterInside: ObjectIndex<string[]> = {};
-    private _afterOutside: ObjectIndex<string[]> = {};
     private _unsupportedCascade!: Set<string>;
     private _unsupportedTagName!: Set<string>;
     private _settingsStyle!: ControllerSettingsStyleUI;
@@ -120,11 +120,11 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public reset() {
+        this._beforeOutside.clear();
+        this._beforeInside.clear();
+        this._afterInside.clear();
+        this._afterOutside.clear();
         this._requireFormat = false;
-        this._beforeOutside = {};
-        this._beforeInside = {};
-        this._afterInside = {};
-        this._afterOutside = {};
     }
 
     public applyDefaultStyles(element: Element, sessionId: string) {
@@ -312,7 +312,11 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public addBeforeOutsideTemplate(id: number, value: string, format = true, index = -1) {
-        const template = this._beforeOutside[id] || (this._beforeOutside[id] = []);
+        let template = this._beforeOutside.get(id);
+        if (!template) {
+            template = [];
+            this._beforeOutside.set(id, template);
+        }
         if (index !== -1 && index < template.length) {
             template.splice(index, 0, value);
         }
@@ -325,7 +329,11 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public addBeforeInsideTemplate(id: number, value: string, format = true, index = -1) {
-        const template = this._beforeInside[id] || (this._beforeInside[id] = []);
+        let template = this._beforeInside.get(id);
+        if (!template) {
+            template = [];
+            this._beforeInside.set(id, template);
+        }
         if (index !== -1 && index < template.length) {
             template.splice(index, 0, value);
         }
@@ -338,7 +346,11 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public addAfterInsideTemplate(id: number, value: string, format = true, index = -1) {
-        const template = this._afterInside[id] || (this._afterInside[id] = []);
+        let template = this._afterInside.get(id);
+        if (!template) {
+            template = [];
+            this._afterInside.set(id, template);
+        }
         if (index !== -1 && index < template.length) {
             template.splice(index, 0, value);
         }
@@ -351,7 +363,11 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public addAfterOutsideTemplate(id: number, value: string, format = true, index = -1) {
-        const template = this._afterOutside[id] || (this._afterOutside[id] = []);
+        let template = this._afterOutside.get(id);
+        if (!template) {
+            template = [];
+            this._afterOutside.set(id, template);
+        }
         if (index !== -1 && index < template.length) {
             template.splice(index, 0, value);
         }
@@ -364,27 +380,27 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public getBeforeOutsideTemplate(id: number, depth: number): string {
-        const template = this._beforeOutside[id];
+        const template = this._beforeOutside.get(id);
         return template ? pushIndentArray(template, depth) : '';
     }
 
     public getBeforeInsideTemplate(id: number, depth: number): string {
-        const template = this._beforeInside[id];
+        const template = this._beforeInside.get(id);
         return template ? pushIndentArray(template, depth) : '';
     }
 
     public getAfterInsideTemplate(id: number, depth: number): string {
-        const template = this._afterInside[id];
+        const template = this._afterInside.get(id);
         return template ? pushIndentArray(template, depth) : '';
     }
 
     public getAfterOutsideTemplate(id: number, depth: number): string {
-        const template = this._afterOutside[id];
+        const template = this._afterOutside.get(id);
         return template ? pushIndentArray(template, depth) : '';
     }
 
     public hasAppendProcessing(id?: number) {
-        return id === undefined ? this._requireFormat : id in this._beforeOutside || id in this._beforeInside || id in this._afterInside || id in this._afterOutside;
+        return id === undefined ? this._requireFormat : this._beforeOutside.has(id) || this._beforeInside.has(id) || this._afterInside.has(id) || this._afterOutside.has(id);
     }
 
     public visibleElement(element: HTMLElement, sessionId: string, pseudoElt?: string) {

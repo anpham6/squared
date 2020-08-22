@@ -3,7 +3,7 @@ import { USER_AGENT, getDeviceDPI, isUserAgent } from './client';
 import { clamp, truncate, truncateFraction } from './math';
 import { CSS, STRING, TRANSFORM } from './regex';
 import { getElementCache, setElementCache } from './session';
-import { convertAlpha, convertFloat, convertHyphenated, convertRoman, hasBit, isNumber, isString, iterateArray, replaceMap, resolvePath, spliceString, splitEnclosing, splitPair, trimBoth } from './util';
+import { convertAlpha, convertCamelCase, convertFloat, convertHyphenated, convertRoman, hasBit, isNumber, isString, iterateArray, replaceMap, resolvePath, spliceString, splitEnclosing, splitPair, trimBoth } from './util';
 
 const DOCUMENT_ELEMENT = document.documentElement;
 const DOCUMENT_FIXEDMAP = [9/13, 10/13, 12/13, 16/13, 20/13, 2, 3];
@@ -1487,10 +1487,12 @@ export const SVG_PROPERTIES: CssProperties = {
 };
 
 export const PROXY_INLINESTYLE = Object.freeze(
-    new Proxy({
+    new Proxy(Object.create({
+        fontSize: 'inherit',
         lineHeight: 'inherit',
-        fontSize: 'inherit'
-    } as CSSStyleDeclaration,
+        "setProperty": function() {},
+        "getPropertyValue": function(property: string) { return this[convertCamelCase(property)] as string; }
+    }) as CSSStyleDeclaration,
     {
         get: (target, attr) => {
             let value: Undef<string | string[]> = target[attr];
@@ -1568,12 +1570,18 @@ export function getStyle(element: Element, pseudoElt = '') {
 }
 
 export function updateDocumentFont() {
-    const computedStyle = getComputedStyle(DOCUMENT_ELEMENT);
-    DOCUMENT_FONTSIZE = parseFloat(computedStyle.fontSize) || 16;
+    const documentStyle = getStyle(DOCUMENT_ELEMENT);
+    DOCUMENT_FONTSIZE = parseFloat(documentStyle.fontSize);
+    if (isNaN(DOCUMENT_FONTSIZE)) {
+        DOCUMENT_FONTSIZE = 16;
+    }
     const style = DOCUMENT_ELEMENT.style;
     const fontSize = style.fontSize;
     style.fontSize = 'initial';
-    DOCUMENT_FONTBASE = parseFloat(computedStyle.fontSize) || 16;
+    DOCUMENT_FONTBASE = parseFloat(documentStyle.fontSize);
+    if (isNaN(DOCUMENT_FONTBASE)) {
+        DOCUMENT_FONTBASE = 16;
+    }
     style.fontSize = fontSize;
     const index = 16 - Math.floor(DOCUMENT_FONTBASE);
     if (index < 0) {

@@ -27,7 +27,7 @@ module.exports = {
         "max-len": "off",
         "multiline-ternary": ["error", "always-multiline"],
         "new-parens": "error",
-        "object-shorthand": "error",
+        "object-shorthand": ["error", "always", { "avoidQuotes": true }],
         "one-var": "off",
         "prefer-arrow-callback": "error",
         "prefer-const": "error",

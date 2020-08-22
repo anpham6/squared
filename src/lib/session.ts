@@ -1,6 +1,6 @@
-let SESSION_MAP!: ObjectMap<Map<Element, ElementData>>;
+let SESSION_MAP: ObjectMap<Map<Element, ElementData>> = {};
 
-resetSessionAll();
+newSessionInit('0');
 
 export function newSessionInit(value: string) {
     const elementMap = new Map<Element, ElementData>();
@@ -9,8 +9,7 @@ export function newSessionInit(value: string) {
 }
 
 export function resetSessionAll() {
-    SESSION_MAP = {};
-    newSessionInit('0');
+    SESSION_MAP = { '0': SESSION_MAP['0'] };
 }
 
 export function frameworkNotInstalled<T = void>(): Promise<T> {
