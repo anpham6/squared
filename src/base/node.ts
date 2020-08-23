@@ -1332,7 +1332,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (this.styleElement) {
             const styleData = !this._pseudoElt ? this._elementData?.['styleSpecificity'] : this.actualParent?.elementData?.['styleSpecificity' + this._pseudoElt] as Undef<ObjectMap<number>>;
             if (styleData) {
-                value = styleData[attr]; 
+                value = styleData[attr];
             }
         }
         return value || 0;
@@ -1466,32 +1466,39 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public toInt(attr: string, fallback = NaN, initial?: boolean) {
-        const value = parseInt((initial && this._initial?.styleMap || this._styleMap)[attr]!);
-        return !isNaN(value) ? value : fallback;
+        return convertInt((initial && this._initial?.styleMap || this._styleMap)[attr]!, fallback);
     }
 
     public toFloat(attr: string, fallback = NaN, initial?: boolean) {
-        const value = parseFloat((initial && this._initial?.styleMap || this._styleMap)[attr]!);
-        return !isNaN(value) ? value : fallback;
+        return convertFloat((initial && this._initial?.styleMap || this._styleMap)[attr]!, fallback);
     }
 
     public toElementInt(attr: string, fallback = NaN) {
-        const value = parseInt(this._element?.[attr]);
-        return !isNaN(value) ? value : fallback;
+        return this.naturalElement ? convertInt(this._element![attr], fallback) : fallback;
     }
 
     public toElementFloat(attr: string, fallback = NaN) {
-        const value = parseFloat(this._element?.[attr]);
-        return !isNaN(value) ? value : fallback;
+        return this.naturalElement ? convertFloat(this._element![attr], fallback) : fallback;
     }
 
     public toElementBoolean(attr: string, fallback = false) {
-        const value = this._element?.[attr];
-        return typeof value === 'boolean' ? value : fallback;
+        if (this.naturalElement) {
+            const value: UndefNull<boolean> = this._element![attr];
+            if (value !== undefined && value !== null) {
+                return !!value;
+            }
+        }
+        return fallback;
     }
 
     public toElementString(attr: string, fallback = '') {
-        return (this._element?.[attr] as Undef<string> ?? fallback).toString();
+        if (this.naturalElement) {
+            const value: UndefNull<string> = this._element![attr];
+            if (value !== undefined && value !== null) {
+                return value.toString();
+            }
+        }
+        return fallback;
     }
 
     public parseUnit(value: string, options?: NodeParseUnitOptions) {

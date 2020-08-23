@@ -283,7 +283,7 @@ ready() // boolean indicating if parseDocument can be called
 close() // close current session preceding write to disk or local output
 reset() // clear cached layouts and reopen new session
 
-toString() // main layout file contents
+toString() // current framework loaded
 
 include(extension: string | squared.base.Extension, options?: FrameworkOptions) // see extension configuration section
 retrieve(name: string) // retrieve an extension by namespace or control

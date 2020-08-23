@@ -9,7 +9,7 @@ type AttributeMap = ObjectMap<number[]>;
 type TagNameMap = ObjectMap<StyleAttribute[]>;
 type NodeStyleMap = ObjectMap<string[]>;
 
-const { capitalize, convertInt, convertWord, hasKeys, replaceMap, spliceArray, trimBoth } = squared.lib.util;
+const { capitalize, convertWord, hasKeys, replaceMap, spliceArray, trimBoth } = squared.lib.util;
 const { truncate } = squared.lib.math;
 
 const { NODE_RESOURCE } = squared.base.lib.enumeration;
@@ -423,7 +423,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 const name = values[i];
                 const match = REGEXP_FONTNAME.exec(name);
                 if (match) {
-                    const styleData = resourceMap[match[1].toUpperCase()][convertInt(match[2])];
+                    const styleData = resourceMap[match[1].toUpperCase()][parseInt(match[2]) || 0];
                     if (styleData) {
                         if (i === 0) {
                             parent = name;

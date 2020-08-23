@@ -635,11 +635,11 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
     }
 
     public extractStrokeDash(animations?: SvgAnimation[], precision?: number): [Undef<SvgAnimation[]>, Undef<SvgStrokeDash[]>, string, string] {
-        const strokeWidth = convertInt(this.strokeWidth);
+        const strokeWidth = parseInt(this.strokeWidth);
         let path = '',
             clipPath = '',
             result: Undef<SvgStrokeDash[]>;
-        if (strokeWidth > 0) {
+        if (strokeWidth) {
             let valueArray = SvgBuild.parseCoordinates(this.strokeDasharray);
             if (valueArray.length) {
                 const totalLength = this.totalLength;

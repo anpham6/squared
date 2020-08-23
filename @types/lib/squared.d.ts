@@ -270,8 +270,8 @@ declare module "lib" {
         function convertHyphenated(value: string, char?: string): string;
         function convertCamelCase(value: string, char?: string): string;
         function convertWord(value: string, dash?: boolean): string;
-        function convertInt(value: string): number;
-        function convertFloat(value: string): number;
+        function convertInt(value: string, fallback?: number): number;
+        function convertFloat(value: string, fallback?: number): number;
         function convertAlpha(value: number): string;
         function convertRoman(value: number): string;
         function randomUUID(separator?: string): string;

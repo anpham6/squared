@@ -538,12 +538,14 @@ export function convertWord(value: string, dash?: boolean) {
     return value.replace(dash ? /[^A-Za-z\d]+/g : /[^\w]+/g, '_');
 }
 
-export function convertInt(value: string) {
-    return parseInt(value) || 0;
+export function convertInt(value: string, fallback = 0) {
+    const result = parseInt(value);
+    return !isNaN(result) ? result : fallback;
 }
 
-export function convertFloat(value: string) {
-    return parseFloat(value) || 0;
+export function convertFloat(value: string, fallback = 0) {
+    const result = parseFloat(value);
+    return !isNaN(result) ? result : fallback;
 }
 
 export function convertAlpha(value: number) {
