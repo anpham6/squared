@@ -65,7 +65,8 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
     public readonly definitions: SvgDefinitions = {
         clipPath: new Map<string, SVGClipPathElement>(),
         pattern: new Map<string, SVGPatternElement>(),
-        gradient: new Map<string, SvgGradient>()
+        gradient: new Map<string, SvgGradient>(),
+        contentMap: null
     };
 
     constructor(

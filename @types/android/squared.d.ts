@@ -49,7 +49,7 @@ declare namespace base {
         static addColor(value: ColorData | string, transparency?: boolean): string;
         readonly application: Application<T>;
         get userSettings(): AndroidUserResourceSettingsUI;
-        addImageSrc(element: HTMLImageElement | string, prefix?: string, imageSet?: ImageSrcSet[]): string;
+        addImageSrc(element: HTMLImageElement | string, prefix?: string, imageSet?: Null<ImageSrcSet[]>): string;
         addImageSet(images: StringMap, prefix?: string): string;
     }
 

@@ -116,7 +116,7 @@ function getDashArray(map: SvgAnimationIntervalMap, valueArray: number[], time: 
 const getFromToValue = (item?: SvgStrokeDash) => item ? item.start + ' ' + item.end : '1 1';
 
 export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) implements squared.svg.SvgPath {
-    public static extrapolate(attr: string, pathData: string, values: string[], transforms?: SvgTransform[], parent?: SvgShape, precision?: number) {
+    public static extrapolate(attr: string, pathData: string, values: string[], transforms: Null<SvgTransform[]>, parent: Null<SvgShape>, precision?: number) {
         const container = parent && parent.parent;
         const transformRefit = !!transforms && transforms.length > 0 || !!container && container.requireRefit;
         const result: string[] = [];
@@ -216,7 +216,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
     public name = '';
     public value = '';
     public baseValue = '';
-    public transformed?: Null<SvgTransform[]>;
+    public parent: Null<SvgContainer> = null;
+    public transformed: Null<SvgTransform[]> = null;
     public transformResidual?: SvgTransform[][];
     public readonly instanceType = INSTANCE_TYPE.SVG_PATH;
 
@@ -524,6 +525,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 }
             }
         }
+        return data;
     }
 
     public flattenStrokeDash(valueArray: number[], valueOffset: number, totalLength: number, pathLength?: number, data?: SvgPathExtendData) {

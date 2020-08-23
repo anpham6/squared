@@ -28,14 +28,14 @@ declare module "svg" {
         static drawPolygon(values: Point[] | DOMPoint[], precision?: number): string;
         static drawPolyline(values: Point[] | DOMPoint[], precision?: number): string;
         static drawPath(values: SvgPathCommand[], precision?: number): string;
-        static drawRefit(element: SVGGraphicsElement, parent?: SvgContainer, precision?: number): string;
+        static drawRefit(element: SVGGraphicsElement, parent: Null<SvgContainer>, precision?: number): string;
         static transformRefit(value: string, options?: SvgTransformRefitOptions): string;
         static toOffsetPath(value: string, rotation?: string): SvgOffsetPath[];
         static toPathCommands(value: string): SvgPathCommand[];
         static toPathPoints(values: SvgPathCommand[]): SvgPoint[];
         static syncPath(values: SvgPathCommand[], points: SvgPoint[], transformed?: boolean): SvgPathCommand[];
         static filterTransforms(transforms: SvgTransform[], exclude?: number[]): SvgTransform[];
-        static applyTransforms(transforms: SvgTransform[], values: Point[], aspectRatio?: SvgAspectRatio, origin?: Point): SvgPoint[];
+        static applyTransforms(transforms: SvgTransform[], values: Point[], origin?: Null<Point>): SvgPoint[];
         static convertTransforms(transforms: SVGTransformList): SvgTransform[];
         static convertPoints(values: number[]): Point[];
         static clonePoints(values: SvgPoint[] | SVGPointList): SvgPoint[];
@@ -50,12 +50,12 @@ declare module "svg" {
         setBaseValue<T = unknown>(attr: string, value?: T): boolean;
         getBaseValue<T = unknown>(attr: string, fallback?: T): Undef<T>;
         refitBaseValue(x: number, y: number, precision?: number, scaleX?: number, scaleY?: number): void;
-        verifyBaseValue(attr: string, value?: any): Undef<boolean>;
+        verifyBaseValue(attr: string, value?: any): number;
     }
 
     interface SvgView extends SvgElement {
         name: string;
-        transformed?: Null<SvgTransform[]>;
+        transformed: Null<SvgTransform[]>;
         readonly opacity: string;
         readonly visible: boolean;
         readonly transforms: SvgTransform[];
@@ -94,7 +94,7 @@ declare module "svg" {
         clipRule: string;
         useParent?: SvgUse;
         patternParent?: SvgShapePattern;
-        setPaint(d?: string[], precision?: number): void;
+        setPaint(d?: Null<string[]>, precision?: number): void;
         setAttribute(attr: string): void;
         getAttribute(attr: string): string;
         resetPaint(): void;
@@ -110,13 +110,13 @@ declare module "svg" {
 
     interface SvgTransformable {
         rotateAngle?: number;
-        transformed?: Null<SvgTransform[]>;
+        transformed: Null<SvgTransform[]>;
         transformResidual?: SvgTransform[][];
         readonly transforms: SvgTransform[];
     }
 
     class SvgElement {
-        parent?: SvgContainer;
+        parent: Null<SvgContainer>;
         viewport?: Svg;
         readonly element: SVGGraphicsElement;
         readonly instanceType: number;
@@ -126,8 +126,8 @@ declare module "svg" {
     }
 
     class SvgContainer extends squared.lib.base.Container<SvgView> implements SvgElement {
+        parent: Null<SvgContainer>;
         aspectRatio: SvgAspectRatio;
-        parent?: SvgContainer;
         viewport?: Svg;
         readonly element: SvgContainerElement;
         readonly instanceType: number;
@@ -153,7 +153,7 @@ declare module "svg" {
         setBaseValue(attr: string, value?: any): boolean;
         getBaseValue(attr: string, fallback?: any): any;
         refitBaseValue(x: number, y: number, precision?: number, scaleX?: number, scaleY?: number): void;
-        verifyBaseValue(attr: string, value?: any): Undef<boolean>;
+        verifyBaseValue(attr: string, value?: any): number;
         set x(value);
         get x(): number;
         set y(value);
@@ -166,7 +166,7 @@ declare module "svg" {
 
     class Svg extends SvgContainer implements SvgViewBox {
         precision?: number;
-        transformed?: Null<SvgTransform[]>;
+        transformed: Null<SvgTransform[]>;
         keyframesMap?: KeyframesMap;
         readonly element: SVGSVGElement;
         readonly documentRoot: boolean;
@@ -177,7 +177,7 @@ declare module "svg" {
         setBaseValue(attr: string, value?: any): boolean;
         getBaseValue(attr: string, fallback?: any): any;
         refitBaseValue(x: number, y: number, precision?: number, scaleX?: number, scaleY?: number): void;
-        verifyBaseValue(attr: string, value?: any): Undef<boolean>;
+        verifyBaseValue(attr: string, value?: any): number;
         getAnimateShape(element: SVGGraphicsElement): SvgAnimate[];
         getAnimateTransform(options?: SvgSynchronizeOptions): SvgAnimateTransform[];
         getAnimateViewRect(animations?: SvgAnimation[]): SvgAnimate[];
@@ -197,7 +197,7 @@ declare module "svg" {
         set height(value);
         get height(): number;
         set contentMap(value);
-        get contentMap(): Undef<StringMap>;
+        get contentMap(): Null<StringMap>;
         get transforms(): SvgTransform[];
         get animations(): SvgAnimation[];
         get viewBox(): DOMRect;
@@ -222,7 +222,7 @@ declare module "svg" {
         strokeDashoffset: string;
         clipPath: string;
         clipRule: string;
-        transformed?: Null<SvgTransform[]>;
+        transformed: Null<SvgTransform[]>;
         useParent?: SvgUse;
         patternParent?: SvgShapePattern;
         readonly element: SVGGElement;
@@ -252,7 +252,7 @@ declare module "svg" {
         setBaseValue(attr: string, value?: any): boolean;
         getBaseValue(attr: string, fallback?: any): any;
         refitBaseValue(x: number, y: number, precision?: number, scaleX?: number, scaleY?: number): void;
-        verifyBaseValue(attr: string, value?: any): Undef<boolean>;
+        verifyBaseValue(attr: string, value?: any): number;
         set x(value);
         get x(): number;
         set y(value);
@@ -265,7 +265,7 @@ declare module "svg" {
     }
 
     class SvgShape extends SvgElement implements SvgView, SvgSynchronize {
-        transformed?: Null<SvgTransform[]>;
+        transformed: Null<SvgTransform[]>;
         readonly element: SVGGeometryElement;
         synchronize(options?: SvgSynchronizeOptions): void;
         getAnimateShape(element: SVGGraphicsElement): SvgAnimate[];
@@ -280,7 +280,7 @@ declare module "svg" {
         set name(value);
         get name(): string;
         set path(value);
-        get path(): Undef<SvgPath>;
+        get path(): Null<SvgPath>;
         get transforms(): SvgTransform[];
         get animations(): SvgAnimation[];
         get visible(): boolean;
@@ -311,7 +311,7 @@ declare module "svg" {
         setBaseValue(attr: string, value?: any): boolean;
         getBaseValue(attr: string, fallback?: any): any;
         refitBaseValue(x: number, y: number, precision?: number, scaleX?: number, scaleY?: number): void;
-        verifyBaseValue(attr: string, value?: any): Undef<boolean>;
+        verifyBaseValue(attr: string, value?: any): number;
         setPaint(d?: string[], precision?: number): void;
         resetPaint(): void;
         setAttribute(attr: string, computed?: boolean, inherited?: boolean): void;
@@ -333,13 +333,13 @@ declare module "svg" {
 
     class SvgImage extends SvgElement implements SvgView, SvgViewRect, SvgBaseVal, SvgTransformable {
         rotateAngle?: number;
-        transformed?: Null<SvgTransform[]>;
+        transformed: Null<SvgTransform[]>;
         readonly element: SVGImageElement | SVGUseElement;
         setRect(): void;
         setBaseValue(attr: string, value?: any): boolean;
         getBaseValue(attr: string, fallback?: any): any;
         refitBaseValue(x: number, y: number, precision?: number, scaleX?: number, scaleY?: number): void;
-        verifyBaseValue(attr: string, value?: any): Undef<boolean>;
+        verifyBaseValue(attr: string, value?: any): number;
         renderStatic(exclude?: number[]): void;
         getTransforms(element?: SVGGraphicsElement): SvgTransform[];
         getAnimations(element?: SVGGraphicsElement): SvgAnimation[];
@@ -365,7 +365,7 @@ declare module "svg" {
 
     class SvgPath implements SvgBaseVal, SvgPaint, SvgTransformable {
         static transform(value: string, transforms: SvgTransform[], element?: SVGGeometryElement, precision?: number): string;
-        static extrapolate(attr: string, value: string, values: string[], transforms?: SvgTransform[], parent?: SvgShape, precision?: number): Undef<string[]>;
+        static extrapolate(attr: string, value: string, values: string[], transforms: Null<SvgTransform[]>, parent: Null<SvgShape>, precision?: number): string[];
         name: string;
         value: string;
         baseValue: string;
@@ -384,9 +384,10 @@ declare module "svg" {
         strokeDashoffset: string;
         clipPath: string;
         clipRule: string;
+        parent: Null<SvgContainer>;
+        transformed: Null<SvgTransform[]>;
         useParent?: SvgUse;
         patternParent?: SvgShapePattern;
-        transformed?: Null<SvgTransform[]>;
         transformResidual?: SvgTransform[][];
         readonly element: SVGGeometryElement;
         readonly instanceType: number;
@@ -398,11 +399,11 @@ declare module "svg" {
         setBaseValue(attr: string, value?: any): boolean;
         getBaseValue(attr: string, fallback?: any): any;
         refitBaseValue(x: number, y: number, precision?: number, scaleX?: number, scaleY?: number): void;
-        verifyBaseValue(attr: string, value?: any): Undef<boolean>;
+        verifyBaseValue(attr: string, value?: any): number;
         build(options?: SvgBuildOptions): void;
         synchronize(options?: SvgSynchronizeOptions): void;
         draw(transforms?: SvgTransform[], options?: SvgBuildOptions): string;
-        extendLength(data: SvgPathExtendData, precision?: number): Undef<SvgPathExtendData>;
+        extendLength(data: SvgPathExtendData, precision?: number): SvgPathExtendData;
         flattenStrokeDash(valueArray: number[], valueOffset: number, totalLength: number, pathLength?: number): SvgPathExtendData;
         extractStrokeDash(animations?: SvgAnimation[], precision?: number): [Undef<SvgAnimation[]>, Undef<SvgStrokeDash[]>, string, string];
         set strokeWidth(value);
@@ -429,7 +430,7 @@ declare module "svg" {
         strokeDashoffset: string;
         clipPath: string;
         clipRule: string;
-        transformed?: Null<SvgTransform[]>;
+        transformed: Null<SvgTransform[]>;
         useParent?: SvgUse;
         patternParent?: SvgShapePattern;
         readonly symbolElement: SVGSymbolElement
@@ -443,7 +444,7 @@ declare module "svg" {
         setBaseValue(attr: string, value?: any): boolean;
         getBaseValue(attr: string, fallback?: any): any;
         refitBaseValue(x: number, y: number, precision?: number, scaleX?: number, scaleY?: number): void;
-        verifyBaseValue(attr: string, value?: any): Undef<boolean>;
+        verifyBaseValue(attr: string, value?: any): number;
         getAnimateShape(element: SVGGraphicsElement): SvgAnimate[];
         getAnimateTransform(options?: SvgSynchronizeOptions): SvgAnimateTransform[];
         getAnimateViewRect(animations?: SvgAnimation[]): SvgAnimate[];
@@ -473,7 +474,7 @@ declare module "svg" {
     }
 
     class SvgPattern extends SvgContainer implements SvgView {
-        transformed?: Null<SvgTransform[]>;
+        transformed: Null<SvgTransform[]>;
         readonly element: SVGGraphicsElement;
         readonly patternElement: SVGPatternElement;
         getTransforms(element?: SVGGraphicsElement): SvgTransform[];
@@ -506,7 +507,7 @@ declare module "svg" {
         clipPath: string;
         clipRule: string;
         drawRegion?: BoxRect;
-        transformed?: Null<SvgTransform[]>;
+        transformed: Null<SvgTransform[]>;
         useParent?: SvgUse;
         patternParent?: SvgShapePattern;
         readonly element: SVGGeometryElement;
@@ -539,7 +540,7 @@ declare module "svg" {
         setBaseValue(attr: string, value?: any): boolean;
         getBaseValue(attr: string, fallback?: any): any;
         refitBaseValue(x: number, y: number, precision?: number, scaleX?: number, scaleY?: number): void;
-        verifyBaseValue(attr: string, value?: any): Undef<boolean>;
+        verifyBaseValue(attr: string, value?: any): number;
         set x(value);
         get x(): number;
         set y(value);
@@ -584,10 +585,10 @@ declare module "svg" {
         set fillFreeze(value);
         get fillFreeze(): boolean;
         set parent(value);
-        get parent(): Undef<SvgView | SvgPath>;
+        get parent(): Null<SvgView | SvgPath>;
         set group(value);
         get group(): SvgAnimationGroup;
-        get parentContainer(): Undef<SvgContainer>;
+        get parentContainer(): Null<SvgContainer>;
         get fillReplace(): boolean;
         get dataset(): SvgDataSet;
         constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimationElement);
@@ -596,7 +597,7 @@ declare module "svg" {
     class SvgAnimate extends SvgAnimation {
         static getSplitValue(value: number, next: number, percent: number): number;
         static findTimingFunction(value: string): string;
-        static fromStepTimingFunction(element: SVGElement, attributeName: string, keyTimes: number[], values: string[], keySpline: string, index: number): Undef<[number[], string[]]>;
+        static fromStepTimingFunction(element: SVGElement, attributeName: string, keyTimes: number[], values: string[], keySpline: string, index: number): Null<[number[], string[]]>;
         static toFractionList(value: string, delimiter?: string, ordered?: boolean): number[];
         type: number;
         from: string;
@@ -637,10 +638,10 @@ declare module "svg" {
     }
 
     class SvgAnimateTransform extends SvgAnimate {
-        static toRotateList(values: string[]): Undef<number[][]>;
-        static toScaleList(values: string[]): Undef<number[][]>;
-        static toTranslateList(values: string[]): Undef<number[][]>;
-        static toSkewList(values: string[]): Undef<number[][]>;
+        static toRotateList(values: string[]): Null<number[][]>;
+        static toScaleList(values: string[]): Null<number[][]>;
+        static toTranslateList(values: string[]): Null<number[][]>;
+        static toSkewList(values: string[]): Null<number[][]>;
         transformFrom?: string;
         transformOrigin?: Point[];
         readonly animationElement: Null<SVGAnimateTransformElement>;
@@ -658,8 +659,8 @@ declare module "svg" {
         framesPerSecond?: number;
         readonly animationElement: Null<SVGAnimateMotionElement>;
         addKeyPoint(item: NumberValue): void;
-        get offsetPath(): Undef<SvgOffsetPath[]>;
-        get rotateValues(): Undef<number[]>;
+        get offsetPath(): Null<SvgOffsetPath[]>;
+        get rotateValues(): Null<number[]>;
         get keyPoints(): number[];
         get offsetLength(): number;
     }
@@ -747,8 +748,8 @@ declare module "svg" {
             };
             const TRANSFORM: {
                 create(type: number, matrix: SvgMatrix | DOMMatrix, angle?: number, x?: boolean, y?: boolean): SvgTransform;
-                parse(element: SVGElement, value?: string): Undef<SvgTransform[]>;
-                matrix(element: SVGElement, value?: string): Undef<SvgMatrix>;
+                parse(element: SVGElement, value?: string): Null<SvgTransform[]>;
+                matrix(element: SVGElement, value?: string): Null<SvgMatrix>;
                 origin(element: SVGElement, value?: string): Point;
                 rotateOrigin(element: SVGElement, attr?: string): SvgPoint[];
                 typeAsName(type: number): string;
@@ -778,8 +779,8 @@ declare module "svg" {
             function getAttribute(element: SVGElement, attr: string, computed?: boolean): string;
             function getParentAttribute(element: SVGElement, attr: string, computed?: boolean): string;
             function getDOMRect(element: SVGElement): DOMRect;
-            function getTargetElement(element: SVGElement, rootElement?: Null<SVGSVGElement>, contentMap?: StringMap): Null<SVGElement>;
-            function getNearestViewBox(element: SVGElement): Undef<DOMRect>;
+            function getTargetElement(element: SVGElement, rootElement?: Null<SVGSVGElement>, contentMap?: Null<StringMap>): Null<SVGElement>;
+            function getNearestViewBox(element: SVGElement): Null<DOMRect>;
             function getRootOffset(element: SVGGraphicsElement, rootElement: Element): Point;
             function getPathLength(value: string): string;
         }

@@ -1465,7 +1465,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             case 'IMG':
             case 'CANVAS': {
                 const element = node.element as HTMLImageElement;
-                let imageSet: Undef<ImageSrcSet[]>;
+                let imageSet: UndefNull<ImageSrcSet[]>;
                 if (node.actualParent!.tagName === 'PICTURE') {
                     imageSet = getSrcSet(element, this.localSettings.mimeType.image);
                     if (imageSet) {

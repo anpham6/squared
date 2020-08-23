@@ -33,7 +33,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         return match ? match[1] + ' ' + match[2] + ' ' + match[3] + ' ' + match[4] : KEYSPLINE_NAME.ease;
     }
 
-    public static fromStepTimingFunction(element: SVGElement, attributeName: string, timingFunction: string, keyTimes: number[], values: string[], index: number): Undef<[number[], string[]]> {
+    public static fromStepTimingFunction(element: SVGElement, attributeName: string, timingFunction: string, keyTimes: number[], values: string[], index: number): Null<[number[], string[]]> {
         const valueA = values[index];
         const valueB = values[index + 1];
         let currentValue: Undef<any[]>,
@@ -150,13 +150,14 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                             splitValues[i] = result;
                         }
                         else {
-                            return;
+                            return null;
                         }
                     }
                     return [splitTimes, splitValues];
                 }
             }
         }
+        return null;
     }
 
     public static toFractionList(value: string, delimiter = ';', ordered = true) {

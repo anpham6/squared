@@ -204,7 +204,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return precision ? truncateString(result, precision) : result;
     }
 
-    public static drawRefit(element: SVGGraphicsElement, parent?: SvgContainer, precision?: number) {
+    public static drawRefit(element: SVGGraphicsElement, parent: Null<SvgContainer>, precision?: number) {
         let value: Undef<string>;
         if (SVG.path(element)) {
             value = getNamedItem(element, 'd');
@@ -271,9 +271,9 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     }
 
     public static transformRefit(value: string, options?: SvgTransformRefitOptions) {
-        let transforms: Undef<SvgTransform[]>,
-            parent: Undef<SvgView>,
-            container: Undef<SvgContainer>,
+        let transforms: UndefNull<SvgTransform[]>,
+            parent: UndefNull<SvgView>,
+            container: UndefNull<SvgContainer>,
             precision: Undef<number>;
         if (options) {
             ({ transforms, parent, container, precision } = options);
@@ -679,7 +679,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
-    public static applyTransforms(transforms: SvgTransform[], values: SvgPoint[], origin?: SvgPoint) {
+    public static applyTransforms(transforms: SvgTransform[], values: SvgPoint[], origin?: Null<SvgPoint>) {
         const result = SvgBuild.clonePoints(values);
         const length = result.length;
         for (const item of transforms.slice(0).reverse()) {

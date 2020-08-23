@@ -28,7 +28,7 @@ interface CalculateOptions {
 }
 
 interface CalculateVarAsStringOptions extends CalculateOptions {
-    boundingBox?: Dimension;
+    boundingBox?: Null<Dimension>;
     dimension?: DimensionAttr[] | DimensionAttr;
     orderedSize?: number[];
     parent?: boolean;

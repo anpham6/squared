@@ -145,9 +145,9 @@ declare module "lib" {
         function calculate(value: string, options?: CalculateOptions): number;
         function calculateVar(element: StyleElement, value: string, options?: CalculateVarOptions): number;
         function calculateVarAsString(element: StyleElement, value: string, options?: CalculateVarAsStringOptions): string;
-        function calculateStyle(element: StyleElement, attr: string, value: string, boundingBox?: Dimension): string;
+        function calculateStyle(element: StyleElement, attr: string, value: string, boundingBox?: Null<Dimension>): string;
         function parseVar(element: StyleElement, value: string): string;
-        function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll): Undef<ImageSrcSet[]>;
+        function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll): Null<ImageSrcSet[]>;
         function convertListStyle(name: string, value: number, valueAsDefault?: boolean): string;
         function extractURL(value: string): Undef<string>;
         function resolveURL(value: string): Undef<string>;

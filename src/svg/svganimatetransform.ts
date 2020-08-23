@@ -25,7 +25,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                     result[i] = seg;
                 }
                 else {
-                    return;
+                    return null;
                 }
             }
         }
@@ -53,7 +53,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                     result[i] = seg;
                 }
                 else {
-                    return;
+                    return null;
                 }
             }
         }
@@ -77,7 +77,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                     result[i] = seg;
                 }
                 else {
-                    return;
+                    return null;
                 }
             }
         }
@@ -98,7 +98,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                     result[i] = seg;
                 }
                 else {
-                    return;
+                    return null;
                 }
             }
         }
@@ -210,7 +210,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
     }
 
     public setType(value: string) {
-        let values: Undef<number[][]>;
+        let values: Null<number[][]> = null;
         switch (value) {
             case 'translate':
                 this.type = SVGTransform.SVG_TRANSFORM_TRANSLATE;

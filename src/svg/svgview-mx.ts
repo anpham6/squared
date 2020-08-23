@@ -77,7 +77,7 @@ const sortAttribute = (value: NumberValue[]) => value.sort((a, b) => a.key - b.k
 
 export default <T extends Constructor<SvgElement>>(Base: T) => {
     return class extends Base implements squared.svg.SvgView {
-        public transformed?: Null<SvgTransform[]>;
+        public transformed: Null<SvgTransform[]> = null;
 
         protected _transforms?: SvgTransform[];
         protected _animations?: squared.svg.SvgAnimation[];

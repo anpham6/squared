@@ -53,7 +53,7 @@ function compareRange(operation: string, unit: number, range: number) {
     }
 }
 
-function calculatePosition(element: StyleElement, value: string, boundingBox?: Dimension) {
+function calculatePosition(element: StyleElement, value: string, boundingBox?: Null<Dimension>) {
     const alignment: string[] = [];
     for (const seg of replaceMap(splitEnclosing(value.trim(), 'calc'), item => item.trim())) {
         if (seg.includes(' ') && !isCalc(seg)) {
@@ -186,7 +186,7 @@ function calculateColor(element: StyleElement, value: string) {
     return value;
 }
 
-function calculateGeneric(element: StyleElement, value: string, unitType: number, min: number, boundingBox?: Dimension, dimension: DimensionAttr = 'width') {
+function calculateGeneric(element: StyleElement, value: string, unitType: number, min: number, boundingBox?: Null<Dimension>, dimension: DimensionAttr = 'width') {
     const segments = splitEnclosing(value, 'calc');
     for (let i = 0, length = segments.length; i < length; ++i) {
         const seg = segments[i];
@@ -280,8 +280,8 @@ function checkCalculateOperator(operand: Undef<string>, operator: Undef<string>)
 
 function getContentBoxDimension(element: Null<StyleElement>) {
     if (element) {
-        const style = getStyle(element);
         const { width, height } = element.getBoundingClientRect();
+        const style = getStyle(element);
         return { width: Math.max(0, width - getContentBoxWidth(style)), height: Math.max(0, height - getContentBoxHeight(style)) };
     }
     return { width: 0, height: 0 };
@@ -1922,7 +1922,7 @@ export function checkWritingMode(attr: string, value?: string) {
     return '';
 }
 
-export function calculateStyle(element: StyleElement, attr: string, value: string, boundingBox?: Dimension): string {
+export function calculateStyle(element: StyleElement, attr: string, value: string, boundingBox?: Null<Dimension>): string {
     switch (attr) {
         case 'left':
         case 'right':
@@ -2853,9 +2853,7 @@ export function calculateVarAsString(element: StyleElement, value: string, optio
         unitType: Undef<number>,
         checkUnit: Undef<boolean>,
         errorString: Undef<RegExp>;
-    const optionsVar = {} as CalculateVarOptions;
     if (options) {
-        Object.assign(optionsVar, options);
         if (Array.isArray(options.orderedSize)) {
             orderedSize = options.orderedSize;
         }
@@ -2898,17 +2896,19 @@ export function calculateVarAsString(element: StyleElement, value: string, optio
                 for (let i = 0, j = 0; i < length; ++i) {
                     let output = calc[i];
                     if (isCalc(output)) {
-                        if (orderedSize && orderedSize[j] !== undefined) {
-                            optionsVar.boundingSize = orderedSize[j++];
+                        if (options) {
+                            if (orderedSize && orderedSize[j] !== undefined) {
+                                options.boundingSize = orderedSize[j++];
+                            }
+                            else if (dimension) {
+                                options.dimension = dimension[j++];
+                                delete options.boundingSize;
+                            }
+                            else if (orderedSize) {
+                                delete options.boundingSize;
+                            }
                         }
-                        else if (dimension) {
-                            optionsVar.dimension = dimension[j++];
-                            delete optionsVar.boundingSize;
-                        }
-                        else if (orderedSize) {
-                            delete optionsVar.boundingSize;
-                        }
-                        const k = calculateVar(element, output, optionsVar);
+                        const k = calculateVar(element, output, options as CalculateVarOptions);
                         if (!isNaN(k)) {
                             partial += k + unit;
                         }
@@ -2978,7 +2978,7 @@ export function calculateVar(element: StyleElement, value: string, options: Calc
                         else {
                             boundingElement = element.parentElement;
                             if (boundingElement instanceof HTMLElement) {
-                                let style: Undef<CSSStyleDeclaration>;
+                                let style: CSSStyleDeclaration;
                                 if (hasCoords(getStyle(element).position)) {
                                     do {
                                         style = getStyle(boundingElement);
@@ -2997,9 +2997,7 @@ export function calculateVar(element: StyleElement, value: string, options: Calc
                                 else {
                                     style = getStyle(boundingElement);
                                 }
-                                if (style) {
-                                    offsetPadding = dimension === 'width' ? getContentBoxWidth(style) : getContentBoxHeight(style);
-                                }
+                                offsetPadding = dimension === 'width' ? getContentBoxWidth(style) : getContentBoxHeight(style);
                             }
                             else if (element instanceof SVGElement) {
                                 if (options.parent !== true) {
@@ -3023,12 +3021,12 @@ export function calculateVar(element: StyleElement, value: string, options: Calc
         if ((!options.unitType || options.unitType === CSS_UNIT.LENGTH) && isEmBased(value) && options.fontSize === undefined) {
             options.fontSize = getFontSize(element);
         }
-        let result = calculate(output, options);
+        const result = calculate(output, options);
         if (options.precision !== undefined) {
-            result = options.precision === 0 ? Math.floor(result) : parseFloat(truncate(result, options.precision));
+            return options.precision === 0 ? Math.floor(result) : parseFloat(truncate(result, options.precision));
         }
         else if (options.roundValue) {
-            result = Math.round(result);
+            return Math.round(result);
         }
         return result;
     }
@@ -3041,11 +3039,9 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
     let { srcset, sizes } = element;
     if (parentElement && parentElement.tagName === 'PICTURE') {
         iterateArray(parentElement.children, (item: HTMLSourceElement) => {
-            if (item.tagName === 'SOURCE') {
-                if (isString(item.srcset) && !(isString(item.media) && !checkMediaRule(item.media)) && (!mimeType || mimeType === '*' || !isString(item.type) || mimeType.includes(item.type.trim().toLowerCase()))) {
-                    ({ srcset, sizes } = item);
-                    return true;
-                }
+            if (item.tagName === 'SOURCE' && isString(item.srcset) && !(isString(item.media) && !checkMediaRule(item.media)) && (!mimeType || mimeType === '*' || !isString(item.type) || mimeType.includes(item.type.trim().toLowerCase()))) {
+                ({ srcset, sizes } = item);
+                return true;
             }
         });
     }
@@ -3072,7 +3068,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
     }
     const length = result.length;
     if (length === 0) {
-        return;
+        return null;
     }
     else if (length > 1) {
         result.sort((a, b) => {
@@ -3737,10 +3733,7 @@ export function parseTransform(value: string, options?: TransformOptions) {
         else if (method.startsWith('matrix') && !accumulate) {
             const matrix = TRANSFORM.MATRIX.exec(match[0]);
             if (matrix) {
-                result.push({
-                    method,
-                    values: [parseFloat(matrix[2]), parseFloat(matrix[3]), parseFloat(matrix[4]), parseFloat(matrix[5]), parseFloat(matrix[6]), parseFloat(matrix[7])]
-                });
+                result.push({ method, values: replaceMap(matrix.slice(2, 8), item => parseFloat(item)) });
             }
         }
     }

@@ -118,7 +118,7 @@ function getForwardValue(items: Undef<ForwardValue[]>, time: number) {
     return value;
 }
 
-function getPathData(entries: TimelineEntries, path: SvgPath, parent: Undef<SvgContainer>, forwardMap: ForwardMap, precision?: number) {
+function getPathData(entries: TimelineEntries, path: SvgPath, parent: Null<SvgContainer>, forwardMap: ForwardMap, precision?: number) {
     const result: NumberValue[] = [];
     const tagName = path.element.tagName;
     let baseVal: string[];
@@ -690,7 +690,7 @@ function sortEvaluateStart(incomplete: SvgAnimate[], maxTime: number) {
     });
 }
 
-function refitTransformPoints(data: TimelineValue, parent?: SvgContainer) {
+function refitTransformPoints(data: TimelineValue, parent: Null<SvgContainer>) {
     const x = data.get('x') as number || 0;
     const y = data.get('y') as number || 0;
     return parent ? parent.refitX(x) + ' ' + parent.refitX(y) : x + ' ' + y;

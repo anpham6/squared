@@ -23,7 +23,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
 
     private _offsetLength = 0;
     private _keyPoints: number[] = [];
-    private _offsetPath?: SvgOffsetPath[];
+    private _offsetPath: Null<SvgOffsetPath[]> = null;
 
     constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimateMotionElement) {
         super(element, animationElement);
@@ -102,7 +102,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     }
 
     public addKeyPoint(item: NumberValue) {
-        if (this._offsetPath === undefined) {
+        if (!this._offsetPath) {
             const key = item.key;
             if (key >= 0 && key <= 1) {
                 const keyTimes = super.keyTimes;
@@ -128,7 +128,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     }
 
     protected setOffsetPath() {
-        if (this._offsetPath === undefined && this.path) {
+        if (!this._offsetPath && this.path) {
             let offsetPath = SvgBuild.toOffsetPath(this.path, this.rotate),
                 distance = offsetPath.length;
             if (distance > 0) {

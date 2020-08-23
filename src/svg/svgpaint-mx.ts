@@ -46,7 +46,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
             this.setAttribute('stroke-width');
         }
 
-        public setPaint(d?: string[], precision?: number) {
+        public setPaint(d?: Null<string[]>, precision?: number) {
             this.resetPaint();
             this.setAttribute('color');
             this.setAttribute('fill');

@@ -122,7 +122,7 @@ interface SvgDefinitions {
     clipPath: Map<string, SVGClipPathElement>;
     pattern: Map<string, SVGPatternElement>;
     gradient: Map<string, SvgGradient>;
-    contentMap?: StringMap;
+    contentMap: Null<StringMap>;
 }
 
 interface SvgBuildOptions {
@@ -144,9 +144,9 @@ interface SvgSynchronizeOptions {
 }
 
 interface SvgTransformRefitOptions {
-    transforms?: SvgTransform[];
-    parent?: squared.svg.SvgView;
-    container?: squared.svg.SvgContainer;
+    transforms?: Null<SvgTransform[]>;
+    parent?: Null<squared.svg.SvgView>;
+    container?: Null<squared.svg.SvgContainer>;
     precision?: number;
 }
 

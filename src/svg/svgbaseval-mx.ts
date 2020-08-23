@@ -22,7 +22,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
 
         public setBaseValue(attr: string, value?: any) {
             if (value !== undefined) {
-                if (this.verifyBaseValue(attr, value)) {
+                if (this.verifyBaseValue(attr, value) === 1) {
                     this._baseVal[attr] = value;
                     return true;
                 }
@@ -110,7 +110,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
         public verifyBaseValue(attr: string, value?: any) {
             switch (attr) {
                 case 'd':
-                    return typeof value === 'string';
+                    return typeof value === 'string' ? 1 : 0;
                 case 'cx':
                 case 'cy':
                 case 'r':
@@ -124,9 +124,11 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                 case 'y':
                 case 'width':
                 case 'height':
-                    return typeof value === 'number';
+                    return typeof value === 'number' ? 1 : 0;
                 case 'points':
-                    return Array.isArray(value);
+                    return Array.isArray(value) ? 1 : 0;
+                default:
+                    return 2;
             }
         }
     };

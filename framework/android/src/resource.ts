@@ -239,7 +239,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         super.reset();
     }
 
-    public addImageSrc(element: HTMLImageElement | string, prefix = '', imageSet?: ImageSrcSet[]) {
+    public addImageSrc(element: HTMLImageElement | string, prefix = '', imageSet?: Null<ImageSrcSet[]>) {
         const result: StringMap = {};
         let mdpi: Undef<string>;
         if (typeof element === 'string') {

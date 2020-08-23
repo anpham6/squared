@@ -434,7 +434,7 @@ function getTransformPropertyName(type: number): Undef<string[]> {
     }
 }
 
-function getTransformValues(item: SvgAnimate): Undef<number[][]> {
+function getTransformValues(item: SvgAnimate): Null<number[][]> {
     switch (item.type) {
         case SVGTransform.SVG_TRANSFORM_ROTATE:
             return SvgAnimateTransform.toRotateList(item.values);
@@ -442,6 +442,8 @@ function getTransformValues(item: SvgAnimate): Undef<number[][]> {
             return SvgAnimateTransform.toScaleList(item.values);
         case SVGTransform.SVG_TRANSFORM_TRANSLATE:
             return SvgAnimateTransform.toTranslateList(item.values);
+        default:
+            return null;
     }
 }
 
@@ -823,7 +825,9 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
     public createSvgDrawable(node: T, element: SVGSVGElement, keyframesMap?: KeyframesMap, contentMap?: StringMap) {
         const { transformExclude: exclude, floatPrecision: precision, floatPrecisionKeyTime } = this.options;
         const svg = new Svg(element);
-        svg.contentMap = contentMap;
+        if (contentMap) {
+            svg.contentMap = contentMap;
+        }
         const supportedKeyframes = node.api >= BUILD_ANDROID.MARSHMALLOW;
         const keyTimeMode = SYNCHRONIZE_MODE.FROMTO_ANIMATE | (supportedKeyframes ? SYNCHRONIZE_MODE.KEYTIME_TRANSFORM : SYNCHRONIZE_MODE.IGNORE_TRANSFORM);
         const animateData = this._animateData;
@@ -1103,7 +1107,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                             repeatCount: string,
                                             beforeValues: Undef<string[]>,
                                             propertyNames: Undef<string[]>,
-                                            values: Undef<string[] |number[][]>;
+                                            values: UndefNull<string[] |number[][]>;
                                         if (i === 1) {
                                             repeatCount = v > 1 ? '0' : '-1';
                                         }
@@ -1114,11 +1118,13 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                         if (!synchronized && valueType === 'pathType') {
                                             if (group.pathData) {
                                                 const parent = item.parent;
-                                                let transforms: Undef<SvgTransform[]>,
-                                                    parentContainer: Undef<SvgShape>;
+                                                let transforms: Null<SvgTransform[]> = null,
+                                                    parentContainer: Null<SvgShape> = null;
                                                 if (parent && SvgBuild.isShape(parent)) {
                                                     parentContainer = parent;
-                                                    transforms = parent.path?.transformed || [];
+                                                    if (parent.path) {
+                                                        transforms = parent.path.transformed;
+                                                    }
                                                 }
                                                 propertyNames = ['pathData'];
                                                 values = SvgPath.extrapolate(item.attributeName, group.pathData, item.values, transforms, parentContainer, precision);

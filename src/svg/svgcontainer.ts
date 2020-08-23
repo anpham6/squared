@@ -196,7 +196,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
         alignX: false,
         alignY: false
     };
-    public parent?: SvgContainer;
+    public parent: Null<SvgContainer> = null;
     public viewport?: Svg;
     public readonly instanceType = INSTANCE_TYPE.SVG_CONTAINER;
 
@@ -229,7 +229,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
         }
         const viewport = getViewport(this);
         let rootElement: Undef<SVGSVGElement>,
-            contentMap: Undef<StringMap>;
+            contentMap: Null<StringMap> = null;
         if (viewport) {
             ({ element: rootElement, contentMap } = viewport);
             if (precision === undefined) {

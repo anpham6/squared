@@ -76,7 +76,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     protected _to = '';
     protected _duration = -1;
     protected _delay = 0;
-    protected _parent?: SvgView | SvgPath;
+    protected _parent: Null<SvgView | SvgPath> = null;
 
     private _attributeName = '';
     private _dataset: SvgDataSet = {};
@@ -259,7 +259,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     }
 
     get parentContainer() {
-        let result = this._parent as Undef<SvgContainer>;
+        let result = this._parent as Null<SvgContainer>;
         while (result && !SvgBuild.isContainer(result)) {
             result = result.parent;
         }

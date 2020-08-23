@@ -180,7 +180,7 @@ export const TRANSFORM = {
             method: { x, y }
         };
     },
-    parse(element: SVGElement, value?: string): Undef<SvgTransform[]> {
+    parse(element: SVGElement, value?: string): Null<SvgTransform[]> {
         if (!value) {
             value = element.style.getPropertyValue('transform');
         }
@@ -265,8 +265,9 @@ export const TRANSFORM = {
                 return result;
             }
         }
+        return null;
     },
-    matrix(element: SVGElement, value?: string): Undef<SvgMatrix> {
+    matrix(element: SVGElement, value?: string): Null<SvgMatrix> {
         const match = REGEXP_TRANSFORM.MATRIX.exec(value || getAttribute(element, 'transform'));
         if (match) {
             switch (match[1]) {
@@ -290,6 +291,7 @@ export const TRANSFORM = {
                     };
             }
         }
+        return null;
     },
     origin(element: SVGElement, value?: string) {
         if (!value) {
@@ -505,7 +507,7 @@ export function getParentAttribute(element: SVGElement, attr: string, computed?:
     return value;
 }
 
-export function getTargetElement(element: Element, rootElement?: Null<Element>, contentMap?: StringMap) {
+export function getTargetElement(element: Element, rootElement?: Null<Element>, contentMap?: Null<StringMap>) {
     const value = getNamedItem(element, 'href') || getNamedItem(element, 'xlink:href');
     if (value[0] === '#') {
         const id = value.substring(1);
@@ -568,6 +570,7 @@ export function getNearestViewBox(element: SVGElement) {
         }
         current = current.parentElement;
     }
+    return null;
 }
 
 export function getRootOffset(element: SVGGraphicsElement, rootElement: Element) {
