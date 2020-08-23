@@ -9,8 +9,9 @@ Option #1 (chrome / bundle / html+css):
 GitHub  
 &nbsp;&nbsp;&nbsp;&gt; git clone https://github.com/anpham6/squared  
 &nbsp;&nbsp;&nbsp;&gt; cd squared  
-&nbsp;&nbsp;&nbsp;&gt; npm install  
-&nbsp;&nbsp;&nbsp;&gt; npm run prod -OR- npm run dev  
+&nbsp;&nbsp;&nbsp;&gt; npm install --only=prod && npm run prod  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *OR*  
+&nbsp;&nbsp;&nbsp;&gt; npm run dev && npm install
 
 NPM  
 &nbsp;&nbsp;&nbsp;&gt; npm install squared  

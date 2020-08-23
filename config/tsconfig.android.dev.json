@@ -1,9 +1,10 @@
 {
-  "extends": "../tsconfig.json",
+  "extends": "./tsconfig.dev.options.json",
   "include": [
     "../@types/**/object.d.ts",
     "../@types/index.d.ts",
     "../@types/android/index.d.ts",
-    "../extension/android/**/*.ts"
+    "../src/**/*.ts",
+    "../framework/android/**/*.ts"
   ]
 }

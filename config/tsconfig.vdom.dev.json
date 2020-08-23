@@ -2,8 +2,9 @@
   "extends": "./tsconfig.dev.options.json",
   "include": [
     "../@types/**/object.d.ts",
-    "../@types/**/index.d.ts",
+    "../@types/index.d.ts",
+    "../@types/vdom/index.d.ts",
     "../src/**/*.ts",
-    "../framework/**/*.ts"
+    "../framework/vdom/**/*.ts"
   ]
 }
