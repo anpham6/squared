@@ -1,8 +1,9 @@
+import type View from '../../view';
+
 import Resource from '../../resource';
 
 import { BUILD_ANDROID } from '../../lib/enumeration';
 
-type View = android.base.View;
 type StyleList = ObjectMap<number[]>;
 type SharedAttributes = ObjectMapNested<number[]>;
 type AttributeMap = ObjectMap<number[]>;

@@ -1,7 +1,7 @@
+import type View from '../view';
+
 import { CONTAINER_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
-
-type View = android.base.View;
 
 const { formatPX } = squared.lib.css;
 const { createElement } = squared.lib.dom;

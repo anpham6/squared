@@ -1,6 +1,6 @@
-import Resource from '../resource';
+import type View from '../view';
 
-type View = android.base.View;
+import Resource from '../resource';
 
 const { formatPX } = squared.lib.css;
 

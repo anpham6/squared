@@ -1,10 +1,12 @@
+import type Node from './node';
+
 const { extractURL } = squared.lib.css;
 const { STRING } = squared.lib.regex;
 const { fromLastIndexOf, fromMimeType, hasMimeType, randomUUID } = squared.lib.util;
 
 const REGEXP_DATAURI = new RegExp(`^${STRING.DATAURI}$`);
 
-export default abstract class Resource<T extends squared.base.Node> implements squared.base.Resource<T> {
+export default abstract class Resource<T extends Node> implements squared.base.Resource<T> {
     public static readonly KEY_NAME = 'squared.base.resource';
 
     public static readonly ASSETS: ResourceAssetMap = {

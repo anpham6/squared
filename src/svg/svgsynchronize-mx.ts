@@ -144,56 +144,56 @@ function getPathData(entries: TimelineEntries, path: SvgPath, parent: Null<SvgCo
     }
     const transformOrigin = TRANSFORM.origin(path.element);
     for (let i = 0, length = entries.length; i < length; ++i) {
-        const [key, data] = entries[i];
-        const values: AnimateValue[] = [];
-        for (let j = 0, q = baseVal.length; j < q; ++j) {
-            const attr = baseVal[j];
-            let value = data.get(attr);
-            if (value === undefined) {
-                value = getForwardValue(forwardMap[attr], key) ?? path.getBaseValue(attr);
+        invalid: {
+            const [key, data] = entries[i];
+            const values: AnimateValue[] = [];
+            for (let j = 0, q = baseVal.length; j < q; ++j) {
+                const attr = baseVal[j];
+                let value = data.get(attr);
+                if (value === undefined) {
+                    value = getForwardValue(forwardMap[attr], key) ?? path.getBaseValue(attr);
+                }
+                if (value !== undefined) {
+                    values.push(value);
+                }
+                else {
+                    break invalid;
+                }
             }
-            if (value !== undefined) {
-                values.push(value);
+            let points: SvgPoint[];
+            switch (tagName) {
+                case 'line':
+                    points = [
+                        { x: values[0], y: values[1] },
+                        { x: values[2], y: values[4] }
+                    ] as Point[];
+                    break;
+                case 'rect': {
+                    const [width, height, x, y] = values as number[];
+                    points = [
+                        { x, y },
+                        { x: x + width, y },
+                        { x: x + width, y: y + height },
+                        { x, y: y + height }
+                    ] as Point[];
+                    break;
+                }
+                case 'polygon':
+                case 'polyline':
+                    points = values[0] as Point[];
+                    break;
+                case 'circle':
+                case 'ellipse':
+                    points = [{ x: values[0] as number, y: values[1] as number, rx: values[2] as number, ry: values[values.length - 1] as number }];
+                    break;
             }
-            else {
-                return;
-            }
-        }
-        let points: Undef<SvgPoint[]>;
-        switch (tagName) {
-            case 'line':
-                points = [
-                    { x: values[0], y: values[1] },
-                    { x: values[2], y: values[4] }
-                ] as Point[];
-                break;
-            case 'rect': {
-                const [width, height, x, y] = values as number[];
-                points = [
-                    { x, y },
-                    { x: x + width, y },
-                    { x: x + width, y: y + height },
-                    { x, y: y + height }
-                ] as Point[];
-                break;
-            }
-            case 'polygon':
-            case 'polyline':
-                points = values[0] as Point[];
-                break;
-            case 'circle':
-            case 'ellipse':
-                points = [{ x: values[0] as number, y: values[1] as number, rx: values[2] as number, ry: values[values.length - 1] as number }];
-                break;
-        }
-        if (points) {
-            let value: Undef<string>;
             if (path.transformed) {
                 points = SvgBuild.applyTransforms(path.transformed, points, transformOrigin);
             }
             if (parent) {
                 parent.refitPoints(points);
             }
+            let value: Undef<string>;
             switch (tagName) {
                 case 'line':
                 case 'polyline':

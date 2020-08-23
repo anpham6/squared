@@ -1,6 +1,6 @@
-import Extension from './extension';
+import type NodeUI from './node-ui';
 
-type NodeUI = squared.base.NodeUI;
+import Extension from './extension';
 
 const { includes } = squared.lib.util;
 

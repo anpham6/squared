@@ -2814,7 +2814,7 @@ export function getInheritedStyle(element: Element, attr: string, options?: Inhe
     }
     let value = '',
         current = element.parentElement;
-    while (current && (tagNames === undefined || !tagNames.includes(current.tagName))) {
+    while (current && (!tagNames || !tagNames.includes(current.tagName))) {
         value = getStyle(current)[attr];
         if (value === 'inherit' || exclude && exclude.test(value)) {
             value = '';

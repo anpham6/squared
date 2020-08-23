@@ -1,8 +1,9 @@
+import type NodeUI from '../node-ui';
+
 import ExtensionUI from '../extension-ui';
 
 import { NODE_ALIGNMENT } from '../lib/enumeration';
 
-type NodeUI = squared.base.NodeUI;
 type NodeIntersectXY = "intersectY" | "intersectX";
 
 const { withinRange } = squared.lib.util;

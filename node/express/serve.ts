@@ -456,14 +456,13 @@ let Node: serve.INode,
             return match ? [parseInt(match[1]), match[2] === '*' ? Infinity : parseInt(match[2])] : [0, Infinity];
         }
         withinSizeRange(filepath: string, value: Undef<string>) {
-            if (!value) {
-                return true;
-            }
-            const [largerThan, smallerThan] = Compress.getSizeRange(value);
-            if (largerThan > 0 || smallerThan < Infinity) {
-                const fileSize = Compress.getFileSize(filepath);
-                if (fileSize === 0 || fileSize < largerThan || fileSize > smallerThan) {
-                    return false;
+            if (value) {
+                const [largerThan, smallerThan] = Compress.getSizeRange(value);
+                if (largerThan > 0 || smallerThan < Infinity) {
+                    const fileSize = Compress.getFileSize(filepath);
+                    if (fileSize === 0 || fileSize < largerThan || fileSize > smallerThan) {
+                        return false;
+                    }
                 }
             }
             return true;
@@ -514,7 +513,7 @@ let Node: serve.INode,
                             options = options.trim();
                             if (options !== '') {
                                 const result = this.createTranspilerFunction(options);
-                                if (result === null) {
+                                if (!result) {
                                     continue;
                                 }
                                 return [module, result];
@@ -1683,7 +1682,7 @@ class FileManager implements serve.IFileManager {
                     }
                 }
             }
-            const pattern = /[uU][rR][lL]\(\s*([^)]+)\s*\)/g;
+            const pattern = /url\(\s*([^)]+)\s*\)/ig;
             let output: Undef<string>,
                 match: Null<RegExpExecArray>;
             while (match = pattern.exec(content)) {

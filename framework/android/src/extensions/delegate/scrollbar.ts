@@ -1,7 +1,7 @@
+import type View from '../../view';
+
 import { CONTAINER_ANDROID, CONTAINER_ANDROID_X } from '../../lib/constant';
 import { BUILD_ANDROID, CONTAINER_NODE } from '../../lib/enumeration';
-
-type View = android.base.View;
 
 const { formatPX } = squared.lib.css;
 

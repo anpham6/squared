@@ -1,3 +1,5 @@
+import type ExtensionManager from './extensionmanager';
+
 import Application from './application';
 import ControllerUI from './controller-ui';
 import ExtensionUI from './extension-ui';
@@ -158,7 +160,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public abstract get controllerHandler(): ControllerUI<T>;
     public abstract get resourceHandler(): ResourceUI<T>;
-    public abstract get extensionManager(): squared.base.ExtensionManager<T>;
+    public abstract get extensionManager(): ExtensionManager<T>;
 
     public init() {
         super.init();
@@ -1638,7 +1640,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         }
                                         else {
                                             current = current.parentElement;
-                                            if (current === null) {
+                                            if (!current) {
                                                 break;
                                             }
                                             ascending = true;

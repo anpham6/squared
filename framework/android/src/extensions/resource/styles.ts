@@ -1,8 +1,8 @@
+import type View from '../../view';
+
 import Resource from '../../resource';
 
 import { createStyleAttribute } from '../../lib/util';
-
-type View = android.base.View;
 
 const { capitalize } = squared.lib.util;
 

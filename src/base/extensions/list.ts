@@ -1,8 +1,8 @@
+import type NodeUI from '../node-ui';
+
 import ExtensionUI from '../extension-ui';
 
 import { NODE_RESOURCE } from '../lib/enumeration';
-
-type NodeUI = squared.base.NodeUI;
 
 const { convertListStyle } = squared.lib.css;
 const { isNumber } = squared.lib.util;

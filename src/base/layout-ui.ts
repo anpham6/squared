@@ -76,10 +76,7 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
     }
 
     public addRender(value: number) {
-        if (this.renderType === undefined) {
-            this.renderType = 0;
-        }
-        return this.renderType |= value;
+        return !this.renderType ? this.renderType = value : this.renderType |= value;
     }
 
     public retainAs(list: T[]) {

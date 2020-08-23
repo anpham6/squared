@@ -1,8 +1,8 @@
+import type View from '../../view';
+
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import LayoutUI = squared.base.LayoutUI;
-
-type View = android.base.View;
 
 interface PositiveXData {
     children: View[];

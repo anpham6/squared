@@ -1,6 +1,6 @@
-import { RESERVED_JAVA } from './lib/constant';
+import type View from './view';
 
-type View = android.base.View;
+import { RESERVED_JAVA } from './lib/constant';
 
 const { findColorShade, parseColor } = squared.lib.color;
 const { extractURL, getSrcSet } = squared.lib.css;

@@ -1,6 +1,6 @@
-import { getDataSet } from '../../lib/util';
+import type View from '../../view';
 
-type View = android.base.View;
+import { getDataSet } from '../../lib/util';
 
 const { capitalize } = squared.lib.util;
 

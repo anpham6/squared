@@ -1,10 +1,10 @@
+import type View from '../view';
+
 import Resource from '../resource';
 
 import { EXT_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 import { createViewAttribute, getDataSet } from '../lib/util';
-
-type View = android.base.View;
 
 const { convertCamelCase } = squared.lib.util;
 

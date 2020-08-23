@@ -1,6 +1,7 @@
+import type View from '../../view';
+
 import { getRootNs } from '../../lib/util';
 
-type View = android.base.View;
 type RenderData = Undef<NodeIndex[]>;
 
 interface NodeIndex {

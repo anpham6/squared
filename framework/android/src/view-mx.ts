@@ -1470,8 +1470,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (options) {
                 ({ attributes, position } = options);
             }
-            const node = new View(!isNaN(id) ? id : this.id, this.sessionId, this.element || undefined);
-            if (id !== undefined) {
+            const newInstance = !isNaN(id);
+            const node = new View(newInstance ? id : this.id, this.sessionId, this.element || undefined);
+            if (newInstance) {
                 node.setControlType(this.controlName, this.containerType);
             }
             else {

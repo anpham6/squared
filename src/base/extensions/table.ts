@@ -1,8 +1,8 @@
+import type NodeUI from '../node-ui';
+
 import ExtensionUI from '../extension-ui';
 
 import { BOX_STANDARD, NODE_RESOURCE } from '../lib/enumeration';
-
-type NodeUI = squared.base.NodeUI;
 
 const { formatPercent, formatPX, getInheritedStyle, getStyle, isLength } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;

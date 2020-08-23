@@ -1,3 +1,5 @@
+import type View from '../../view';
+
 import Resource from '../../resource';
 import ResourceSvg from './svg';
 
@@ -10,8 +12,6 @@ import { applyTemplate } from '../../lib/util';
 import LAYERLIST_TMPL from '../../template/layer-list';
 import SHAPE_TMPL from '../../template/shape';
 import VECTOR_TMPL from '../../template/vector';
-
-type View = android.base.View;
 
 interface PositionAttribute {
     top?: string;

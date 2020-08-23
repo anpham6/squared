@@ -1,3 +1,5 @@
+import type View from './view';
+
 import Resource from './resource';
 
 import { XMLNS_ANDROID } from './lib/constant';
@@ -13,7 +15,6 @@ import STYLE_TMPL from './template/resources/style';
 
 type FileArchivingOptions = squared.base.FileArchivingOptions;
 type FileCopyingOptions = squared.base.FileCopyingOptions;
-type View = android.base.View;
 
 interface ItemValue {
     name: string;

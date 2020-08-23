@@ -1,6 +1,8 @@
+import type NodeUI from '../node-ui';
+
 import ExtensionUI from '../extension-ui';
 
-export default abstract class Column<T extends squared.base.NodeUI> extends ExtensionUI<T> {
+export default abstract class Column<T extends NodeUI> extends ExtensionUI<T> {
     public is(node: T) {
         return node.length > 1 && (node.blockDimension && node.display !== 'table') && !node.layoutElement;
     }

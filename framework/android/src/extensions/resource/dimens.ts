@@ -1,8 +1,9 @@
+import type View from '../../view';
+
 import Resource from '../../resource';
 
 import Pattern = squared.lib.base.Pattern;
 
-type View = android.base.View;
 type GroupData = ObjectMap<View[]>;
 
 const { convertHyphenated, fromLastIndexOf } = squared.lib.util;

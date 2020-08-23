@@ -1,3 +1,5 @@
+import type ExtensionUI from './extension-ui';
+
 import Node from './node';
 
 import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TRAVERSE } from './lib/enumeration';
@@ -524,7 +526,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public innerBefore?: T;
     public innerAfter?: T;
     public companion?: T;
-    public renderExtension?: squared.base.ExtensionUI<T>[];
+    public renderExtension?: ExtensionUI<T>[];
     public renderTemplates?: NodeTemplate<T>[];
     public renderedAs?: NodeTemplate<T>;
     public horizontalRows?: T[][];
@@ -644,7 +646,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public lockAttr(name: string, attr: string) {
-        if (this._locked === undefined) {
+        if (!this._locked) {
             this._locked = {};
         }
         (this._locked[name] || (this._locked[name] = {}))[attr] = true;
@@ -1278,7 +1280,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public registerBox(region: number, node?: T): Null<T> {
-        if (this._boxRegister === undefined) {
+        if (!this._boxRegister) {
             this._boxRegister = {};
         }
         if (node) {
@@ -1532,7 +1534,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         const result = this._cacheState.naturalChild;
         if (result === undefined) {
             const element = this._element;
-            return this._cacheState.naturalChild = element !== null && (!!element.parentElement || element === document.documentElement);
+            return this._cacheState.naturalChild = element !== null && (element.parentElement !== null || element === document.documentElement);
         }
         return result;
     }
@@ -2074,7 +2076,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get innerMostWrapped() {
-        if (this._innerMostWrapped === undefined) {
+        if (!this._innerMostWrapped) {
             let result: Undef<T>;
             if (!this.naturalChild) {
                 result = this.innerWrapped;

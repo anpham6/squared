@@ -67,7 +67,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
         for (let i = 0; i < length; ++i) {
             const item = animations[i];
             const keyName = SvgAnimationIntervalMap.getKeyName(item);
-            if (item.baseValue && intervalMap[keyName][-1] === undefined) {
+            if (item.baseValue && !intervalMap[keyName][-1]) {
                 insertIntervalValue(intervalMap, intervalTimes, keyName, -1, item.baseValue);
             }
             if (item.setterType) {

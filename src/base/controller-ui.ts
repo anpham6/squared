@@ -1,3 +1,5 @@
+import type LayoutUI from './layout-ui';
+
 import Controller from './controller';
 import NodeUI from './node-ui';
 
@@ -50,7 +52,7 @@ function setButtonStyle(styleMap: StringMap, applied: boolean, defaultColor: str
 
 function pushIndent(value: string, depth: number, char = '\t', indent?: string) {
     if (depth > 0) {
-        if (indent === undefined) {
+        if (!indent) {
             indent = char.repeat(depth);
         }
         return joinArray(value.split('\n'), line => line !== '' ? indent + line : '');
@@ -82,15 +84,15 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     private _unsupportedTagName!: Set<string>;
     private _settingsStyle!: ControllerSettingsStyleUI;
 
-    public abstract processUnknownParent(layout: squared.base.LayoutUI<T>): squared.base.LayoutUI<T>;
-    public abstract processUnknownChild(layout: squared.base.LayoutUI<T>): squared.base.LayoutUI<T>;
-    public abstract processTraverseHorizontal(layout: squared.base.LayoutUI<T>, siblings: T[]): Undef<squared.base.LayoutUI<T>>;
-    public abstract processTraverseVertical(layout: squared.base.LayoutUI<T>, siblings: T[]): Undef<squared.base.LayoutUI<T>>;
-    public abstract processLayoutHorizontal(layout: squared.base.LayoutUI<T>): squared.base.LayoutUI<T>;
+    public abstract processUnknownParent(layout: LayoutUI<T>): LayoutUI<T>;
+    public abstract processUnknownChild(layout: LayoutUI<T>): LayoutUI<T>;
+    public abstract processTraverseHorizontal(layout: LayoutUI<T>, siblings: T[]): Undef<LayoutUI<T>>;
+    public abstract processTraverseVertical(layout: LayoutUI<T>, siblings: T[]): Undef<LayoutUI<T>>;
+    public abstract processLayoutHorizontal(layout: LayoutUI<T>): LayoutUI<T>;
     public abstract createNodeGroup(node: T, children: T[], parent?: T, options?: CreateNodeGroupUIOptions): T;
     public abstract createNodeWrapper(node: T, parent: T, options?: CreateNodeWrapperUIOptions<T>): T;
-    public abstract renderNode(layout: squared.base.LayoutUI<T>): Undef<NodeTemplate<T>>;
-    public abstract renderNodeGroup(layout: squared.base.LayoutUI<T>): Undef<NodeTemplate<T>>;
+    public abstract renderNode(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
+    public abstract renderNodeGroup(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
     public abstract sortRenderPosition(parent: T, templates: NodeTemplate<T>[]): NodeTemplate<T>[];
     public abstract setConstraints(rendering: squared.base.NodeList<T>): void;
     public abstract optimize(rendered: T[]): void;

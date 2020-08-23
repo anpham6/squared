@@ -1,8 +1,9 @@
+import type NodeUI from '../node-ui';
+
 import ExtensionUI from '../extension-ui';
 
 import { BOX_STANDARD } from '../lib/enumeration';
 
-type NodeUI = squared.base.NodeUI;
 type RowData = Undef<NodeUI[]>[][];
 
 interface GridAlignment extends StringMap {

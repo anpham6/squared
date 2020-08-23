@@ -155,7 +155,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
     }
 
     get transforms() {
-        if (this._transforms === undefined) {
+        if (!this._transforms) {
             this._transforms = super.transforms;
             const transforms = SvgBuild.convertTransforms(this.patternElement.patternTransform.baseVal);
             const length = transforms.length;

@@ -1388,14 +1388,14 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             if (elementData) {
                 if (typeof attrs === 'string') {
                     const value = elementData[attrs] as Undef<string>;
-                    if (value !== undefined) {
+                    if (value) {
                         element.style.setProperty(attrs, value);
                     }
                 }
                 else {
                     for (const attr in attrs) {
                         const value = elementData[attr] as Undef<string>;
-                        if (value !== undefined) {
+                        if (value) {
                             element.style.setProperty(attr, value);
                         }
                     }
@@ -2157,7 +2157,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get linear() {
-        if (this._linear === null) {
+        if (!this._linear) {
             const bounds = this.bounds;
             if (bounds) {
                 if (this.styleElement) {
@@ -2181,7 +2181,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get box() {
-        if (this._box === null) {
+        if (!this._box) {
             const bounds = this.bounds;
             if (bounds) {
                 if (this.styleElement && this.naturalChildren.length) {

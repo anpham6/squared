@@ -1,4 +1,6 @@
-export default class NodeList<T extends squared.base.Node> extends squared.lib.base.Container<T> implements squared.base.NodeList<T> {
+import type Node from './node';
+
+export default class NodeList<T extends Node> extends squared.lib.base.Container<T> implements squared.base.NodeList<T> {
     public afterAdd?: (node: T, cascade?: boolean, remove?: boolean) => void;
 
     constructor(

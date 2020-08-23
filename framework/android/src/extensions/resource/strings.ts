@@ -1,9 +1,9 @@
+import type View from '../../view';
+
 import Resource from '../../resource';
 
 import { CONTAINER_ANDROID } from '../../lib/constant';
 import { replaceCharacterData } from '../../lib/util';
-
-type View = android.base.View;
 
 const { parseAngle } = squared.lib.css;
 const { measureTextWidth } = squared.lib.dom;

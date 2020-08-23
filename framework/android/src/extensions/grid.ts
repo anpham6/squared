@@ -1,10 +1,10 @@
+import type View from '../view';
+
 import Resource from '../resource';
 
 import LayoutUI = squared.base.LayoutUI;
 
 import { CONTAINER_NODE } from '../lib/enumeration';
-
-type View = android.base.View;
 
 const { formatPX } = squared.lib.css;
 const { withinRange } = squared.lib.util;

@@ -1,3 +1,5 @@
+import type View from '../../view';
+
 import Resource from '../../resource';
 
 import NodeUI = squared.base.NodeUI;
@@ -26,7 +28,6 @@ import SvgG = squared.svg.SvgG;
 import SvgPath = squared.svg.SvgPath;
 import SvgShape = squared.svg.SvgShape;
 
-type View = android.base.View;
 type SvgAnimation = squared.svg.SvgAnimation;
 type SvgGroup = squared.svg.SvgGroup;
 type SvgImage = squared.svg.SvgImage;

@@ -1,3 +1,5 @@
+import type NodeUI from '../node-ui';
+
 import ExtensionUI from '../extension-ui';
 import ResourceUI from '../resource-ui';
 
@@ -5,7 +7,7 @@ const { resolveURL } = squared.lib.css;
 
 const REGEXP_POSITION = /^0[a-z%]+|left|start|top/;
 
-export default abstract class Sprite<T extends squared.base.NodeUI> extends ExtensionUI<T> {
+export default abstract class Sprite<T extends NodeUI> extends ExtensionUI<T> {
     public is(node: T) {
         return node.length === 0 && node.hasWidth && node.hasHeight;
     }

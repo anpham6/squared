@@ -1,10 +1,12 @@
+import type Node from './node';
+
 type FileActionOptions = squared.base.FileActionOptions;
 type FileArchivingOptions = squared.base.FileArchivingOptions;
 type FileCopyingOptions = squared.base.FileCopyingOptions;
 
 const { fromLastIndexOf, trimEnd } = squared.lib.util;
 
-export default abstract class File<T extends squared.base.Node> implements squared.base.File<T> {
+export default abstract class File<T extends Node> implements squared.base.File<T> {
     public static downloadFile(data: Blob, filename: string, mimeType?: string) {
         const blob = new Blob([data], { type: mimeType || 'application/octet-stream' });
         const url = window.URL.createObjectURL(blob);

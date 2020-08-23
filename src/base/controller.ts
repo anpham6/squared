@@ -1,4 +1,6 @@
-export default class Controller<T extends squared.base.Node> implements squared.base.Controller<T> {
+import type Node from './node';
+
+export default class Controller<T extends Node> implements squared.base.Controller<T> {
     public readonly localSettings: ControllerSettings = {
         mimeType: {
             font: '*',

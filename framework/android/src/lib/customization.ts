@@ -1,7 +1,7 @@
+import type View from '../view';
+
 import { STRING_ANDROID } from './constant';
 import { BUILD_ANDROID } from './enumeration';
-
-type View = android.base.View;
 
 function substitute(result: PlainObject, value: string, api?: number, minApi = 0) {
     if (!api || api >= minApi) {

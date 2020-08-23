@@ -1,3 +1,5 @@
+import type View from '../view';
+
 import Resource from '../resource';
 
 import LayoutUI = squared.base.LayoutUI;
@@ -5,8 +7,6 @@ import LayoutUI = squared.base.LayoutUI;
 import { CONTAINER_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 import { createViewAttribute } from '../lib/util';
-
-type View = android.base.View;
 
 const { formatPX } = squared.lib.css;
 

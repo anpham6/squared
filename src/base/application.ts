@@ -1,3 +1,8 @@
+import type Extension from './extension';
+import type ExtensionManager from './extensionmanager';
+import type Resource from './resource';
+import type Controller from './controller';
+
 import Node from './node';
 import NodeList from './nodelist';
 
@@ -24,10 +29,10 @@ const operationNotSupported = (): Promise<void> => Promise.reject(new Error('Ope
 export default abstract class Application<T extends Node> implements squared.base.Application<T> {
     public static readonly KEY_NAME = 'squared.base.application';
 
-    public static prioritizeExtensions<T extends Node>(value: string, extensions: squared.base.Extension<T>[]) {
+    public static prioritizeExtensions<T extends Node>(value: string, extensions: Extension<T>[]) {
         const included = value.trim().split(/\s*,\s*/);
-        const result: squared.base.Extension<T>[] = [];
-        const untagged: squared.base.Extension<T>[] = [];
+        const result: Extension<T>[] = [];
+        const untagged: Extension<T>[] = [];
         for (let i = 0, length = extensions.length; i < length; ++i) {
             const ext = extensions[i];
             const index = included.indexOf(ext.name);
@@ -38,12 +43,12 @@ export default abstract class Application<T extends Node> implements squared.bas
                 untagged.push(ext);
             }
         }
-        return result.length ? flatArray<squared.base.Extension<T>>(result, 0).concat(untagged) : extensions;
+        return result.length ? flatArray<Extension<T>>(result, 0).concat(untagged) : extensions;
     }
 
-    public extensions: squared.base.Extension<T>[] = [];
+    public extensions: Extension<T>[] = [];
     public closed = false;
-    public builtInExtensions!: Map<string, squared.base.Extension<T>>;
+    public builtInExtensions!: Map<string, Extension<T>>;
     public readonly Node: Constructor<T>;
     public readonly elementMap = new Map<Element, T>();
     public readonly session: squared.base.AppSession<T> = {
@@ -55,9 +60,9 @@ export default abstract class Application<T extends Node> implements squared.bas
     protected readonly _afterInsertNode: BindGeneric<T, void>;
 
     private _nextId = 0;
-    private readonly _controllerHandler: squared.base.Controller<T>;
-    private readonly _resourceHandler: Null<squared.base.Resource<T>> = null;
-    private readonly _extensionManager: Null<squared.base.ExtensionManager<T>> = null;
+    private readonly _controllerHandler: Controller<T>;
+    private readonly _resourceHandler: Null<Resource<T>> = null;
+    private readonly _extensionManager: Null<ExtensionManager<T>> = null;
 
     constructor(
         public readonly framework: number,
@@ -66,12 +71,12 @@ export default abstract class Application<T extends Node> implements squared.bas
         ResourceConstructor?: Constructor<T>,
         ExtensionManagerConstructor?: Constructor<T>)
     {
-        this._controllerHandler = (new ControllerConstructor(this) as unknown) as squared.base.Controller<T>;
+        this._controllerHandler = (new ControllerConstructor(this) as unknown) as Controller<T>;
         if (ResourceConstructor) {
-            this._resourceHandler = (new ResourceConstructor(this) as unknown) as squared.base.Resource<T>;
+            this._resourceHandler = (new ResourceConstructor(this) as unknown) as Resource<T>;
         }
         if (ExtensionManagerConstructor) {
-            this._extensionManager = (new ExtensionManagerConstructor(this) as unknown) as squared.base.ExtensionManager<T>;
+            this._extensionManager = (new ExtensionManagerConstructor(this) as unknown) as ExtensionManager<T>;
         }
         this._afterInsertNode = this._controllerHandler.afterInsertNode;
         this.Node = nodeConstructor;
@@ -415,7 +420,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         return node;
     }
 
-    protected cascadeParentNode(cache: NodeList<T>, excluded: NodeList<T>, parentElement: HTMLElement, sessionId: string, depth: number, extensions?: squared.base.Extension<T>[], rootElements?: Set<HTMLElement>) {
+    protected cascadeParentNode(cache: NodeList<T>, excluded: NodeList<T>, parentElement: HTMLElement, sessionId: string, depth: number, extensions?: Extension<T>[], rootElements?: Set<HTMLElement>) {
         const node = this.insertNode(parentElement, sessionId);
         if (node) {
             const controllerHandler = this.controllerHandler;

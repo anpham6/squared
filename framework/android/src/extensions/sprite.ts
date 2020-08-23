@@ -1,9 +1,9 @@
+import type View from '../view';
+
 import LayoutUI = squared.base.LayoutUI;
 
 import { CONTAINER_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
-
-type View = android.base.View;
 
 interface SpriteData {
     image: Required<RawAsset>;

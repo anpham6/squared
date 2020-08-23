@@ -1,8 +1,8 @@
+import type View from '../../view';
+
 import LayoutUI = squared.base.LayoutUI;
 
 import { CONTAINER_NODE } from '../../lib/enumeration';
-
-type View = android.base.View;
 
 interface MaxWidthHeightData {
     maxWidth: boolean;
