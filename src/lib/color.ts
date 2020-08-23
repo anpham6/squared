@@ -919,7 +919,7 @@ export function findColorName(value: string) {
             CACHE_COLORRESULT.set(color.key, color);
         }
     }
-    return CACHE_COLORRESULT.get(value.toLowerCase());
+    return CACHE_COLORRESULT.get(value.toLowerCase()) || null;
 }
 
 export function findColorShade(value: string) {
@@ -961,10 +961,9 @@ export function findColorShade(value: string) {
             }
             return result[index];
         }
-        else {
-            return COLOR_CSS3[COLOR_CSS3.length - 1];
-        }
+        return COLOR_CSS3[COLOR_CSS3.length - 1];
     }
+    return null;
 }
 
 export function parseColor(value: string, opacity = 1, transparency?: boolean) {
@@ -974,7 +973,7 @@ export function parseColor(value: string, opacity = 1, transparency?: boolean) {
             return colorData;
         }
         let key = '',
-            rgba: Undef<RGBA>;
+            rgba: Null<RGBA>;
         if (value[0] === '#') {
             rgba = parseRGBA(value);
         }
@@ -1014,6 +1013,9 @@ export function parseColor(value: string, opacity = 1, transparency?: boolean) {
                                 rgba = { ...color.rgb, a: clampOpacity(opacity) } as RGBA;
                                 key = value;
                             }
+                            else {
+                                rgba = null;
+                            }
                             break;
                         }
                     }
@@ -1049,6 +1051,7 @@ export function parseColor(value: string, opacity = 1, transparency?: boolean) {
             }
         }
     }
+    return null;
 }
 
 export function reduceRGBA(value: RGBA, percent: number, cacheName?: string) {
@@ -1126,6 +1129,7 @@ export function parseRGBA(value: string) {
             } as RGBA;
         }
     }
+    return null;
 }
 
 export function convertHSLA(value: RGBA): HSLA {

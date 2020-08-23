@@ -40,9 +40,9 @@ function formatObject(obj: ObjectMap<Undef<string | StringMap>>, numberAlias?: b
                         }
                         break;
                     default: {
-                        const color = parseColor(value);
-                        if (color) {
-                            const colorName = Resource.addColor(color);
+                        const colorData = parseColor(value);
+                        if (colorData) {
+                            const colorName = Resource.addColor(colorData);
                             if (colorName !== '') {
                                 obj[attr] = `@color/${colorName}`;
                             }
@@ -186,11 +186,17 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         return '';
     }
 
-    public static addColor(color: Undef<ColorData | string>, transparency?: boolean) {
+    public static addColor(color: ColorData | string, transparency?: boolean) {
         if (typeof color === 'string') {
-            color = parseColor(color, 1, transparency);
+            const result = parseColor(color, 1, transparency);
+            if (result) {
+                color = result;
+            }
+            else {
+                return '';
+            }
         }
-        if (color && (!color.transparent || transparency)) {
+        if (!color.transparent || transparency) {
             const keyName = color.opacity < 1 ? color.valueAsARGB : color.value;
             let colorName = STORED.colors.get(keyName);
             if (colorName) {

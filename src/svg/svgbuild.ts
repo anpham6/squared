@@ -271,7 +271,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     }
 
     public static transformRefit(value: string, options?: SvgTransformRefitOptions) {
-        let transforms: UndefNull<SvgTransform[]>,
+        let transforms: Undef<SvgTransform[]>,
             parent: Undef<SvgView>,
             container: Undef<SvgContainer>,
             precision: Undef<number>;

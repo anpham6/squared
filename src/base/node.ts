@@ -776,10 +776,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     protected _childIndex = Infinity;
     protected readonly _element: Null<Element> = null;
 
+    private _elementData: Null<ElementData> = null;
     private _style?: CSSStyleDeclaration;
     private _dataset?: DOMStringMap;
-    private _elementData?: ElementData;
-    private _pseudoElt?: string;
+    private _pseudoElt?: PseudoElt;
     private _data?: StandardMap;
 
     constructor(
@@ -791,12 +791,12 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         super(children);
         if (element) {
             this._element = element;
-            if (!this.syncWith(sessionId)) {
-                this._styleMap = {};
-            }
             if (sessionId !== '0') {
                 setElementCache(element, 'node', sessionId, this);
                 this._elementData = getElementData(element, sessionId);
+            }
+            if (!this.syncWith(sessionId)) {
+                this._styleMap = {};
             }
         }
         else {
@@ -823,8 +823,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 else if (!sessionId) {
                     return false;
                 }
+                else {
+                    this._elementData = getElementData(element, sessionId);
+                }
             }
-            const styleMap: Undef<StringMap> = getElementCache(element, 'styleMap', sessionId);
+            const styleMap: Undef<StringMap> = this._elementData?.styleMap;
             if (styleMap) {
                 if (this.styleElement) {
                     if (!this.pseudoElement) {
@@ -838,7 +841,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         }
                     }
                     else {
-                        this._pseudoElt = getElementCache<string>(element, 'pseudoElt', sessionId);
+                        this._pseudoElt = this._elementData?.pseudoElt as PseudoElt;
                     }
                     this._styleMap = Node.sanitizeCss(element, styleMap, styleMap.writingMode);
                 }
@@ -1325,11 +1328,14 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public cssSpecificity(attr: string) {
+        let value: Undef<number>;
         if (this.styleElement) {
-            const element = this._element as Element;
-            return (!this._pseudoElt ? getElementCache<ObjectMap<number>>(element, 'styleSpecificity', this.sessionId)?.[attr] : getElementCache<ObjectMap<number>>(element.parentElement as Element, 'styleSpecificity' + this._pseudoElt, this.sessionId)?.[attr]) || 0;
+            const styleData = !this._pseudoElt ? this._elementData?.['styleSpecificity'] : this.actualParent?.elementData?.['styleSpecificity' + this._pseudoElt] as Undef<ObjectMap<number>>;
+            if (styleData) {
+                value = styleData[attr]; 
+            }
         }
-        return 0;
+        return value || 0;
     }
 
     public cssTry(attr: string, value: string, callback?: FunctionSelf<this>) {
@@ -1434,13 +1440,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return result;
     }
 
-    public cssPseudoElement(name: string) {
+    public cssPseudoElement(value: PseudoElt) {
         if (this.naturalElement) {
-            const styleMap = getElementCache<StringMap>(this._element!, 'styleMap::' + name, this.sessionId);
+            const styleMap = this._elementData!['styleMap' + value] as Undef<StringMap>;
             if (styleMap) {
-                switch (name) {
-                    case 'first-letter':
-                    case 'first-line':
+                switch (value) {
+                    case '::first-letter':
+                    case '::first-line':
                         switch (this.display) {
                             case 'block':
                             case 'inline-block':
@@ -1450,8 +1456,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             default:
                                 return null;
                         }
-                    case 'before':
-                    case 'after':
+                    case '::before':
+                    case '::after':
                         return Node.sanitizeCss(this._element as HTMLElement, styleMap, styleMap.writingMode || this.cssInitial('writingMode'));
                 }
             }
@@ -2594,7 +2600,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (result === undefined) {
             if (this.naturalChild) {
                 if (this.textElement) {
-                    return this._textBounds = getRangeClientRect(this._element as Element) || null;
+                    return this._textBounds = getRangeClientRect(this._element as Element);
                 }
                 else if (this.length) {
                     const children = this.naturalChildren;

@@ -51,32 +51,35 @@ function cascadeActualPadding(children: T[], attr: string, value: number) {
     return valid;
 }
 
-function traverseElementSibling(element: UndefNull<Element>, direction: "previousSibling" | "nextSibling", sessionId: string, options?: TraverseSiblingsOptions) {
+function traverseElementSibling(element: Null<Element>, direction: "previousSibling" | "nextSibling", sessionId: string, options?: TraverseSiblingsOptions) {
     let floating: Undef<boolean>,
         pageFlow: Undef<boolean>,
         lineBreak: Undef<boolean>,
         excluded: Undef<boolean>;
-    if (options) {
-        ({ floating, pageFlow, lineBreak, excluded } = options);
-    }
     const result: T[] = [];
+    let i = 0;
     while (element) {
-        const node = getElementAsNode<T>(element, sessionId);
-        if (node) {
-            if (lineBreak !== false && node.lineBreak || excluded !== false && node.excluded && !node.lineBreak) {
-                result.push(node);
-            }
-            else if (node.pageFlow && !node.excluded) {
-                if (pageFlow === false) {
-                    break;
+        if (i++) {
+            const node = getElementAsNode<T>(element, sessionId);
+            if (node) {
+                if (lineBreak !== false && node.lineBreak || excluded !== false && node.excluded && !node.lineBreak) {
+                    result.push(node);
                 }
-                result.push(node);
-                if (floating !== false || !node.floating && (node.visible || node.rendered) && node.display !== 'none') {
-                    break;
+                else if (node.pageFlow && !node.excluded) {
+                    if (pageFlow === false) {
+                        break;
+                    }
+                    result.push(node);
+                    if (floating !== false || !node.floating && (node.visible || node.rendered) && node.display !== 'none') {
+                        break;
+                    }
                 }
             }
         }
-        element = element[direction] as Element;
+        else if (options) {
+            ({ floating, pageFlow, lineBreak, excluded } = options);
+        }
+        element = element[direction] as Null<Element>;
     }
     return result;
 }
@@ -1177,12 +1180,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public previousSiblings(options?: TraverseSiblingsOptions): T[] {
         const node = this.innerMostWrapped;
-        return options ? traverseElementSibling(node.element?.previousSibling as Element, 'previousSibling', this.sessionId, options) : node.siblingsLeading;
+        return options ? traverseElementSibling(node.element, 'previousSibling', this.sessionId, options) : node.siblingsLeading;
     }
 
     public nextSiblings(options?: TraverseSiblingsOptions): T[] {
         const node = this.innerMostWrapped;
-        return options ? traverseElementSibling(node.element?.nextSibling as Element, 'nextSibling', this.sessionId, options) : node.siblingsTrailing;
+        return options ? traverseElementSibling(node.element, 'nextSibling', this.sessionId, options) : node.siblingsTrailing;
     }
 
     public modifyBox(region: number, value: number, negative = true) {
@@ -2102,12 +2105,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     get firstLetterStyle() {
         const result = this._cacheState.firstLetterStyle;
-        return result === undefined ? this._cacheState.firstLetterStyle = this.cssPseudoElement('first-letter') : result;
+        return result === undefined ? this._cacheState.firstLetterStyle = this.cssPseudoElement('::first-letter') : result;
     }
 
     get firstLineStyle() {
         const result = this._cacheState.firstLineStyle;
-        return result === undefined ? this._cacheState.firstLineStyle = this.cssPseudoElement('first-line') : result;
+        return result === undefined ? this._cacheState.firstLineStyle = this.cssPseudoElement('::first-line') : result;
     }
 
     get textAlignLast() {

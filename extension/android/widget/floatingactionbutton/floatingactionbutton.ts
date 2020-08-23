@@ -38,7 +38,8 @@ export default class FloatingActionButton<T extends View> extends squared.base.E
         const element = node.element as HTMLElement;
         const target = node.target;
         const options = createViewAttribute(this.options[element.id.trim()]);
-        const colorName = Resource.addColor(parseColor(node.css('backgroundColor'), node.toFloat('opacity', 1)));
+        const colorData = parseColor(node.css('backgroundColor'), node.toFloat('opacity', 1));
+        const colorName = colorData ? Resource.addColor(colorData) : '';
         assignEmptyValue(options, 'android', 'backgroundTint', colorName !== '' ? `@color/${colorName}` : '?attr/colorAccent');
         if (!node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
             assignEmptyValue(options, 'android', 'focusable', 'false');

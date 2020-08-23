@@ -460,12 +460,11 @@ function getTransformInitialValue(name: string): Undef<string> {
 }
 
 function getColorValue<T>(value: string, asArray?: T) {
-    const colorName = `@color/${Resource.addColor(value)}`;
-    return (asArray ? [colorName] : colorName) as T extends boolean ? string[] : string;
-}
-
-function convertValueType(item: SvgAnimation, value: string) {
-    return isColorType(item.attributeName) ? getColorValue(value) : value.trim() || undefined;
+    let colorName = Resource.addColor(value);
+    if (colorName !== '') {
+        colorName = `@color/${colorName}`;
+        return (asArray ? [colorName] : colorName) as T extends boolean ? string[] : string;
+    }
 }
 
 function getTileMode(value: number) {
@@ -697,6 +696,7 @@ function insertFillAfter(propertyName: string, valueType: string, item: SvgAnima
     }
 }
 
+const convertValueType = (item: SvgAnimation, value: string) => isColorType(item.attributeName) ? getColorValue(value) : value.trim() || undefined;
 const getTemplateFilename = (templateName: string, length: number, prefix?: string, suffix?: string) => templateName + (prefix ? '_' + prefix : '') + (length ? '_vector' : '') + (suffix ? '_' + suffix.toLowerCase() : '');
 const isColorType = (attr: string) => attr === 'fill' || attr === 'stroke';
 const getVectorName = (target: SvgView, section: string, index = -1) => target.name + '_' + section + (index !== -1 ? '_' + (index + 1) : '');
@@ -740,50 +740,49 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 }
             }
             const { cache, keyframesMap } = this.application.getProcessing(sessionId)!;
-            let parentElement: UndefNull<HTMLElement>,
-                element: UndefNull<SVGSVGElement>;
+            const addSvgElement = (node: T, element: SVGSVGElement, parentElement?: HTMLElement) => {
+                const drawable = this.createSvgDrawable(node, element, keyframesMap, contentMap);
+                if (drawable) {
+                    if (node.api >= BUILD_ANDROID.LOLLIPOP) {
+                        node.android('src', getDrawableSrc(drawable));
+                    }
+                    else {
+                        node.app('srcCompat', getDrawableSrc(drawable));
+                    }
+                }
+                if (!node.hasWidth) {
+                    node.setLayoutWidth('wrap_content');
+                }
+                if (!node.hasHeight) {
+                    node.setLayoutHeight('wrap_content');
+                }
+                if (node.baseline) {
+                    node.android('baselineAlignBottom', 'true');
+                }
+                const svg = node.data<Svg>(Resource.KEY_NAME, 'svg');
+                if (svg) {
+                    const title = svg.getTitle();
+                    const desc = svg.getDesc();
+                    if (title !== '') {
+                        node.android('tooltipText', Resource.addString(title, `svg_${node.controlId.toLowerCase()}_title`, true));
+                    }
+                    if (desc !== '') {
+                        node.android('contentDescription', Resource.addString(desc, `svg_${node.controlId.toLowerCase()}_desc`, true));
+                    }
+                }
+                if (parentElement) {
+                    parentElement.removeChild(element);
+                }
+            };
             cache.each(node => {
                 if (node.imageElement) {
-                    [parentElement, element] = this.createSvgElement(node, node.toElementString('src'));
+                    const [parentElement, element] = this.createSvgElement(node, node.toElementString('src'));
+                    if (element) {
+                        addSvgElement(node, element, parentElement);
+                    }
                 }
                 else if (node.svgElement) {
-                    element = node.element as SVGSVGElement;
-                }
-                if (element) {
-                    const drawable = this.createSvgDrawable(node, element, keyframesMap, contentMap);
-                    if (drawable) {
-                        if (node.api >= BUILD_ANDROID.LOLLIPOP) {
-                            node.android('src', getDrawableSrc(drawable));
-                        }
-                        else {
-                            node.app('srcCompat', getDrawableSrc(drawable));
-                        }
-                    }
-                    if (!node.hasWidth) {
-                        node.setLayoutWidth('wrap_content');
-                    }
-                    if (!node.hasHeight) {
-                        node.setLayoutHeight('wrap_content');
-                    }
-                    if (node.baseline) {
-                        node.android('baselineAlignBottom', 'true');
-                    }
-                    const svg = node.data<Svg>(Resource.KEY_NAME, 'svg');
-                    if (svg) {
-                        const title = svg.getTitle();
-                        const desc = svg.getDesc();
-                        if (title !== '') {
-                            node.android('tooltipText', Resource.addString(title, `svg_${node.controlId.toLowerCase()}_title`, true));
-                        }
-                        if (desc !== '') {
-                            node.android('contentDescription', Resource.addString(desc, `svg_${node.controlId.toLowerCase()}_desc`, true));
-                        }
-                    }
-                    if (parentElement) {
-                        parentElement.removeChild(element);
-                        parentElement = null;
-                    }
-                    element = null;
+                    addSvgElement(node, node.element as SVGSVGElement);
                 }
             });
         }
@@ -1050,19 +1049,18 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                     if (item.setterType) {
                                         const propertyNames = getAttributePropertyName(item.attributeName);
                                         if (propertyNames) {
-                                            const values = isColorType(item.attributeName) ? getColorValue(item.to, true) : item.to.trim().split(' ');
-                                            const q = propertyNames.length;
-                                            if (values.length === q && !values.some(value => value === '')) {
+                                            const values = isColorType(item.attributeName) ? getColorValue(item.to, true) : item.to.trim().split(/\s+/);
+                                            if (values && values.length === propertyNames.length && !values.some(value => value === '')) {
                                                 let companionBefore: Undef<PropertyValue[]>,
                                                     companionAfter: Undef<PropertyValue[]>;
-                                                for (let k = 0; k < q; ++k) {
+                                                for (let k = 0, q = propertyNames.length; k < q; ++k) {
                                                     let valueFrom: Undef<string>;
                                                     if (valueType === 'pathType') {
                                                         valueFrom = values[k];
                                                     }
                                                     else if (requireBefore) {
                                                         if (item.baseValue) {
-                                                            valueFrom = convertValueType(item, item.baseValue.trim().split(' ')[k]);
+                                                            valueFrom = convertValueType(item, item.baseValue.trim().split(/\s+/)[k]);
                                                         }
                                                     }
                                                     const propertyValue = createPropertyValue(propertyNames[k], valueType, values[k], '1', precision, valueFrom, item.delay > 0 ? item.delay.toString() : '');
@@ -1116,11 +1114,11 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                         if (!synchronized && valueType === 'pathType') {
                                             if (group.pathData) {
                                                 const parent = item.parent;
-                                                let transforms: Null<SvgTransform[]> = null,
+                                                let transforms: Undef<SvgTransform[]>,
                                                     parentContainer: Undef<SvgShape>;
                                                 if (parent && SvgBuild.isShape(parent)) {
                                                     parentContainer = parent;
-                                                    transforms = parent.path?.transformed || null;
+                                                    transforms = parent.path?.transformed || [];
                                                 }
                                                 propertyNames = ['pathData'];
                                                 values = SvgPath.extrapolate(item.attributeName, group.pathData, item.values, transforms, parentContainer, precision);
@@ -1183,7 +1181,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                         }
                                                         for (let k = 0, r = values.length; k < r; ++k) {
                                                             if (values[k] !== '') {
-                                                                values[k] = getColorValue(values[k]);
+                                                                values[k] = getColorValue(values[k]) || values[k - 1] || '';
                                                             }
                                                         }
                                                     }

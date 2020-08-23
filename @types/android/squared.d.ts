@@ -46,7 +46,7 @@ declare namespace base {
         static addTheme(theme: StyleAttribute): boolean;
         static addString(value: string, name?: string, numberAlias?: boolean): string;
         static addImage(images: StringMap, prefix?: string, imageFormat?: MIMEOrAll): string;
-        static addColor(value: Undef<ColorData | string>, transparency?: boolean): string;
+        static addColor(value: ColorData | string, transparency?: boolean): string;
         readonly application: Application<T>;
         get userSettings(): AndroidUserResourceSettingsUI;
         addImageSrc(element: HTMLImageElement | string, prefix?: string, imageSet?: ImageSrcSet[]): string;

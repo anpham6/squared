@@ -192,13 +192,13 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                             this[attr + 'Pattern'] = url;
                         }
                         else {
-                            let color: Undef<ColorData>;
+                            let color: Null<ColorData>;
                             switch (value) {
                                 case 'none':
                                 case 'transparent':
                                 case 'rgba(0, 0, 0, 0)':
                                     this[attr] = 'none';
-                                    break;
+                                    return;
                                 case 'currentcolor':
                                 case 'currentColor':
                                     color = parseColor(this.color || getAttribute(element, 'color', true));

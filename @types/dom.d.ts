@@ -1,6 +1,7 @@
-type CSSElement = HTMLElement | SVGElement;
+type StyleElement = HTMLElement | SVGElement;
 type PositionAttr = "top" | "right" | "bottom" | "left";
 type DimensionAttr = "width" | "height";
+type PseudoElt = "::before" | "::after" | "::first-letter" | "::first-line";
 
 interface BoxRect<T = number> {
     top: T;

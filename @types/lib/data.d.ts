@@ -1,3 +1,7 @@
+interface CssProperties {
+    [key: string]: CssPropertyData;
+}
+
 interface CssPropertyData {
     name?: string;
     readonly trait: number;
@@ -27,17 +31,17 @@ interface ElementData {
     textRangeRect?: BoxRectDimension;
     pseudoElt?: string;
     node?: squared.base.Node;
-    style?: StringMap;
-    styleMap?: CSSStyleDeclaration;
-    styleSpecificity?: StringMap;
+    style?: CSSStyleDeclaration;
+    styleMap?: StringMap;
+    styleSpecificity?: ObjectMap<number>;
     'style::before'?: CSSStyleDeclaration;
     'style::after'?: CSSStyleDeclaration;
     'styleMap::before'?: StringMap;
     'styleMap::after'?: StringMap;
     'styleMap::first-letter'?: StringMap;
     'styleMap::first-line'?: StringMap;
-    'styleSpecificity::before'?: StringMap;
-    'styleSpecificity::after'?: StringMap;
-    'styleSpecificity::first-letter'?: StringMap;
-    'styleSpecificity::first-line'?: StringMap;
+    'styleSpecificity::before'?: ObjectMap<number>;
+    'styleSpecificity::after'?: ObjectMap<number>;
+    'styleSpecificity::first-letter'?: ObjectMap<number>;
+    'styleSpecificity::first-line'?: ObjectMap<number>;
 }

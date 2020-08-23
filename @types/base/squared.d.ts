@@ -398,7 +398,7 @@ declare module "base" {
         cssApply(values: StringMap, overwrite?: boolean, cache?: boolean): this;
         cssCopy(node: Node, ...attrs: string[]): void;
         cssCopyIfEmpty(node: Node, ...attrs: string[]): void;
-        cssPseudoElement(name: string): Null<StringMap>;
+        cssPseudoElement(value: PseudoElt): Null<StringMap>;
         parseUnit(value: string, options?: NodeParseUnitOptions): number;
         has(attr: string, options?: HasOptions): boolean;
         hasPX(attr: string, options?: HasPXOptions): boolean;
@@ -525,8 +525,8 @@ declare module "base" {
         get preserveWhiteSpace(): boolean;
         get cssStyle(): StringMap;
         get textStyle(): StringMap;
-        get pseudoElt(): Undef<string>;
-        get elementData(): Undef<ElementData>;
+        get pseudoElt(): Undef<PseudoElt>;
+        get elementData(): Null<ElementData>;
         get center(): Point;
         get style(): CSSStyleDeclaration;
         constructor(id: number, sessionId?: string, element?: Element, children?: Node[]);

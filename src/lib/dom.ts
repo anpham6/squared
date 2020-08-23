@@ -65,8 +65,8 @@ export function getRangeClientRect(element: Element) {
             domRect.push(item);
         }
     }
-    let bounds: Undef<BoxRectDimension>;
-    let length = domRect.length;
+    let bounds: Null<BoxRectDimension> = null,
+        length = domRect.length;
     if (length) {
         let numberOfLines = 1,
             overflow = false;

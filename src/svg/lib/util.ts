@@ -492,7 +492,7 @@ export function getAttribute(element: SVGElement, attr: string, computed?: boole
 }
 
 export function getParentAttribute(element: SVGElement, attr: string, computed?: boolean) {
-    let current: Null<CSSElement> = element,
+    let current: Null<StyleElement> = element,
         value: string;
     do {
         value = getAttribute(current, attr, computed);

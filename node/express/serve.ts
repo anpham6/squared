@@ -375,7 +375,7 @@ let Node: serve.INode,
             if (match) {
                 const origin = hostname ? match[1] : '';
                 const pathname = match[2].split('/');
-                pathname.pop();
+                --pathname.length;
                 value = value.replace(/\\/g, '/');
                 if (value[0] === '/') {
                     return origin + value;
@@ -388,7 +388,7 @@ let Node: serve.INode,
                                 pathname.pop();
                             }
                             else {
-                                trailing.pop();
+                                --trailing.length;
                             }
                         }
                         else {
@@ -1509,7 +1509,7 @@ class FileManager implements serve.IFileManager {
                     }
                     else {
                         const convert = mimeType.split(':');
-                        convert.pop();
+                        --convert.length;
                         for (const value of convert) {
                             if (!Compress.withinSizeRange(filepath, value)) {
                                 continue;

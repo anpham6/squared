@@ -879,7 +879,7 @@ export function resolvePath(value: string, href?: string) {
     value = value.trim();
     if (value !== '' && !FILE.PROTOCOL.test(value)) {
         const pathname = (href?.replace(location.origin, '') || location.pathname).replace(/\\/g, '/').split('/');
-        pathname.pop();
+        --pathname.length;
         value = value.replace(/\\/g, '/');
         if (value[0] === '/') {
             return location.origin + value;
@@ -892,7 +892,7 @@ export function resolvePath(value: string, href?: string) {
                         pathname.pop();
                     }
                     else {
-                        trailing.pop();
+                        --trailing.length;
                     }
                 }
                 else {

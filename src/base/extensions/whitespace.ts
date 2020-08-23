@@ -4,7 +4,6 @@ import NodeUI from '../node-ui';
 import { BOX_STANDARD, NODE_ALIGNMENT } from '../lib/enumeration';
 
 const { formatPX } = squared.lib.css;
-const { getElementCache } = squared.lib.session;
 const { iterateReverseArray } = squared.lib.util;
 
 const DOCTYPE_HTML = document.doctype?.name === 'html';
@@ -531,21 +530,28 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                 valid = true;
                                             }
                                             else {
-                                                let float: Undef<string>;
+                                                let direction: Undef<string>;
                                                 iterateReverseArray(previous.naturalElements, (item: T) => {
                                                     if (clearMap.has(item)) {
                                                         return true;
                                                     }
                                                     else if (item.floating) {
                                                         if (item.linear.bottom > Math.ceil(previous.bounds.bottom)) {
-                                                            float = item.float;
+                                                            direction = item.float;
                                                         }
                                                         return true;
                                                     }
                                                 });
-                                                if (float) {
-                                                    const clear = getElementCache<StringMap>(previous.element as Element, 'styleMap::after', previous.sessionId)?.clear;
-                                                    valid = !(clear === 'both' || clear === float);
+                                                if (direction) {
+                                                    switch (previous.elementData!['styleMap::after']?.clear) {
+                                                        case direction:
+                                                        case 'both':
+                                                            valid = false;
+                                                            break;
+                                                        default:
+                                                            valid = true;
+                                                            break;
+                                                    }
                                                 }
                                             }
                                             if (valid) {
@@ -909,12 +915,12 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                     for (let j = 0; j < q; ++j) {
                                         const previous = floating[j];
                                         if (top <= Math.floor(previous.bounds.top)) {
-                                            let floatingRenderParent = previous.outerMostWrapper.renderParent;
-                                            if (floatingRenderParent) {
+                                            let outerRenderParent = previous.outerMostWrapper.renderParent;
+                                            if (outerRenderParent) {
                                                 renderParent = renderParent.ascend({ error: parent => parent.naturalChild, attr: 'renderParent' }).pop() as NodeUI || renderParent;
-                                                floatingRenderParent = floatingRenderParent.ascend({ error: parent => parent.naturalChild, attr: 'renderParent' }).pop() as NodeUI || floatingRenderParent;
-                                                if (renderParent !== floatingRenderParent) {
-                                                    outerWrapper.modifyBox(BOX_STANDARD.MARGIN_TOP, (floatingRenderParent !== node ? floatingRenderParent : previous).linear.height * -1, false);
+                                                outerRenderParent = outerRenderParent.ascend({ error: parent => parent.naturalChild, attr: 'renderParent' }).pop() as NodeUI || outerRenderParent;
+                                                if (renderParent !== outerRenderParent) {
+                                                    outerWrapper.modifyBox(BOX_STANDARD.MARGIN_TOP, (outerRenderParent !== node ? outerRenderParent : previous).linear.height * -1, false);
                                                 }
                                                 break;
                                             }

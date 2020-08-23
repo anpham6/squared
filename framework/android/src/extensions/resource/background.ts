@@ -209,10 +209,12 @@ function getCornerRadius(corners: string[]) {
     }
 }
 
-function getBackgroundColor(value?: string) {
-    const color = getColorValue(value, false);
-    if (color !== '') {
-        return { color };
+function getBackgroundColor(value: Undef<string>) {
+    if (value) {
+        const color = getColorValue(value, false);
+        if (color !== '') {
+            return { color };
+        }
     }
 }
 
@@ -375,7 +377,7 @@ function createLayerList(boxStyle: BoxStyle, images: BackgroundImageData[] = [],
     return result;
 }
 
-function getColorValue(value: Undef<ColorData | string>, transparency = true) {
+function getColorValue(value: ColorData | string, transparency = true) {
     const color = Resource.addColor(value, transparency);
     return color !== '' ? `@color/${color}` : '';
 }

@@ -1,4 +1,3 @@
-
 interface InitialData<T> extends PlainObject {
     styleMap?: StringMap;
     children?: T[];

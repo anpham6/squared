@@ -18,7 +18,7 @@ export function frameworkNotInstalled<T = void>(): Promise<T> {
 
 export function setElementCache(element: Element, attr: string, sessionId: string, data: any) {
     let elementMap = SESSION_MAP[sessionId].get(element);
-    if (elementMap === undefined) {
+    if (!elementMap) {
         elementMap = {};
         SESSION_MAP[sessionId].set(element, elementMap);
     }
@@ -27,7 +27,7 @@ export function setElementCache(element: Element, attr: string, sessionId: strin
 
 export function getElementCache<T = unknown>(element: Element, attr: string, sessionId?: string) {
     const elementMap = getElementData(element, sessionId);
-    if (elementMap !== undefined) {
+    if (elementMap) {
         return elementMap[attr] as Undef<T>;
     }
 }
@@ -36,10 +36,10 @@ export function getElementData(element: Element, sessionId?: string) {
     if (!sessionId) {
         sessionId = SESSION_MAP['0'].get(element)?.sessionId;
         if (!sessionId) {
-            return;
+            return null;
         }
     }
-    return SESSION_MAP[sessionId].get(element);
+    return SESSION_MAP[sessionId].get(element) || null;
 }
 
 export function getElementAsNode<T>(element: Element, sessionId?: string) {

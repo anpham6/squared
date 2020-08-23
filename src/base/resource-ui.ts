@@ -206,7 +206,7 @@ function setBorderStyle(node: NodeUI, boxStyle: BoxStyle, attr: string, border: 
     if (style !== 'none') {
         let width = formatPX(attr !== 'outline' ? node[border[0]] : parseFloat(node.style[border[0]]));
         if (width !== '0px') {
-            let color: Undef<string | ColorData> = node.css(border[2]) || 'initial';
+            let color: Null<string | ColorData> = node.css(border[2]) || 'initial';
             switch (color) {
                 case 'initial':
                     color = 'rgb(0, 0, 0)';

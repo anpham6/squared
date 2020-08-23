@@ -73,11 +73,11 @@ declare module "lib" {
     }
 
     namespace color {
-        function findColorName(value: string): Undef<ColorResult>;
-        function findColorShade(value: string): Undef<ColorResult>;
-        function parseColor(value: string, opacity?: number, transparency?: boolean): Undef<ColorData>;
-        function parseRGBA(value: string): Undef<RGBA>;
-        function reduceRGBA(value: RGBA, percent: number, cacheName?: string): Undef<ColorData>;
+        function findColorName(value: string): Null<ColorResult>;
+        function findColorShade(value: string): Null<ColorResult>;
+        function parseColor(value: string, opacity?: number, transparency?: boolean): Null<ColorData>;
+        function parseRGBA(value: string): Null<RGBA>;
+        function reduceRGBA(value: RGBA, percent: number, cacheName?: string): ColorData;
         function getHexCode(...values: number[]): string;
         function convertHex(value: RGBA): string;
         function convertHSLA(value: RGBA): HSLA;
@@ -129,24 +129,24 @@ declare module "lib" {
         const SVG_PROPERTIES: CssProperties;
         const ELEMENT_BLOCK: Set<string>;
         function getPropertiesAsTraits(value: number, map?: string): ObjectMap<CssPropertyData>;
-        function getStyle(element: Element, pseudoElt?: string): CSSStyleDeclaration;
+        function getStyle(element: Element, pseudoElt?: PseudoElt): CSSStyleDeclaration;
         function getRemSize(fixedWidth?: boolean): number;
         function getFontSize(element: Element): number;
         function hasComputedStyle(element: Element): element is HTMLElement;
         function checkWritingMode(attr: string, value?: string): string;
-        function checkStyleValue(element: CSSElement, attr: string, value: string): string;
+        function checkStyleValue(element: StyleElement, attr: string, value: string): string;
         function checkFontSizeValue(value: string, fixedWidth?: boolean): string;
         function checkMediaRule(value: string, fontSize?: number): boolean;
         function parseSelectorText(value: string, document?: boolean): string[];
         function getSpecificity(value: string): number;
-        function parseKeyframes(rules: CSSRuleList): Undef<KeyframeData>;
+        function parseKeyframes(rules: CSSRuleList): Null<KeyframeData>;
         function getKeyframesRules(): KeyframesMap;
         function getInheritedStyle(element: Element, attr: string, options?: InheritedStyleOptions): string;
         function calculate(value: string, options?: CalculateOptions): number;
-        function calculateVar(element: CSSElement, value: string, options?: CalculateVarOptions): number;
-        function calculateVarAsString(element: CSSElement, value: string, options?: CalculateVarAsStringOptions): string;
-        function calculateStyle(element: CSSElement, attr: string, value: string, boundingBox?: Dimension): string;
-        function parseVar(element: CSSElement, value: string): string;
+        function calculateVar(element: StyleElement, value: string, options?: CalculateVarOptions): number;
+        function calculateVarAsString(element: StyleElement, value: string, options?: CalculateVarAsStringOptions): string;
+        function calculateStyle(element: StyleElement, attr: string, value: string, boundingBox?: Dimension): string;
+        function parseVar(element: StyleElement, value: string): string;
         function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll): Undef<ImageSrcSet[]>;
         function convertListStyle(name: string, value: number, valueAsDefault?: boolean): string;
         function extractURL(value: string): Undef<string>;
@@ -175,7 +175,7 @@ declare module "lib" {
         function newBoxRectDimension(): BoxRectDimension;
         function withinViewport(rect: DOMRect | ClientRect): boolean;
         function assignRect(rect: Undef<DOMRect | ClientRect | BoxRectDimension>, scrollPosition?: boolean): BoxRectDimension;
-        function getRangeClientRect(element: Element): Undef<BoxRectDimension>;
+        function getRangeClientRect(element: Element): Null<BoxRectDimension>;
         function removeElementsByClassName(className: string): void;
         function getElementsBetweenSiblings(elementStart: Null<Element>, elementEnd: Element): Element[];
         function getNamedItem(element: Element, attr: string): string;
@@ -252,7 +252,7 @@ declare module "lib" {
         function frameworkNotInstalled<T = void>(): Promise<T>;
         function setElementCache(element: Element, attr: string, sessionId: string, data: any): void;
         function getElementCache<T = unknown>(element: Element, attr: string, sessionId?: string): Undef<T>;
-        function getElementData(element: Element, sessionId?: string): Undef<ElementData>;
+        function getElementData(element: Element, sessionId?: string): Null<ElementData>;
         function getElementAsNode<T>(element: Element, sessionId?: string): Null<T>;
     }
 

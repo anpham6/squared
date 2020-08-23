@@ -365,7 +365,7 @@ declare module "svg" {
 
     class SvgPath implements SvgBaseVal, SvgPaint, SvgTransformable {
         static transform(value: string, transforms: SvgTransform[], element?: SVGGeometryElement, precision?: number): string;
-        static extrapolate(attr: string, value: string, values: string[], transforms?: Null<SvgTransform[]>, parent?: SvgShape, precision?: number): Undef<string[]>;
+        static extrapolate(attr: string, value: string, values: string[], transforms?: SvgTransform[], parent?: SvgShape, precision?: number): Undef<string[]>;
         name: string;
         value: string;
         baseValue: string;

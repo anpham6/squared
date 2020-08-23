@@ -144,7 +144,7 @@ interface SvgSynchronizeOptions {
 }
 
 interface SvgTransformRefitOptions {
-    transforms?: Null<SvgTransform[]>;
+    transforms?: SvgTransform[];
     parent?: squared.svg.SvgView;
     container?: squared.svg.SvgContainer;
     precision?: number;
@@ -178,11 +178,3 @@ interface SvgAnimationIntervalValue<T> {
     valueFrom?: string;
     animation?: T;
 }
-
-type SvgContainerElement = SVGSVGElement | SVGGElement | SVGUseElement;
-type SvgUseElement = SVGSymbolElement | SVGGElement | SVGGeometryElement | SVGPatternElement;
-type SvgViewBoxElement = SVGSVGElement | SVGSymbolElement;
-type SvgRectElement = SVGSVGElement | SVGUseElement | SVGImageElement;
-type SvgDataSet = ObjectMap<Undef<ObjectMap<Undef<NumString | boolean>>>>;
-
-type SvgTransformResidualHandler = (e: SVGGraphicsElement, t: SvgTransform[], rx?: number, ry?: number) => [SvgTransform[][], SvgTransform[]];

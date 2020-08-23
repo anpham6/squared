@@ -1735,8 +1735,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (!node.hasHeight) {
                     node.css('height', formatPX(node.bounds.height));
                 }
-                node.android('progressTint', `@color/${Resource.addColor(foregroundColor)}`);
-                node.android('progressBackgroundTint', `@color/${Resource.addColor(backgroundColor)}`);
+                node.android('progressTint', `@color/${Resource.addColor(foregroundColor!)}`);
+                node.android('progressBackgroundTint', `@color/${Resource.addColor(backgroundColor!)}`);
                 node.attr('_', 'style', '@android:style/Widget.ProgressBar.Horizontal');
                 node.exclude({ resource: NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.FONT_STYLE });
                 break;
@@ -1824,13 +1824,16 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (node.has('textShadow')) {
                     const match = /((?:rgb|hsl)a?\([^)]+\)|[a-z]{4,})?\s*(-?[\d.]+[a-z]+)\s+(-?[\d.]+[a-z]+)\s*([\d.]+[a-z]+)?/.exec(node.css('textShadow'));
                     if (match) {
-                        const color = Resource.addColor(parseColor(match[1] || node.css('color')));
-                        if (color !== '') {
-                            const precision = node.localSettings.floatPrecision;
-                            node.android('shadowColor', `@color/${color}`);
-                            node.android('shadowDx', truncate(node.parseWidth(match[2]) * 2, precision));
-                            node.android('shadowDy', truncate(node.parseHeight(match[3]) * 2, precision));
-                            node.android('shadowRadius', truncate(match[4] ? Math.max(node.parseWidth(match[4]), 0) : 0.01, precision));
+                        const colorData = parseColor(match[1] || node.css('color'));
+                        if (colorData) {
+                            const colorName = Resource.addColor(colorData);
+                            if (colorName !== '') {
+                                const precision = node.localSettings.floatPrecision;
+                                node.android('shadowColor', `@color/${colorName}`);
+                                node.android('shadowDx', truncate(node.parseWidth(match[2]) * 2, precision));
+                                node.android('shadowDy', truncate(node.parseHeight(match[3]) * 2, precision));
+                                node.android('shadowRadius', truncate(match[4] ? Math.max(node.parseWidth(match[4]), 0) : 0.01, precision));
+                            }
                         }
                     }
                 }
@@ -2720,7 +2723,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 else if (item.inlineVertical) {
                                     switch (item.css('verticalAlign')) {
                                         case 'text-top':
-                                            if (!textBaseline) {
+                                            if (textBaseline === undefined) {
                                                 textBaseline = NodeUI.baseline(items, true);
                                             }
                                             if (textBaseline && item !== textBaseline) {
@@ -3049,11 +3052,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         const [anchorStart, anchorEnd, chainStart, chainEnd] = getAnchorDirection(reverse);
         let bias = 0,
             baselineCount = 0,
-            textBaseline: UndefNull<T>,
-            textBottom: UndefNull<T>,
             tallest: Undef<T>,
             bottom: Undef<T>,
-            previous: Undef<T>;
+            previous: Undef<T>,
+            textBaseline: UndefNull<T>,
+            textBottom: UndefNull<T>;
         if (!reverse) {
             switch (node.cssAscend('textAlign', { startSelf: true })) {
                 case 'center':

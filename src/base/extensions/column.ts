@@ -39,7 +39,7 @@ export default abstract class Column<T extends squared.base.NodeUI> extends Exte
             }
         });
         if (items.length === 0) {
-            rows.pop();
+            --rows.length;
         }
         const [borderLeftStyle, borderLeftWidth, borderLeftColor] = node.cssAsTuple('columnRuleStyle', 'columnRuleWidth', 'columnRuleColor');
         const boxWidth = node.box.width;

@@ -53,7 +53,7 @@ function compareRange(operation: string, unit: number, range: number) {
     }
 }
 
-function calculatePosition(element: CSSElement, value: string, boundingBox?: Dimension) {
+function calculatePosition(element: StyleElement, value: string, boundingBox?: Dimension) {
     const alignment: string[] = [];
     for (const seg of replaceMap(splitEnclosing(value.trim(), 'calc'), item => item.trim())) {
         if (seg.includes(' ') && !isCalc(seg)) {
@@ -125,7 +125,7 @@ function calculatePosition(element: CSSElement, value: string, boundingBox?: Dim
     return '';
 }
 
-function calculateColor(element: CSSElement, value: string) {
+function calculateColor(element: StyleElement, value: string) {
     const color = splitEnclosing(value);
     const length = color.length;
     if (length > 1) {
@@ -186,7 +186,7 @@ function calculateColor(element: CSSElement, value: string) {
     return value;
 }
 
-function calculateGeneric(element: CSSElement, value: string, unitType: number, min: number, boundingBox?: Dimension, dimension: DimensionAttr = 'width') {
+function calculateGeneric(element: StyleElement, value: string, unitType: number, min: number, boundingBox?: Dimension, dimension: DimensionAttr = 'width') {
     const segments = splitEnclosing(value, 'calc');
     for (let i = 0, length = segments.length; i < length; ++i) {
         const seg = segments[i];
@@ -278,7 +278,7 @@ function checkCalculateOperator(operand: Undef<string>, operator: Undef<string>)
     return true;
 }
 
-function getContentBoxDimension(element: Null<CSSElement>) {
+function getContentBoxDimension(element: Null<StyleElement>) {
     if (element) {
         const style = getStyle(element);
         const { width, height } = element.getBoundingClientRect();
@@ -1922,7 +1922,7 @@ export function checkWritingMode(attr: string, value?: string) {
     return '';
 }
 
-export function calculateStyle(element: CSSElement, attr: string, value: string, boundingBox?: Dimension): string {
+export function calculateStyle(element: StyleElement, attr: string, value: string, boundingBox?: Dimension): string {
     switch (attr) {
         case 'left':
         case 'right':
@@ -2539,7 +2539,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
     return '';
 }
 
-export function checkStyleValue(element: CSSElement, attr: string, value: string) {
+export function checkStyleValue(element: StyleElement, attr: string, value: string) {
     switch (value) {
         case 'unset':
             switch (attr) {
@@ -2699,9 +2699,7 @@ export function parseKeyframes(rules: CSSRuleList) {
             }
         }
     }
-    if (valid) {
-        return result;
-    }
+    return valid ? result : null;
 }
 
 export function checkMediaRule(value: string, fontSize?: number) {
@@ -2829,7 +2827,7 @@ export function getInheritedStyle(element: Element, attr: string, options?: Inhe
     return value;
 }
 
-export function parseVar(element: CSSElement, value: string) {
+export function parseVar(element: StyleElement, value: string) {
     const style = getStyle(element);
     let match: Null<RegExpMatchArray>;
     while (match = REGEXP_VAR.exec(value)) {
@@ -2848,7 +2846,7 @@ export function parseVar(element: CSSElement, value: string) {
     return value;
 }
 
-export function calculateVarAsString(element: CSSElement, value: string, options?: CalculateVarAsStringOptions) {
+export function calculateVarAsString(element: StyleElement, value: string, options?: CalculateVarAsStringOptions) {
     let orderedSize: Undef<number[]>,
         dimension: Undef<DimensionAttr[]>,
         separator: Undef<string>,
@@ -2958,7 +2956,7 @@ export function calculateVarAsString(element: CSSElement, value: string, options
     return value;
 }
 
-export function calculateVar(element: CSSElement, value: string, options: CalculateVarOptions = {}) {
+export function calculateVar(element: StyleElement, value: string, options: CalculateVarOptions = {}) {
     const output = parseVar(element, value);
     if (output) {
         if (value.includes('%')) {

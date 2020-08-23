@@ -177,14 +177,13 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                         above[j] = data[0];
                     }
                     for (let j = 0; j < r; ++j) {
-                        const item = columns[j];
-                        if (j < r - 1 && item.length > 1) {
-                            const columnEnd = item[item.length - 1];
+                        const items = columns[j];
+                        if (j < r - 1 && items.length > 1) {
+                            const columnEnd = items[items.length - 1];
                             if (/^H\d/.test(columnEnd.tagName)) {
-                                item.pop();
-                                const k = j + 1;
-                                above[k] = columnEnd;
-                                columns[k].unshift(columnEnd);
+                                --items.length;
+                                above[j + 1] = columnEnd;
+                                columns[j + 1].unshift(columnEnd);
                             }
                         }
                     }

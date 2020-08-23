@@ -403,7 +403,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         return id === undefined ? this._requireFormat : this._beforeOutside.has(id) || this._beforeInside.has(id) || this._afterInside.has(id) || this._afterOutside.has(id);
     }
 
-    public visibleElement(element: HTMLElement, sessionId: string, pseudoElt?: string) {
+    public visibleElement(element: HTMLElement, sessionId: string, pseudoElt?: PseudoElt) {
         let style: CSSStyleDeclaration,
             width: number,
             height: number;

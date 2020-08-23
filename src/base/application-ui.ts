@@ -67,7 +67,7 @@ function checkPseudoDimension(styleMap: StringMapChecked, after: boolean, absolu
     }
 }
 
-function getPseudoQuoteValue(element: HTMLElement, pseudoElt: string, outside: string, inside: string, sessionId: string) {
+function getPseudoQuoteValue(element: HTMLElement, pseudoElt: PseudoElt, outside: string, inside: string, sessionId: string) {
     const extractQuote = (value: string) => /^"(.+)"$/.exec(value)?.[1] || value;
     let current: Null<HTMLElement> = element,
         found = 0,
@@ -137,7 +137,7 @@ function setColumnMaxWidth(nodes: NodeUI[], offset: number) {
     }
 }
 
-const getCounterIncrementValue = (parent: HTMLElement, counterName: string, pseudoElt: string, sessionId: string, fallback?: number) => getCounterValue(getElementCache<CSSStyleDeclaration>(parent, 'styleMap' + pseudoElt, sessionId)?.counterIncrement, counterName, fallback);
+const getCounterIncrementValue = (parent: HTMLElement, counterName: string, pseudoElt: PseudoElt, sessionId: string, fallback?: number) => getCounterValue(getElementCache<CSSStyleDeclaration>(parent, 'styleMap' + pseudoElt, sessionId)?.counterIncrement, counterName, fallback);
 
 export default abstract class ApplicationUI<T extends NodeUI> extends Application<T> implements squared.base.ApplicationUI<T> {
     public builtInExtensions!: Map<string, ExtensionUI<T>>;
@@ -267,7 +267,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         this._layouts.length = 0;
     }
 
-    public conditionElement(element: HTMLElement, sessionId: string, cascadeAll?: boolean, pseudoElt?: string) {
+    public conditionElement(element: HTMLElement, sessionId: string, cascadeAll?: boolean, pseudoElt?: PseudoElt) {
         if (!this._excludedElements.has(element.tagName)) {
             if (this.controllerHandler.visibleElement(element, sessionId, pseudoElt) || cascadeAll) {
                 return true;
@@ -293,7 +293,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return false;
     }
 
-    public insertNode(element: Element, sessionId: string, cascadeAll?: boolean, pseudoElt?: string) {
+    public insertNode(element: Element, sessionId: string, cascadeAll?: boolean, pseudoElt?: PseudoElt) {
         if (element.nodeName === '#text' || this.conditionElement(element as HTMLElement, sessionId, cascadeAll, pseudoElt)) {
             this.controllerHandler.applyDefaultStyles(element, sessionId);
             return this.createNode(sessionId, { element, append: false });
@@ -1477,7 +1477,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return layout;
     }
 
-    protected createPseduoElement(element: HTMLElement, pseudoElt: string, sessionId: string) {
+    protected createPseduoElement(element: HTMLElement, pseudoElt: PseudoElt, sessionId: string) {
         let styleMap = getElementCache<StringMapChecked>(element, 'styleMap' + pseudoElt, sessionId);
         if (element.tagName === 'Q') {
             if (!styleMap) {
@@ -1589,7 +1589,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         counterName = match[6];
                                         styleName = match[8] || 'decimal';
                                     }
-                                    const initialValue = (getCounterIncrementValue(element, counterName, pseudoElt, sessionId, 0) ?? 1) + (getCounterValue(style.getPropertyValue('counter-reset'), counterName, 0) ?? 0);
+                                    const initialValue = (getCounterIncrementValue(element, counterName, pseudoElt, sessionId, 0) ?? 1) + (getCounterValue(style.getPropertyValue('counter-reset'), counterName, 0) || 0);
                                     const subcounter: number[] = [];
                                     let current: Null<HTMLElement> = element,
                                         counter = initialValue,

@@ -32,13 +32,11 @@ function getFilePath(value: string, saveTo?: boolean): [Undef<string>, string, s
     else if (value.startsWith('../')) {
         moveTo = STRING_SERVERROOT;
         const pathname = location.pathname.split('/');
-        pathname.pop();
-        for (let i = 0; i < value.length && pathname.length > 0; i += 3) {
-            if (value.substring(i, i + 3) === '../') {
-                pathname.pop();
-            }
-            else {
-                break;
+        if (--pathname.length) {
+            for (let i = 0, length = value.length; i < length; i += 3) {
+                if (value.substring(i, i + 3) !== '../' || --pathname.length === 0) {
+                    break;
+                }
             }
         }
         value = `${pathname.join('/')}/${value.split('../').pop()!}`;
