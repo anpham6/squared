@@ -24,11 +24,11 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
     public renderIndex?: number;
     public next?: boolean;
 
+    private _floated: Null<Set<string>> = null;
     private _initialized?: boolean;
     private _itemCount?: number;
     private _linearX?: boolean;
     private _linearY?: boolean;
-    private _floated?: Set<string>;
     private _singleRow?: boolean;
 
     constructor(
@@ -43,10 +43,12 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
 
     public init() {
         if (this.length > 1) {
-            const linearData = NodeUI.linearData(this.children);
-            this._floated = linearData.floated;
-            this._linearX = linearData.linearX;
-            this._linearY = linearData.linearY;
+            const { linearX, linearY, floated } = NodeUI.linearData(this.children);
+            this._linearX = linearX;
+            this._linearY = linearY;
+            if (floated) {
+                this._floated = floated;
+            }
         }
         else if (this.length === 1) {
             this._linearY = this.children[0].blockStatic;

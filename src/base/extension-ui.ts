@@ -16,7 +16,6 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
                 }
             }
         }
-        return null;
     }
 
     public readonly tagNames: string[];

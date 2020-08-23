@@ -30,6 +30,7 @@ export default class Application<T extends View> extends squared.base.Applicatio
                 }
             }
         }
+        return null;
     }
 
     public setViewModel(data: AppViewModel, sessionId?: string) {

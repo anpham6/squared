@@ -104,7 +104,7 @@ function setBundleIndex(bundleIndex: BundleIndex) {
     }
 }
 
-function createBundleAsset(bundles: ChromeAsset[], element: HTMLElement, saveTo: string, format?: string, preserve?: boolean): Undef<ChromeAsset> {
+function createBundleAsset(bundles: ChromeAsset[], element: HTMLElement, saveTo: string, format?: string, preserve?: boolean): Null<ChromeAsset> {
     const content = element.innerHTML.trim();
     if (content) {
         const [moveTo, pathname, filename] = getFilePath(saveTo);
@@ -126,6 +126,7 @@ function createBundleAsset(bundles: ChromeAsset[], element: HTMLElement, saveTo:
             } as ChromeAsset;
         }
     }
+    return null;
 }
 
 function setBundleData(bundleIndex: BundleIndex, data: ChromeAsset) {
@@ -147,7 +148,7 @@ const getFileExt = (value: string) => value.includes('.') ? fromLastIndexOf(valu
 const getDirectory = (path: string, start: number) => path.substring(start, path.lastIndexOf('/'));
 
 export default class File<T extends squared.base.Node> extends squared.base.File<T> implements chrome.base.File<T> {
-    public static parseUri(uri: string, options?: UriOptions): Undef<ChromeAsset> {
+    public static parseUri(uri: string, options?: UriOptions): Null<ChromeAsset> {
         let saveAs: Undef<string>,
             format: Undef<string>,
             saveTo: Undef<boolean>,
@@ -177,7 +178,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             }
         }
         if (!local && !relocate && options && options.preserveCrossOrigin) {
-            return;
+            return null;
         }
         const match = FILE.PROTOCOL.exec(value);
         if (match) {
@@ -250,6 +251,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 preserve
             };
         }
+        return null;
     }
 
     public resource!: chrome.base.Resource<T>;
@@ -351,10 +353,10 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 let file = element.dataset.chromeFile;
                 if (file !== 'exclude') {
                     const src = element.src.trim();
-                    let format: Undef<string>,
+                    let data: Null<ChromeAsset> = null,
+                        format: Undef<string>,
                         outerHTML: Undef<string>,
-                        preserve: Undef<boolean>,
-                        data: Undef<ChromeAsset>;
+                        preserve: Undef<boolean>;
                     if (!isString(file) && saveAs && saveAs.filename) {
                         file = appendSeparator(saveAs.pathname, saveAs.filename);
                         format = saveAs.format;
@@ -403,7 +405,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         document.querySelectorAll(`${rel ? `link[rel="${rel}"]` : 'link'}, style`).forEach((element: HTMLLinkElement | HTMLStyleElement) => {
             let file = element.dataset.chromeFile;
             if (file !== 'exclude') {
-                let data: Undef<ChromeAsset>,
+                let data: Null<ChromeAsset> = null,
                     href: Undef<string>,
                     mimeType: Undef<string>,
                     format: Undef<string>,
@@ -621,7 +623,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         return options.productionRelease ? '&release=1' : '';
     }
 
-    protected validFile(data: Undef<ChromeAsset>): data is ChromeAsset {
+    protected validFile(data: Null<ChromeAsset>): data is ChromeAsset {
         if (data) {
             const fullpath = appendSeparator(data.pathname, data.filename);
             return !this.outputFileExclusions.some(pattern => pattern.test(fullpath));

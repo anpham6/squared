@@ -288,8 +288,8 @@ function getContentBoxDimension(element: Null<StyleElement>) {
 }
 
 const fromFontNamedValue = (index: number, fixedWidth?: boolean) => (!fixedWidth ? DOCUMENT_FONTMAP[index] : DOCUMENT_FIXEDMAP[index]).toPrecision(8) + 'rem';
-const getInnerWidth = (dimension: Undef<Dimension>) => dimension && dimension.width || window.innerWidth;
-const getInnerHeight = (dimension: Undef<Dimension>) => dimension && dimension.height || window.innerHeight;
+const getInnerWidth = (dimension: UndefNull<Dimension>) => dimension && dimension.width || window.innerWidth;
+const getInnerHeight = (dimension: UndefNull<Dimension>) => dimension && dimension.height || window.innerHeight;
 const isColor = (value: string) => /(rgb|hsl)a?/.test(value);
 const formatVar = (value: number) => !isNaN(value) ? value + 'px' : '';
 const formatDecimal = (value: number) => !isNaN(value) ? value.toString() : '';
@@ -3068,7 +3068,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
     }
     const length = result.length;
     if (length === 0) {
-        return null;
+        return;
     }
     else if (length > 1) {
         result.sort((a, b) => {
@@ -3524,7 +3524,7 @@ export function parseUnit(value: string, options?: ParseUnitOptions) {
 export function parseTransform(value: string, options?: TransformOptions) {
     let accumulate: Undef<boolean>,
         fontSize: Undef<number>,
-        boundingBox: Undef<Dimension>;
+        boundingBox: UndefNull<Dimension>;
     if (options) {
         ({ accumulate, fontSize, boundingBox } = options);
     }

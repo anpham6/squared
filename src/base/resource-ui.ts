@@ -301,9 +301,9 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     public static getBackgroundPosition(value: string, dimension: Dimension, options?: BackgroundPositionOptions) {
         if (value) {
             let fontSize: Undef<number>,
-                imageDimension: Undef<Dimension>,
+                imageDimension: UndefNull<Dimension>,
                 imageSize: Undef<string>,
-                screenDimension: Undef<Dimension>;
+                screenDimension: UndefNull<Dimension>;
             if (options) {
                 ({ fontSize, imageDimension, imageSize, screenDimension } = options);
             }
@@ -685,7 +685,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         return numberArray ? [undefined, result] : [result];
     }
 
-    public static parseBackgroundImage(node: NodeUI, backgroundImage: string, screenDimension?: Dimension) {
+    public static parseBackgroundImage(node: NodeUI, backgroundImage: string, screenDimension?: Null<Dimension>) {
         if (backgroundImage !== '') {
             const backgroundSize = node.css('backgroundSize').split(/\s*,\s*/);
             const images: (string | Gradient)[] = [];
@@ -714,7 +714,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     const repeating = !!match[1];
                     const type = match[2];
                     const direction = match[3];
-                    const imageDimension = backgroundSize.length ? ResourceUI.getBackgroundSize(node, backgroundSize[i % backgroundSize.length], screenDimension) : undefined;
+                    const imageDimension = backgroundSize.length ? ResourceUI.getBackgroundSize(node, backgroundSize[i % backgroundSize.length], screenDimension) : null;
                     const dimension = NodeUI.refitScreen(node, imageDimension || node.actualDimension);
                     let gradient: Undef<Gradient>;
                     switch (type) {
@@ -886,7 +886,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         }
     }
 
-    public static getBackgroundSize(node: NodeUI, value: string, screenDimension?: Dimension): Undef<Dimension> {
+    public static getBackgroundSize(node: NodeUI, value: string, screenDimension?: Null<Dimension>): Null<Dimension> {
         let width = 0,
             height = 0;
         switch (value) {
@@ -897,7 +897,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             case 'auto':
             case 'auto auto':
             case 'initial':
-                return;
+                return null;
             default: {
                 value.split(' ').forEach((size, index) => {
                     if (size === 'auto') {
@@ -915,9 +915,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 break;
             }
         }
-        if (width && height) {
-            return { width: Math.round(width), height: Math.round(height) };
-        }
+        return width && height ? { width: Math.round(width), height: Math.round(height) } : null;
     }
 
     public static hasLineBreak(node: NodeUI, lineBreak?: boolean, trim?: boolean) {
@@ -987,12 +985,13 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     asset.bytes = data;
                 }
                 else {
-                    return;
+                    return null;
                 }
                 fileHandler.addAsset(asset);
                 return asset;
             }
         }
+        return null;
     }
 
     public setBoxStyle(node: T) {

@@ -44,6 +44,7 @@ function createLinearGradient(element: SVGLinearGradientElement): SvgGradient {
         element,
         spreadMethod: element.spreadMethod.baseVal,
         colorStops: getColorStop(element),
+        dimension: null,
         ...getBaseValue(element, 'x1', 'x2', 'y1', 'y2')
     };
 }
@@ -54,6 +55,7 @@ function createRadialGradient(element: SVGRadialGradientElement): SvgGradient {
         element,
         spreadMethod: element.spreadMethod.baseVal,
         colorStops: getColorStop(element),
+        dimension: null,
         ...getBaseValue(element, 'cx', 'cy', 'r', 'fx', 'fy', 'fr')
     };
 }

@@ -18,7 +18,7 @@ declare namespace base {
         readonly userSettings: AndroidUserResourceSettingsUI;
         setViewModel(data: AppViewModel, sessionId?: string): void;
         getViewModel(sessionId: string): Undef<AppViewModel>;
-        resolveTarget(sessionId: string, target: Null<HTMLElement | string>): Undef<T>;
+        resolveTarget(sessionId: string, target: Null<HTMLElement | string>): Null<T>;
         get viewModel(): Map<string, AppViewModel>;
     }
 
@@ -49,7 +49,7 @@ declare namespace base {
         static addColor(value: ColorData | string, transparency?: boolean): string;
         readonly application: Application<T>;
         get userSettings(): AndroidUserResourceSettingsUI;
-        addImageSrc(element: HTMLImageElement | string, prefix?: string, imageSet?: Null<ImageSrcSet[]>): string;
+        addImageSrc(element: HTMLImageElement | string, prefix?: string, imageSet?: ImageSrcSet[]): string;
         addImageSet(images: StringMap, prefix?: string): string;
     }
 

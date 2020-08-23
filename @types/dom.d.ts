@@ -104,7 +104,7 @@ interface BoxStyle extends Partial<BoxBorder> {
 interface Gradient {
     type: string;
     colorStops: ColorStop[];
-    dimension?: Dimension;
+    dimension: Null<Dimension>;
 }
 
 interface RepeatingGradient extends Gradient {

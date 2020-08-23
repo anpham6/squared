@@ -14,9 +14,9 @@ interface ContainerFindOptions<T> extends ContainerCascadeOptions<T>, ContainerR
 
 interface BackgroundPositionOptions {
     fontSize?: number;
-    imageDimension?: Dimension;
+    imageDimension?: Null<Dimension>;
     imageSize?: string;
-    screenDimension?: Dimension;
+    screenDimension?: Null<Dimension>;
 }
 
 interface CalculateOptions {
@@ -51,7 +51,7 @@ interface CreateElementOptions {
 }
 
 interface TransformOptions {
-    boundingBox?: Dimension;
+    boundingBox?: Null<Dimension>;
     accumulate?: boolean;
     fontSize?: number;
 }
@@ -72,5 +72,5 @@ interface DelimitStringOptions {
 interface ParseUnitOptions {
     fontSize?: number;
     fixedWidth?: boolean;
-    screenDimension?: Dimension;
+    screenDimension?: Null<Dimension>;
 }

@@ -16,7 +16,7 @@ type Node = squared.base.Node;
 type Main = squared.base.Application<Node>;
 type Framework = squared.base.AppFramework<Node>;
 type Extension = squared.base.Extension<Node>;
-type ExtensionRequest = Null<Extension | string>;
+type ExtensionRequest = Undef<Extension | string>;
 type FileActionOptions = squared.base.FileActionOptions;
 
 const extensionsQueue = new Set<Extension>();
@@ -345,7 +345,6 @@ export function retrieve(value: string) {
             }
         }
     }
-    return null;
 }
 
 export function extend(functionMap: squared.ExtensionPrototypeData, value = 0) {

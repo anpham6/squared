@@ -25,7 +25,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
 
     public readonly abstract application: squared.base.Application<T>;
 
-    private _fileHandler: Undef<squared.base.File<T>>;
+    private _fileHandler: Null<squared.base.File<T>> = null;
 
     public abstract get userSettings(): UserResourceSettings;
 
@@ -168,7 +168,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         }
     }
 
-    set fileHandler(value: Undef<squared.base.File<T>>) {
+    set fileHandler(value) {
         if (value) {
             value.resource = this;
         }

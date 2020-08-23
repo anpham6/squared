@@ -90,8 +90,8 @@ declare module "base" {
         init(): void;
         finalize(): boolean;
         reset(): void;
-        parseDocument(...elements: (string | HTMLElement)[]): Promise<T | T[]>;
-        parseDocumentSync(...elements: (string | HTMLElement)[]): Undef<T | T[]>;
+        parseDocument(...elements: (string | HTMLElement)[]): Promise<Void<T | T[]>>;
+        parseDocumentSync(...elements: (string | HTMLElement)[]): Void<T | T[]>;
         createCache(documentRoot: HTMLElement, sessionId: string): Undef<T>;
         setStyleMap(sessionId: string, processing: AppProcessing<T>): void;
         createNode(sessionId: string, options: CreateNodeOptions): T;
@@ -221,8 +221,8 @@ declare module "base" {
         addRawData(uri: string, mimeType: string, content: Undef<string>, options?: RawDataOptions): string;
         getRawData(uri: string): Undef<RawAsset>;
         addImageData(uri: string, width?: number, height?: number): void;
-        set fileHandler(value: Undef<File<T>>);
-        get fileHandler(): Undef<File<T>>;
+        set fileHandler(value);
+        get fileHandler(): Null<File<T>>;
         get controllerSettings(): ControllerSettings;
         get userSettings(): UserResourceSettings;
         get mimeTypeMap(): ObjectMap<MIMEOrAll>;
@@ -238,12 +238,12 @@ declare module "base" {
         static insertStoredAsset(asset: string, name: string, value: any): string;
         static getOptionArray(element: HTMLSelectElement | HTMLOptGroupElement, showDisabled?: boolean): Undef<string[]>[];
         static isBackgroundVisible(object: Undef<BoxStyle>): boolean;
-        static parseBackgroundImage(node: NodeUI, value: string, screenDimension?: Dimension): Undef<string | Gradient>[];
-        static getBackgroundSize<T extends NodeUI>(node: T, value: string, screenDimension?: Dimension): Undef<Dimension>;
+        static parseBackgroundImage(node: NodeUI, value: string, screenDimension?: Null<Dimension>): Undef<string | Gradient>[];
+        static getBackgroundSize<T extends NodeUI>(node: T, value: string, screenDimension?: Null<Dimension>): Null<Dimension>;
         static hasLineBreak<T extends NodeUI>(node: T, lineBreak?: boolean, trim?: boolean): boolean;
         static checkPreIndent(node: NodeUI): Undef<[string, NodeUI]>;
         finalize(layouts: FileAsset[]): void;
-        writeRawImage(options: RawDataOptions): Undef<Partial<RawAsset>>;
+        writeRawImage(options: RawDataOptions): Null<Partial<RawAsset>>;
         setBoxStyle(node: T): void;
         setFontStyle(node: T): void;
         setValueString(node: T): void;
@@ -273,7 +273,7 @@ declare module "base" {
     }
 
     class ExtensionUI<T extends NodeUI> extends Extension<T> {
-        static findNestedElement<T extends NodeUI>(node: T, name: string): Null<HTMLElement>;
+        static findNestedElement<T extends NodeUI>(node: T, name: string): Undef<HTMLElement>;
         readonly tagNames: string[];
         readonly eventOnly?: boolean;
         readonly cascadeAll?: boolean;
@@ -304,7 +304,7 @@ declare module "base" {
         readonly application: Application<T>;
         include(ext: Extension<T> | string): boolean;
         exclude(ext: Extension<T> | string): boolean;
-        retrieve(name: string, checkBuiltIn?: boolean): Null<Extension<T>>;
+        retrieve(name: string, checkBuiltIn?: boolean): Undef<Extension<T>>;
         optionValue<T = unknown>(name: string, attr: string, fallback?: T): Undef<T>;
         optionValueAsObject(name: string, attr: string, fallback?: Null<PlainObject>): Null<PlainObject>;
         optionValueAsString(name: string, attr: string, fallback?: string): string;
@@ -355,7 +355,7 @@ declare module "base" {
         set type(value: LayoutType);
         get linearX(): boolean;
         get linearY(): boolean;
-        get floated(): Undef<Set<string>>;
+        get floated(): Null<Set<string>>;
         get singleRowAligned(): boolean;
         constructor(parent: T, node: T, containerType?: number, alignmentType?: number, children?: T[]);
     }

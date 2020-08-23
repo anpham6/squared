@@ -730,7 +730,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             const result: BackgroundImageData[] = [];
             const svg: boolean[] = [];
             const images: (string | GradientTemplate)[] = [];
-            const imageDimensions: Undef<Dimension>[] = [];
+            const imageDimensions: Null<Dimension>[] = [];
             const backgroundPosition: BoxRectPosition[] = [];
             const backgroundPositionX = data.backgroundPositionX.split(CHAR_SEPARATOR);
             const backgroundPositionY = data.backgroundPositionY.split(CHAR_SEPARATOR);
@@ -803,7 +803,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                             const { base64, filename } = rawData;
                                             if (base64 && filename) {
                                                 images[length] = filename.substring(0, filename.lastIndexOf('.'));
-                                                imageDimensions[length] = rawData.width && rawData.height ? rawData as Dimension : undefined;
+                                                imageDimensions[length] = rawData.width && rawData.height ? rawData as Dimension : null;
                                                 resource.writeRawImage({
                                                     mimeType: rawData.mimeType,
                                                     filename,
@@ -819,7 +819,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         const src = resource.addImageSet({ mdpi: value });
                                         images[length] = src;
                                         if (src !== '') {
-                                            imageDimensions[length] = resource.getImage(value);
+                                            imageDimensions[length] = resource.getImage(value)!;
                                             valid = true;
                                         }
                                     }
@@ -831,7 +831,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         const gradient = createBackgroundGradient(value, node.api, q, data.borderRadius);
                         if (gradient) {
                             images[length] = gradient;
-                            imageDimensions[length] = value.dimension;
+                            imageDimensions[length] = value.dimension!;
                             valid = true;
                         }
                     }
@@ -891,7 +891,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 node.modifyBox(BOX_STANDARD.PADDING_LEFT, offsetStart);
                             }
                         }
-                        imageDimensions[length] = stored;
+                        imageDimensions[length] = stored!;
                         backgroundPosition[length] = position;
                         ++length;
                     }

@@ -73,8 +73,8 @@ declare module "lib" {
     }
 
     namespace color {
-        function findColorName(value: string): Null<ColorResult>;
-        function findColorShade(value: string): Null<ColorResult>;
+        function findColorName(value: string): Undef<ColorResult>;
+        function findColorShade(value: string): Undef<ColorResult>;
         function parseColor(value: string, opacity?: number, transparency?: boolean): Null<ColorData>;
         function parseRGBA(value: string): Null<RGBA>;
         function reduceRGBA(value: RGBA, percent: number, cacheName?: string): ColorData;
@@ -147,7 +147,7 @@ declare module "lib" {
         function calculateVarAsString(element: StyleElement, value: string, options?: CalculateVarAsStringOptions): string;
         function calculateStyle(element: StyleElement, attr: string, value: string, boundingBox?: Null<Dimension>): string;
         function parseVar(element: StyleElement, value: string): string;
-        function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll): Null<ImageSrcSet[]>;
+        function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll): Undef<ImageSrcSet[]>;
         function convertListStyle(name: string, value: number, valueAsDefault?: boolean): string;
         function extractURL(value: string): Undef<string>;
         function resolveURL(value: string): Undef<string>;

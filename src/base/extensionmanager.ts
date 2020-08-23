@@ -63,7 +63,9 @@ export default class ExtensionManager<T extends squared.base.Node> implements sq
                 return ext;
             }
         }
-        return checkBuiltIn && this.application.builtInExtensions.get(name) || null;
+        if (checkBuiltIn) {
+            return this.application.builtInExtensions.get(name);
+        }
     }
 
     public optionValue<T = unknown>(name: string, attr: string, fallback?: T): Undef<T> {

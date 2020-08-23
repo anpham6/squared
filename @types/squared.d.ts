@@ -20,7 +20,7 @@ export function exclude(value: ExtensionRequest | string): boolean;
 export function configure(value: ExtensionRequest | string, options: FrameworkOptions): boolean;
 export function retrieve(value: string): Null<PlainObject>;
 export function parseDocument(...elements: (string | HTMLElement)[]): Promise<Void<Node | Node[]>>;
-export function parseDocumentSync(...elements: (string | HTMLElement)[]): Undef<Node | Node[]>;
+export function parseDocumentSync(...elements: (string | HTMLElement)[]): Void<Node | Node[]>;
 export function copyToDisk(value: string, options?: PlainObject): PromiseResult;
 export function appendToArchive(value: string, options?: PlainObject): PromiseResult;
 export function saveToArchive(value?: string, options?: PlainObject): PromiseResult;

@@ -919,7 +919,7 @@ export function findColorName(value: string) {
             CACHE_COLORRESULT.set(color.key, color);
         }
     }
-    return CACHE_COLORRESULT.get(value.toLowerCase()) || null;
+    return CACHE_COLORRESULT.get(value.toLowerCase());
 }
 
 export function findColorShade(value: string) {
@@ -963,7 +963,6 @@ export function findColorShade(value: string) {
         }
         return COLOR_CSS3[COLOR_CSS3.length - 1];
     }
-    return null;
 }
 
 export function parseColor(value: string, opacity = 1, transparency?: boolean) {

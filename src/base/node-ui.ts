@@ -360,12 +360,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public static linearData<T extends NodeUI>(list: T[], cleared?: Map<T, string>): LinearData {
         let linearX = false,
-            linearY = false,
-            floated: Undef<Set<string>>;
+            linearY = false;
         const length = list.length;
         if (length > 1) {
             const nodes: T[] = new Array(length);
-            let n = 0;
+            let floated: Undef<Set<string>>,
+                n = 0;
             for (let i = 0; i < length; ++i) {
                 const item = list[i];
                 if (item.pageFlow) {
@@ -398,63 +398,66 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 }
                 linearX = x === n;
                 linearY = y === n;
-                if (linearX && floated) {
-                    let boxLeft = Infinity,
-                        boxRight = -Infinity,
-                        floatLeft = -Infinity,
-                        floatRight = Infinity;
-                    for (let i = 0; i < n; ++i) {
-                        const node = nodes[i];
-                        const { left, right } = node.linear;
-                        boxLeft = Math.min(boxLeft, left);
-                        boxRight = Math.max(boxRight, right);
-                        switch (node.float) {
-                            case 'left':
-                                floatLeft = Math.max(floatLeft, right);
-                                break;
-                            case 'right':
-                                floatRight = Math.min(floatRight, left);
-                                break;
-                        }
-                    }
-                    for (let i = 0, j = 0, k = 0, l = 0, m = 0; i < n; ++i) {
-                        const node = nodes[i];
-                        const { left, right } = node.linear;
-                        if (Math.floor(left) <= boxLeft) {
-                            ++j;
-                        }
-                        if (Math.ceil(right) >= boxRight) {
-                            ++k;
-                        }
-                        if (!node.floating) {
-                            if (left === floatLeft) {
-                                ++l;
-                            }
-                            if (right === floatRight) {
-                                ++m;
+                if (floated) {
+                    if (linearX) {
+                        let boxLeft = Infinity,
+                            boxRight = -Infinity,
+                            floatLeft = -Infinity,
+                            floatRight = Infinity;
+                        for (let i = 0; i < n; ++i) {
+                            const node = nodes[i];
+                            const { left, right } = node.linear;
+                            boxLeft = Math.min(boxLeft, left);
+                            boxRight = Math.max(boxRight, right);
+                            switch (node.float) {
+                                case 'left':
+                                    floatLeft = Math.max(floatLeft, right);
+                                    break;
+                                case 'right':
+                                    floatRight = Math.min(floatRight, left);
+                                    break;
                             }
                         }
-                        if (i === 0) {
-                            continue;
-                        }
-                        if (j === 2 || k === 2 || l === 2 || m === 2) {
-                            linearX = false;
-                            break;
-                        }
-                        const previous = nodes[i - 1];
-                        if (withinRange(left, previous.linear.left) || previous.floating && Math.ceil(node.bounds.top) >= previous.bounds.bottom) {
-                            linearX = false;
-                            break;
+                        for (let i = 0, j = 0, k = 0, l = 0, m = 0; i < n; ++i) {
+                            const node = nodes[i];
+                            const { left, right } = node.linear;
+                            if (Math.floor(left) <= boxLeft) {
+                                ++j;
+                            }
+                            if (Math.ceil(right) >= boxRight) {
+                                ++k;
+                            }
+                            if (!node.floating) {
+                                if (left === floatLeft) {
+                                    ++l;
+                                }
+                                if (right === floatRight) {
+                                    ++m;
+                                }
+                            }
+                            if (i === 0) {
+                                continue;
+                            }
+                            if (j === 2 || k === 2 || l === 2 || m === 2) {
+                                linearX = false;
+                                break;
+                            }
+                            const previous = nodes[i - 1];
+                            if (withinRange(left, previous.linear.left) || previous.floating && Math.ceil(node.bounds.top) >= previous.bounds.bottom) {
+                                linearX = false;
+                                break;
+                            }
                         }
                     }
                 }
+                return { linearX, linearY, floated };
             }
         }
         else if (length) {
             linearY = list[0].blockStatic;
             linearX = !linearY;
         }
-        return { linearX, linearY, floated };
+        return { linearX, linearY };
     }
 
     public static partitionRows(list: T[], cleared?: Map<T, string>) {
