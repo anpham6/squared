@@ -128,7 +128,6 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                     }
                 }
                 else {
-                    const bounds = child.bounds;
                     if (child.floating) {
                         floatHeight = Math.max(child.linear.height, floatHeight);
                     }
@@ -153,12 +152,12 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                             else {
                                 ++n;
                             }
-                            textHeight += bounds.height;
+                            textHeight += child.bounds.height;
                         }
                         ++l;
                     }
                     if (checkWidth) {
-                        textWidth += Math.max(bounds.width, child.textBounds?.width ?? -Infinity);
+                        textWidth += child.textWidth;
                     }
                 }
             }

@@ -1006,6 +1006,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 }
             }
         }
+        return null;
     }
 
     public sort(predicate?: (a: T, b: T) => number) {
@@ -1273,7 +1274,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         }
     }
 
-    public registerBox(region: number, node?: T): Undef<T> {
+    public registerBox(region: number, node?: T): Null<T> {
         if (this._boxRegister === undefined) {
             this._boxRegister = {};
         }
@@ -1292,7 +1293,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 break;
             }
         }
-        return node;
+        return node || null;
     }
 
     public actualPadding(attr: "paddingTop" | "paddingBottom", value: number) {
@@ -2052,7 +2053,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         const result = this._containerIndex;
         if (result === Infinity) {
             let wrapped = this.innerWrapped;
-            if (wrapped !== undefined) {
+            if (wrapped) {
                 do {
                     const index = wrapped.containerIndex;
                     if (index !== Infinity) {

@@ -85,7 +85,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                         }
                     });
                 }
-                if (top < 0 || bottom > 0) {
+                if ((top < 0 || bottom > 0) && node.floating && node.bounds.height > node.documentParent.box.height) {
                     node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, Math.min(top, bottom * -1));
                 }
                 node.hide({ hidden: true });

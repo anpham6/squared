@@ -1572,7 +1572,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public setBounds(cache = true) {
-        let bounds: Undef<BoxRectDimension>;
+        let bounds: Null<BoxRectDimension>;
         if (this.styleElement) {
             bounds = assignRect(cache && this._elementData?.clientRect || this._element!.getBoundingClientRect());
             this._bounds = bounds;
@@ -1580,21 +1580,20 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         else if (this.plainText) {
             const rect = getRangeClientRect(this._element!);
             if (rect) {
-                const lines = rect.numberOfLines || 1;
-                rect.numberOfLines = lines;
-                this._textBounds = bounds;
-                this._cache.multiline = lines > 1;
+                this._textBounds = rect;
+                this._cache.multiline = rect.numberOfLines! > 1;
             }
             bounds = rect || newBoxRectDimension();
             this._bounds = bounds;
         }
-        if (bounds) {
-            if (!cache) {
-                this._box = null;
-                this._linear = null;
-            }
-            return bounds;
+        else {
+            return null;
         }
+        if (!cache) {
+            this._box = null;
+            this._linear = null;
+        }
+        return bounds;
     }
 
     public resetBounds() {

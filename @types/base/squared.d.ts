@@ -408,7 +408,7 @@ declare module "base" {
         toElementFloat(attr: string, fallback?: number): number;
         toElementBoolean(attr: string, fallback?: boolean): boolean;
         toElementString(attr: string, fallback?: string): string;
-        setBounds(cache?: boolean): Undef<BoxRectDimension>;
+        setBounds(cache?: boolean): Null<BoxRectDimension>;
         resetBounds(): void;
         min(attr: string, options?: MinMaxOptions): Node;
         max(attr: string, options?: MinMaxOptions): Node;
@@ -595,7 +595,7 @@ declare module "base" {
         exclude(options: ExcludeOptions): void;
         hide(options?: HideOptions<NodeUI>): void;
         replaceTry(options: ReplaceTryOptions<NodeUI>): boolean;
-        removeTry(options?: RemoveTryOptions<NodeUI>): Undef<NodeTemplate<NodeUI>>;
+        removeTry(options?: RemoveTryOptions<NodeUI>): Null<NodeTemplate<NodeUI>>;
         sort(predicate?: (a: NodeUI, b: NodeUI) => number): this;
         render(parent: NodeUI): void;
         renderEach(predicate: IteratorPredicate<NodeUI, void>): this;
@@ -613,7 +613,7 @@ declare module "base" {
         getBox(region: number): [number, number];
         resetBox(region: number, node?: NodeUI): void;
         transferBox(region: number, node: NodeUI): void;
-        registerBox(region: number, node?: NodeUI): Undef<NodeUI>;
+        registerBox(region: number, node?: NodeUI): Null<NodeUI>;
         extractAttributes(depth: number): string;
         setCacheValue(attr: string, value: any): void;
         setCacheState(attr: string, value: any): void;
@@ -624,8 +624,6 @@ declare module "base" {
         get naturalChild(): boolean;
         set documentParent(value);
         get documentParent(): NodeUI;
-        set renderAs(value);
-        get renderAs(): Undef<NodeUI>;
         set containerName(value);
         get containerName(): string;
         set autoPosition(value);
@@ -656,6 +654,8 @@ declare module "base" {
         get textIndent(): number;
         set renderExclude(value: boolean);
         get renderExclude(): boolean;
+        set renderAs(value);
+        get renderAs(): Undef<NodeUI>;
         set labelFor(value);
         get labelFor(): Undef<NodeUI>;
         set innerWrapped(value);
