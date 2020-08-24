@@ -9,10 +9,10 @@ import { getDataSet, isHorizontalAlign, isVerticalAlign, localizeString } from '
 
 type T = android.base.View;
 
-const { CSS_PROPERTIES, CSS_UNIT, formatPX, isLength, parseTransform } = squared.lib.css;
+const { CSS_PROPERTIES, CSS_UNIT, formatPX, isLength, isPercent, parseTransform } = squared.lib.css;
 const { getNamedItem, getRangeClientRect } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
-const { capitalize, convertInt, convertWord, fromLastIndexOf, hasKeys, isString, lastItemOf, replaceMap, splitPair } = squared.lib.util;
+const { capitalize, convertInt, convertWord, fromLastIndexOf, hasKeys, isString, replaceMap, splitPair } = squared.lib.util;
 
 const { EXT_NAME } = squared.base.lib.constant;
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE } = squared.base.lib.enumeration;
@@ -521,7 +521,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 setFlexGrow(node.parseUnit(basis, { dimension }), shrink);
                 setLayoutDimension(node, '0px', horizontal, true);
             }
-            else if (basis !== '0%' && lastItemOf(basis) === '%') {
+            else if (basis !== '0%' && isPercent(basis)) {
                 setFlexGrow();
                 setConstraintPercent(node, parseFloat(basis) / 100, horizontal, NaN);
             }
@@ -565,7 +565,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     valid = true;
                     if (sibling.hasPX(dimension, { initial: true })) {
                         const value = sibling.cssInitial(dimension);
-                        if (lastItemOf(value) === '%') {
+                        if (isPercent(value)) {
                             percent -= parseFloat(value) / 100;
                             continue;
                         }
@@ -653,7 +653,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 if (this.hasPX('width') && (!this.inlineStatic || this.cssInitial('width') === '')) {
                     const width = this.css('width');
                     let value = -1;
-                    if (lastItemOf(width) === '%') {
+                    if (isPercent(width)) {
                         const expandable = () => width === '100%' && containsWidth && (this.support.maxDimension || !this.hasPX('maxWidth'));
                         if (this.inputElement) {
                             if (expandable()) {
@@ -839,7 +839,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 if (this.hasPX('height') && (!this.inlineStatic || this.cssInitial('height') === '')) {
                     const height = this.css('height');
                     let value = -1;
-                    if (lastItemOf(height) === '%') {
+                    if (isPercent(height)) {
                         if (this.inputElement) {
                             value = this.bounds.height;
                         }
@@ -1353,7 +1353,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             }
                         }
                         else if (this.float === 'right') {
-                            left = Math.min(-left, -this.bounds.width);
+                            left = Math.min(-left, this.bounds.width * -1);
                             for (const item of this.anchorChain('left')) {
                                 item.translateX(-left);
                             }
@@ -2416,10 +2416,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 if (pivoted && this.has('transformOrigin')) {
                     const { left, top } = Resource.getBackgroundPosition(this.css('transformOrigin'), this.bounds, { fontSize: this.fontSize });
                     if (top !== 0) {
-                        this.android('transformPivotX', formatPX(top - (offsetX >= 0 ? offsetX : -offsetX * 2)));
+                        this.android('transformPivotX', formatPX(top - (offsetX >= 0 ? offsetX : offsetX * -2)));
                     }
                     if (left !== 0) {
-                        this.android('transformPivotY', formatPX(left - (offsetY >= 0 ? offsetY : -offsetY * 2)));
+                        this.android('transformPivotY', formatPX(left - (offsetY >= 0 ? offsetY : offsetY * -2)));
                     }
                 }
             }

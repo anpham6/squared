@@ -5,7 +5,7 @@ const { CSS_PROPERTIES, CSS_TRAITS, CSS_UNIT, PROXY_INLINESTYLE, SVG_PROPERTIES,
 const { assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { CSS, FILE } = squared.lib.regex;
 const { getElementData, getElementAsNode, getElementCache, setElementCache } = squared.lib.session;
-const { convertCamelCase, convertFloat, convertInt, hasBit, hasValue, isNumber, isObject, iterateArray, iterateReverseArray, lastItemOf, spliceString, splitEnclosing, splitPair } = squared.lib.util;
+const { convertCamelCase, convertFloat, convertInt, hasBit, hasValue, isNumber, isObject, iterateArray, iterateReverseArray, spliceString, splitEnclosing, splitPair } = squared.lib.util;
 
 const { SELECTOR_ATTR, SELECTOR_G, SELECTOR_LABEL, SELECTOR_PSEUDO_CLASS } = CSS;
 
@@ -46,7 +46,7 @@ function setStyleCache(element: HTMLElement, attr: string, sessionId: string, va
 }
 
 function parseLineHeight(lineHeight: string, fontSize: number) {
-    if (lastItemOf(lineHeight) === '%') {
+    if (isPercent(lineHeight)) {
         return parseFloat(lineHeight) / 100 * fontSize;
     }
     else if (isNumber(lineHeight)) {
@@ -97,7 +97,7 @@ function setDimension(node: T, styleMap: StringMap, attr: DimensionAttr) {
                 if (size !== '') {
                     result = isNumber(size) ? parseFloat(size) : node.parseUnit(size, options);
                     if (result) {
-                        node.css(attr, lastItemOf(size) === '%' ? size : size + 'px');
+                        node.css(attr, isPercent(size) ? size : size + 'px');
                     }
                 }
                 break;
@@ -202,7 +202,7 @@ function convertPosition(node: T, attr: string) {
         if (unit.endsWith('px')) {
             return parseFloat(unit);
         }
-        else if (lastItemOf(unit) === '%') {
+        else if (isPercent(unit)) {
             return node.styleElement ? convertFloat(node.style[attr]) : 0;
         }
         return node.parseUnit(unit, attr === 'top' || attr === 'bottom' ? { dimension: 'height' } : undefined);
@@ -1508,7 +1508,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         else if (value.endsWith('px')) {
             return parseFloat(value);
         }
-        else if (lastItemOf(value) === '%') {
+        else if (isPercent(value)) {
             const bounds: BoxRectDimension = (!options || options.parent !== false) && this.absoluteParent?.box || this.bounds;
             return (parseFloat(value) / 100) * bounds[options && options.dimension || 'width'];
         }
@@ -2475,16 +2475,16 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 const width = this.valueOf('width');
                 const minWidth = this.valueOf('minWidth');
                 let percent = 0;
-                if (lastItemOf(width) === '%') {
+                if (isPercent(width)) {
                     percent = parseFloat(width);
                 }
-                if (lastItemOf(minWidth) === '%') {
+                if (isPercent(minWidth)) {
                     percent = Math.max(parseFloat(minWidth), percent);
                 }
                 if (percent) {
                     const marginLeft = this.valueOf('marginLeft');
                     const marginRight = this.valueOf('marginRight');
-                    return this._cache.blockStatic = percent + (isPercent(marginLeft) ? parseFloat(marginLeft) : 0) + (isPercent(marginRight) ? parseFloat(marginRight) : 0) >= 100;
+                    return this._cache.blockStatic = percent + (isPercent(marginLeft) ? Math.max(0, parseFloat(marginLeft)) : 0) + (isPercent(marginRight) ? parseFloat(marginRight) : 0) >= 100;
                 }
             }
             return this._cache.blockStatic = false;
@@ -2916,9 +2916,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return this.naturalElements[0] || null;
     }
 
-    get lastChild() {
+    get lastChild(): Null<T> {
         const children = this.naturalElements;
-        return lastItemOf(children) || null;
+        return children[children.length - 1] || null;
     }
 
     get previousSibling() {
@@ -3020,7 +3020,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                     const fontSize = parent.valueOf('fontSize');
                                     if (fontSize !== '' && fontSize !== 'inherit') {
                                         value = checkFontSizeValue(fontSize);
-                                        if (lastItemOf(value) === '%') {
+                                        if (isPercent(value)) {
                                             emRatio *= parseFloat(value) / 100;
                                         }
                                         else if (isEm(value)) {
@@ -3045,7 +3045,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     else if (value.endsWith('px')) {
                         result = parseFloat(value);
                     }
-                    else if (lastItemOf(value) === '%') {
+                    else if (isPercent(value)) {
                         const parent = this.actualParent;
                         result = parent ? parseFloat(value) / 100 * parent.fontSize : getRemSize();
                     }

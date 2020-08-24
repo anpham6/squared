@@ -27,8 +27,8 @@ interface RepeatItem {
     unitMin?: string;
 }
 
-const { formatPercent, formatPX, isLength } = squared.lib.css;
-const { isNumber, lastItemOf, splitPairEnd, trimString, withinRange } = squared.lib.util;
+const { formatPercent, formatPX, isLength, isPercent } = squared.lib.css;
+const { isNumber, splitPairEnd, trimString, withinRange } = squared.lib.util;
 
 const PATTERN_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
 const PATTERN_MINMAX = 'minmax\\(\\s*([^,]+),\\s+([^)]+)\\s*\\)';
@@ -79,7 +79,7 @@ function setAutoFill(data: CssGridDirectionData, dimension: number) {
         const unitMin = data.unitMin;
         let sizeMin = 0;
         for (const value of [unit[0], unitMin[0]]) {
-            if (lastItemOf(value) === '%') {
+            if (isPercent(value)) {
                 sizeMin = Math.max(parseFloat(value) / 100 * dimension, sizeMin);
             }
             else if (isLength(value)) {
@@ -109,7 +109,7 @@ function setFlexibleDimension(dimension: number, gap: number, count: number, uni
         else if (value.endsWith('fr')) {
             fractional += parseFloat(value);
         }
-        else if (lastItemOf(value) === '%') {
+        else if (isPercent(value)) {
             percent -= parseFloat(value) / 100;
         }
     }
@@ -181,31 +181,6 @@ function createDataAttribute(node: NodeUI): CssGridData<NodeUI> {
     });
 }
 
-function setDataRows(rowData: Undef<NodeUI[]>[][], openCells: number[][], rowA: number, rowB: number, colA: number, colB: number, item: NodeUI, placement: number[], length: number, dense: boolean) {
-    if (placement.every(value => value > 0)) {
-        for (let i = placement[rowA] - 1; i < placement[rowB] - 1; ++i) {
-            const data = rowData[i] || (rowData[i] = []);
-            let cell = openCells[i],
-                j = placement[colA] - 1;
-            if (!cell) {
-                cell = new Array(length).fill(0);
-                if (!dense) {
-                    for (let k = 0; k < j; ++k) {
-                        cell[k] = 1;
-                    }
-                }
-                openCells[i] = cell;
-            }
-            while (j < placement[colB] - 1) {
-                (data[j] || (data[j] = [])).push(item);
-                cell[j++] = 1;
-            }
-        }
-        return true;
-    }
-    return false;
-}
-
 function applyLayout(node: NodeUI, data: CssGridDirectionData, dataCount: number, horizontal: boolean) {
     let unit = data.unit;
     if (unit.length < dataCount) {
@@ -241,7 +216,7 @@ function applyLayout(node: NodeUI, data: CssGridDirectionData, dataCount: number
     const length = unit.length;
     for (let i = 0; i < length; ++i) {
         const value = unit[i];
-        if (lastItemOf(value) === '%') {
+        if (isPercent(value)) {
             percent -= parseFloat(value) / 100;
         }
         else if (value.endsWith('fr')) {
@@ -320,7 +295,10 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             rowA: number,
             colA: number,
             rowB: number,
-            colB: number;
+            colB: number,
+            ITERATION: number,
+            ROW_SPAN: number,
+            COLUMN_SPAN: number;
         if (horizontal) {
             rowA = 0;
             colA = 1;
@@ -333,6 +311,30 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             rowB = 3;
             colB = 2;
         }
+        const setDataRows = (item: T, placement: number[]) => {
+            if (placement.every(value => value > 0)) {
+                for (let i = placement[rowA] - 1; i < placement[rowB] - 1; ++i) {
+                    const data = rowData[i] || (rowData[i] = []);
+                    let cell = openCells[i],
+                        j = placement[colA] - 1;
+                    if (!cell) {
+                        cell = new Array(ITERATION).fill(0);
+                        if (!dense) {
+                            for (let k = 0; k < j; ++k) {
+                                cell[k] = 1;
+                            }
+                        }
+                        openCells[i] = cell;
+                    }
+                    while (j < placement[colB] - 1) {
+                        (data[j] || (data[j] = [])).push(item);
+                        cell[j++] = 1;
+                    }
+                }
+                return true;
+            }
+            return false;
+        };
         for (let index = 0; index < 4; ++index) {
             const value = gridTemplates[index];
             if (value !== '' && value !== 'none' && value !== 'auto') {
@@ -796,9 +798,6 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 previousPlacement = placement;
             });
         }
-        let ITERATION: number,
-            ROW_SPAN: number,
-            COLUMN_SPAN: number;
         {
             let totalCount = 1,
                 outerCount = 0,
@@ -955,7 +954,7 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             if (placement[colB] === 0) {
                 placement[colB] = placement[colA] + COLUMN_SPAN;
             }
-            if (setDataRows(rowData, openCells, rowA, rowB, colA, colB, item, placement, ITERATION, dense)) {
+            if (setDataRows(item, placement)) {
                 const [a, b, c, d] = placement;
                 const rowStart = a - 1;
                 const rowCount = c - a;
@@ -1064,7 +1063,7 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                                 }
                                             }
                                             else if (boundsHeight > Math.abs(columnHeight)) {
-                                                rowMax[i] = -boundsHeight;
+                                                rowMax[i] = boundsHeight * -1;
                                             }
                                             minCellHeight = Math.max(boundsHeight, minCellHeight);
                                         }
@@ -1082,7 +1081,7 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                                 }
                                             }
                                             else if (boundsWidth > Math.abs(columnWidth)) {
-                                                columnMax[j] = -boundsWidth;
+                                                columnMax[j] = boundsWidth * -1;
                                             }
                                         }
                                         modified.add(item);

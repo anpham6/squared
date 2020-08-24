@@ -6,7 +6,7 @@ import { INSTANCE_TYPE, KEYSPLINE_NAME, PATTERN_CUBICBEZIER } from './lib/consta
 const { getHexCode, parseColor } = squared.lib.color;
 const { getFontSize, isEmBased, isLength, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
-const { isNumber, replaceMap, sortNumber, trimEnd } = squared.lib.util;
+const { isNumber, lastItemOf, replaceMap, sortNumber, trimEnd } = squared.lib.util;
 
 const invertControlPoint = (value: number) => parseFloat((1 - value).toPrecision(5));
 
@@ -266,7 +266,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                     this.keySplines = replaceMap(getNamedItem(animationElement, 'keySplines').split(';'), value => value.trim()).filter(value => value !== '');
                 case 'linear': {
                     const keyTimesBase = this.keyTimes;
-                    if (keyTimesBase[0] !== 0 && keyTimesBase[keyTimesBase.length - 1] !== 1) {
+                    if (keyTimesBase[0] !== 0 && lastItemOf(keyTimesBase) !== 1) {
                         const length = this.values.length;
                         const keyTimes: number[] = new Array(length);
                         for (let i = 0; i < length; ++i) {
@@ -324,7 +324,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             while (delay + duration <= leadTime) {
                 delay += duration;
             }
-            return Math.min(delay + (complete ? 1 : keyTimes[keyTimes.length - 1]) * duration, endTime);
+            return Math.min(delay + (complete ? 1 : lastItemOf(keyTimes)!) * duration, endTime);
         }
         return endTime;
     }
@@ -554,7 +554,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
 
     get valueTo() {
         const values = this._values;
-        return values ? values[values.length - 1] : '';
+        return values && lastItemOf(values) || '';
     }
 
     get valueFrom() {
@@ -581,6 +581,6 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
 
     get evaluateEnd() {
         const keyTimes = this.keyTimes;
-        return keyTimes.length > 0 && keyTimes[keyTimes.length - 1] < 1;
+        return keyTimes.length > 0 && lastItemOf(keyTimes)! < 1;
     }
 }

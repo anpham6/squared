@@ -282,6 +282,7 @@ declare module "lib" {
         function splitPairEnd(value: string, char: string, trim?: boolean): string;
         function splitEnclosing(value: string, prefix?: string, separator?: string, opening?: string, closing?: string): string[];
         function lastItemOf<T>(value: ArrayLike<T>): Undef<T>;
+        function lastItemEquals<T>(value: ArrayLike<T>, compareTo: T): boolean;
         function hasBit(value: number, offset: number): boolean;
         function isNumber(value: string): boolean;
         function isString(value: any): value is string;

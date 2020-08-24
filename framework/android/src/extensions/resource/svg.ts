@@ -135,10 +135,10 @@ interface AnimateGroup {
     pathData?: string;
 }
 
-const { extractURL, formatPX } = squared.lib.css;
+const { extractURL, formatPX, isPercent } = squared.lib.css;
 const { truncate } = squared.lib.math;
 const { FILE } = squared.lib.regex;
-const { convertCamelCase, convertInt, convertWord, formatString, hasKeys, isArray, isNumber, lastItemOf, partitionArray, plainMap, replaceMap } = squared.lib.util;
+const { convertCamelCase, convertInt, convertWord, formatString, hasKeys, isArray, isNumber, lastItemOf, lastItemEquals, partitionArray, plainMap, replaceMap } = squared.lib.util;
 
 const { KEYSPLINE_NAME, SYNCHRONIZE_MODE } = squared.svg.lib.constant;
 const { CACHE_VIEWNAME, MATRIX, SVG, TRANSFORM, getAttribute, getRootOffset } = squared.svg.lib.util;
@@ -490,7 +490,7 @@ function createFillGradient(gradient: Gradient, path: SvgPath, precision?: numbe
         case 'radial': {
             const { cxAsString, cyAsString, rAsString, spreadMethod } = gradient as SvgRadialGradient;
             const element = path.element;
-            const getRadiusPercent = (value: string) => lastItemOf(value) === '%' ? parseFloat(value) / 100 : 0.5;
+            const getRadiusPercent = (value: string) => isPercent(value) ? parseFloat(value) / 100 : 0.5;
             let points: Point[] = [],
                 cx!: number,
                 cy!: number,
@@ -541,7 +541,7 @@ function createFillGradient(gradient: Gradient, path: SvgPath, precision?: numbe
             }
             result.centerX = (cx + cxDiameter * getRadiusPercent(cxAsString)).toString();
             result.centerY = (cy + cyDiameter * getRadiusPercent(cyAsString)).toString();
-            result.gradientRadius = (((cxDiameter + cyDiameter) / 2) * (lastItemOf(rAsString) === '%' ? parseFloat(rAsString) / 100 : 1)).toString();
+            result.gradientRadius = (((cxDiameter + cyDiameter) / 2) * (isPercent(rAsString) ? parseFloat(rAsString) / 100 : 1)).toString();
             if (spreadMethod) {
                 result.tileMode = getTileMode(spreadMethod);
             }
@@ -667,10 +667,10 @@ function insertFillAfter(propertyName: string, valueType: string, item: SvgAnima
         }
         let previousValue: Undef<string>;
         if (propertyValues && propertyValues.length) {
-            const lastValue = propertyValues[propertyValues.length - 1];
+            const lastValue = lastItemOf(propertyValues)!;
             if (isArray(lastValue.propertyValuesHolder)) {
-                const propertyValue = lastValue.propertyValuesHolder[lastValue.propertyValuesHolder.length - 1];
-                previousValue = propertyValue.keyframe[propertyValue.keyframe.length - 1].value;
+                const propertyValue = lastItemOf(lastValue.propertyValuesHolder)!;
+                previousValue = lastItemOf(propertyValue.keyframe)!.value;
             }
             else {
                 previousValue = lastValue.valueTo;
@@ -689,10 +689,10 @@ function insertFillAfter(propertyName: string, valueType: string, item: SvgAnima
             }
         }
         if (transformOrigin) {
-            if (lastItemOf(propertyName) === 'X') {
+            if (lastItemEquals(propertyName, 'X')) {
                 afterAnimator.push(createPropertyValue('translateX', valueType, '0', '1', precision));
             }
-            else if (lastItemOf(propertyName) === 'Y') {
+            else if (lastItemEquals(propertyName, 'Y')) {
                 afterAnimator.push(createPropertyValue('translateY', valueType, '0', '1', precision));
             }
         }
@@ -1272,11 +1272,11 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                                 if (origin) {
                                                                     let translateTo = 0,
                                                                         direction: Undef<string>;
-                                                                    if (lastItemOf(propertyName) === 'X') {
+                                                                    if (lastItemEquals(propertyName, 'X')) {
                                                                         translateTo = origin.x;
                                                                         direction = 'translateX';
                                                                     }
-                                                                    else if (lastItemOf(propertyName) === 'Y') {
+                                                                    else if (lastItemEquals(propertyName, 'Y')) {
                                                                         translateTo = origin.y;
                                                                         direction = 'translateY';
                                                                     }

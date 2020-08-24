@@ -11,12 +11,13 @@ GitHub
 &nbsp;&nbsp;&nbsp;&gt; cd squared  
 &nbsp;&nbsp;&nbsp;&gt; npm install --only=prod && npm run prod  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *OR*  
-&nbsp;&nbsp;&nbsp;&gt; npm run dev && npm install
+&nbsp;&nbsp;&nbsp;&gt; npm install && npm run dev
 
 NPM  
 &nbsp;&nbsp;&nbsp;&gt; npm install squared  
 &nbsp;&nbsp;&nbsp;&gt; cd node_modules/squared  
 
+Express  
 &nbsp;&nbsp;&nbsp;&gt; squared.settings.json (configure)  
 &nbsp;&nbsp;&nbsp;&gt; node serve.js [--help]
 

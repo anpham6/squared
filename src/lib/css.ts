@@ -14,7 +14,6 @@ let DOCUMENT_FONTSIZE!: number;
 
 const PATTERN_SIZES = `(\\(\\s*(?:orientation:\\s*(?:portrait|landscape)|(?:max|min)-width:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\))`;
 const REGEXP_LENGTH = new RegExp(`^${STRING.LENGTH}$`);
-const REGEXP_PERCENT = new RegExp(`^${STRING.PERCENT}$`);
 const REGEXP_LENGTHPERCENTAGE = new RegExp(`^${STRING.LENGTH_PERCENTAGE}$`);
 const REGEXP_ANGLE = new RegExp(`^${STRING.CSS_ANGLE}$`);
 const REGEXP_TIME = new RegExp(`^${STRING.CSS_TIME}$`);
@@ -3655,7 +3654,7 @@ export function parseTransform(value: string, options?: TransformOptions) {
                     switch (method) {
                         case 'scale':
                             x = parseFloat(scale[2]);
-                            y = parseFloat(scale[3]) || x;
+                            y = scale[3] ? parseFloat(scale[3]) : x;
                             break;
                         case 'scaleX':
                             x = parseFloat(scale[2]);
@@ -3821,7 +3820,7 @@ export function isTime(value: string) {
 }
 
 export function isPercent(value: string) {
-    return REGEXP_PERCENT.test(value);
+    return value[value.length - 1] === '%';
 }
 
 export function hasCalc(value: string) {

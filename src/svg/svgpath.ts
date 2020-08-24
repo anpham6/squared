@@ -450,11 +450,11 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                 if (afterStartPoint) {
                                     const coordinates = pathStart.coordinates;
                                     if (afterStartPoint.x === pathStartPoint.x) {
-                                        coordinates[1] += pathStartPoint.y > afterStartPoint.y ? leading : -leading;
+                                        coordinates[1] += pathStartPoint.y > afterStartPoint.y ? leading : leading * -1;
                                         modified = true;
                                     }
                                     else if (afterStartPoint.y === pathStartPoint.y) {
-                                        coordinates[0] += pathStartPoint.x > afterStartPoint.x ? leading : -leading;
+                                        coordinates[0] += pathStartPoint.x > afterStartPoint.x ? leading : leading * -1;
                                         modified = true;
                                     }
                                     else {
@@ -488,11 +488,11 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         if (beforeEndPoint) {
                                             const coordinates = pathEnd.coordinates;
                                             if (beforeEndPoint.x === pathEndPoint.x) {
-                                                coordinates[1] += pathEndPoint.y > beforeEndPoint.y ? trailing : -trailing;
+                                                coordinates[1] += pathEndPoint.y > beforeEndPoint.y ? trailing : trailing * -1;
                                                 modified = true;
                                             }
                                             else if (beforeEndPoint.y === pathEndPoint.y) {
-                                                coordinates[0] += pathEndPoint.x > beforeEndPoint.x ? trailing : -trailing;
+                                                coordinates[0] += pathEndPoint.x > beforeEndPoint.x ? trailing : trailing * -1;
                                                 modified = true;
                                             }
                                             else {

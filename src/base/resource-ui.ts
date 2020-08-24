@@ -762,10 +762,10 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                     opposite = relativeAngle({ x: 0, y: 0 }, { x: width, y: height });
                                 }
                                 else if (angle <= 270) {
-                                    opposite = relativeAngle({ x: 0, y: 0 }, { x: -width, y: height });
+                                    opposite = relativeAngle({ x: 0, y: 0 }, { x: width * -1, y: height });
                                 }
                                 else {
-                                    opposite = relativeAngle({ x: 0, y: height }, { x: -width, y: 0 });
+                                    opposite = relativeAngle({ x: 0, y: height }, { x: width * -1, y: 0 });
                                 }
                                 const a = Math.abs(opposite - angle);
                                 x = truncateFraction(offsetAngleX(angle, triangulate(a, 90 - a, hypotenuse(width, height))[1]));

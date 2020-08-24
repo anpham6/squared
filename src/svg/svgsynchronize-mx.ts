@@ -26,7 +26,7 @@ interface ForwardValue extends NumberValue<AnimateValue> {
 }
 
 const { clamp, equal, multipleOf } = squared.lib.math;
-const { hasBit, hasKeys, hasValue, isEqual, isNumber, joinArray, plainMap, replaceMap, spliceArray, sortNumber } = squared.lib.util;
+const { hasBit, hasKeys, hasValue, isEqual, isNumber, joinArray, lastItemOf, plainMap, replaceMap, spliceArray, sortNumber } = squared.lib.util;
 
 function insertAdjacentSplitValue(map: TimelineIndex, attr: string, time: number, intervalMap: SvgAnimationIntervalMap, transforming: boolean) {
     let previousTime = 0,
@@ -184,7 +184,7 @@ function getPathData(entries: TimelineEntries, path: SvgPath, parent: Null<SvgCo
                     break;
                 case 'circle':
                 case 'ellipse':
-                    points = [{ x: values[0] as number, y: values[1] as number, rx: values[2] as number, ry: values[values.length - 1] as number }];
+                    points = [{ x: values[0] as number, y: values[1] as number, rx: values[2] as number, ry: lastItemOf(values) as number }];
                     break;
             }
             if (path.transformed) {
@@ -572,7 +572,7 @@ function setStartItemValues(map: SvgAnimationIntervalMap, forwardMap: ForwardMap
             keySplines.unshift(item.timingFunction);
         }
     }
-    if (keyTimes[keyTimes.length - 1] < 1) {
+    if (lastItemOf(keyTimes)! < 1) {
         const value = map.get(SvgAnimationIntervalMap.getKeyName(item), item.delay) || convertToString(baseValueMap[item.attributeName]) || values[0];
         keyTimes.push(1);
         values.push(value);
@@ -593,7 +593,7 @@ function setTransformOrigin(map: TransformOriginMap, item: SvgAnimateTransform, 
 
 function getForwardItem(forwardMap: ForwardMap, attr: string) {
     const map = forwardMap[attr] as Undef<ForwardValue[]>;
-    return map && map[map.length - 1];
+    return map && lastItemOf(map);
 }
 
 function setSetterValue(baseMap: Map<number, AnimateValue>, item: SvgAnimation, transforming: boolean, time?: number, value?: AnimateValue) {
@@ -2018,7 +2018,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                         }
                                         object.delay = delay;
                                         object.keySplines = keySplines;
-                                        object.duration = entries[entries.length - 1][0];
+                                        object.duration = lastItemOf(entries)![0];
                                         insertAnimate(animationsBase, object, repeating);
                                     }
                                 }

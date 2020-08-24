@@ -691,7 +691,7 @@ export function splitEnclosing(value: string, prefix?: string, separator = '', o
                 if (segment !== '') {
                     appendValues(segment);
                     if (!prefixed) {
-                        const joined = result[result.length - 1];
+                        const joined = lastItemOf(result)!;
                         if (value.substring(index - joined.length, index + 1) === joined + prefix) {
                             preceding = joined;
                             --result.length;
@@ -755,6 +755,10 @@ export function splitEnclosing(value: string, prefix?: string, separator = '', o
 
 export function lastItemOf<T>(value: ArrayLike<T>): Undef<T> {
     return value[value.length - 1];
+}
+
+export function lastItemEquals<T>(value: ArrayLike<T>, compareTo: T) {
+    return value[value.length - 1] === compareTo;
 }
 
 export function hasBit(value: number, offset: number) {
@@ -982,7 +986,7 @@ export function searchObject(obj: StringMap, value: string | StringMap) {
                 ? (a: string) => a.includes(value.replace(/^\*/, '').replace(/\*$/, ''))
             : value[0] === '*'
                 ? (a: string) => a.endsWith(value.replace(/^\*/, ''))
-            : lastItemOf(value) === '*'
+            : lastItemEquals(value, '*')
                 ? (a: string) => a.startsWith(value.replace(/\*$/, ''))
                 : (a: string) => a === value;
         for (const attr in obj) {

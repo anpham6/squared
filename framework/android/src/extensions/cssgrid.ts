@@ -12,9 +12,9 @@ interface AndroidCssGridData<T> extends CssGridData<T> {
     constraintData?: T[][];
 }
 
-const { formatPercent, formatPX, isLength } = squared.lib.css;
+const { formatPercent, formatPX, isLength, isPercent } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { flatArray, lastItemOf } = squared.lib.util;
+const { flatArray } = squared.lib.util;
 
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.enumeration;
 
@@ -145,7 +145,7 @@ function setContentSpacing(mainData: AndroidCssGridData<View>, data: CssGridDire
                                         const marginEnd = marginSize + (marginExcess > 0 ? Math.max(marginExcess - 1, 1) : 0);
                                         item.cssPX(dimension, marginEnd, true);
                                         if (adjusted.has(item)) {
-                                            item.modifyBox(MARGIN_END, -marginEnd, false);
+                                            item.modifyBox(MARGIN_END, marginEnd * -1, false);
                                         }
                                     }
                                 }
@@ -240,7 +240,7 @@ function getCellDimensions(node: View, horizontal: boolean, section: string[], i
             rowWeight = weight;
         }
     }
-    else if (section.every(value => lastItemOf(value) === '%')) {
+    else if (section.every(value => isPercent(value))) {
         const percent = formatPercent((section.reduce((a, b) => a + parseFloat(b), 0) + insideGap / (horizontal ? node.actualWidth : node.actualHeight)) / 100);
         if (horizontal) {
             width = percent;
@@ -274,7 +274,7 @@ function requireDirectionSpacer(data: CssGridDirectionData, dimension: number) {
         if (value.endsWith('px')) {
             size += parseFloat(value);
         }
-        else if (lastItemOf(value) === '%') {
+        else if (isPercent(value)) {
             percent += parseFloat(value);
         }
         else if (value.endsWith('fr')) {
@@ -376,7 +376,7 @@ function applyLayout(node: View, parent: View, item: View, mainData: CssGridData
             }
             size = 0;
         }
-        else if (lastItemOf(value) === '%') {
+        else if (isPercent(value)) {
             if (sizeWeight === -1) {
                 sizeWeight = 0;
             }
@@ -889,7 +889,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                                 item.anchor('right', 'parent');
                             }
                             else {
-                                item.modifyBox(BOX_STANDARD.MARGIN_RIGHT, -gap);
+                                item.modifyBox(BOX_STANDARD.MARGIN_RIGHT, gap * -1);
                             }
                             if (previousItem) {
                                 previousItem.anchor('rightLeft', item.documentId);
@@ -1099,7 +1099,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 let valid = false;
                 for (let i = 0; i < columnSpan; ++i) {
                     const value = unit[columnStart + i];
-                    if (value.endsWith('fr') || lastItemOf(value) === '%') {
+                    if (value.endsWith('fr') || isPercent(value)) {
                         valid = true;
                     }
                     else if (value === 'auto') {

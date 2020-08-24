@@ -178,7 +178,7 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
                                 node.setBox(direction ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.PADDING_BOTTOM, { reset: 1 });
                             }
                             else if (blockAll) {
-                                node.modifyBox(direction ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.PADDING_BOTTOM, -value, false);
+                                node.modifyBox(direction ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.PADDING_BOTTOM, value * -1, false);
                             }
                             break;
                         }
@@ -597,7 +597,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                     if (!inheritedTop && current !== firstChild && previousSiblings.length > 1 && (node.layoutVertical || current.renderParent?.layoutVertical)) {
                                         const previousSibling = previousSiblings.pop() as T;
                                         if (previousSibling.floating && Math.floor(previousSibling.bounds.top) === Math.floor(current.bounds.top)) {
-                                            current.modifyBox(BOX_STANDARD.MARGIN_TOP, -previousSibling.bounds.height, false);
+                                            current.modifyBox(BOX_STANDARD.MARGIN_TOP, previousSibling.bounds.height * -1, false);
                                         }
                                     }
                                 }
