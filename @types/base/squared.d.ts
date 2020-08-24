@@ -269,6 +269,7 @@ declare module "base" {
         set application(value);
         get application(): Application<T>;
         get controller(): Controller<T>;
+        get resource(): Null<Resource<T>>;
         constructor(name: string, framework: number, options?: StandardMap);
     }
 

@@ -1,4 +1,6 @@
+import type ApplicationUI from './application-ui';
 import type LayoutUI from './layout-ui';
+import type NodeList from './nodelist';
 
 import Controller from './controller';
 import NodeUI from './node-ui';
@@ -94,7 +96,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     public abstract renderNode(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
     public abstract renderNodeGroup(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
     public abstract sortRenderPosition(parent: T, templates: NodeTemplate<T>[]): NodeTemplate<T>[];
-    public abstract setConstraints(rendering: squared.base.NodeList<T>): void;
+    public abstract setConstraints(rendering: NodeList<T>): void;
     public abstract optimize(rendered: T[]): void;
     public abstract finalize(layouts: FileAsset[]): void;
 
@@ -442,7 +444,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         );
     }
 
-    public evaluateNonStatic(documentRoot: T, cache: squared.base.NodeList<T>) {
+    public evaluateNonStatic(documentRoot: T, cache: NodeList<T>) {
         const altered = new Set<T>();
         const removed = new Set<T>();
         const escaped = new Map<T, { parent: T; appending: T[] }>();
@@ -623,7 +625,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                     if (sibling.floating) {
                                         const float = sibling.float;
                                         if (clear === 'both' || float === clear) {
-                                            (this.application as squared.base.ApplicationUI<T>).clearMap.set(item, clear);
+                                            (this.application as ApplicationUI<T>).clearMap.set(item, clear);
                                             let nextSibling = item.nextElementSibling as Null<T>;
                                             while (nextSibling) {
                                                 if (nextSibling.floating && !appending.includes(nextSibling)) {
@@ -751,7 +753,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         }
     }
 
-    public sortInitialCache(cache: squared.base.NodeList<T>) {
+    public sortInitialCache(cache: NodeList<T>) {
         cache.sort((a, b) => {
             if (a.depth !== b.depth) {
                 return a.depth - b.depth;

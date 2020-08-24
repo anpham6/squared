@@ -1,3 +1,5 @@
+import type Application from './application';
+import type File from './file';
 import type Node from './node';
 
 const { extractURL } = squared.lib.css;
@@ -25,9 +27,9 @@ export default abstract class Resource<T extends Node> implements squared.base.R
         return /\.(\w+)\s*$/.exec(value)?.[1] || '';
     }
 
-    public readonly abstract application: squared.base.Application<T>;
+    public readonly abstract application: Application<T>;
 
-    private _fileHandler: Null<squared.base.File<T>> = null;
+    private _fileHandler: Null<File<T>> = null;
 
     public abstract get userSettings(): UserResourceSettings;
 

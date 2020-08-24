@@ -1,4 +1,4 @@
-const REGEXP_TRUNCATECACHE: ObjectMap<RegExp> = {};
+const REGEXP_TRUNCATECACHE = new Map<number, RegExp>();
 const REGEXP_DECIMALNOTAION = /^(-?\d+\.\d+)e(-?\d+)$/;
 const REGEXP_FRACTION = /^(-?\d+)\.(\d*?)(0{5,}|9{5,})\d*$/;
 const REGEXP_TRAILINGZERO = /\.(\d*?)(0+)$/;
@@ -59,10 +59,10 @@ export function truncateTrailingZero(value: string) {
 }
 
 export function truncateString(value: string, precision = 3) {
-    let pattern = REGEXP_TRUNCATECACHE[precision];
+    let pattern = REGEXP_TRUNCATECACHE.get(precision);
     if (!pattern) {
         pattern = new RegExp(`(-?\\d+\\.\\d{${precision}})(\\d)\\d*`, 'g');
-        REGEXP_TRUNCATECACHE[precision] = pattern;
+        REGEXP_TRUNCATECACHE.set(precision, pattern);
     }
     let output = value,
         match: Null<RegExpExecArray>;

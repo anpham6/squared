@@ -1,4 +1,6 @@
+import type Application from './application';
 import type Node from './node';
+import type NodeList from './nodelist';
 
 export default class Controller<T extends Node> implements squared.base.Controller<T> {
     public readonly localSettings: ControllerSettings = {
@@ -10,11 +12,11 @@ export default class Controller<T extends Node> implements squared.base.Controll
         }
     };
 
-    constructor(public readonly application: squared.base.Application<T>) {
+    constructor(public readonly application: Application<T>) {
     }
 
     public init() {}
-    public sortInitialCache(cache: squared.base.NodeList<T>) {}
+    public sortInitialCache(cache: NodeList<T>) {}
     public applyDefaultStyles(element: Element, sessionId: string) {}
     public reset() {}
 

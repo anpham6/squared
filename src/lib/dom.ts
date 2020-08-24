@@ -16,29 +16,26 @@ export function withinViewport(rect: DOMRect | ClientRect) {
     return !(rect.top + window.scrollY + rect.height < 0 || rect.left + window.scrollX + rect.width < 0);
 }
 
-export function assignRect(rect: Undef<DOMRect | ClientRect | BoxRectDimension>, scrollPosition = true) {
-    if (rect) {
-        const result = {
-            top: rect.top,
-            right: rect.right,
-            bottom: rect.bottom,
-            left: rect.left,
-            width: rect.width,
-            height: rect.height
-        };
-        if (scrollPosition) {
-            if (window.scrollY !== 0) {
-                result.top += window.scrollY;
-                result.bottom += window.scrollY;
-            }
-            if (window.scrollX !== 0) {
-                result.left += window.scrollX;
-                result.right += window.scrollX;
-            }
+export function assignRect(rect: DOMRect | ClientRect | BoxRectDimension, scrollPosition = true) {
+    const result = {
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        left: rect.left,
+        width: rect.width,
+        height: rect.height
+    };
+    if (scrollPosition) {
+        if (window.scrollY !== 0) {
+            result.top += window.scrollY;
+            result.bottom += window.scrollY;
         }
-        return result;
+        if (window.scrollX !== 0) {
+            result.left += window.scrollX;
+            result.right += window.scrollX;
+        }
     }
-    return newBoxRectDimension();
+    return result;
 }
 
 export function getRangeClientRect(element: Element) {

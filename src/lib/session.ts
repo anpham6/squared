@@ -36,10 +36,10 @@ export function getElementData(element: Element, sessionId?: string) {
     if (!sessionId) {
         sessionId = SESSION_MAP['0'].get(element)?.sessionId;
         if (!sessionId) {
-            return null;
+            return;
         }
     }
-    return SESSION_MAP[sessionId].get(element) || null;
+    return SESSION_MAP[sessionId].get(element);
 }
 
 export function getElementAsNode<T>(element: Element, sessionId?: string) {

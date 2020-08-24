@@ -314,7 +314,7 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
         const setDataRows = (item: T, placement: number[]) => {
             if (placement.every(value => value > 0)) {
                 for (let i = placement[rowA] - 1; i < placement[rowB] - 1; ++i) {
-                    const data = rowData[i] || (rowData[i] = []);
+                    const itemData = rowData[i] || (rowData[i] = []);
                     let cell = openCells[i],
                         j = placement[colA] - 1;
                     if (!cell) {
@@ -327,7 +327,7 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         openCells[i] = cell;
                     }
                     while (j < placement[colB] - 1) {
-                        (data[j] || (data[j] = [])).push(item);
+                        (itemData[j] || (itemData[j] = [])).push(item);
                         cell[j++] = 1;
                     }
                 }

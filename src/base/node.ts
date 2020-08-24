@@ -776,7 +776,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     protected _childIndex = Infinity;
     protected readonly _element: Null<Element> = null;
 
-    private _elementData: Null<ElementData> = null;
+    private _elementData: Null<ElementData>;
     private _style?: CSSStyleDeclaration;
     private _dataset?: DOMStringMap;
     private _pseudoElt?: PseudoElt;
@@ -793,15 +793,18 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             this._element = element;
             if (sessionId !== '0') {
                 setElementCache(element, 'node', sessionId, this);
-                this._elementData = getElementData(element, sessionId);
-            }
-            if (!this.syncWith(sessionId)) {
-                this._styleMap = {};
+                const elementData = getElementData(element, sessionId);
+                if (elementData) {
+                    this._elementData = elementData;
+                    if (!this.syncWith(sessionId)) {
+                        this._styleMap = {};
+                    }
+                    return;
+                }
             }
         }
-        else {
-            this._styleMap = {};
-        }
+        this._styleMap = {};
+        this._elementData = null;
     }
 
     public init(parent: T, depth: number, index?: number) {
@@ -815,44 +818,56 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     public syncWith(sessionId?: string, cache?: boolean) {
         const element = this._element as HTMLElement;
         if (element) {
+            let elementData: UndefNull<ElementData>;
             if (!sessionId) {
                 sessionId = getElementCache(element, 'sessionId', '0');
                 if (sessionId === this.sessionId) {
+                    if (cache) {
+                        this._cache = {};
+                    }
                     return true;
                 }
                 else if (!sessionId) {
                     return false;
                 }
                 else {
-                    this._elementData = getElementData(element, sessionId);
+                    elementData = getElementData(element, sessionId);
+                    if (elementData) {
+                        this._elementData = elementData;
+                    }
                 }
             }
-            const styleMap: Undef<StringMap> = this._elementData?.styleMap;
-            if (styleMap) {
-                if (this.styleElement) {
-                    if (!this.pseudoElement) {
-                        const items = Array.from(element.style);
-                        const length = items.length;
-                        if (length) {
-                            for (let i = 0; i < length; ++i) {
-                                const attr = items[i];
-                                styleMap[convertCamelCase(attr)] = element.style.getPropertyValue(attr);
+            else {
+                elementData = this._elementData;
+            }
+            if (elementData) {
+                const styleMap: Undef<StringMap> = elementData.styleMap;
+                if (styleMap) {
+                    if (this.styleElement) {
+                        if (!this.pseudoElement) {
+                            const items = Array.from(element.style);
+                            const length = items.length;
+                            if (length) {
+                                for (let i = 0; i < length; ++i) {
+                                    const attr = items[i];
+                                    styleMap[convertCamelCase(attr)] = element.style.getPropertyValue(attr);
+                                }
                             }
                         }
+                        else {
+                            this._pseudoElt = elementData.pseudoElt;
+                        }
+                        this._styleMap = Node.sanitizeCss(element, styleMap, styleMap.writingMode);
                     }
                     else {
-                        this._pseudoElt = this._elementData?.pseudoElt as PseudoElt;
+                        this._styleMap = styleMap;
                     }
-                    this._styleMap = Node.sanitizeCss(element, styleMap, styleMap.writingMode);
+                    this._cssStyle = styleMap;
+                    if (cache) {
+                        this._cache = {};
+                    }
+                    return true;
                 }
-                else {
-                    this._styleMap = styleMap;
-                }
-                this._cssStyle = styleMap;
-                if (cache) {
-                    this._cache = {};
-                }
-                return true;
             }
         }
         return false;

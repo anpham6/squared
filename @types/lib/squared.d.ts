@@ -174,7 +174,7 @@ declare module "lib" {
     namespace dom {
         function newBoxRectDimension(): BoxRectDimension;
         function withinViewport(rect: DOMRect | ClientRect): boolean;
-        function assignRect(rect: Undef<DOMRect | ClientRect | BoxRectDimension>, scrollPosition?: boolean): BoxRectDimension;
+        function assignRect(rect: DOMRect | ClientRect | BoxRectDimension, scrollPosition?: boolean): BoxRectDimension;
         function getRangeClientRect(element: Element): Null<BoxRectDimension>;
         function removeElementsByClassName(className: string): void;
         function getElementsBetweenSiblings(elementStart: Null<Element>, elementEnd: Element): Element[];
@@ -252,7 +252,7 @@ declare module "lib" {
         function frameworkNotInstalled<T = void>(): Promise<T>;
         function setElementCache(element: Element, attr: string, sessionId: string, data: any): void;
         function getElementCache<T = unknown>(element: Element, attr: string, sessionId?: string): Undef<T>;
-        function getElementData(element: Element, sessionId?: string): Null<ElementData>;
+        function getElementData(element: Element, sessionId?: string): Undef<ElementData>;
         function getElementAsNode<T>(element: Element, sessionId?: string): Null<T>;
     }
 

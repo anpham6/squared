@@ -1,5 +1,5 @@
-import { parseColor } from './color';
 import { USER_AGENT, getDeviceDPI, isUserAgent } from './client';
+import { parseColor } from './color';
 import { clamp, truncate, truncateFraction } from './math';
 import { CSS, STRING, TRANSFORM } from './regex';
 import { getElementCache, setElementCache } from './session';
@@ -204,17 +204,15 @@ function calculateGeneric(element: StyleElement, value: string, unitType: number
 }
 
 function getWritingMode(value?: string) {
-    if (!value) {
-        return 0;
+    if (value) {
+        switch (value) {
+            case 'vertical-lr':
+                return 1;
+            case 'vertical-rl':
+                return 2;
+        }
     }
-    switch (value) {
-        case 'vertical-lr':
-            return 1;
-        case 'vertical-rl':
-            return 2;
-        default:
-            return 0;
-    }
+    return 0;
 }
 
 function hasBorderStyle(value: string) {
@@ -1583,36 +1581,31 @@ export function updateDocumentFont() {
     }
     style.fontSize = fontSize;
     const index = 16 - Math.floor(DOCUMENT_FONTBASE);
-    if (index < 0) {
-        DOCUMENT_FONTMAP = [0.6, 0.75, 0.89, 1.2, 1.5, 2, 3];
-    }
-    else {
-        switch (index) {
-            case 0:
-                DOCUMENT_FONTMAP = [9/16, 10/16, 13/16, 18/16, 24/16, 2, 3];
-                break;
-            case 1:
-                DOCUMENT_FONTMAP = [9/15, 10/15, 13/15, 18/15, 23/15, 2, 3];
-                break;
-            case 2:
-                DOCUMENT_FONTMAP = [9/14, 10/14, 12/14, 17/14, 21/14, 2, 3];
-                break;
-            case 3:
-                DOCUMENT_FONTMAP = DOCUMENT_FIXEDMAP;
-                break;
-            case 4:
-                DOCUMENT_FONTMAP = [9/12, 9/12, 10/12, 14/12, 18/12, 2, 3];
-                break;
-            case 5:
-                DOCUMENT_FONTMAP = [9/11, 9/11, 10/11, 13/11, 17/11, 2, 3];
-                break;
-            case 6:
-                DOCUMENT_FONTMAP = [9/10, 9/10, 9/10, 12/10, 15/10, 2, 3];
-                break;
-            default:
-                DOCUMENT_FONTMAP = [1, 1, 1, 11/9, 14/9, 2, 3];
-                break;
-        }
+    switch (index) {
+        case 0:
+            DOCUMENT_FONTMAP = [9/16, 10/16, 13/16, 18/16, 24/16, 2, 3];
+            break;
+        case 1:
+            DOCUMENT_FONTMAP = [9/15, 10/15, 13/15, 18/15, 23/15, 2, 3];
+            break;
+        case 2:
+            DOCUMENT_FONTMAP = [9/14, 10/14, 12/14, 17/14, 21/14, 2, 3];
+            break;
+        case 3:
+            DOCUMENT_FONTMAP = DOCUMENT_FIXEDMAP;
+            break;
+        case 4:
+            DOCUMENT_FONTMAP = [9/12, 9/12, 10/12, 14/12, 18/12, 2, 3];
+            break;
+        case 5:
+            DOCUMENT_FONTMAP = [9/11, 9/11, 10/11, 13/11, 17/11, 2, 3];
+            break;
+        case 6:
+            DOCUMENT_FONTMAP = [9/10, 9/10, 9/10, 12/10, 15/10, 2, 3];
+            break;
+        default:
+            DOCUMENT_FONTMAP = index < 0 ? [0.6, 0.75, 0.89, 1.2, 1.5, 2, 3] : [1, 1, 1, 11/9, 14/9, 2, 3];
+            break;
     }
 }
 
@@ -1621,10 +1614,7 @@ export function getRemSize(fixedWidth?: boolean) {
 }
 
 export function getFontSize(element: Element) {
-    if (element.nodeName[0] === '#') {
-        element = element.parentElement || DOCUMENT_ELEMENT;
-    }
-    return parseFloat(getStyle(element).getPropertyValue('font-size'));
+    return parseFloat(getStyle(element.nodeName[0] === '#' ? element.parentElement! : element).getPropertyValue('font-size'));
 }
 
 export function hasComputedStyle(element: Element): element is HTMLElement {
@@ -1965,7 +1955,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
             return formatVar(calculateVar(element, value, { dimension: 'height', boundingBox, min: 0, parent: false }));
         case 'flexBasis': {
             const parentElement = element.parentElement;
-            return formatVar(calculateVar(element, value, { dimension: !!parentElement && getStyle(parentElement).flexDirection.includes('column') ? 'height' : 'width', boundingBox, min: 0 }));
+            return formatVar(calculateVar(element, value, { dimension: parentElement && getStyle(parentElement).flexDirection.includes('column') ? 'height' : 'width', boundingBox, min: 0 }));
         }
         case 'borderBottomWidth':
         case 'borderLeftWidth':
@@ -3195,7 +3185,7 @@ export function convertListStyle(name: string, value: number, valueAsDefault?: b
 export function extractURL(value: string) {
     const match = CSS.URL.exec(value);
     if (match) {
-        return trimBoth(match[1].trim(), '"').trim();
+        return trimBoth(match[1], '"');
     }
 }
 

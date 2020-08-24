@@ -22,8 +22,7 @@ export function promisify<T>(fn: FunctionType<any>): FunctionType<Promise<T>> {
     return (...args: any[]) => {
         return new Promise((resolve, reject) => {
             try {
-                const result: T = fn.call(null, ...args);
-                resolve(result);
+                resolve(fn.call(null, ...args));
             }
             catch (err) {
                 reject(err);

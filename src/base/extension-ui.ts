@@ -1,3 +1,6 @@
+import type ApplicationUI from './application-ui';
+import type ControllerUI from './controller-ui';
+import type ResourceUI from './resource-ui';
 import type NodeUI from './node-ui';
 
 import Extension from './extension';
@@ -23,10 +26,6 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
     public readonly cascadeAll?: boolean;
     public readonly documentBase?: boolean;
 
-    protected _application!: squared.base.ApplicationUI<T>;
-    protected _controller!: squared.base.ControllerUI<T>;
-    protected _resource: Null<squared.base.ResourceUI<T>> = null;
-
     private readonly _isAll: boolean;
 
     constructor(name: string, framework: number, options?: ExtensionUIOptions) {
@@ -34,6 +33,11 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
         this.tagNames = options && options.tagNames || [];
         this._isAll = this.tagNames.length === 0;
     }
+
+    public abstract set application(value);
+    public abstract get application(): ApplicationUI<T>;
+    public abstract get controller(): ControllerUI<T>;
+    public abstract get resource(): Null<ResourceUI<T>>;
 
     public is(node: T) {
         return this._isAll || this.tagNames.includes(node.tagName);
@@ -74,21 +78,4 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
 
     public beforeBaseLayout(sessionId: string) {}
     public beforeDocumentWrite(data: DocumentWriteDataExtensionUI<T>) {}
-
-    set application(value) {
-        this._application = value;
-        this._controller = value.controllerHandler;
-        this._resource = value.resourceHandler;
-    }
-    get application() {
-        return this._application;
-    }
-
-    get controller() {
-        return this._controller;
-    }
-
-    get resource() {
-        return this._resource;
-    }
 }

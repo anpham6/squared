@@ -883,8 +883,7 @@ const COLOR_CSS3: ColorResult[] = [
         value: '#FFB6C1',
         key: 'lightpink',
         rgb: { r: 255, g: 182, b: 193 },
-        hsl: { h: 351, s: 100, l: 86
-        }
+        hsl: { h: 351, s: 100, l: 86 }
     }
 ];
 const CACHE_COLORDATA: ObjectMap<ColorData> = {};

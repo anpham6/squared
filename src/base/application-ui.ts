@@ -1,9 +1,10 @@
 import type ExtensionManager from './extensionmanager';
+import type NodeList from './nodelist';
 
 import Application from './application';
+import File from './file';
 import ControllerUI from './controller-ui';
 import ExtensionUI from './extension-ui';
-import File from './file';
 import LayoutUI from './layout-ui';
 import NodeUI from './node-ui';
 import ResourceUI from './resource-ui';
@@ -558,7 +559,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return this.layouts[0]?.content || '';
     }
 
-    protected cascadeParentNode(cache: squared.base.NodeList<T>, excluded: squared.base.NodeList<T>, parentElement: HTMLElement, sessionId: string, depth: number, extensions?: ExtensionUI<T>[], rootElements?: Set<HTMLElement>, cascadeAll?: boolean) {
+    protected cascadeParentNode(cache: NodeList<T>, excluded: NodeList<T>, parentElement: HTMLElement, sessionId: string, depth: number, extensions?: ExtensionUI<T>[], rootElements?: Set<HTMLElement>, cascadeAll?: boolean) {
         const node = this.insertNode(parentElement, sessionId, cascadeAll);
         if (depth === 0) {
             cache.add(node);
@@ -674,7 +675,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return node;
     }
 
-    protected cacheNodeChildren(cache: squared.base.NodeList<T>, excluded: squared.base.NodeList<T>, node: T, children: T[]) {
+    protected cacheNodeChildren(cache: NodeList<T>, excluded: NodeList<T>, node: T, children: T[]) {
         const length = children.length;
         if (length > 1) {
             let siblingsLeading: T[] = [],
@@ -1880,7 +1881,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         });
     }
 
-    get extensionsTraverse() {
+    get extensionsTraverse(): ExtensionUI<T>[] {
         return this.extensions.filter(item => item.enabled && !item.eventOnly);
     }
 

@@ -840,11 +840,11 @@ export default abstract class Application<T extends Node> implements squared.bas
         return this._extensionManager;
     }
 
-    get extensionsAll() {
+    get extensionsAll(): Extension<T>[] {
         return this.extensions.filter(item => item.enabled);
     }
 
-    get extensionsCascade() {
+    get extensionsCascade(): Extension<T>[] {
         return this.extensions.filter(item => item.enabled && !!item.init);
     }
 

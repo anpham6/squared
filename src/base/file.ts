@@ -1,3 +1,4 @@
+import type Resource from './resource';
 import type Node from './node';
 
 type FileActionOptions = squared.base.FileActionOptions;
@@ -25,7 +26,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
     }
 
     public readonly assets: RawAsset[] = [];
-    public abstract resource: squared.base.Resource<T>;
+    public abstract resource: Resource<T>;
 
     private _hostname = '';
 

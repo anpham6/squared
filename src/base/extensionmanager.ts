@@ -1,12 +1,14 @@
+import type Application from './application';
+import type Extension from './extension';
 import type Node from './node';
 
 const { hasBit, isObject } = squared.lib.util;
 
 export default class ExtensionManager<T extends Node> implements squared.base.ExtensionManager<T> {
-    constructor(public readonly application: squared.base.Application<T>) {
+    constructor(public readonly application: Application<T>) {
     }
 
-    public include(ext: squared.base.Extension<T> | string) {
+    public include(ext: Extension<T> | string) {
         const application = this.application;
         const extensions = application.extensions;
         if (typeof ext === 'string') {
@@ -46,7 +48,7 @@ export default class ExtensionManager<T extends Node> implements squared.base.Ex
         return false;
     }
 
-    public exclude(ext: squared.base.Extension<T> | string) {
+    public exclude(ext: Extension<T> | string) {
         const extensions = this.extensions;
         for (let i = 0, length = extensions.length; i < length; ++i) {
             if (extensions[i] === ext || typeof ext === 'string' && this.retrieve(ext)) {

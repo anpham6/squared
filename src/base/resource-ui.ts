@@ -1,3 +1,5 @@
+import type ControllerUI from './controller-ui';
+
 import Resource from './resource';
 import NodeUI from './node-ui';
 
@@ -1404,8 +1406,8 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         return value.replace(/&#(\d+);/g, (match, capture) => String.fromCharCode(parseInt(capture)));
     }
 
-    get controllerSettings() {
-        return (this.application.controllerHandler as squared.base.ControllerUI<T>).localSettings;
+    get controllerSettings(): ControllerSettingsUI {
+        return (this.application.controllerHandler as ControllerUI<T>).localSettings;
     }
 
     get mapOfStored() {

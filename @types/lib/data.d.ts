@@ -29,7 +29,7 @@ interface ElementData {
     sessionId?: string;
     clientRect?: DOMRect;
     textRangeRect?: BoxRectDimension;
-    pseudoElt?: string;
+    pseudoElt?: PseudoElt;
     node?: squared.base.Node;
     style?: CSSStyleDeclaration;
     styleMap?: StringMap;

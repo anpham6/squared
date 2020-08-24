@@ -29,7 +29,7 @@ Option #2 (android / ui / kotlin+java):
 
 &nbsp;&nbsp;&nbsp;&gt; git clone https://github.com/anpham6/squared-apache  
 &nbsp;&nbsp;&nbsp;&gt; cd squared-apache  
-&nbsp;&nbsp;&nbsp;&gt; squared.settings.json (configure)  
+&nbsp;&nbsp;&nbsp;&gt; squared.settings.yaml (configure)  
 &nbsp;&nbsp;&nbsp;&gt; gradlew run
 
 * http://localhost:8080
@@ -40,10 +40,8 @@ Option #3 (vdom / minimal / browser only):
 
 &nbsp;&nbsp;&nbsp;&gt; https://unpkg.com/squared/dist/squared.min.js  
 &nbsp;&nbsp;&nbsp;&gt; https://unpkg.com/squared/dist/squared.base.min.js  
-&nbsp;&nbsp;&nbsp;&gt; https://unpkg.com/squared/dist/vdom.framework.min.js
-
-OR
-
+&nbsp;&nbsp;&nbsp;&gt; https://unpkg.com/squared/dist/vdom.framework.min.js  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *OR*  
 &nbsp;&nbsp;&nbsp;&gt; https://unpkg.com/squared/dist/squared.min.js  
 &nbsp;&nbsp;&nbsp;&gt; https://unpkg.com/squared/dist/vdom-lite.framework.min.js
 
@@ -95,7 +93,7 @@ The primary function "parseDocument" can be called on multiple elements and mult
 
 #### Example: vdom / chrome
 
-VDOM is a minimal framework with slightly better performance when you are only looking for a better HTMLElement and performing cached selector queries. The "lite" version is about half the bundle size and recommended for most browser applications. Chrome uses Express to provide a simple way for bundling assets that is adequate for most applications.
+VDOM is a minimal framework for those who require a universal HTMLElement and performing cached selector queries. The "lite" version is about half the bundle size and recommended for most browser applications. Chrome framework offers the same features as VDOM but can also bundle assets using HTML and Express. It is adequate for most applications and gives you the ability to see your application first and to build it last.
 
 ```javascript
 <script src="/dist/squared.min.js"></script>
