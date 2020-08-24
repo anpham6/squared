@@ -2,8 +2,6 @@ import type View from '../../view';
 
 import Resource from '../../resource';
 
-import NodeUI = squared.base.NodeUI;
-
 import { convertColorStops } from './background';
 
 import { XMLNS_ANDROID } from '../../lib/constant';
@@ -858,7 +856,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         const imageLength = imageData.length;
         let vectorName: Undef<string>;
         if (vectorData !== '') {
-            const { width, height } = NodeUI.refitScreen(node, { width: svg.width, height: svg.height });
+            const { width, height } = node.fitToScreen({ width: svg.width, height: svg.height });
             vectorName = Resource.insertStoredAsset(
                 'drawables',
                 getTemplateFilename(templateName, imageLength),

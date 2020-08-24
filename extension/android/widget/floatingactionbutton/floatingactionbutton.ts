@@ -4,7 +4,7 @@ type View = android.base.View;
 
 const { parseColor } = squared.lib.color;
 const { assignEmptyValue } = squared.lib.util;
-const { adjustAbsolutePaddingOffset, createViewAttribute, getHorizontalBias, getVerticalBias } = android.lib.util;
+const { createViewAttribute } = android.lib.util;
 
 const { BOX_STANDARD, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 const { EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = android.lib.constant;
@@ -72,11 +72,11 @@ export default class FloatingActionButton<T extends View> extends squared.base.E
             }
             else if (node.hasPX('left')) {
                 node.mergeGravity('layout_gravity', node.localizeString('left'));
-                node.modifyBox(BOX_STANDARD.MARGIN_LEFT, adjustAbsolutePaddingOffset(offsetParent, BOX_STANDARD.PADDING_LEFT, node.left));
+                node.modifyBox(BOX_STANDARD.MARGIN_LEFT, offsetParent.adjustAbsolutePaddingOffset(BOX_STANDARD.PADDING_LEFT, node.left));
             }
             else if (node.hasPX('right')) {
                 node.mergeGravity('layout_gravity', node.localizeString('right'));
-                node.modifyBox(BOX_STANDARD.MARGIN_RIGHT, adjustAbsolutePaddingOffset(offsetParent, BOX_STANDARD.PADDING_RIGHT, node.right));
+                node.modifyBox(BOX_STANDARD.MARGIN_RIGHT, offsetParent.adjustAbsolutePaddingOffset(BOX_STANDARD.PADDING_RIGHT, node.right));
             }
             if (node.autoMargin.topBottom) {
                 node.mergeGravity('layout_gravity', 'center_vertical');
@@ -84,19 +84,19 @@ export default class FloatingActionButton<T extends View> extends squared.base.E
             else if (node.hasPX('top')) {
                 node.app('layout_dodgeInsetEdges', 'top');
                 node.mergeGravity('layout_gravity', 'top');
-                node.modifyBox(BOX_STANDARD.MARGIN_TOP, adjustAbsolutePaddingOffset(offsetParent, BOX_STANDARD.PADDING_TOP, node.top));
+                node.modifyBox(BOX_STANDARD.MARGIN_TOP, offsetParent.adjustAbsolutePaddingOffset(BOX_STANDARD.PADDING_TOP, node.top));
             }
             else if (node.hasPX('bottom')) {
                 node.mergeGravity('layout_gravity', 'bottom');
-                node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, adjustAbsolutePaddingOffset(offsetParent, BOX_STANDARD.PADDING_BOTTOM, node.bottom));
+                node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, offsetParent.adjustAbsolutePaddingOffset(BOX_STANDARD.PADDING_BOTTOM, node.bottom));
             }
             node.positioned = true;
         }
         else if (target) {
             const box = node.documentParent.box;
             const linear = node.linear;
-            const horizontalBias = getHorizontalBias(node);
-            const verticalBias = getVerticalBias(node);
+            const horizontalBias = node.getHorizontalBias();
+            const verticalBias = node.getVerticalBias();
             if (horizontalBias < 0.5) {
                 node.mergeGravity('layout_gravity', node.localizeString('left'));
                 node.modifyBox(BOX_STANDARD.MARGIN_LEFT, linear.left - box.left);

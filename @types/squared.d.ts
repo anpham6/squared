@@ -8,8 +8,12 @@ export interface FrameworkOptions {
     saveAs?: string;
     cache?: boolean;
 }
-
-export type ExtensionPrototypeData = ObjectMap<FunctionType<any> | { get: () => any, set: (value: any) => void } | number | string | boolean>;
+export interface FileActionOptions {
+    assets?: FileAsset[];
+    exclusions?: Exclusions;
+    callback?: CallbackResult;
+}
+export type ExtendPrototypeMap = ObjectMap<FunctionType<any> | { get: () => any, set: (value: any) => void } | number | string | boolean>;
 
 export const settings: StandardMap;
 export const system: FunctionMap<any>;
@@ -35,7 +39,7 @@ export function getElementById(value: string, cache?: boolean): Promise<Null<Nod
 export function querySelector(value: string, cache?: boolean): Promise<Null<Node>> | Null<Node>;
 export function querySelectorAll(value: string, cache?: boolean): Promise<Node[]> | Node[];
 export function fromElement(element: HTMLElement, cache?: boolean): Promise<Null<Node>> | Null<Node>;
-export function extend(functionMap: ExtensionPrototypeData, framework?: number): void;
+export function extend(functionMap: ExtendPrototypeMap, framework?: number): void;
 export function getElementMap(): Map<HTMLElement, Node>;
 export function clearElementMap(): void;
 export function toString(): string;

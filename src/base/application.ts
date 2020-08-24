@@ -6,7 +6,7 @@ import type Controller from './controller';
 import Node from './node';
 import NodeList from './nodelist';
 
-type FileActionOptions = squared.base.FileActionOptions;
+type FileActionOptions = squared.FileActionOptions;
 type PreloadItem = HTMLImageElement | string;
 
 const { CSS_PROPERTIES, CSS_TRAITS, checkMediaRule, getSpecificity, hasComputedStyle, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText } = squared.lib.css;

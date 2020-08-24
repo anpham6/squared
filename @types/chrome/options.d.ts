@@ -1,4 +1,4 @@
-interface ChromeFileActionOptions extends squared.base.FileActionOptions, FileActionAttribute, FileUniversalAttribute {}
+interface ChromeFileActionOptions extends squared.FileActionOptions, FileActionAttribute, FileUniversalAttribute {}
 
 interface ChromeFileCopyingOptions extends squared.base.FileCopyingOptions, ChromeFileActionOptions {}
 

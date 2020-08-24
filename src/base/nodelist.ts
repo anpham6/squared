@@ -16,10 +16,4 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
         }
         return this;
     }
-
-    public reset() {
-        this.clear();
-        this.sessionId = '';
-        return this;
-    }
 }

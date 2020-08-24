@@ -747,7 +747,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                     }
                     else if (actualParent.visible && !actualParent.preserveWhiteSpace && actualParent.tagName !== 'CODE' && !actualParent.documentRoot && !actualParent.documentBody) {
                         const previousStart = previousSiblings[previousSiblings.length - 1];
-                        const rect = previousStart.bounds.height === 0 && previousStart.length ? NodeUI.outerRegion(previousStart) : previousStart.linear;
+                        const rect = previousStart.bounds.height === 0 && previousStart.length ? previousStart.outerRegion : previousStart.linear;
                         const offset = actualParent.box.bottom - (previousStart.lineBreak || previousStart.excluded ? rect.top : rect.bottom);
                         if (offset !== 0) {
                             if (previousStart.rendered || actualParent.visibleStyle.background) {
@@ -866,7 +866,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             }
                         }
                     }
-                    if (!renderParent.layoutVertical && !outerWrapper.alignParent('left') && !NodeUI.justified(node)) {
+                    if (!renderParent.layoutVertical && !outerWrapper.alignParent('left') && !node.textJustified) {
                         const documentId = outerWrapper.alignSibling('leftRight');
                         if (documentId !== '') {
                             const previousSibling = renderParent.renderChildren.find(item => item.documentId === documentId);

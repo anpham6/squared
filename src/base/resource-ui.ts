@@ -717,7 +717,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     const type = match[2];
                     const direction = match[3];
                     const imageDimension = backgroundSize.length ? ResourceUI.getBackgroundSize(node, backgroundSize[i % backgroundSize.length], screenDimension) : null;
-                    const dimension = NodeUI.refitScreen(node, imageDimension || node.actualDimension);
+                    const dimension = node.fitToScreen(imageDimension || node.actualDimension);
                     let gradient: Undef<Gradient>;
                     switch (type) {
                         case 'linear': {

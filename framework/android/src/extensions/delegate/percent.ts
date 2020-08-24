@@ -1,4 +1,3 @@
-import Controller from '../../controller';
 import View from '../../view';
 
 import LayoutUI = squared.base.LayoutUI;
@@ -110,7 +109,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
             const templateId = node.anchorTarget.renderParent!.id;
             if (mainData.marginHorizontal) {
                 const [marginLeft, marginRight] = node.cssAsTuple('marginLeft', 'marginRight');
-                const boxRect = Controller.anchorPosition(node, renderParent, true, false);
+                const boxRect = node.getAnchorPosition(renderParent, true, false);
                 const rightAligned = node.rightAligned;
                 let percentWidth = node.percentWidth,
                     leftPercent = validPercent(marginLeft) ? parseFloat(marginLeft) / 100 : 0,
@@ -225,7 +224,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
             }
             if (mainData.marginVertical) {
                 const [marginTop, marginBottom] = node.cssAsTuple('marginTop', 'marginBottom');
-                const boxRect = Controller.anchorPosition(node, renderParent, true, false);
+                const boxRect = node.getAnchorPosition(renderParent, true, false);
                 const bottomAligned = node.bottomAligned;
                 let percentHeight = node.percentHeight,
                     topPercent = validPercent(marginTop) ? parseFloat(marginTop) / 100 : 0,

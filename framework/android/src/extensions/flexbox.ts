@@ -664,7 +664,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     break;
                                 }
                             }
-                            percentWidth = View.setFlexDimension(chain, WHL, percentWidth);
+                            percentWidth = chain.setFlexDimension(WHL, percentWidth);
                             if (!chain.innerMostWrapped.has('flexGrow')) {
                                 growAll = false;
                             }

@@ -103,7 +103,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
                 firstChild.anchorStyle('horizontal', 0);
                 firstChild.anchorParent('vertical', 0);
                 firstChild.modifyBox(BOX_STANDARD.MARGIN_LEFT, mainData.offsetLeft);
-                View.setConstraintDimension(firstChild);
+                firstChild.setConstraintDimension();
                 firstChild.positioned = true;
             }
             for (const item of mainData.children) {
@@ -123,7 +123,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
             }
             node.anchorParent('horizontal', 0);
             node.anchorParent('vertical', 0);
-            View.setConstraintDimension(node);
+            node.setConstraintDimension();
             node.positioned = true;
         }
     }

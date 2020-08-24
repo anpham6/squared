@@ -1,7 +1,7 @@
 import type Resource from './resource';
 import type Node from './node';
 
-type FileActionOptions = squared.base.FileActionOptions;
+type FileActionOptions = squared.FileActionOptions;
 type FileArchivingOptions = squared.base.FileArchivingOptions;
 type FileCopyingOptions = squared.base.FileCopyingOptions;
 

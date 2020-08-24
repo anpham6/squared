@@ -182,93 +182,6 @@ function applyExclusionValue(enumeration: PlainObject, value: string) {
 const canCascadeChildren = (node: T) => node.naturalElements.length > 0 && !node.layoutElement && !node.tableElement;
 
 export default abstract class NodeUI extends Node implements squared.base.NodeUI {
-    public static justified(node: T) {
-        if (node.naturalChild && node.cssAscend('textAlign') === 'justify') {
-            const { box, naturalChildren } = node.actualParent!;
-            let inlineWidth = 0;
-            for (let i = 0, length = naturalChildren.length; i < length; ++i) {
-                const item = naturalChildren[i] as T;
-                if (!item.inlineVertical) {
-                    return false;
-                }
-                else {
-                    inlineWidth += item.linear.width;
-                }
-            }
-            if (Math.floor(inlineWidth) > box.width) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public static refitScreen(node: T, value: Dimension): Dimension {
-        const { width, height } = node.localSettings.screenDimension;
-        if (value.width > width) {
-            return { width, height: Math.round(value.height * width / value.width) };
-        }
-        else if (value.height > height) {
-            return { width: Math.round(value.width * height / value.height), height };
-        }
-        return value;
-    }
-
-    public static outerRegion(node: T): BoxRectDimension {
-        let top = Infinity,
-            right = -Infinity,
-            bottom = -Infinity,
-            left = Infinity,
-            negativeRight = -Infinity,
-            negativeBottom = -Infinity,
-            actualTop: number,
-            actualRight: number,
-            actualBottom: number,
-            actualLeft: number;
-        node.each((item: T) => {
-            if (item.companion) {
-                actualTop = item.actualRect('top');
-                actualRight = item.actualRect('right');
-                actualBottom = item.actualRect('bottom');
-                actualLeft = item.actualRect('left');
-            }
-            else {
-                ({ top: actualTop, right: actualRight, bottom: actualBottom, left: actualLeft } = item.linear);
-                if (item.marginRight < 0) {
-                    const value = actualRight + Math.abs(item.marginRight);
-                    if (value > negativeRight) {
-                        negativeRight = value;
-                    }
-                }
-                if (item.marginBottom < 0) {
-                    const value = actualBottom + Math.abs(item.marginBottom);
-                    if (value > negativeBottom) {
-                        negativeBottom = value;
-                    }
-                }
-            }
-            if (actualTop < top) {
-                top = actualTop;
-            }
-            if (actualRight > right) {
-                right = actualRight;
-            }
-            if (actualBottom > bottom) {
-                bottom = actualBottom;
-            }
-            if (actualLeft < left) {
-                left = actualLeft;
-            }
-        });
-        return {
-            top,
-            right,
-            bottom,
-            left,
-            width: Math.max(right, negativeRight) - left,
-            height: Math.max(bottom, negativeBottom) - top
-        };
-    }
-
     public static baseline<T extends NodeUI>(list: T[], text?: boolean, image?: boolean): Null<T> {
         const length = list.length;
         const result: T[] = new Array(length);
@@ -1523,6 +1436,17 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         super.unsetCache(...attrs);
     }
 
+    public fitToScreen(value: Dimension): Dimension {
+        const { width, height } = this.localSettings.screenDimension;
+        if (value.width > width) {
+            return { width, height: Math.round(value.height * width / value.width) };
+        }
+        else if (value.height > height) {
+            return { width: Math.round(value.width * height / value.height), height };
+        }
+        return value;
+    }
+
     get element() {
         return this._element || this.innerWrapped && this.innerMostWrapped.unsafe<Null<Element>>('element') || null;
     }
@@ -2154,6 +2078,82 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             }
         }
         return '';
+    }
+
+    get textJustified() {
+        if (this.naturalChild && this.cssAscend('textAlign') === 'justify') {
+            const { box, naturalChildren } = this.actualParent!;
+            let inlineWidth = 0;
+            for (let i = 0, length = naturalChildren.length; i < length; ++i) {
+                const item = naturalChildren[i] as T;
+                if (!item.inlineVertical) {
+                    return false;
+                }
+                else {
+                    inlineWidth += item.linear.width;
+                }
+            }
+            if (Math.floor(inlineWidth) > box.width) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    get outerRegion(): BoxRectDimension {
+        let top = Infinity,
+            right = -Infinity,
+            bottom = -Infinity,
+            left = Infinity,
+            negativeRight = -Infinity,
+            negativeBottom = -Infinity,
+            actualTop: number,
+            actualRight: number,
+            actualBottom: number,
+            actualLeft: number;
+        this.each((item: T) => {
+            if (item.companion) {
+                actualTop = item.actualRect('top');
+                actualRight = item.actualRect('right');
+                actualBottom = item.actualRect('bottom');
+                actualLeft = item.actualRect('left');
+            }
+            else {
+                ({ top: actualTop, right: actualRight, bottom: actualBottom, left: actualLeft } = item.linear);
+                if (item.marginRight < 0) {
+                    const value = actualRight + Math.abs(item.marginRight);
+                    if (value > negativeRight) {
+                        negativeRight = value;
+                    }
+                }
+                if (item.marginBottom < 0) {
+                    const value = actualBottom + Math.abs(item.marginBottom);
+                    if (value > negativeBottom) {
+                        negativeBottom = value;
+                    }
+                }
+            }
+            if (actualTop < top) {
+                top = actualTop;
+            }
+            if (actualRight > right) {
+                right = actualRight;
+            }
+            if (actualBottom > bottom) {
+                bottom = actualBottom;
+            }
+            if (actualLeft < left) {
+                left = actualLeft;
+            }
+        });
+        return {
+            top,
+            right,
+            bottom,
+            left,
+            width: Math.max(right, negativeRight) - left,
+            height: Math.max(bottom, negativeBottom) - top
+        };
     }
 
     set use(value) {

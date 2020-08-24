@@ -5,7 +5,7 @@ import LayoutUI = squared.base.LayoutUI;
 type View = base.View;
 
 declare interface AndroidFramework<T extends View> extends squared.base.AppFramework<T> {
-    setViewModel(data?: PlainObject): void;
+    setViewModel(data?: PlainObject, sessionId?: string): void;
 }
 
 declare namespace base {
@@ -23,7 +23,6 @@ declare namespace base {
     }
 
     class Controller<T extends View> extends squared.base.ControllerUI<T> {
-        static anchorPosition<T extends View>(node: T, parent: T, horizontal: boolean, modifyAnchor?: boolean): Partial<BoxRect>;
         readonly application: Application<T>;
         renderNodeStatic(attrs: RenderNodeStaticAttribute, options?: ViewAttribute): string;
         renderSpace(attrs: RenderSpaceAttribute): string;
@@ -73,9 +72,6 @@ declare namespace base {
     }
 
     class View extends squared.base.NodeUI {
-        static horizontalMatchConstraint<T extends View>(node: T, parent: T): boolean;
-        static setConstraintDimension<T extends View>(node: T, percentWidth?: number): number;
-        static setFlexDimension<T extends View>(node: T, dimension: DimensionAttr, percentWidth?: number): number;
         static availablePercent<T extends View>(nodes: T[], dimension: DimensionAttr, boxSize: number): number;
         static getControlName(containerType: number, api?: number): string;
         api: number;
@@ -97,6 +93,14 @@ declare namespace base {
         setLayoutWidth(value: string, overwrite?: boolean): void;
         setLayoutHeight(value: string, overwrite?: boolean): void;
         setSingleLine(maxLines: boolean, ellipsize?: boolean): void;
+        setConstraintDimension(percentWidth?: number): number;
+        setFlexDimension(dimension: DimensionAttr, percentWidth?: number): number;
+        getMatchConstraint(parent?: View): string;
+        getAnchorPosition(parent: View, horizontal: boolean, modifyAnchor?: boolean): Partial<BoxRect>;
+        isUnstyled(checkMargin?: boolean): boolean;
+        getHorizontalBias(): number;
+        getVerticalBias(): number;
+        adjustAbsolutePaddingOffset(direction: number, value: number): number;
         hasFlex(direction: FlowDirectionAttr): boolean;
         set anchored(value);
         get anchored(): boolean;
@@ -415,10 +419,6 @@ declare namespace lib {
         function getDocumentId(value: string): string;
         function isHorizontalAlign(value: string): boolean;
         function isVerticalAlign(value: string): boolean;
-        function isUnstyled(node: View, checkMargin?: boolean): boolean;
-        function getHorizontalBias(node: View): number;
-        function getVerticalBias(node: View): number;
-        function adjustAbsolutePaddingOffset(parent: View, direction: number, value: number): number;
         function createViewAttribute(data?: StandardMap): ViewAttribute;
         function createStyleAttribute(data?: StandardMap): Required<StyleAttribute>;
         function getDataSet(dataset: StringMap | DOMStringMap, prefix: string): Undef<StringMap>;

@@ -17,12 +17,12 @@ type Main = squared.base.Application<Node>;
 type Framework = squared.base.AppFramework<Node>;
 type Extension = squared.base.Extension<Node>;
 type ExtensionRequest = Undef<Extension | string>;
-type FileActionOptions = squared.base.FileActionOptions;
+type FileActionOptions = squared.FileActionOptions;
 
 const extensionsQueue = new Set<Extension>();
 const extensionsExternal = new Set<Extension>();
 const optionsQueue = new Map<string, StandardMap>();
-const prototypeMap = new Map<number, squared.ExtensionPrototypeData>();
+const prototypeMap = new Map<number, squared.ExtendPrototypeMap>();
 const settings = {} as UserSettings;
 const system = {} as FunctionMap<any>;
 
@@ -347,7 +347,7 @@ export function retrieve(value: string) {
     }
 }
 
-export function extend(functionMap: squared.ExtensionPrototypeData, value = 0) {
+export function extend(functionMap: squared.ExtendPrototypeMap, value = 0) {
     let map = prototypeMap.get(value);
     if (!map) {
         map = {};

@@ -1,22 +1,7 @@
-import type View from '../view';
-
 import { LOCALIZE_ANDROID, XMLNS_ANDROID } from './constant';
 import { BUILD_ANDROID } from './enumeration';
 
-const { truncate } = squared.lib.math;
 const { capitalize, joinArray, isPlainObject } = squared.lib.util;
-
-const { BOX_STANDARD } = squared.base.lib.enumeration;
-
-function calculateBias(start: number, end: number, accuracy = 3) {
-    if (start === 0) {
-        return 0;
-    }
-    else if (end === 0) {
-        return 1;
-    }
-    return parseFloat(truncate(Math.max(start / (start + end), 0), accuracy));
-}
 
 export function applyTemplate(tagName: string, template: StandardMap, children: StandardMap[], depth?: number) {
     const tag: StandardMap = template[tagName];
@@ -144,92 +129,6 @@ export function getDataSet(dataset: StringMap | DOMStringMap, prefix: string) {
         }
     }
     return result;
-}
-
-export function isUnstyled(node: View, checkMargin = true) {
-    switch (node.css('verticalAlign')) {
-        case 'baseline':
-        case 'initial':
-            return node.contentBoxWidth === 0 && node.contentBoxHeight === 0 && (!checkMargin || !node.blockStatic && node.marginTop === 0 && node.marginBottom === 0) && !node.visibleStyle.background && !node.positionRelative && !node.hasWidth && !node.hasHeight && !node.has('maxWidth') && !node.has('maxHeight') && node.css('whiteSpace') !== 'nowrap';
-        default:
-            return false;
-    }
-}
-
-export function getHorizontalBias(node: View) {
-    const parent = node.documentParent;
-    const box = parent.box;
-    const left = Math.max(0, node.actualRect('left', 'bounds') - box.left);
-    const right = Math.max(0, box.right - node.actualRect('right', 'bounds'));
-    return calculateBias(left, right, node.localSettings.floatPrecision);
-}
-
-export function getVerticalBias(node: View) {
-    const parent = node.documentParent;
-    const box = parent.box;
-    const top = Math.max(0, node.actualRect('top', 'bounds') - box.top);
-    const bottom = Math.max(0, box.bottom - node.actualRect('bottom', 'bounds'));
-    return calculateBias(top, bottom, node.localSettings.floatPrecision);
-}
-
-export function adjustAbsolutePaddingOffset(parent: View, direction: number, value: number) {
-    if (value > 0) {
-        if (parent.documentBody) {
-            switch (direction) {
-                case BOX_STANDARD.PADDING_TOP:
-                    if (parent.getBox(BOX_STANDARD.MARGIN_TOP)[0] === 0) {
-                        value -= parent.marginTop;
-                    }
-                    break;
-                case BOX_STANDARD.PADDING_RIGHT:
-                    value -= parent.marginRight;
-                    break;
-                case BOX_STANDARD.PADDING_BOTTOM:
-                    if (parent.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] === 0) {
-                        value -= parent.marginBottom;
-                    }
-                    break;
-                case BOX_STANDARD.PADDING_LEFT:
-                    value -= parent.marginLeft;
-                    break;
-            }
-        }
-        if (parent.getBox(direction)[0] === 0) {
-            switch (direction) {
-                case BOX_STANDARD.PADDING_TOP:
-                    value += parent.borderTopWidth - parent.paddingTop;
-                    break;
-                case BOX_STANDARD.PADDING_RIGHT:
-                    value += parent.borderRightWidth - parent.paddingRight;
-                    break;
-                case BOX_STANDARD.PADDING_BOTTOM:
-                    value += parent.borderBottomWidth - parent.paddingBottom;
-                    break;
-                case BOX_STANDARD.PADDING_LEFT:
-                    value += parent.borderLeftWidth - parent.paddingLeft;
-                    break;
-            }
-        }
-        return Math.max(value, 0);
-    }
-    else if (value < 0) {
-        switch (direction) {
-            case BOX_STANDARD.PADDING_TOP:
-                value += parent.marginTop;
-                break;
-            case BOX_STANDARD.PADDING_RIGHT:
-                value += parent.marginRight;
-                break;
-            case BOX_STANDARD.PADDING_BOTTOM:
-                value += parent.marginBottom;
-                break;
-            case BOX_STANDARD.PADDING_LEFT:
-                value += parent.marginLeft;
-                break;
-        }
-        return value;
-    }
-    return 0;
 }
 
 export function createViewAttribute(data?: StandardMap) {

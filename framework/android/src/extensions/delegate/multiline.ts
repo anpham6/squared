@@ -1,7 +1,5 @@
 import View from '../../view';
 
-import { isUnstyled } from '../../lib/util';
-
 import { CONTAINER_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
@@ -44,7 +42,7 @@ function isTextElement(node: View) {
     return node.textElement && !(node.tagName === 'LABEL' && node.toElementString('htmlFor') !== '');
 }
 
-const checkBreakable = (node: View, checkMargin?: boolean) => node.plainText || node.naturalChild && node.naturalElements.length === 0 && !node.floating && node.innerAfter === undefined && node.innerBefore === undefined && isUnstyled(node, checkMargin);
+const checkBreakable = (node: View, checkMargin?: boolean) => node.plainText || node.naturalChild && node.naturalElements.length === 0 && !node.floating && node.innerAfter === undefined && node.innerBefore === undefined && node.isUnstyled(checkMargin);
 const hasTextIndent = (node: View) => node.textElement && node.textIndent < 0 && node.naturalElement && !node.floating;
 
 export default class Multiline<T extends View> extends squared.base.ExtensionUI<T> {

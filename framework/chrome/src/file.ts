@@ -679,7 +679,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             .concat(this.getFontAssets(options));
     }
 
-    private appendAssetsFromOptions(options?: squared.base.FileActionOptions) {
+    private appendAssetsFromOptions(options?: squared.FileActionOptions) {
         const assets = this.combineAssets(options);
         return options && options.assets ? assets.concat(options.assets) : assets;
     }

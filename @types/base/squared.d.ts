@@ -1,15 +1,9 @@
 declare module "base" {
-    interface FileActionOptions {
-        assets?: FileAsset[];
-        exclusions?: Exclusions;
-        callback?: CallbackResult;
-    }
-
-    interface FileCopyingOptions extends FileActionOptions {
+    interface FileCopyingOptions extends squared.FileActionOptions {
         directory?: string;
     }
 
-    interface FileArchivingOptions extends FileActionOptions {
+    interface FileArchivingOptions extends squared.FileActionOptions {
         filename?: string;
         format?: string;
         copyTo?: string;
@@ -17,11 +11,11 @@ declare module "base" {
     }
 
     interface FileActionAsync {
-        copyToDisk(directory: string, options?: FileActionOptions): FileActionResult;
-        appendToArchive(pathname: string, options?: FileActionOptions): FileActionResult;
-        saveToArchive(filename?: string, options?: FileActionOptions): FileActionResult;
-        createFrom(format: string, options: FileActionOptions): FileActionResult;
-        appendFromArchive(filename: string, options: FileActionOptions): FileActionResult;
+        copyToDisk(directory: string, options?: squared.FileActionOptions): FileActionResult;
+        appendToArchive(pathname: string, options?: squared.FileActionOptions): FileActionResult;
+        saveToArchive(filename?: string, options?: squared.FileActionOptions): FileActionResult;
+        createFrom(format: string, options: squared.FileActionOptions): FileActionResult;
+        appendFromArchive(filename: string, options: squared.FileActionOptions): FileActionResult;
     }
 
     interface AppBase<T extends Node> {
@@ -39,7 +33,7 @@ declare module "base" {
         base: PlainObject;
         extensions: PlainObject;
         lib: PlainObject;
-        system: FunctionMap<any>;
+        system: FunctionMap<unknown>;
         create(): AppBase<T>;
         cached(): AppBase<T>;
     }
@@ -327,7 +321,7 @@ declare module "base" {
         saveToArchive(filename: string, options?: FileArchivingOptions): FileActionResult;
         createFrom(format: string, options: FileArchivingOptions): FileActionResult;
         appendFromArchive(filename: string, options: FileArchivingOptions): FileActionResult;
-        getDataMap(options: FileActionOptions): Void<StandardMap>;
+        getDataMap(options: squared.FileActionOptions): Void<StandardMap>;
         getCopyQueryParameters(options: FileCopyingOptions): string;
         getArchiveQueryParameters(options: FileArchivingOptions): string;
         get userSettings(): UserResourceSettings;
@@ -534,10 +528,7 @@ declare module "base" {
     }
 
     class NodeUI extends Node implements LayoutType {
-        static justified<T>(node: T): boolean;
-        static refitScreen<T>(node: T, value: Dimension): Dimension;
         static linearData<T>(list: T[], cleared?: Map<T, string>): LinearData;
-        static outerRegion<T>(node: T): BoxRectDimension;
         static baseline<T>(list: T[], text?: boolean, image?: boolean): Null<T>;
         static partitionRows<T>(list: T[], cleared?: Map<T, string>): T[][];
         alignmentType: number;
@@ -621,6 +612,7 @@ declare module "base" {
         cssSet(attr: string, value: string, cache?: boolean): string;
         translateX(value: number, options?: TranslateOptions): boolean;
         translateY(value: number, options?: TranslateOptions): boolean;
+        fitToScreen(value: Dimension): Dimension;
         set naturalChild(value);
         get naturalChild(): boolean;
         set documentParent(value);
@@ -704,6 +696,8 @@ declare module "base" {
         get firstLineStyle(): Null<StringMap>;
         get firstLetterStyle(): Null<StringMap>;
         get textAlignLast(): string;
+        get textJustified(): boolean;
+        get outerRegion(): BoxRectDimension;
     }
 
     class NodeGroupUI extends NodeUI {}
@@ -712,8 +706,7 @@ declare module "base" {
         sessionId: string;
         afterAdd?: (node: T, cascade?: boolean, remove?: boolean) => void;
         add(node: T, delegate?: boolean, cascade?: boolean, remove?: boolean): this;
-        reset(): this;
-        constructor(children?: T[]);
+        constructor(children?: T[], sessionId?: string);
     }
 
     namespace extensions {

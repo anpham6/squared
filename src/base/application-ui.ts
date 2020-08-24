@@ -11,7 +11,7 @@ import ResourceUI from './resource-ui';
 
 import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TRAVERSE } from './lib/enumeration';
 
-type FileActionOptions = squared.base.FileActionOptions;
+type FileActionOptions = squared.FileActionOptions;
 
 const { convertListStyle, formatPX, getStyle, hasComputedStyle, hasCoords, insertStyleSheetRule, resolveURL } = squared.lib.css;
 const { getNamedItem, removeElementsByClassName } = squared.lib.dom;

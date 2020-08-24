@@ -3,8 +3,6 @@ import type View from '../../view';
 import Resource from '../../resource';
 import ResourceSvg from './svg';
 
-import NodeUI = squared.base.NodeUI;
-
 import { CONTAINER_ANDROID, EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X, XMLNS_ANDROID } from '../../lib/constant';
 import { BUILD_ANDROID, CONTAINER_NODE } from '../../lib/enumeration';
 import { applyTemplate } from '../../lib/util';
@@ -1117,7 +1115,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     fittedHeight = getFittedWidth();
                                 }
                                 else {
-                                    ({ width: fittedWidth, height: fittedHeight } = NodeUI.refitScreen(node, bounds));
+                                    ({ width: fittedWidth, height: fittedHeight } = node.fitToScreen(bounds));
                                 }
                             }
                             else if (innerWidth >= screenWidth) {
@@ -1508,10 +1506,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
                 else if (value.item) {
                     if (width === 0) {
-                        width = dimension ? dimension.width : NodeUI.refitScreen(node, node.actualDimension).width;
+                        width = dimension ? dimension.width : node.fitToScreen(node.actualDimension).width;
                     }
                     if (height === 0) {
-                        height = dimension ? dimension.height : NodeUI.refitScreen(node, node.actualDimension).height;
+                        height = dimension ? dimension.height : node.fitToScreen(node.actualDimension).height;
                     }
                     const gradient = Resource.insertStoredAsset(
                         'drawables',

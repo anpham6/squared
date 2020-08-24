@@ -6,11 +6,7 @@ const { hasCoords } = squared.lib.css;
 
 export default abstract class NodeGroupUI extends NodeUI {
     public setBounds() {
-        if (this.length) {
-            this._bounds = NodeUI.outerRegion(this);
-            return this._bounds;
-        }
-        return null;
+        return this.length ? this._bounds = this.outerRegion : null;
     }
 
     public previousSiblings(options?: TraverseSiblingsOptions) {
