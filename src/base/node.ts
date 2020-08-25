@@ -735,7 +735,7 @@ const isInlineVertical = (value: string) => value.startsWith('inline') || value 
 const canTextAlign = (node: T) => node.naturalChild && (node.length === 0 || isInlineVertical(node.display)) && !node.floating && node.autoMargin.horizontal !== true;
 
 export default class Node extends squared.lib.base.Container<T> implements squared.base.Node {
-    public static sanitizeCss(element: HTMLElement, styleMap: StringMap, writingMode?: string) {
+    public static sanitizeCss(element: StyleElement, styleMap: StringMap, writingMode?: string) {
         const result: StringMap = {};
         for (let attr in styleMap) {
             let value = styleMap[attr]!;
@@ -1455,29 +1455,33 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return result;
     }
 
-    public cssPseudoElement(value: PseudoElt) {
+    public cssPseudoElement(name: PseudoElt, attr?: string) {
         if (this.naturalElement) {
-            const styleMap = this._elementData!['styleMap' + value] as Undef<StringMap>;
-            if (styleMap) {
-                switch (value) {
-                    case '::first-letter':
-                    case '::first-line':
-                        switch (this.display) {
-                            case 'block':
-                            case 'inline-block':
-                            case 'list-item':
-                            case 'table-cell':
-                                break;
-                            default:
-                                return null;
-                        }
-                    case '::before':
-                    case '::after':
-                        return Node.sanitizeCss(this._element as HTMLElement, styleMap, styleMap.writingMode || this.cssInitial('writingMode'));
+            if (attr) {
+                return getStyle(this._element!, name)[attr] as Undef<string>;
+            }
+            else {
+                const styleMap = this._elementData!['styleMap' + name] as Undef<StringMap>;
+                if (styleMap) {
+                    switch (name) {
+                        case '::first-letter':
+                        case '::first-line':
+                            switch (this.display) {
+                                case 'block':
+                                case 'inline-block':
+                                case 'list-item':
+                                case 'table-cell':
+                                    break;
+                                default:
+                                    return;
+                            }
+                        case '::before':
+                        case '::after':
+                            return Node.sanitizeCss(this._element as HTMLElement, styleMap, styleMap.writingMode || this.cssInitial('writingMode'));
+                    }
                 }
             }
         }
-        return null;
     }
 
     public toInt(attr: string, fallback = NaN, initial?: boolean) {

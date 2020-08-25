@@ -2035,12 +2035,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     get firstLetterStyle() {
         const result = this._cacheState.firstLetterStyle;
-        return result === undefined ? this._cacheState.firstLetterStyle = this.cssPseudoElement('::first-letter') : result;
+        return result === undefined ? this._cacheState.firstLetterStyle = this.cssPseudoElement('::first-letter') as Undef<StringMap> || null : result;
     }
 
     get firstLineStyle() {
         const result = this._cacheState.firstLineStyle;
-        return result === undefined ? this._cacheState.firstLineStyle = this.cssPseudoElement('::first-line') : result;
+        return result === undefined ? this._cacheState.firstLineStyle = this.cssPseudoElement('::first-line') as Undef<StringMap> || null : result;
     }
 
     get textAlignLast() {

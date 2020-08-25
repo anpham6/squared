@@ -357,7 +357,7 @@ declare module "base" {
 
     class Node extends squared.lib.base.Container<Node> implements BoxModel {
         static readonly TEXT_STYLE: string[];
-        static sanitizeCss(element: HTMLElement, styleMap: StringMap, writingMode?: string): StringMap;
+        static sanitizeCss(element: StyleElement, styleMap: StringMap, writingMode?: string): StringMap;
         depth: number;
         documentRoot: boolean;
         sessionId: string;
@@ -393,7 +393,7 @@ declare module "base" {
         cssApply(values: StringMap, overwrite?: boolean, cache?: boolean): this;
         cssCopy(node: Node, ...attrs: string[]): void;
         cssCopyIfEmpty(node: Node, ...attrs: string[]): void;
-        cssPseudoElement(value: PseudoElt): Null<StringMap>;
+        cssPseudoElement(name: PseudoElt, attr?: string): Undef<StringMap | string>;
         parseUnit(value: string, options?: NodeParseUnitOptions): number;
         has(attr: string, options?: HasOptions): boolean;
         hasPX(attr: string, options?: HasPXOptions): boolean;
