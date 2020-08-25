@@ -404,7 +404,7 @@ declare module "base" {
         toElementBoolean(attr: string, fallback?: boolean): boolean;
         toElementString(attr: string, fallback?: string): string;
         setBounds(cache?: boolean): Null<BoxRectDimension>;
-        resetBounds(): void;
+        resetBounds(recalibrate?: boolean): void;
         min(attr: string, options?: MinMaxOptions): Node;
         max(attr: string, options?: MinMaxOptions): Node;
         querySelector(value: string): Null<Node>;
@@ -572,7 +572,6 @@ declare module "base" {
         namespace(name: string): StringMap;
         namespaces(): [string, StringMap][];
         unsafe<T = unknown>(name: string, value?: any): Undef<T>;
-        unset(name: string): void;
         delete(name: string, ...attrs: string[]): void;
         apply(options: PlainObject): void;
         lockAttr(name: string, attr: string): void;

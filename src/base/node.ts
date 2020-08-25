@@ -9,6 +9,11 @@ const { convertCamelCase, convertFloat, convertInt, hasBit, hasValue, isNumber, 
 
 const { SELECTOR_ATTR, SELECTOR_G, SELECTOR_LABEL, SELECTOR_PSEUDO_CLASS } = CSS;
 
+const enum STYLE_CACHE {
+    FAIL = 0,
+    READY = 1,
+    CHANGED = 2
+}
 const TEXT_STYLE = [
     'fontFamily',
     'fontWeight',
@@ -33,16 +38,16 @@ const REGEXP_QUERYNTH = /^:nth(-last)?-(child|of-type)\((.+)\)$/;
 const REGEXP_QUERYNTHPOSITION = /^(-)?(\d+)?n\s*([+-]\d+)?$/;
 
 function setStyleCache(element: HTMLElement, attr: string, sessionId: string, value: string, current: string) {
-    if (current !== value) {
+    if (value !== current) {
         element.style.setProperty(attr, value);
         const newValue = element.style.getPropertyValue(attr);
         if (current !== newValue) {
             setElementCache(element, attr, sessionId, value !== 'auto' ? current : '');
-            return 2;
+            return STYLE_CACHE.CHANGED;
         }
-        return 0;
+        return STYLE_CACHE.FAIL;
     }
-    return 1;
+    return STYLE_CACHE.READY;
 }
 
 function parseLineHeight(lineHeight: string, fontSize: number) {
@@ -876,8 +881,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     public saveAsInitial() {
         this._initial = {
             styleMap: { ...this._styleMap },
-            children: this.length ? this.toArray() : undefined,
-            bounds: this._bounds
+            bounds: this._bounds,
+            children: this.length ? this.toArray() : undefined
         };
     }
 
@@ -1376,14 +1381,14 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             for (const attr in values) {
                 const value = values[attr]!;
                 switch (setStyleCache(element, attr, sessionId, value, style.getPropertyValue(attr))) {
-                    case 0:
+                    case STYLE_CACHE.FAIL:
                         this.cssFinally(result);
                         return false;
-                    case 1:
+                    case STYLE_CACHE.READY:
                         continue;
-                    case 2:
-                       result[attr] = value;
-                       break;
+                    case STYLE_CACHE.CHANGED:
+                        result[attr] = value;
+                        break;
                 }
             }
             if (callback) {
@@ -1615,12 +1620,14 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return bounds;
     }
 
-    public resetBounds() {
-        this._bounds = null;
+    public resetBounds(recalibrate?: boolean) {
+        if (!recalibrate) {
+            this._bounds = null;
+            this._textBounds = undefined;
+            this._cache.multiline = undefined;
+        }
         this._box = null;
         this._linear = null;
-        this._textBounds = undefined;
-        this._cache.multiline = undefined;
     }
 
     public min(attr: string, options?: MinMaxOptions) {
@@ -1947,33 +1954,36 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public descendants(value?: string, options?: DescendOptions<T>) {
-        if (options || !this.queryMap) {
-            const children: T[] = this.descend(options);
-            let length = children.length;
-            if (value && length) {
-                const result: T[][] = [];
-                const depth = this.depth + 1;
-                let index: number;
-                for (let i = 0; i < length; ++i) {
-                    const item = children[i];
-                    index = item.depth - depth;
-                    (result[index] || (result[index] = [])).push(item);
-                }
-                length = result.length;
-                for (let i = 0; i < length; ++i) {
-                    if (result[i] === undefined) {
-                        result[i] = [];
+        if (this.naturalElements.length) {
+            if (options || !this.queryMap) {
+                const children: T[] = this.descend(options).filter(item => item.naturalElement);
+                let length = children.length;
+                if (value && length) {
+                    const result: T[][] = [];
+                    const depth = this.depth + 1;
+                    let index: number;
+                    for (let i = 0; i < length; ++i) {
+                        const item = children[i];
+                        index = item.depth - depth;
+                        (result[index] || (result[index] = [])).push(item);
                     }
+                    length = result.length;
+                    for (let i = 0; i < length; ++i) {
+                        if (result[i] === undefined) {
+                            result[i] = [];
+                        }
+                    }
+                    return this.querySelectorAll(value, result);
                 }
-                return this.querySelectorAll(value, result);
+                return children.sort(sortById);
             }
-            return children.sort(sortById);
+            return this.querySelectorAll(value || '*');
         }
-        return this.querySelectorAll(value || '*');
+        return [];
     }
 
     public siblings(value?: string, options?: SiblingsOptions<T>) {
-        if (this.naturalChild) {
+        if (this.naturalElement) {
             let condition: Undef<(item: T) => boolean>,
                 error: Undef<(item: T) => boolean>,
                 every: Undef<boolean>,

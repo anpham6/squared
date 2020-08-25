@@ -554,10 +554,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return (arguments.length === 1 ? this['_' + name] : this['_' + name] = value) as Undef<T>;
     }
 
-    public unset(name: string) {
-        this['_' + name] = null;
-    }
-
     public lockAttr(name: string, attr: string) {
         if (!this._locked) {
             this._locked = {};

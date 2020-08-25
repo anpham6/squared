@@ -122,8 +122,7 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
                                     if (direction) {
                                         if (node.bounds.top > 0) {
                                             node.bounds.top = 0;
-                                            node.unset('box');
-                                            node.unset('linear');
+                                            node.resetBounds(true);
                                         }
                                         if (node.layoutVertical) {
                                             const firstChild = node.renderChildren.find(item => item.pageFlow);
