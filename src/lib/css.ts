@@ -15,6 +15,7 @@ let DOCUMENT_FONTSIZE!: number;
 const PATTERN_SIZES = `(\\(\\s*(?:orientation:\\s*(?:portrait|landscape)|(?:max|min)-width:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\))`;
 const REGEXP_LENGTH = new RegExp(`^${STRING.LENGTH}$`);
 const REGEXP_LENGTHPERCENTAGE = new RegExp(`^${STRING.LENGTH_PERCENTAGE}$`);
+const REGEXP_PERCENT = new RegExp(`^${STRING.PERCENT}$`);
 const REGEXP_ANGLE = new RegExp(`^${STRING.CSS_ANGLE}$`);
 const REGEXP_TIME = new RegExp(`^${STRING.CSS_TIME}$`);
 const REGEXP_CALC = new RegExp(`^${STRING.CSS_CALC}$`);
@@ -29,7 +30,6 @@ const REGEXP_IMGSRCSET = /^(.*?)(?:\s+([\d.]+)([xw]))?$/;
 const REGEXP_CALCOPERATION = /\s+([+-]\s+|\s*[*/])\s*/;
 const REGEXP_CALCUNIT = /\s*{(\d+)}\s*/;
 const REGEXP_TRANSFORM = /(\w+)\([^)]+\)/g;
-const REGEXP_EM = /\dem$/;
 const REGEXP_EMBASED = /\d(?:em|ch|ex)\b/;
 const CHAR_SPACE = /\s+/;
 const CHAR_SEPARATOR = /\s*,\s*/;
@@ -1981,9 +1981,9 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
             return formatVar(calculateVar(element, value, { boundingSize }));
         }
         case 'lineHeight':
-            return formatVar(calculateVar(element, value, { boundingSize: isEmBased(value) ? getFontSize(element) : undefined, min: 0 }));
+            return formatVar(calculateVar(element, value, { boundingSize: hasEm(value) ? getFontSize(element) : undefined, min: 0 }));
         case 'fontSize':
-            return formatVar(calculateVar(element, value, { boundingSize: isEmBased(value) ? getFontSize(element.parentElement || DOCUMENT_ELEMENT) : undefined, min: 0 }));
+            return formatVar(calculateVar(element, value, { boundingSize: hasEm(value) ? getFontSize(element.parentElement || DOCUMENT_ELEMENT) : undefined, min: 0 }));
         case 'margin':
             return calculateVarAsString(element, value, { dimension: 'width', boundingBox });
         case 'borderBottomLeftRadius':
@@ -3006,7 +3006,7 @@ export function calculateVar(element: StyleElement, value: string, options: Calc
         else if (options.supportPercent) {
             return NaN;
         }
-        if ((!options.unitType || options.unitType === CSS_UNIT.LENGTH) && isEmBased(value) && options.fontSize === undefined) {
+        if ((!options.unitType || options.unitType === CSS_UNIT.LENGTH) && hasEm(value) && options.fontSize === undefined) {
             options.fontSize = getFontSize(element);
         }
         const result = calculate(output, options);
@@ -3784,14 +3784,6 @@ export function isLength(value: string, percent?: boolean) {
     return !percent ? REGEXP_LENGTH.test(value) : REGEXP_LENGTHPERCENTAGE.test(value);
 }
 
-export function isEm(value: string) {
-    return REGEXP_EM.test(value);
-}
-
-export function isEmBased(value: string) {
-    return REGEXP_EMBASED.test(value);
-}
-
 export function isCalc(value: string) {
     return REGEXP_CALC.test(value);
 }
@@ -3808,8 +3800,12 @@ export function isTime(value: string) {
     return REGEXP_TIME.test(value);
 }
 
-export function isPercent(value: string) {
-    return value[value.length - 1] === '%';
+export function isPercent(value: string, digits?: boolean) {
+    return !digits ? value[value.length - 1] === '%' : REGEXP_PERCENT.test(value);
+}
+
+export function hasEm(value: string) {
+    return REGEXP_EMBASED.test(value);
 }
 
 export function hasCalc(value: string) {

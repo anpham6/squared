@@ -160,13 +160,12 @@ declare module "lib" {
         function formatPX(value: number): string;
         function formatPercent(value: NumString, round?: boolean): string;
         function isLength(value: string, percent?: boolean): boolean;
-        function isEm(value: string): boolean;
-        function isEmBased(value: string): boolean;
-        function isPercent(value: string): boolean;
+        function isPercent(value: string, digits?: boolean): boolean;
         function isCalc(value: string): boolean;
         function isCustomProperty(value: string): boolean;
         function isTime(value: string): boolean;
         function isAngle(value: string): boolean;
+        function hasEm(value: string): boolean;
         function hasCalc(value: string): boolean;
         function hasCoords(value: string): boolean;
     }

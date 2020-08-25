@@ -7,7 +7,7 @@ type SvgContainer = squared.svg.SvgContainer;
 type SvgView = squared.svg.SvgView;
 type SvgPath = squared.svg.SvgPath;
 
-const { getFontSize, isEmBased, isLength, parseUnit } = squared.lib.css;
+const { getFontSize, hasEm, isLength, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { capitalize, hasBit, isString } = squared.lib.util;
 
@@ -169,7 +169,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
                             if (parentElement) {
                                 const valueAsString: Undef<string> = parentElement[value]?.baseVal?.valueAsString;
                                 if (valueAsString && isLength(valueAsString)) {
-                                    this.baseValue = parseUnit(valueAsString, isEmBased(valueAsString) ? { fontSize: getFontSize(parentElement) } : undefined).toString();
+                                    this.baseValue = parseUnit(valueAsString, hasEm(valueAsString) ? { fontSize: getFontSize(parentElement) } : undefined).toString();
                                 }
                             }
                         }

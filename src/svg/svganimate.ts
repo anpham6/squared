@@ -4,7 +4,7 @@ import SvgBuild from './svgbuild';
 import { INSTANCE_TYPE, KEYSPLINE_NAME, PATTERN_CUBICBEZIER } from './lib/constant';
 
 const { getHexCode, parseColor } = squared.lib.color;
-const { getFontSize, isEmBased, isLength, parseUnit } = squared.lib.css;
+const { getFontSize, hasEm, isLength, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { isNumber, lastItemOf, replaceMap, sortNumber, trimEnd } = squared.lib.util;
 
@@ -60,7 +60,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 nextValue = replaceMap(valueB.trim().split(/\s+/), value => parseFloat(value));
                 break;
             default: {
-                const checkOptions = (value: string) => isEmBased(value) ? { fontSize: getFontSize(element) } : undefined;
+                const checkOptions = (value: string) => hasEm(value) ? { fontSize: getFontSize(element) } : undefined;
                 if (isNumber(valueA)) {
                     currentValue = [parseFloat(valueA)];
                 }

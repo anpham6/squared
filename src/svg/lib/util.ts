@@ -1,6 +1,6 @@
 import Pattern = squared.lib.base.Pattern;
 
-const { CSS_UNIT, calculateStyle: calculateCssStyle, calculateVar, calculateVarAsString, convertAngle, getFontSize, isEmBased, isLength, isPercent, parseUnit } = squared.lib.css;
+const { CSS_UNIT, calculateStyle: calculateCssStyle, calculateVar, calculateVarAsString, convertAngle, getFontSize, hasEm, isLength, isPercent, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { clamp, convertRadian, hypotenuse } = squared.lib.math;
 const { TRANSFORM: REGEXP_TRANSFORM } = squared.lib.regex;
@@ -39,7 +39,7 @@ function getStyleValue(element: Element, attr: string) {
 }
 
 const getViewportArea = (viewBox: DOMRect, min?: boolean) => min ? Math.min(viewBox.width, viewBox.height) : hypotenuse(viewBox.width, viewBox.height);
-const createParseUnitOptions = (element: Element, value: string): Undef<ParseUnitOptions> => isEmBased(value) ? { fontSize: getFontSize(element) } : undefined;
+const createParseUnitOptions = (element: Element, value: string): Undef<ParseUnitOptions> => hasEm(value) ? { fontSize: getFontSize(element) } : undefined;
 
 export const CACHE_VIEWNAME = new Map<string, number>();
 

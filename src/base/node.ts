@@ -1,7 +1,7 @@
 type T = Node;
 
 const { USER_AGENT, isUserAgent } = squared.lib.client;
-const { CSS_PROPERTIES, CSS_TRAITS, CSS_UNIT, PROXY_INLINESTYLE, SVG_PROPERTIES, checkFontSizeValue, checkStyleValue, checkWritingMode, formatPX, getRemSize, getStyle, isAngle, isEm, isLength, isPercent, isTime, parseSelectorText, parseUnit } = squared.lib.css;
+const { CSS_PROPERTIES, CSS_TRAITS, CSS_UNIT, PROXY_INLINESTYLE, SVG_PROPERTIES, checkFontSizeValue, checkStyleValue, checkWritingMode, formatPX, getRemSize, getStyle, isAngle, isLength, isPercent, isTime, parseSelectorText, parseUnit } = squared.lib.css;
 const { assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { CSS, FILE } = squared.lib.regex;
 const { getElementData, getElementAsNode, getElementCache, setElementCache } = squared.lib.session;
@@ -33,6 +33,7 @@ const BORDER_RIGHT = CSS_PROPERTIES.borderRight.value as string[];
 const BORDER_BOTTOM = CSS_PROPERTIES.borderBottom.value as string[];
 const BORDER_LEFT = CSS_PROPERTIES.borderLeft.value as string[];
 
+const REGEXP_EM = /\dem$/;
 const REGEXP_BACKGROUND = /\s*(url|[a-z-]+gradient)/;
 const REGEXP_QUERYNTH = /^:nth(-last)?-(child|of-type)\((.+)\)$/;
 const REGEXP_QUERYNTHPOSITION = /^(-)?(\d+)?n\s*([+-]\d+)?$/;
@@ -2306,7 +2307,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     if (parent) {
                         value = parseLineHeight(parent.css('lineHeight'), this.fontSize);
                         if (value) {
-                            if (parent !== this.actualParent || isEm(this.valueOf('fontSize')) || this.multiline) {
+                            if (parent !== this.actualParent || REGEXP_EM.test(this.valueOf('fontSize')) || this.multiline) {
                                 this.css('lineHeight', value + 'px');
                             }
                             hasOwnStyle = true;
@@ -3029,7 +3030,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     const fixedWidth = isFontFixedWidth(this);
                     let value = checkFontSizeValue(this.valueOf('fontSize'), fixedWidth),
                         emRatio = 1;
-                    if (isEm(value)) {
+                    if (REGEXP_EM.test(value)) {
                         emRatio *= parseFloat(value);
                         value = 'inherit';
                     }
@@ -3048,7 +3049,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                         if (isPercent(value)) {
                                             emRatio *= parseFloat(value) / 100;
                                         }
-                                        else if (isEm(value)) {
+                                        else if (REGEXP_EM.test(value)) {
                                             emRatio *= parseFloat(value);
                                         }
                                         else {
