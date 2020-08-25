@@ -21,7 +21,7 @@ interface ItemValue {
     innerText: string;
 }
 
-const { fromLastIndexOf, parseMimeType, plainMap, splitPairStart } = squared.lib.util;
+const { fromLastIndexOf, parseMimeType, splitPairStart } = squared.lib.util;
 
 const STORED = Resource.STORED as AndroidResourceStoredMap;
 
@@ -98,7 +98,7 @@ function getOutputDirectory(value: string) {
 }
 
 export default class File<T extends View> extends squared.base.File<T> implements android.base.File<T> {
-    public readonly resource!: android.base.Resource<T>;
+    public readonly resource!: Resource<T>;
 
     public copyToDisk(directory: string, options?: FileCopyingOptions) {
         return this.copying({ ...options, assets: this.combineAssets(options?.assets), directory });
@@ -187,7 +187,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             const item: ObjectMap<any[]> = { 'string-array': [] };
             const itemArray = item['string-array'];
             for (const [name, values] of Array.from(STORED.arrays.entries()).sort()) {
-                itemArray.push({ name, item: plainMap(values, innerText => ({ innerText })) });
+                itemArray.push({ name, item: values.map(innerText => ({ innerText })) });
             }
             return this.checkFileAssets([
                 replaceTab(applyTemplate('resources', STRINGARRAY_TMPL, [item]), this.userSettings.insertSpaces, true),
@@ -267,7 +267,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     itemArray.push({
                         name: style.name,
                         parent: style.parent,
-                        item: plainMap(styleArray.sort((a, b) => a.key >= b.key ? 1 : -1), obj => ({ name: obj.key, innerText: obj.value }))
+                        item: styleArray.sort((a, b) => a.key >= b.key ? 1 : -1).map(obj => ({ name: obj.key, innerText: obj.value }))
                     });
                 }
             }

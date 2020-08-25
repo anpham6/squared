@@ -1,3 +1,4 @@
+import type Application from './application';
 import type View from './view';
 
 import { RESERVED_JAVA } from './lib/constant';
@@ -215,7 +216,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
     private readonly _imageFormat?: MIMEOrAll;
 
     constructor(
-        public application: android.base.Application<T>,
+        public application: Application<T>,
         public cache: squared.base.NodeList<T>)
     {
         super();

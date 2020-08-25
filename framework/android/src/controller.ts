@@ -1,3 +1,5 @@
+import type Application from './application';
+
 import Resource from './resource';
 import View from './view';
 import ViewGroup from './viewgroup';
@@ -550,10 +552,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     protected _screenDimension!: Dimension;
 
-    private _defaultViewSettings!: AndroidLocalSettingsUI;
     private _targetAPI!: number;
+    private _viewSettings!: AndroidLocalSettingsUI;
 
-    constructor(public readonly application: android.base.Application<T>) {
+    constructor(public readonly application: Application<T>) {
         super();
     }
 
@@ -565,7 +567,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             width: userSettings.resolutionScreenWidth * dpiRatio,
             height: userSettings.resolutionScreenHeight * dpiRatio
         };
-        this._defaultViewSettings = {
+        this._viewSettings = {
             systemName: capitalize(this.application.systemName),
             screenDimension: this._screenDimension,
             supportRTL: userSettings.supportRTL,
@@ -3686,7 +3688,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     get afterInsertNode() {
         return (node: T) => {
-            node.localSettings = this._defaultViewSettings;
+            node.localSettings = this._viewSettings;
             node.api = this._targetAPI;
         };
     }

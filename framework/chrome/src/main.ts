@@ -1,5 +1,6 @@
 import Application from './application';
 import Controller from './controller';
+import Extension from './extension';
 import File from './file';
 import Resource from './resource';
 
@@ -48,6 +49,7 @@ const appBase: chrome.ChromeFramework<Node> = {
     base: {
         Application,
         Controller,
+        Extension,
         File,
         Resource
     },
@@ -139,7 +141,7 @@ const appBase: chrome.ChromeFramework<Node> = {
         application = new Application<Node>(squared.base.lib.enumeration.APP_FRAMEWORK.CHROME, squared.base.Node, Controller, Resource, squared.base.ExtensionManager);
         file = new File();
         application.resourceHandler!.fileHandler = file;
-        application.builtInExtensions = new Map<string, chrome.base.Extension<Node>>([
+        application.builtInExtensions = new Map<string, Extension<Node>>([
             [EC.COMPRESS_BROTLI, new CompressBrotli(EC.COMPRESS_BROTLI, squared.base.lib.enumeration.APP_FRAMEWORK.CHROME)],
             [EC.COMPRESS_GZIP, new CompressGzip(EC.COMPRESS_GZIP, squared.base.lib.enumeration.APP_FRAMEWORK.CHROME)],
             [EC.COMPRESS_JPEG, new CompressJpeg(EC.COMPRESS_JPEG, squared.base.lib.enumeration.APP_FRAMEWORK.CHROME)],

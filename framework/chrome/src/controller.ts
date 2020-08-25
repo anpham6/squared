@@ -1,7 +1,9 @@
+import type Application from './application';
+
 const { setElementCache } = squared.lib.session;
 
 export default class Controller<T extends squared.base.Node> extends squared.base.Controller<T> implements chrome.base.Controller<T> {
-    constructor(public readonly application: chrome.base.Application<T>) {
+    constructor(public readonly application: Application<T>) {
         super();
     }
 

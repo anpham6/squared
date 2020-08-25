@@ -1,9 +1,10 @@
+import type Extension from './extension';
+
 import Resource from './resource';
 
 import Pattern = squared.lib.base.Pattern;
 
 type Node = squared.base.Node;
-type Extension = chrome.base.Extension<Node>;
 type BundleIndex = ObjectMap<ChromeAsset[]>;
 
 const { FILE } = squared.lib.regex;
@@ -78,14 +79,14 @@ function getExtensions(element: Null<HTMLElement>) {
 }
 
 function processExtensions(this: chrome.base.File<Node>, data: ChromeAsset, extensions: string[]) {
-    const processed: Extension[] = [];
+    const processed: Extension<Node>[] = [];
     for (const ext of this.application.extensions) {
         if (ext.processFile(data)) {
             processed.push(ext);
         }
     }
     for (const name of extensions) {
-        const ext = this.application.extensionManager!.retrieve(name, true) as Extension;
+        const ext = this.application.extensionManager!.retrieve(name, true) as Extension<Node>;
         if (ext && !processed.includes(ext)) {
             ext.processFile(data, true);
         }
@@ -254,7 +255,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         return null;
     }
 
-    public resource!: chrome.base.Resource<T>;
+    public resource!: Resource<T>;
 
     private _outputFileExclusions?: RegExp[];
 
