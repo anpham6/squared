@@ -656,7 +656,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             node.naturalElements = elements;
             node.inlineText = inlineText;
             if (!inlineText) {
-                if (j) {
+                if (j > 0) {
                     this.cacheNodeChildren(cache, excluded, node, children);
                 }
             }
@@ -668,7 +668,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     node.multiline = true;
                 }
             }
-            if (k && this.userSettings.createQuerySelectorMap) {
+            if (k > 0 && this.userSettings.createQuerySelectorMap) {
                 node.queryMap = this.createQueryMap(elements, k);
             }
         }
@@ -689,7 +689,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (child.floating) {
                         floating = true;
                     }
-                    if (i) {
+                    if (i > 0) {
                         siblingsTrailing.push(child);
                         if (child.lineBreak) {
                             children[i - 1].lineBreakTrailing = true;

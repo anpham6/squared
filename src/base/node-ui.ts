@@ -26,7 +26,7 @@ const CSS_SPACING = new Map<number, number>([
 const CSS_SPACINGINDEX = [BOX_STANDARD.MARGIN_TOP, BOX_STANDARD.MARGIN_RIGHT, BOX_STANDARD.MARGIN_BOTTOM, BOX_STANDARD.MARGIN_LEFT, BOX_STANDARD.PADDING_TOP, BOX_STANDARD.PADDING_RIGHT, BOX_STANDARD.PADDING_BOTTOM, BOX_STANDARD.PADDING_LEFT];
 const REGEXP_PARSEUNIT = /(?:%|vw|vh|vmin|vmax)$/;
 
-function cascadeActualPadding(children: T[], attr: string, value: number) {
+function cascadeActualPadding(children: T[], attr: "paddingTop" | "paddingBottom", value: number) {
     let valid = false;
     for (let i = 0, length = children.length; i < length; ++i) {
         const item = children[i];
@@ -44,9 +44,7 @@ function cascadeActualPadding(children: T[], attr: string, value: number) {
                 if (!cascadeActualPadding(item.naturalChildren as T[], attr, value)) {
                     return false;
                 }
-                else {
-                    valid = true;
-                }
+                valid = true;
             }
         }
     }
@@ -72,7 +70,7 @@ function traverseElementSibling(element: Null<Element>, direction: "previousSibl
                         break;
                     }
                     result.push(node);
-                    if (floating !== false || !node.floating && (node.visible || node.rendered) && node.display !== 'none') {
+                    if (floating || !node.floating && (node.visible || node.rendered) && node.display !== 'none') {
                         break;
                     }
                 }
@@ -1094,13 +1092,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public previousSiblings(options?: TraverseSiblingsOptions): T[] {
-        const node = this.innerMostWrapped;
-        return options ? traverseElementSibling(node.element, 'previousSibling', this.sessionId, options) : node.siblingsLeading;
+        return traverseElementSibling(this.innerMostWrapped.element, 'previousSibling', this.sessionId, options);
     }
 
     public nextSiblings(options?: TraverseSiblingsOptions): T[] {
-        const node = this.innerMostWrapped;
-        return options ? traverseElementSibling(node.element, 'nextSibling', this.sessionId, options) : node.siblingsTrailing;
+        return traverseElementSibling(this.innerMostWrapped.element, 'nextSibling', this.sessionId, options);
     }
 
     public modifyBox(region: number, value: number, negative = true) {
@@ -1225,7 +1221,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     }
                 }
                 if (node.naturalChild) {
-                    return canCascadeChildren(node) && cascadeActualPadding(node.naturalChildren as T[], attr, value) ? 0 : value;
+                    return canCascadeChildren(node) && cascadeActualPadding(node.naturalElements as T[], attr, value) ? 0 : value;
                 }
             }
             else if (this.gridElement) {
@@ -1765,14 +1761,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         this._siblingsLeading = value;
     }
     get siblingsLeading() {
-        return this._siblingsLeading || (this._siblingsLeading = this.previousSiblings({ lineBreak: true, excluded: true }));
+        return this._siblingsLeading || (this._siblingsLeading = this.previousSiblings({ floating: true }));
     }
 
     set siblingsTrailing(value) {
         this._siblingsTrailing = value;
     }
     get siblingsTrailing() {
-        return this._siblingsTrailing || (this._siblingsTrailing = this.nextSiblings({ lineBreak: true, excluded: true }));
+        return this._siblingsTrailing || (this._siblingsTrailing = this.nextSiblings({ floating: true }));
     }
 
     get flowElement() {

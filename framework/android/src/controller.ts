@@ -1216,7 +1216,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                         }
                     }
-                    if (j) {
+                    if (j > 0) {
                         pageFlow.length = j;
                         if (node.layoutHorizontal) {
                             this.processConstraintHorizontal(node, pageFlow);
@@ -2350,7 +2350,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         float = '';
                     }
                     const setTextIndent = (item: T) => {
-                        if (i && textIndent < 0) {
+                        if (i > 0 && textIndent < 0) {
                             item.modifyBox(BOX_STANDARD.MARGIN_LEFT, float === 'left' ? Math.max(-(currentFloated!.linear.width + textIndent), 0) : textIndent * -1);
                         }
                     };
@@ -2382,7 +2382,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                         let last = items[index],
                                             textRemainder = '',
                                             widthRemainder = 0;
-                                        if (k === 0 && index === r - 1 && q === 1 && i < length - 1 && !currentFloated && textAlignLast === '' && (i || textIndent >= 0 && !firstLineStyle)) {
+                                        if (k === 0 && index === r - 1 && q === 1 && i < length - 1 && !currentFloated && textAlignLast === '' && (i > 0 || textIndent >= 0 && !firstLineStyle)) {
                                             const nodes: T[] = [];
                                             invalid: {
                                                 for (let l = i + 1; l < length; ++l) {
@@ -2628,7 +2628,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 }
                                 if (verticalAlign !== 0) {
                                     if (verticalAlign > 0) {
-                                        if (i || node.renderParent!.layoutVertical && items.every(sibling => !sibling.rendering)) {
+                                        if (i > 0 || node.renderParent!.layoutVertical && items.every(sibling => !sibling.rendering)) {
                                             offsetTop = Math.max(verticalAlign, offsetTop);
                                         }
                                     }

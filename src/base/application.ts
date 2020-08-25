@@ -485,7 +485,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 node.inlineText = inlineText;
             }
             node.retainAs(children);
-            if (k && this.userSettings.createQuerySelectorMap) {
+            if (k > 0 && this.userSettings.createQuerySelectorMap) {
                 node.queryMap = this.createQueryMap(elements, k);
             }
         }

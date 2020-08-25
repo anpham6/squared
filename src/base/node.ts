@@ -10,9 +10,9 @@ const { convertCamelCase, convertFloat, convertInt, hasBit, hasValue, isNumber, 
 const { SELECTOR_ATTR, SELECTOR_G, SELECTOR_LABEL, SELECTOR_PSEUDO_CLASS } = CSS;
 
 const enum STYLE_CACHE {
-    FAIL = 0,
-    READY = 1,
-    CHANGED = 2
+    FAIL,
+    READY,
+    CHANGED
 }
 const TEXT_STYLE = [
     'fontFamily',
@@ -224,7 +224,7 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, last: boo
     }
     const { attrList, classList, notList, pseudoList } = selector;
     if (pseudoList) {
-        const { parent, tagName } = child;
+        const { actualParent: parent, tagName } = child;
         for (let i = 0, length = pseudoList.length; i < length; ++i) {
             const pseudo = pseudoList[i];
             switch (pseudo) {
@@ -2837,7 +2837,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         const result = this._cacheState.actualParent;
         if (result === undefined) {
             const parentElement = this.element?.parentElement;
-            return this._cacheState.actualParent = parentElement ? getElementAsNode<T>(parentElement, this.sessionId) : null;
+            return this._cacheState.actualParent = parentElement && getElementAsNode<T>(parentElement, this.sessionId) || this.parent;
         }
         return result;
     }

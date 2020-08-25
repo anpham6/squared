@@ -358,8 +358,8 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             }
                         }
                         if (isBlockElement(current, true)) {
-                            if (i) {
-                                const previousSiblings = current.previousSiblings({ floating: false });
+                            if (i > 0) {
+                                const previousSiblings = current.previousSiblings();
                                 const q = previousSiblings.length;
                                 if (q) {
                                     const previous = previousSiblings[q - 1];
@@ -632,7 +632,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
         excluded.each(node => {
             if (node.lineBreak && !node.lineBreakTrailing && !clearMap.has(node) && !processed.has(node.id)) {
                 let valid: Undef<boolean>;
-                const previousSiblings = node.previousSiblings({ floating: false });
+                const previousSiblings = node.previousSiblings();
                 const q = previousSiblings.length;
                 if (q) {
                     const actualParent = node.actualParent!;
@@ -807,7 +807,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                         const q = row.length;
                                         for (let j = 0; j < q; ++j) {
                                             if (outerWrapper === row[j]) {
-                                                if (i) {
+                                                if (i > 0) {
                                                     setSpacingOffset(outerWrapper, BOX_STANDARD.MARGIN_TOP, maxBottom);
                                                 }
                                                 else {

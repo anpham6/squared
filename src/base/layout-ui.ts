@@ -4,8 +4,8 @@ const { hasBit } = squared.lib.util;
 
 export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Container<T> implements squared.base.LayoutUI<T> {
     public static create<T extends NodeUI>(options: LayoutOptions<T>) {
-        const { parent, node, containerType, alignmentType, children, itemCount, rowCount, columnCount } = options;
-        const layout = new LayoutUI(parent, node, containerType, alignmentType, children);
+        const { itemCount, rowCount, columnCount } = options;
+        const layout = new LayoutUI(options.parent, options.node, options.containerType, options.alignmentType, options.children);
         if (itemCount) {
             layout.itemCount = itemCount;
         }

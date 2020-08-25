@@ -377,7 +377,7 @@ export function formatXml(value: string, closeEmpty?: boolean, startIndent = -1,
     for (let i = 0, length = lines.length; i < length; ++i) {
         const line = lines[i];
         let previous = indent;
-        if (i) {
+        if (i > 0) {
             let single: Undef<boolean>;
             if (line.closing) {
                 --indent;
