@@ -48,8 +48,7 @@ function setAspectRatio(parent: Undef<Svg | SvgUseSymbol>, group: SvgGroup, view
                             boxWidth = element.width.baseVal.value;
                             boxHeight = element.height.baseVal.value;
                         }
-                        catch {
-                        }
+                        catch {}
                     }
                     if (!boxWidth && !boxHeight) {
                         boxWidth = parseFloat(w);

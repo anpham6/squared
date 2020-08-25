@@ -164,57 +164,31 @@ export default abstract class NodeGroupUI extends NodeUI {
         return result === undefined ? this._cache.rightAligned = this.every(node => node.rightAligned) : result;
     }
 
-    get tagName() {
-        return '';
-    }
-
-    get plainText() {
-        return false;
-    }
-
-    get styleText() {
-        return false;
-    }
-
     set inlineText(value) {}
-    get inlineText() {
-        return false;
-    }
+    get inlineText() { return false; }
 
     set multiline(value) {}
-    get multiline() {
-        return false;
-    }
+    get multiline() { return false; }
 
-    get nodeGroup() {
-        return true;
-    }
+    get tagName() { return ''; }
 
-    get naturalChild() {
-        return false;
-    }
+    get plainText() { return false; }
 
-    get naturalElement() {
-        return false;
-    }
+    get styleText() { return false; }
 
-    get pseudoElement() {
-        return false;
-    }
+    get nodeGroup() { return true; }
 
-    get previousSibling() {
-        return null;
-    }
+    get naturalChild() { return false; }
 
-    get nextSibling() {
-        return null;
-    }
+    get naturalElement() { return false; }
 
-    get previousElementSibling() {
-        return null;
-    }
+    get pseudoElement() { return false; }
 
-    get nextElementSibling() {
-        return null;
-    }
+    get previousSibling() { return null; }
+
+    get nextSibling() { return null; }
+
+    get previousElementSibling() { return null; }
+
+    get nextElementSibling() { return null; }
 }

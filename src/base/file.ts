@@ -37,14 +37,8 @@ export default abstract class File<T extends Node> implements squared.base.File<
     public abstract get userSettings(): UserResourceSettings;
 
     public getDataMap(options: FileActionOptions): Void<StandardMap> {}
-
-    public getCopyQueryParameters(options: FileCopyingOptions) {
-        return '';
-    }
-
-    public getArchiveQueryParameters(options: FileArchivingOptions) {
-        return '';
-    }
+    public getCopyQueryParameters(options: FileCopyingOptions) { return ''; }
+    public getArchiveQueryParameters(options: FileArchivingOptions) { return ''; }
 
     public createFrom(format: string, options: FileArchivingOptions) {
         return this.archiving({

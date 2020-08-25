@@ -91,8 +91,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
                     try {
                         this._dataset[name] = JSON.parse(value);
                     }
-                    catch {
-                    }
+                    catch {}
                 }
             }
             this.element = element;
@@ -244,9 +243,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     }
 
     set setterType(value) {}
-    get setterType() {
-        return true;
-    }
+    get setterType() { return true; }
 
     get fillReplace() {
         switch (this.fillMode) {

@@ -9,9 +9,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
         return node.positionRelative && !node.autoPosition || node.verticalAligned;
     }
 
-    public condition() {
-        return true;
-    }
+    public condition() { return true; }
 
     public processNode(node: T) {
         return { subscribe: true };

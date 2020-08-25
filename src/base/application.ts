@@ -336,8 +336,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             try {
                 mediaText = styleSheet.media.mediaText;
             }
-            catch {
-            }
+            catch {}
             if (!mediaText || checkMediaRule(mediaText)) {
                 this.applyStyleSheet(styleSheet, sessionId, processing);
             }
@@ -810,8 +809,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         try {
             document.head.removeChild(styleElement);
         }
-        catch {
-        }
+        catch {}
         return multipleRequest > 1 ? success : success[0];
     }
 

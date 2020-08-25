@@ -12,8 +12,7 @@ export default class Controller<T extends Node> implements squared.base.Controll
         }
     };
 
-    constructor(public readonly application: Application<T>) {
-    }
+    constructor(public readonly application: Application<T>) {}
 
     public init() {}
     public sortInitialCache(cache: NodeList<T>) {}

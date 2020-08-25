@@ -17,14 +17,13 @@ const BORDER_TOP = CSS_PROPERTIES.borderTop.value as string[];
 const BORDER_RIGHT = CSS_PROPERTIES.borderRight.value as string[];
 const BORDER_BOTTOM = CSS_PROPERTIES.borderBottom.value as string[];
 const BORDER_LEFT = CSS_PROPERTIES.borderLeft.value as string[];
-
-const BOX_BORDER = [BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM, BORDER_LEFT];
+const BORDER_BOX = [BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM, BORDER_LEFT];
 
 function setBorderStyle(styleMap: StringMap, defaultColor: string) {
     if (!styleMap.border && !(BORDER_TOP[0] in styleMap || BORDER_RIGHT[0] in styleMap || BORDER_BOTTOM[0] in styleMap || BORDER_LEFT[0] in styleMap)) {
         styleMap.border = '1px outset ' + defaultColor;
         for (let i = 0; i < 4; ++i) {
-            const border = BOX_BORDER[i];
+            const border = BORDER_BOX[i];
             styleMap[border[0]] = '1px';
             styleMap[border[1]] = 'outset';
             styleMap[border[2]] = defaultColor;

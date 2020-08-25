@@ -1608,9 +1608,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return false;
     }
 
-    get nodeGroup() {
-        return false;
-    }
+    get nodeGroup() { return false; }
 
     set renderAs(value) {
         this._renderAs = !this.rendered && value && !value.renderParent ? value : undefined;

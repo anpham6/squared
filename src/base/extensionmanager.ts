@@ -5,8 +5,7 @@ import type Node from './node';
 const { hasBit, isObject } = squared.lib.util;
 
 export default class ExtensionManager<T extends Node> implements squared.base.ExtensionManager<T> {
-    constructor(public readonly application: Application<T>) {
-    }
+    constructor(public readonly application: Application<T>) {}
 
     public include(ext: Extension<T> | string) {
         const application = this.application;

@@ -436,8 +436,7 @@ let Node: serve.INode,
             try {
                 return fs.statSync(filepath).size;
             }
-            catch {
-            }
+            catch {}
             return 0;
         }
         findFormat(compress: Undef<CompressFormat[]>, format: string) {
@@ -471,8 +470,7 @@ let Node: serve.INode,
     (GZIP_LEVEL, BROTLI_QUALITY, JPEG_QUALITY);
 
     Chrome = new class implements serve.IChrome {
-        constructor(public external: Undef<ExternalModules>) {
-        }
+        constructor(public external: Undef<ExternalModules>) {}
 
         configureTranspiler(config: ObjectMap<StandardMap>, name: string, category: "html" | "css" | "js", transpileMap?: TranspileMap): [Null<string>, StandardMap | FunctionType<string>] {
             if (transpileMap) {
@@ -796,8 +794,7 @@ let Node: serve.INode,
     (EXTERNAL);
 
     Image = new class implements serve.IImage {
-        constructor(public tinify_api_key: boolean) {
-        }
+        constructor(public tinify_api_key: boolean) {}
 
         findCompress(compress: Undef<CompressFormat[]>) {
             if (this.tinify_api_key) {
@@ -897,8 +894,7 @@ let Node: serve.INode,
                 try {
                     fs.unlinkSync(master);
                 }
-                catch {
-                }
+                catch {}
             }
             return deg ? self.rotate(deg) : self;
         }
@@ -1124,8 +1120,7 @@ class FileManager implements serve.IFileManager {
                             try {
                                 fs.unlinkSync(gz);
                             }
-                            catch {
-                            }
+                            catch {}
                             gz = '';
                         }
                         this.finalize(gz);
@@ -1144,8 +1139,7 @@ class FileManager implements serve.IFileManager {
                             try {
                                 fs.unlinkSync(br);
                             }
-                            catch {
-                            }
+                            catch {}
                             br = '';
                         }
                         this.finalize(br);
@@ -1174,8 +1168,7 @@ class FileManager implements serve.IFileManager {
                                     fs.renameSync(jpg, filepath);
                                 }
                             }
-                            catch {
-                            }
+                            catch {}
                         }
                         this.finalize('');
                         resumeThread();
@@ -1900,8 +1893,7 @@ class FileManager implements serve.IFileManager {
                     stream.close();
                     fs.unlinkSync(filepath);
                 }
-                catch {
-                }
+                catch {}
             }
             file.excluded = true;
             Node.writeFail(uri, message);

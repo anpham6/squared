@@ -176,8 +176,7 @@ export function setFramework(value: Framework, options?: squared.FrameworkOption
                     Object.assign(baseSettings, JSON.parse(storedSettings));
                 }
             }
-            catch {
-            }
+            catch {}
         }
         if (!framework) {
             Object.assign(baseSettings, settings);
@@ -189,8 +188,7 @@ export function setFramework(value: Framework, options?: squared.FrameworkOption
             try {
                 localStorage.setItem(saveAs + '-' + frameworkId, JSON.stringify(baseSettings));
             }
-            catch {
-            }
+            catch {}
         }
     };
     if (framework !== value || cache === false) {
@@ -302,16 +300,14 @@ export function configure(value: ExtensionRequest, options: squared.FrameworkOpt
                         Object.assign(result, JSON.parse(storedSettings));
                     }
                 }
-                catch {
-                }
+                catch {}
             }
             Object.assign(result, options.settings);
             if (saveAs) {
                 try {
                     localStorage.setItem(saveAs + '-' + name, JSON.stringify(result));
                 }
-                catch {
-                }
+                catch {}
             }
             return result;
         };

@@ -2088,9 +2088,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return this.htmlElement || this.svgElement;
     }
 
-    get naturalChild() {
-        return true;
-    }
+    get naturalChild() { return true; }
 
     get naturalElement() {
         const result = this._cacheState.naturalElement;
@@ -2105,9 +2103,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return this.plainText || this.inlineText && this.tagName !== 'BUTTON';
     }
 
-    get pseudoElement() {
-        return false;
-    }
+    get pseudoElement() { return false; }
 
     get imageElement() {
         return this.tagName === 'IMG';
