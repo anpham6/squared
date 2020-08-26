@@ -2012,20 +2012,21 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
         }
 
-        public supported(attr: string, result = {}): boolean {
-            if (typeof DEPRECATED_ANDROID.android[attr] === 'function') {
-                const valid = DEPRECATED_ANDROID.android[attr].call(this, result, this.api);
+        public supported(attr: string, value: string, result: PlainObject): boolean {
+            const api = this.api;
+            if (DEPRECATED_ANDROID.android[attr]) {
+                const valid = DEPRECATED_ANDROID.android[attr].call(this, result, api, value);
                 if (!valid || hasKeys(result)) {
                     return valid;
                 }
             }
-            for (let i = this.api; i <= BUILD_ANDROID.LATEST; ++i) {
-                const callback = API_ANDROID[i]?.android[attr];
+            for (let i = api; i <= BUILD_ANDROID.LATEST; ++i) {
+                const callback = API_ANDROID[i].android[attr];
                 switch (typeof callback) {
                     case 'boolean':
                         return callback;
                     case 'function':
-                        return callback.call(this, result, this.api);
+                        return callback.call(this, result, api, value);
                 }
             }
             return true;
@@ -2050,7 +2051,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     else {
                                         const data: ObjectMap<string | boolean> = {};
                                         let value = obj[attr];
-                                        if (!this.supported(attr, data)) {
+                                        if (!this.supported(attr, value, data)) {
                                             continue;
                                         }
                                         if (hasKeys(data)) {

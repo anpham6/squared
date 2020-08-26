@@ -27,7 +27,7 @@ const settings: AndroidUserResourceSettingsUI = {
         'android.resource.data',
         'android.resource.includes'
     ],
-    targetAPI: 29,
+    targetAPI: 30,
     resolutionDPI: 160,
     resolutionScreenWidth: 1280,
     resolutionScreenHeight: 900,

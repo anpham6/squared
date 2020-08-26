@@ -57,4 +57,4 @@ interface StyleAttribute {
     ids?: number[];
 }
 
-type CustomizationResult<T> = (this: T, result: PlainObject, api?: number) => boolean;
+type CustomizationResult<T> = (this: T, result: PlainObject, api: number, value: string) => boolean;

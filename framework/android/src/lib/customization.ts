@@ -3,17 +3,38 @@ import type View from '../view';
 import { STRING_ANDROID } from './constant';
 import { BUILD_ANDROID } from './enumeration';
 
-function substitute(result: PlainObject, value: string, api?: number, minApi = 0) {
+function substitute(result: PlainObject, attr: string, api?: number, minApi = 0, value?: string) {
     if (!api || api >= minApi) {
-        result.attr = value;
+        result.attr = attr;
+        if (value) {
+            result.value = value;
+        }
         return true;
     }
     return false;
 }
 
 export const API_ANDROID: Customizations<View> = {
-    [BUILD_ANDROID.Q]: {
+    [BUILD_ANDROID.R]: {
         android: {},
+        assign: {}
+    },
+    [BUILD_ANDROID.Q]: {
+        android: {
+            allowNativeHeapPointerTagging: false,
+            animatedImageDrawable: false,
+            canTakeScreenshot: false,
+            crossProfile: false,
+            forceQueryable: false,
+            gwpAsanMode: false,
+            htmlDescription: false,
+            importantForContentCapture: false,
+            mimeGroup: false,
+            preferMinimalPostProcessing: false,
+            preserveLegacyExternalStorage: false,
+            resourcesMap: false,
+            supportsInlineSuggestions: false
+        },
         assign: {}
     },
     [BUILD_ANDROID.PIE]: {
@@ -71,8 +92,7 @@ export const API_ANDROID: Customizations<View> = {
             ttcIndex: false,
             versionCodeMajor: false,
             versionMajor: false,
-            widgetFeatures: false,
-            windowLayoutInDisplayCutoutMode: false
+            widgetFeatures: false
         },
         assign: {}
     },
@@ -82,19 +102,67 @@ export const API_ANDROID: Customizations<View> = {
             navigationBarDividerColor: false,
             showWhenLocked: false,
             turnScreenOn: false,
+            windowLayoutInDisplayCutoutMode: false,
             windowLightNavigationBar: false
         },
         assign: {}
     },
     [BUILD_ANDROID.NOUGAT_1]: {
         android: {
+            alphabeticModifiers: false,
+            appCategory: false,
+            autoSizeMaxTextSize: false,
+            autoSizeMinTextSize: false,
+            autoSizePresetSizes: false,
+            autoSizeStepGranularity: false,
+            autoSizeTextType: false,
+            autofillHints: false,
+            autofilledHighlight: false,
+            canRequestFingerprintGestures: false,
+            certDigest: false,
+            colorError: false,
+            colorMode: false,
+            defaultFocusHighlightEnabled: false,
+            focusedByDefault: false,
+            font: false,
+            fontProviderAuthority: false,
+            fontProviderCerts: false,
+            fontProviderPackage: false,
+            fontProviderQuery: false,
+            fontStyle: false,
             fontWeight: false,
+            iconSpaceReserved: false,
+            iconTint: false,
+            iconTintMode: false,
+            importantForAutofill: false,
+            isFeatureSplit: false,
+            isStatic: false,
+            isolatedSplits: false,
             justificationMode: false,
+            keyboardNavigationCluster: false,
             layout_marginHorizontal: false,
             layout_marginVertical: false,
+            maxAspectRatio: false,
+            min: false,
+            nextClusterForward: false,
+            numericModifiers: false,
             paddingHorizontal: false,
             paddingVertical: false,
-            tooltipText: false
+            persistentWhenFeatureAvailable: false,
+            primaryContentAlpha: false,
+            recreateOnConfigChanges: false,
+            recycleEnabled: false,
+            requiredFeature: false,
+            requiredNotFeature: false,
+            rotationAnimation: false,
+            secondaryContentAlpha: false,
+            singleLineTitle: false,
+            splitName: false,
+            targetProcesses: false,
+            targetSandboxVersion: false,
+            tooltipText: false,
+            visibleToInstantApps: false,
+            windowSplashscreenContent: false
         },
         assign: {}
     },
@@ -179,7 +247,7 @@ export const API_ANDROID: Customizations<View> = {
             contextClickable: false,
             drawableTint: false,
             drawableTintMode: false,
-            end: (result: PlainObject) => substitute(result, 'right'),
+            end: result => substitute(result, 'right'),
             extractNativeLibs: false,
             fingerprintAuthDrawable: false,
             fraction: false,
@@ -190,7 +258,7 @@ export const API_ANDROID: Customizations<View> = {
             numbersInnerTextColor: false,
             scrollIndicators: false,
             showForAllUsers: false,
-            start: (result: PlainObject) => substitute(result, 'left'),
+            start: result => substitute(result, 'left'),
             subtitleTextColor: false,
             supportsAssist: false,
             supportsLaunchVoiceAssistFromKeyguard: false,
@@ -452,7 +520,7 @@ export const API_ANDROID: Customizations<View> = {
     },
     [BUILD_ANDROID.JELLYBEAN_1]: {
         android: {
-            canRequestEnhancedWebAccessibility: (result: PlainObject, api: number) => api < BUILD_ANDROID.OREO,
+            canRequestEnhancedWebAccessibility: (result, api) => api < BUILD_ANDROID.OREO,
             canRequestFilterKeyEvents: false,
             canRequestTouchExplorationMode: false,
             childIndicatorEnd: false,
@@ -477,18 +545,18 @@ export const API_ANDROID: Customizations<View> = {
             initialKeyguardLayout: false,
             labelFor: false,
             layoutDirection: false,
-            layout_alignEnd: (result: PlainObject) => substitute(result, 'layout_alignRight'),
-            layout_alignParentEnd: (result: PlainObject) => substitute(result, 'layout_alignParentRight'),
-            layout_alignParentStart: (result: PlainObject) => substitute(result, 'layout_alignParentLeft'),
-            layout_alignStart: (result: PlainObject) => substitute(result, 'layout_alignLeft'),
-            layout_marginEnd: (result: PlainObject) => substitute(result, 'layout_marginRight'),
-            layout_marginStart: (result: PlainObject) => substitute(result, 'layout_marginLeft'),
-            layout_toEndOf: (result: PlainObject) => substitute(result, 'layout_toRightOf'),
-            layout_toStartOf: (result: PlainObject) => substitute(result, 'layout_toLeftOf'),
-            listPreferredItemPaddingEnd: (result: PlainObject) => substitute(result, 'listPreferredItemPaddingRight'),
-            listPreferredItemPaddingStart: (result: PlainObject) => substitute(result, 'listPreferredItemPaddingLeft'),
-            paddingEnd: (result: PlainObject) => substitute(result, STRING_ANDROID.PADDING_RIGHT),
-            paddingStart: (result: PlainObject) => substitute(result, STRING_ANDROID.PADDING_LEFT),
+            layout_alignEnd: result => substitute(result, 'layout_alignRight'),
+            layout_alignParentEnd: result => substitute(result, 'layout_alignParentRight'),
+            layout_alignParentStart: result => substitute(result, 'layout_alignParentLeft'),
+            layout_alignStart: result => substitute(result, 'layout_alignLeft'),
+            layout_marginEnd: result => substitute(result, 'layout_marginRight'),
+            layout_marginStart: result => substitute(result, 'layout_marginLeft'),
+            layout_toEndOf: result => substitute(result, 'layout_toRightOf'),
+            layout_toStartOf: result => substitute(result, 'layout_toLeftOf'),
+            listPreferredItemPaddingEnd: result => substitute(result, 'listPreferredItemPaddingRight'),
+            listPreferredItemPaddingStart: result => substitute(result, 'listPreferredItemPaddingLeft'),
+            paddingEnd: result => substitute(result, STRING_ANDROID.PADDING_RIGHT),
+            paddingStart: result => substitute(result, STRING_ANDROID.PADDING_LEFT),
             permissionFlags: false,
             permissionGroupFlags: false,
             presentationTheme: false,
@@ -533,22 +601,98 @@ export const API_ANDROID: Customizations<View> = {
 
 export const DEPRECATED_ANDROID: Deprecations<View> = {
     android: {
-        amPmBackgroundColor: (result: PlainObject, api: number) => substitute(result, 'headerBackground', api, BUILD_ANDROID.MARSHMALLOW),
-        amPmTextColor: (result: PlainObject, api: number) => substitute(result, 'headerTextColor', api, BUILD_ANDROID.MARSHMALLOW),
-        animationResolution: (result: PlainObject, api: number) => api < BUILD_ANDROID.JELLYBEAN,
-        canRequestEnhancedWebAccessibility: (result: PlainObject, api: number) => api < BUILD_ANDROID.OREO,
-        dayOfWeekBackground: (result: PlainObject, api: number) => api < BUILD_ANDROID.MARSHMALLOW,
-        dayOfWeekTextAppearance: (result: PlainObject, api: number) => api < BUILD_ANDROID.MARSHMALLOW,
-        directionDescriptions: (result: PlainObject, api: number) => api < BUILD_ANDROID.MARSHMALLOW,
-        headerAmPmTextAppearance: (result: PlainObject, api: number) => substitute(result, 'headerTextColor', api, BUILD_ANDROID.MARSHMALLOW),
-        headerDayOfMonthTextAppearance: (result: PlainObject, api: number) => substitute(result, 'headerTextColor', api, BUILD_ANDROID.MARSHMALLOW),
-        headerMonthTextAppearance: (result: PlainObject, api: number) => substitute(result, 'headerTextColor', api, BUILD_ANDROID.MARSHMALLOW),
-        headerTimeTextAppearance: (result: PlainObject, api: number) => substitute(result, 'headerTextColor', api, BUILD_ANDROID.MARSHMALLOW),
-        headerYearTextAppearance: (result: PlainObject, api: number) => substitute(result, 'headerTextColor', api, BUILD_ANDROID.MARSHMALLOW),
-        showOnLockScreen: (result: PlainObject, api: number) => substitute(result, 'showForAllUsers', api, BUILD_ANDROID.MARSHMALLOW),
-        targetDescriptions: (result: PlainObject, api: number) => api < BUILD_ANDROID.MARSHMALLOW,
-        yearListItemTextAppearance: (result: PlainObject, api: number) => substitute(result, 'yearListTextColor', api, BUILD_ANDROID.MARSHMALLOW),
-        yearListSelectorColor: (result: PlainObject, api: number) => api < BUILD_ANDROID.MARSHMALLOW
+        amPmBackgroundColor: (result, api) => substitute(result, 'headerBackground', api, BUILD_ANDROID.MARSHMALLOW),
+        amPmTextColor: (result, api) => substitute(result, 'headerTextColor', api, BUILD_ANDROID.MARSHMALLOW),
+        animationResolution: (result, api) => api < BUILD_ANDROID.JELLYBEAN,
+        anyDensity: (result, api) => api < BUILD_ANDROID.R,
+        autoText: (result, api) => substitute(result, 'inputType', api, BUILD_ANDROID.ICE_CREAM_SANDWICH_1, 'textAutoCorrect'),
+        canRequestEnhancedWebAccessibility: (result, api) => api < BUILD_ANDROID.OREO,
+        capitalize: (result, api, value) => {
+            switch (parseInt(value)) {
+                case 1:
+                    value = 'textCapSentences';
+                    break;
+                case 2:
+                    value = 'textCapWords';
+                    break;
+                default:
+                    return api < BUILD_ANDROID.JELLYBEAN;
+            }
+            return substitute(result, 'inputType', api, BUILD_ANDROID.ICE_CREAM_SANDWICH_1, value);
+        },
+        codes: (result, api) => api < BUILD_ANDROID.Q,
+        dayOfWeekBackground: (result, api) => api < BUILD_ANDROID.MARSHMALLOW,
+        dayOfWeekTextAppearance: (result, api) => api < BUILD_ANDROID.MARSHMALLOW,
+        directionDescriptions: (result, api) => api < BUILD_ANDROID.MARSHMALLOW,
+        editable: (result, api) => substitute(result, 'inputType', api, BUILD_ANDROID.ICE_CREAM_SANDWICH_1, 'text'),
+        enabled: (result, api) => api < BUILD_ANDROID.ICE_CREAM_SANDWICH_1,
+        endYear: (result, api) => substitute(result, 'maxDate', api, BUILD_ANDROID.JELLYBEAN),
+        fadingEdge: (result, api) => substitute(result, 'requiresFadingEdge', api, BUILD_ANDROID.ICE_CREAM_SANDWICH),
+        focusedMonthDateColor: (result, api) => api < BUILD_ANDROID.MARSHMALLOW,
+        headerAmPmTextAppearance: (result, api) => substitute(result, 'headerTextColor', api, BUILD_ANDROID.MARSHMALLOW),
+        headerDayOfMonthTextAppearance: (result, api) => substitute(result, 'headerTextColor', api, BUILD_ANDROID.MARSHMALLOW),
+        headerMonthTextAppearance: (result, api) => substitute(result, 'headerTextColor', api, BUILD_ANDROID.MARSHMALLOW),
+        headerTimeTextAppearance: (result, api) => substitute(result, 'headerTextColor', api, BUILD_ANDROID.MARSHMALLOW),
+        headerYearTextAppearance: (result, api) => substitute(result, 'headerTextColor', api, BUILD_ANDROID.MARSHMALLOW),
+        horizontalGap: (result, api) => api < BUILD_ANDROID.Q,
+        iconPreview: (result, api) => api < BUILD_ANDROID.Q,
+        inputMethod: (result, api) => substitute(result, 'inputType', api, BUILD_ANDROID.ICE_CREAM_SANDWICH_1, 'text'),
+        isModifier: (result, api) => api < BUILD_ANDROID.Q,
+        isRepeatable: (result, api) => api < BUILD_ANDROID.Q,
+        isSticky: (result, api) => api < BUILD_ANDROID.Q,
+        keyBackground: (result, api) => api < BUILD_ANDROID.Q,
+        keyEdgeFlags: (result, api) => api < BUILD_ANDROID.Q,
+        keyHeight: (result, api) => api < BUILD_ANDROID.Q,
+        keyIcon: (result, api) => api < BUILD_ANDROID.Q,
+        keyLabel: (result, api) => api < BUILD_ANDROID.Q,
+        keyOutputText: (result, api) => api < BUILD_ANDROID.Q,
+        keyPreviewHeight: (result, api) => api < BUILD_ANDROID.Q,
+        keyPreviewLayout: (result, api) => api < BUILD_ANDROID.Q,
+        keyPreviewOffset: (result, api) => api < BUILD_ANDROID.Q,
+        keyTextColor: (result, api) => api < BUILD_ANDROID.Q,
+        keyTextSize: (result, api) => api < BUILD_ANDROID.Q,
+        keyWidth: (result, api) => api < BUILD_ANDROID.Q,
+        keyboardMode: (result, api) => api < BUILD_ANDROID.Q,
+        labelTextSize: (result, api) => api < BUILD_ANDROID.Q,
+        numeric: (result, api) => substitute(result, 'inputType', api, BUILD_ANDROID.ICE_CREAM_SANDWICH_1, 'number'),
+        password: (result, api) => substitute(result, 'inputType', api, BUILD_ANDROID.ICE_CREAM_SANDWICH_1, 'textPassword'),
+        phoneNumber: (result, api) => substitute(result, 'inputType', api, BUILD_ANDROID.ICE_CREAM_SANDWICH_1, 'phone'),
+        popupCharacters: (result, api) => api < BUILD_ANDROID.Q,
+        popupKeyboard: (result, api) => api < BUILD_ANDROID.Q,
+        popupLayout: (result, api) => api < BUILD_ANDROID.Q,
+        protectionLevel: (result, api, value) => {
+            switch (value) {
+                case 'signatureOrSystem':
+                case 'system':
+                    return api < BUILD_ANDROID.MARSHMALLOW;
+                default:
+                    return true;
+            }
+        },
+        restoreNeedsApplication: (result, api) => api < BUILD_ANDROID.ICE_CREAM_SANDWICH_1,
+        rowEdgeFlags: (result, api) => api < BUILD_ANDROID.Q,
+        searchButtonText: (result, api) => api < BUILD_ANDROID.ICE_CREAM_SANDWICH_1,
+        selectedDateVerticalBar: (result, api) => api < BUILD_ANDROID.MARSHMALLOW,
+        selectedWeekBackgroundColor: (result, api) => api < BUILD_ANDROID.MARSHMALLOW,
+        sharedUserId: (result, api) => api < BUILD_ANDROID.Q,
+        sharedUserLabel: (result, api) => api < BUILD_ANDROID.Q,
+        showOnLockScreen: (result, api) => substitute(result, 'showForAllUsers', api, BUILD_ANDROID.MARSHMALLOW),
+        showWeekNumber: (result, api) => api < BUILD_ANDROID.MARSHMALLOW,
+        shownWeekCount: (result, api) => api < BUILD_ANDROID.MARSHMALLOW,
+        startYear: (result, api) => substitute(result, 'minDate', api, BUILD_ANDROID.JELLYBEAN),
+        state_long_pressable: (result, api) => api < BUILD_ANDROID.Q,
+        targetDescriptions: (result, api) => api < BUILD_ANDROID.MARSHMALLOW,
+        targetProcesses: (result, api) => api < BUILD_ANDROID.Q,
+        targetSandboxVersion: (result, api) => api < BUILD_ANDROID.Q,
+        unfocusedMonthDateColor: (result, api) => api < BUILD_ANDROID.MARSHMALLOW,
+        verticalCorrection: (result, api) => api < BUILD_ANDROID.Q,
+        verticalGap: (result, api) => api < BUILD_ANDROID.Q,
+        weekNumberColor: (result, api) => api < BUILD_ANDROID.MARSHMALLOW,
+        weekSeparatorLineColor: (result, api) => api < BUILD_ANDROID.MARSHMALLOW,
+        windowOverscan: (result, api) => api < BUILD_ANDROID.R,
+        windowSwipeToDismiss: (result, api) => api < BUILD_ANDROID.R,
+        yearListItemTextAppearance: (result, api) => substitute(result, 'yearListTextColor', api, BUILD_ANDROID.MARSHMALLOW),
+        yearListSelectorColor: (result, api) => api < BUILD_ANDROID.MARSHMALLOW
     }
 };
 

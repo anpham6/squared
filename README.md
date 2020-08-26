@@ -70,7 +70,7 @@ The primary function "parseDocument" can be called on multiple elements and mult
 <script src="/dist/android.framework.min.js"></script>
 <script>
     // optional
-    squared.settings.targetAPI = 29;
+    squared.settings.targetAPI = 30;
 
     document.addEventListener('DOMContentLoaded', () => {
         squared.setFramework(android, /* optional: FrameworkOptions */);
@@ -169,7 +169,7 @@ squared.settings = {
         'android.resource.data',
         'android.resource.includes'
     ],
-    targetAPI: 29,
+    targetAPI: 30,
     resolutionDPI: 160, // Pixel C: 320dpi 2560x1800
     resolutionScreenWidth: 1280,
     resolutionScreenHeight: 900,
@@ -377,7 +377,7 @@ squared.system.writeResourceRawAudio()
 ```
 
 ```javascript
-// targetAPI: 0 - ALL, 29 - Android Q
+// targetAPI: 0 - ALL, 30 - Android R
 
 squared.system.customize(squared.settings.targetAPI, 'Button', {
     android: {
