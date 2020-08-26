@@ -29,7 +29,7 @@ Option #2 (android / ui / kotlin+java):
 
 &nbsp;&nbsp;&nbsp;&gt; git clone https://github.com/anpham6/squared-apache  
 &nbsp;&nbsp;&nbsp;&gt; cd squared-apache  
-&nbsp;&nbsp;&nbsp;&gt; squared.settings.yaml (configure)  
+&nbsp;&nbsp;&nbsp;&gt; squared.settings.yml (configure)  
 &nbsp;&nbsp;&nbsp;&gt; gradlew run
 
 * http://localhost:8080

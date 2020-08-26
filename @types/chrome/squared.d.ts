@@ -25,7 +25,6 @@ declare namespace base {
 
     class File<T extends Node> extends squared.base.File<T> {
         static parseUri(uri: string, options?: UriOptions): Null<ChromeAsset>;
-        resource: Resource<T>;
         get application(): Application<T>;
         get userSettings(): ChromeUserSettings;
         get outputFileExclusions(): RegExp[];

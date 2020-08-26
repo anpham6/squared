@@ -106,7 +106,20 @@
         }
         document.addEventListener('DOMContentLoaded', async () => {
             console.log(document.getElementById('squared_ui').querySelectorAll(query));
-
+            squared.extend({
+                _id: 1,
+                getId: function() {
+                    return this._id;
+                },
+                altId: {
+                    get: function() {
+                        return this._id;
+                    },
+                    set: function(value) {
+                        this._id += value;
+                    }
+                }
+            }, 4);
             squared.setFramework(chrome);
             searchQuery(await squared.fromElement(document.documentElement));
 
@@ -144,6 +157,12 @@
             time = performance.now();
             console.log(squared.querySelectorAll(query, true));
             console.log('vdom sync #5: ' + (performance.now() - time));
+
+            const body = await squared.fromElement(document.body);
+            console.log('getId(): ' + body.getId());
+            console.log('altId: ' + body.altId);
+            body.altId = 1;
+            console.log('altId = 1: ' + body.altId);
         });
     </script>
 </head>

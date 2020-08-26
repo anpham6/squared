@@ -18,14 +18,8 @@ export default class Controller<T extends Node> implements squared.base.Controll
     public sortInitialCache(cache: NodeList<T>) {}
     public applyDefaultStyles(element: Element, sessionId: string) {}
     public reset() {}
-
-    public includeElement(element: HTMLElement) {
-        return true;
-    }
-
-    public preventNodeCascade(node: T) {
-        return false;
-    }
+    public includeElement(element: HTMLElement) { return true; }
+    public preventNodeCascade(node: T) { return false; }
 
     get generateSessionId() {
         return Date.now() + '-' + this.application.session.active.size;

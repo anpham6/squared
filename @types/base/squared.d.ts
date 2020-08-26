@@ -51,6 +51,7 @@ declare module "base" {
         initializing: boolean;
         elementMap: Map<Element, ElementData>;
         keyframesMap: KeyframesMap;
+        extensions: Extension<T>[];
         node?: T;
         documentElement?: T;
     }
@@ -59,8 +60,6 @@ declare module "base" {
         extensionMap: Map<number, ExtensionUI<T>[]>;
         clearMap: Map<T, string>;
     }
-
-    interface AppProcessingUI<T extends NodeUI> extends AppProcessing<T> {}
 
     interface LayoutRoot<T extends NodeUI> {
         node: T;
@@ -106,8 +105,7 @@ declare module "base" {
         get resourceHandler(): Null<Resource<T>>;
         get extensionManager(): Null<ExtensionManager<T>>;
         get extensionsAll(): Extension<T>[];
-        get extensionsCascade(): Extension<T>[];
-        get childrenAll(): T[];
+        get sessionAll(): [Extension<T>[], T[]];
         get nextId(): number;
         get length(): number;
         constructor(
@@ -138,7 +136,6 @@ declare module "base" {
         get extensionManager(): ExtensionManager<T>;
         get layouts(): FileAsset[];
         get clearMap(): Map<T, string>;
-        get extensionsTraverse(): ExtensionUI<T>[];
         constructor(
             framework: number,
             nodeConstructor: Constructor<T>,

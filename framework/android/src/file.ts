@@ -98,7 +98,7 @@ function getOutputDirectory(value: string) {
 }
 
 export default class File<T extends View> extends squared.base.File<T> implements android.base.File<T> {
-    public readonly resource!: Resource<T>;
+    public resource!: Resource<T>;
 
     public copyToDisk(directory: string, options?: FileCopyingOptions) {
         return this.copying({ ...options, assets: this.combineAssets(options?.assets), directory });

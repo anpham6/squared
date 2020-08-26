@@ -256,8 +256,6 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         return null;
     }
 
-    public resource!: Resource<T>;
-
     private _outputFileExclusions?: RegExp[];
 
     public reset() {
@@ -691,11 +689,11 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         return result === undefined ? this._outputFileExclusions = this.userSettings.outputFileExclusions.map(value => convertFileMatch(value)) : result;
     }
 
-    get userSettings() {
-        return this.resource.userSettings as ChromeUserSettings;
-    }
-
     get application() {
         return this.resource.application as Application<T>;
+    }
+
+    get userSettings() {
+        return this.resource.userSettings as ChromeUserSettings;
     }
 }

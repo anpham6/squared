@@ -144,7 +144,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             return Promise.reject(new Error('Document root not found.'));
         }
         else {
-            documentRoot = rootElements.values().next().value as HTMLElement;
+            documentRoot = rootElements.values().next().value;
         }
         const resourceHandler = this._resourceHandler;
         const preloadItems: PreloadItem[] = [];
@@ -365,8 +365,16 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     protected createRootNode(rootElement: HTMLElement, sessionId: string) {
         const processing = this.getProcessing(sessionId)!;
-        const extensions = this.extensionsCascade;
-        const node = this.cascadeParentNode(processing.cache, processing.excluded, rootElement, sessionId, 0, extensions.length ? extensions : undefined, processing.rootElements.size > 1 ? processing.rootElements : undefined);
+        const extensions = processing.extensions.filter(item => !!item.init) as Extension<T>[];
+        const node = this.cascadeParentNode(
+            processing.cache,
+            processing.excluded,
+            rootElement,
+            sessionId,
+            0,
+            extensions.length ? extensions : undefined,
+            processing.rootElements.size > 1 ? processing.rootElements : undefined
+        );
         if (node) {
             node.documentRoot = true;
             processing.node = node;
@@ -754,6 +762,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             rootElements,
             elementMap: newSessionInit(sessionId),
             keyframesMap: new Map<string, KeyframeData>(),
+            extensions: this.extensionsAll,
             initializing: false
         };
         this.session.active.set(sessionId, processing);
@@ -780,8 +789,7 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     private resumeSessionThread(processing: squared.base.AppProcessing<T>, rootElements: Set<HTMLElement>, multipleRequest: number, documentRoot?: HTMLElement, preloaded?: HTMLImageElement[]) {
         processing.initializing = false;
-        const sessionId = processing.sessionId;
-        const extensions = this.extensions;
+        const { sessionId, extensions } = processing;
         const styleElement = insertStyleSheetRule('html > body { overflow: hidden !important; }');
         if (preloaded) {
             for (let i = 0, length = preloaded.length; i < length; ++i) {
@@ -842,20 +850,19 @@ export default abstract class Application<T extends Node> implements squared.bas
         return this.extensions.filter(item => item.enabled);
     }
 
-    get extensionsCascade(): Extension<T>[] {
-        return this.extensions.filter(item => item.enabled && !!item.init);
-    }
-
-    get childrenAll() {
+    get sessionAll(): [Extension<T>[], T[]] {
         const active = this.session.active;
         if (active.size === 1) {
-            return (active.values().next().value as squared.base.AppProcessing<T>).cache.children;
+            const processing: squared.base.AppProcessing<T> = active.values().next().value;
+            return [processing.extensions as Extension<T>[], processing.cache.children];
         }
-        let result: T[] = [];
-        for (const item of active.values()) {
-            result = result.concat(item.cache.children);
+        let extensions: Extension<T>[] = [],
+            children: T[] = [];
+        for (const processing of active.values()) {
+            extensions = extensions.concat(processing.extensions as Extension<T>[]);
+            children = children.concat(processing.cache.children);
         }
-        return result;
+        return [Array.from(new Set(extensions)), children];
     }
 
     get nextId() {

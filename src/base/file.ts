@@ -25,8 +25,8 @@ export default abstract class File<T extends Node> implements squared.base.File<
         setTimeout(() => window.URL.revokeObjectURL(url), 1);
     }
 
+    public resource!: Resource<T>;
     public readonly assets: RawAsset[] = [];
-    public abstract resource: Resource<T>;
 
     private _hostname = '';
 

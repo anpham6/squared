@@ -178,13 +178,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const controllerHandler = this.controllerHandler;
         const baseTemplate = this._controllerSettings.layout.baseTemplate;
         const showAttributes = this.userSettings.showAttributes;
-        const { childrenAll, extensions } = this;
         const systemName = capitalize(this.systemName);
-        let length = childrenAll.length;
+        const [extensions, children] = this.sessionAll;
+        let length = children.length,
+            j = 0;
         const rendered: T[] = new Array(length);
-        let j = 0;
         for (let i = 0; i < length; ++i) {
-            const node = childrenAll[i];
+            const node = children[i];
             if (node.visible && node.renderParent) {
                 if (node.hasProcedure(NODE_PROCEDURE.LAYOUT)) {
                     node.setLayout();
@@ -201,7 +201,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         for (let i = 0; i < length; ++i) {
             const ext = extensions[i];
             for (const node of ext.subscribers) {
-                ext.postOptimize(node, rendered);
+                (ext as ExtensionUI<T>).postOptimize(node, rendered);
             }
         }
         const documentRoot: squared.base.LayoutRoot<T>[] = [];
@@ -223,7 +223,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         const documentWriteData: DocumentWriteDataExtensionUI<T> = { rendered, documentRoot };
         for (let i = 0; i < length; ++i) {
-            extensions[i].beforeDocumentWrite(documentWriteData);
+            (extensions[i] as ExtensionUI<T>).beforeDocumentWrite(documentWriteData);
         }
         for (let i = 0, q = documentRoot.length; i < q; ++i) {
             const { node, layoutName, renderTemplates } = documentRoot[i];
@@ -237,7 +237,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         this.resourceHandler.finalize(this._layouts);
         controllerHandler.finalize(this._layouts);
         for (let i = 0; i < length; ++i) {
-            extensions[i].afterFinalize();
+            (extensions[i] as ExtensionUI<T>).afterFinalize();
         }
         removeElementsByClassName('__squared.pseudo');
         this.closed = true;
@@ -739,7 +739,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     protected setBaseLayout(sessionId: string) {
         const controllerHandler = this.controllerHandler;
         const { extensionMap, clearMap } = this.session;
-        const { cache, node: rootNode } = this.getProcessing(sessionId)!;
+        const { extensions, cache, node: rootNode } = this.getProcessing(sessionId)!;
         const mapData = new Map<number, Set<T>>();
         const setMapDepth = (depth: number, node: T) => {
             const data = mapData.get(depth);
@@ -806,12 +806,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 });
             }
         };
-        const extensions = this.extensionsAll as ExtensionUI<T>[];
         const length = extensions.length;
         for (let i = 0; i < length; ++i) {
-            extensions[i].beforeBaseLayout(sessionId);
+            (extensions[i] as ExtensionUI<T>).beforeBaseLayout(sessionId);
         }
-        let extensionsTraverse = this.extensionsTraverse;
+        let extensionsTraverse = extensions.filter((item: ExtensionUI<T>) => !item.eventOnly) as ExtensionUI<T>[];
         for (const depth of mapData.values()) {
             for (const parent of depth.values()) {
                 const q = parent.length;
@@ -1098,7 +1097,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             return a.depth - b.depth;
         });
         for (let i = 0; i < length; ++i) {
-            const ext = extensions[i];
+            const ext = extensions[i] as ExtensionUI<T>;
             for (const node of ext.subscribers) {
                 if (node.sessionId === sessionId) {
                     ext.postBaseLayout(node);
@@ -1109,10 +1108,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected setConstraints(sessionId: string) {
-        this.controllerHandler.setConstraints(this.getProcessingCache(sessionId));
-        const extensions = this.extensions;
+        const { cache, extensions } = this.getProcessing(sessionId)!;
+        this.controllerHandler.setConstraints(cache);
         for (let i = 0, length = extensions.length; i < length; ++i) {
-            const ext = extensions[i];
+            const ext = extensions[i] as ExtensionUI<T>;
             for (const node of ext.subscribers) {
                 if (node.sessionId === sessionId) {
                     ext.postConstraints(node);
@@ -1123,8 +1122,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected setResources(sessionId: string) {
-        const { extensions, resourceHandler } = this;
-        this.getProcessingCache(sessionId).each(node => {
+        const { cache, extensions } = this.getProcessing(sessionId)!;
+        const resourceHandler = this.resourceHandler;
+        cache.each(node => {
             resourceHandler.setBoxStyle(node);
             if (node.hasResource(NODE_RESOURCE.VALUE_STRING) && node.visible && !node.imageElement && !node.svgElement) {
                 resourceHandler.setFontStyle(node);
@@ -1132,7 +1132,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
         });
         for (let i = 0, length = extensions.length; i < length; ++i) {
-            extensions[i].afterResources(sessionId);
+            (extensions[i] as ExtensionUI<T>).afterResources(sessionId);
         }
     }
 
@@ -1878,10 +1878,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             return 0;
         });
-    }
-
-    get extensionsTraverse(): ExtensionUI<T>[] {
-        return this.extensions.filter(item => item.enabled && !item.eventOnly);
     }
 
     get clearMap() {

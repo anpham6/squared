@@ -32,22 +32,16 @@ let extensionManager: Null<squared.base.ExtensionManager<Node>> = null;
 
 const ERROR_PARSEDOCUMENT = 'ERROR: Document is closed. Reset and rerun?';
 
-function includeExtension(extensions: Extension[], ext: Extension) {
-    if (!extensions.includes(ext)) {
-        ext.application = main!;
-        extensions.push(ext);
-    }
-}
-
 function clearProperties(data: StandardMap) {
     for (const attr in data) {
         delete data[attr];
     }
 }
 
-function extendPrototype(proto: any, offset: number) {
+function extendPrototype(id: number) {
+    const proto = main!.Node.prototype;
     for (const [value, functionMap] of prototypeMap.entries()) {
-        if (value === 0 || util.hasBit(value, offset)) {
+        if (value === 0 || util.hasBit(value, id)) {
             for (const method in functionMap) {
                 const item = functionMap[method];
                 if (util.isPlainObject(item)) {
@@ -67,6 +61,28 @@ function extendPrototype(proto: any, offset: number) {
                     }
                 }
                 proto[method] = item;
+            }
+        }
+    }
+}
+
+function setupExtensions(list: string[]) {
+    const { builtInExtensions, extensions } = main!;
+    extensions.length = 0;
+    for (let i = 0, length = list.length; i < length; ++i) {
+        let name = list[i],
+            ext = builtInExtensions.get(name);
+        if (ext) {
+            ext.application = main!;
+            extensions.push(ext);
+        }
+        else {
+            const namespace = name + '.';
+            for ([name, ext] of builtInExtensions.entries()) {
+                if (name.startsWith(namespace) && !extensions.includes(ext)) {
+                    ext.application = main!;
+                    extensions.push(ext);
+                }
             }
         }
     }
@@ -199,23 +215,8 @@ export function setFramework(value: Framework, options?: squared.FrameworkOption
         main = appBase.application;
         main.userSettings = settings;
         extensionManager = main.extensionManager;
-        extendPrototype(main.Node.prototype, main.framework);
-        const { builtInExtensions, extensions } = main;
-        extensions.length = 0;
-        for (const namespace of settings.builtInExtensions) {
-            const ext = builtInExtensions.get(namespace);
-            if (ext) {
-                includeExtension(extensions, ext);
-            }
-            else {
-                const packaage = namespace + '.';
-                for (const [name, extension] of builtInExtensions.entries()) {
-                    if (name.startsWith(packaage)) {
-                        includeExtension(extensions, extension);
-                    }
-                }
-            }
-        }
+        extendPrototype(main.framework);
+        setupExtensions(settings.builtInExtensions);
         if (reloading) {
             clearProperties(system);
         }
@@ -344,12 +345,7 @@ export function retrieve(value: string) {
 }
 
 export function extend(functionMap: squared.ExtendPrototypeMap, value = 0) {
-    let map = prototypeMap.get(value);
-    if (!map) {
-        map = {};
-        prototypeMap.set(value, map);
-    }
-    Object.assign(map, functionMap);
+    prototypeMap.set(value, Object.assign(prototypeMap.get(value) || {}, functionMap));
 }
 
 export function get(...elements: (Element | string)[]) {
