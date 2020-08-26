@@ -6,7 +6,7 @@ import { convertColorStops } from './background';
 
 import { XMLNS_ANDROID } from '../../lib/constant';
 import { BUILD_ANDROID } from '../../lib/enumeration';
-import { applyTemplate } from '../../lib/util';
+import { applyTemplate, formatString } from '../../lib/util';
 import { VECTOR_GROUP, VECTOR_PATH } from '../../template/vector';
 
 import ANIMATEDVECTOR_TMPL from '../../template/animated-vector';
@@ -136,7 +136,7 @@ interface AnimateGroup {
 const { extractURL, formatPX, isPercent } = squared.lib.css;
 const { truncate } = squared.lib.math;
 const { FILE } = squared.lib.regex;
-const { convertCamelCase, convertInt, convertWord, formatString, hasKeys, isArray, isNumber, lastItemOf, lastItemEquals, partitionArray, plainMap, replaceMap } = squared.lib.util;
+const { convertCamelCase, convertInt, convertWord, hasKeys, isArray, isNumber, lastItemOf, lastItemEquals, partitionArray, plainMap, replaceMap } = squared.lib.util;
 
 const { KEYSPLINE_NAME, SYNCHRONIZE_MODE } = squared.svg.lib.constant;
 const { CACHE_VIEWNAME, MATRIX, SVG, TRANSFORM, getAttribute, getRootOffset } = squared.svg.lib.util;

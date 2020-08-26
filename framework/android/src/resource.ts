@@ -1,6 +1,8 @@
 import type Application from './application';
 import type View from './view';
 
+import { concatString } from './lib/util';
+
 import { RESERVED_JAVA } from './lib/constant';
 
 const { findColorShade, parseColor } = squared.lib.color;
@@ -144,7 +146,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                     if (partial.length > 4) {
                         partial.length = 4;
                     }
-                    name = partial.join('_');
+                    name = concatString(partial, '_');
                 }
                 else {
                     name = partial[0];

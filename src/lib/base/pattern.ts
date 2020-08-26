@@ -133,8 +133,7 @@ export default class Pattern implements squared.lib.base.Pattern {
             index = current.index + current[0].length;
             --replaceCount;
         }
-        output += input.substring(index);
-        return output;
+        return output + input.substring(index);
     }
 
     public replaceFirst(replacement: string | PatternGroupPredicate) {

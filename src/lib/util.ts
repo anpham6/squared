@@ -439,41 +439,6 @@ export function capitalize(value: string, upper?: boolean) {
     return upper === false ? value[0].toLowerCase() + value.substring(1) : value[0].toUpperCase() + value.substring(1).toLowerCase();
 }
 
-export function upperCaseString(value: string) {
-    let result: Undef<string[]>;
-    const pattern = /\b([a-z])/g;
-    let match: Null<RegExpMatchArray>;
-    while (match = pattern.exec(value)) {
-        if (result === undefined) {
-            result = value.split('');
-        }
-        result[match.index!] = match[1][0].toUpperCase();
-    }
-    return result ? result.join('') : value;
-}
-
-export function lowerCaseString(value: string) {
-    const entities: string[] = [];
-    const pattern = /&#?[A-Za-z\d]+?;/g;
-    let match: Null<RegExpMatchArray>;
-    while (match = pattern.exec(value)) {
-        entities.push(match[0]);
-    }
-    if (entities.length) {
-        let result = '';
-        const segments = value.split(pattern);
-        for (let i = 0, length = segments.length; i < length; ++i) {
-            result += segments[i].toLowerCase() + (entities[i] || '');
-        }
-        return result;
-    }
-    return value.toLowerCase();
-}
-
-export function spliceString(value: string, index: number, length: number) {
-    return index === 0 ? value.substring(length) : value.substring(0, index) + value.substring(index + length);
-}
-
 export function convertHyphenated(value: string, char = '-') {
     switch (char) {
         case '-': {
@@ -597,13 +562,6 @@ export function randomUUID(separator = '-') {
     return result;
 }
 
-export function formatString(value: string, ...params: string[]) {
-    for (let i = 0, length = params.length; i < length; ++i) {
-        value = value.replace(`{${i}}`, params[i]);
-    }
-    return value;
-}
-
 export function delimitString(options: DelimitStringOptions, ...appending: string[]) {
     const length = appending.length;
     const value = options.value;
@@ -633,6 +591,10 @@ export function delimitString(options: DelimitStringOptions, ...appending: strin
         values.sort();
     }
     return values.join(delimiter);
+}
+
+export function spliceString(value: string, index: number, length: number) {
+    return index === 0 ? value.substring(length) : value.substring(0, index) + value.substring(index + length);
 }
 
 export function splitPair(value: string, char: string, trim?: boolean): [string, string] {

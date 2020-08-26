@@ -263,9 +263,6 @@ declare module "lib" {
         function formatXml(value: string, closeEmpty?: boolean): string;
         function hasKeys(obj: PlainObject): boolean;
         function capitalize(value: string, upper?: boolean): string;
-        function upperCaseString(value: string): string;
-        function lowerCaseString(value: string): string;
-        function spliceString(value: string, index: number, length: number): string;
         function convertHyphenated(value: string, char?: string): string;
         function convertCamelCase(value: string, char?: string): string;
         function convertWord(value: string, dash?: boolean): string;
@@ -274,8 +271,8 @@ declare module "lib" {
         function convertAlpha(value: number): string;
         function convertRoman(value: number): string;
         function randomUUID(separator?: string): string;
-        function formatString(value: string, ...params: string[]): string;
         function delimitString(options: DelimitStringOptions, ...appending: string[]): string;
+        function spliceString(value: string, index: number, length: number): string;
         function splitPair(value: string, char: string, trim?: boolean): [string, string];
         function splitPairStart(value: string, char: string, trim?: boolean): string;
         function splitPairEnd(value: string, char: string, trim?: boolean): string;

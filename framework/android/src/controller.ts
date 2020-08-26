@@ -9,7 +9,7 @@ import LayoutUI = squared.base.LayoutUI;
 
 import { CONTAINER_ANDROID, CONTAINER_ANDROID_X } from './lib/constant';
 import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
-import { createViewAttribute, getDocumentId, getRootNs, replaceTab } from './lib/util';
+import { concatString, createViewAttribute, getDocumentId, getRootNs, replaceTab } from './lib/util';
 
 const { PLATFORM, isPlatform } = squared.lib.client;
 const { parseColor } = squared.lib.color;
@@ -1829,7 +1829,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 android: {},
                 app: {
                     barrierDirection,
-                    constraint_referenced_ids: plainMap(unbound, item => getDocumentId(item.anchorTarget.documentId)).join(',')
+                    constraint_referenced_ids: concatString(plainMap(unbound, item => getDocumentId(item.anchorTarget.documentId)), ',')
                 }
             };
             const { api, anchorTarget } = unbound[length - 1];

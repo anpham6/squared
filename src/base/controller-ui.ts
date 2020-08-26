@@ -788,21 +788,18 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     const previous = node.depth < 0 ? depth + node.depth : depth;
                     const beforeInside = this.getBeforeInsideTemplate(id, next);
                     const afterInside = this.getAfterInsideTemplate(id, next);
-                    let template = indent + '<' +
-                        controlName +
-                        (depth === 0 ? '{#0}' : '') +
-                        (showAttributes ? !attributes ? node.extractAttributes(next) : pushIndent(attributes, next) : '');
-                    if (renderTemplates || beforeInside !== '' || afterInside !== '') {
-                        template += '>\n' +
+                    output +=
+                        this.getBeforeOutsideTemplate(id, previous) + indent +
+                        `<${controlName + (depth === 0 ? '{#0}' : '')}` +
+                            (showAttributes ? !attributes ? node.extractAttributes(next) : pushIndent(attributes, next) : '') +
+                            (renderTemplates || beforeInside !== '' || afterInside !== ''
+                                ? '>\n' +
                                     beforeInside +
                                     (renderTemplates ? this.writeDocument(this.sortRenderPosition(node, renderTemplates as NodeTemplate<T>[]), next, showAttributes) : '') +
                                     afterInside +
-                                    indent + `</${controlName}>\n`;
-                    }
-                    else {
-                        template += ' />\n';
-                    }
-                    output += this.getBeforeOutsideTemplate(id, previous) + template + this.getAfterOutsideTemplate(id, previous);
+                                    indent + `</${controlName}>\n`
+                                : ' />\n') +
+                        this.getAfterOutsideTemplate(id, previous);
                     break;
                 }
                 case NODE_TEMPLATE.INCLUDE:

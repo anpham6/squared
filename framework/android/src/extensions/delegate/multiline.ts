@@ -1,5 +1,7 @@
 import View from '../../view';
 
+import { concatString } from '../../lib/util';
+
 import { CONTAINER_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
@@ -269,7 +271,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                         let r: number;
                         for (let j = 0, k = 0, l = q; j < columns; ++j, l -= r, k += r) {
                             r = j === columns - 1 ? l : Math.floor(q / columns);
-                            const container = createContainer(seg.tagName, words.slice(k, k + r).join(''));
+                            const container = createContainer(seg.tagName, concatString(words.slice(k, k + r)));
                             container.multiline = true;
                             if (j === 0) {
                                 container.siblingsLeading = seg.siblingsLeading;

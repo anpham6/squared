@@ -423,6 +423,10 @@ declare namespace lib {
         function createStyleAttribute(data?: StandardMap): Required<StyleAttribute>;
         function getDataSet(dataset: StringMap | DOMStringMap, prefix: string): Undef<StringMap>;
         function localizeString(value: string, rtl: boolean, api: number): string;
+        function concatString(list: (string | number)[], char?: string): string;
+        function upperCaseString(value: string): string;
+        function lowerCaseString(value: string): string;
+        function formatString(value: string, ...params: string[]): string;
         function replaceCharacterData(value: string, tab?: number): string;
         function replaceTab(value: string, spaces?: number, preserve?: boolean): string;
         function getXmlNs(value: string): string;

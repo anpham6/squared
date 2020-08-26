@@ -5,7 +5,7 @@ import ResourceUI = squared.base.ResourceUI;
 import { CONTAINER_ANDROID, CONTAINER_ANDROID_X, ELEMENT_ANDROID, LAYOUT_ANDROID, RESERVED_JAVA, STRING_ANDROID } from './lib/constant';
 import { API_ANDROID, DEPRECATED_ANDROID } from './lib/customization';
 import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
-import { getDataSet, isHorizontalAlign, isVerticalAlign, localizeString } from './lib/util';
+import { concatString, getDataSet, isHorizontalAlign, isVerticalAlign, localizeString } from './lib/util';
 
 type T = android.base.View;
 
@@ -2296,7 +2296,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         modified = true;
                     }
                     if (modified) {
-                        this.android(attr, direction.join('|'));
+                        this.android(attr, concatString(direction, '|'));
                     }
                 }
             };

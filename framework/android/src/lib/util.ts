@@ -183,45 +183,50 @@ export function replaceTab(value: string, spaces = 4, preserve?: boolean) {
 }
 
 export function replaceCharacterData(value: string, tab?: number) {
-    value = value
-        .replace(/&nbsp;/g, '&#160;')
-        .replace(/&(?!#?[A-Za-z\d]{2,};)/g, '&amp;');
-    const char: { i: number; text: string }[] = [];
-    for (let i = 0, length = value.length; i < length; ++i) {
-        switch (value[i]) {
+    let output = '';
+    for (let i = 0, length = value.length, ch: string; i < length; ++i) {
+        ch = value[i];
+        switch (ch) {
             case "'":
-                char.push({ i, text: "\\'" });
+                output += "\\'";
                 break;
             case '"':
-                char.push({ i, text: '&quot;' });
+                output += '&quot;';
                 break;
             case '<':
-                char.push({ i, text: '&lt;' });
+                output += '&lt;';
                 break;
             case '>':
-                char.push({ i, text: '&gt;' });
-                break;
-            case '\t':
-                if (tab) {
-                    char.push({ i, text: '&#160;'.repeat(tab) });
-                }
+                output += '&gt;';
                 break;
             case '\u0003':
-                char.push({ i, text: ' ' });
+                output += ' ';
                 break;
             case '\u00A0':
-                char.push({ i, text: '&#160;' });
+                output += '&#160;';
+                break;
+            case '\t':
+                output += tab ? '&#160;'.repeat(tab) : ch;
+                break;
+            default:
+                output += ch;
                 break;
         }
     }
-    const length = char.length;
-    if (length) {
-        const parts = value.split('');
-        for (let j = 0; j < length; ++j) {
-            const item = char[j];
-            parts[item.i] = item.text;
-        }
-        return parts.join('');
+    return output.replace(/&nbsp;/g, '&#160;').replace(/&(?!#?[A-Za-z\d]{2,};)/g, '&amp;');
+}
+
+export function concatString(list: (string | number)[], char = '') {
+    let output = '';
+    for (let i = 0, length = list.length; i < length; ++i) {
+        output += (i > 0 ? char : '') + list[i];
+    }
+    return output;
+}
+
+export function formatString(value: string, ...params: string[]) {
+    for (let i = 0, length = params.length; i < length; ++i) {
+        value = value.replace(`{${i}}`, params[i]);
     }
     return value;
 }

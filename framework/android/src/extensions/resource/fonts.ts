@@ -2,6 +2,8 @@ import type View from '../../view';
 
 import Resource from '../../resource';
 
+import { concatString } from '../../lib/util';
+
 import { BUILD_ANDROID } from '../../lib/enumeration';
 
 type StyleList = ObjectMap<number[]>;
@@ -129,9 +131,9 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         });
         for (const tag in nameMap) {
             const data = nameMap[tag];
-            const sorted: StyleList[] = [{}, {}, {}, {}, {}];
+            const sorted: StyleList[] = [{}, {}, {}];
             const addFontItem = (index: number, attr: string, value: string, id: number) => {
-                const items = sorted[index];
+                const items = sorted[index] ?? (sorted[index] = {});
                 const name = FONT_STYLE[attr] + value + '"';
                 (items[name] || (items[name] = [])).push(id);
             };
@@ -199,15 +201,15 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     return true;
                 });
                 addFontItem(0, 'fontFamily', fontFamily, id);
-                addFontItem(1, 'fontStyle', fontStyle, id);
-                addFontItem(2, 'fontWeight', fontWeight, id);
-                addFontItem(3, 'fontSize', truncate(stored.fontSize, floatPrecision) + (convertPixels ? 'sp' : 'px'), id);
-                addFontItem(4, 'color', Resource.addColor(stored.color), id);
+                addFontItem(1, 'fontSize', truncate(stored.fontSize, floatPrecision) + (convertPixels ? 'sp' : 'px'), id);
+                addFontItem(2, 'color', Resource.addColor(stored.color), id);
+                if (fontWeight !== '') {
+                    addFontItem(3, 'fontWeight', fontWeight, id);
+                }
+                if (fontStyle !== '') {
+                    addFontItem(4, 'fontStyle', fontStyle, id);
+                }
                 if (stored.backgroundColor) {
-                    if (sorted.length === 5) {
-                        sorted.push({});
-
-                    }
                     addFontItem(5, 'backgroundColor', Resource.addColor(stored.backgroundColor, node.inputElement), id);
                 }
             }
@@ -217,7 +219,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         for (const tag in groupMap) {
             const styleTag = {};
             style[tag] = styleTag;
-            const sorted = groupMap[tag].sort((a, b) => {
+            const sorted = groupMap[tag].filter(item => item).sort((a, b) => {
                 let maxA = 0,
                     maxB = 0,
                     countA = 0,
@@ -303,7 +305,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                             const deleteKeys = new Set<string>();
                             const joinArray: StringMap = {};
                             for (const attr in filtered) {
-                                joinArray[attr] = filtered[attr].join(',');
+                                joinArray[attr] = concatString(filtered[attr], ',');
                             }
                             for (const attrA in filtered) {
                                 for (const attrB in filtered) {
@@ -329,7 +331,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                 styleTag[attr] = filtered[attr];
                             }
                             for (const attr in combined) {
-                                const attrs = Array.from(combined[attr]).sort().join(';');
+                                const attrs = concatString(Array.from(combined[attr]), ';');
                                 const ids = replaceMap(attr.split(','), value => parseInt(value));
                                 deleteStyleAttribute(sorted, attrs, ids);
                                 styleTag[attrs] = ids;
@@ -338,7 +340,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     }
                     const shared = Object.keys(styleKey);
                     if (shared.length) {
-                        styleTag[shared.join(';')] = styleKey[shared[0]];
+                        styleTag[concatString(shared, ';')] = styleKey[shared[0]];
                     }
                     spliceArray(sorted, item => {
                         for (const attr in item) {
@@ -406,13 +408,13 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             const styleData = nodeMap[node.id];
             if (styleData) {
                 if (styleData.length > 1) {
-                    parentStyle.add(styleData.join('.'));
+                    parentStyle.add(concatString(styleData, '.'));
                     styleData.shift();
                 }
                 else {
                     parentStyle.add(styleData[0]);
                 }
-                node.attr('_', 'style', `@style/${styleData.join('.')}`);
+                node.attr('_', 'style', `@style/${concatString(styleData, '.')}`);
             }
         }
         for (const value of parentStyle) {
@@ -463,7 +465,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     styles.set(parent, { name: parent, parent: '', items });
                 }
                 else {
-                    const name = styleName.join('.');
+                    const name = concatString(styleName, '.');
                     styles.set(name, { name, parent, items });
                 }
             }
