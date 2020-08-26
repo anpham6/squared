@@ -243,7 +243,6 @@ declare module "base" {
         setValueString(node: T): void;
         removeExcludedFromText(node: T, element: Element): string;
         get controllerSettings(): ControllerSettingsUI;
-        get userSettings(): UserResourceSettingsUI;
         get mapOfStored(): ResourceStoredMap;
     }
 

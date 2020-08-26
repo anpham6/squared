@@ -289,7 +289,7 @@ const convertLength = (value: string, dimension: number, options?: ParseUnitOpti
 const convertPercent = (value: string, dimension: number, options?: ParseUnitOptions) => isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, options) / dimension;
 const checkPreviousSibling = (node: Undef<NodeUI>) => node === undefined || node.lineBreak || node.floating || node.plainText && CHAR_TRAILINGSPACE.test(node.textContent);
 
-export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> implements squared.base.ResourceUI<T> {
+export default class ResourceUI<T extends NodeUI> extends Resource<T> implements squared.base.ResourceUI<T> {
     public static STRING_SPACE = '&#160;';
     public static readonly STORED: ResourceStoredMap = {
         ids: new Map(),
@@ -954,8 +954,6 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         }
     }
 
-    public abstract get userSettings(): UserResourceSettingsUI;
-
     public finalize(layouts: FileAsset[]) {}
 
     public reset() {
@@ -972,7 +970,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             const { mimeType, filename, data, encoding, width, height } = options;
             if (filename && data) {
                 const asset = {
-                    pathname: appendSeparator(this.userSettings.outputDirectory, this.controllerSettings.directory.image),
+                    pathname: appendSeparator((this.userSettings as UserResourceSettingsUI).outputDirectory, this.controllerSettings.directory.image),
                     filename,
                     mimeType,
                     width,

@@ -3,7 +3,7 @@ import type Controller from './controller';
 import type Resource from './resource';
 import type Node from './node';
 
-export default abstract class Extension<T extends Node> implements squared.base.Extension<T> {
+export default class Extension<T extends Node> implements squared.base.Extension<T> {
     public enabled = true;
     public readonly options: StandardMap = {};
     public readonly dependencies: ExtensionDependency[] = [];
@@ -14,8 +14,7 @@ export default abstract class Extension<T extends Node> implements squared.base.
     protected _controller!: Controller<T>;
     protected _resource: Null<Resource<T>> = null;
 
-
-    protected constructor(
+    constructor(
         public readonly name: string,
         public readonly framework: number,
         options?: ExtensionOptions)

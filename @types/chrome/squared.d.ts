@@ -19,15 +19,9 @@ declare namespace base {
         createNode(sessionId: string, options: CreateNodeOptions): T;
     }
 
-    class Controller<T extends Node> extends squared.base.Controller<T> {
-        application: Application<T>;
-        get userSettings(): ChromeUserSettings;
-    }
+    class Controller<T extends Node> extends squared.base.Controller<T> {}
 
-    class Resource<T extends Node> extends squared.base.Resource<T> {
-        application: Application<T>;
-        get userSettings(): ChromeUserSettings;
-    }
+    class Resource<T extends Node> extends squared.base.Resource<T> {}
 
     class File<T extends Node> extends squared.base.File<T> {
         static parseUri(uri: string, options?: UriOptions): Null<ChromeAsset>;

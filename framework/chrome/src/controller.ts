@@ -1,12 +1,6 @@
-import type Application from './application';
-
 const { setElementCache } = squared.lib.session;
 
 export default class Controller<T extends squared.base.Node> extends squared.base.Controller<T> implements chrome.base.Controller<T> {
-    constructor(public readonly application: Application<T>) {
-        super();
-    }
-
     public applyDefaultStyles(element: Element, sessionId: string) {
         if (element.nodeName[0] === '#') {
             setElementCache(element, 'styleMap', sessionId, {
@@ -16,9 +10,5 @@ export default class Controller<T extends squared.base.Node> extends squared.bas
                 float: 'none'
             });
         }
-    }
-
-    get userSettings() {
-        return this.application.userSettings;
     }
 }

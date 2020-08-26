@@ -1139,7 +1139,9 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                 if (resetBefore || requireBefore) {
                                                     beforeValues = plainMap(propertyNames, value => getTransformInitialValue(value) || '0');
                                                 }
-                                                transformOrigin = item.transformOrigin || null;
+                                                if (item.transformOrigin) {
+                                                    transformOrigin = item.transformOrigin;
+                                                }
                                             }
                                             transforming = true;
                                         }

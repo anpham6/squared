@@ -8,7 +8,7 @@ const { fromLastIndexOf, fromMimeType, hasMimeType, randomUUID } = squared.lib.u
 
 const REGEXP_DATAURI = new RegExp(`^${STRING.DATAURI}$`);
 
-export default abstract class Resource<T extends Node> implements squared.base.Resource<T> {
+export default class Resource<T extends Node> implements squared.base.Resource<T> {
     public static readonly KEY_NAME = 'squared.base.resource';
 
     public static readonly ASSETS: ResourceAssetMap = {
@@ -27,11 +27,9 @@ export default abstract class Resource<T extends Node> implements squared.base.R
         return /\.(\w+)\s*$/.exec(value)?.[1] || '';
     }
 
-    public readonly abstract application: Application<T>;
-
     private _fileHandler: Null<File<T>> = null;
 
-    public abstract get userSettings(): UserResourceSettings;
+    constructor(public readonly application: Application<T>) {}
 
     public reset() {
         const ASSETS = Resource.ASSETS;
@@ -184,6 +182,10 @@ export default abstract class Resource<T extends Node> implements squared.base.R
 
     get controllerSettings() {
         return this.application.controllerHandler.localSettings;
+    }
+
+    get userSettings() {
+        return this.application.userSettings as UserResourceSettings;
     }
 
     get mimeTypeMap() {

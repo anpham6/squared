@@ -1,3 +1,4 @@
+import type Application from './application';
 import type Extension from './extension';
 
 import Resource from './resource';
@@ -691,10 +692,10 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     get userSettings() {
-        return this.resource.userSettings;
+        return this.resource.userSettings as ChromeUserSettings;
     }
 
     get application() {
-        return this.resource.application;
+        return this.resource.application as Application<T>;
     }
 }

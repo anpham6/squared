@@ -198,7 +198,7 @@ export function setFramework(value: Framework, options?: squared.FrameworkOption
         Object.assign(settings, appBase.userSettings);
         main = appBase.application;
         main.userSettings = settings;
-        extensionManager = main.extensionManager || null;
+        extensionManager = main.extensionManager;
         extendPrototype(main.Node.prototype, main.framework);
         const { builtInExtensions, extensions } = main;
         extensions.length = 0;
