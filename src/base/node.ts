@@ -92,7 +92,7 @@ function setDimension(node: T, styleMap: StringMap, attr: DimensionAttr) {
                 }
             case 'TD':
             case 'TH':
-            case 'SVG':
+            case 'svg':
             case 'IFRAME':
             case 'VIDEO':
             case 'AUDIO':
@@ -469,13 +469,10 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, last: boo
                 default: {
                     let match = REGEXP_QUERYNTH.exec(pseudo);
                     if (match) {
-                        const placement = match[3].trim();
-                        let children = parent!.naturalElements;
-                        if (match[1]) {
-                            children = children.slice(0).reverse();
-                        }
+                        const children = match[1] ? parent!.naturalElements.slice(0).reverse() : parent!.naturalElements;
                         const index = match[2] === 'child' ? children.indexOf(child) + 1 : children.filter((item: T) => item.tagName === tagName).indexOf(child) + 1;
                         if (index) {
+                            const placement = match[3].trim();
                             if (isNumber(placement)) {
                                 if (parseInt(placement) !== index) {
                                     return false;
@@ -2446,7 +2443,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             case 'INPUT':
             case 'SELECT':
             case 'TEXTAREA':
-            case 'SVG':
+            case 'svg':
             case 'BR':
             case 'HR':
             case 'PROGRESS':

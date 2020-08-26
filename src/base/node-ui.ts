@@ -1575,21 +1575,15 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         this._cacheState.containerName = value.toUpperCase();
     }
     get containerName() {
-        let result = this._cacheState.containerName;
+        const result = this._cacheState.containerName;
         if (result === undefined) {
-            const element = this.element as HTMLInputElement;
+            const element = this.element;
             if (element) {
-                if (element.nodeName[0] === '#') {
-                    result = 'PLAINTEXT';
-                }
-                else if (element.tagName === 'INPUT') {
-                    result = 'INPUT_' + convertWord(element.type, true).toUpperCase();
-                }
-                else {
-                    result = element.tagName.toUpperCase();
-                }
+                return this._cacheState.containerName = element.nodeName[0] === '#'
+                    ? 'PLAINTEXT'
+                    : (element.tagName === 'INPUT' ? 'INPUT_' + convertWord((element as HTMLInputElement).type, true) : element.tagName).toUpperCase();
             }
-            return this._cacheState.containerName = result || '';
+            return '';
         }
         return result;
     }
@@ -1781,13 +1775,15 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         const parent = this.actualParent;
         if (parent) {
             const children = parent.naturalChildren as NodeUI[];
-            const index = children.indexOf(this);
-            if (index !== -1) {
-                for (let i = index - 1; i >= 0; --i) {
-                    const node = children[i];
+            for (let i = children.length - 1, found: Undef<boolean>; i >= 0; --i) {
+                const node = children[i];
+                if (found) {
                     if (node.flowElement) {
                         return node;
                     }
+                }
+                else if (node === this) {
+                    found = true;
                 }
             }
         }
@@ -1798,13 +1794,15 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         const parent = this.actualParent;
         if (parent) {
             const children = parent.naturalChildren as NodeUI[];
-            const index = children.indexOf(this);
-            if (index !== -1) {
-                for (let i = index + 1, length = children.length; i < length; ++i) {
-                    const node = children[i];
+            for (let i = 0, length = children.length, found: Undef<boolean>; i < length; ++i) {
+                const node = children[i];
+                if (found) {
                     if (node.flowElement) {
                         return node;
                     }
+                }
+                else if (node === this) {
+                    found = true;
                 }
             }
         }

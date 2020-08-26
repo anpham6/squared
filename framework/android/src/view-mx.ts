@@ -2144,7 +2144,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 switch (this.tagName) {
                     case '#text':
                     case 'IMG':
-                    case 'SVG':
+                    case 'svg':
                     case 'HR':
                     case 'VIDEO':
                     case 'AUDIO':
