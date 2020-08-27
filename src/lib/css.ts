@@ -2650,7 +2650,8 @@ export function getKeyframesRules(): KeyframesMap {
                         }
                     }
                 }
-            } catch {
+            }
+            catch {
             }
         }
     }

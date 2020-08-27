@@ -15,21 +15,24 @@ import Pattern from './lib/base/pattern';
 
 type Node = squared.base.Node;
 type Main = squared.base.Application<Node>;
-type Framework = squared.base.AppFramework<Node>;
 type Extension = squared.base.Extension<Node>;
+type ExtensionManager = squared.base.ExtensionManager<Node>;
 type ExtensionRequest = Undef<Extension | string>;
+type Framework = squared.base.AppFramework<Node>;
 type FileActionOptions = squared.FileActionOptions;
+type FrameworkOptions = squared.FrameworkOptions;
+type ExtendPrototypeMap = squared.ExtendPrototypeMap;
 
 const extensionsQueue = new Set<Extension>();
 const extensionsExternal = new Set<Extension>();
 const optionsQueue = new Map<string, StandardMap>();
-const prototypeMap = new Map<number, squared.ExtendPrototypeMap>();
+const prototypeMap = new Map<number, ExtendPrototypeMap>();
 const settings = {} as UserSettings;
 const system = {} as FunctionMap<any>;
 
 let main: Null<Main> = null;
 let framework: Null<Framework> = null;
-let extensionManager: Null<squared.base.ExtensionManager<Node>> = null;
+let extensionManager: Null<ExtensionManager> = null;
 
 function clearProperties(data: StandardMap) {
     for (const attr in data) {
@@ -92,16 +95,6 @@ function findElement(element: HTMLElement, sync: boolean, cache: boolean) {
     return sync ? main!.parseDocumentSync(element) as Node : main!.parseDocument(element) as Promise<Node>;
 }
 
-async function findElementAsync(element: HTMLElement, cache: boolean) {
-    if (cache) {
-        const result = main!.elementMap.get(element);
-        if (result) {
-            return Promise.resolve([result]);
-        }
-    }
-    return [await main!.parseDocument(element) as Node];
-}
-
 function findElementAll(query: NodeListOf<Element>, length: number) {
     let incomplete: Undef<boolean>;
     const elementMap = main!.elementMap;
@@ -116,7 +109,17 @@ function findElementAll(query: NodeListOf<Element>, length: number) {
             incomplete = true;
         }
     }
-    return !incomplete ? result : util.flatArray<Node>(result, 0);
+    return !incomplete ? result : result.filter(item => item);
+}
+
+async function findElementAsync(element: HTMLElement, cache: boolean) {
+    if (cache) {
+        const result = main!.elementMap.get(element);
+        if (result) {
+            return Promise.resolve([result]);
+        }
+    }
+    return [await main!.parseDocument(element) as Node];
 }
 
 async function findElementAllAsync(query: NodeListOf<Element>, length: number) {
@@ -133,7 +136,7 @@ async function findElementAllAsync(query: NodeListOf<Element>, length: number) {
             incomplete = true;
         }
     }
-    return !incomplete ? result : util.flatArray<Node>(result, 0);
+    return !incomplete ? result : result.filter(item => item);
 }
 
 const checkWritable = (app: Null<Main>): app is Main => app ? !app.initializing && app.length > 0 : false;
@@ -151,7 +154,7 @@ export function setHostname(value: string) {
     }
 }
 
-export function setFramework(value: Framework, options?: squared.FrameworkOptions) {
+export function setFramework(value: Framework, options?: FrameworkOptions) {
     const reloading = framework !== null;
     let userSettings: Undef<StandardMap>,
         saveAs: Undef<string>,
@@ -167,7 +170,8 @@ export function setFramework(value: Framework, options?: squared.FrameworkOption
                 if (storedSettings) {
                     Object.assign(baseSettings, JSON.parse(storedSettings));
                 }
-            } catch {
+            }
+            catch {
             }
         }
         if (!framework) {
@@ -179,7 +183,8 @@ export function setFramework(value: Framework, options?: squared.FrameworkOption
         if (saveAs) {
             try {
                 localStorage.setItem(saveAs + '-' + frameworkId, JSON.stringify(baseSettings));
-            } catch {
+            }
+            catch {
             }
         }
     };
@@ -234,7 +239,7 @@ export function parseDocumentSync(...elements: (HTMLElement | string)[]) {
     }
 }
 
-export function include(value: ExtensionRequest, options?: squared.FrameworkOptions) {
+export function include(value: ExtensionRequest, options?: FrameworkOptions) {
     if (typeof value === 'string') {
         value = main && main.builtInExtensions.get(value) || retrieve(value);
     }
@@ -265,8 +270,8 @@ export function exclude(value: ExtensionRequest) {
     return false;
 }
 
-export function configure(value: ExtensionRequest, options: squared.FrameworkOptions) {
-    if (util.isPlainObject<squared.FrameworkOptions>(options)) {
+export function configure(value: ExtensionRequest, options: FrameworkOptions) {
+    if (util.isPlainObject(options)) {
         const mergeSettings = (name: string) => {
             const { loadAs, saveAs } = options;
             const result: PlainObject = {};
@@ -276,14 +281,16 @@ export function configure(value: ExtensionRequest, options: squared.FrameworkOpt
                     if (storedSettings) {
                         Object.assign(result, JSON.parse(storedSettings));
                     }
-                } catch {
+                }
+                catch {
                 }
             }
             Object.assign(result, options.settings);
             if (saveAs) {
                 try {
                     localStorage.setItem(saveAs + '-' + name, JSON.stringify(result));
-                } catch {
+                }
+                catch {
                 }
             }
             return result;
@@ -320,7 +327,7 @@ export function retrieve(value: string) {
     }
 }
 
-export function extend(functionMap: squared.ExtendPrototypeMap, value = 0) {
+export function extend(functionMap: ExtendPrototypeMap, value = 0) {
     prototypeMap.set(value, Object.assign(prototypeMap.get(value) || {}, functionMap));
 }
 
@@ -348,7 +355,7 @@ export function get(...elements: (Element | string)[]) {
             }
         }
         if (length <= 1) {
-            if (result.size === 1) {
+            if (result.size) {
                 return result.values().next().value as Node[];
             }
         }

@@ -27,7 +27,8 @@ function getDataSetValue(element: SVGElement, attr: string) {
             if (obj) {
                 return obj[attr]?.toString().trim() as string || '';
             }
-        } catch {
+        }
+        catch {
         }
     }
     return '';

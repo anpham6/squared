@@ -1505,8 +1505,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     public toElementBoolean(attr: string, fallback = false) {
         if (this.naturalElement) {
-            const value: UndefNull<boolean> = this._element![attr];
-            if (value !== undefined && value !== null) {
+            const value: Undef<boolean> = this._element![attr];
+            if (value !== undefined) {
                 return !!value;
             }
         }
@@ -1515,9 +1515,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     public toElementString(attr: string, fallback = '') {
         if (this.naturalElement) {
-            const value: UndefNull<string> = this._element![attr];
-            if (value !== undefined && value !== null) {
-                return value.toString();
+            const value: Undef<string> = this._element![attr];
+            if (value !== undefined) {
+                return value ? value.toString() : '';
             }
         }
         return fallback;

@@ -10,10 +10,10 @@ type FileActionOptions = squared.FileActionOptions;
 type PreloadItem = HTMLImageElement | string;
 
 const { CSS_PROPERTIES, CSS_TRAITS, checkMediaRule, getSpecificity, hasComputedStyle, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText } = squared.lib.css;
-const { DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, UNABLE_TO_PARSE_CSS } = squared.lib.error;
+const { DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, CSS_CANNOT_BE_PARSED } = squared.lib.error;
 const { FILE, STRING } = squared.lib.regex;
 const { getElementCache, newSessionInit, resetSessionAll, setElementCache } = squared.lib.session;
-const { capitalize, convertCamelCase, flatArray, isEmptyString, parseMimeType, resolvePath, splitPair, splitPairStart, trimBoth } = squared.lib.util;
+const { capitalize, convertCamelCase, isEmptyString, parseMimeType, resolvePath, splitPair, splitPairStart, trimBoth } = squared.lib.util;
 
 const REGEXP_IMPORTANT = /\s*([a-z-]+):[^!;]+!important;/g;
 const REGEXP_FONTFACE = /\s*@font-face\s*{([^}]+)}\s*/;
@@ -44,7 +44,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 untagged.push(ext);
             }
         }
-        return result.length ? flatArray<Extension<T>>(result, 0).concat(untagged) : extensions;
+        return result.length ? result.filter(item => item).concat(untagged) : extensions;
     }
 
     public extensions: Extension<T>[] = [];
@@ -335,7 +335,8 @@ export default abstract class Application<T extends Node> implements squared.bas
             let mediaText: Undef<string>;
             try {
                 mediaText = styleSheet.media.mediaText;
-            } catch {
+            }
+            catch {
             }
             if (!mediaText || checkMediaRule(mediaText)) {
                 this.applyStyleSheet(styleSheet, sessionId, processing);
@@ -760,8 +761,8 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
             }
         }
-        catch (error) {
-            (this.userSettings.showErrorMessages ? alert : console.log)(UNABLE_TO_PARSE_CSS + '\n\n' + item.href + '\n\n' + error);
+        catch (err) {
+            (this.userSettings.showErrorMessages ? alert : console.log)(CSS_CANNOT_BE_PARSED + '\n\n' + item.href + '\n\n' + err);
         }
     }
 
@@ -834,7 +835,8 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
         try {
             document.head.removeChild(styleElement);
-        } catch {
+        }
+        catch {
         }
         return multipleRequest > 1 ? success : success[0];
     }

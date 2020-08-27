@@ -140,8 +140,6 @@ function setColumnMaxWidth(nodes: NodeUI[], offset: number) {
     }
 }
 
-const getCounterIncrementValue = (parent: HTMLElement, counterName: string, pseudoElt: PseudoElt, sessionId: string, fallback?: number) => getCounterValue(getElementCache<CSSStyleDeclaration>(parent, 'styleMap' + pseudoElt, sessionId)?.counterIncrement, counterName, fallback);
-
 export default abstract class ApplicationUI<T extends NodeUI> extends Application<T> implements squared.base.ApplicationUI<T> {
     public builtInExtensions!: Map<string, ExtensionUI<T>>;
     public readonly session: squared.base.AppSessionUI<T> = {
@@ -493,7 +491,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (styleElement) {
                         try {
                             document.head.removeChild(styleElement);
-                        } catch {
+                        }
+                        catch {
                         }
                     }
                     data.item.cssFinally('display');
@@ -1338,7 +1337,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
                 this.addLayout(group);
                 if (seg === inlineAbove) {
-                    this.setFloatPadding(parent, target, inlineAbove, leftSub && flatArray(leftSub, 0), rightSub && flatArray(rightSub, 0));
+                    this.setFloatPadding(parent, target, inlineAbove, leftSub && flatArray(leftSub), rightSub && flatArray(rightSub));
                 }
             }
         }
@@ -1571,6 +1570,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                         else {
                             const style = getStyle(element);
+                            const getCounterIncrementValue = (parent: HTMLElement, counterName: string, fallback?: number) => getCounterValue(getElementCache<CSSStyleDeclaration>(parent, 'styleMap' + pseudoElt, sessionId)?.counterIncrement, counterName, fallback);
                             let found: Undef<boolean>,
                                 match: Null<RegExpExecArray>;
                             while (match = REGEXP_PSEUDOCOUNTER.exec(value)) {
@@ -1590,7 +1590,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         counterName = match[6];
                                         styleName = match[8] || 'decimal';
                                     }
-                                    const initialValue = (getCounterIncrementValue(element, counterName, pseudoElt, sessionId, 0) ?? 1) + (getCounterValue(style.getPropertyValue('counter-reset'), counterName, 0) || 0);
+                                    const initialValue = (getCounterIncrementValue(element, counterName, 0) ?? 1) + (getCounterValue(style.getPropertyValue('counter-reset'), counterName, 0) || 0);
                                     const subcounter: number[] = [];
                                     let current: Null<HTMLElement> = element,
                                         counter = initialValue,
@@ -1608,7 +1608,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         if (getCounterValue(getStyle(sibling).getPropertyValue('counter-reset'), counterName) === undefined) {
                                             iterateArray(sibling.children, (item: HTMLElement) => {
                                                 if (item.className !== '__squared.pseudo') {
-                                                    let increment = getCounterIncrementValue(item, counterName, pseudoElt, sessionId);
+                                                    let increment = getCounterIncrementValue(item, counterName);
                                                     if (increment) {
                                                         incrementCounter(increment, true);
                                                     }
@@ -1645,7 +1645,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             ascending = true;
                                         }
                                         if (current.className !== '__squared.pseudo') {
-                                            const pesudoIncrement = getCounterIncrementValue(current, counterName, pseudoElt, sessionId);
+                                            const pesudoIncrement = getCounterIncrementValue(current, counterName);
                                             if (pesudoIncrement) {
                                                 incrementCounter(pesudoIncrement, true);
                                             }

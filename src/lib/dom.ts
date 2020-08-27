@@ -147,30 +147,28 @@ export function getElementsBetweenSiblings(elementStart: Null<Element>, elementE
     return result;
 }
 
-export function createElement(tagName: string, options?: CreateElementOptions) {
+export function createElement(tagName: string, options: CreateElementOptions) {
+    const { parent, attrs, style } = options;
     const element = document.createElement(tagName);
-    if (options) {
-        const { parent, attrs, style } = options;
-        if (style) {
-            for (const attr in style) {
-                if (attr.includes('-')) {
-                    element.style.setProperty(attr, style[attr]!);
-                }
-                else {
-                    element.style[attr] = style[attr];
-                }
+    if (style) {
+        for (const attr in style) {
+            if (attr.includes('-')) {
+                element.style.setProperty(attr, style[attr]!);
+            }
+            else {
+                element.style[attr] = style[attr];
             }
         }
-        if (attrs) {
-            for (const attr in attrs) {
-                if (attr in element) {
-                    element[attr] = attrs[attr];
-                }
+    }
+    if (attrs) {
+        for (const attr in attrs) {
+            if (attr in element) {
+                element[attr] = attrs[attr];
             }
         }
-        if (parent) {
-            parent.appendChild(element);
-        }
+    }
+    if (parent) {
+        parent.appendChild(element);
     }
     return element;
 }

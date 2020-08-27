@@ -178,7 +178,7 @@ declare module "lib" {
         function removeElementsByClassName(className: string): void;
         function getElementsBetweenSiblings(elementStart: Null<Element>, elementEnd: Element): Element[];
         function getNamedItem(element: Element, attr: string): string;
-        function createElement(tagName: string, options?: CreateElementOptions): HTMLElement;
+        function createElement(tagName: string, options: CreateElementOptions): HTMLElement;
         function measureTextWidth(value: string, fontFamily: string, fontSize: number): number;
     }
 
@@ -191,7 +191,7 @@ declare module "lib" {
         const OPERATION_NOT_SUPPORTED: string;
         const DOCUMENT_ROOT_NOT_FOUND: string;
         const DOCUMENT_IS_CLOSED: string;
-        const UNABLE_TO_PARSE_CSS: string;
+        const CSS_CANNOT_BE_PARSED: string;
     }
 
     namespace math {

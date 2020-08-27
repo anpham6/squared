@@ -5,11 +5,11 @@ interface ChromeFileCopyingOptions extends squared.base.FileCopyingOptions, Chro
 interface ChromeFileArchivingOptions extends squared.base.FileArchivingOptions, ChromeFileActionOptions {}
 
 interface CompressOptions {
-    level?: number;
     mimeTypes: MIMEOrAll;
     largerThan: number;
     smallerThan: number;
     whenSmaller: boolean;
+    level?: number;
 }
 
 interface ConvertOptions extends CompressOptions {

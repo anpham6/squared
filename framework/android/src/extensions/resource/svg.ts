@@ -1103,10 +1103,10 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                     }
                                     else if (SvgBuild.isAnimate(item)) {
                                         let resetBefore = checkBefore,
+                                            values: Null<string[] |number[][]> = null,
                                             repeatCount: string,
                                             beforeValues: Undef<string[]>,
-                                            propertyNames: Undef<string[]>,
-                                            values: UndefNull<string[] |number[][]>;
+                                            propertyNames: Undef<string[]>;
                                         if (i === 1) {
                                             repeatCount = v > 1 ? '0' : '-1';
                                         }
