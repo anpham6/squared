@@ -83,9 +83,8 @@ export default abstract class Application<T extends Node> implements squared.bas
         this.init();
     }
 
+    public abstract init(): void;
     public abstract insertNode(element: Element, sessionId: string): Undef<T>;
-
-    public init() {}
 
     public afterCreateCache(node: T) {
         if (this.userSettings.createElementMap) {
@@ -723,13 +722,14 @@ export default abstract class Application<T extends Node> implements squared.bas
                         case CSSRule.KEYFRAMES_RULE: {
                             const value = parseKeyframes((rule as CSSKeyframesRule).cssRules);
                             if (value) {
+                                const keyframesMap = (processing.keyframesMap || (processing.keyframesMap = new Map<string, KeyframeData>()));
                                 const name = (rule as CSSKeyframesRule).name;
-                                const keyframe = processing.keyframesMap.get(name);
+                                const keyframe = keyframesMap.get(name);
                                 if (keyframe) {
                                     Object.assign(keyframe, value);
                                 }
                                 else {
-                                    processing.keyframesMap.set(name, value);
+                                    keyframesMap.set(name, value);
                                 }
                             }
                         }
@@ -757,13 +757,12 @@ export default abstract class Application<T extends Node> implements squared.bas
         const rootElements = new Set<HTMLElement>();
         const processing: squared.base.AppProcessing<T> = {
             sessionId,
+            initializing: false,
             cache: new NodeList<T>(undefined, sessionId),
             excluded: new NodeList<T>(undefined, sessionId),
             rootElements,
             elementMap: newSessionInit(sessionId),
-            keyframesMap: new Map<string, KeyframeData>(),
-            extensions: this.extensionsAll,
-            initializing: false
+            extensions: this.extensionsAll
         };
         this.session.active.set(sessionId, processing);
         this._controllerHandler.init();

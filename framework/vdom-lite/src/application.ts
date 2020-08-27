@@ -5,6 +5,8 @@ export default class <T extends Node> extends Application<T> implements vdom.bas
     public userSettings!: UserSettings;
     public readonly systemName = 'vdom';
 
+    public init() {}
+
     public insertNode(element: Element, sessionId: string) {
         if (element.nodeName[0] !== '#') {
             return new this.Node(this.nextId, sessionId, element);

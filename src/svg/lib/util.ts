@@ -513,14 +513,9 @@ export function getTargetElement(element: Element, rootElement?: Null<Element>, 
         if (!rootElement) {
             let parent = element.parentElement;
             rootElement = parent;
-            while (parent) {
-                if (parent.parentElement instanceof HTMLElement) {
-                    break;
-                }
-                else if (parent.parentElement) {
-                    rootElement = parent;
-                    parent = parent.parentElement;
-                }
+            while (parent && !(parent.parentElement instanceof HTMLElement)) {
+                rootElement = parent;
+                parent = parent.parentElement;
             }
         }
         if (rootElement) {

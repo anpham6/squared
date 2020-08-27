@@ -164,7 +164,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public abstract get extensionManager(): ExtensionManager<T>;
 
     public init() {
-        super.init();
         const localSettings = this.controllerHandler.localSettings;
         this._controllerSettings = localSettings;
         this._layoutFileExtension = new RegExp(`\\.${localSettings.layout.fileExtension}$`);

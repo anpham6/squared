@@ -45,13 +45,13 @@ declare module "base" {
 
     interface AppProcessing<T extends Node> {
         sessionId: string;
+        initializing: boolean;
         cache: NodeList<T>;
         excluded: NodeList<T>;
         rootElements: Set<HTMLElement>;
-        initializing: boolean;
-        elementMap: Map<Element, ElementData>;
-        keyframesMap: KeyframesMap;
         extensions: Extension<T>[];
+        elementMap: Map<Element, ElementData>;
+        keyframesMap?: KeyframesMap;
         node?: T;
         documentElement?: T;
     }

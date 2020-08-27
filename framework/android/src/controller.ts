@@ -550,14 +550,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         floatPrecision: 3
     };
 
+    public readonly application!: Application<T>;
+
     protected _screenDimension!: Dimension;
 
     private _targetAPI!: number;
     private _viewSettings!: AndroidLocalSettingsUI;
-
-    constructor(public readonly application: Application<T>) {
-        super();
-    }
 
     public init() {
         const userSettings = this.userSettings;
