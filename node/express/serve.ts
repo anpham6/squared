@@ -435,8 +435,8 @@ let Node: serve.INode,
         getFileSize(filepath: string) {
             try {
                 return fs.statSync(filepath).size;
+            } catch {
             }
-            catch {}
             return 0;
         }
         findFormat(compress: Undef<CompressFormat[]>, format: string) {
@@ -893,8 +893,8 @@ let Node: serve.INode,
                 }
                 try {
                     fs.unlinkSync(master);
+                } catch {
                 }
-                catch {}
             }
             return deg ? self.rotate(deg) : self;
         }
@@ -1119,8 +1119,8 @@ class FileManager implements serve.IFileManager {
                         if (gzip.condition?.includes('%') && Compress.getFileSize(gz) >= Compress.getFileSize(filepath)) {
                             try {
                                 fs.unlinkSync(gz);
+                            } catch {
                             }
-                            catch {}
                             gz = '';
                         }
                         this.finalize(gz);
@@ -1138,8 +1138,8 @@ class FileManager implements serve.IFileManager {
                         if (brotli.condition?.includes('%') && Compress.getFileSize(br) >= Compress.getFileSize(filepath)) {
                             try {
                                 fs.unlinkSync(br);
+                            } catch {
                             }
-                            catch {}
                             br = '';
                         }
                         this.finalize(br);
@@ -1167,8 +1167,8 @@ class FileManager implements serve.IFileManager {
                                 else {
                                     fs.renameSync(jpg, filepath);
                                 }
+                            } catch {
                             }
-                            catch {}
                         }
                         this.finalize('');
                         resumeThread();
@@ -1892,8 +1892,8 @@ class FileManager implements serve.IFileManager {
                 try {
                     stream.close();
                     fs.unlinkSync(filepath);
+                } catch {
                 }
-                catch {}
             }
             file.excluded = true;
             Node.writeFail(uri, message);

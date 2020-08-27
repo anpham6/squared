@@ -90,8 +90,8 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
                 if (isString(value)) {
                     try {
                         this._dataset[name] = JSON.parse(value);
+                    } catch {
                     }
-                    catch {}
                 }
             }
             this.element = element;

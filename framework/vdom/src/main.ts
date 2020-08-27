@@ -14,7 +14,13 @@ const appBase: squared.base.AppFramework<Node> = {
     extensions: {},
     system: {},
     create() {
-        application = new Application<Node>(squared.base.lib.enumeration.APP_FRAMEWORK.VDOM, squared.base.Node, squared.base.Controller);
+        application = new Application<Node>(
+            squared.base.lib.enumeration.APP_FRAMEWORK.VDOM,
+            squared.base.Node,
+            squared.base.Controller,
+            undefined,
+            squared.base.ExtensionManager
+        );
         return {
             application,
             framework: squared.base.lib.enumeration.APP_FRAMEWORK.VDOM,

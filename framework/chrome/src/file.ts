@@ -1,7 +1,7 @@
 import type Application from './application';
 import type Extension from './extension';
 
-import Resource from './resource';
+import Resource = squared.base.Resource;
 
 import Pattern = squared.lib.base.Pattern;
 

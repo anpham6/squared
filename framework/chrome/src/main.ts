@@ -1,8 +1,6 @@
 import Application from './application';
-import Controller from './controller';
 import Extension from './extension';
 import File from './file';
-import Resource from './resource';
 
 import CompressBrotli from './extensions/compress/brotli';
 import CompressGzip from './extensions/compress/gzip';
@@ -48,10 +46,8 @@ const directoryNotProvided = () => Promise.reject('Directory not provided.');
 const appBase: chrome.ChromeFramework<Node> = {
     base: {
         Application,
-        Controller,
         Extension,
-        File,
-        Resource
+        File
     },
     lib: {
         constant
@@ -138,7 +134,12 @@ const appBase: chrome.ChromeFramework<Node> = {
     },
     create() {
         const EC = constant.EXT_CHROME;
-        application = new Application<Node>(squared.base.lib.enumeration.APP_FRAMEWORK.CHROME, squared.base.Node, Controller, Resource, squared.base.ExtensionManager);
+        application = new Application<Node>(
+            squared.base.lib.enumeration.APP_FRAMEWORK.CHROME, squared.base.Node,
+            squared.base.Controller,
+            squared.base.Resource,
+            squared.base.ExtensionManager
+        );
         file = new File();
         application.resourceHandler!.fileHandler = file;
         application.builtInExtensions = new Map<string, Extension<Node>>([

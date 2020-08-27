@@ -494,8 +494,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (styleElement) {
                         try {
                             document.head.removeChild(styleElement);
+                        } catch {
                         }
-                        catch {}
                     }
                     data.item.cssFinally('display');
                 }

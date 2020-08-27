@@ -281,7 +281,13 @@ const appBase: android.AndroidFramework<View> = {
     create() {
         const EN = squared.base.lib.constant.EXT_NAME as StringMapChecked;
         const EA = constant.EXT_ANDROID;
-        application = new Application<View>(squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID, View, Controller, Resource, squared.base.ExtensionManager);
+        application = new Application<View>(
+            squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID,
+            View,
+            Controller,
+            Resource,
+            squared.base.ExtensionManager
+        );
         file = new File();
         application.resourceHandler.fileHandler = file;
         application.builtInExtensions = new Map<string, squared.base.ExtensionUI<View>>([
