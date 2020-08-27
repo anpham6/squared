@@ -182,6 +182,18 @@ declare module "lib" {
         function measureTextWidth(value: string, fontFamily: string, fontSize: number): number;
     }
 
+    namespace error {
+        const FRAMEWORK_NOT_INSTALLED: string;
+        const SERVER_REQUIRED: string;
+        const DIRECTORY_NOT_PROVIDED: string;
+        const UNABLE_TO_FINALIZE_DOCUMENT: string;
+        const INVALID_ASSET_REQUEST: string;
+        const OPERATION_NOT_SUPPORTED: string;
+        const DOCUMENT_ROOT_NOT_FOUND: string;
+        const DOCUMENT_IS_CLOSED: string;
+        const UNABLE_TO_PARSE_CSS: string;
+    }
+
     namespace math {
         function convertRadian(value: number): number;
         function equal(a: number, b: number, precision?: number): boolean;

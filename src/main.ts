@@ -2,6 +2,7 @@ import * as client from './lib/client';
 import * as color from './lib/color';
 import * as css from './lib/css';
 import * as dom from './lib/dom';
+import * as error from './lib/error';
 import * as math from './lib/math';
 import * as regex from './lib/regex';
 import * as session from './lib/session';
@@ -29,8 +30,6 @@ const system = {} as FunctionMap<any>;
 let main: Null<Main> = null;
 let framework: Null<Framework> = null;
 let extensionManager: Null<squared.base.ExtensionManager<Node>> = null;
-
-const ERROR_PARSEDOCUMENT = 'ERROR: Document is closed. Reset and rerun?';
 
 function clearProperties(data: StandardMap) {
     for (const attr in data) {
@@ -161,7 +160,6 @@ async function findElementAllAsync(query: NodeListOf<Element>, length: number) {
 
 const checkWritable = (app: Null<Main>): app is Main => app ? !app.initializing && app.length > 0 : false;
 const checkFrom = (value: string, options: FileActionOptions) => checkWritable(main) && util.isString(value) && util.isPlainObject<FileActionOptions>(options) && options.assets && options.assets.length > 0;
-const promiseRejectMessage = (value: string): Promise<void> => Promise.reject(new Error(value));
 
 export function setHostname(value: string) {
     if (main) {
@@ -237,7 +235,7 @@ export function parseDocument(...elements: (HTMLElement | string)[]) {
         if (!main.closed) {
             return main.parseDocument(...elements);
         }
-        else if (!settings.showErrorMessages || confirm(ERROR_PARSEDOCUMENT)) {
+        else if (!settings.showErrorMessages || confirm(error.DOCUMENT_IS_CLOSED)) {
             main.reset();
             return main.parseDocument(...elements);
         }
@@ -251,7 +249,7 @@ export function parseDocumentSync(...elements: (HTMLElement | string)[]) {
         if (!main.closed) {
             return main.parseDocumentSync(...elements);
         }
-        else if (!settings.showErrorMessages || confirm(ERROR_PARSEDOCUMENT)) {
+        else if (!settings.showErrorMessages || confirm(error.DOCUMENT_IS_CLOSED)) {
             main.reset();
             return main.parseDocumentSync(...elements);
         }
@@ -408,35 +406,35 @@ export function close() {
 
 export function copyToDisk(value: string, options?: FileActionOptions) {
     if (main) {
-        return util.isString(value) && close() ? main.copyToDisk(value, options) : promiseRejectMessage('Unable to finalize document.');
+        return util.isString(value) && close() ? main.copyToDisk(value, options) : Promise.reject(new Error(error.UNABLE_TO_FINALIZE_DOCUMENT));
     }
     return session.frameworkNotInstalled();
 }
 
 export function appendToArchive(value: string, options?: FileActionOptions) {
     if (main) {
-        return util.isString(value) && close() ? main.appendToArchive(value, options) : promiseRejectMessage('Unable to finalize document.');
+        return util.isString(value) && close() ? main.appendToArchive(value, options) : Promise.reject(new Error(error.UNABLE_TO_FINALIZE_DOCUMENT));
     }
     return session.frameworkNotInstalled();
 }
 
 export function saveToArchive(value?: string, options?: FileActionOptions) {
     if (main) {
-        return close() ? main.saveToArchive(value, options) : promiseRejectMessage('Unable to finalize document.');
+        return close() ? main.saveToArchive(value, options) : Promise.reject(new Error(error.UNABLE_TO_FINALIZE_DOCUMENT));
     }
     return session.frameworkNotInstalled();
 }
 
 export function createFrom(value: string, options: FileActionOptions) {
     if (main) {
-        return checkFrom(value, options) ? main.createFrom(value, options) : promiseRejectMessage('Invalid asset request.');
+        return checkFrom(value, options) ? main.createFrom(value, options) : Promise.reject(new Error(error.INVALID_ASSET_REQUEST));
     }
     return session.frameworkNotInstalled();
 }
 
 export function appendFromArchive(value: string, options: FileActionOptions) {
     if (main) {
-        return checkFrom(value, options) ? main.appendFromArchive(value, options) : promiseRejectMessage('Invalid asset request.');
+        return checkFrom(value, options) ? main.appendFromArchive(value, options) : Promise.reject(new Error(error.INVALID_ASSET_REQUEST));
     }
     return session.frameworkNotInstalled();
 }
@@ -521,6 +519,7 @@ const lib = {
     color,
     css,
     dom,
+    error,
     math,
     regex,
     session,

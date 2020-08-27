@@ -292,9 +292,6 @@ exclude(name: string) // remove an extension by namespace or control
 
 extend(functionMap: {}, framework?: number) // add extension functions to Node prototype (framework: 0 - ALL | 1 - vdom | 2 - android | 4 - chrome)
 
-getElementMap() // map used for caching results from parseDocument
-clearElementMap()
-
 // Promise (cache: createElementMap - true)
 
 getElementById(value: string, sync?: boolean, cache?: boolean) // default: sync - false | cache - true
@@ -302,6 +299,9 @@ querySelector(value: string, sync?: boolean, cache?: boolean)
 querySelectorAll(value: string, sync?: boolean, cache?: boolean)
 
 fromElement(element: HTMLElement, sync?: boolean, cache?: boolean) // default: sync - false | cache - false
+
+getElementMap() // cached results from parseDocument (synchronous)
+clearElementMap()
 ```
 
 Packaging methods will return a Promise and require either node-express or squared-apache installed. These features are not supported when the framework is VDOM.

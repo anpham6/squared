@@ -41,7 +41,7 @@ function createAssetsOptions(assets: ChromeAsset[], options?: FileOptions, direc
 }
 
 const checkFileName = (value: Undef<string>) => value || application!.userSettings.outputArchiveName;
-const directoryNotProvided = () => Promise.reject('Directory not provided.');
+const directoryNotProvided = () => Promise.reject(squared.lib.error.DIRECTORY_NOT_PROVIDED);
 
 const appBase: chrome.ChromeFramework<Node> = {
     base: {

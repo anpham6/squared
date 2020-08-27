@@ -10,6 +10,7 @@ type FileActionOptions = squared.FileActionOptions;
 type PreloadItem = HTMLImageElement | string;
 
 const { CSS_PROPERTIES, CSS_TRAITS, checkMediaRule, getSpecificity, hasComputedStyle, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText } = squared.lib.css;
+const { DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, UNABLE_TO_PARSE_CSS } = squared.lib.error;
 const { FILE, STRING } = squared.lib.regex;
 const { getElementCache, newSessionInit, resetSessionAll, setElementCache } = squared.lib.session;
 const { capitalize, convertCamelCase, flatArray, isEmptyString, parseMimeType, resolvePath, splitPair, splitPairStart, trimBoth } = squared.lib.util;
@@ -24,7 +25,7 @@ const REGEXP_FONTURL = /\s*(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*for
 const REGEXP_DATAURI = new RegExp(`url\\("?(${STRING.DATAURI})"?\\),?\\s*`, 'g');
 const CSS_SHORTHANDNONE = getPropertiesAsTraits(CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE);
 
-const operationNotSupported = (): Promise<void> => Promise.reject(new Error('Operation not supported.'));
+const operationNotSupported = (): Promise<void> => Promise.reject(new Error(OPERATION_NOT_SUPPORTED));
 
 export default abstract class Application<T extends Node> implements squared.base.Application<T> {
     public static readonly KEY_NAME = 'squared.base.application';
@@ -140,7 +141,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         const [processing, rootElements] = this.createSessionThread(elements);
         let documentRoot: HTMLElement;
         if (rootElements.size === 0) {
-            return Promise.reject(new Error('Document root not found.'));
+            return Promise.reject(new Error(DOCUMENT_ROOT_NOT_FOUND));
         }
         else {
             documentRoot = rootElements.values().next().value;
@@ -308,7 +309,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         message = error.src;
                     }
                 }
-                return !message || !this.userSettings.showErrorMessages || confirm(`FAIL: ${message}`) ? this.resumeSessionThread(processing, rootElements, elements.length, documentRoot, preloaded) : Promise.reject(message);
+                return !message || !this.userSettings.showErrorMessages || confirm(`FAIL: ${message}`) ? this.resumeSessionThread(processing, rootElements, elements.length, documentRoot, preloaded) : Promise.reject(new Error(message));
             });
         }
         return Promise.resolve(this.resumeSessionThread(processing, rootElements, elements.length));
@@ -722,7 +723,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         case CSSRule.KEYFRAMES_RULE: {
                             const value = parseKeyframes((rule as CSSKeyframesRule).cssRules);
                             if (value) {
-                                const keyframesMap = (processing.keyframesMap || (processing.keyframesMap = new Map<string, KeyframeData>()));
+                                const keyframesMap = processing.keyframesMap || (processing.keyframesMap = new Map<string, KeyframeData>());
                                 const name = (rule as CSSKeyframesRule).name;
                                 const keyframe = keyframesMap.get(name);
                                 if (keyframe) {
@@ -738,11 +739,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
         }
         catch (error) {
-            (this.userSettings.showErrorMessages ? alert : console.log)(
-                'CSS cannot be parsed inside <link> tags when loading files directly from your hard drive or from external websites. ' +
-                'Either use a local web server, embed your CSS into a <style> tag, or you can also try using a different browser. ' +
-                'See the README for more detailed instructions.\n\n' +
-                item.href + '\n\n' + error);
+            (this.userSettings.showErrorMessages ? alert : console.log)(UNABLE_TO_PARSE_CSS + '\n\n' + item.href + '\n\n' + error);
         }
     }
 

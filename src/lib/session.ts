@@ -1,3 +1,5 @@
+import { FRAMEWORK_NOT_INSTALLED } from './error';
+
 let SESSION_MAP: ObjectMap<Map<Element, ElementData>> = {};
 
 newSessionInit('0');
@@ -13,7 +15,7 @@ export function resetSessionAll() {
 }
 
 export function frameworkNotInstalled<T = void>(): Promise<T> {
-    return Promise.reject(new Error('Framework not installed.'));
+    return Promise.reject(new Error(FRAMEWORK_NOT_INSTALLED));
 }
 
 export function setElementCache(element: Element, attr: string, sessionId: string, data: any) {

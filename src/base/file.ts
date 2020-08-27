@@ -5,6 +5,7 @@ type FileActionOptions = squared.FileActionOptions;
 type FileArchivingOptions = squared.base.FileArchivingOptions;
 type FileCopyingOptions = squared.base.FileCopyingOptions;
 
+const { SERVER_REQUIRED } = squared.lib.error;
 const { fromLastIndexOf, trimEnd } = squared.lib.util;
 
 export default abstract class File<T extends Node> implements squared.base.File<T> {
@@ -104,7 +105,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
             }
         }
         else {
-            (this.userSettings.showErrorMessages ? alert : console.log)('SERVER (required): See README for instructions');
+            (this.userSettings.showErrorMessages ? alert : console.log)(SERVER_REQUIRED);
         }
         return Promise.resolve();
     }
@@ -146,7 +147,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
             }
         }
         else {
-            (this.userSettings.showErrorMessages ? alert : console.log)('SERVER (required): See README for instructions');
+            (this.userSettings.showErrorMessages ? alert : console.log)(SERVER_REQUIRED);
         }
         return Promise.resolve();
     }
