@@ -83,6 +83,7 @@ declare module "base" {
         init(): void;
         finalize(): boolean;
         reset(): void;
+        setExtensions(namespaces?: string[]): void;
         parseDocument(...elements: (string | HTMLElement)[]): Promise<Void<T | T[]>>;
         parseDocumentSync(...elements: (string | HTMLElement)[]): Void<T | T[]>;
         createCache(documentRoot: HTMLElement, sessionId: string): Undef<T>;

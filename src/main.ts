@@ -65,28 +65,6 @@ function extendPrototype(id: number) {
     }
 }
 
-function setupExtensions(list: string[]) {
-    const { builtInExtensions, extensions } = main!;
-    extensions.length = 0;
-    for (let i = 0, length = list.length; i < length; ++i) {
-        let name = list[i],
-            ext = builtInExtensions.get(name);
-        if (ext) {
-            ext.application = main!;
-            extensions.push(ext);
-        }
-        else {
-            const namespace = name + '.';
-            for ([name, ext] of builtInExtensions.entries()) {
-                if (name.startsWith(namespace) && !extensions.includes(ext)) {
-                    ext.application = main!;
-                    extensions.push(ext);
-                }
-            }
-        }
-    }
-}
-
 function loadExtensions() {
     if (extensionManager) {
         if (extensionsQueue.size) {
@@ -211,10 +189,10 @@ export function setFramework(value: Framework, options?: squared.FrameworkOption
         clearProperties(settings);
         Object.assign(settings, appBase.userSettings);
         main = appBase.application;
-        main.userSettings = settings;
         extensionManager = main.extensionManager;
+        main.userSettings = settings;
+        main.setExtensions();
         extendPrototype(main.framework);
-        setupExtensions(settings.builtInExtensions);
         if (reloading) {
             clearProperties(system);
         }

@@ -343,6 +343,28 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
     }
 
+    public setExtensions(namespaces: string[] = this.userSettings.builtInExtensions) {
+        const { builtInExtensions, extensions } = this;
+        extensions.length = 0;
+        for (let i = 0, length = namespaces.length; i < length; ++i) {
+            let name = namespaces[i],
+                ext = builtInExtensions.get(name);
+            if (ext) {
+                ext.application = this;
+                extensions.push(ext);
+            }
+            else {
+                const namespace = name + '.';
+                for ([name, ext] of builtInExtensions.entries()) {
+                    if (name.startsWith(namespace) && !extensions.includes(ext)) {
+                        ext.application = this;
+                        extensions.push(ext);
+                    }
+                }
+            }
+        }
+    }
+
     public getProcessing(sessionId: string) {
         return this.session.active.get(sessionId);
     }
