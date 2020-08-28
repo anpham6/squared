@@ -14,6 +14,7 @@ const enum STYLE_CACHE {
     READY,
     CHANGED
 }
+
 const TEXT_STYLE = [
     'fontFamily',
     'fontWeight',

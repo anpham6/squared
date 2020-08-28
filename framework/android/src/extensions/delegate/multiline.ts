@@ -7,7 +7,7 @@ import { CONTAINER_NODE } from '../../lib/enumeration';
 
 type MultilineData<T> = [number, T][];
 
-const { measureTextWidth } = squared.lib.dom;
+const { getTextMetrics } = squared.lib.dom;
 
 const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
@@ -258,7 +258,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                         container.setCacheValue('fontSize', fontSize);
                         container.setCacheValue('lineHeight', lineHeight);
                         container.cssApply(cssData);
-                        const textBounds = { ...boxRect, width: measureTextWidth(value, fontFamily, fontSize) + (value.length * adjustment) } as BoxRectDimension;
+                        const textBounds = { ...boxRect, width: getTextMetrics(value, fontSize, fontFamily).width + (value.length * adjustment) } as BoxRectDimension;
                         container.textBounds = textBounds;
                         container.unsafe('bounds', textBounds);
                         container.setControlType(CONTAINER_ANDROID.TEXT, CONTAINER_NODE.TEXT);

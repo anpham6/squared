@@ -177,7 +177,7 @@ declare module "lib" {
         function getElementsBetweenSiblings(elementStart: Null<Element>, elementEnd: Element): Element[];
         function getNamedItem(element: Element, attr: string): string;
         function createElement(tagName: string, options: CreateElementOptions): HTMLElement;
-        function measureTextWidth(value: string, fontFamily: string, fontSize: number): number;
+        function getTextMetrics(value: string, fontSize: number, fontFamily?: string): TextMetrics;
     }
 
     namespace error {

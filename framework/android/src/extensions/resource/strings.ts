@@ -6,7 +6,7 @@ import { CONTAINER_ANDROID } from '../../lib/constant';
 import { replaceCharacterData } from '../../lib/util';
 
 const { parseAngle } = squared.lib.css;
-const { measureTextWidth } = squared.lib.dom;
+const { getTextMetrics } = squared.lib.dom;
 const { clamp } = squared.lib.math;
 const { delimitString } = squared.lib.util;
 
@@ -156,8 +156,10 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                 valueString = `<strike>${valueString}</strike>`;
                             }
                             if (textIndent > 0) {
-                                const width = measureTextWidth(' ', node.css('fontFamily'), node.fontSize) || node.fontSize / 2;
-                                valueString = Resource.STRING_SPACE.repeat(Math.max(Math.floor(textIndent / width), 1)) + valueString;
+                                const width = getTextMetrics(' ', node.fontSize, node.css('fontFamily')).width;
+                                if (width) {
+                                    valueString = Resource.STRING_SPACE.repeat(Math.max(Math.floor(textIndent / width), 1)) + valueString;
+                                }
                             }
                             let fontVariation = getFontVariationStyle(node.css('fontStyle')),
                                 fontFeature = '';

@@ -173,16 +173,14 @@ export function createElement(tagName: string, options: CreateElementOptions) {
     return element;
 }
 
-export function measureTextWidth(value: string, fontFamily: string, fontSize: number) {
-    if (fontFamily && fontSize) {
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-        if (context) {
-            context.font = `${fontSize}px ${fontFamily}`;
-            return context.measureText(value).width;
-        }
+export function getTextMetrics(value: string, fontSize: number, fontFamily?: string) {
+    const context = document.createElement('canvas').getContext('2d');
+    if (context) {
+        context.font = fontSize + 'px' + (fontFamily ? ' ' + fontFamily : '');
+        return context.measureText(value);
     }
-    return 0;
+
+    return { width: 0 } as TextMetrics;
 }
 
 export function getNamedItem(element: Element, attr: string) {
