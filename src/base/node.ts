@@ -272,7 +272,7 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, last: boo
                 case ':nth-last-child(n)':
                     break;
                 case ':empty':
-                    if ((child.element as HTMLElement).childNodes.length) {
+                    if ((child.element as HTMLElement).hasChildNodes()) {
                         return false;
                     }
                     break;

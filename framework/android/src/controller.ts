@@ -17,7 +17,7 @@ const { formatPX, getSrcSet, hasCoords, hasComputedStyle } = squared.lib.css;
 const { getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
-const { assignEmptyValue, capitalize, convertWord, hasBit, hasMimeType, isString, iterateArray, lastItemOf, parseMimeType, partitionArray, plainMap, withinRange } = squared.lib.util;
+const { assignEmptyValue, capitalize, convertWord, hasBit, isString, iterateArray, lastItemOf, parseMimeType, partitionArray, plainMap, withinRange } = squared.lib.util;
 
 const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
@@ -1581,14 +1581,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const element = node.element as HTMLVideoElement;
                 let src = element.src.trim(),
                     mimeType: Undef<string>;
-                if (hasMimeType(videoMimeType, src)) {
+                if (Resource.hasMimeType(videoMimeType, src)) {
                     mimeType = parseMimeType(src);
                 }
                 else {
                     src = '';
                     iterateArray(element.children, (source: HTMLSourceElement) => {
                         if (source.tagName === 'SOURCE') {
-                            if (hasMimeType(videoMimeType, source.src)) {
+                            if (Resource.hasMimeType(videoMimeType, source.src)) {
                                 src = source.src.trim();
                                 mimeType = parseMimeType(src);
                                 return true;

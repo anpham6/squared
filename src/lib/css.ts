@@ -3,7 +3,7 @@ import { parseColor } from './color';
 import { clamp, truncate, truncateFraction } from './math';
 import { CSS, STRING, TRANSFORM } from './regex';
 import { getElementCache, setElementCache } from './session';
-import { convertAlpha, convertCamelCase, convertFloat, convertHyphenated, convertRoman, hasBit, isNumber, isString, iterateArray, replaceMap, resolvePath, spliceString, splitEnclosing, splitPair, trimBoth } from './util';
+import { convertCamelCase, convertFloat, convertHyphenated, hasBit, isNumber, isString, iterateArray, replaceMap, resolvePath, spliceString, splitEnclosing, splitPair, trimBoth } from './util';
 
 const DOCUMENT_ELEMENT = document.documentElement;
 const DOCUMENT_FIXEDMAP = [9/13, 10/13, 12/13, 16/13, 20/13, 2, 3];
@@ -30,7 +30,7 @@ const REGEXP_IMGSRCSET = /^(.*?)(?:\s+([\d.]+)([xw]))?$/;
 const REGEXP_CALCOPERATION = /\s+([+-]\s+|\s*[*/])\s*/;
 const REGEXP_CALCUNIT = /\s*{(\d+)}\s*/;
 const REGEXP_TRANSFORM = /(\w+)\([^)]+\)/g;
-const REGEXP_EMBASED = /\d(?:em|ch|ex)\b/;
+const REGEXP_EMBASED = /\b-?[\d.]+(?:em|ch|ex)\b/;
 const CHAR_SPACE = /\s+/;
 const CHAR_SEPARATOR = /\s*,\s*/;
 const CHAR_DIVIDER = /\s*\/\s*/;
@@ -2592,10 +2592,9 @@ export function checkStyleValue(element: StyleElement, attr: string, value: stri
 }
 
 export function checkFontSizeValue(value: string, fixedWidth?: boolean) {
-    if (value === '') {
-        return 'inherit';
-    }
     switch (value) {
+        case '':
+            return 'inherit';
         case 'medium':
             return '1rem';
         case 'smaller':
@@ -2793,27 +2792,6 @@ export function checkMediaRule(value: string, fontSize?: number) {
         }
     }
     return false;
-}
-
-export function getInheritedStyle(element: Element, attr: string, options?: InheritedStyleOptions) {
-    let exclude: Undef<RegExp>,
-        tagNames: Undef<string[]>;
-    if (options) {
-        ({ exclude, tagNames } = options);
-    }
-    let value = '',
-        current = element.parentElement;
-    while (current && (!tagNames || !tagNames.includes(current.tagName))) {
-        value = getStyle(current)[attr];
-        if (value === 'inherit' || exclude && exclude.test(value)) {
-            value = '';
-        }
-        else if (value) {
-            break;
-        }
-        current = current.parentElement;
-    }
-    return value;
 }
 
 export function parseVar(element: StyleElement, value: string) {
@@ -3154,32 +3132,6 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
         }
     }
     return result;
-}
-
-export function convertListStyle(name: string, value: number, valueAsDefault?: boolean) {
-    switch (name) {
-        case 'decimal':
-            return value.toString();
-        case 'decimal-leading-zero':
-            return (value < 9 ? '0' : '') + value.toString();
-        case 'upper-alpha':
-        case 'upper-latin':
-            if (value >= 1) {
-                return convertAlpha(value - 1);
-            }
-            break;
-        case 'lower-alpha':
-        case 'lower-latin':
-            if (value >= 1) {
-                return convertAlpha(value - 1).toLowerCase();
-            }
-            break;
-        case 'upper-roman':
-            return convertRoman(value);
-        case 'lower-roman':
-            return convertRoman(value).toLowerCase();
-    }
-    return valueAsDefault ? value.toString() : '';
 }
 
 export function extractURL(value: string) {

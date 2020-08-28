@@ -4,7 +4,7 @@ import ExtensionUI from '../extension-ui';
 
 import { BOX_STANDARD, NODE_RESOURCE } from '../lib/enumeration';
 
-const { formatPercent, formatPX, getInheritedStyle, getStyle, isLength, isPercent } = squared.lib.css;
+const { formatPercent, formatPX, getStyle, isLength, isPercent } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { isNumber, replaceMap, withinRange } = squared.lib.util;
 
@@ -50,6 +50,22 @@ function createDataAttribute(node: NodeUI): TableData {
         borderCollapse: node.css('borderCollapse') === 'collapse',
         expand: false
     };
+}
+
+function getInheritedStyle(element: Element, attr: string, exclude: RegExp) {
+    let value = '',
+        current = element.parentElement;
+    while (current && current.tagName !== 'TABLE') {
+        value = getStyle(current)[attr];
+        if (exclude.test(value)) {
+            value = '';
+        }
+        else if (value) {
+            break;
+        }
+        current = current.parentElement;
+    }
+    return value;
 }
 
 const setBoundsWidth = (node: NodeUI) => node.css('width', formatPX(node.bounds.width), true);
@@ -175,11 +191,11 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         }
                     }
                     else {
-                        let value = getInheritedStyle(element, 'backgroundImage', { exclude: /none/, tagNames: ['TABLE'] });
+                        let value = getInheritedStyle(element, 'backgroundImage', /none/);
                         if (value !== '') {
                             td.css('backgroundImage', value, true);
                         }
-                        value = getInheritedStyle(element, 'backgroundColor', { exclude, tagNames: ['TABLE'] });
+                        value = getInheritedStyle(element, 'backgroundColor', exclude);
                         if (value !== '') {
                             td.css('backgroundColor', value);
                             td.setCacheValue('backgroundColor', value);

@@ -4,13 +4,12 @@ import type Node from './node';
 
 const { extractURL } = squared.lib.css;
 const { STRING } = squared.lib.regex;
-const { fromLastIndexOf, fromMimeType, hasMimeType, randomUUID } = squared.lib.util;
+const { fromLastIndexOf, fromMimeType, parseMimeType, randomUUID } = squared.lib.util;
 
 const REGEXP_DATAURI = new RegExp(`^${STRING.DATAURI}$`);
 
 export default class Resource<T extends Node> implements squared.base.Resource<T> {
     public static readonly KEY_NAME = 'squared.base.resource';
-
     public static readonly ASSETS: ResourceAssetMap = {
         fonts: new Map(),
         image: new Map(),
@@ -18,6 +17,10 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
         audio: new Map(),
         rawData: new Map()
     };
+
+    public static hasMimeType(formats: MIMEOrAll, value: string) {
+        return formats === '*' || formats.includes(parseMimeType(value));
+    }
 
     public static canCompressImage(filename: string, mimeType?: string) {
         return /\.(png|jpg|jpeg)$/i.test(filename) || mimeType === 'image/png' || mimeType === 'image/jpeg';
@@ -149,7 +152,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
         const font = Resource.ASSETS.fonts.get(fontFamily.trim().toLowerCase());
         if (font) {
             const mimeType = this.mimeTypeMap.font;
-            return font.find(item => fontStyle.startsWith(item.fontStyle) && (!fontWeight || item.fontWeight === parseInt(fontWeight)) && (hasMimeType(mimeType, item.srcFormat) || item.srcUrl && hasMimeType(mimeType, item.srcUrl)));
+            return font.find(item => fontStyle.startsWith(item.fontStyle) && (!fontWeight || item.fontWeight === parseInt(fontWeight)) && (Resource.hasMimeType(mimeType, item.srcFormat) || item.srcUrl && Resource.hasMimeType(mimeType, item.srcUrl)));
         }
     }
 

@@ -141,14 +141,12 @@ declare module "lib" {
         function getSpecificity(value: string): number;
         function parseKeyframes(rules: CSSRuleList): Null<KeyframeData>;
         function getKeyframesRules(): KeyframesMap;
-        function getInheritedStyle(element: Element, attr: string, options?: InheritedStyleOptions): string;
         function calculate(value: string, options?: CalculateOptions): number;
         function calculateVar(element: StyleElement, value: string, options?: CalculateVarOptions): number;
         function calculateVarAsString(element: StyleElement, value: string, options?: CalculateVarAsStringOptions): string;
         function calculateStyle(element: StyleElement, attr: string, value: string, boundingBox?: Null<Dimension>): string;
         function parseVar(element: StyleElement, value: string): string;
         function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll): Undef<ImageSrcSet[]>;
-        function convertListStyle(name: string, value: number, valueAsDefault?: boolean): string;
         function extractURL(value: string): Undef<string>;
         function resolveURL(value: string): Undef<string>;
         function insertStyleSheetRule(value: string, index?: number): HTMLStyleElement;
@@ -269,7 +267,6 @@ declare module "lib" {
 
     namespace util {
         function promisify<T = unknown>(fn: FunctionType<any>): FunctionType<Promise<T>>
-        function hasMimeType(formats: MIMEOrAll, value: string): boolean;
         function parseMimeType(value: string): string;
         function fromMimeType(value: string): string;
         function formatXml(value: string, closeEmpty?: boolean): string;
@@ -280,8 +277,6 @@ declare module "lib" {
         function convertWord(value: string, dash?: boolean): string;
         function convertInt(value: string, fallback?: number): number;
         function convertFloat(value: string, fallback?: number): number;
-        function convertAlpha(value: number): string;
-        function convertRoman(value: number): string;
         function randomUUID(separator?: string): string;
         function delimitString(options: DelimitStringOptions, ...appending: string[]): string;
         function spliceString(value: string, index: number, length: number): string;

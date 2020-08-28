@@ -7,12 +7,6 @@ interface XMLTagData {
     closing: boolean;
 }
 
-const NUMERALS = [
-    '', 'C', 'CC', 'CCC', 'CD', 'D', 'DC', 'DCC', 'DCCC', 'CM',
-    '', 'X', 'XX', 'XXX', 'XL', 'L', 'LX', 'LXX', 'LXXX', 'XC',
-    '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'
-];
-
 const CACHE_CAMELCASE: StringMap = {};
 const CACHE_HYPHENATED: StringMap = {};
 const CACHE_UNDERSCORE: StringMap = {};
@@ -29,10 +23,6 @@ export function promisify<T>(fn: FunctionType<any>): FunctionType<Promise<T>> {
             }
         });
     };
-}
-
-export function hasMimeType(formats: MIMEOrAll, value: string) {
-    return formats === '*' || formats.includes(parseMimeType(value));
 }
 
 export function parseMimeType(value: string) {
@@ -510,42 +500,6 @@ export function convertInt(value: string, fallback = 0) {
 export function convertFloat(value: string, fallback = 0) {
     const result = parseFloat(value);
     return !isNaN(result) ? result : fallback;
-}
-
-export function convertAlpha(value: number) {
-    if (value >= 0) {
-        const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        let result = '';
-        const length = alphabet.length;
-        while (value >= length) {
-            const base = Math.floor(value / length);
-            if (base > 1 && base <= length) {
-                result += alphabet[base - 1];
-                value -= base * length;
-            }
-            else if (base) {
-                result += 'Z';
-                value -= Math.pow(length, 2);
-                result += convertAlpha(value);
-                return result;
-            }
-            const index = value % length;
-            result += alphabet[index];
-            value -= index + length;
-        }
-        return alphabet[value] + result;
-    }
-    return value.toString();
-}
-
-export function convertRoman(value: number) {
-    const digits = value.toString().split('');
-    let result = '',
-        i = 3;
-    while (i--) {
-        result = (NUMERALS[parseInt(digits.pop()!) + (i * 10)] || '') + result;
-    }
-    return 'M'.repeat(parseInt(digits.join(''))) + result;
 }
 
 export function randomUUID(separator = '-') {

@@ -8,7 +8,7 @@ import { RESERVED_JAVA } from './lib/constant';
 const { findColorShade, parseColor } = squared.lib.color;
 const { extractURL, getSrcSet } = squared.lib.css;
 const { FILE } = squared.lib.regex;
-const { fromLastIndexOf, hasMimeType, isNumber, isPlainObject, isString, resolvePath, trimString } = squared.lib.util;
+const { fromLastIndexOf, isNumber, isPlainObject, isString, resolvePath, trimString } = squared.lib.util;
 
 const STORED = squared.base.ResourceUI.STORED as AndroidResourceStoredMap;
 
@@ -180,7 +180,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
             const src = fromLastIndexOf(mdpi, '/');
             const ext = this.getExtension(src);
             const length = ext.length;
-            if (!imageFormat || hasMimeType(imageFormat, ext) || length === 0) {
+            if (!imageFormat || Resource.hasMimeType(imageFormat, ext) || length === 0) {
                 const asset = Resource.insertStoredAsset('images', Resource.formatName(prefix + src.substring(0, src.length - (length ? length + 1 : 0))).toLowerCase(), images);
                 CACHE_IMAGE.set(mdpi, asset);
                 return asset;

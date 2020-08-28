@@ -198,6 +198,7 @@ declare module "base" {
     class Resource<T extends Node> implements Resource<T>, AppHandler<T> {
         static readonly KEY_NAME: string;
         static readonly ASSETS: ResourceAssetMap;
+        static hasMimeType(formats: MIMEOrAll, value: string): boolean;
         static canCompressImage(filename: string, mimeType?: string): boolean;
         static getExtension(value: string): string;
         readonly application: Application<T>;
@@ -808,6 +809,12 @@ declare module "base" {
                 XML = 1,
                 INCLUDE
             }
+        }
+
+        namespace util {
+            function convertAlpha(value: number): string;
+            function convertRoman(value: number): string;
+            function convertListStyle(name: string, value: number, valueAsDefault?: boolean): string;
         }
     }
 }

@@ -9,14 +9,16 @@ import LayoutUI from './layout-ui';
 import NodeUI from './node-ui';
 import ResourceUI from './resource-ui';
 
+import { convertListStyle } from './lib/util';
+
 import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TRAVERSE } from './lib/enumeration';
 
 type FileActionOptions = squared.FileActionOptions;
 
-const { convertListStyle, formatPX, getStyle, hasComputedStyle, hasCoords, insertStyleSheetRule, resolveURL } = squared.lib.css;
+const { formatPX, getStyle, hasComputedStyle, hasCoords, insertStyleSheetRule, resolveURL } = squared.lib.css;
 const { getNamedItem, removeElementsByClassName } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;
-const { appendSeparator, capitalize, convertWord, flatArray, hasBit, hasMimeType, isString, iterateArray, partitionArray, trimBoth, trimString } = squared.lib.util;
+const { appendSeparator, capitalize, convertWord, flatArray, hasBit, isString, iterateArray, partitionArray, trimBoth, trimString } = squared.lib.util;
 
 const REGEXP_PSEUDOCOUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s+([a-z-]+))?\)|(counters)\(([^,]+),\s+"([^"]*)"(?:,\s+([a-z-]+))?\)|"([^"]+)")\s*/g;
 const REGEXP_PSEUDOCOUNTERVALUE = /\b([^\-\d][^\-\d]?[^\s]*)\s+(-?\d+)\b/g;
@@ -1563,7 +1565,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     default: {
                         const url = resolveURL(value);
                         if (url) {
-                            if (hasMimeType(this._controllerSettings.mimeType.image, url)) {
+                            if (ResourceUI.hasMimeType(this._controllerSettings.mimeType.image, url)) {
                                 tagName = 'img';
                                 content = url;
                             }

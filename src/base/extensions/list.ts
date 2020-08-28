@@ -2,9 +2,10 @@ import type NodeUI from '../node-ui';
 
 import ExtensionUI from '../extension-ui';
 
+import { convertListStyle } from '../lib/util';
+
 import { NODE_RESOURCE } from '../lib/enumeration';
 
-const { convertListStyle } = squared.lib.css;
 const { isNumber } = squared.lib.util;
 
 function isListItem(node: NodeUI) {

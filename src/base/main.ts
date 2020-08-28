@@ -27,6 +27,7 @@ import WhiteSpace from './extensions/whitespace';
 
 import * as constant from './lib/constant';
 import * as enumeration from './lib/enumeration';
+import * as util from './lib/util';
 
 const extensions = {
     Accessibility,
@@ -43,7 +44,8 @@ const extensions = {
 
 const lib = {
     constant,
-    enumeration
+    enumeration,
+    util
 };
 
 export {
