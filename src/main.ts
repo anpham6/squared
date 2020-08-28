@@ -21,7 +21,7 @@ type ExtensionRequest = Undef<Extension | string>;
 type Framework = squared.base.AppFramework<Node>;
 type FileActionOptions = squared.FileActionOptions;
 type FrameworkOptions = squared.FrameworkOptions;
-type ExtendPrototypeMap = squared.ExtendPrototypeMap;
+type ExtendPrototypeMap = ObjectMap<FunctionType<any> | { get: () => any, set: (value: any) => void }>;
 
 const extensionsQueue = new Set<Extension>();
 const extensionsExternal = new Set<Extension>();
@@ -157,11 +157,11 @@ export function setHostname(value: string) {
 export function setFramework(value: Framework, options?: FrameworkOptions) {
     const reloading = framework !== null;
     let userSettings: Undef<StandardMap>,
-        saveAs: Undef<string>,
+        saveAsLocal: Undef<string>,
         loadAs: Undef<string>,
         cache: Undef<boolean>;
     if (options) {
-        ({ settings: userSettings, saveAs, loadAs, cache } = options);
+        ({ settings: userSettings, saveAs: saveAsLocal, loadAs, cache } = options);
     }
     const mergeSettings = (baseSettings: UserSettings, frameworkId: number) => {
         if (loadAs) {
@@ -180,9 +180,9 @@ export function setFramework(value: Framework, options?: FrameworkOptions) {
         if (util.isPlainObject(userSettings)) {
             Object.assign(baseSettings, userSettings);
         }
-        if (saveAs) {
+        if (saveAsLocal) {
             try {
-                localStorage.setItem(saveAs + '-' + frameworkId, JSON.stringify(baseSettings));
+                localStorage.setItem(saveAsLocal + '-' + frameworkId, JSON.stringify(baseSettings));
             }
             catch {
             }
@@ -273,7 +273,7 @@ export function exclude(value: ExtensionRequest) {
 export function configure(value: ExtensionRequest, options: FrameworkOptions) {
     if (util.isPlainObject(options)) {
         const mergeSettings = (name: string) => {
-            const { loadAs, saveAs } = options;
+            const { loadAs, saveAs: saveAsLocal } = options;
             const result: PlainObject = {};
             if (loadAs) {
                 try {
@@ -286,9 +286,9 @@ export function configure(value: ExtensionRequest, options: FrameworkOptions) {
                 }
             }
             Object.assign(result, options.settings);
-            if (saveAs) {
+            if (saveAsLocal) {
                 try {
-                    localStorage.setItem(saveAs + '-' + name, JSON.stringify(result));
+                    localStorage.setItem(saveAsLocal + '-' + name, JSON.stringify(result));
                 }
                 catch {
                 }
@@ -327,7 +327,7 @@ export function retrieve(value: string) {
     }
 }
 
-export function extend(functionMap: ExtendPrototypeMap, value = 0) {
+export function extend(functionMap: PlainObject, value = 0) {
     prototypeMap.set(value, Object.assign(prototypeMap.get(value) || {}, functionMap));
 }
 
@@ -375,12 +375,6 @@ export function latest(value = 1) {
     return '';
 }
 
-export function reset() {
-    if (main) {
-        main.reset();
-    }
-}
-
 export function ready() {
     return main ? !main.initializing && !main.closed : false;
 }
@@ -389,23 +383,19 @@ export function close() {
     return checkWritable(main) && main.finalize();
 }
 
-export function copyToDisk(value: string, options?: FileActionOptions) {
-    if (main) {
-        return util.isString(value) && close() ? main.copyToDisk(value, options) : Promise.reject(new Error(error.UNABLE_TO_FINALIZE_DOCUMENT));
-    }
-    return session.frameworkNotInstalled();
+export function save() {
+    return saveAs('');
 }
 
-export function appendToArchive(value: string, options?: FileActionOptions) {
+export function reset() {
     if (main) {
-        return util.isString(value) && close() ? main.appendToArchive(value, options) : Promise.reject(new Error(error.UNABLE_TO_FINALIZE_DOCUMENT));
+        main.reset();
     }
-    return session.frameworkNotInstalled();
 }
 
-export function saveToArchive(value?: string, options?: FileActionOptions) {
+export function saveAs(value: string, options?: FileActionOptions) {
     if (main) {
-        return close() ? main.saveToArchive(value, options) : Promise.reject(new Error(error.UNABLE_TO_FINALIZE_DOCUMENT));
+        return close() ? main.saveAs(value, options) : Promise.reject(new Error(error.UNABLE_TO_FINALIZE_DOCUMENT));
     }
     return session.frameworkNotInstalled();
 }
@@ -417,9 +407,23 @@ export function createFrom(value: string, options: FileActionOptions) {
     return session.frameworkNotInstalled();
 }
 
-export function appendFromArchive(value: string, options: FileActionOptions) {
+export function appendTo(value: string, options?: FileActionOptions) {
     if (main) {
-        return checkFrom(value, options) ? main.appendFromArchive(value, options) : Promise.reject(new Error(error.INVALID_ASSET_REQUEST));
+        return util.isString(value) && close() ? main.appendTo(value, options) : Promise.reject(new Error(error.UNABLE_TO_FINALIZE_DOCUMENT));
+    }
+    return session.frameworkNotInstalled();
+}
+
+export function appendFrom(value: string, options: FileActionOptions) {
+    if (main) {
+        return checkFrom(value, options) ? main.appendFrom(value, options) : Promise.reject(new Error(error.INVALID_ASSET_REQUEST));
+    }
+    return session.frameworkNotInstalled();
+}
+
+export function copyTo(value: string, options?: FileActionOptions) {
+    if (main) {
+        return util.isString(value) && close() ? main.copyTo(value, options) : Promise.reject(new Error(error.UNABLE_TO_FINALIZE_DOCUMENT));
     }
     return session.frameworkNotInstalled();
 }

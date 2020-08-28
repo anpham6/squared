@@ -100,24 +100,24 @@ export default abstract class Application<T extends Node> implements squared.bas
         return node;
     }
 
-    public copyToDisk(directory: string, options?: FileActionOptions) {
-        return this._resourceHandler?.fileHandler?.copyToDisk(directory, options) || operationNotSupported();
+    public copyTo(directory: string, options?: FileActionOptions) {
+        return this._resourceHandler?.fileHandler?.copyTo(directory, options) || operationNotSupported();
     }
 
-    public appendToArchive(pathname: string, options?: FileActionOptions) {
-        return this._resourceHandler?.fileHandler?.appendToArchive(pathname, options) || operationNotSupported();
+    public appendTo(pathname: string, options?: FileActionOptions) {
+        return this._resourceHandler?.fileHandler?.appendTo(pathname, options) || operationNotSupported();
     }
 
-    public saveToArchive(filename?: string, options?: FileActionOptions) {
-        return this._resourceHandler?.fileHandler?.saveToArchive(filename || this._resourceHandler.userSettings.outputArchiveName, options) || operationNotSupported();
+    public saveAs(filename?: string, options?: FileActionOptions) {
+        return this._resourceHandler?.fileHandler?.saveAs(filename || this._resourceHandler.userSettings.outputArchiveName, options) || operationNotSupported();
     }
 
     public createFrom(format: string, options: FileActionOptions) {
         return this._resourceHandler?.fileHandler?.createFrom(format, options) || operationNotSupported();
     }
 
-    public appendFromArchive(filename: string, options: FileActionOptions) {
-        return this._resourceHandler?.fileHandler?.appendFromArchive(filename, options) || operationNotSupported();
+    public appendFrom(filename: string, options: FileActionOptions) {
+        return this._resourceHandler?.fileHandler?.appendFrom(filename, options) || operationNotSupported();
     }
 
     public finalize() {

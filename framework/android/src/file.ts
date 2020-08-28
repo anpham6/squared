@@ -100,11 +100,11 @@ function getOutputDirectory(value: string) {
 export default class File<T extends View> extends squared.base.File<T> implements android.base.File<T> {
     public resource!: Resource<T>;
 
-    public copyToDisk(directory: string, options?: FileCopyingOptions) {
+    public copyTo(directory: string, options?: FileCopyingOptions) {
         return this.copying({ ...options, assets: this.combineAssets(options?.assets), directory });
     }
 
-    public appendToArchive(pathname: string, options?: FileArchivingOptions) {
+    public appendTo(pathname: string, options?: FileArchivingOptions) {
         return this.archiving({
             filename: this.userSettings.outputArchiveName,
             ...options,
@@ -113,7 +113,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         });
     }
 
-    public saveToArchive(filename: string, options?: FileArchivingOptions) {
+    public saveAs(filename: string, options?: FileArchivingOptions) {
         return this.archiving({ ...options, assets: this.combineAssets(options?.assets), filename });
     }
 

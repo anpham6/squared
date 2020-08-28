@@ -179,7 +179,7 @@ const appBase: chrome.ChromeFramework<Node> = {
             settings.preloadFonts = false;
             application.reset();
             return application.parseDocument(document.body).then((response: Node) => {
-                file!.saveToArchive(filename || settings.outputArchiveName, options);
+                file!.saveAs(filename || settings.outputArchiveName, options);
                 settings.preloadImages = preloadImages;
                 settings.preloadFonts = preloadFonts;
                 return response;

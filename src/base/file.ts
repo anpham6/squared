@@ -31,9 +31,9 @@ export default abstract class File<T extends Node> implements squared.base.File<
 
     private _hostname = '';
 
-    public abstract copyToDisk(directory: string, options?: FileCopyingOptions): FileActionResult;
-    public abstract appendToArchive(pathname: string, options?: FileArchivingOptions): FileActionResult;
-    public abstract saveToArchive(filename: string, options?: FileArchivingOptions): FileActionResult;
+    public abstract copyTo(directory: string, options?: FileCopyingOptions): FileActionResult;
+    public abstract appendTo(pathname: string, options?: FileArchivingOptions): FileActionResult;
+    public abstract saveAs(filename: string, options?: FileArchivingOptions): FileActionResult;
 
     public abstract get userSettings(): UserResourceSettings;
 
@@ -49,7 +49,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
         });
     }
 
-    public appendFromArchive(filename: string, options: FileArchivingOptions) {
+    public appendFrom(filename: string, options: FileArchivingOptions) {
         return this.archiving({
             filename: this.userSettings.outputArchiveName,
             format: filename.substring(filename.lastIndexOf('.') + 1),

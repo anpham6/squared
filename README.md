@@ -79,12 +79,15 @@ The primary function "parseDocument" can be called on multiple elements and mult
         // OR
         squared.parseDocument(/* HTMLElement */, /* 'subview-id' */, /* ...etc */);
 
-        // With: node-express / squared-apache
-        squared.saveToArchive(/* optional: archive name */, /* options */);
+        squared.close() // optional: autoCloseOnWrite = true
+
+        squared.save(); // using defaults from settings
         // OR
-        squared.copyToDisk(/* required: local directory */, /* options */);
+        squared.saveAs(/* archive name */, /* options */);
         // OR
-        squared.appendToArchive(/* required: location uri */, /* options */);
+        squared.copyTo(/* local directory */, /* options */);
+        // OR
+        squared.appendTo(/* location uri */, /* options */);
 
         squared.reset(); // start new "parseDocument" session
     });
@@ -126,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
     squared.setFramework(android);
     squared.parseDocument(/* 'mainview' */, /* 'subview' */).then(() => {
         squared.close();
-        squared.saveToArchive();
+        squared.save();
     });
 });
 ```
@@ -307,22 +310,23 @@ clearElementMap()
 Packaging methods will return a Promise and require either node-express or squared-apache installed. These features are not supported when the framework is VDOM.
 
 ```javascript
-saveToArchive(filename?: string, options?: {}) // save entire project as a new archive
-createFrom(format: string, options: {}) // create new archive from only RequestAsset[]
+save() // save current session using default settings
+saveAs(filename: string, options?: {}) // save current session with filename as a new archive
+createFrom(format: string, options: {}) // create new archive from RequestAsset[]
 
 // Required (local archives): --disk-read | --unc-read | --access-all (command-line)
 
-appendToArchive(pathname: string, options?: {}) // append entire project to a copy of a preexisting archive
-appendFromArchive(pathname: string, options: {}) // create new archive from a preexisting archive and from only RequestAsset[]
+appendTo(pathname: string, options?: {}) // create new archive from a preexisting archive and current session
+appendFrom(pathname: string, options: {}) // create new archive from a preexisting archive and RequestAsset[]
 
 // Required (all): --disk-write | --unc-write | --access-all (command-line)
 
-copyToDisk(directory: string, options?: {}) // copy entire project to local directory
+copyTo(directory: string, options?: {}) // copy current session to local directory
 ```
 
 ### ANDROID: Public Methods
 
-The system methods are used internally to create the entire project and generally are not useful other than for debugging purposes or extracting the raw assets.
+The system methods are used internally to create the entire project and generally are not useful other than for debugging or extracting the raw assets.
 
 ```javascript
 android.setViewModel(data: {}, sessionId?: string) // object data for layout bindings
@@ -487,7 +491,7 @@ These are some of the available options when creating archives or copying files.
 
 squared.settings.outputArchiveFormat = '7z'; // default format "zip"
 
-squared.saveToArchive('archive1', {
+squared.saveAs('archive1', {
     format: '7z',
     assets: [
         {
@@ -584,7 +588,7 @@ Most attributes can be excluded from the generated XML using the dataset feature
 View model data can be applied to most HTML elements using the dataset attribute. Different view models can be used for every "parseDocument" session. Leaving the sessionId empty sets the default view model for the entire project.
 
 ```javascript
-squared.parseDocument(/* 'mainview' */, /* 'subview' */).then(() => {
+await squared.parseDocument(/* 'mainview' */, /* 'subview' */).then(() => {
     const sessions = squared.latest(2).split(',');
     android.setViewModel(
         {
@@ -608,9 +612,10 @@ squared.parseDocument(/* 'mainview' */, /* 'subview' */).then(() => {
         },
         sessions[0]
     );
-    squared.close();
-    squared.saveToArchive();
 });
+
+squared.close();
+squared.save();
 ```
 
 Two additional output parameters are required with the "data-viewmodel" prefix. 

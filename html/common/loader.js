@@ -10,7 +10,7 @@ System.import('/build/src/main.js').then(result => {
             const time = new Date().getTime();
             squared.parseDocument().then(function() {
                 squared.settings.outputEmptyCopyDirectory = true;
-                squared.copyToDisk('C:/Users/An/git/flexbox', {
+                squared.copyTo('C:/Users/An/git/flexbox', {
                     assets: [
                         {
                             pathname: 'app/src/main/res/drawable',
@@ -42,7 +42,7 @@ System.import('/build/src/main.js').then(result => {
                 const time = new Date().getTime();
                 squared.parseDocument().then(function() {
                     squared.settings.outputEmptyCopyDirectory = true;
-                    squared.copyToDisk('C:/Users/An/git/flexbox', {
+                    squared.copyTo('C:/Users/An/git/flexbox', {
                         assets: [
                             {
                                 pathname: 'app/src/main/res/drawable',
@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
     squared.parseDocument()
         .then(() => {
             if (copyTo) {
-                squared.copyToDisk(copyTo).then(response => {
+                squared.copyTo(copyTo).then(response => {
                     squared.lib.dom.createElement('div', {
                         parent: document.body,
                         attrs: {
@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
             else {
                 console.log('SQ: ' + (performance.now() - time));
                 squared.settings.outputEmptyCopyDirectory = true;
-                squared.copyToDisk('C:/Users/An/git/flexbox', {
+                squared.copyTo('C:/Users/An/git/flexbox', {
                     assets: [
                         {
                             pathname: 'app/src/main/res/drawable',

@@ -11,11 +11,11 @@ declare module "base" {
     }
 
     interface FileActionAsync {
-        copyToDisk(directory: string, options?: squared.FileActionOptions): FileActionResult;
-        appendToArchive(pathname: string, options?: squared.FileActionOptions): FileActionResult;
-        saveToArchive(filename?: string, options?: squared.FileActionOptions): FileActionResult;
+        copyTo(directory: string, options?: squared.FileActionOptions): FileActionResult;
+        appendTo(pathname: string, options?: squared.FileActionOptions): FileActionResult;
+        saveAs(filename?: string, options?: squared.FileActionOptions): FileActionResult;
         createFrom(format: string, options: squared.FileActionOptions): FileActionResult;
-        appendFromArchive(filename: string, options: squared.FileActionOptions): FileActionResult;
+        appendFrom(filename: string, options: squared.FileActionOptions): FileActionResult;
     }
 
     interface AppBase<T extends Node> {
@@ -95,11 +95,11 @@ declare module "base" {
         getProcessingCache(sessionId: string): NodeList<T>;
         getDatasetName(attr: string, element: HTMLElement): Undef<string>;
         setDatasetName(attr: string, element: HTMLElement, value: string): void;
-        copyToDisk(directory: string, options?: FileCopyingOptions): FileActionResult;
-        appendToArchive(pathname: string, options?: FileCopyingOptions): FileActionResult;
-        saveToArchive(filename?: string, options?: FileArchivingOptions): FileActionResult;
+        copyTo(directory: string, options?: FileCopyingOptions): FileActionResult;
+        appendTo(pathname: string, options?: FileCopyingOptions): FileActionResult;
+        saveAs(filename?: string, options?: FileArchivingOptions): FileActionResult;
         createFrom(format: string, options: FileArchivingOptions): FileActionResult;
-        appendFromArchive(filename: string, options: FileArchivingOptions): FileActionResult;
+        appendFrom(filename: string, options: FileArchivingOptions): FileActionResult;
         toString(): string;
         get mainElement(): Element;
         get controllerHandler(): Controller<T>;
@@ -314,11 +314,11 @@ declare module "base" {
         reset(): void;
         copying(options: FileCopyingOptions): FileActionResult;
         archiving(options: FileArchivingOptions): FileActionResult;
-        copyToDisk(directory: string, options?: FileCopyingOptions): FileActionResult;
-        appendToArchive(pathname: string, options?: FileCopyingOptions): FileActionResult;
-        saveToArchive(filename: string, options?: FileArchivingOptions): FileActionResult;
+        copyTo(directory: string, options?: FileCopyingOptions): FileActionResult;
+        appendTo(pathname: string, options?: FileCopyingOptions): FileActionResult;
+        saveAs(filename: string, options?: FileArchivingOptions): FileActionResult;
         createFrom(format: string, options: FileArchivingOptions): FileActionResult;
-        appendFromArchive(filename: string, options: FileArchivingOptions): FileActionResult;
+        appendFrom(filename: string, options: FileArchivingOptions): FileActionResult;
         getDataMap(options: squared.FileActionOptions): Void<StandardMap>;
         getCopyQueryParameters(options: FileCopyingOptions): string;
         getArchiveQueryParameters(options: FileArchivingOptions): string;

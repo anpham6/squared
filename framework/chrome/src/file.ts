@@ -263,11 +263,11 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         delete this._outputFileExclusions;
     }
 
-    public copyToDisk(directory: string, options?: ChromeFileCopyingOptions) {
+    public copyTo(directory: string, options?: ChromeFileCopyingOptions) {
         return this.copying({ ...options, assets: this.appendAssetsFromOptions(options), directory });
     }
 
-    public appendToArchive(pathname: string, options?: ChromeFileArchivingOptions) {
+    public appendTo(pathname: string, options?: ChromeFileArchivingOptions) {
         return this.archiving({
             filename: this.userSettings.outputArchiveName,
             ...options,
@@ -276,7 +276,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         });
     }
 
-    public saveToArchive(filename: string, options?: ChromeFileArchivingOptions) {
+    public saveAs(filename: string, options?: ChromeFileArchivingOptions) {
         return this.archiving({ ...options, assets: this.appendAssetsFromOptions(options), filename });
     }
 

@@ -243,16 +243,16 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return true;
     }
 
-    public copyToDisk(directory: string, options?: FileActionOptions) {
-        return super.copyToDisk(directory, this.createAssetOptions(options));
+    public copyTo(directory: string, options?: FileActionOptions) {
+        return super.copyTo(directory, this.createAssetOptions(options));
     }
 
-    public appendToArchive(pathname: string, options?: FileActionOptions) {
-        return super.appendToArchive(pathname, this.createAssetOptions(options));
+    public appendTo(pathname: string, options?: FileActionOptions) {
+        return super.appendTo(pathname, this.createAssetOptions(options));
     }
 
-    public saveToArchive(filename?: string, options?: FileActionOptions) {
-        return super.saveToArchive(filename, this.createAssetOptions(options));
+    public saveAs(filename?: string, options?: FileActionOptions) {
+        return super.saveAs(filename, this.createAssetOptions(options));
     }
 
     public reset() {

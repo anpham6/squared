@@ -8,12 +8,12 @@ export interface FrameworkOptions {
     saveAs?: string;
     cache?: boolean;
 }
+
 export interface FileActionOptions {
     assets?: FileAsset[];
     exclusions?: Exclusions;
     callback?: CallbackResult;
 }
-export type ExtendPrototypeMap = ObjectMap<FunctionType<any> | { get: () => any, set: (value: any) => void } | number | string | boolean>;
 
 export const settings: StandardMap;
 export const system: FunctionMap<any>;
@@ -25,21 +25,22 @@ export function configure(value: ExtensionRequest | string, options: FrameworkOp
 export function retrieve(value: string): Null<PlainObject>;
 export function parseDocument(...elements: (string | HTMLElement)[]): Promise<Void<Node | Node[]>>;
 export function parseDocumentSync(...elements: (string | HTMLElement)[]): Void<Node | Node[]>;
-export function copyToDisk(value: string, options?: PlainObject): PromiseResult;
-export function appendToArchive(value: string, options?: PlainObject): PromiseResult;
-export function saveToArchive(value?: string, options?: PlainObject): PromiseResult;
-export function createFrom(value: string, options: PlainObject): PromiseResult;
-export function appendFromArchive(value: string, options: PlainObject): PromiseResult;
 export function get(...elements: (string | Element)[]): Undef<Node[] | Map<Element, Node[]>>;
 export function latest(value?: number): string;
 export function ready(): boolean;
 export function close(): boolean;
+export function save(): PromiseResult;
 export function reset(): void;
+export function saveAs(value?: string, options?: PlainObject): PromiseResult;
+export function createFrom(value: string, options: PlainObject): PromiseResult;
+export function appendTo(value: string, options?: PlainObject): PromiseResult;
+export function appendFrom(value: string, options: PlainObject): PromiseResult;
+export function copyTo(value: string, options?: PlainObject): PromiseResult;
 export function getElementById(value: string, cache?: boolean): Promise<Null<Node>> | Null<Node>;
 export function querySelector(value: string, cache?: boolean): Promise<Null<Node>> | Null<Node>;
 export function querySelectorAll(value: string, cache?: boolean): Promise<Node[]> | Node[];
 export function fromElement(element: HTMLElement, cache?: boolean): Promise<Null<Node>> | Null<Node>;
-export function extend(functionMap: ExtendPrototypeMap, framework?: number): void;
+export function extend(functionMap: PlainObject, framework?: number): void;
 export function getElementMap(): Map<HTMLElement, Node>;
 export function clearElementMap(): void;
 export function toString(): string;
