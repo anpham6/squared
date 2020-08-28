@@ -23,9 +23,9 @@ export function include(value: ExtensionRequest, options?: FrameworkOptions): bo
 export function exclude(value: ExtensionRequest | string): boolean;
 export function configure(value: ExtensionRequest | string, options: FrameworkOptions): boolean;
 export function retrieve(value: string): Null<PlainObject>;
+export function extend(functionMap: PlainObject, framework?: number): void;
 export function parseDocument(...elements: (string | HTMLElement)[]): Promise<Void<Node | Node[]>>;
 export function parseDocumentSync(...elements: (string | HTMLElement)[]): Void<Node | Node[]>;
-export function get(...elements: (string | Element)[]): Undef<Node[] | Map<Element, Node[]>>;
 export function latest(value?: number): string;
 export function ready(): boolean;
 export function close(): boolean;
@@ -40,9 +40,8 @@ export function getElementById(value: string, cache?: boolean): Promise<Null<Nod
 export function querySelector(value: string, cache?: boolean): Promise<Null<Node>> | Null<Node>;
 export function querySelectorAll(value: string, cache?: boolean): Promise<Node[]> | Node[];
 export function fromElement(element: HTMLElement, cache?: boolean): Promise<Null<Node>> | Null<Node>;
-export function extend(functionMap: PlainObject, framework?: number): void;
-export function getElementMap(): Map<HTMLElement, Node>;
-export function clearElementMap(): void;
+export function fromCache(...elements: (string | Element)[]): Undef<Node | Node[] | Map<Element, Node | Node[]>>;
+export function resetCache(): void;
 export function toString(): string;
 
 export * as lib from './lib/index';

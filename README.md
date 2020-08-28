@@ -279,12 +279,11 @@ setHostname(value: string) // use another cors-enabled server for processing arc
 parseDocument() // see installation section (Promise)
 parseDocumentSync() // skips preloadImages and preloadFonts (synchronous)
 
-get(...elements: (Element | string)[]) // Element map of any Node objects created during the active "parseDocument" session
 latest(count?: number) // most recent parseDocument session ids
 
 ready() // boolean indicating if parseDocument can be called
 close() // close current session preceding write to disk or local output
-reset() // clear cached layouts and reopen new session
+reset() // clear cache and reopen new session
 
 toString() // current framework loaded
 
@@ -303,8 +302,8 @@ querySelectorAll(value: string, sync?: boolean, cache?: boolean)
 
 fromElement(element: HTMLElement, sync?: boolean, cache?: boolean) // default: sync - false | cache - false
 
-getElementMap() // cached results from parseDocument (synchronous)
-clearElementMap()
+fromCache(...elements: (Element | string)[]) // Element map of any Node objects created during the active "parseDocument" session
+resetCache() // clear element data map
 ```
 
 Packaging methods will return a Promise and require either node-express or squared-apache installed. These features are not supported when the framework is VDOM.

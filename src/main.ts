@@ -331,40 +331,6 @@ export function extend(functionMap: PlainObject, value = 0) {
     prototypeMap.set(value, Object.assign(prototypeMap.get(value) || {}, functionMap));
 }
 
-export function get(...elements: (Element | string)[]) {
-    if (main) {
-        const result = new Map<Element, Node[]>();
-        const length = elements.length;
-        for (const sessionId of main.session.active.keys()) {
-            for (let i = 0; i < length; ++i) {
-                let element = elements[i];
-                if (typeof element === 'string') {
-                    element = document.getElementById(element) as HTMLElement;
-                }
-                if (element instanceof Element) {
-                    const node = session.getElementAsNode<Node>(element, sessionId);
-                    if (node) {
-                        if (result.has(element)) {
-                            result.get(element)!.push(node);
-                        }
-                        else {
-                            result.set(element, [node]);
-                        }
-                    }
-                }
-            }
-        }
-        if (length <= 1) {
-            if (result.size) {
-                return result.values().next().value as Node[];
-            }
-        }
-        else {
-            return result;
-        }
-    }
-}
-
 export function latest(value = 1) {
     if (main && value > 0) {
         const active = main.session.active;
@@ -483,11 +449,50 @@ export function fromElement(element: HTMLElement, sync = false, cache = false) {
     return sync ? null : Promise.resolve(null);
 }
 
-export function getElementMap() {
-    return main ? main.elementMap : new Map<Element, Node>();
+export function fromCache(...elements: (Element | string)[]) {
+    if (main) {
+        const result = new Map<Element, Node | Node[]>();
+        const length = elements.length;
+        const multiple = main.session.active.size > 1;
+        for (const sessionId of main.session.active.keys()) {
+            for (let i = 0; i < length; ++i) {
+                let element = elements[i];
+                if (typeof element === 'string') {
+                    element = document.getElementById(element) as HTMLElement;
+                }
+                if (element instanceof Element) {
+                    const node = session.getElementAsNode<Node>(element, sessionId);
+                    if (node) {
+                        if (multiple) {
+                            if (result.has(element)) {
+                                (result.get(element) as Node[]).push(node);
+                            }
+                            else {
+                                result.set(element, [node]);
+                            }
+                        }
+                        else {
+                            if (length === 1) {
+                                return node;
+                            }
+                            result.set(element, node);
+                        }
+                    }
+                }
+            }
+        }
+        if (length <= 1) {
+            if (result.size) {
+                return result.values().next().value as Node[];
+            }
+        }
+        else {
+            return result;
+        }
+    }
 }
 
-export function clearElementMap() {
+export function resetCache() {
     if (main) {
         main.elementMap.clear();
     }
