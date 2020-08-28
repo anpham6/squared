@@ -52,9 +52,9 @@ export default abstract class File<T extends Node> implements squared.base.File<
     public appendFromArchive(filename: string, options: FileArchivingOptions) {
         return this.archiving({
             filename: this.userSettings.outputArchiveName,
+            format: filename.substring(filename.lastIndexOf('.') + 1),
             ...options,
-            appendTo: filename,
-            format: filename.substring(filename.lastIndexOf('.') + 1)
+            appendTo: filename
         });
     }
 

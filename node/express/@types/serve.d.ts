@@ -1,9 +1,11 @@
 import * as express from 'express';
 import * as cors from 'cors';
 import * as fs from 'fs';
+import * as archiver from 'archiver';
 import * as jimp from 'jimp';
 
 type BoolString = boolean | string;
+type Format = archiver.Format | '7z';
 
 interface INode {
     readonly disk_read: boolean;

@@ -8,7 +8,7 @@ import cors = require('cors');
 import request = require('request');
 import uuid = require('uuid');
 import archiver = require('archiver');
-import decompress = require('decompress');
+import _7z = require('7zip-min');
 import jimp = require('jimp');
 import tinify = require('tinify');
 import chalk = require('chalk');
@@ -2197,7 +2197,7 @@ app.post('/api/assets/archive', (req, res) => {
     }
     let append_to = req.query.append_to as string,
         zipname = '',
-        format: archiver.Format,
+        format: serve.Format,
         cleared: Undef<boolean>,
         formatGzip: Undef<boolean>;
     if (path.isAbsolute(append_to)) {
@@ -2283,21 +2283,21 @@ app.post('/api/assets/archive', (req, res) => {
         }
     };
     if (append_to) {
-        const match = /([^/\\]+)\.(zip|tar)$/i.exec(append_to);
+        const match = /([^/\\]+)\.(zip|tar|7z|gz|tgz|bz2|lzma)$/i.exec(append_to);
         if (match) {
             const zippath = path.join(dirname_zip, match[0]);
             const copySuccess = () => {
                 zipname = match[1];
                 const unzip_to = path.join(dirname_zip, zipname);
-                decompress(zippath, unzip_to)
-                    .then(() => {
-                        format = match[2].toLowerCase() as archiver.Format;
+                _7z.unpack(zippath, unzip_to, err => {
+                    if (!err) {
                         resumeThread(unzip_to);
-                    })
-                    .catch(err => {
+                    }
+                    else {
                         Node.writeFail(zippath, err);
                         resumeThread();
-                    });
+                    }
+                });
             };
             try {
                 if (Node.isFileURI(append_to)) {
