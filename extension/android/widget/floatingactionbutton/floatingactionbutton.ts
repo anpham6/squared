@@ -64,7 +64,7 @@ export default class FloatingActionButton<T extends View> extends squared.base.E
         const controlName = node.api < BUILD_ANDROID.Q ? SUPPORT_ANDROID.FLOATING_ACTION_BUTTON : SUPPORT_ANDROID_X.FLOATING_ACTION_BUTTON;
         node.setControlType(controlName, CONTAINER_NODE.BUTTON);
         node.exclude({ resource: NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.ASSET });
-        Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberAsResource'));
+        Resource.formatOptions(options, this.application.extensionManager.valueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberAsResource'));
         if (!node.pageFlow) {
             const offsetParent = (this.application as android.base.Application<T>).resolveTarget(node.sessionId, target) || parent;
             if (node.autoMargin.leftRight) {

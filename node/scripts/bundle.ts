@@ -21,6 +21,9 @@ let output: String;
             case '--framework': {
                 const name = value.toLowerCase();
                 switch (name) {
+                    case 'base':
+                        files[1] = 'squared.base';
+                        break;
                     case 'android':
                     case 'chrome':
                     case 'vdom':

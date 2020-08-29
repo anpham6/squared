@@ -551,7 +551,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public useElement(element: HTMLElement) {
         const use = this.getDatasetName('use', element);
-        return isString(use) && use.split(',').some(value => !!this.extensionManager.retrieve(value.trim()));
+        return isString(use) && use.split(',').some(value => !!this.extensionManager.get(value.trim()));
     }
 
     public toString() {
@@ -563,7 +563,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (depth === 0) {
             cache.add(node);
             for (const name of node.extensions) {
-                if ((this.extensionManager.retrieve(name) as ExtensionUI<T>)?.cascadeAll) {
+                if ((this.extensionManager.get(name) as ExtensionUI<T>)?.cascadeAll) {
                     cascadeAll = true;
                     break;
                 }

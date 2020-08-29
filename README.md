@@ -276,21 +276,22 @@ There is no official documentation as this project is still in early development
 setFramework(module: {}, options?: FrameworkOptions) // install application interpreter
 setHostname(value: string) // use another cors-enabled server for processing archives (--cors <origin> | node-express + squared.settings.json: <https://github.com/expressjs/cors>)
 
-parseDocument() // see installation section (Promise)
-parseDocumentSync() // skips preloadImages and preloadFonts (synchronous)
+parseDocument(...elements: (Element | string)[]) // see installation section (Promise)
+parseDocumentSync(...elements: (Element | string)[]) // skips preloadImages and preloadFonts (synchronous)
 
 latest(count?: number) // most recent parseDocument session ids
 
 ready() // boolean indicating if parseDocument can be called
 close() // close current session preceding write to disk or local output
+save() // save current session to a new archive using default settings
 reset() // clear cache and reopen new session
 
 toString() // current framework loaded
 
-include(extension: string | squared.base.Extension, options?: FrameworkOptions) // see extension configuration section
-retrieve(name: string) // retrieve an extension by namespace or control
-configure(name: string, options: FrameworkOptions) // see extension configuration section
-exclude(name: string) // remove an extension by namespace or control
+add(...names: (string | Extension)[]) // see extension configuration section
+remove(...names: (string | Extension)[]) // remove an extension by namespace or control
+get(...names: (string | Extension)[]) // retrieve an extension by namespace or control
+assign(name: string | Extension, options: FrameworkOptions) // see extension configuration section
 
 extend(functionMap: {}, framework?: number) // add extension functions to Node prototype (framework: 0 - ALL | 1 - vdom | 2 - android | 4 - chrome)
 
@@ -302,15 +303,14 @@ querySelectorAll(value: string, sync?: boolean, cache?: boolean)
 
 fromElement(element: HTMLElement, sync?: boolean, cache?: boolean) // default: sync - false | cache - false
 
-fromCache(...elements: (Element | string)[]) // Element map of any Node objects created during the active "parseDocument" session
+fromCache(...elements: (Element | string)[]) // Element map of any Node objects created during the active "parseDocument" sessions
 resetCache() // clear element data map
 ```
 
 Packaging methods will return a Promise and require either node-express or squared-apache installed. These features are not supported when the framework is VDOM.
 
 ```javascript
-save() // save current session using default settings
-saveAs(filename: string, options?: {}) // save current session with filename as a new archive
+saveAs(filename: string, options?: {}) // save current sessionas a new archive
 createFrom(format: string, options: {}) // create new archive from RequestAsset[]
 
 // Required (local archives): --disk-read | --unc-read | --access-all (command-line)
@@ -426,7 +426,7 @@ Layout rendering can also be customized using extensions as the program was buil
 <script src="/dist/extensions/android.widget.toolbar.min.js"></script>
 <script>
     // Configure an extension (optional)
-    squared.configure('android.widget.toolbar', {
+    squared.assign('android.widget.toolbar', {
         settings: {
             'elementId': { // HTML DOM
                 appBar: {
@@ -449,7 +449,7 @@ Layout rendering can also be customized using extensions as the program was buil
 
     // Install an extension
     const sample = new Sample('your.namespace.sample', 0, { /* same as configure */ });
-    squared.include(sample);
+    squared.add(sample);
 </script>
 ```
 
@@ -806,7 +806,16 @@ external -> html | js | css -> npm package name -> custom name
 // squared.settings.json
 {
   "external": {
-    "js": {
+    "html": { // built-in minifier
+      "prettier": {
+        "beautify": {
+          "parser": "html",
+          "printWidth": 120,
+          "tabWidth": 4
+        }
+      }
+    },
+    "js": { // custom function
       "terser": {
         "minify-example": "const options = { keep_classnames: true }; return context.minify(value, options).code;" // arguments are always 'context' and 'value'
       },
@@ -911,7 +920,7 @@ chrome.extension.options = { // internal representation
     replaceWith: true // convert
 };
 
-squared.configure('chrome.convert.png', {
+squared.assign('chrome.convert.png', {
     largerThan: 10000,
     replaceWith: false,
     whenSmaller: true

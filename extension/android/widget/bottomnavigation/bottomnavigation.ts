@@ -26,7 +26,7 @@ export default class BottomNavigation<T extends android.base.View> extends squar
         node.setControlType(controlName, CONTAINER_NODE.BLOCK);
         node.exclude({ resource: NODE_RESOURCE.ASSET });
         node.render(parent);
-        node.apply(Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberAsResource')));
+        node.apply(Resource.formatOptions(options, this.application.extensionManager.valueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberAsResource')));
         node.setLayoutWidth('match_parent');
         node.setLayoutHeight('wrap_content');
         node.cascade((item: T) => this.addDescendant(item));

@@ -295,14 +295,14 @@ declare module "base" {
 
     class ExtensionManager<T extends Node> {
         readonly application: Application<T>;
-        include(ext: Extension<T> | string): boolean;
-        exclude(ext: Extension<T> | string): boolean;
-        retrieve(name: string, checkBuiltIn?: boolean): Undef<Extension<T>>;
-        optionValue<T = unknown>(name: string, attr: string, fallback?: T): Undef<T>;
-        optionValueAsObject(name: string, attr: string, fallback?: Null<PlainObject>): Null<PlainObject>;
-        optionValueAsString(name: string, attr: string, fallback?: string): string;
-        optionValueAsNumber(name: string, attr: string, fallback?: number): number;
-        optionValueAsBoolean(name: string, attr: string, fallback?: boolean): boolean;
+        add(ext: Extension<T> | string): boolean;
+        remove(ext: Extension<T> | string): boolean;
+        get(name: string, checkBuiltIn?: boolean): Undef<Extension<T>>;
+        valueOf<T = unknown>(name: string, attr: string, fallback?: T): Undef<T>;
+        valueAsObject(name: string, attr: string, fallback?: Null<PlainObject>): Null<PlainObject>;
+        valueAsString(name: string, attr: string, fallback?: string): string;
+        valueAsNumber(name: string, attr: string, fallback?: number): number;
+        valueAsBoolean(name: string, attr: string, fallback?: boolean): boolean;
         get extensions(): Extension<T>[];
     }
 

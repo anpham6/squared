@@ -5,7 +5,7 @@ import { WIDGET_NAME } from '../lib/constant';
 const fab = new FloatingActionButton(WIDGET_NAME.FAB, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID, { tagNames: ['BUTTON', 'INPUT', 'IMG'] });
 
 if (squared) {
-    squared.include(fab);
+    squared.add(fab);
 }
 
 export default fab;

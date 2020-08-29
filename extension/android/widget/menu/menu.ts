@@ -209,7 +209,7 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
                 break;
         }
         if (title !== '') {
-            android.title = Resource.addString(title, '', this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberAsResource'));
+            android.title = Resource.addString(title, '', this.application.extensionManager.valueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberAsResource'));
         }
         node.setControlType(controlName, CONTAINER_NODE.INLINE);
         node.exclude({ resource: NODE_RESOURCE.ALL, procedure: NODE_PROCEDURE.ALL });

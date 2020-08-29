@@ -72,14 +72,14 @@ function loadExtensions() {
     if (extensionManager) {
         if (extensionsQueue.size) {
             for (const item of extensionsQueue) {
-                extensionManager.include(item);
+                extensionManager.add(item);
             }
             extensionsQueue.clear();
         }
     }
     if (optionsQueue.size) {
         for (const [name, options] of optionsQueue.entries()) {
-            configure(name, options);
+            assign(name, options);
         }
         optionsQueue.clear();
     }
@@ -239,38 +239,72 @@ export function parseDocumentSync(...elements: (HTMLElement | string)[]) {
     }
 }
 
-export function include(value: ExtensionRequest, options?: FrameworkOptions) {
-    if (typeof value === 'string') {
-        value = main && main.builtInExtensions.get(value) || retrieve(value);
-    }
-    if (value instanceof squared.base.Extension) {
-        extensionsExternal.add(value);
-        if (extensionManager && !extensionManager.include(value)) {
-            extensionsQueue.add(value);
-        }
-        if (options) {
-            configure(value, options);
-        }
-        return true;
-    }
-    return false;
-}
-
-export function exclude(value: ExtensionRequest) {
-    if (extensionManager) {
+export function add(...values: ExtensionRequest[]) {
+    let success = 0;
+    for (let i = 0, length = values.length; i < length; ++i) {
+        let value = values[i];
         if (typeof value === 'string') {
-            value = extensionManager.retrieve(value);
+            value = main && main.builtInExtensions.get(value) || get(value) as Extension;
         }
         if (value instanceof squared.base.Extension) {
-            extensionsQueue.delete(value);
-            extensionsExternal.delete(value);
-            return extensionManager.exclude(value);
+            extensionsExternal.add(value);
+            if (extensionManager && !extensionManager.add(value)) {
+                extensionsQueue.add(value);
+            }
+            ++success;
         }
     }
-    return false;
+    return success;
 }
 
-export function configure(value: ExtensionRequest, options: FrameworkOptions) {
+export function remove(...values: ExtensionRequest[]) {
+    let success = 0;
+    if (extensionManager) {
+        for (let i = 0, length = values.length; i < length; ++i) {
+            let value = values[i];
+            if (typeof value === 'string') {
+                value = extensionManager.get(value);
+            }
+            if (value instanceof squared.base.Extension) {
+                extensionsQueue.delete(value);
+                extensionsExternal.delete(value);
+                if (extensionManager.remove(value)) {
+                    ++success;
+                }
+            }
+        }
+    }
+    return success;
+}
+
+export function get(...values: string[]) {
+    if (extensionManager) {
+        const result: Extension[] = [];
+        for (let i = 0, length = values.length; i < length; ++i) {
+            const value = values[i];
+            let item = extensionManager.get(value);
+            if (!item) {
+                for (const ext of extensionsExternal) {
+                    if (ext.name === value) {
+                        item = ext;
+                        break;
+                    }
+                }
+            }
+            if (item) {
+                if (length === 1) {
+                    return item;
+                }
+                else {
+                    result.push(item);
+                }
+            }
+        }
+        return result;
+    }
+}
+
+export function assign(value: ExtensionRequest, options: FrameworkOptions) {
     if (util.isPlainObject(options)) {
         const mergeSettings = (name: string) => {
             const { loadAs, saveAs: saveAsLocal } = options;
@@ -296,7 +330,7 @@ export function configure(value: ExtensionRequest, options: FrameworkOptions) {
             return result;
         };
         if (typeof value === 'string') {
-            const extension = extensionManager && extensionManager.retrieve(value) || util.findSet(extensionsQueue, item => item.name === value);
+            const extension = extensionManager && extensionManager.get(value) || util.findSet(extensionsQueue, item => item.name === value);
             if (!extension) {
                 optionsQueue.set(value, mergeSettings(value));
                 return true;
@@ -311,20 +345,6 @@ export function configure(value: ExtensionRequest, options: FrameworkOptions) {
         }
     }
     return false;
-}
-
-export function retrieve(value: string) {
-    if (extensionManager) {
-        const result = extensionManager.retrieve(value);
-        if (result) {
-            return result;
-        }
-        for (const ext of extensionsExternal) {
-            if (ext.name === value) {
-                return ext;
-            }
-        }
-    }
 }
 
 export function extend(functionMap: PlainObject, value = 0) {
@@ -452,8 +472,8 @@ export function fromElement(element: HTMLElement, sync = false, cache = false) {
 export function fromCache(...elements: (Element | string)[]) {
     if (main) {
         const result = new Map<Element, Node | Node[]>();
-        const length = elements.length;
         const multiple = main.session.active.size > 1;
+        const length = elements.length;
         for (const sessionId of main.session.active.keys()) {
             for (let i = 0; i < length; ++i) {
                 let element = elements[i];

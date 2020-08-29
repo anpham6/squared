@@ -99,12 +99,12 @@
                         System.import('/build/extension/android/widget/menu/main.js'),
                         System.import('/build/extension/android/widget/toolbar/main.js')
                     ]).then(() => {
-                        squared.configure('android.widget.toolbar', {
+                        squared.assign('android.widget.toolbar', {
                             toolbar_demo: {
                                 appBar: {}
                             }
                         });
-                        squared.include('android.substitute', {
+                        squared.add('android.substitute', {
                             viewpager_demo: {
                                 android: {
                                     layout_height: 'match_parent'

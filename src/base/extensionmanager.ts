@@ -7,11 +7,11 @@ const { hasBit, isObject } = squared.lib.util;
 export default class ExtensionManager<T extends Node> implements squared.base.ExtensionManager<T> {
     constructor(public readonly application: Application<T>) {}
 
-    public include(ext: Extension<T> | string) {
+    public add(ext: Extension<T> | string) {
         const application = this.application;
         const extensions = application.extensions;
         if (typeof ext === 'string') {
-            const item = this.retrieve(ext);
+            const item = this.get(ext);
             if (!item) {
                 return false;
             }
@@ -29,16 +29,16 @@ export default class ExtensionManager<T extends Node> implements squared.base.Ex
                 for (let i = 0, length = dependencies.length; i < length; ++i) {
                     const item = dependencies[i];
                     if (item.preload) {
-                        if (!this.retrieve(item.name)) {
+                        if (!this.get(item.name)) {
                             const extension = application.builtInExtensions.get(item.name);
                             if (extension) {
-                                this.include(extension);
+                                this.add(extension);
                             }
                         }
                     }
                 }
             }
-            if ((framework === 0 || hasBit(framework, application.framework)) && dependencies.every(item => !!this.retrieve(item.name))) {
+            if ((framework === 0 || hasBit(framework, application.framework)) && dependencies.every(item => !!this.get(item.name))) {
                 ext.application = application;
                 extensions.push(ext);
                 return true;
@@ -47,10 +47,10 @@ export default class ExtensionManager<T extends Node> implements squared.base.Ex
         return false;
     }
 
-    public exclude(ext: Extension<T> | string) {
+    public remove(ext: Extension<T> | string) {
         const extensions = this.extensions;
         for (let i = 0, length = extensions.length; i < length; ++i) {
-            if (extensions[i] === ext || typeof ext === 'string' && this.retrieve(ext)) {
+            if (extensions[i] === ext || typeof ext === 'string' && this.get(ext)) {
                 extensions.splice(i, 1);
                 return true;
             }
@@ -58,7 +58,7 @@ export default class ExtensionManager<T extends Node> implements squared.base.Ex
         return false;
     }
 
-    public retrieve(name: string, checkBuiltIn?: boolean) {
+    public get(name: string, checkBuiltIn?: boolean) {
         const extensions = this.extensions;
         for (let i = 0, length = extensions.length; i < length; ++i) {
             const ext = extensions[i];
@@ -71,28 +71,28 @@ export default class ExtensionManager<T extends Node> implements squared.base.Ex
         }
     }
 
-    public optionValue<T = unknown>(name: string, attr: string, fallback?: T): Undef<T> {
-        const options = this.retrieve(name)?.options;
+    public valueOf<T = unknown>(name: string, attr: string, fallback?: T): Undef<T> {
+        const options = this.get(name)?.options;
         return isObject(options) ? options[attr] as T : fallback;
     }
 
-    public optionValueAsObject(name: string, attr: string, fallback = null) {
-        const value = this.optionValue(name, attr);
+    public valueAsObject(name: string, attr: string, fallback = null) {
+        const value = this.valueOf(name, attr);
         return isObject(value) ? value : fallback;
     }
 
-    public optionValueAsString(name: string, attr: string, fallback = '') {
-        const value = this.optionValue(name, attr);
+    public valueAsString(name: string, attr: string, fallback = '') {
+        const value = this.valueOf(name, attr);
         return typeof value === 'string' ? value : fallback;
     }
 
-    public optionValueAsNumber(name: string, attr: string, fallback = NaN) {
-        const value = this.optionValue(name, attr);
+    public valueAsNumber(name: string, attr: string, fallback = NaN) {
+        const value = this.valueOf(name, attr);
         return typeof value === 'number' ? value : fallback;
     }
 
-    public optionValueAsBoolean(name: string, attr: string, fallback = false) {
-        const value = this.optionValue(name, attr);
+    public valueAsBoolean(name: string, attr: string, fallback = false) {
+        const value = this.valueOf(name, attr);
         return typeof value === 'boolean' ? value : fallback;
     }
 

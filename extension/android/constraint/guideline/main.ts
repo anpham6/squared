@@ -5,7 +5,7 @@ import { WIDGET_NAME } from '../lib/constant';
 const guideline = new Guideline(WIDGET_NAME.GUIDELINE, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID);
 
 if (squared) {
-    squared.include(guideline);
+    squared.add(guideline);
 }
 
 export default guideline;

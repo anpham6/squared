@@ -58,7 +58,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
         const toolbarOptions = createViewAttribute(options.self);
         const appBarOptions = createViewAttribute(options.appBar);
         const collapsingToolbarOptions = createViewAttribute(options.collapsingToolbar);
-        const numberAsResource = application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberAsResource');
+        const numberAsResource = application.extensionManager.valueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberAsResource');
         const hasMenu = Toolbar.findNestedElement(node, WIDGET_NAME.MENU);
         const backgroundImage = node.has('backgroundImage');
         const appBarChildren: T[] = [];
