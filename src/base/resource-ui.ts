@@ -3,6 +3,8 @@ import type ControllerUI from './controller-ui';
 import Resource from './resource';
 import NodeUI from './node-ui';
 
+import { appendSeparator } from './lib/util';
+
 import { NODE_ALIGNMENT, NODE_RESOURCE } from './lib/enumeration';
 
 const { USER_AGENT, isUserAgent } = squared.lib.client;
@@ -12,7 +14,7 @@ const { getNamedItem } = squared.lib.dom;
 const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = squared.lib.math;
 const { STRING } = squared.lib.regex;
 const { getElementAsNode } = squared.lib.session;
-const { appendSeparator, convertCamelCase, hasValue, isEqual, isNumber, isString, iterateArray, splitPair, splitPairEnd } = squared.lib.util;
+const { convertCamelCase, hasValue, isEqual, isNumber, isString, iterateArray, splitPair, splitPairEnd } = squared.lib.util;
 
 const BORDER_TOP = CSS_PROPERTIES.borderTop.value as string[];
 const BORDER_RIGHT = CSS_PROPERTIES.borderRight.value as string[];

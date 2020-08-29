@@ -318,7 +318,7 @@ function resetBox(node: NodeUI, region: number, register?: NodeUI) {
 const canResetChild = (node: NodeUI, children = true) => (!children && node.blockStatic || children && node.length > 0 && !node.floating) && !node.layoutElement && !node.tableElement && node.tagName !== 'FIELDSET';
 const validAboveChild = (node: NodeUI, children: boolean) => !node.hasHeight && node.borderBottomWidth === 0 && node.paddingBottom === 0 && canResetChild(node, children);
 const validBelowChild = (node: NodeUI, children: boolean) => !node.hasHeight && node.borderTopWidth === 0 && node.paddingTop === 0 && canResetChild(node, children);
-const hasOverflowXY = (node: NodeUI) => checkOverflowValue(node.cssInitial('overflowY')) || checkOverflowValue(node.cssInitial('overflowX'));
+const hasOverflow = (node: NodeUI) => checkOverflowValue(node.cssInitial('overflowY')) || checkOverflowValue(node.cssInitial('overflowX'));
 
 export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
     public readonly eventOnly = true;
@@ -499,7 +499,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                         if (marginBottom > 0) {
                                             if (marginTop > 0) {
                                                 if (marginTop <= marginBottom) {
-                                                    if (!inheritedTop || hasOverflowXY(current)) {
+                                                    if (!inheritedTop || hasOverflow(current)) {
                                                         resetBox(current, BOX_STANDARD.MARGIN_TOP);
                                                         if (current.bounds.height === 0 && marginBottom >= current.marginBottom) {
                                                             resetBox(current, BOX_STANDARD.MARGIN_BOTTOM);
@@ -507,7 +507,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                         inheritedTop = false;
                                                     }
                                                 }
-                                                else if (!inheritedBottom || hasOverflowXY(previous)) {
+                                                else if (!inheritedBottom || hasOverflow(previous)) {
                                                     resetBox(previous, BOX_STANDARD.MARGIN_BOTTOM);
                                                     if (previous.bounds.height === 0 && marginTop >= previous.marginTop) {
                                                         resetBox(previous, BOX_STANDARD.MARGIN_TOP);
@@ -523,7 +523,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                 }
                                             }
                                         }
-                                        if (marginTop > 0 && previous.floatContainer && current.getBox(BOX_STANDARD.MARGIN_TOP)[1] === 0 && hasOverflowXY(previous)) {
+                                        if (marginTop > 0 && previous.floatContainer && current.getBox(BOX_STANDARD.MARGIN_TOP)[1] === 0 && hasOverflow(previous)) {
                                             let valid: Undef<boolean>;
                                             if (previous.bounds.height === 0) {
                                                 valid = true;
@@ -613,7 +613,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                         }
                     }
                 }
-                if (pageFlow && hasOverflowXY(node) && node.tagName !== 'FIELDSET') {
+                if (pageFlow && hasOverflow(node) && node.tagName !== 'FIELDSET') {
                     if (firstChild && firstChild.naturalElement) {
                         applyMarginCollapse(node, firstChild, true);
                     }

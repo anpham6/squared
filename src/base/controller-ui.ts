@@ -56,7 +56,7 @@ function pushIndent(value: string, depth: number, char = '\t', indent?: string) 
         if (!indent) {
             indent = char.repeat(depth);
         }
-        return joinArray(value.split('\n'), line => line !== '' ? indent + line : '');
+        return joinArray(value.split('\n'), line => line !== '' ? indent + line : '', '\n') + '\n';
     }
     return value;
 }

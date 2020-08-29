@@ -9,7 +9,9 @@ type Node = squared.base.Node;
 type BundleIndex = ObjectMap<ChromeAsset[]>;
 
 const { FILE } = squared.lib.regex;
-const { appendSeparator, convertWord, fromLastIndexOf, isString, iterateReverseArray, parseMimeType, partitionLastIndexOf, randomUUID, resolvePath, splitPairStart, trimEnd } = squared.lib.util;
+const { convertWord, fromLastIndexOf, isString, iterateReverseArray, parseMimeType, partitionLastIndexOf, resolvePath, splitPairStart, trimEnd } = squared.lib.util;
+
+const { appendSeparator, randomUUID } = squared.base.lib.util;
 
 const STRING_SERVERROOT = '__serverroot__';
 

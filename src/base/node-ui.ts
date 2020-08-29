@@ -528,7 +528,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             for (let i = 0, length = attrs.length; i < length; ++i) {
                 const attr = attrs[i];
                 if (attr.includes('*')) {
-                    for (const [key] of searchObject(obj, attr)) {
+                    for (const key of searchObject(obj, attr)) {
                         delete obj[key];
                     }
                 }

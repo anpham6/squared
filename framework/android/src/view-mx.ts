@@ -1997,7 +1997,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         transferLayoutAlignment(update);
                     }
                     node.anchorDelete(...Object.keys(LAYOUT_CONSTRAINT) as AnchorPositionAttr[]);
-                    node.delete('app', 'layout_constraintHorizontal_bias', 'layout_constraintHorizontal_chainStyle', 'layout_constraintVertical_bias', 'layout_constraintVertical_chainStyle');
+                    node.delete('app', 'layout_constraint*');
                 }
                 else if (renderParent.layoutRelative) {
                     if (update === true) {

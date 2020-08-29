@@ -502,20 +502,6 @@ export function convertFloat(value: string, fallback = 0) {
     return !isNaN(result) ? result : fallback;
 }
 
-export function randomUUID(separator = '-') {
-    const alpha = '0123456789abcdef';
-    let result = '';
-    for (const length of [8, 4, 4, 4, 12]) {
-        if (result !== '') {
-            result += separator;
-        }
-        for (let i = 0; i < length; ++i) {
-            result += alpha[Math.floor(Math.random() * 16)];
-        }
-    }
-    return result;
-}
-
 export function delimitString(options: DelimitStringOptions, ...appending: string[]) {
     const length = appending.length;
     const value = options.value;
@@ -847,22 +833,6 @@ export function trimEnd(value: string, pattern: string) {
     return value.replace(new RegExp(`(${pattern})+$`), '');
 }
 
-export function appendSeparator(preceding = '', value = '', separator = '/') {
-    preceding = preceding.trim();
-    value = value.trim();
-    switch (separator) {
-        case '\\':
-            preceding = preceding.replace(/\//g, '\\');
-            value = value.replace(/\//g, '\\');
-            break;
-        case '/':
-            preceding = preceding.replace(/\\/g, '/');
-            value = value.replace(/\\/g, '/');
-            break;
-    }
-    return preceding + (preceding !== '' && value !== '' && !preceding.endsWith(separator) && !value.startsWith(separator) ? separator : '') + value;
-}
-
 export function fromLastIndexOf(value: string, ...char: string[]) {
     let i = 0;
     while (i < char.length) {
@@ -885,29 +855,21 @@ export function partitionLastIndexOf(value: string, ...char: string[]): [string,
     return ['', value];
 }
 
-export function searchObject(obj: StringMap, value: string | StringMap) {
-    const result: [string, string][] = [];
-    if (typeof value === 'object') {
-        for (const term in value) {
-            const attr = value[term]!;
-            if (hasValue(obj[attr])) {
-                result.push([attr, obj[attr]!]);
-            }
-        }
-    }
-    else {
-        const search =
-            /^\*.+\*$/.test(value)
-                ? (a: string) => a.includes(value.replace(/^\*/, '').replace(/\*$/, ''))
-            : value[0] === '*'
-                ? (a: string) => a.endsWith(value.replace(/^\*/, ''))
-            : lastItemEquals(value, '*')
-                ? (a: string) => a.startsWith(value.replace(/\*$/, ''))
-                : (a: string) => a === value;
-        for (const attr in obj) {
-            if (search(attr) && hasValue(obj[attr])) {
-                result.push([attr, obj[attr]!]);
-            }
+export function searchObject(obj: StringMap, value: string) {
+    const result: string[] = [];
+    const start = value[0] === '*';
+    const end = lastItemEquals(value, '*');
+    const search =
+        start && end
+            ? (a: string) => a.includes(value.replace(/^\*/, '').replace(/\*$/, ''))
+        : start
+            ? (a: string) => a.endsWith(value.replace(/^\*/, ''))
+        : end
+            ? (a: string) => a.startsWith(value.replace(/\*$/, ''))
+            : (a: string) => a === value;
+    for (const attr in obj) {
+        if (search(attr)) {
+            result.push(attr);
         }
     }
     return result;
@@ -1082,15 +1044,15 @@ export function sameArray<T, U = unknown>(list: ArrayLike<T>, predicate: Iterato
     return false;
 }
 
-export function joinArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, string>, char = '\n', trailing = true): string {
+export function joinArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, string>, char = ''): string {
     let result = '';
     for (let i = 0, length = list.length; i < length; ++i) {
         const value = predicate(list[i], i, list);
-        if (value) {
-            result += value + char;
+        if (value !== '') {
+            result += (result !== '' ? char : '') + value;
         }
     }
-    return trailing ? result : result.substring(0, result.length - char.length);
+    return result;
 }
 
 export function iterateArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start = 0, end = Infinity) {

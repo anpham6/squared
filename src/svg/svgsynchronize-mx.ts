@@ -1889,7 +1889,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                     if (repeatingResult || infiniteResult) {
                         removeAnimations(animationsBase, staggered);
                         const timeRange = Array.from(animateTimeRangeMap.entries());
-                        const synchronizedName = joinArray(staggered, item => SvgBuild.isAnimateTransform(item) ? TRANSFORM.typeAsName(item.type) : item.attributeName, '-', false);
+                        const synchronizedName = joinArray(staggered, item => SvgBuild.isAnimateTransform(item) ? TRANSFORM.typeAsName(item.type) : item.attributeName, '-');
                         const parent = this.parent;
                         for (const result of [repeatingResult, infiniteResult]) {
                             if (result) {

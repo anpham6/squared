@@ -2,9 +2,11 @@ import type Application from './application';
 import type File from './file';
 import type Node from './node';
 
+import { randomUUID } from './lib/util';
+
 const { extractURL } = squared.lib.css;
 const { STRING } = squared.lib.regex;
-const { fromLastIndexOf, fromMimeType, parseMimeType, randomUUID } = squared.lib.util;
+const { fromLastIndexOf, fromMimeType, parseMimeType } = squared.lib.util;
 
 const REGEXP_DATAURI = new RegExp(`^${STRING.DATAURI}$`);
 

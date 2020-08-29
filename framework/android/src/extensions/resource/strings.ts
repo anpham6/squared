@@ -10,6 +10,8 @@ const { getTextMetrics } = squared.lib.dom;
 const { clamp } = squared.lib.math;
 const { delimitString } = squared.lib.util;
 
+const { lowerCaseString, upperCaseString } = squared.base.lib.util;
+
 const { NODE_RESOURCE } = squared.base.lib.enumeration;
 
 const REGEXP_FONTVARIATION = /oblique(?:\s+(-?[\d.]+[a-z]+))?/;
@@ -33,37 +35,6 @@ function setTextValue(node: View, attr: string, name: string) {
     if (name !== '') {
         node.android(attr, name, false);
     }
-}
-
-function upperCaseString(value: string) {
-    let result: Undef<string[]>;
-    const pattern = /\b([a-z])/g;
-    let match: Null<RegExpMatchArray>;
-    while (match = pattern.exec(value)) {
-        if (result === undefined) {
-            result = value.split('');
-        }
-        result[match.index!] = match[1][0].toUpperCase();
-    }
-    return result ? result.join('') : value;
-}
-
-function lowerCaseString(value: string) {
-    const entities: string[] = [];
-    const pattern = /&#?[A-Za-z\d]+?;/g;
-    let match: Null<RegExpMatchArray>;
-    while (match = pattern.exec(value)) {
-        entities.push(match[0]);
-    }
-    if (entities.length) {
-        let result = '';
-        const segments = value.split(pattern);
-        for (let i = 0, length = segments.length; i < length; ++i) {
-            result += segments[i].toLowerCase() + (entities[i] || '');
-        }
-        return result;
-    }
-    return value.toLowerCase();
 }
 
 export default class ResourceStrings<T extends View> extends squared.base.ExtensionUI<T> {

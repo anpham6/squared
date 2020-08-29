@@ -173,11 +173,9 @@ export function replaceTab(value: string, spaces = 4, preserve?: boolean) {
             return joinArray(value.split('\n'), line => {
                 const match = /^(\t+)(.*)$/.exec(line);
                 return match ? ' '.repeat(spaces * match[1].length) + match[2] : line;
-            });
+            }, '\n') + '\n';
         }
-        else {
-            return value.replace(/\t/g, ' '.repeat(spaces));
-        }
+        return value.replace(/\t/g, ' '.repeat(spaces));
     }
     return value;
 }

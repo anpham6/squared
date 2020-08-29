@@ -2433,7 +2433,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                         if (r > 1) {
                             const bottomAligned = getTextBottom(items);
-                            let textBottom = bottomAligned[0] as Null<T> || null,
+                            let textBottom = bottomAligned[0] as UndefNull<T>,
                                 offsetTop = 0,
                                 offsetBottom = 0,
                                 maxCenter: Null<T> = null,
@@ -3126,7 +3126,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         baseline.anchor(getAnchorBaseline(tallest), tallest.documentId);
                         if (node.hasHeight) {
                             tallest.anchorDelete('top', 'bottom');
-                            tallest.delete('app', 'layout_constraintVertical_bias', 'layout_constraintVertical_chainStyle');
+                            tallest.delete('app', 'layout_constraintVertical*');
                             tallest.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 0, adjustment: 0 });
                             tallest.anchor('baseline', 'parent', true);
                         }
@@ -3309,7 +3309,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                         else {
                                             chain.modifyBox(BOX_STANDARD.MARGIN_LEFT, aboveBefore.marginRight);
                                         }
-                                        rowStart.delete('app', 'layout_constraintHorizontal_chainStyle', 'layout_constraintHorizontal_bias');
+                                        rowStart.delete('app', 'layout_constraintHorizontal*');
                                         rowStart.anchorDelete(chainEnd);
                                         rowEnd.anchorDelete(anchorEnd);
                                         if (!currentRowTop) {

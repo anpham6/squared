@@ -277,7 +277,6 @@ declare module "lib" {
         function convertWord(value: string, dash?: boolean): string;
         function convertInt(value: string, fallback?: number): number;
         function convertFloat(value: string, fallback?: number): number;
-        function randomUUID(separator?: string): string;
         function delimitString(options: DelimitStringOptions, ...appending: string[]): string;
         function spliceString(value: string, index: number, length: number): string;
         function splitPair(value: string, char: string, trim?: boolean): [string, string];
@@ -303,10 +302,9 @@ declare module "lib" {
         function trimString(value: string, pattern: string): string;
         function trimStart(value: string, pattern: string): string;
         function trimEnd(value: string, pattern: string): string;
-        function appendSeparator(preceding?: string, value?: string, separator?: string): string;
         function fromLastIndexOf(value: string, ...char: string[]): string;
         function partitionLastIndexOf(value: string, ...char: string[]): [string, string];
-        function searchObject(obj: StringMap, value: string | StringMap): [string, string][];
+        function searchObject(obj: StringMap, value: string): string[];
         function hasValue<T>(value: any): value is T;
         function withinRange(a: number, b: number, offset?: number): boolean;
         function assignEmptyProperty(dest: PlainObject, source: PlainObject): PlainObject;
@@ -318,7 +316,7 @@ declare module "lib" {
         function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>, deleteCount?: number): T[];
         function partitionArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>): [T[], T[]];
         function sameArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, any>): boolean;
-        function joinArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, string>, char?: string, trailing?: boolean): string;
+        function joinArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, string>, char?: string): string;
         function iterateArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start?: number, end?: number): number;
         function iterateReverseArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start?: number, end?: number): number;
         function replaceMap<T, U>(list: (T | U)[], predicate: IteratorPredicate<T, U>): U[];

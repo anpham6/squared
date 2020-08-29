@@ -1,9 +1,12 @@
 type View = android.base.View;
 
-const { appendSeparator, capitalize, sameArray } = squared.lib.util;
+const { capitalize, sameArray } = squared.lib.util;
 const { createViewAttribute } = android.lib.util;
 
+const { appendSeparator } = squared.base.lib.util;
+
 const { NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
+
 const { EXT_ANDROID } = android.lib.constant;
 const { CONTAINER_NODE } = android.lib.enumeration;
 

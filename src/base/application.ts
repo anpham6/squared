@@ -539,7 +539,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         return result;
     }
 
-    protected applyStyleRule(item: CSSStyleRule, sessionId: string) {
+    private applyStyleRule(item: CSSStyleRule, sessionId: string) {
         const resourceHandler = this._resourceHandler;
         const styleSheetHref = item.parentStyleSheet?.href || location.href;
         const cssText = item.cssText;
@@ -712,7 +712,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
     }
 
-    protected applyStyleSheet(item: CSSStyleSheet, sessionId: string, processing: squared.base.AppProcessing<T>) {
+    private applyStyleSheet(item: CSSStyleSheet, sessionId: string, processing: squared.base.AppProcessing<T>) {
         try {
             const cssRules = item.cssRules;
             if (cssRules) {
@@ -766,7 +766,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
     }
 
-    protected applyCSSRuleList(rules: CSSRuleList, sessionId: string) {
+    private applyCSSRuleList(rules: CSSRuleList, sessionId: string) {
         for (let i = 0, length = rules.length; i < length; ++i) {
             this.applyStyleRule(rules[i] as CSSStyleRule, sessionId);
         }

@@ -4,6 +4,67 @@ const NUMERALS = [
     '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'
 ];
 
+export function appendSeparator(preceding = '', value = '', separator = '/') {
+    preceding = preceding.trim();
+    value = value.trim();
+    switch (separator) {
+        case '\\':
+            preceding = preceding.replace(/\//g, '\\');
+            value = value.replace(/\//g, '\\');
+            break;
+        case '/':
+            preceding = preceding.replace(/\\/g, '/');
+            value = value.replace(/\\/g, '/');
+            break;
+    }
+    return preceding + (preceding !== '' && value !== '' && !preceding.endsWith(separator) && !value.startsWith(separator) ? separator : '') + value;
+}
+
+export function randomUUID(separator = '-') {
+    const alpha = '0123456789abcdef';
+    let result = '';
+    for (const length of [8, 4, 4, 4, 12]) {
+        if (result !== '') {
+            result += separator;
+        }
+        for (let i = 0; i < length; ++i) {
+            result += alpha[Math.floor(Math.random() * 16)];
+        }
+    }
+    return result;
+}
+
+export function upperCaseString(value: string) {
+    let result: Undef<string[]>;
+    const pattern = /\b([a-z])/g;
+    let match: Null<RegExpMatchArray>;
+    while (match = pattern.exec(value)) {
+        if (result === undefined) {
+            result = value.split('');
+        }
+        result[match.index!] = match[1][0].toUpperCase();
+    }
+    return result ? result.join('') : value;
+}
+
+export function lowerCaseString(value: string) {
+    const entities: string[] = [];
+    const pattern = /&#?[A-Za-z\d]+?;/g;
+    let match: Null<RegExpMatchArray>;
+    while (match = pattern.exec(value)) {
+        entities.push(match[0]);
+    }
+    if (entities.length) {
+        let result = '';
+        const segments = value.split(pattern);
+        for (let i = 0, length = segments.length; i < length; ++i) {
+            result += segments[i].toLowerCase() + (entities[i] || '');
+        }
+        return result;
+    }
+    return value.toLowerCase();
+}
+
 export function convertListStyle(name: string, value: number, valueAsDefault?: boolean) {
     switch (name) {
         case 'decimal':

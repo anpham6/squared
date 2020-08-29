@@ -179,7 +179,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                 }
                 switch (attr) {
                     case 'strokeDasharray':
-                        value = value !== 'none' ? joinArray(value.replace(/[,\s]+/g, ',').split(','), unit => this.convertLength(unit).toString(), ', ', false) : '';
+                        value = value !== 'none' ? joinArray(value.replace(/[,\s]+/g, ',').split(','), unit => this.convertLength(unit).toString(), ', ') : '';
                         break;
                     case 'strokeDashoffset':
                     case 'strokeWidth':

@@ -812,6 +812,10 @@ declare module "base" {
         }
 
         namespace util {
+            function appendSeparator(preceding?: string, value?: string, separator?: string): string;
+            function randomUUID(separator?: string): string;
+            function upperCaseString(value: string): string;
+            function lowerCaseString(value: string): string;
             function convertAlpha(value: number): string;
             function convertRoman(value: number): string;
             function convertListStyle(name: string, value: number, valueAsDefault?: boolean): string;
