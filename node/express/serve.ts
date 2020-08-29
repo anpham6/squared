@@ -473,7 +473,7 @@ let Node: serve.INode,
     Chrome = new class implements serve.IChrome {
         constructor(public external: Undef<ExternalModules>) {}
 
-        configureTranspiler(config: ObjectMap<StandardMap>, name: string, category: "html" | "css" | "js", transpileMap?: TranspileMap): [Null<string>, StandardMap | FunctionType<string>] {
+        configureTranspiler(config: ObjectMap<StandardMap>, name: string, category: serve.ExternalCategory, transpileMap?: TranspileMap): [string, StandardMap | FunctionType<string>] {
             if (transpileMap) {
                 const data = transpileMap[category];
                 for (const attr in data) {
@@ -499,7 +499,7 @@ let Node: serve.INode,
             }
             return value.startsWith('function') ? eval(`(${value})`) : new Function('context', 'value', value);
         }
-        findExternalPlugin(data: ObjectMap<StandardMap>, name: string): [Null<string>, StandardMap | FunctionType<string>] {
+        findExternalPlugin(data: ObjectMap<StandardMap>, name: string): [string, StandardMap | FunctionType<string>] {
             for (const module in data) {
                 const plugin = data[module];
                 for (const custom in plugin) {
@@ -526,7 +526,7 @@ let Node: serve.INode,
                     }
                 }
             }
-            return [null, {}];
+            return ['', {}];
         }
         getPrettierParser(name: string): NodeModule[] {
             switch (name.toLowerCase()) {
@@ -2197,7 +2197,7 @@ app.post('/api/assets/archive', (req, res) => {
     }
     let append_to = req.query.append_to as string,
         zipname = '',
-        format: serve.Format,
+        format: archiver.Format,
         cleared: Undef<boolean>,
         formatGzip: Undef<boolean>;
     if (path.isAbsolute(append_to)) {
@@ -2283,10 +2283,10 @@ app.post('/api/assets/archive', (req, res) => {
         }
     };
     if (append_to) {
-        const match = /([^/\\]+)\.(zip|tar|7z|gz|tgz|bz2|lzma)$/i.exec(append_to);
+        const match = /([^/\\]+)\.\w+?$/i.exec(append_to);
         if (match) {
             const zippath = path.join(dirname_zip, match[0]);
-            const copySuccess = () => {
+            const decompress = () => {
                 zipname = match[1];
                 const unzip_to = path.join(dirname_zip, zipname);
                 _7z.unpack(zippath, unzip_to, err => {
@@ -2302,7 +2302,7 @@ app.post('/api/assets/archive', (req, res) => {
             try {
                 if (Node.isFileURI(append_to)) {
                     const stream = fs.createWriteStream(zippath);
-                    stream.on('finish', copySuccess);
+                    stream.on('finish', decompress);
                     request(append_to)
                         .on('response', response => {
                             const statusCode = response.statusCode;
@@ -2329,7 +2329,7 @@ app.post('/api/assets/archive', (req, res) => {
                         res.json({ application: 'OPTION: --disk-read', system: 'Reading from disk is not enabled.' });
                         return;
                     }
-                    fs.copyFile(append_to, zippath, copySuccess);
+                    fs.copyFile(append_to, zippath, decompress);
                     return;
                 }
                 else {
@@ -2337,7 +2337,7 @@ app.post('/api/assets/archive', (req, res) => {
                 }
             }
             catch (err) {
-                Node.writeFail(zippath, err as Error);
+                Node.writeFail(zippath, err);
             }
         }
         else {

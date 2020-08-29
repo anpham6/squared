@@ -855,8 +855,7 @@ export function partitionLastIndexOf(value: string, ...char: string[]): [string,
     return ['', value];
 }
 
-export function searchObject(obj: StringMap, value: string) {
-    const result: string[] = [];
+export function* searchObject(obj: StringMap, value: string) {
     const start = value[0] === '*';
     const end = lastItemEquals(value, '*');
     const search =
@@ -869,10 +868,9 @@ export function searchObject(obj: StringMap, value: string) {
             : (a: string) => a === value;
     for (const attr in obj) {
         if (search(attr)) {
-            result.push(attr);
+            yield attr;
         }
     }
-    return result;
 }
 
 export function hasValue<T>(value: any): value is T {

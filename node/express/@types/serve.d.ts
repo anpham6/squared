@@ -5,7 +5,7 @@ import * as archiver from 'archiver';
 import * as jimp from 'jimp';
 
 type BoolString = boolean | string;
-type Format = archiver.Format | '7z';
+type ExternalCategory = "html" | "css" | "js";
 
 interface INode {
     readonly disk_read: boolean;
@@ -59,9 +59,9 @@ interface IImage {
 
 interface IChrome {
     readonly external: Undef<ExternalModules>;
-    configureTranspiler(config: ObjectMap<StandardMap>, name: string, category: "html" | "css" | "js", transpileMap?: TranspileMap): [Null<string>, StandardMap | FunctionType<string>];
+    configureTranspiler(config: ObjectMap<StandardMap>, name: string, category: ExternalCategory, transpileMap?: TranspileMap): [string, StandardMap | FunctionType<string>];
     createTranspilerFunction(value: string): Null<FunctionType<string>>;
-    findExternalPlugin(data: ObjectMap<StandardMap>, name: string): [Null<string>, StandardMap | FunctionType<string>];
+    findExternalPlugin(data: ObjectMap<StandardMap>, name: string): [string, StandardMap | FunctionType<string>];
     getPrettierParser(name: string): NodeModule[];
     minifyHtml(format: string, value: string, transpileMap?: TranspileMap): Undef<string>;
     minifyCss(format: string, value: string, transpileMap?: TranspileMap): Undef<string>;

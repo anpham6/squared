@@ -140,7 +140,7 @@ async function findElementAllAsync(query: NodeListOf<Element>, length: number) {
 }
 
 const checkWritable = (app: Null<Main>): app is Main => app ? !app.initializing && app.length > 0 : false;
-const checkFrom = (value: string, options: FileActionOptions) => checkWritable(main) && util.isString(value) && util.isPlainObject<FileActionOptions>(options) && options.assets && options.assets.length > 0;
+const checkFrom = (value: string, options: FileActionOptions) => checkWritable(main) && util.isString(value) && util.isPlainObject<FileActionOptions>(options) && !!options.assets && options.assets.length > 0;
 
 export function setHostname(value: string) {
     if (main) {
@@ -208,7 +208,7 @@ export function setFramework(value: Framework, options?: FrameworkOptions) {
         mergeSettings(main!.userSettings, main!.framework);
     }
     if (reloading) {
-        reset();
+        main!.reset();
     }
 }
 

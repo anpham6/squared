@@ -304,7 +304,7 @@ declare module "lib" {
         function trimEnd(value: string, pattern: string): string;
         function fromLastIndexOf(value: string, ...char: string[]): string;
         function partitionLastIndexOf(value: string, ...char: string[]): [string, string];
-        function searchObject(obj: StringMap, value: string): string[];
+        function searchObject(obj: StringMap, value: string): Generator<string, void>;
         function hasValue<T>(value: any): value is T;
         function withinRange(a: number, b: number, offset?: number): boolean;
         function assignEmptyProperty(dest: PlainObject, source: PlainObject): PlainObject;
