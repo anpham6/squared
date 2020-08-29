@@ -1,26 +1,28 @@
+
+import type Svg from './svg';
+import type SvgAnimate from './svganimate';
+import type SvgAnimateMotion from './svganimatemotion';
+import type SvgAnimateTransform from './svganimatetransform';
+import type SvgElement from './svgelement';
+import type SvgG from './svgg';
+import type SvgImage from './svgimage';
+import type SvgPattern from './svgpattern';
+import type SvgShape from './svgshape';
+import type SvgShapePattern from './svgshapepattern';
+import type SvgUseG from './svguseg';
+import type SvgUseShape from './svguseshape';
+import type SvgUseShapePattern from './svguseshapepattern';
+import type SvgUseSymbol from './svgusesymbol';
+
 import { INSTANCE_TYPE } from './lib/constant';
 import { MATRIX, SVG, TRANSFORM, createPath } from './lib/util';
 
 import Pattern = squared.lib.base.Pattern;
 
-type Svg = squared.svg.Svg;
-type SvgAnimate = squared.svg.SvgAnimate;
-type SvgAnimateMotion = squared.svg.SvgAnimateMotion;
-type SvgAnimateTransform = squared.svg.SvgAnimateTransform;
-type SvgAnimation = squared.svg.SvgAnimation;
 type SvgContainer = squared.svg.SvgContainer;
-type SvgElement = squared.svg.SvgElement;
-type SvgG = squared.svg.SvgG;
+type SvgAnimation = squared.svg.SvgAnimation;
 type SvgGroup = squared.svg.SvgGroup;
-type SvgImage = squared.svg.SvgImage;
-type SvgPattern = squared.svg.SvgPattern;
-type SvgShape = squared.svg.SvgShape;
-type SvgShapePattern = squared.svg.SvgShapePattern;
 type SvgUse = squared.svg.SvgUse;
-type SvgUseG = squared.svg.SvgUseG;
-type SvgUseShape = squared.svg.SvgUseShape;
-type SvgUseShapePattern = squared.svg.SvgUseShapePattern;
-type SvgUseSymbol = squared.svg.SvgUseSymbol;
 type SvgView = squared.svg.SvgView;
 
 const { isAngle, parseAngle } = squared.lib.css;
@@ -270,7 +272,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return value || '';
     }
 
-    public static transformRefit(value: string, options?: SvgTransformRefitOptions) {
+    public static transformRefit(value: string, options?: SvgTransformRefitOptions<SvgView, SvgContainer>) {
         let transforms: UndefNull<SvgTransform[]>,
             parent: UndefNull<SvgView>,
             container: UndefNull<SvgContainer>,
@@ -485,7 +487,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 const relative = key === lowerKey;
                 const itemCount = item.length;
                 const points: SvgPoint[] = new Array(itemCount / 2);
-                for (let j = 0, k = 0; j < itemCount; j += 2) {
+                let k = 0;
+                for (let j = 0; j < itemCount; j += 2) {
                     let x = item[j],
                         y = item[j + 1];
                     if (relative && previousPoint) {
@@ -498,7 +501,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     key,
                     value: points,
                     start: points[0],
-                    end: points[points.length - 1],
+                    end: points[k - 1],
                     relative,
                     coordinates: item
                 };

@@ -1,7 +1,5 @@
 const { USER_AGENT, isUserAgent } = squared.lib.client;
 
-type SvgBaseVal = squared.svg.SvgBaseVal;
-
 function hasUnsupportedAccess(element: SVGElement) {
     if (element.tagName === 'svg') {
         if (isUserAgent(USER_AGENT.FIREFOX)) {
@@ -14,7 +12,7 @@ function hasUnsupportedAccess(element: SVGElement) {
     return false;
 }
 
-export default <T extends Constructor<SvgBaseVal>>(Base: T) => {
+export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {
     return class extends Base implements squared.svg.SvgViewRect {
         public rectElement?: SvgRectElement;
 

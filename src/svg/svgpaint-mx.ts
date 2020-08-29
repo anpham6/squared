@@ -2,9 +2,8 @@ import SvgBuild from './svgbuild';
 
 import { calculateStyle, getAttribute } from './lib/util';
 
-type SvgElement = squared.svg.SvgElement;
-type SvgUse = squared.svg.SvgUse;
 type SvgShapePattern = squared.svg.SvgShapePattern;
+type SvgUse = squared.svg.SvgUse;
 
 const { parseColor } = squared.lib.color;
 const { extractURL, getFontSize, hasCalc, hasEm, isCustomProperty, isLength, isPercent, parseUnit, parseVar } = squared.lib.css;
@@ -19,7 +18,7 @@ const REGEXP_CACHE: ObjectMap<RegExp> = {
     ellipse: new RegExp(`ellipse\\(${STRING.LENGTH_PERCENTAGE}\\s+${STRING.LENGTH_PERCENTAGE}(?:\\s+at\\s+${STRING.LENGTH_PERCENTAGE}\\s+${STRING.LENGTH_PERCENTAGE})?\\)`)
 };
 
-export default <T extends Constructor<SvgElement>>(Base: T) => {
+export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
     return class extends Base implements squared.svg.SvgPaint {
         public fill!: string;
         public fillPattern!: string;

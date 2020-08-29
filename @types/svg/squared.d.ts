@@ -29,7 +29,7 @@ declare module "svg" {
         static drawPolyline(values: Point[] | DOMPoint[], precision?: number): string;
         static drawPath(values: SvgPathCommand[], precision?: number): string;
         static drawRefit(element: SVGGraphicsElement, parent: Null<SvgContainer>, precision?: number): string;
-        static transformRefit(value: string, options?: SvgTransformRefitOptions): string;
+        static transformRefit(value: string, options?: SvgTransformRefitOptions<SvgView, SvgContainer>): string;
         static toOffsetPath(value: string, rotation?: string): SvgOffsetPath[];
         static toPathCommands(value: string): SvgPathCommand[];
         static toPathPoints(values: SvgPathCommand[]): SvgPoint[];
@@ -53,6 +53,15 @@ declare module "svg" {
         verifyBaseValue(attr: string, value?: any): number;
     }
 
+    interface SvgUse extends SvgElement, SvgViewRect, SvgBaseVal {
+        readonly useElement: SVGUseElement;
+        setRect(): void;
+        setBaseValue(attr: string, value?: any): boolean;
+        getBaseValue(attr: string, fallback?: any): any;
+        refitBaseValue(x: number, y: number, precision?: number, scaleX?: number, scaleY?: number): void;
+        verifyBaseValue(attr: string, value?: any): number;
+    }
+
     interface SvgView extends SvgElement {
         name: string;
         transformed: Null<SvgTransform[]>;
@@ -67,6 +76,10 @@ declare module "svg" {
     }
 
     interface SvgViewRect extends SvgBaseVal, SvgRect {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
         rectElement?: SvgRectElement;
         setRect(): void;
     }
@@ -145,23 +158,6 @@ declare module "svg" {
         get clipRegion(): string;
         get requireRefit(): boolean;
         constructor(element: SvgContainerElement);
-    }
-
-    class SvgUse extends SvgElement implements SvgViewRect, SvgBaseVal {
-        readonly useElement: SVGUseElement;
-        setRect(): void;
-        setBaseValue(attr: string, value?: any): boolean;
-        getBaseValue(attr: string, fallback?: any): any;
-        refitBaseValue(x: number, y: number, precision?: number, scaleX?: number, scaleY?: number): void;
-        verifyBaseValue(attr: string, value?: any): number;
-        set x(value);
-        get x(): number;
-        set y(value);
-        get y(): number;
-        set width(value);
-        get width(): number;
-        set height(value);
-        get height(): number;
     }
 
     class Svg extends SvgContainer implements SvgViewBox {
@@ -288,7 +284,7 @@ declare module "svg" {
         constructor(element: SVGGraphicsElement, initialize?: boolean);
     }
 
-    class SvgUseShape extends SvgShape implements SvgViewRect, SvgBaseVal, SvgPaint, SvgUse {
+    class SvgUseShape extends SvgShape implements SvgBaseVal, SvgPaint, SvgUse {
         color: string;
         fill: string;
         fillPattern: string;

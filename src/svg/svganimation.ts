@@ -1,3 +1,5 @@
+import type SvgPath from './svgpath';
+
 import SvgBuild from './svgbuild';
 
 import { FILL_MODE, INSTANCE_TYPE } from './lib/constant';
@@ -5,7 +7,6 @@ import { getAttribute } from './lib/util';
 
 type SvgContainer = squared.svg.SvgContainer;
 type SvgView = squared.svg.SvgView;
-type SvgPath = squared.svg.SvgPath;
 
 const { getFontSize, hasEm, isLength, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;

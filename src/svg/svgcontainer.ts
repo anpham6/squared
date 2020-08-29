@@ -1,3 +1,5 @@
+import type SvgUseSymbol from './svgusesymbol';
+
 import SvgBuild from './svgbuild';
 
 import { INSTANCE_TYPE } from './lib/constant';
@@ -5,7 +7,6 @@ import { SVG, getAttribute, getDOMRect, getTargetElement } from './lib/util';
 
 type Svg = squared.svg.Svg;
 type SvgGroup = squared.svg.SvgGroup;
-type SvgUseSymbol = squared.svg.SvgUseSymbol;
 type SvgView = squared.svg.SvgView;
 
 const { STRING } = squared.lib.regex;

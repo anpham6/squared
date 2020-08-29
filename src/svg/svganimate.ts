@@ -324,7 +324,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             while (delay + duration <= leadTime) {
                 delay += duration;
             }
-            return Math.min(delay + (complete ? 1 : lastItemOf(keyTimes)!) * duration, endTime);
+            return Math.min(delay + (complete ? 1 : lastItemOf(keyTimes) || 0) * duration, endTime);
         }
         return endTime;
     }

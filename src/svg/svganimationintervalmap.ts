@@ -1,9 +1,10 @@
+import type SvgAnimate from './svganimate';
+
 import SvgBuild from './svgbuild';
 
 import { FILL_MODE } from './lib/constant';
 import { TRANSFORM } from './lib/util';
 
-type SvgAnimate = squared.svg.SvgAnimate;
 type SvgAnimation = squared.svg.SvgAnimation;
 type IntervalMap = ObjectMap<ObjectIndex<SvgAnimationIntervalValue<SvgAnimation>[]>>;
 type IntervalTime = ObjectMap<Set<number>>;
@@ -292,15 +293,18 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
 
     public evaluateStart(item: SvgAnimate, fallback?: string) {
         const values = item.values;
-        const value = (item.reverse ? values[values.length - 1] : values[0]) || this.get(item.attributeName, item.delay) || fallback || item.baseValue;
-        if (value) {
-            if (item.reverse) {
-                values[values.length - 1] = value;
-                item.to = value;
-            }
-            else {
-                values[0] = value;
-                item.from = value;
+        const length = values.length;
+        if (length) {
+            const value = (item.reverse ? values[length - 1] : values[0]) || this.get(item.attributeName, item.delay) || fallback || item.baseValue;
+            if (value) {
+                if (item.reverse) {
+                    values[length - 1] = value;
+                    item.to = value;
+                }
+                else {
+                    values[0] = value;
+                    item.from = value;
+                }
             }
         }
         return values;

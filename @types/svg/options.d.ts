@@ -16,9 +16,9 @@ interface SvgSynchronizeOptions {
     element?: SVGGraphicsElement;
 }
 
-interface SvgTransformRefitOptions {
+interface SvgTransformRefitOptions<T, U> {
     transforms?: Null<SvgTransform[]>;
-    parent?: Null<squared.svg.SvgView>;
-    container?: Null<squared.svg.SvgContainer>;
+    parent?: Null<T>;
+    container?: Null<U>;
     precision?: number;
 }

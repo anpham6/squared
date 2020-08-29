@@ -7,7 +7,7 @@ import { SVG, getAttribute, getPathLength, getTargetElement } from './lib/util';
 const { isPercent, parseAngle } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { truncateFraction } = squared.lib.math;
-const { isEqual, isNumber, iterateArray, plainMap } = squared.lib.util;
+const { isEqual, isNumber, iterateArray, lastItemOf, plainMap } = squared.lib.util;
 
 const equalPoint = (item: Undef<SvgOffsetPath>, time: number, point: DOMPoint, rotate: number) => !!item && item.key === time && item.rotate === rotate && isEqual(item.value, point);
 
@@ -151,7 +151,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                         item.key = i;
                         result[i] = item;
                     }
-                    const end = offsetPath.pop()!;
+                    const end = lastItemOf(offsetPath)!;
                     if (item.value !== end.value) {
                         end.key = duration;
                         result.push(end);
@@ -234,7 +234,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                                         }
                                     }
                                 }
-                                result[result.length - 1].key = baseTime + offsetDuration;
+                                lastItemOf(result)!.key = baseTime + offsetDuration;
                             }
                         }
                     }
@@ -251,8 +251,8 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                     for (let i = 0; i < distance; i += fps) {
                         result.push(offsetPath[Math.floor(i)]);
                     }
-                    const end = offsetPath.pop()!;
-                    if (result[result.length - 1] !== end) {
+                    const end = lastItemOf(offsetPath)!;
+                    if (lastItemOf(result) !== end) {
                         result.push(end);
                     }
                     this._offsetPath = result;
@@ -285,8 +285,8 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                         }
                         const fromValue = from.value;
                         const toValue = to.value;
-                        const angleFrom = parseAngle(fromValue.split(' ').pop()!);
-                        const angleTo = parseAngle(toValue.split(' ').pop()!);
+                        const angleFrom = parseAngle(lastItemOf(fromValue.split(' '))!);
+                        const angleTo = parseAngle(lastItemOf(toValue.split(' '))!);
                         if (isNaN(angleFrom) || isNaN(angleTo)) {
                             continue;
                         }

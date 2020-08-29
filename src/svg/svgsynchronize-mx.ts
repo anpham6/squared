@@ -1,3 +1,5 @@
+import type SvgPath from './svgpath';
+
 import SvgAnimate from './svganimate';
 import SvgAnimateTransform from './svganimatetransform';
 import SvgBuild from './svgbuild';
@@ -8,8 +10,6 @@ import { SVG, TRANSFORM } from './lib/util';
 
 type SvgContainer = squared.svg.SvgContainer;
 type SvgAnimation = squared.svg.SvgAnimation;
-type SvgPath = squared.svg.SvgPath;
-type SvgView = squared.svg.SvgView;
 type AnimateValue = NumString | Point[];
 type TimelineValue = Map<string | number, AnimateValue>;
 type TimelineIndex = Map<number, AnimateValue>;
@@ -719,7 +719,7 @@ const playableAnimation = (item: SvgAnimate) => item.playable || item.animationE
 const cloneKeyTimes = (item: SvgAnimate): [number[], string[], Null<string[]>] => [item.keyTimes.slice(0), item.values.slice(0), item.keySplines?.slice(0) || null];
 const getStartIteration = (time: number, delay: number, duration: number) => Math.floor(Math.max(0, time - delay) / duration);
 
-export default <T extends Constructor<SvgView>>(Base: T) => {
+export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
     return class extends Base implements squared.svg.SvgSynchronize {
         public getAnimateShape(element: SVGGraphicsElement) {
             const result: SvgAnimate[] = [];

@@ -592,8 +592,8 @@ export function splitEnclosing(value: string, prefix?: string, separator = '', o
                 if (segment !== '') {
                     appendValues(segment);
                     if (!prefixed) {
-                        const joined = lastItemOf(result)!;
-                        if (value.substring(index - joined.length, index + 1) === joined + prefix) {
+                        const joined = lastItemOf(result);
+                        if (joined && value.substring(index - joined.length, index + 1) === joined + prefix) {
                             preceding = joined;
                             --result.length;
                         }

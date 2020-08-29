@@ -1,3 +1,6 @@
+import type SvgShape from './svgshape';
+import type SvgShapePattern from './svgshapepattern';
+
 import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgPaint$MX from './svgpaint-mx';
 import SvgAnimate from './svganimate';
@@ -10,8 +13,6 @@ import { INSTANCE_TYPE, REGION_UNIT } from './lib/constant';
 import { SVG, TRANSFORM, getPathLength } from './lib/util';
 
 type SvgContainer = squared.svg.SvgContainer;
-type SvgShape = squared.svg.SvgShape;
-type SvgShapePattern = squared.svg.SvgShapePattern;
 
 const { getNamedItem } = squared.lib.dom;
 const { equal, lessEqual, multipleOf, offsetAngleX, offsetAngleY, relativeAngle, truncateFraction } = squared.lib.math;

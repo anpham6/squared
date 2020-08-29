@@ -1,3 +1,5 @@
+import type SvgElement from './svgelement';
+
 import SvgAnimate from './svganimate';
 import SvgAnimateMotion from './svganimatemotion';
 import SvgAnimateTransform from './svganimatetransform';
@@ -9,7 +11,6 @@ import { CACHE_VIEWNAME, TRANSFORM, calculateStyle, getAttribute } from './lib/u
 
 import Pattern = squared.lib.base.Pattern;
 
-type SvgElement = squared.svg.SvgElement;
 type AttributeMap = ObjectMap<AttributeData[]>;
 
 interface AttributeData extends NumberValue {
