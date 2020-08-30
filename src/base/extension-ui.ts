@@ -77,5 +77,5 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
     public afterFinalize() {}
 
     public beforeBaseLayout(sessionId: string) {}
-    public beforeDocumentWrite(data: DocumentWriteDataExtensionUI<T>) {}
+    public beforeDocumentWrite(data: squared.base.DocumentWriteDataExtensionUI<T>) {}
 }

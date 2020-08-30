@@ -1,9 +1,11 @@
+type FileActionOptions = squared.FileActionOptions;
+
 declare module "base" {
-    interface FileCopyingOptions extends squared.FileActionOptions {
+    interface FileCopyingOptions extends FileActionOptions {
         directory?: string;
     }
 
-    interface FileArchivingOptions extends squared.FileActionOptions {
+    interface FileArchivingOptions extends FileActionOptions {
         filename?: string;
         format?: string;
         copyTo?: string;
@@ -11,11 +13,11 @@ declare module "base" {
     }
 
     interface FileActionAsync {
-        copyTo(directory: string, options?: squared.FileActionOptions): FileActionResult;
-        appendTo(pathname: string, options?: squared.FileActionOptions): FileActionResult;
-        saveAs(filename?: string, options?: squared.FileActionOptions): FileActionResult;
-        createFrom(format: string, options: squared.FileActionOptions): FileActionResult;
-        appendFrom(filename: string, options: squared.FileActionOptions): FileActionResult;
+        copyTo(directory: string, options?: FileActionOptions): FileActionResult;
+        appendTo(pathname: string, options?: FileActionOptions): FileActionResult;
+        saveAs(filename?: string, options?: FileActionOptions): FileActionResult;
+        createFrom(format: string, options: FileActionOptions): FileActionResult;
+        appendFrom(filename: string, options: FileActionOptions): FileActionResult;
     }
 
     interface AppBase<T extends Node> {
@@ -65,6 +67,11 @@ declare module "base" {
         node: T;
         layoutName: string;
         renderTemplates: NodeTemplate<T>[];
+    }
+
+    interface DocumentWriteDataExtensionUI<T extends NodeUI> {
+        rendered: T[];
+        documentRoot: LayoutRoot<T>[];
     }
 
     class Application<T extends Node> implements FileActionAsync {

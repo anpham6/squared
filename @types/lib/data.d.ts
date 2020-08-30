@@ -30,7 +30,7 @@ interface ElementData {
     clientRect?: DOMRect;
     textRangeRect?: BoxRectDimension;
     pseudoElt?: PseudoElt;
-    node?: squared.base.Node;
+    node?: unknown;
     style?: CSSStyleDeclaration;
     styleMap?: StringMap;
     styleSpecificity?: ObjectMap<number>;

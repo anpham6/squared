@@ -220,7 +220,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
         }
-        const documentWriteData: DocumentWriteDataExtensionUI<T> = { rendered, documentRoot };
+        const documentWriteData: squared.base.DocumentWriteDataExtensionUI<T> = { rendered, documentRoot };
         for (let i = 0; i < length; ++i) {
             (extensions[i] as ExtensionUI<T>).beforeDocumentWrite(documentWriteData);
         }

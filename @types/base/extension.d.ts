@@ -1,8 +1,3 @@
-interface DocumentWriteDataExtensionUI<T extends squared.base.NodeUI> {
-    rendered: T[];
-    documentRoot: squared.base.LayoutRoot<T>[];
-}
-
 interface CssGridData<T> {
     children: T[];
     row: CssGridDirectionData;
