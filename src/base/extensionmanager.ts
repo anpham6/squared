@@ -58,7 +58,7 @@ export default class ExtensionManager<T extends Node> implements squared.base.Ex
         return false;
     }
 
-    public get(name: string, checkBuiltIn?: boolean) {
+    public get(name: string, builtIn?: boolean) {
         const extensions = this.extensions;
         for (let i = 0, length = extensions.length; i < length; ++i) {
             const ext = extensions[i];
@@ -66,7 +66,7 @@ export default class ExtensionManager<T extends Node> implements squared.base.Ex
                 return ext;
             }
         }
-        if (checkBuiltIn) {
+        if (builtIn) {
             return this.application.builtInExtensions.get(name);
         }
     }

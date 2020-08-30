@@ -32,10 +32,10 @@ declare module "base" {
     }
 
     interface AppFramework<T extends Node> {
-        base: PlainObject;
-        extensions: PlainObject;
-        lib: PlainObject;
-        system: FunctionMap<unknown>;
+        base?: PlainObject;
+        extensions?: PlainObject;
+        lib?: PlainObject;
+        system?: FunctionMap<unknown>;
         create(): AppBase<T>;
         cached(): AppBase<T>;
     }
@@ -304,7 +304,7 @@ declare module "base" {
         readonly application: Application<T>;
         add(ext: Extension<T> | string): boolean;
         remove(ext: Extension<T> | string): boolean;
-        get(name: string, checkBuiltIn?: boolean): Undef<Extension<T>>;
+        get(name: string, builtIn?: boolean): Undef<Extension<T>>;
         valueOf<T = unknown>(name: string, attr: string, fallback?: T): Undef<T>;
         valueAsObject(name: string, attr: string, fallback?: Null<PlainObject>): Null<PlainObject>;
         valueAsString(name: string, attr: string, fallback?: string): string;

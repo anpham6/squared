@@ -7,12 +7,6 @@ import SETTINGS from '../../vdom/src/settings';
 let application: Null<Application<Node>> = null;
 
 const appBase: squared.base.AppFramework<Node> = {
-    base: {
-        Application
-    },
-    lib: {},
-    extensions: {},
-    system: {},
     create() {
         application = new Application<Node>(
             squared.base.lib.enumeration.APP_FRAMEWORK.VDOM,
