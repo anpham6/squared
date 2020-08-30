@@ -26,7 +26,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
             );
         });
         if (children.length) {
-            this.data.set(node, { children, offsetLeft: node.marginLeft + node.paddingLeft });
+            this.data.set(node, { children, offsetLeft: node.marginLeft + node.paddingLeft } as NegativeXData);
             return true;
         }
         return false;

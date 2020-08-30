@@ -137,7 +137,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
             }
         });
         if (children.size || right || bottom) {
-            this.data.set(node, { children: Array.from(children), right, bottom });
+            this.data.set(node, { children: Array.from(children), right, bottom } as PositiveXData);
             return true;
         }
         return false;

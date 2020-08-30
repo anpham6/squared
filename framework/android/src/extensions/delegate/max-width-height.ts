@@ -25,7 +25,7 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
         );
         const maxHeight = node.hasPX('maxHeight') && (parent.hasHeight || parent.gridElement || parent.tableElement);
         if (maxWidth || maxHeight) {
-            this.data.set(node, { maxWidth, maxHeight });
+            this.data.set(node, { maxWidth, maxHeight } as MaxWidthHeightData);
             return true;
         }
         return false;

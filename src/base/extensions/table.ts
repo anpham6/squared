@@ -266,7 +266,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     td.modifyBox(BOX_STANDARD.MARGIN_TOP, i === 0 ? vertical : spacingHeight);
                     td.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, i + rowSpan < rowCount ? spacingHeight : vertical);
                 }
-                this.data.set(td, { colSpan, rowSpan });
+                this.data.set(td, { colSpan, rowSpan } as TableCellSpanData);
             });
             hideCell(tr);
             columnCount = Math.max(columnCount, row.length);
@@ -373,7 +373,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             if (!caption.cssInitial('textAlign')) {
                 caption.css('textAlign', 'center');
             }
-            this.data.set(caption as T, { colSpan: columnCount });
+            this.data.set(caption as T, { colSpan: columnCount } as TableCellSpanData);
             if (!captionBottom) {
                 caption.parent = node;
             }

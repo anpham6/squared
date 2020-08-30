@@ -1484,12 +1484,14 @@ export const SVG_PROPERTIES: CssProperties = {
 };
 
 export const PROXY_INLINESTYLE = Object.freeze(
-    new Proxy(Object.create({
-        fontSize: 'inherit',
-        lineHeight: 'inherit',
-        "setProperty": function() {},
-        "getPropertyValue": function(property: string) { return this[convertCamelCase(property)] as string; }
-    }) as CSSStyleDeclaration,
+    new Proxy(
+        Object.create({
+            fontSize: 'inherit',
+            lineHeight: 'inherit',
+            "setProperty": function() {},
+            "getPropertyValue": function(property: string) { return this[convertCamelCase(property)] as string; }
+        }
+    ) as CSSStyleDeclaration,
     {
         get: (target, attr) => {
             let value: Undef<string | string[]> = target[attr];

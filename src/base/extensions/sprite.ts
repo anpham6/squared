@@ -24,7 +24,7 @@ export default abstract class Sprite<T extends NodeUI> extends ExtensionUI<T> {
                 const x = (position.left < 0 || REGEXP_POSITION.test(backgroundPositionX)) && image.width > dimension.width;
                 const y = (position.top < 0 || REGEXP_POSITION.test(backgroundPositionY)) && image.height > dimension.height;
                 if ((x || y) && (x || position.left === 0) && (y || position.top === 0)) {
-                    this.data.set(node, { image, position });
+                    this.data.set(node, { image, position } as SpriteData);
                     return true;
                 }
             }

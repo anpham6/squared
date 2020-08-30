@@ -5,11 +5,6 @@ import LayoutUI = squared.base.LayoutUI;
 import { CONTAINER_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 
-interface SpriteData {
-    image: Required<RawAsset>;
-    position: BoxRectPosition;
-}
-
 const { formatPX } = squared.lib.css;
 
 const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.enumeration;

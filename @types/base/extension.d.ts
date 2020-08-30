@@ -71,9 +71,12 @@ interface TableData {
     columnCount: number;
 }
 
-interface TableCellData {
-    rowSpan: number;
-    colSpan: number;
+interface TableCellSpanData {
+    rowSpan?: number;
+    colSpan?: number;
+}
+
+interface TableCellData extends Required<TableCellSpanData> {
     spaceSpan?: number;
     percent?: string;
     expand?: boolean;
@@ -96,4 +99,9 @@ interface ColumnData<T> {
     };
     boxWidth: number;
     multiline: boolean;
+}
+
+interface SpriteData {
+    image: Required<RawAsset>;
+    position: BoxRectPosition;
 }

@@ -70,6 +70,6 @@ export default abstract class Column<T extends NodeUI> extends ExtensionUI<T> {
             },
             boxWidth: parent.actualBoxWidth(boxWidth),
             multiline
-        });
+        } as ColumnData<T>);
     }
 }

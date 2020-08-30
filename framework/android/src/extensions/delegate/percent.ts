@@ -47,7 +47,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
             marginVertical = (validPercent(node.css('marginTop')) || validPercent(node.css('marginBottom'))) && node.documentParent.percentHeight > 0 && !node.inlineStatic && (node.documentParent.length === 1 || !node.pageFlow);
         }
         if (percentWidth || percentHeight || marginHorizontal || marginVertical) {
-            this.data.set(node, { percentWidth, percentHeight, marginHorizontal, marginVertical });
+            this.data.set(node, { percentWidth, percentHeight, marginHorizontal, marginVertical } as PercentData);
             return true;
         }
         return false;

@@ -60,7 +60,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                 }
             }
             else if (parent.layoutVertical && hasTextIndent(node)) {
-                this.data.set(node, [[1, node]]);
+                this.data.set(node, [[1, node]] as MultilineData<T>);
                 return true;
             }
         }
@@ -170,7 +170,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
             }
         }
         else if (node.textElement && node.firstLineStyle || node.multiline && node.textAlignLast !== '') {
-            this.data.set(node, [[NaN, node]]);
+            this.data.set(node, [[NaN, node]] as MultilineData<T>);
             return true;
         }
         return false;
