@@ -1,3 +1,5 @@
+import type SvgElement from './svgelement';
+
 import SvgBuild from './svgbuild';
 
 const { getNamedItem } = squared.lib.dom;
@@ -14,7 +16,7 @@ function adjustPoints(values: SvgPoint[], x: number, y: number, scaleX: number, 
     }
 }
 
-export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
+export default <T extends Constructor<SvgElement>>(Base: T) => {
     return class extends Base implements squared.svg.SvgBaseVal {
         private _baseVal: StandardMap = {};
 

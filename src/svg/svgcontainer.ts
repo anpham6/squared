@@ -27,19 +27,19 @@ function setAspectRatio(parent: Undef<Svg | SvgUseSymbol>, group: SvgGroup, view
                     parentHeight = parentAspectRatio.height || parent.viewBox.height,
                     boxWidth = NaN,
                     boxHeight = NaN,
-                    parentUnknown: Undef<boolean>;
+                    unknownViewBox: Undef<boolean>;
                 if (parentWidth === 0 && parentHeight === 0) {
                     ({ width: parentWidth, height: parentHeight } = getDOMRect(parent.element));
                     parentAspectRatio.width = parentWidth;
                     parentAspectRatio.height = parentHeight;
-                    parentUnknown = true;
+                    unknownViewBox = true;
                 }
                 const parentRatio = parentWidth / parentHeight;
                 const ratioWidth = parentWidth / width;
                 const ratioHeight = parentHeight / height;
                 const w = getAttribute(element, 'width');
                 const h = getAttribute(element, 'height');
-                if (parentUnknown) {
+                if (unknownViewBox) {
                     boxWidth = parentWidth;
                     boxHeight = parentHeight;
                 }
@@ -66,7 +66,7 @@ function setAspectRatio(parent: Undef<Svg | SvgUseSymbol>, group: SvgGroup, view
                     aspectRatio.unit = Math.min(boxRatioWidth, boxRatioHeight);
                     resizeUnit = false;
                 }
-                else if (ratioWidth !== ratioHeight || parentUnknown) {
+                else if (ratioWidth !== ratioHeight || unknownViewBox) {
                     aspectRatio.unit = Math.min(ratioWidth, ratioHeight);
                 }
                 if (hasWidth || hasHeight) {
@@ -184,7 +184,10 @@ function getNearestViewBox(container: SvgContainer): Undef<Svg | SvgUseSymbol> {
 const hasLength = (value: string) => REGEXP_LENGTHPERCENTAGE.test(value);
 
 export default class SvgContainer extends squared.lib.base.Container<SvgView> implements squared.svg.SvgContainer {
-    public aspectRatio: SvgAspectRatio = {
+    public parent: Null<SvgContainer> = null;
+    public viewport?: Svg;
+    public readonly instanceType = INSTANCE_TYPE.SVG_CONTAINER;
+    public readonly aspectRatio: SvgAspectRatio = {
         x: 0,
         y: 0,
         width: 0,
@@ -197,9 +200,6 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
         alignX: false,
         alignY: false
     };
-    public parent: Null<SvgContainer> = null;
-    public viewport?: Svg;
-    public readonly instanceType = INSTANCE_TYPE.SVG_CONTAINER;
 
     private _clipRegion: string[] = [];
 

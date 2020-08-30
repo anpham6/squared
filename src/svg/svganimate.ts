@@ -8,10 +8,10 @@ const { getFontSize, hasEm, isLength, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { isNumber, lastItemOf, replaceMap, sortNumber, trimEnd } = squared.lib.util;
 
-const invertControlPoint = (value: number) => parseFloat((1 - value).toPrecision(5));
-
 const REGEXP_BEZIER = new RegExp(`\\s*${PATTERN_CUBICBEZIER}\\s*`);
 const REGEXP_BEZIERCSS = new RegExp(`cubic-bezier\\(${PATTERN_CUBICBEZIER}\\)`);
+
+const invertControlPoint = (value: number) => parseFloat((1 - value).toPrecision(5));
 
 export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgAnimate {
     public static getSplitValue(value: number, next: number, percent: number) {

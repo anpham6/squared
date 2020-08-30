@@ -1,3 +1,4 @@
+import type SvgAnimation from './svganimation';
 import type SvgPath from './svgpath';
 
 import SvgAnimate from './svganimate';
@@ -9,7 +10,6 @@ import { SYNCHRONIZE_MODE, SYNCHRONIZE_STATE } from './lib/constant';
 import { SVG, TRANSFORM } from './lib/util';
 
 type SvgContainer = squared.svg.SvgContainer;
-type SvgAnimation = squared.svg.SvgAnimation;
 type AnimateValue = NumString | Point[];
 type TimelineValue = Map<string | number, AnimateValue>;
 type TimelineIndex = Map<number, AnimateValue>;
@@ -788,7 +788,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
 
         public getAnimateViewRect(animations?: SvgAnimation[]) {
             if (!animations) {
-                animations = this.animations;
+                animations = this.animations as SvgAnimation[];
             }
             const result: SvgAnimate[] = [];
             for (let i = 0, length = animations.length; i < length; ++i) {
@@ -814,7 +814,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                 }
                 precision = options.precision;
             }
-            const animationsBase = this.animations;
+            const animationsBase = this.animations as SvgAnimation[];
             for (const mergeable of [animations, transforms]) {
                 const transforming = mergeable === transforms;
                 if (!mergeable || mergeable.length === 0 || !transforming && hasBit(keyTimeMode, SYNCHRONIZE_MODE.IGNORE_ANIMATE) || transforming && hasBit(keyTimeMode, SYNCHRONIZE_MODE.IGNORE_TRANSFORM)) {

@@ -1,3 +1,5 @@
+import type SvgElement from './svgelement';
+
 import SvgBuild from './svgbuild';
 
 import { calculateStyle, getAttribute } from './lib/util';
@@ -18,7 +20,7 @@ const REGEXP_CACHE: ObjectMap<RegExp> = {
     ellipse: new RegExp(`ellipse\\(${STRING.LENGTH_PERCENTAGE}\\s+${STRING.LENGTH_PERCENTAGE}(?:\\s+at\\s+${STRING.LENGTH_PERCENTAGE}\\s+${STRING.LENGTH_PERCENTAGE})?\\)`)
 };
 
-export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
+export default <T extends Constructor<SvgElement>>(Base: T) => {
     return class extends Base implements squared.svg.SvgPaint {
         public fill!: string;
         public fillPattern!: string;

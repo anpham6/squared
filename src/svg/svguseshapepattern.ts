@@ -1,3 +1,5 @@
+import type SvgAnimation from './svganimation';
+
 import SvgSynchronize$MX from './svgsynchronize-mx';
 import SvgViewRect$MX from './svgviewrect-mx';
 import SvgShapePattern from './svgshapepattern';
@@ -18,7 +20,7 @@ export default class SvgUseShapePattern extends SvgSynchronize$MX(SvgViewRect$MX
     }
 
     public synchronize(options?: SvgSynchronizeOptions) {
-        const animations = this.animations.filter(item => item.attributeName === 'x' || item.attributeName === 'y' || this.verifyBaseValue(item.attributeName, 0) > 0);
+        const animations = this.animations.filter(item => item.attributeName === 'x' || item.attributeName === 'y' || this.verifyBaseValue(item.attributeName, 0) > 0) as SvgAnimation[];
         const transforms = this.getAnimateTransform(options);
         if (animations.length || transforms.length) {
             this.animateSequentially(this.getAnimateViewRect(animations), transforms, undefined, options);

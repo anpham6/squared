@@ -288,7 +288,7 @@ reset() // clear cache and reopen new session
 
 toString() // current framework loaded
 
-add(...names: (string | Extension)[]) // see extension configuration section
+add(...names: (string | Extension | ExtensionRequestObject)[]) // see extension configuration section
 remove(...names: (string | Extension)[]) // remove an extension by namespace or control
 get(...names: (string | Extension)[]) // retrieve an extension by namespace or control
 assign(name: string | Extension, options: FrameworkOptions) // see extension configuration section
@@ -450,6 +450,8 @@ Layout rendering can also be customized using extensions as the program was buil
     // Install an extension
     const sample = new Sample('your.namespace.sample', 0, { /* same as configure */ });
     squared.add(sample);
+    // OR
+    squared.add([sample, {/* configuration */}]);
 </script>
 ```
 

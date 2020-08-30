@@ -31,7 +31,7 @@ const ANIMATION_DEFAULT = {
     'animation-timing-function': 'ease'
 };
 
-const RE_TIMINGFUNCTION = new Pattern(`(ease|ease-in|ease-out|ease-in-out|linear|step-(?:start|end)|steps\\(\\d+,\\s+(?:start|end)\\)|cubic-bezier\\(${PATTERN_CUBICBEZIER}\\)),?\\s*`);
+const RE_TIMINGFUNCTION = new Pattern(`(ease|ease-(?:in|out|in-out)|linear|step-(?:start|end)|steps\\(\\d+,\\s+(?:start|end|jump-(?:start|end|both|none))\\)|cubic-bezier\\(${PATTERN_CUBICBEZIER}\\)),?\\s*`);
 
 function parseAttribute(element: SVGElement, attr: string) {
     const value = getAttribute(element, attr);
@@ -81,7 +81,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
         public transformed: Null<SvgTransform[]> = null;
 
         protected _transforms?: SvgTransform[];
-        protected _animations?: squared.svg.SvgAnimation[];
+        protected _animations?: SvgAnimation[];
 
         private _name?: string;
 
@@ -90,7 +90,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
         }
 
         public getAnimations(element = this.element) {
-            const result: squared.svg.SvgAnimation[] = [];
+            const result: SvgAnimation[] = [];
             let id = 0;
             const addAnimation = (item: SvgAnimation, delay: number, name = '') => {
                 if (name === '') {

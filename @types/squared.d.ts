@@ -1,5 +1,4 @@
 type Node = squared.base.Node;
-type ExtensionRequest = squared.base.Extension<Node> | string;
 type PromiseResult = Promise<Void<PlainObject>>;
 
 export interface FrameworkOptions {
@@ -15,11 +14,14 @@ export interface FileActionOptions {
     callback?: CallbackResult;
 }
 
+export type ExtensionRequest = squared.base.Extension<Node> | string;
+export type ExtensionRequestObject = ExtensionRequest | [ExtensionRequest, PlainObject];
+
 export const settings: StandardMap;
 export const system: FunctionMap<any>;
 export function setHostname(value: string): void;
 export function setFramework(value: PlainObject, options?: FrameworkOptions): void;
-export function add(...values: ExtensionRequest[]): number;
+export function add(...values: ExtensionRequestObject[]): number;
 export function remove(...values: ExtensionRequest[]): number;
 export function get(...values: string[]): Undef<PlainObject | PlainObject[]>;
 export function assign(value: ExtensionRequest, options: FrameworkOptions): boolean;

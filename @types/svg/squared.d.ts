@@ -140,10 +140,10 @@ declare module "svg" {
 
     class SvgContainer extends squared.lib.base.Container<SvgView> implements SvgElement {
         parent: Null<SvgContainer>;
-        aspectRatio: SvgAspectRatio;
         viewport?: Svg;
         readonly element: SvgContainerElement;
         readonly instanceType: number;
+        readonly aspectRatio: SvgAspectRatio;
         add(item: SvgView, viewport?: Svg): this;
         refitX(value: number): number;
         refitY(value: number): number;

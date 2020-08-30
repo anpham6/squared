@@ -1,3 +1,5 @@
+import type SvgAnimation from './svganimation';
+
 import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgPaint$MX from './svgpaint-mx';
 import SvgViewRect$MX from './svgviewrect-mx';
@@ -46,6 +48,6 @@ export default class SvgUseShape extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$M
     }
 
     public getAnimations() {
-        return super.getAnimations(this.useElement).concat(super.getAnimations());
+        return super.getAnimations(this.useElement).concat(super.getAnimations()) as SvgAnimation[];
     }
 }

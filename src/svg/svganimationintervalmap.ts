@@ -1,11 +1,11 @@
 import type SvgAnimate from './svganimate';
+import type SvgAnimation from './svganimation';
 
 import SvgBuild from './svgbuild';
 
 import { FILL_MODE } from './lib/constant';
 import { TRANSFORM } from './lib/util';
 
-type SvgAnimation = squared.svg.SvgAnimation;
 type IntervalMap = ObjectMap<ObjectIndex<SvgAnimationIntervalValue<SvgAnimation>[]>>;
 type IntervalTime = ObjectMap<Set<number>>;
 

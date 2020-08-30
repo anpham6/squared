@@ -3,6 +3,7 @@ import type Svg from './svg';
 import type SvgAnimate from './svganimate';
 import type SvgAnimateMotion from './svganimatemotion';
 import type SvgAnimateTransform from './svganimatetransform';
+import type SvgAnimation from './svganimation';
 import type SvgElement from './svgelement';
 import type SvgG from './svgg';
 import type SvgImage from './svgimage';
@@ -20,7 +21,6 @@ import { MATRIX, SVG, TRANSFORM, createPath } from './lib/util';
 import Pattern = squared.lib.base.Pattern;
 
 type SvgContainer = squared.svg.SvgContainer;
-type SvgAnimation = squared.svg.SvgAnimation;
 type SvgGroup = squared.svg.SvgGroup;
 type SvgUse = squared.svg.SvgUse;
 type SvgView = squared.svg.SvgView;

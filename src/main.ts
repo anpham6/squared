@@ -15,13 +15,14 @@ import Pattern from './lib/base/pattern';
 
 type Node = squared.base.Node;
 type Main = squared.base.Application<Node>;
+type ExtensionRequest = squared.ExtensionRequest;
+type ExtensionRequestObject = squared.ExtensionRequestObject;
 type Extension = squared.base.Extension<Node>;
 type ExtensionManager = squared.base.ExtensionManager<Node>;
-type ExtensionRequest = Undef<Extension | string>;
 type Framework = squared.base.AppFramework<Node>;
-type FileActionOptions = squared.FileActionOptions;
 type FrameworkOptions = squared.FrameworkOptions;
-type ExtendPrototypeMap = ObjectMap<FunctionType<any> | { get: () => any, set: (value: any) => void }>;
+type FileActionOptions = squared.FileActionOptions;
+type ExtendPrototypeMap = ObjectMap<FunctionType<any> | { get?: () => any, set?: (value: any) => void }>;
 
 const extensionsQueue = new Set<Extension>();
 const extensionsExternal = new Set<Extension>();
@@ -239,10 +240,14 @@ export function parseDocumentSync(...elements: (HTMLElement | string)[]) {
     }
 }
 
-export function add(...values: ExtensionRequest[]) {
+export function add(...values: ExtensionRequestObject[]) {
     let success = 0;
     for (let i = 0, length = values.length; i < length; ++i) {
-        let value = values[i];
+        let value = values[i],
+            options: Undef<PlainObject>;
+        if (Array.isArray(value)) {
+            [value, options] = value;
+        }
         if (typeof value === 'string') {
             value = main && main.builtInExtensions.get(value) || get(value) as Extension;
         }
@@ -250,6 +255,9 @@ export function add(...values: ExtensionRequest[]) {
             extensionsExternal.add(value);
             if (extensionManager && !extensionManager.add(value)) {
                 extensionsQueue.add(value);
+            }
+            if (options) {
+                assign(value, options);
             }
             ++success;
         }
@@ -263,7 +271,7 @@ export function remove(...values: ExtensionRequest[]) {
         for (let i = 0, length = values.length; i < length; ++i) {
             let value = values[i];
             if (typeof value === 'string') {
-                value = extensionManager.get(value);
+                value = extensionManager.get(value) as Extension;
             }
             if (value instanceof squared.base.Extension) {
                 extensionsQueue.delete(value);
@@ -291,13 +299,11 @@ export function get(...values: string[]) {
                     }
                 }
             }
-            if (item) {
-                if (length === 1) {
-                    return item;
-                }
-                else {
-                    result.push(item);
-                }
+            if (length === 1) {
+                return item;
+            }
+            else if (item) {
+                result.push(item);
             }
         }
         return result;

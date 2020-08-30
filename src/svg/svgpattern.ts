@@ -1,5 +1,3 @@
-import type SvgAnimation from './svganimation';
-
 import SvgView$MX from './svgview-mx';
 import SvgContainer from './svgcontainer';
 
@@ -19,7 +17,7 @@ export default class SvgPattern extends SvgView$MX(SvgContainer) implements squa
         super.build({ ...options, targetElement: this.patternElement, initialize: false });
     }
 
-    get animations(): SvgAnimation[] {
+    get animations() {
         return [];
     }
 }
