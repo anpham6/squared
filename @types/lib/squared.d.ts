@@ -1,10 +1,10 @@
 declare module "lib" {
     namespace base {
-        class Container<T> implements Iterable<T> {
+        class Container<T = any> implements Iterable<T> {
             [Symbol.iterator](): Iterator<T>;
             item(index: number, value?: T): Undef<T>;
             add(item: T): this;
-            addAll(list: T[]): this;
+            addAll(list: T[] | Container<T>): this;
             remove(...items: T[]): T[];
             removeAt(index: number): Undef<T>;
             retainAs(list: T[]): this;
@@ -13,12 +13,11 @@ declare module "lib" {
             each(predicate: IteratorPredicate<T, void>, options?: ContainerFindOptions<T>): this;
             iterate(predicate: IteratorPredicate<T, void | boolean>, options?: ContainerRangeOptions): number;
             every(predicate: IteratorPredicate<T, boolean>, options?: ContainerRangeOptions): boolean;
-            removeAll(predicate: IteratorPredicate<T, boolean>, options?: ContainerCascadeOptions<T>): T[];
+            removeIf(predicate: IteratorPredicate<T, boolean>, options?: ContainerCascadeOptions<T>): T[];
             find(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>): Undef<T>;
             some(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>): boolean;
             cascade(predicate?: (item: T) => void | boolean, options?: ContainerCascadeOptions<T>): T[];
             map<U>(predicate: IteratorPredicate<T, U>): U[];
-            same(predicate: IteratorPredicate<T, any>): boolean;
             partition(predicate: IteratorPredicate<T, boolean>): [T[], T[]];
             findIndex(predicate: IteratorPredicate<T, boolean>): number;
             sort(predicate: (a: T, b: T) => number): this;
@@ -30,7 +29,7 @@ declare module "lib" {
             constructor(children?: T[]);
         }
 
-        class ArrayIterator<T> {
+        class ArrayIterator<T = any> {
             public index: number;
             public length: number;
             public next(): Undef<T>;
@@ -40,7 +39,7 @@ declare module "lib" {
             constructor(children: T[]);
         }
 
-        class ListIterator<T> extends ArrayIterator<T> {
+        class ListIterator<T = any> extends ArrayIterator<T> {
             add(item: T): void;
             set(item: T): void;
             nextIndex(): number;

@@ -1,4 +1,4 @@
-export default class Iterator<T> implements squared.lib.base.ArrayIterator<T> {
+export default class Iterator<T = any> implements squared.lib.base.ArrayIterator<T> {
     public index = -1;
     public length: number;
 

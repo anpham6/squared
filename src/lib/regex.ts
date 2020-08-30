@@ -36,10 +36,10 @@ export const CSS = {
 };
 
 export const TRANSFORM = {
-    MATRIX: new RegExp(`(matrix(?:3d)?)\\((${STRING.DECIMAL}),\\s+(${STRING.DECIMAL}),\\s+(${STRING.DECIMAL}),\\s+(${STRING.DECIMAL}),\\s+(${STRING.DECIMAL}),\\s+(${STRING.DECIMAL})(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?\\)`),
+    MATRIX: new RegExp(`(matrix(?:3d)?)\\((${DECIMAL}),\\s+(${DECIMAL}),\\s+(${DECIMAL}),\\s+(${DECIMAL}),\\s+(${DECIMAL}),\\s+(${DECIMAL})(?:,\\s+(${DECIMAL}))?(?:,\\s+(${DECIMAL}))?(?:,\\s+(${DECIMAL}))?(?:,\\s+(${DECIMAL}))?(?:,\\s+(${DECIMAL}))?(?:,\\s+(${DECIMAL}))?(?:,\\s+(${DECIMAL}))?(?:,\\s+(${DECIMAL}))?(?:,\\s+(${DECIMAL}))?(?:,\\s+(${DECIMAL}))?\\)`),
     ROTATE: new RegExp(`(rotate[XYZ]?)\\(${STRING.CSS_ANGLE}\\)`),
     SKEW: new RegExp(`(skew[XY]?)\\(${STRING.CSS_ANGLE}(?:,\\s+${STRING.CSS_ANGLE})?\\)`),
-    SCALE: new RegExp(`(scale[XYZ]?)\\((${STRING.DECIMAL})(?:,\\s+(${STRING.DECIMAL}))?\\)`),
+    SCALE: new RegExp(`(scale[XYZ]?)\\((${DECIMAL})(?:,\\s+(${DECIMAL}))?\\)`),
     TRANSLATE: new RegExp(`(translate[XYZ]?)\\(${STRING.LENGTH_PERCENTAGE}(?:,\\s+${STRING.LENGTH_PERCENTAGE})?\\)`),
     PERSPECTIVE: new RegExp(`(perspective)\\(${STRING.LENGTH_PERCENTAGE}\\)`)
 };

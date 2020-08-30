@@ -1,13 +1,14 @@
 import ListIterator from './listiterator';
 
-import { iterateArray, partitionArray, plainMap, sameArray } from '../util';
+import { iterateArray, partitionArray, plainMap } from '../util';
 
 class Iter<T> implements Iterator<T> {
-    public index = -1;
-    public length: number;
+    private index = -1;
 
-    constructor(public children: T[]) {
-        this.length = children.length;
+    constructor(
+        public readonly children: T[],
+        public readonly length = children.length)
+    {
     }
 
     public next() {
@@ -16,7 +17,7 @@ class Iter<T> implements Iterator<T> {
     }
 }
 
-export default class Container<T> implements squared.lib.base.Container<T>, Iterable<T> {
+export default class Container<T = any> implements squared.lib.base.Container<T>, Iterable<T> {
     private _children: T[];
 
     constructor(children: T[] = []) {
@@ -28,7 +29,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     }
 
     public item(index: number, value?: T): Undef<T> {
-        if (value !== undefined && value !== null) {
+        if (value !== undefined) {
             const children = this._children;
             if (index < 0) {
                 index += children.length;
@@ -47,8 +48,8 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return this;
     }
 
-    public addAll(list: T[]) {
-        this._children = this._children.concat(list);
+    public addAll(list: T[] | Container<T>) {
+        this._children = this._children.concat(Array.isArray(list) ? list : list.children);
         return this;
     }
 
@@ -125,7 +126,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return false;
     }
 
-    public removeAll(predicate: IteratorPredicate<T, boolean>, options?: ContainerCascadeOptions<T>): T[] {
+    public removeIf(predicate: IteratorPredicate<T, boolean>, options?: ContainerCascadeOptions<T>): T[] {
         let also: Undef<BindGeneric<T, void>>,
             error: Undef<IteratorPredicate<T, boolean>>;
         if (options) {
@@ -262,10 +263,6 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
 
     public map<U>(predicate: IteratorPredicate<T, U>): U[] {
         return plainMap(this._children, predicate);
-    }
-
-    public same(predicate: IteratorPredicate<T, any>) {
-        return sameArray(this._children, predicate);
     }
 
     public partition(predicate: IteratorPredicate<T, boolean>): [T[], T[]] {

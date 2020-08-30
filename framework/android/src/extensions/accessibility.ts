@@ -80,7 +80,7 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                                 node.css('minWidth', formatPX(width));
                                 node.css('minHeight', formatPX(height));
                             }
-                            const embedded = node.removeAll((item: T) => !item.textElement) as T[];
+                            const embedded = node.removeIf((item: T) => !item.textElement) as T[];
                             if (embedded.length && node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
                                 node.data(Resource.KEY_NAME, 'embedded', embedded);
                             }

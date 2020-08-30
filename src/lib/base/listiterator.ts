@@ -1,6 +1,6 @@
 import ArrayIterator from './arrayiterator';
 
-export default class ListIterator<T> extends ArrayIterator<T> implements squared.lib.base.ListIterator<T> {
+export default class ListIterator<T = any> extends ArrayIterator<T> implements squared.lib.base.ListIterator<T> {
     public add(item: T): void {
         const iterating = this._iterating;
         if (iterating !== 0) {
