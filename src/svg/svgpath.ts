@@ -16,7 +16,7 @@ type SvgContainer = squared.svg.SvgContainer;
 
 const { getNamedItem } = squared.lib.dom;
 const { equal, lessEqual, multipleOf, offsetAngleX, offsetAngleY, relativeAngle, truncateFraction } = squared.lib.math;
-const { cloneArray, convertInt, convertFloat } = squared.lib.util;
+const { cloneObject, convertInt, convertFloat } = squared.lib.util;
 
 interface DashGroup {
     items: SvgStrokeDash[];
@@ -138,7 +138,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 }
                 const value = parseFloat(values[i]);
                 if (!isNaN(value)) {
-                    const path = i < length - 1 ? cloneArray(commands, [], true) as SvgPathCommand[] : commands;
+                    const path = i < length - 1 ? cloneObject(commands, { deep: true }) : commands;
                     switch (attr) {
                         case 'x':
                         case 'x1':
@@ -265,7 +265,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                 this.transformed = transforms;
                             }
                         }
-                        this.baseValue = SvgBuild.drawPath(SvgBuild.syncPath(requireRefit ? cloneArray(commands, [], true) : commands, requireRefit ? cloneArray(points, [], true) : points, !!this.transformed), precision);
+                        this.baseValue = SvgBuild.drawPath(SvgBuild.syncPath(requireRefit ? cloneObject(commands, { deep: true }) : commands, requireRefit ? cloneObject(points, { deep: true }) : points, !!this.transformed), precision);
                         if (requireRefit) {
                             parent.refitPoints(points);
                             d = SvgBuild.drawPath(SvgBuild.syncPath(commands, points, !!this.transformed), precision);

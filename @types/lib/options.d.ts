@@ -69,3 +69,8 @@ interface ParseUnitOptions {
     fixedWidth?: boolean;
     screenDimension?: Null<Dimension>;
 }
+
+interface CloneObjectOptions<T> {
+    target?: PlainObject | T[];
+    deep?: boolean;
+}

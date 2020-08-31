@@ -294,8 +294,7 @@ declare module "lib" {
         function isEqual(source: any, other: any): boolean;
         function includes(source: Undef<string>, value: string, delimiter?: RegExp): boolean;
         function cloneInstance<T>(value: T): T;
-        function cloneArray(data: any[], result?: any[], object?: boolean): any[];
-        function cloneObject(data: PlainObject, result?: PlainObject, array?: boolean): PlainObject;
+        function cloneObject<T>(data: T, options?: CloneObjectOptions<T>): T;
         function resolvePath(value: string, href?: string): string;
         function trimBoth(value: string, pattern: string): string;
         function trimString(value: string, pattern: string): string;

@@ -754,7 +754,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public inheritApply(module: string, data: StandardMap) {
         switch (module) {
             case 'initial':
-                cloneObject(data, this._initial);
+                this._initial = cloneObject<InitialData<T>>(data, { target: this._initial });
                 break;
             case 'textStyle':
                 this.cssApply(data);

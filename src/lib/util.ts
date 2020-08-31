@@ -750,36 +750,48 @@ export function cloneInstance<T>(value: T) {
     return Object.assign(Object.create(Object.getPrototypeOf(value)), value) as T;
 }
 
-export function cloneArray<T>(data: T[], result: T[] = [], object?: boolean) {
-    for (let i = 0, length = data.length; i < length; ++i) {
-        const value = data[i];
-        if (Array.isArray(value)) {
-            result.push(cloneArray(value, [], object) as any);
+export function cloneObject<T>(data: T, options?: CloneObjectOptions<T>) {
+    let target: Undef<PlainObject | any[]>,
+        deep: Undef<boolean>;
+    if (options) {
+        ({ target, deep } = options);
+    }
+    const nested = deep ? { deep } : undefined;
+    if (Array.isArray(data)) {
+        if (!target || !Array.isArray(target)) {
+            target = [];
         }
-        else if (object && isPlainObject(value)) {
-            result.push(cloneObject(value, {}, true) as T);
-        }
-        else {
-            result.push(value);
+        for (let i = 0, length = data.length; i < length; ++i) {
+            const value = data[i];
+            if (Array.isArray(value)) {
+                target.push(cloneObject(value, nested));
+            }
+            else if (deep && isPlainObject(value)) {
+                target.push(cloneObject(value, nested));
+            }
+            else {
+                target.push(value);
+            }
         }
     }
-    return result;
-}
-
-export function cloneObject(data: PlainObject, result = {}, array?: boolean) {
-    for (const attr in data) {
-        const value = data[attr];
-        if (Array.isArray(value)) {
-            result[attr] = array ? cloneArray(value, [], true) : value;
+    else if (isObject(data)) {
+        if (!target || !isObject(target)) {
+            target = {};
         }
-        else if (isPlainObject(value)) {
-            result[attr] = cloneObject(value, {}, array);
-        }
-        else {
-            result[attr] = value;
+        for (const attr in data) {
+            const value = data[attr];
+            if (Array.isArray(value)) {
+                target[attr] = deep ? cloneObject(value, nested) : value;
+            }
+            else if (isPlainObject(value)) {
+                target[attr] = cloneObject(value, nested);
+            }
+            else {
+                target[attr] = value;
+            }
         }
     }
-    return result;
+    return target as T extends [] ? T[] : PlainObject;
 }
 
 export function resolvePath(value: string, href?: string) {
