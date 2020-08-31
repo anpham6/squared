@@ -242,24 +242,26 @@ export function parseDocumentSync(...elements: (HTMLElement | string)[]) {
 
 export function add(...values: ExtensionRequestObject[]) {
     let success = 0;
-    for (let i = 0, length = values.length; i < length; ++i) {
-        let value = values[i],
-            options: Undef<PlainObject>;
-        if (Array.isArray(value)) {
-            [value, options] = value;
-        }
-        if (typeof value === 'string') {
-            value = main && main.builtInExtensions.get(value) || get(value) as Extension;
-        }
-        if (value instanceof squared.base.Extension) {
-            extensionsExternal.add(value);
-            if (extensionManager && !extensionManager.add(value)) {
-                extensionsQueue.add(value);
+    if (extensionManager) {
+        for (let i = 0, length = values.length; i < length; ++i) {
+            let value = values[i],
+                options: Undef<PlainObject>;
+            if (Array.isArray(value)) {
+                [value, options] = value;
             }
-            if (options) {
-                assign(value, options);
+            if (typeof value === 'string') {
+                value = get(value) as Extension;
             }
-            ++success;
+            if (value instanceof squared.base.Extension) {
+                extensionsExternal.add(value);
+                if (!extensionManager.add(value)) {
+                    extensionsQueue.add(value);
+                }
+                if (options) {
+                    assign(value, options);
+                }
+                ++success;
+            }
         }
     }
     return success;
@@ -290,7 +292,7 @@ export function get(...values: string[]) {
         const result: Extension[] = [];
         for (let i = 0, length = values.length; i < length; ++i) {
             const value = values[i];
-            let item = extensionManager.get(value);
+            let item = extensionManager.get(value, true);
             if (!item) {
                 for (const ext of extensionsExternal) {
                     if (ext.name === value) {
@@ -311,7 +313,7 @@ export function get(...values: string[]) {
 }
 
 export function assign(value: ExtensionRequest, options: FrameworkOptions) {
-    if (util.isPlainObject(options)) {
+    if (extensionManager && util.isPlainObject(options)) {
         const mergeSettings = (name: string) => {
             const { loadAs, saveAs: saveAsLocal } = options;
             const result: PlainObject = {};
@@ -336,7 +338,7 @@ export function assign(value: ExtensionRequest, options: FrameworkOptions) {
             return result;
         };
         if (typeof value === 'string') {
-            const extension = extensionManager && extensionManager.get(value) || util.findSet(extensionsQueue, item => item.name === value);
+            const extension = extensionManager.get(value, true) || util.findSet(extensionsQueue, item => item.name === value);
             if (!extension) {
                 optionsQueue.set(value, mergeSettings(value));
                 return true;

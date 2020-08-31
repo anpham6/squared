@@ -8,10 +8,9 @@ export default class ExtensionManager<T extends Node> implements squared.base.Ex
     constructor(public readonly application: Application<T>) {}
 
     public add(ext: Extension<T> | string) {
-        const application = this.application;
-        const extensions = application.extensions;
+        const { application, extensions } = this;
         if (typeof ext === 'string') {
-            const item = this.get(ext);
+            const item = this.get(ext, true);
             if (!item) {
                 return false;
             }
@@ -28,12 +27,10 @@ export default class ExtensionManager<T extends Node> implements squared.base.Ex
             if (framework) {
                 for (let i = 0, length = dependencies.length; i < length; ++i) {
                     const item = dependencies[i];
-                    if (item.preload) {
-                        if (!this.get(item.name)) {
-                            const extension = application.builtInExtensions.get(item.name);
-                            if (extension) {
-                                this.add(extension);
-                            }
+                    if (item.preload && !this.get(item.name)) {
+                        const extension = application.builtInExtensions.get(item.name);
+                        if (extension) {
+                            this.add(extension);
                         }
                     }
                 }
@@ -49,8 +46,14 @@ export default class ExtensionManager<T extends Node> implements squared.base.Ex
 
     public remove(ext: Extension<T> | string) {
         const extensions = this.extensions;
+        if (typeof ext === 'string') {
+            ext = this.get(ext, true) as Extension<T>;
+            if (!ext) {
+                return false;
+            }
+        }
         for (let i = 0, length = extensions.length; i < length; ++i) {
-            if (extensions[i] === ext || typeof ext === 'string' && this.get(ext)) {
+            if (extensions[i] === ext) {
                 extensions.splice(i, 1);
                 return true;
             }
@@ -72,7 +75,7 @@ export default class ExtensionManager<T extends Node> implements squared.base.Ex
     }
 
     public valueOf<T = unknown>(name: string, attr: string, fallback?: T): Undef<T> {
-        const options = this.get(name)?.options;
+        const options = this.get(name, true)?.options;
         return isObject(options) ? options[attr] as T : fallback;
     }
 
