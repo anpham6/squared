@@ -7,7 +7,7 @@ import LayoutUI = squared.base.LayoutUI;
 import { CONTAINER_ANDROID, STRING_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 
-interface AndroidCssGridData<T> extends CssGridData<T> {
+interface ICssGridData<T> extends CssGridData<T> {
     unsetContentBox?: boolean;
     constraintData?: T[][];
 }
@@ -83,7 +83,7 @@ function getMarginSize(value: number, gridSize: number) {
     return [size, gridSize - (size * value)];
 }
 
-function setContentSpacing(mainData: AndroidCssGridData<View>, data: CssGridDirectionData, node: View, horizontal: boolean, maxScreenWidth: number, maxScreenHeight: number) {
+function setContentSpacing(mainData: ICssGridData<View>, data: CssGridDirectionData, node: View, horizontal: boolean, maxScreenWidth: number, maxScreenHeight: number) {
     let alignment: string,
         dimension: DimensionAttr,
         MARGIN_START: number,
@@ -570,7 +570,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
             );
         }
         super.processNode(node, parent);
-        const mainData = this.data.get(node) as Undef<AndroidCssGridData<T>>;
+        const mainData = this.data.get(node) as Undef<ICssGridData<T>>;
         if (mainData) {
             mainData.unsetContentBox = unsetContentBox;
             const { column, row } = mainData;
@@ -632,7 +632,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
     }
 
     public processChild(node: T, parent: T) {
-        const mainData = this.data.get(parent) as Undef<AndroidCssGridData<T>>;
+        const mainData = this.data.get(parent) as Undef<ICssGridData<T>>;
         const cellData = this.data.get(node) as Undef<CssGridCellData>;
         if (mainData && cellData) {
             const row = mainData.row;
@@ -736,7 +736,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
     }
 
     public postBaseLayout(node: T) {
-        const mainData = this.data.get(node) as Undef<AndroidCssGridData<T>>;
+        const mainData = this.data.get(node) as Undef<ICssGridData<T>>;
         if (mainData) {
             const controller = this.controller as android.base.Controller<T>;
             const { children, column, row, rowData } = mainData;

@@ -1,4 +1,4 @@
-const settings: ChromeUserSettings = {
+const settings: IUserSettings = {
     builtInExtensions: [],
     preloadImages: false,
     preloadFonts: false,

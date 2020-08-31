@@ -15,7 +15,7 @@ declare namespace base {
     }
 
     class Application<T extends View> extends squared.base.ApplicationUI<T> {
-        readonly userSettings: AndroidUserResourceSettingsUI;
+        readonly userSettings: IUserResourceSettingsUI;
         setViewModel(data: AppViewModel, sessionId?: string): void;
         getViewModel(sessionId: string): Undef<AppViewModel>;
         resolveTarget(sessionId: string, target: Null<HTMLElement | string>): Null<T>;
@@ -33,13 +33,13 @@ declare namespace base {
         addGuideline(options: GuidelineOptions<T>): void;
         addBarrier(nodes: T[], barrierDirection: string): string;
         evaluateAnchors(nodes: T[]): void;
-        createNodeWrapper(node: T, parent: T, options?: AndroidCreateNodeWrapperUIOptions<T>): T;
-        get userSettings(): AndroidUserResourceSettingsUI;
+        createNodeWrapper(node: T, parent: T, options?: ICreateNodeWrapperUIOptions<T>): T;
+        get userSettings(): IUserResourceSettingsUI;
         get screenDimension(): Dimension;
     }
 
     class Resource<T extends View> extends squared.base.ResourceUI<T> {
-        static STORED: AndroidResourceStoredMap;
+        static STORED: IResourceStoredMap;
         static formatOptions(options: ViewAttribute, numberAlias?: boolean): ViewAttribute;
         static formatName(value: string): string;
         static addTheme(theme: StyleAttribute): boolean;
@@ -47,14 +47,14 @@ declare namespace base {
         static addImage(images: StringMap, prefix?: string, imageFormat?: MIMEOrAll): string;
         static addColor(value: ColorData | string, transparency?: boolean): string;
         readonly application: Application<T>;
-        get userSettings(): AndroidUserResourceSettingsUI;
+        get userSettings(): IUserResourceSettingsUI;
         addImageSrc(element: HTMLImageElement | string, prefix?: string, imageSet?: ImageSrcSet[]): string;
         addImageSet(images: StringMap, prefix?: string): string;
     }
 
     class File<T extends View> extends squared.base.File<T> {
         resource: Resource<T>;
-        get userSettings(): AndroidUserResourceSettingsUI;
+        get userSettings(): IUserResourceSettingsUI;
         get directory(): { string: string; image: string; video: string; audio: string; font: string };
         resourceAllToXml(options?: FileUniversalOptions): PlainObject;
         resourceStringToXml(options?: FileUniversalOptions): string[];
@@ -77,7 +77,7 @@ declare namespace base {
         api: number;
         android(attr: string, value?: string, overwrite?: boolean): string;
         app(attr: string, value?: string, overwrite?: boolean): string;
-        clone(id: number, options?: AndroidCloneOptions): View;
+        clone(id: number, options?: ICloneOptions): View;
         applyOptimizations(): void;
         applyCustomizations(overwrite?: boolean): void;
         formatted(value: string, overwrite?: boolean): void;
@@ -105,7 +105,7 @@ declare namespace base {
         set anchored(value);
         get anchored(): boolean;
         set localSettings(value);
-        get localSettings(): AndroidLocalSettingsUI;
+        get localSettings(): ILocalSettingsUI;
         get documentId(): string;
         get anchorTarget(): View;
         get constraint(): Constraint;
@@ -123,7 +123,7 @@ declare namespace base {
         get flexibleWidth(): boolean;
         get flexibleHeight(): boolean;
         get target(): Null<HTMLElement>;
-        get support(): AndroidSupportUI;
+        get support(): ISupportUI;
     }
 
     class ViewGroup extends View {

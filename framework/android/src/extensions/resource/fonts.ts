@@ -120,7 +120,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         const { defaultFontFamily, floatPrecision, disableFontAlias } = this.options;
         const api = userSettings.targetAPI;
         const convertPixels = userSettings.convertPixels === 'dp';
-        const { fonts, styles } = resource.mapOfStored as AndroidResourceStoredMap;
+        const { fonts, styles } = resource.mapOfStored as IResourceStoredMap;
         const nameMap: ObjectMap<T[]> = {};
         const groupMap: ObjectMap<StyleList[]> = {};
         let cache: T[] = [];

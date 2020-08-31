@@ -1,8 +1,8 @@
-interface ChromeFileActionOptions extends squared.FileActionOptions, FileActionAttribute, FileUniversalAttribute {}
+interface IFileActionOptions extends squared.FileActionOptions, FileActionAttribute, FileUniversalAttribute {}
 
-interface ChromeFileCopyingOptions extends squared.base.FileCopyingOptions, ChromeFileActionOptions {}
+interface IFileCopyingOptions extends squared.base.FileCopyingOptions, IFileActionOptions {}
 
-interface ChromeFileArchivingOptions extends squared.base.FileArchivingOptions, ChromeFileActionOptions {}
+interface IFileArchivingOptions extends squared.base.FileArchivingOptions, IFileActionOptions {}
 
 interface CompressOptions {
     mimeTypes: MIMEOrAll;

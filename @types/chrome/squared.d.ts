@@ -12,7 +12,7 @@ declare namespace base {
     }
 
     class Application<T extends Node> extends squared.base.Application<T> {
-        userSettings: ChromeUserSettings;
+        userSettings: IUserSettings;
         builtInExtensions: Map<string, Extension<T>>;
         readonly session: AppSession<T>;
         readonly extensions: Extension<T>[];
@@ -26,7 +26,7 @@ declare namespace base {
     class File<T extends Node> extends squared.base.File<T> {
         static parseUri(uri: string, options?: UriOptions): Null<ChromeAsset>;
         get application(): Application<T>;
-        get userSettings(): ChromeUserSettings;
+        get userSettings(): IUserSettings;
         get outputFileExclusions(): RegExp[];
         getHtmlPage(options?: FileActionAttribute): ChromeAsset[];
         getScriptAssets(options?: FileActionAttribute): ChromeAsset[];

@@ -1,14 +1,14 @@
-interface AndroidLocalSettingsUI extends LocalSettingsUI {
+interface ILocalSettingsUI extends LocalSettingsUI {
     supportRTL: boolean;
     lineHeightAdjust: number;
     floatPrecision: number;
 }
 
-interface AndroidCacheValueUI extends CacheValueUI {
-    support?: AndroidSupportUI;
+interface ICacheValueUI extends CacheValueUI {
+    support?: ISupportUI;
 }
 
-interface AndroidSupportUI extends SupportUI {
+interface ISupportUI extends SupportUI {
     maxDimension: boolean;
 }
 

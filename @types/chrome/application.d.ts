@@ -1,4 +1,4 @@
-interface ChromeUserSettings extends UserResourceSettings {
+interface IUserSettings extends UserResourceSettings {
     excludePlainText: boolean;
     outputFileExclusions: string[];
 }

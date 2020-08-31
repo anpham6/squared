@@ -18,7 +18,7 @@ import SETTINGS from './settings';
 import * as constant from './lib/constant';
 
 type Node = squared.base.Node;
-type FileOptions = ChromeFileArchivingOptions | ChromeFileCopyingOptions;
+type FileOptions = IFileArchivingOptions | IFileCopyingOptions;
 
 const { util, session } = squared.lib;
 
@@ -68,67 +68,67 @@ const appBase: chrome.ChromeFramework<Node> = {
         }
     },
     system: {
-        copyHtmlPage(directory: string, options?: ChromeFileCopyingOptions) {
+        copyHtmlPage(directory: string, options?: IFileCopyingOptions) {
             if (isString(directory)) {
                 return file ? file.copying(createAssetsOptions(file.getHtmlPage(options), options, directory)) : frameworkNotInstalled();
             }
             return directoryNotProvided();
         },
-        copyScriptAssets(directory: string, options?: ChromeFileCopyingOptions) {
+        copyScriptAssets(directory: string, options?: IFileCopyingOptions) {
             if (isString(directory)) {
                 return file ? file.copying(createAssetsOptions(file.getScriptAssets(options), options, directory)) : frameworkNotInstalled();
             }
             return directoryNotProvided();
         },
-        copyLinkAssets(directory: string, options?: ChromeFileCopyingOptions) {
+        copyLinkAssets(directory: string, options?: IFileCopyingOptions) {
             if (isString(directory)) {
                 return file ? file.copying(createAssetsOptions(file.getLinkAssets(options), options, directory)) : frameworkNotInstalled();
             }
             return directoryNotProvided();
         },
-        copyImageAssets(directory: string, options?: ChromeFileCopyingOptions) {
+        copyImageAssets(directory: string, options?: IFileCopyingOptions) {
             if (isString(directory)) {
                 return file ? file.copying(createAssetsOptions(file.getImageAssets(options), options, directory)) : frameworkNotInstalled();
             }
             return directoryNotProvided();
         },
-        copyVideoAssets(directory: string, options?: ChromeFileCopyingOptions) {
+        copyVideoAssets(directory: string, options?: IFileCopyingOptions) {
             if (isString(directory)) {
                 return file ? file.copying(createAssetsOptions(file.getVideoAssets(options), options, directory)) : frameworkNotInstalled();
             }
             return directoryNotProvided();
         },
-        copyAudioAssets(directory: string, options?: ChromeFileCopyingOptions) {
+        copyAudioAssets(directory: string, options?: IFileCopyingOptions) {
             if (isString(directory)) {
                 return file ? file.copying(createAssetsOptions(file.getAudioAssets(options), options, directory)) : frameworkNotInstalled();
             }
             return directoryNotProvided();
         },
-        copyFontAssets(directory: string, options?: ChromeFileCopyingOptions) {
+        copyFontAssets(directory: string, options?: IFileCopyingOptions) {
             if (isString(directory)) {
                 return file ? file.copying(createAssetsOptions(file.getFontAssets(options), options, directory)) : frameworkNotInstalled();
             }
             return directoryNotProvided();
         },
-        saveHtmlPage(filename?: string, options?: ChromeFileArchivingOptions) {
+        saveHtmlPage(filename?: string, options?: IFileArchivingOptions) {
             return file ? file.archiving(createAssetsOptions(file.getHtmlPage(options), options, undefined, checkFileName(filename) + '-html')) : frameworkNotInstalled();
         },
-        saveScriptAssets(filename?: string, options?: ChromeFileArchivingOptions) {
+        saveScriptAssets(filename?: string, options?: IFileArchivingOptions) {
             return file ? file.archiving(createAssetsOptions(file.getScriptAssets(options), options, undefined, checkFileName(filename) + '-script')) : frameworkNotInstalled();
         },
-        saveLinkAssets(filename?: string, options?: ChromeFileArchivingOptions) {
+        saveLinkAssets(filename?: string, options?: IFileArchivingOptions) {
             return file ? file.archiving(createAssetsOptions(file.getLinkAssets(options), options, undefined, checkFileName(filename) + '-link')) : frameworkNotInstalled();
         },
-        saveImageAssets(filename?: string, options?: ChromeFileArchivingOptions) {
+        saveImageAssets(filename?: string, options?: IFileArchivingOptions) {
             return file ? file.archiving(createAssetsOptions(file.getImageAssets(options), options, undefined, checkFileName(filename) + '-image')) : frameworkNotInstalled();
         },
-        saveVideoAssets(filename?: string, options?: ChromeFileArchivingOptions) {
+        saveVideoAssets(filename?: string, options?: IFileArchivingOptions) {
             return file ? file.archiving(createAssetsOptions(file.getVideoAssets(options), options, undefined, checkFileName(filename) + '-video')) : frameworkNotInstalled();
         },
-        saveAudioAssets(filename?: string, options?: ChromeFileArchivingOptions) {
+        saveAudioAssets(filename?: string, options?: IFileArchivingOptions) {
             return file ? file.archiving(createAssetsOptions(file.getAudioAssets(options), options, undefined, checkFileName(filename) + '-audio')) : frameworkNotInstalled();
         },
-        saveFontAssets(filename?: string, options?: ChromeFileArchivingOptions) {
+        saveFontAssets(filename?: string, options?: IFileArchivingOptions) {
             return file ? file.archiving(createAssetsOptions(file.getFontAssets(options), options, undefined, checkFileName(filename) + '-font')) : frameworkNotInstalled();
         }
     },
@@ -169,7 +169,7 @@ const appBase: chrome.ChromeFramework<Node> = {
         }
         return appBase.create();
     },
-    saveAsWebPage: (filename?: string, options?: ChromeFileArchivingOptions) => {
+    saveAsWebPage: (filename?: string, options?: IFileArchivingOptions) => {
         if (application) {
             options = !isPlainObject(options) ? {} : { ...options };
             options.saveAsWebPage = true;

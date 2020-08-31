@@ -1,4 +1,4 @@
-interface AndroidUserResourceSettingsUI extends UserResourceSettingsUI {
+interface IUserResourceSettingsUI extends UserResourceSettingsUI {
     targetAPI: number;
     resolutionDPI: number;
     resolutionScreenWidth: number;
@@ -17,15 +17,15 @@ interface AndroidUserResourceSettingsUI extends UserResourceSettingsUI {
     outputMainFileName: string;
 }
 
-interface AndroidControllerSettingsUI extends ControllerSettingsUI {
-    deviations: AndroidControllerSettingsDeviationsUI;
+interface IControllerSettingsUI extends ControllerSettingsUI {
+    deviations: IControllerSettingsDeviationsUI;
 }
 
-interface AndroidControllerSettingsDeviationsUI extends ControllerSettingsDeviationsUI {
+interface IControllerSettingsDeviationsUI extends ControllerSettingsDeviationsUI {
     legendBottomOffset: number;
 }
 
-interface AndroidResourceStoredMap extends ResourceStoredMap {
+interface IResourceStoredMap extends ResourceStoredMap {
     styles: Map<string, StyleAttribute>;
     themes: Map<string, Map<string, StyleAttribute>>;
     dimens: Map<string, string>;

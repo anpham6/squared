@@ -1,4 +1,4 @@
-const settings: AndroidUserResourceSettingsUI = {
+const settings: IUserResourceSettingsUI = {
     builtInExtensions: [
         'squared.accessibility',
         'android.delegate.background',

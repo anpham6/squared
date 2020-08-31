@@ -12,7 +12,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
     public readonly eventOnly = true;
 
     public beforeDocumentWrite(data: squared.base.DocumentWriteDataExtensionUI<T>) {
-        const styles = (Resource.STORED as AndroidResourceStoredMap).styles;
+        const styles = (Resource.STORED as IResourceStoredMap).styles;
         const rendered = data.rendered;
         for (let i = 0, length = rendered.length; i < length; ++i) {
             next: {

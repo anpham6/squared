@@ -10,7 +10,7 @@ const { extractURL, getSrcSet } = squared.lib.css;
 const { FILE } = squared.lib.regex;
 const { fromLastIndexOf, isNumber, isPlainObject, isString, resolvePath, trimString } = squared.lib.util;
 
-const STORED = squared.base.ResourceUI.STORED as AndroidResourceStoredMap;
+const STORED = squared.base.ResourceUI.STORED as IResourceStoredMap;
 
 const REGEXP_STRINGNAME = /(\\[nt]|<\/?[A-Za-z]+>|&#?[A-Za-z\d]{2,};)/g;
 const REGEXP_STRINGWORD = /[^A-Za-z\d]+/g;

@@ -534,8 +534,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         protected _namespaces: ObjectMap<StringMapChecked> = { android: {} };
         protected _containerType = 0;
         protected _controlName = '';
-        protected _cache!: AndroidCacheValueUI;
-        protected _localSettings!: AndroidLocalSettingsUI;
+        protected _cache!: ICacheValueUI;
+        protected _localSettings!: ILocalSettingsUI;
         protected _boxReset?: number[];
         protected _boxAdjustment?: number[];
         protected _documentParent?: T;
@@ -1400,7 +1400,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
         }
 
-        public clone(id: number, options?: AndroidCloneOptions): T {
+        public clone(id: number, options?: ICloneOptions): T {
             let attributes: Undef<boolean>,
                 position: Undef<boolean>;
             if (options) {

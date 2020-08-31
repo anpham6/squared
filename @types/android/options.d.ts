@@ -8,12 +8,12 @@ interface GuidelineOptions<T> {
     opposing?: boolean;
 }
 
-interface AndroidCloneOptions {
+interface ICloneOptions {
     position?: boolean;
     attributes?: boolean;
 }
 
-interface AndroidCreateNodeWrapperUIOptions<T> extends CreateNodeWrapperUIOptions<T> {
+interface ICreateNodeWrapperUIOptions<T> extends CreateNodeWrapperUIOptions<T> {
     resetMargin?: boolean;
     resetContentBox?: boolean;
     inheritDataset?: boolean;

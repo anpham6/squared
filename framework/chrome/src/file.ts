@@ -265,11 +265,11 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         delete this._outputFileExclusions;
     }
 
-    public copyTo(directory: string, options?: ChromeFileCopyingOptions) {
+    public copyTo(directory: string, options?: IFileCopyingOptions) {
         return this.copying({ ...options, assets: this.appendAssetsFromOptions(options), directory });
     }
 
-    public appendTo(pathname: string, options?: ChromeFileArchivingOptions) {
+    public appendTo(pathname: string, options?: IFileArchivingOptions) {
         return this.archiving({
             filename: this.userSettings.outputArchiveName,
             ...options,
@@ -278,7 +278,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         });
     }
 
-    public saveAs(filename: string, options?: ChromeFileArchivingOptions) {
+    public saveAs(filename: string, options?: IFileArchivingOptions) {
         return this.archiving({ ...options, assets: this.appendAssetsFromOptions(options), filename });
     }
 
@@ -610,18 +610,18 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         return result;
     }
 
-    public getDataMap(options: ChromeFileActionOptions) {
+    public getDataMap(options: IFileActionOptions) {
         return {
             unusedStyles: options.removeUnusedStyles ? Array.from(this.application.session.unusedStyles!) : undefined,
             transpileMap: this.application.session.transpileMap
         };
     }
 
-    public getCopyQueryParameters(options: ChromeFileCopyingOptions) {
+    public getCopyQueryParameters(options: IFileCopyingOptions) {
         return options.productionRelease ? '&release=1' : '';
     }
 
-    public getArchiveQueryParameters(options: ChromeFileArchivingOptions) {
+    public getArchiveQueryParameters(options: IFileArchivingOptions) {
         return options.productionRelease ? '&release=1' : '';
     }
 
@@ -657,7 +657,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         return result;
     }
 
-    protected combineAssets(options?: ChromeFileArchivingOptions) {
+    protected combineAssets(options?: IFileArchivingOptions) {
         const result = this.getHtmlPage(options).concat(this.getLinkAssets(options));
         if (options && options.saveAsWebPage) {
             for (let i = 0, length = result.length; i < length; ++i) {
@@ -696,6 +696,6 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     get userSettings() {
-        return this.resource.userSettings as ChromeUserSettings;
+        return this.resource.userSettings as IUserSettings;
     }
 }

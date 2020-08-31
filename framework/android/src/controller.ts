@@ -474,7 +474,7 @@ export function setVerticalAlignment(node: View, onlyChild = true, biasOnly?: bo
 }
 
 export default class Controller<T extends View> extends squared.base.ControllerUI<T> implements android.base.Controller<T> {
-    public readonly localSettings: AndroidControllerSettingsUI = {
+    public readonly localSettings: IControllerSettingsUI = {
         layout: {
             pathName: 'res/layout',
             fileExtension: 'xml',
@@ -555,7 +555,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     protected _screenDimension!: Dimension;
 
     private _targetAPI!: number;
-    private _viewSettings!: AndroidLocalSettingsUI;
+    private _viewSettings!: ILocalSettingsUI;
 
     public init() {
         const userSettings = this.userSettings;
@@ -1962,7 +1962,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         return container;
     }
 
-    public createNodeWrapper(node: T, parent: T, options: AndroidCreateNodeWrapperUIOptions<T> = {}) {
+    public createNodeWrapper(node: T, parent: T, options: ICreateNodeWrapperUIOptions<T> = {}) {
         const { children, containerType, alignmentType } = options;
         const container = this.application.createNode(node.sessionId, {
             parent,
