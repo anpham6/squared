@@ -114,7 +114,7 @@ export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> 
         const element = Drawer.findNestedElement(node, WIDGET_NAME.COORDINATOR);
         if (element) {
             const coordinator = getElementAsNode<T>(element, node.sessionId);
-            if (coordinator && coordinator.inlineHeight && coordinator.some((item: T) => item.positioned)) {
+            if (coordinator && coordinator.inlineHeight && coordinator.find((item: T) => item.positioned)) {
                 coordinator.setLayoutHeight('match_parent');
             }
         }

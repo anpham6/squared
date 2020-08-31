@@ -72,7 +72,7 @@ export default abstract class NodeGroupUI extends NodeUI {
             return true;
         }
         const result = this._cache.block;
-        return result === undefined ? this._cache.block = this.some(node => node.block) : result;
+        return result === undefined ? this._cache.block = !!this.find(node => node.block) : result;
     }
 
     get blockStatic() {
@@ -84,8 +84,8 @@ export default abstract class NodeGroupUI extends NodeUI {
             const parent = this.actualParent || this.documentParent;
             result = parent.blockStatic && (parent.layoutVertical || this.hasAlign(NODE_ALIGNMENT.COLUMN)) ||
                 parent.percentWidth > 0 ||
-                this.layoutVertical && (parent.hasWidth || this.some(node => node.centerAligned || node.rightAligned)) ||
-                this.some(node => node.blockStatic && !node.hasWidth || node.percentWidth > 0);
+                this.layoutVertical && (parent.hasWidth || !!this.find(node => node.centerAligned || node.rightAligned)) ||
+                !!this.find(node => node.blockStatic && !node.hasWidth || node.percentWidth > 0);
             if (result || this.containerType !== 0) {
                 this._cache.blockStatic = result;
             }

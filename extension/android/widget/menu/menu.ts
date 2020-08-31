@@ -88,7 +88,7 @@ function getTitle(node: View, element: HTMLElement) {
     return '';
 }
 
-const hasInputType = (node: View, value: string) => node.some(item => item.toElementString('type') === value);
+const hasInputType = (node: View, value: string) => !!node.find(item => item.toElementString('type') === value);
 
 export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly cascadeAll = true;
@@ -160,8 +160,8 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
             controlName = NAVIGATION.MENU;
             title = getTitle(node, element);
         }
-        else if (node.some(item => item.length > 0)) {
-            if (node.some(item => item.tagName === 'NAV')) {
+        else if (node.find(item => item.length > 0)) {
+            if (node.find(item => item.tagName === 'NAV')) {
                 controlName = NAVIGATION.ITEM;
             }
             else {

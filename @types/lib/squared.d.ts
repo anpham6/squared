@@ -15,11 +15,10 @@ declare module "lib" {
             every(predicate: IteratorPredicate<T, boolean>, options?: ContainerRangeOptions): boolean;
             removeIf(predicate: IteratorPredicate<T, boolean>, options?: ContainerCascadeOptions<T>): T[];
             find(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>): Undef<T>;
-            some(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>): boolean;
             cascade(predicate?: (item: T) => void | boolean, options?: ContainerCascadeOptions<T>): T[];
-            map<U>(predicate: IteratorPredicate<T, U>): U[];
+            findIndex(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindIndexOptions<T>): number;
+            map<U = unknown>(predicate: IteratorPredicate<T, U>): U[];
             partition(predicate: IteratorPredicate<T, boolean>): [T[], T[]];
-            findIndex(predicate: IteratorPredicate<T, boolean>): number;
             sort(predicate: (a: T, b: T) => number): this;
             toArray(): T[];
             iterator(): ListIterator<T>;

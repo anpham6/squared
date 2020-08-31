@@ -213,10 +213,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 }
                 const renderA = a.rendering;
                 const renderB = b.rendering;
-                if (!renderA && renderB && b.some(item => item.css('verticalAlign') !== 'baseline')) {
+                if (!renderA && renderB && b.find(item => item.css('verticalAlign') !== 'baseline')) {
                     return -1;
                 }
-                else if (!renderB && renderA && a.some(item => item.css('verticalAlign') !== 'baseline')) {
+                else if (!renderB && renderA && a.find(item => item.css('verticalAlign') !== 'baseline')) {
                     return 1;
                 }
                 if (renderA && a.baselineElement) {
@@ -1079,7 +1079,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     else if (this.autoMargin.left) {
                         return NODE_TRAVERSE.FLOAT_BLOCK;
                     }
-                    if (this.floatContainer && this.some(item => item.floating && Math.ceil(item.bounds.top) >= previous.bounds.bottom)) {
+                    if (this.floatContainer && this.find(item => item.floating && Math.ceil(item.bounds.top) >= previous.bounds.bottom)) {
                         return NODE_TRAVERSE.FLOAT_BLOCK;
                     }
                 }

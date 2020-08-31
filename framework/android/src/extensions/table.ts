@@ -71,7 +71,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                     item.setLayoutWidth('wrap_content');
                     requireWidth = true;
                 }
-                if (item.tagName !== 'CAPTION' && (item.multiline || item.some((child: T) => child.multiline || child.contentAltered, { cascade: true }))) {
+                if (item.tagName !== 'CAPTION' && (item.multiline || item.find((child: T) => child.multiline || child.contentAltered, { cascade: true }))) {
                     multiline = true;
                     requireWidth = true;
                 }

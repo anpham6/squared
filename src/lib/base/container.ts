@@ -109,11 +109,12 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
         if (length) {
             let i = 0;
             if (options) {
-                if (options.start) {
-                    i = Math.max(options.start, 0);
+                const { start, end } = options;
+                if (start) {
+                    i = Math.max(start, 0);
                 }
-                if (options.end) {
-                    length = Math.min(length, options.end);
+                if (end) {
+                    length = Math.min(end, length);
                 }
             }
             for ( ; i < length; ++i) {
@@ -149,15 +150,24 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
         }
         return result;
     }
-
-    public findIndex(predicate: IteratorPredicate<T, boolean>, options?: ContainerCascadeOptions<T>) {
+    public findIndex(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindIndexOptions<T>) {
         let also: Undef<BindGeneric<T, void>>,
-            error: Undef<IteratorPredicate<T, boolean>>;
-        if (options) {
-            ({ also, error } = options);
-        }
+            error: Undef<IteratorPredicate<T, boolean>>,
+            start: Undef<number>,
+            end: Undef<number>;
         const children = this._children;
-        for (let i = 0, length = children.length; i < length; ++i) {
+        let i = 0,
+            length = children.length;
+        if (options) {
+            ({ also, error, start, end } = options);
+            if (start) {
+                i = Math.max(start, 0);
+            }
+            if (end) {
+                length = Math.min(length, end);
+            }
+        }
+        for ( ; i < length; ++i) {
             const item = children[i];
             if (error && error(item, i, children)) {
                 return -1;
@@ -175,43 +185,52 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
     public find(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>) {
         let also: Undef<BindGeneric<T, void>>,
             error: Undef<IteratorPredicate<T, boolean>>,
-            cascade: Undef<boolean>,
             start: Undef<number>,
-            end: Undef<number>;
+            end: Undef<number>,
+            count: Undef<number>,
+            cascade: Undef<boolean>;
         if (options) {
-            ({ also, error, cascade } = options);
-            if (!cascade) {
-                ({ start, end } = options);
-                if (start) {
-                    start = Math.max(start, 0);
-                }
-                if (end) {
-                    end = Math.min(this.length, end);
-                }
+            ({ also, error, start, end, count, cascade } = options);
+            if (start) {
+                start = Math.max(start, 0);
+            }
+            if (end) {
+                end = Math.min(this.length, end);
             }
         }
+        if (count === undefined) {
+            count = 0;
+        }
         let invalid: Undef<boolean>;
-        const recurse = (container: Container<T>): Undef<T> => {
+        const recurse = (container: Container<T>, level: number): Undef<T> => {
             const children = container.children;
-            const length = end ?? children.length;
-            for (let i = start || 0; i < length; ++i) {
+            let i = 0,
+                length = children.length;
+            if (level === 0) {
+                if (start) {
+                    i = start;
+                }
+                if (end) {
+                    length = end;
+                }
+            }
+            for ( ; i < length; ++i) {
                 const item = children[i];
                 if (error && error(item, i, children)) {
                     invalid = true;
                     break;
                 }
                 if (predicate(item, i, children)) {
-                    if (also) {
-                        also.call(item, item);
-                    }
-                    return item;
-                }
-                if (cascade && item instanceof Container && !item.isEmpty) {
-                    const result = recurse(item);
-                    if (result) {
+                    if (count!-- === 0) {
                         if (also) {
                             also.call(item, item);
                         }
+                        return item;
+                    }
+                }
+                if (cascade && item instanceof Container && !item.isEmpty) {
+                    const result = recurse(item, level + 1);
+                    if (result) {
                         return result;
                     }
                     else if (invalid) {
@@ -220,11 +239,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
                 }
             }
         };
-        return recurse(this);
-    }
-
-    public some(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>) {
-        return this.find(predicate, options) !== undefined;
+        return recurse(this, 0);
     }
 
     public cascade(predicate?: (item: T) => void | boolean, options?: ContainerCascadeOptions<T>) {
@@ -261,7 +276,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
         return recurse(this);
     }
 
-    public map<U>(predicate: IteratorPredicate<T, U>): U[] {
+    public map<U = unknown>(predicate: IteratorPredicate<T, U>): U[] {
         return plainMap(this._children, predicate);
     }
 

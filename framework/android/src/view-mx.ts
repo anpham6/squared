@@ -712,15 +712,15 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     else if (
                         containsWidth && (
                             this.nodeGroup && (this.hasAlign(NODE_ALIGNMENT.FLOAT) && (this.hasAlign(NODE_ALIGNMENT.BLOCK) || this.hasAlign(NODE_ALIGNMENT.RIGHT)) || this.hasAlign(NODE_ALIGNMENT.PERCENT)) ||
-                            actualParent.flexElement && this.some(item => item.multiline, { cascade: true }) ||
-                            this.layoutGrid && this.some((node: T) => node.flexibleWidth)
+                            actualParent.flexElement && this.find(item => item.multiline, { cascade: true }) ||
+                            this.layoutGrid && this.find((node: T) => node.flexibleWidth)
                         ))
                     {
                         layoutWidth = this.getMatchConstraint(renderParent);
                     }
                     else if (!this.imageElement && !this.inputElement && !this.controlElement) {
                         const checkParentWidth = (block: boolean) => {
-                            if (!actualParent.pageFlow && this.some(node => node.textElement)) {
+                            if (!actualParent.pageFlow && this.find(node => node.textElement)) {
                                 return;
                             }
                             else if (this.styleText) {
@@ -757,14 +757,14 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     checkParentWidth(true);
                                 }
                             }
-                            else if (containsWidth && (actualParent.gridElement && !renderParent.layoutElement || actualParent.flexElement && this.layoutVertical && this.some(item => item.textElement && item.multiline))) {
+                            else if (containsWidth && (actualParent.gridElement && !renderParent.layoutElement || actualParent.flexElement && this.layoutVertical && this.find(item => item.textElement && item.multiline))) {
                                 layoutWidth = this.getMatchConstraint(renderParent);
                             }
                         }
                         else if (this.floating && this.block && !this.rightAligned && this.alignParent('left') && this.alignParent('right')) {
                             layoutWidth = 'match_parent';
                         }
-                        else if (this.naturalElement && this.inlineStatic && !this.blockDimension && this.some(item => item.naturalElement && item.blockStatic) && !actualParent.layoutElement && (renderParent.layoutVertical || this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '')) {
+                        else if (this.naturalElement && this.inlineStatic && !this.blockDimension && this.find(item => item.naturalElement && item.blockStatic) && !actualParent.layoutElement && (renderParent.layoutVertical || this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '')) {
                             checkParentWidth(false);
                         }
                     }

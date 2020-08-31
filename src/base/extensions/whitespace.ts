@@ -229,7 +229,7 @@ function isBlockElement(node: Null<NodeUI>, direction?: boolean): boolean {
 
 function getMarginOffset<T extends NodeUI>(below: T, above: T, lineHeight: number, aboveLineBreak?: Null<T>): [number, T] {
     let top = Infinity;
-    if (below.nodeGroup && below.some(item => item.floating)) {
+    if (below.nodeGroup && below.find(item => item.floating)) {
         below.renderEach((item: T) => {
             if (!item.floating) {
                 const topA = item.linear.top;

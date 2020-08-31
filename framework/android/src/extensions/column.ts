@@ -198,7 +198,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                                 const element = column.element!.cloneNode(true) as HTMLElement;
                                 if (column.styleElement) {
                                     const style = element.style;
-                                    if (column.imageContainer || column.some((item: T) => item.imageContainer, { cascade: true })) {
+                                    if (column.imageContainer || column.find((item: T) => item.imageContainer, { cascade: true })) {
                                         style.height = formatPX(column.bounds.height);
                                     }
                                     else {

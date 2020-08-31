@@ -509,7 +509,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                             if (outsideX && (node.left < 0 || node.right > 0) ||
                                                 outsideY && (node.top < 0 || node.bottom !== 0) ||
                                                 outsideX && outsideY && (!parent.pageFlow || parent.actualParent!.documentRoot && (node.top > 0 || node.left > 0)) ||
-                                                !overflowX && ((node.left < 0 || node.right > 0) && Math.ceil(node.bounds.right) < linear.left || (node.left > 0 || node.right < 0) && Math.floor(node.bounds.left) > linear.right) && parent.some(item => item.pageFlow) ||
+                                                !overflowX && ((node.left < 0 || node.right > 0) && Math.ceil(node.bounds.right) < linear.left || (node.left > 0 || node.right < 0) && Math.floor(node.bounds.left) > linear.right) && !!parent.find(item => item.pageFlow) ||
                                                 !overflowY && ((node.top < 0 || node.bottom > 0) && Math.ceil(node.bounds.bottom) < parent.bounds.top || (node.top > 0 || node.bottom < 0) && Math.floor(node.bounds.top) > parent.bounds.bottom) ||
                                                 !overflowX && !overflowY && !node.intersectX(linear) && !node.intersectY(linear))
                                             {
@@ -704,18 +704,17 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             let maxIndex = -1;
             node.each((item: T) => {
                 if (item.containerIndex === Infinity) {
-                    node.some((adjacent: T) => {
-                        let valid = adjacent.naturalElements.includes(item);
-                        if (!valid) {
-                            const nested = adjacent.cascade();
-                            valid = item.ascend({ condition: child => nested.includes(child) }).length > 0;
+                    const sibling = node.find((adjacent: T) => {
+                        if (adjacent.naturalElements.includes(item)) {
+                            return true;
                         }
-                        if (valid) {
-                            const index = adjacent.containerIndex + (item.zIndex >= 0 || adjacent !== item.actualParent ? 1 : 0);
-                            (layers[index] || (layers[index] = [])).push(item);
-                        }
-                        return valid;
-                    });
+                        const nested = adjacent.cascade();
+                        return item.ascend({ condition: child => nested.includes(child) }).length > 0;
+                    }) as Undef<T>;
+                    if (sibling) {
+                        const index = sibling.containerIndex + (item.zIndex >= 0 || sibling !== item.actualParent ? 1 : 0);
+                        (layers[index] || (layers[index] = [])).push(item);
+                    }
                 }
                 else if (item.containerIndex > maxIndex) {
                     maxIndex = item.containerIndex;
