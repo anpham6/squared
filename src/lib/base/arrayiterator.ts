@@ -34,8 +34,4 @@ export default class Iterator<T = any> implements squared.lib.base.ArrayIterator
             predicate(children[++this._index]);
         }
     }
-
-    public size() {
-        return this._length;
-    }
 }

@@ -6,13 +6,13 @@ declare module "lib" {
             item(index: number, value?: T): Undef<T>;
             add(item: T): this;
             addAll(list: T[] | Container<T>): this;
-            remove(...items: T[]): T[];
+            remove(item: T): Undef<T>;
+            removeAll(list: T[] | Container<T>): T[];
             removeAt(index: number): Undef<T>;
             retainAs(list: T[]): this;
             contains(item: T): boolean;
             clear(): this;
             each(predicate: IteratorPredicate<T, void>, options?: ContainerFindOptions<T>): this;
-            iterate(predicate: IteratorPredicate<T, void | boolean>, options?: ContainerRangeOptions): number;
             every(predicate: IteratorPredicate<T, boolean>, options?: ContainerRangeOptions): boolean;
             removeIf(predicate: IteratorPredicate<T, boolean>, options?: ContainerCascadeOptions<T>): T[];
             find(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>): Undef<T>;
@@ -33,7 +33,6 @@ declare module "lib" {
             public hasNext(): boolean;
             public remove(): void;
             public forEachRemaining(predicate: BindGeneric<T, void>): void;
-            public size(): number;
             constructor(children: T[]);
         }
 

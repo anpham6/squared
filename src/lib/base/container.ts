@@ -1,6 +1,6 @@
 import ListIterator from './listiterator';
 
-import { iterateArray, partitionArray, plainMap } from '../util';
+import { partitionArray, plainMap } from '../util';
 
 class Iter<T> implements Iterator<T> {
     private index = -1;
@@ -26,18 +26,17 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
 
     public item(index: number, value?: T): Undef<T> {
         const children = this.children;
-        if (value !== undefined) {
+        if (arguments.length === 2) {
             if (index < 0) {
                 index += children.length;
             }
-            if (index < children.length) {
-                children[index] = value;
-                return value;
+            else {
+                index = Math.min(index, children.length);
             }
+            children[index] = value!;
+            return value;
         }
-        else {
-            return index >= 0 ? children[index] : children[children.length + index];
-        }
+        return index >= 0 ? children[index] : children[children.length + index];
     }
 
     public add(item: T) {
@@ -50,13 +49,24 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
         return this;
     }
 
-    public remove(...items: T[]) {
+    public remove(item: T): Undef<T> {
+        const index = this.children.indexOf(item);
+        if (index !== -1) {
+            return this.removeAt(index);
+        }
+    }
+
+    public removeAll(list: T[] | Container<T>) {
+        if (!Array.isArray(list)) {
+            list = list.children;
+        }
         const result: T[] = [];
         const children = this.children;
-        for (const item of items) {
-            for (let i = 0; i < children.length; ++i) {
-                if (children[i] === item) {
-                    children.splice(i, 1);
+        for (let i = 0, length = list.length; i < length; ++i) {
+            const item = list[i];
+            for (let j = 0; j < children.length; ++j) {
+                if (children[j] === item) {
+                    children.splice(j, 1);
                     result.push(item);
                     break;
                 }
@@ -89,15 +99,6 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
             predicate(children[i], i, children);
         }
         return this;
-    }
-
-    public iterate(predicate: IteratorPredicate<T, void | boolean>, options?: ContainerRangeOptions) {
-        let start: Undef<number>,
-            end: Undef<number>;
-        if (options) {
-            ({ start, end } = options);
-        }
-        return iterateArray(this.children, predicate, start, end);
     }
 
     public every(predicate: IteratorPredicate<T, boolean>, options?: ContainerRangeOptions) {
