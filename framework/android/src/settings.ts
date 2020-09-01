@@ -47,7 +47,6 @@ const settings: IUserResourceSettingsUI = {
     createQuerySelectorMap: false,
     convertPixels: 'dp',
     insertSpaces: 4,
-    autoCloseOnWrite: true,
     showErrorMessages: true,
     manifestLabelAppName: 'android',
     manifestThemeName: 'AppTheme',

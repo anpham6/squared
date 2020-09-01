@@ -79,8 +79,6 @@ The primary function "parseDocument" can be called on multiple elements and mult
         // OR
         squared.parseDocument(/* HTMLElement */, /* 'subview-id' */, /* ...etc */);
 
-        squared.close() // optional: autoCloseOnWrite = true
-
         squared.save(); // using defaults from settings
         // OR
         squared.saveAs(/* archive name */, /* options */);
@@ -128,7 +126,6 @@ NOTE: Calling "save" or "copy" methods before the images have completely loaded 
 document.addEventListener('DOMContentLoaded', () => {
     squared.setFramework(android);
     squared.parseDocument(/* 'mainview' */, /* 'subview' */).then(() => {
-        squared.close();
         squared.save();
     });
 });
@@ -192,7 +189,6 @@ squared.settings = {
     createQuerySelectorMap: false,
     convertPixels: 'dp',
     insertSpaces: 4,
-    autoCloseOnWrite: true,
     showErrorMessages: true,
     manifestLabelAppName: 'android',
     manifestThemeName: 'AppTheme',
@@ -614,7 +610,6 @@ await squared.parseDocument(/* 'mainview' */, /* 'subview' */).then(() => {
     );
 });
 
-squared.close();
 squared.save();
 ```
 

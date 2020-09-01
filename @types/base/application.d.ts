@@ -18,7 +18,6 @@ interface UserResourceSettingsUI extends UserResourceSettings {
     supportNegativeLeftTop: boolean;
     showAttributes: boolean;
     insertSpaces: number;
-    autoCloseOnWrite: boolean;
     outputDirectory: string;
     resolutionScreenWidth?: number;
     resolutionScreenHeight?: number;
