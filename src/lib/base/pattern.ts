@@ -2,8 +2,8 @@ export default class Pattern implements squared.lib.base.Pattern {
     public found = 0;
 
     private _input = '';
-    private _current: Null<RegExpExecArray> = null;
     private _matcher!: RegExp;
+    private _matchResult: Null<RegExpExecArray> = null;
 
     constructor(expression: string | RegExp, flags?: string) {
         this.usePattern(expression, flags);
@@ -25,7 +25,7 @@ export default class Pattern implements squared.lib.base.Pattern {
                     return false;
                 }
                 this.reset();
-                while (this._current = this._matcher.exec(this._input)) {
+                while (this._matchResult = this._matcher.exec(this._input)) {
                     ++this.found;
                     if (start-- === 0) {
                         return true;
@@ -33,8 +33,8 @@ export default class Pattern implements squared.lib.base.Pattern {
                 }
             }
             else {
-                this._current = this._matcher.exec(this._input);
-                if (this._current) {
+                this._matchResult = this._matcher.exec(this._input);
+                if (this._matchResult) {
                     ++this.found;
                     return true;
                 }
@@ -44,21 +44,21 @@ export default class Pattern implements squared.lib.base.Pattern {
     }
 
     public lookingAt() {
-        return this.find(0) && this._current!.index === 0;
+        return this.find(0) && this._matchResult!.index === 0;
     }
 
     public matches() {
-        return this.find(0) && this._current![0].length === this._input.length;
+        return this.find(0) && this._matchResult![0].length === this._input.length;
     }
 
     public start(index = 0) {
-        const current = this._current;
-        if (current && index >= 0) {
-            let pos = current.index,
+        const matchResult = this._matchResult;
+        if (matchResult && index >= 0) {
+            let pos = matchResult.index,
                 i = 0;
             while (index) {
-                if (current[i]) {
-                    pos += current[i++].length;
+                if (matchResult[i]) {
+                    pos += matchResult[i++].length;
                     --index;
                 }
                 else {
@@ -71,13 +71,13 @@ export default class Pattern implements squared.lib.base.Pattern {
     }
 
     public end(index = 0) {
-        const current = this._current;
-        if (current && index >= 0) {
-            let pos = current.index + current[0].length,
+        const matchResult = this._matchResult;
+        if (matchResult && index >= 0) {
+            let pos = matchResult.index + matchResult[0].length,
                 i = 1;
             while (index) {
-                if (current[i]) {
-                    pos += current[i++].length;
+                if (matchResult[i]) {
+                    pos += matchResult[i++].length;
                     --index;
                 }
                 else {
@@ -90,7 +90,7 @@ export default class Pattern implements squared.lib.base.Pattern {
     }
 
     public group(index: NumString = 0) {
-        return this._current ? typeof index === 'number' ? this._current[index] : this._current.groups?.[index] : undefined;
+        return this._matchResult ? typeof index === 'number' ? this._matchResult[index] : this._matchResult.groups?.[index] : undefined;
     }
 
     public groups(start = 0, end?: number) {
@@ -98,24 +98,24 @@ export default class Pattern implements squared.lib.base.Pattern {
             ++end;
         }
         else if (start === 0) {
-            return this._current as string[];
+            return this._matchResult as string[];
         }
-        return this._current?.slice(start, end) || [];
+        return this._matchResult?.slice(start, end) || [];
     }
 
     public groupCount() {
-        return this._current?.length || 0;
+        return this._matchResult?.length || 0;
     }
 
     public map<T>(predicate: IteratorPredicate<string, T>, start = 0, end?: number): T[] {
-        const current = this._current;
-        if (current) {
+        const matchResult = this._matchResult;
+        if (matchResult) {
             if (end === undefined) {
-                end = current.length;
+                end = matchResult.length;
             }
             const result: T[] = new Array(end - start);
             for (let i = 0; start < end; ++start) {
-                result[i++] = predicate(current[start], start, current);
+                result[i++] = predicate(matchResult[start], start, matchResult);
             }
             return result;
         }
@@ -128,9 +128,9 @@ export default class Pattern implements squared.lib.base.Pattern {
         let index = this._matcher.lastIndex,
             output = index ? input.substring(0, index) : '';
         while (replaceCount && this.find()) {
-            const current = this._current!;
-            output += input.substring(index, current.index) + (stringAs ? replacement as string : (replacement as PatternGroupPredicate)(current, current[0]));
-            index = current.index + current[0].length;
+            const matchResult = this._matchResult!;
+            output += input.substring(index, matchResult.index) + (stringAs ? replacement as string : (replacement as PatternGroupPredicate)(matchResult, matchResult[0]));
+            index = matchResult.index + matchResult[0].length;
             --replaceCount;
         }
         return output + input.substring(index);
@@ -148,16 +148,16 @@ export default class Pattern implements squared.lib.base.Pattern {
         return this._matcher.source;
     }
 
+    public toMatchResult() {
+        return this._matchResult;
+    }
+
     public reset(input?: string) {
         this.found = 0;
-        this._current = null;
+        this._matchResult = null;
         this._matcher.lastIndex = 0;
         if (input) {
             this._input = input;
         }
-    }
-
-    get input() {
-        return this._input;
     }
 }

@@ -16,7 +16,7 @@ import type SvgUseShapePattern from './svguseshapepattern';
 import type SvgUseSymbol from './svgusesymbol';
 
 import { INSTANCE_TYPE } from './lib/constant';
-import { MATRIX, SVG, TRANSFORM, createPath } from './lib/util';
+import { MATRIX, SVG, TRANSFORM, createPath, truncateString } from './lib/util';
 
 import Pattern = squared.lib.base.Pattern;
 
@@ -27,7 +27,7 @@ type SvgView = squared.svg.SvgView;
 
 const { isAngle, parseAngle } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
-const { absoluteAngle, offsetAngleY, relativeAngle, truncate, truncateFraction, truncateString } = squared.lib.math;
+const { absoluteAngle, offsetAngleY, relativeAngle, truncate, truncateFraction } = squared.lib.math;
 const { STRING } = squared.lib.regex;
 const { hasBit, isArray, plainMap, splitPair } = squared.lib.util;
 

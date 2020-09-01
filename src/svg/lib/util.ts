@@ -2,10 +2,12 @@ import Pattern = squared.lib.base.Pattern;
 
 const { CSS_UNIT, calculateStyle: calculateCssStyle, calculateVar, calculateVarAsString, convertAngle, getFontSize, hasEm, isLength, isPercent, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
-const { clamp, convertRadian, hypotenuse } = squared.lib.math;
+const { clamp, convertRadian, hypotenuse, truncateFraction, truncateTrailingZero } = squared.lib.math;
 const { TRANSFORM: REGEXP_TRANSFORM } = squared.lib.regex;
 const { getElementCache } = squared.lib.session;
 const { convertCamelCase, resolvePath, splitPair } = squared.lib.util;
+
+const REGEXP_TRUNCATECACHE = new Map<number, RegExp>();
 
 const RE_PARSE = new Pattern(/(\w+)\([^)]+\)/g);
 const RE_ROTATE = new Pattern(/rotate\((-?[\d.]+)(?:,?\s+(-?[\d.]+))?(?:,?\s+(-?[\d.]+))?\)/g);
@@ -551,6 +553,25 @@ export function getTargetElement(element: Element, rootElement?: Null<Element>, 
         }
     }
     return null;
+}
+
+export function truncateString(value: string, precision = 3) {
+    let pattern = REGEXP_TRUNCATECACHE.get(precision);
+    if (!pattern) {
+        pattern = new RegExp(`(-?\\d+\\.\\d{${precision}})(\\d)\\d*`, 'g');
+        REGEXP_TRUNCATECACHE.set(precision, pattern);
+    }
+    let output = value,
+        match: Null<RegExpExecArray>;
+    while (match = pattern.exec(value)) {
+        let trailing = match[1];
+        if (parseInt(match[2]) >= 5) {
+            trailing = truncateFraction(parseFloat(trailing) + 1 / Math.pow(10, precision)).toString();
+        }
+        output = output.replace(match[0], truncateTrailingZero(trailing));
+    }
+    pattern.lastIndex = 0;
+    return output;
 }
 
 export function getNearestViewBox(element: SVGElement) {

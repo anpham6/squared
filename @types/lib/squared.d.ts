@@ -62,7 +62,7 @@ declare module "lib" {
             usePattern(expression: string | RegExp, flags?: string): void;
             pattern(): string;
             reset(input?: string): void;
-            get input(): string;
+            toMatchResult(): Null<RegExpExecArray>;
             constructor(expression: string | RegExp, flags?: string);
         }
     }
@@ -194,7 +194,6 @@ declare module "lib" {
         function lessEqual(a: number, b: number, precision?: number): boolean;
         function truncate(value: NumString, precision?: number): string;
         function truncateFraction(value: number): number;
-        function truncateString(value: string, precision?: number): string;
         function truncateTrailingZero(value: string): string;
         function triangulate(a: number, b: number, clen: number): [number, number];
         function absoluteAngle(start: Point, end: Point): number;

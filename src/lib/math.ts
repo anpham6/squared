@@ -1,4 +1,3 @@
-const REGEXP_TRUNCATECACHE = new Map<number, RegExp>();
 const REGEXP_DECIMALNOTAION = /^(-?\d+\.\d+)e(-?\d+)$/;
 const REGEXP_FRACTION = /^(-?\d+)\.(\d*?)(0{5,}|9{5,})\d*$/;
 const REGEXP_TRAILINGZERO = /\.(\d*?)(0+)$/;
@@ -56,25 +55,6 @@ export function truncateFraction(value: number) {
 export function truncateTrailingZero(value: string) {
     const match = REGEXP_TRAILINGZERO.exec(value);
     return match ? value.substring(0, value.length - match[match[1] ? 2 : 0].length) : value;
-}
-
-export function truncateString(value: string, precision = 3) {
-    let pattern = REGEXP_TRUNCATECACHE.get(precision);
-    if (!pattern) {
-        pattern = new RegExp(`(-?\\d+\\.\\d{${precision}})(\\d)\\d*`, 'g');
-        REGEXP_TRUNCATECACHE.set(precision, pattern);
-    }
-    let output = value,
-        match: Null<RegExpExecArray>;
-    while (match = pattern.exec(value)) {
-        let trailing = match[1];
-        if (parseInt(match[2]) >= 5) {
-            trailing = truncateFraction(parseFloat(trailing) + 1 / Math.pow(10, precision)).toString();
-        }
-        output = output.replace(match[0], truncateTrailingZero(trailing));
-    }
-    pattern.lastIndex = 0;
-    return output;
 }
 
 export function convertRadian(value: number) {

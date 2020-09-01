@@ -771,6 +771,7 @@ declare module "svg" {
                 radialGradient(element: Element): element is SVGRadialGradientElement;
             };
             function calculateStyle(element: SVGElement, attr: string, value: string): string;
+            function truncateString(value: string, precision?: number): string;
             function createPath(value: string): SVGPathElement;
             function getAttribute(element: SVGElement, attr: string, computed?: boolean): string;
             function getParentAttribute(element: SVGElement, attr: string, computed?: boolean): string;
