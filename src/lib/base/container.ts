@@ -149,96 +149,60 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
         return result;
     }
 
-    public findIndex(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindIndexOptions<T>) {
-        let also: Undef<BindGeneric<T, void>>,
-            error: Undef<IteratorPredicate<T, boolean>>,
-            start: Undef<number>,
-            end: Undef<number>;
-        const children = this.children;
-        let i = 0,
-            length = children.length;
-        if (options) {
-            ({ also, error, start, end } = options);
-            if (start) {
-                i = Math.max(start, 0);
-            }
-            if (end) {
-                length = Math.min(length, end);
-            }
-        }
-        for ( ; i < length; ++i) {
-            const item = children[i];
-            if (error && error(item, i, children)) {
-                return -1;
-            }
-            if (predicate(item, i, children)) {
-                if (also) {
-                    also.call(item, item);
-                }
-                return i;
-            }
-        }
-        return -1;
-    }
-
     public find(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>) {
-        let also: Undef<BindGeneric<T, void>>,
-            error: Undef<IteratorPredicate<T, boolean>>,
-            start: Undef<number>,
-            end: Undef<number>,
-            count: Undef<number>,
-            cascade: Undef<boolean>;
         if (options) {
-            ({ also, error, start, end, count, cascade } = options);
+            const { also, error, cascade } = options;
+            let { start, end, count } = options;
             if (start) {
                 start = Math.max(start, 0);
             }
             if (end) {
                 end = Math.min(this.size(), end);
             }
-        }
-        if (count === undefined) {
-            count = 0;
-        }
-        let invalid: Undef<boolean>;
-        const recurse = (container: Container<T>, level: number): Undef<T> => {
-            const children = container.children;
-            let i = 0,
-                length = children.length;
-            if (level === 0) {
-                if (start) {
-                    i = start;
-                }
-                if (end) {
-                    length = end;
-                }
+            if (count === undefined || count < 0) {
+                count = 0;
             }
-            for ( ; i < length; ++i) {
-                const item = children[i];
-                if (error && error(item, i, children)) {
-                    invalid = true;
-                    break;
-                }
-                if (predicate(item, i, children)) {
-                    if (count!-- === 0) {
-                        if (also) {
-                            also.call(item, item);
-                        }
-                        return item;
+            let invalid: Undef<boolean>;
+            const recurse = (container: Container<T>, level: number): Undef<T> => {
+                const children = container.children;
+                let i = 0,
+                    length = children.length;
+                if (level === 0) {
+                    if (start) {
+                        i = start;
+                    }
+                    if (end) {
+                        length = end;
                     }
                 }
-                if (cascade && item instanceof Container && !item.isEmpty()) {
-                    const result = recurse(item, level + 1);
-                    if (result) {
-                        return result;
-                    }
-                    else if (invalid) {
+                for ( ; i < length; ++i) {
+                    const item = children[i];
+                    if (error && error(item, i, children)) {
+                        invalid = true;
                         break;
                     }
+                    if (predicate(item, i, children)) {
+                        if (count!-- === 0) {
+                            if (also) {
+                                also.call(item, item);
+                            }
+                            return item;
+                        }
+                    }
+                    if (cascade && item instanceof Container && !item.isEmpty()) {
+                        const result = recurse(item, level + 1);
+                        if (result) {
+                            return result;
+                        }
+                        else if (invalid) {
+                            break;
+                        }
+                    }
                 }
-            }
-        };
-        return recurse(this, 0);
+            };
+            return recurse(this, 0);
+        }
+        return this.children.find(predicate);
     }
 
     public cascade(predicate?: IteratorPredicate<T, void | boolean>, options?: ContainerCascadeOptions<T>) {

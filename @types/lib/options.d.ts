@@ -8,9 +8,7 @@ interface ContainerCascadeOptions<T> {
     error?: IteratorPredicate<T, boolean>;
 }
 
-interface ContainerFindIndexOptions<T> extends ContainerCascadeOptions<T>, ContainerRangeOptions {}
-
-interface ContainerFindOptions<T> extends ContainerFindIndexOptions<T> {
+interface ContainerFindOptions<T> extends ContainerCascadeOptions<T>, ContainerRangeOptions {
     count?: number;
     cascade?: boolean;
 }
