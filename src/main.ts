@@ -360,10 +360,12 @@ export function extend(functionMap: PlainObject, value = 0) {
 }
 
 export function latest(value = 1) {
-    if (main && value > 0) {
+    if (main && value) {
         const active = main.session.active;
         if (active.size) {
-            return Array.from(active.keys()).slice(Math.max(0, active.size - value)).reverse().join(',');
+            let session = Array.from(active.keys());
+            session = (value < 0 ? session.slice(0, Math.abs(value)) : session.slice(Math.max(0, active.size - value)).reverse());
+            return Math.abs(value) === 1 ? session[0] : session;
         }
     }
     return '';

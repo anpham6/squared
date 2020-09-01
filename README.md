@@ -279,7 +279,7 @@ setHostname(value: string) // use another cors-enabled server for processing arc
 parseDocument(...elements: (Element | string)[]) // see installation section (Promise)
 parseDocumentSync(...elements: (Element | string)[]) // skips preloadImages and preloadFonts (synchronous)
 
-latest(count?: number) // most recent parseDocument session ids
+latest(count?: number) // most recent parseDocument session ids (1 newest / -1 oldest: string, other: string[])
 
 close() // close current session preceding document write
 save() // save current session to a new archive using default settings
@@ -589,7 +589,7 @@ View model data can be applied to most HTML elements using the dataset attribute
 
 ```javascript
 await squared.parseDocument(/* 'mainview' */, /* 'subview' */).then(() => {
-    const sessions = squared.latest(2).split(',');
+    const sessions = squared.latest(2);
     android.setViewModel(
         {
             import: ['java.util.Map', 'java.util.List'],
