@@ -662,7 +662,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         layoutWidth = formatPX(value);
                     }
                 }
-                else if (this.length) {
+                else if (!this.isEmpty()) {
                     switch (this.cssInitial('width')) {
                         case 'max-content':
                         case 'fit-content':
@@ -2162,7 +2162,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                         break;
                     default:
-                        if (this.length && (this.layoutFrame || this.layoutConstraint || this.layoutRelative && this.layoutHorizontal || this.layoutGrid) || this.is(CONTAINER_NODE.TEXT) && this.textEmpty || this.controlElement) {
+                        if (!this.isEmpty() && (this.layoutFrame || this.layoutConstraint || this.layoutRelative && this.layoutHorizontal || this.layoutGrid) || this.is(CONTAINER_NODE.TEXT) && this.textEmpty || this.controlElement) {
                             return;
                         }
                         break;
@@ -2922,7 +2922,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         result = false;
                     }
                     else if (!this.pageFlow) {
-                        result = this.length === 0 && (excludeHorizontal(this) || excludeVertical(this)) || /^rect\(0[a-zQ]*,\s+0[a-zQ]*,\s+0[a-zQ]*,\s+0[a-zQ]*\)$/.test(this.css('clip'));
+                        result = this.isEmpty() && (excludeHorizontal(this) || excludeVertical(this)) || /^rect\(0[a-zQ]*,\s+0[a-zQ]*,\s+0[a-zQ]*,\s+0[a-zQ]*\)$/.test(this.css('clip'));
                     }
                     else {
                         const parent = this.renderParent || this.parent as T;
@@ -2937,7 +2937,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 return item.renderExclude;
                             });
                         }
-                        else if (this.length === 0 && !this.imageContainer) {
+                        else if (this.isEmpty() && !this.imageContainer) {
                             if (parent.layoutFrame) {
                                 result = excludeHorizontal(this) || excludeVertical(this);
                             }

@@ -88,7 +88,7 @@ function setBaselineItems(parent: View, baseline: View, items: View[], index: nu
                 if (isBottomAligned(item)) {
                     bottomAligned = true;
                 }
-                else if (!item.isEmpty) {
+                else if (!item.isEmpty()) {
                     item.renderEach((child: View) => {
                         if (isBottomAligned(child)) {
                             height = Math.max(child.baselineHeight, height);
@@ -179,7 +179,7 @@ function isConstraintLayout(layout: LayoutUI<View>, vertical: boolean) {
     if (layout.parent.flexElement && (layout.parent.css('alignItems') === 'baseline' || layout.find(item => item.flexbox.alignSelf === 'baseline')) || layout.singleRowAligned && layout.find(item => item.positionRelative && item.percentWidth === 0 && Math.ceil(item.actualRect('bottom', 'bounds')) > Math.floor(layout.node.box.bottom))) {
         return false;
     }
-    return layout.find(item => (item.rightAligned || item.centerAligned) && layout.length > 1 && (item.positionStatic && item.marginTop >= 0 || item.positionRelative && Math.floor(item.actualRect('bottom', 'bounds')) <= Math.ceil(layout.node.box.bottom)) && layout.singleRowAligned || item.percentWidth > 0 && item.percentWidth < 1 || item.hasPX('maxWidth')) && (!vertical || layout.every(item => item.marginTop >= 0));
+    return layout.find(item => (item.rightAligned || item.centerAligned) && layout.size() > 1 && (item.positionStatic && item.marginTop >= 0 || item.positionRelative && Math.floor(item.actualRect('bottom', 'bounds')) <= Math.ceil(layout.node.box.bottom)) && layout.singleRowAligned || item.percentWidth > 0 && item.percentWidth < 1 || item.hasPX('maxWidth')) && (!vertical || layout.every(item => item.marginTop >= 0));
 }
 
 function setVerticalLayout(node: View) {
@@ -384,7 +384,7 @@ const sortTemplateStandard = (a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>
 const getAnchorDirection = (reverse?: boolean): AnchorPositionAttr[] => reverse ? ['right', 'left', 'rightLeft', 'leftRight'] : ['left', 'right', 'leftRight', 'rightLeft'];
 const getAnchorBaseline = (node: View) => isBottomAligned(node) ? 'baseline' : 'bottom';
 const hasCleared = (layout: LayoutUI<View>, clearMap: Map<View, string>, ignoreFirst = true) => clearMap.size > 0 && !!layout.find((node, index) => (index > 0 || !ignoreFirst) && clearMap.has(node));
-const isUnknownParent = (node: View, containerType: number, length: number) => node.containerType === containerType && node.length === length && (node.alignmentType === 0 || node.hasAlign(NODE_ALIGNMENT.UNKNOWN));
+const isUnknownParent = (node: View, containerType: number, length: number) => node.containerType === containerType && node.size() === length && (node.alignmentType === 0 || node.hasAlign(NODE_ALIGNMENT.UNKNOWN));
 
 export function setHorizontalAlignment(node: View) {
     if (node.centerAligned) {
@@ -697,7 +697,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if (layout.find(item => !item.pageFlow && !item.autoPosition)) {
             layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.ABSOLUTE | NODE_ALIGNMENT.UNKNOWN);
         }
-        else if (layout.length <= 1) {
+        else if (layout.size() <= 1) {
             const child = node.item(0) as Undef<T>;
             if (child) {
                 if (child.plainText) {
@@ -777,7 +777,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             layout.addAlign(NODE_ALIGNMENT.HORIZONTAL);
         }
         else if (layout.linearY) {
-            layout.setContainerType(getVerticalLayout(layout), NODE_ALIGNMENT.VERTICAL | (node.rootElement || layout.find((item, index) => item.inlineFlow && layout.item(index + 1)!.inlineFlow, { end: layout.length - 1 }) ? NODE_ALIGNMENT.UNKNOWN : 0));
+            layout.setContainerType(getVerticalLayout(layout), NODE_ALIGNMENT.VERTICAL | (node.rootElement || layout.find((item, index) => item.inlineFlow && layout.item(index + 1)!.inlineFlow, { end: layout.size() - 1 }) ? NODE_ALIGNMENT.UNKNOWN : 0));
         }
         else if (layout.every(item => item.inlineFlow)) {
             if (this.checkFrameHorizontal(layout)) {
@@ -853,7 +853,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     public processTraverseHorizontal(layout: LayoutUI<T>, siblings: T[]) {
         const parent = layout.parent;
         if (layout.floated?.size === 1 && layout.every(item => item.floating)) {
-            if (isUnknownParent(parent, CONTAINER_NODE.CONSTRAINT, layout.length)) {
+            if (isUnknownParent(parent, CONTAINER_NODE.CONSTRAINT, layout.size())) {
                 parent.addAlign(NODE_ALIGNMENT.FLOAT);
                 parent.removeAlign(NODE_ALIGNMENT.UNKNOWN);
                 return;
@@ -868,7 +868,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             layout.addRender(NODE_ALIGNMENT.FLOAT);
             layout.addRender(NODE_ALIGNMENT.HORIZONTAL);
         }
-        else if (layout.length !== siblings.length || parent.hasAlign(NODE_ALIGNMENT.VERTICAL)) {
+        else if (layout.size() !== siblings.length || parent.hasAlign(NODE_ALIGNMENT.VERTICAL)) {
             layout.node = this.createNodeGroup(layout.node, layout.children, parent);
             this.processLayoutHorizontal(layout);
         }
@@ -882,13 +882,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public processTraverseVertical(layout: LayoutUI<T>) {
-        const { parent, length } = layout;
         const clearMap = this.application.clearMap;
+        const parent = layout.parent;
         const floatSize = layout.floated?.size;
-        if (layout.find((item, index) => item.lineBreakTrailing && index < length - 1)) {
+        if (layout.find((item, index) => item.lineBreakTrailing && index < layout.size() - 1)) {
             if (!parent.hasAlign(NODE_ALIGNMENT.VERTICAL)) {
                 const containerType = getVerticalLayout(layout);
-                if (isUnknownParent(parent, containerType, length)) {
+                if (isUnknownParent(parent, containerType, layout.size())) {
                     setVerticalLayout(parent);
                     return;
                 }
@@ -1082,7 +1082,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public checkConstraintFloat(layout: LayoutUI<T>) {
-        if (layout.length > 1) {
+        if (layout.size() > 1) {
             const clearMap = this.application.clearMap;
             const emptyMap = clearMap.size === 0;
             let A = true,
@@ -1109,7 +1109,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public checkConstraintHorizontal(layout: LayoutUI<T>) {
-        if (layout.length > 1 && layout.singleRowAligned) {
+        if (layout.size() > 1 && layout.singleRowAligned) {
             switch (layout.floated?.size) {
                 case 1:
                     if (hasCleared(layout, this.application.clearMap)) {
@@ -1149,7 +1149,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             const boxWidth = layout.parent.actualBoxWidth();
             let contentWidth = 0;
             for (const node of layout) {
-                if (!(node.naturalChild && node.isEmpty && !node.positionRelative && node.css('verticalAlign') === 'baseline' && !node.multiline && !node.blockVertical && node.lineHeight === lineHeight && node.fontSize === fontSize && node.zIndex === 0 && !node.inputElement && !node.controlElement)) {
+                if (!(node.naturalChild && node.isEmpty() && !node.positionRelative && node.css('verticalAlign') === 'baseline' && !node.multiline && !node.blockVertical && node.lineHeight === lineHeight && node.fontSize === fontSize && node.zIndex === 0 && !node.inputElement && !node.controlElement)) {
                     return false;
                 }
                 contentWidth += node.linear.width;
@@ -1264,7 +1264,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 break;
             }
             default:
-                return layout.isEmpty ? this.renderNode(layout) : undefined;
+                return layout.isEmpty() ? this.renderNode(layout) : undefined;
         }
         node.setControlType(View.getControlName(containerType, node.api), containerType);
         node.addAlign(layout.alignmentType);
@@ -1952,7 +1952,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             if (!parent.contains(container)) {
                 parent.add(container);
                 container.init(parent, node.depth);
-                container.containerIndex = parent.length - 1;
+                container.containerIndex = parent.size() - 1;
             }
         }
         else {

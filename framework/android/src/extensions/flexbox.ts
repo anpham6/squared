@@ -202,7 +202,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 node,
                 containerType: CONTAINER_NODE.CONSTRAINT,
                 alignmentType: NODE_ALIGNMENT.AUTO_LAYOUT | (mainData.column ? NODE_ALIGNMENT.HORIZONTAL : NODE_ALIGNMENT.VERTICAL),
-                itemCount: node.length,
+                itemCount: node.size(),
                 rowCount: mainData.rowCount,
                 columnCount: mainData.columnCount
             })),
@@ -629,7 +629,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                     setLayoutWeightOpposing(chain, 'match_parent', horizontal);
                                                 }
                                                 else if (isNaN(maxSize)) {
-                                                    if (!horizontal && !wrap && chain.length || dimension && alignContent === 'normal') {
+                                                    if (!horizontal && !wrap && !chain.isEmpty() || dimension && alignContent === 'normal') {
                                                         setLayoutWeightOpposing(chain, dimension ? '0px' : 'match_parent', horizontal);
                                                     }
                                                     else {

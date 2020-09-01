@@ -279,7 +279,7 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
     }
 
     public condition(node: T) {
-        return node.length > 0;
+        return !node.isEmpty();
     }
 
     public processNode(node: T) {
@@ -1020,7 +1020,7 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     unitTotal[j] = count;
                 }
             }
-            if (children.length === node.length) {
+            if (children.length === node.size()) {
                 const { gap: rowGap, unit: rowUnit } = row;
                 const columnGap = column.gap;
                 const rowCount = Math.max(rowUnit.length, rowMain.length);

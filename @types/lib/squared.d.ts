@@ -1,6 +1,7 @@
 declare module "lib" {
     namespace base {
         class Container<T = any> implements Iterable<T> {
+            children: T[];
             [Symbol.iterator](): Iterator<T>;
             item(index: number, value?: T): Undef<T>;
             add(item: T): this;
@@ -15,26 +16,24 @@ declare module "lib" {
             every(predicate: IteratorPredicate<T, boolean>, options?: ContainerRangeOptions): boolean;
             removeIf(predicate: IteratorPredicate<T, boolean>, options?: ContainerCascadeOptions<T>): T[];
             find(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>): Undef<T>;
-            cascade(predicate?: (item: T) => void | boolean, options?: ContainerCascadeOptions<T>): T[];
+            cascade(predicate?: IteratorPredicate<T, void | boolean>, options?: ContainerCascadeOptions<T>): T[];
             findIndex(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindIndexOptions<T>): number;
             map<U = unknown>(predicate: IteratorPredicate<T, U>): U[];
             partition(predicate: IteratorPredicate<T, boolean>): [T[], T[]];
             sort(predicate: (a: T, b: T) => number): this;
             toArray(): T[];
             iterator(): ListIterator<T>;
-            get children(): T[];
-            get isEmpty(): boolean;
-            get length(): number;
+            isEmpty(): boolean;
+            size(): number;
             constructor(children?: T[]);
         }
 
         class ArrayIterator<T = any> {
-            public index: number;
-            public length: number;
             public next(): Undef<T>;
             public hasNext(): boolean;
             public remove(): void;
             public forEachRemaining(predicate: BindGeneric<T, void>): void;
+            public size(): number;
             constructor(children: T[]);
         }
 

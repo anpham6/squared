@@ -255,7 +255,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         }
                     }
                 }
-                if (td.length || td.inlineText) {
+                if (!td.isEmpty() || td.inlineText) {
                     rowWidth[i] += width + horizontal;
                 }
                 if (spacingWidth) {

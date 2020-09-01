@@ -4,7 +4,7 @@ import ExtensionUI from '../extension-ui';
 
 export default abstract class Column<T extends NodeUI> extends ExtensionUI<T> {
     public is(node: T) {
-        return node.length > 1 && (node.blockDimension && node.display !== 'table') && !node.layoutElement;
+        return node.size() > 1 && (node.blockDimension && node.display !== 'table') && !node.layoutElement;
     }
 
     public condition(node: T) {

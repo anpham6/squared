@@ -23,7 +23,7 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
     }
 
     public condition(node: T) {
-        return node.length > 0;
+        return !node.isEmpty();
     }
 
     public processNode(node: T, parent: T) {

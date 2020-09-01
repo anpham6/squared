@@ -20,13 +20,13 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
     public processNode(node: T, parent: T): Void<ExtensionResult<T>> {
         const layout = new LayoutUI(parent, node);
         if (layout.linearY) {
-            layout.rowCount = node.length;
+            layout.rowCount = node.size();
             layout.columnCount = node.find(item => item.css('listStylePosition') === 'inside') ? 3 : 2;
             layout.setContainerType(CONTAINER_NODE.GRID, NODE_ALIGNMENT.VERTICAL);
         }
         else if (layout.linearX || layout.singleRowAligned) {
             layout.rowCount = 1;
-            layout.columnCount = layout.length;
+            layout.columnCount = layout.size();
             layout.setContainerType(CONTAINER_NODE.LINEAR, NODE_ALIGNMENT.HORIZONTAL);
         }
         else {
@@ -79,7 +79,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 ordinal.setBox(BOX_STANDARD.MARGIN_LEFT, { reset: 1 });
                 ordinal.render(parent);
                 const layout = new LayoutUI(parent, ordinal);
-                if (ordinal.inlineText || ordinal.length === 0) {
+                if (ordinal.inlineText || ordinal.isEmpty()) {
                     layout.setContainerType(CONTAINER_NODE.TEXT);
                 }
                 else {
@@ -142,7 +142,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                             return;
                     }
                 }
-                if (node.length === 0 && !node.outerWrapper) {
+                if (node.isEmpty() && !node.outerWrapper) {
                     container = controller.createNodeWrapper(node, parent, { alignmentType: parent.layoutGrid ? NODE_ALIGNMENT.VERTICAL : 0 });
                     containerType = node.baselineElement && node.percentWidth === 0 && !node.css('maxWidth').endsWith('%') ? CONTAINER_NODE.LINEAR : CONTAINER_NODE.CONSTRAINT;
                 }

@@ -9,7 +9,7 @@ const REGEXP_POSITION = /^0[a-z%]+|left|start|top/;
 
 export default abstract class Sprite<T extends NodeUI> extends ExtensionUI<T> {
     public is(node: T) {
-        return node.length === 0 && node.hasWidth && node.hasHeight;
+        return node.isEmpty() && node.hasWidth && node.hasHeight;
     }
 
     public condition(node: T) {

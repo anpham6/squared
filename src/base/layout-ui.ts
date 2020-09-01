@@ -42,7 +42,8 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
     }
 
     public init() {
-        if (this.length > 1) {
+        const length = this.size();
+        if (length > 1) {
             const { linearX, linearY, floated } = NodeUI.linearData(this.children);
             this._linearX = linearX;
             this._linearY = linearY;
@@ -50,7 +51,7 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
                 this._floated = floated;
             }
         }
-        else if (this.length === 1) {
+        else if (length === 1) {
             this._linearY = this.children[0].blockStatic;
             this._linearX = !this._linearY;
         }
@@ -91,7 +92,7 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
         this._itemCount = value;
     }
     get itemCount() {
-        return this._itemCount ?? this.length;
+        return this._itemCount ?? this.size();
     }
 
     set type(value: LayoutType) {

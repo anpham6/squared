@@ -28,7 +28,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
     }
 
     public condition(node: T) {
-        return node.length > 0;
+        return !node.isEmpty();
     }
 
     public processNode(node: T) {
@@ -147,10 +147,10 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
             }
             if (mainData.row) {
                 mainData.rowCount = 1;
-                mainData.columnCount = node.length;
+                mainData.columnCount = node.size();
             }
             else {
-                mainData.rowCount = node.length;
+                mainData.rowCount = node.size();
                 mainData.columnCount = 1;
             }
         }

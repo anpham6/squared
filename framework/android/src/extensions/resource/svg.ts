@@ -1553,7 +1553,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     }
                 }
                 else if (SvgBuild.isContainer(item)) {
-                    if (item.length) {
+                    if (!item.isEmpty()) {
                         output += this.parseVectorData(item, renderDepth);
                     }
                 }

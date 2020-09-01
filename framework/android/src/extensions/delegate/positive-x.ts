@@ -19,7 +19,7 @@ const checkMarginBottom = (node: View, item: View) => item.marginBottom < 0 && (
 
 export default class PositiveX<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
-        return node.length > 0;
+        return !node.isEmpty();
     }
 
     public condition(node: T) {

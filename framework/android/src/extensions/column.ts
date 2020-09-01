@@ -104,7 +104,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                     else {
                         previousRow = row[0];
                     }
-                    if (item.length) {
+                    if (!item.isEmpty()) {
                         item.box.width = Math.max(boxWidth, item.box.width);
                     }
                     item.anchorParent('horizontal', item.centerAligned ? 0.5 : item.rightAligned ? 1 : 0);

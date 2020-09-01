@@ -59,7 +59,7 @@ declare module "base" {
     }
 
     interface AppSessionUI<T extends NodeUI> extends AppSession<T> {
-        extensionMap: Map<number, ExtensionUI<T>[]>;
+        extensionMap: Map<T, ExtensionUI<T>[]>;
         clearMap: Map<T, string>;
     }
 
@@ -367,6 +367,7 @@ declare module "base" {
         documentRoot: boolean;
         sessionId: string;
         queryMap?: Node[][];
+        pseudoElt?: PseudoElt;
         readonly id: number;
         init(parent: Node, depth: number, index?: number): void;
         syncWith(sessionId?: string, cache?: boolean): boolean;
@@ -525,7 +526,6 @@ declare module "base" {
         get preserveWhiteSpace(): boolean;
         get cssStyle(): StringMap;
         get textStyle(): StringMap;
-        get pseudoElt(): Undef<PseudoElt>;
         get elementData(): Null<ElementData>;
         get center(): Point;
         get style(): CSSStyleDeclaration;

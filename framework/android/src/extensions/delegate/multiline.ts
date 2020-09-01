@@ -64,7 +64,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                 return true;
             }
         }
-        const length = node.length;
+        const length = node.size();
         if (length) {
             const children = node.children as T[];
             if (node.has('columnWidth') || node.has('columnCount')) {
@@ -73,7 +73,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                 const columnGap = node.parseWidth(node.css('columnGap'));
                 const minCount = columnWidth ? Math.min(Math.floor(node.box.width / (columnWidth + columnGap)), columnCount) : columnCount;
                 if (minCount !== Infinity) {
-                    let remaining = minCount - node.length;
+                    let remaining = minCount - length;
                     if (remaining > 0) {
                         const nodes: MultilineData<T> = [];
                         const breakable = children.filter((child: T) => isTextElement(child) && checkBreakable(child, false) && child.css('columnSpan') !== 'all').sort((a, b) => b.textContent.length - a.textContent.length);

@@ -824,7 +824,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 if (value) {
                     exclusions[2] |= applyExclusionValue(APP_SECTION, value);
                 }
-                if (this.length) {
+                if (!this.isEmpty()) {
                     value = dataset['excludeResourceChild' + systemName] || dataset.excludeResourceChild;
                     const resource = value ? applyExclusionValue(NODE_RESOURCE, value) : undefined;
                     value = dataset['excludeProcedureChild' + systemName] || dataset.excludeProcedureChild;
@@ -1334,7 +1334,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         node.renderParent = this.renderParent;
         node.renderedAs = this.renderedAs;
         node.rootElement = this.rootElement;
-        if (this.length) {
+        if (!this.isEmpty()) {
             node.retainAs(this.toArray());
         }
         node.inherit(this, 'initial', 'base', 'alignment', 'styleMap', 'textStyle');
@@ -1706,7 +1706,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     result = children.every((node: T) => {
                         do {
                             if (node.css('verticalAlign') === 'baseline' && !node.floating) {
-                                switch (node.length) {
+                                switch (node.size()) {
                                     case 0:
                                         return node.baselineElement && !(node.positionRelative && (node.top !== 0 || node.bottom !== 0));
                                     case 1:
@@ -1840,7 +1840,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get onlyChild() {
-        return (this.renderParent?.renderChildren.length ?? this.parent?.length) === 1 && !this.documentRoot;
+        return (this.renderParent?.renderChildren.length ?? this.parent?.size()) === 1 && !this.documentRoot;
     }
 
     get rendering() {
@@ -1980,7 +1980,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 }
                 while (wrapped);
             }
-            else if (this.length && !this.naturalChild) {
+            else if (!this.isEmpty() && !this.naturalChild) {
                 return this._containerIndex = (this.min('containerIndex', { self: true }) as NodeUI).containerIndex;
             }
         }

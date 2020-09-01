@@ -25,7 +25,7 @@ const hasSingleImage = (visibleStyle: VisibleStyle) => visibleStyle.backgroundIm
 
 export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
     public is(node: T) {
-        return node.length > 0 && node.children.some((item: T) => {
+        return !node.isEmpty() && node.children.some((item: T) => {
             const type = item.css('listStyleType') !== 'none';
             return (type || item.innerBefore?.pageFlow) && isListItem(item) || !type && item.marginLeft < 0 && hasSingleImage(item.visibleStyle);
         });

@@ -56,14 +56,14 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
 
     public addDescendant(node: T) {
         const map = this.application.session.extensionMap;
-        const extensions = map.get(node.id);
+        const extensions = map.get(node);
         if (extensions) {
             if (!extensions.includes(this)) {
                 extensions.push(this);
             }
         }
         else {
-            map.set(node.id, [this]);
+            map.set(node, [this]);
         }
     }
 

@@ -18,19 +18,15 @@ class Iter<T> implements Iterator<T> {
 }
 
 export default class Container<T = any> implements squared.lib.base.Container<T>, Iterable<T> {
-    private _children: T[];
-
-    constructor(children: T[] = []) {
-        this._children = children;
-    }
+    constructor(public children: T[] = []) {}
 
     public [Symbol.iterator]() {
-        return new Iter(this._children);
+        return new Iter(this.children);
     }
 
     public item(index: number, value?: T): Undef<T> {
+        const children = this.children;
         if (value !== undefined) {
-            const children = this._children;
             if (index < 0) {
                 index += children.length;
             }
@@ -38,24 +34,25 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
                 children[index] = value;
                 return value;
             }
-            return;
         }
-        return index >= 0 ? this._children[index] : this._children[this.length + index];
+        else {
+            return index >= 0 ? children[index] : children[children.length + index];
+        }
     }
 
     public add(item: T) {
-        this._children.push(item);
+        this.children.push(item);
         return this;
     }
 
     public addAll(list: T[] | Container<T>) {
-        this._children = this._children.concat(Array.isArray(list) ? list : list.children);
+        this.children = this.children.concat(Array.isArray(list) ? list : list.children);
         return this;
     }
 
     public remove(...items: T[]) {
         const result: T[] = [];
-        const children = this._children;
+        const children = this.children;
         for (const item of items) {
             for (let i = 0; i < children.length; ++i) {
                 if (children[i] === item) {
@@ -69,25 +66,25 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
     }
 
     public removeAt(index: number): Undef<T> {
-        return this._children.splice(index, 1)[0];
+        return this.children.splice(index, 1)[0];
     }
 
     public retainAs(list: T[]) {
-        this._children = list;
+        this.children = list;
         return this;
     }
 
     public contains(item: T) {
-        return this._children.includes(item);
+        return this.children.includes(item);
     }
 
     public clear() {
-        this._children.length = 0;
+        this.children.length = 0;
         return this;
     }
 
     public each(predicate: IteratorPredicate<T, void>) {
-        const children = this._children;
+        const children = this.children;
         for (let i = 0, length = children.length; i < length; ++i) {
             predicate(children[i], i, children);
         }
@@ -100,11 +97,11 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
         if (options) {
             ({ start, end } = options);
         }
-        return iterateArray(this._children, predicate, start, end);
+        return iterateArray(this.children, predicate, start, end);
     }
 
     public every(predicate: IteratorPredicate<T, boolean>, options?: ContainerRangeOptions) {
-        const children = this._children;
+        const children = this.children;
         let length = children.length;
         if (length) {
             let i = 0;
@@ -134,7 +131,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
             ({ also, error } = options);
         }
         const result: T[] = [];
-        const children = this._children;
+        const children = this.children;
         for (let i = 0; i < children.length; ++i) {
             const item = children[i];
             if (error && error(item, i, children)) {
@@ -150,12 +147,13 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
         }
         return result;
     }
+
     public findIndex(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindIndexOptions<T>) {
         let also: Undef<BindGeneric<T, void>>,
             error: Undef<IteratorPredicate<T, boolean>>,
             start: Undef<number>,
             end: Undef<number>;
-        const children = this._children;
+        const children = this.children;
         let i = 0,
             length = children.length;
         if (options) {
@@ -195,7 +193,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
                 start = Math.max(start, 0);
             }
             if (end) {
-                end = Math.min(this.length, end);
+                end = Math.min(this.size(), end);
             }
         }
         if (count === undefined) {
@@ -228,7 +226,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
                         return item;
                     }
                 }
-                if (cascade && item instanceof Container && !item.isEmpty) {
+                if (cascade && item instanceof Container && !item.isEmpty()) {
                     const result = recurse(item, level + 1);
                     if (result) {
                         return result;
@@ -242,7 +240,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
         return recurse(this, 0);
     }
 
-    public cascade(predicate?: (item: T) => void | boolean, options?: ContainerCascadeOptions<T>) {
+    public cascade(predicate?: IteratorPredicate<T, void | boolean>, options?: ContainerCascadeOptions<T>) {
         let also: Undef<BindGeneric<T, void>>,
             error: Undef<IteratorPredicate<T, boolean>>;
         if (options) {
@@ -258,13 +256,13 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
                     invalid = true;
                     break;
                 }
-                if (!predicate || predicate(item) === true) {
+                if (!predicate || predicate(item, i, children) === true) {
                     if (also) {
                         also.call(item, item);
                     }
                     result.push(item);
                 }
-                if (item instanceof Container && !item.isEmpty) {
+                if (item instanceof Container && !item.isEmpty()) {
                     result = result.concat(recurse(item));
                     if (invalid) {
                         break;
@@ -277,35 +275,31 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
     }
 
     public map<U = unknown>(predicate: IteratorPredicate<T, U>): U[] {
-        return plainMap(this._children, predicate);
+        return plainMap(this.children, predicate);
     }
 
     public partition(predicate: IteratorPredicate<T, boolean>): [T[], T[]] {
-        return partitionArray(this._children, predicate);
+        return partitionArray(this.children, predicate);
     }
 
     public sort(predicate: (a: T, b: T) => number) {
-        this._children.sort(predicate);
+        this.children.sort(predicate);
         return this;
     }
 
     public toArray() {
-        return this._children.slice(0);
+        return this.children.slice(0);
     }
 
     public iterator() {
-        return new ListIterator(this._children);
+        return new ListIterator(this.children);
     }
 
-    get children() {
-        return this._children;
+    public isEmpty() {
+        return this.children.length === 0;
     }
 
-    get isEmpty() {
-        return this._children.length === 0;
-    }
-
-    get length() {
-        return this._children.length;
+    public size() {
+        return this.children.length;
     }
 }

@@ -160,7 +160,7 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
             controlName = NAVIGATION.MENU;
             title = getTitle(node, element);
         }
-        else if (node.find(item => item.length > 0)) {
+        else if (node.find(item => !item.isEmpty())) {
             if (node.find(item => item.tagName === 'NAV')) {
                 controlName = NAVIGATION.ITEM;
             }

@@ -147,7 +147,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public readonly session: squared.base.AppSessionUI<T> = {
         active: new Map<string, squared.base.AppProcessing<T>>(),
         unusedStyles: new Set<string>(),
-        extensionMap: new Map<number, ExtensionUI<T>[]>(),
+        extensionMap: new Map<T, ExtensionUI<T>[]>(),
         clearMap: new Map<T, string>()
     };
     public readonly extensions: ExtensionUI<T>[] = [];
@@ -417,7 +417,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             cache.each(item => {
                 if (item.styleElement) {
                     const element = item.element as HTMLElement;
-                    if (item.length) {
+                    if (!item.isEmpty()) {
                         const textAlign = item.cssInitial('textAlign');
                         switch (textAlign) {
                             case 'center':
@@ -754,7 +754,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             setMapDepth(-1, rootNode!.parent as T);
         }
         cache.each(node => {
-            if (node.length) {
+            if (!node.isEmpty()) {
                 setMapDepth(node.depth, node);
                 if (node.floatContainer) {
                     const floated = new Set<string>();
@@ -796,9 +796,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 mapData.get(node.depth)?.delete(node);
             }
             setMapDepth(-(node.depth + 2), node);
-            if (cascade && node.length) {
+            if (cascade && !node.isEmpty()) {
                 node.cascade((item: T) => {
-                    if (item.length) {
+                    if (!item.isEmpty()) {
                         const depth = item.depth;
                         mapData.get(depth)?.delete(item);
                         setMapDepth(-(depth + 2), item);
@@ -813,7 +813,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         let extensionsTraverse = extensions.filter((item: ExtensionUI<T>) => !item.eventOnly) as ExtensionUI<T>[];
         for (const depth of mapData.values()) {
             for (const parent of depth.values()) {
-                const q = parent.length;
+                const q = parent.size();
                 if (q === 0) {
                     continue;
                 }
@@ -973,7 +973,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                     }
                     if (!nodeY.rendered && nodeY.hasSection(APP_SECTION.EXTENSION)) {
-                        const descendant = extensionMap.get(nodeY.id) as Undef<ExtensionUI<T>[]>;
+                        const descendant = extensionMap.get(nodeY) as Undef<ExtensionUI<T>[]>;
                         let combined = descendant ? renderExtension ? renderExtension.concat(descendant) : descendant : renderExtension,
                             next: Undef<boolean>;
                         if (combined) {
@@ -1050,7 +1050,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (!nodeY.rendered && nodeY.hasSection(APP_SECTION.RENDER)) {
                         const layout = this.createLayoutControl(parentY, nodeY);
                         if (layout.containerType === 0) {
-                            if (nodeY.length) {
+                            if (!nodeY.isEmpty()) {
                                 controllerHandler.processUnknownParent(layout);
                             }
                             else {
@@ -1233,7 +1233,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         else if (rightBelow) {
             rightSub = rightBelow;
         }
-        if (rightAbove.length + (rightBelow ? rightBelow.length : 0) === layout.length) {
+        if (rightAbove.length + (rightBelow ? rightBelow.length : 0) === layout.size()) {
             layout.addAlign(NODE_ALIGNMENT.RIGHT);
         }
         if (inlineAbove.length) {

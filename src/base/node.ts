@@ -736,7 +736,7 @@ const aboveRange = (a: number, b: number, offset = 1) => a + offset > b;
 const belowRange = (a: number, b: number, offset = 1) => a - offset < b;
 const sortById = (a: T, b: T) => a.id - b.id;
 const isInlineVertical = (value: string) => value.startsWith('inline') || value === 'table-cell';
-const canTextAlign = (node: T) => node.naturalChild && (node.length === 0 || isInlineVertical(node.display)) && !node.floating && node.autoMargin.horizontal !== true;
+const canTextAlign = (node: T) => node.naturalChild && (node.isEmpty() || isInlineVertical(node.display)) && !node.floating && node.autoMargin.horizontal !== true;
 
 export default class Node extends squared.lib.base.Container<T> implements squared.base.Node {
     public static sanitizeCss(element: StyleElement, styleMap: StringMap, writingMode?: string) {
@@ -763,6 +763,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     public documentRoot = false;
     public depth = -1;
     public queryMap?: T[][];
+    public pseudoElt?: PseudoElt;
 
     protected _parent: Null<T> = null;
     protected _cache: CacheValue = {};
@@ -783,7 +784,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     private _elementData: Null<ElementData>;
     private _style?: CSSStyleDeclaration;
     private _dataset?: DOMStringMap;
-    private _pseudoElt?: PseudoElt;
     private _data?: StandardMap;
 
     constructor(
@@ -859,7 +859,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             }
                         }
                         else {
-                            this._pseudoElt = elementData.pseudoElt;
+                            this.pseudoElt = elementData.pseudoElt;
                         }
                         this._styleMap = Node.sanitizeCss(element, styleMap, styleMap.writingMode);
                     }
@@ -881,7 +881,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         this._initial = {
             styleMap: { ...this._styleMap },
             bounds: this._bounds,
-            children: this.length ? this.toArray() : undefined
+            children: !this.isEmpty() ? this.toArray() : undefined
         };
     }
 
@@ -1134,7 +1134,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         break;
                     }
                 }
-                if (item instanceof Node && !item.isEmpty) {
+                if (item instanceof Node && !item.isEmpty()) {
                     result = result.concat(recurse(item));
                     if (invalid) {
                         break;
@@ -1349,7 +1349,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     public cssSpecificity(attr: string) {
         let value: Undef<number>;
         if (this.styleElement) {
-            const styleData = !this._pseudoElt ? this._elementData?.['styleSpecificity'] : this.actualParent?.elementData?.['styleSpecificity' + this._pseudoElt] as Undef<ObjectMap<number>>;
+            const styleData = !this.pseudoElt ? this._elementData?.['styleSpecificity'] : this.actualParent?.elementData?.['styleSpecificity' + this.pseudoElt] as Undef<ObjectMap<number>>;
             if (styleData) {
                 value = styleData[attr];
             }
@@ -2632,7 +2632,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 if (this.textElement) {
                     return this._textBounds = getRangeClientRect(this._element as Element);
                 }
-                else if (this.length) {
+                else if (!this.isEmpty()) {
                     const children = this.naturalChildren;
                     const length = children.length;
                     if (length) {
@@ -2840,7 +2840,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     get wrapperOf() {
         let node = this as T;
         do {
-            switch (node.length) {
+            switch (node.size()) {
                 case 0:
                     return node === this ? null : node;
                 case 1:
@@ -3093,7 +3093,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get style() {
         const result = this._style;
-        return result === undefined ? this._style = this.styleElement ? !this._pseudoElt ? getStyle(this._element!) : getStyle(this._element!.parentElement!, this._pseudoElt) : PROXY_INLINESTYLE : result;
+        return result === undefined ? this._style = this.styleElement ? !this.pseudoElt ? getStyle(this._element!) : getStyle(this._element!.parentElement!, this.pseudoElt) : PROXY_INLINESTYLE : result;
     }
 
     get cssStyle() {
@@ -3112,10 +3112,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get elementData() {
         return this._elementData;
-    }
-
-    get pseudoElt() {
-        return this._pseudoElt;
     }
 
     set dir(value) {

@@ -315,7 +315,7 @@ function resetBox(node: NodeUI, region: number, register?: NodeUI) {
     }
 }
 
-const canResetChild = (node: NodeUI, children = true) => (!children && node.blockStatic || children && node.length > 0 && !node.floating) && !node.layoutElement && !node.tableElement && node.tagName !== 'FIELDSET';
+const canResetChild = (node: NodeUI, children = true) => (!children && node.blockStatic || children && !node.isEmpty() && !node.floating) && !node.layoutElement && !node.tableElement && node.tagName !== 'FIELDSET';
 const validAboveChild = (node: NodeUI, children: boolean) => !node.hasHeight && node.borderBottomWidth === 0 && node.paddingBottom === 0 && canResetChild(node, children);
 const validBelowChild = (node: NodeUI, children: boolean) => !node.hasHeight && node.borderTopWidth === 0 && node.paddingTop === 0 && canResetChild(node, children);
 const hasOverflow = (node: NodeUI) => checkOverflowValue(node.cssInitial('overflowY')) || checkOverflowValue(node.cssInitial('overflowX'));
@@ -326,7 +326,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
     public afterBaseLayout(sessionId: string) {
         const { cache, excluded } = this.application.getProcessing(sessionId)!;
         const clearMap = this.application.clearMap;
-        const processed = new Set<number>();
+        const processed = new Set<T>();
         cache.each(node => {
             if (node.naturalElement && !node.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
                 const children = node.naturalChildren;
@@ -362,7 +362,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 const previousSiblings = current.previousSiblings();
                                 const q = previousSiblings.length;
                                 if (q) {
-                                    const previous = previousSiblings[q - 1];
+                                    const previous = previousSiblings[q - 1] as T;
                                     let inheritedTop: Undef<boolean>;
                                     if (isBlockElement(previous, false)) {
                                         let marginBottom = previous.marginBottom,
@@ -376,7 +376,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                 else {
                                                     resetBox(current, BOX_STANDARD.MARGIN_TOP);
                                                 }
-                                                processed.add(previous.id);
+                                                processed.add(previous);
                                                 previous.hide({ collapse: true });
                                                 continue;
                                             }
@@ -390,7 +390,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                 else {
                                                     resetBox(previous, BOX_STANDARD.MARGIN_BOTTOM);
                                                 }
-                                                processed.add(current.id);
+                                                processed.add(current);
                                                 current.hide({ collapse: true });
                                                 continue;
                                             }
@@ -440,7 +440,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                     inheritedBottom = true;
                                                 }
                                                 else if (childBottom === 0 && marginBottom === 0) {
-                                                    inherit = bottomChild;
+                                                    inherit = bottomChild as T;
                                                     continue;
                                                 }
                                             }
@@ -630,13 +630,13 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
             }
         });
         excluded.each(node => {
-            if (node.lineBreak && !node.lineBreakTrailing && !clearMap.has(node) && !processed.has(node.id)) {
+            if (node.lineBreak && !node.lineBreakTrailing && !clearMap.has(node) && !processed.has(node)) {
                 let valid: Undef<boolean>;
-                const previousSiblings = node.previousSiblings();
+                const previousSiblings = node.previousSiblings() as T[];
                 const q = previousSiblings.length;
                 if (q) {
                     const actualParent = node.actualParent!;
-                    const nextSiblings = node.siblingsTrailing;
+                    const nextSiblings = node.siblingsTrailing as T[];
                     const r = nextSiblings.length;
                     if (r) {
                         let above = previousSiblings[q - 1],
@@ -648,11 +648,11 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             const inline = above.inlineStatic && below.inlineStatic;
                             if (inline) {
                                 if (q === 1) {
-                                    processed.add(node.id);
+                                    processed.add(node);
                                     return;
                                 }
                                 else if (q > 1) {
-                                    aboveLineBreak = previousSiblings[0] as T;
+                                    aboveLineBreak = previousSiblings[0];
                                     if (aboveLineBreak.lineBreak) {
                                         aboveLineBreak = node;
                                         aboveLineBreak.setBounds(false);
@@ -679,13 +679,8 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 if (above.has('lineHeight')) {
                                     value = above.lineHeight;
                                 }
-                                else if (above.length) {
-                                    if (above.layoutVertical) {
-                                        value = above.lastStaticChild?.lineHeight;
-                                    }
-                                    else {
-                                        value = Math.max(...above.map(item => item.lineHeight));
-                                    }
+                                else if (!above.isEmpty()) {
+                                    value = above.layoutVertical ? above.lastStaticChild?.lineHeight : Math.max(...above.map(item => item.lineHeight));
                                 }
                                 if (value) {
                                     const aboveOffset = Math.floor((value - above.bounds.height) / 2);
@@ -699,7 +694,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 if (below.has('lineHeight')) {
                                     value = below.lineHeight;
                                 }
-                                else if (below.length) {
+                                else if (!below.isEmpty()) {
                                     if (below.layoutVertical) {
                                         value = below.firstStaticChild?.lineHeight;
                                     }
@@ -746,7 +741,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                     }
                     else if (actualParent.visible && !actualParent.preserveWhiteSpace && actualParent.tagName !== 'CODE' && !actualParent.documentRoot && !actualParent.documentBody) {
                         const previousStart = previousSiblings[previousSiblings.length - 1];
-                        const rect = previousStart.bounds.height === 0 && previousStart.length ? previousStart.outerRegion : previousStart.linear;
+                        const rect = previousStart.bounds.height === 0 && !previousStart.isEmpty() ? previousStart.outerRegion : previousStart.linear;
                         const offset = actualParent.box.bottom - (previousStart.lineBreak || previousStart.excluded ? rect.top : rect.bottom);
                         if (offset !== 0) {
                             if (previousStart.rendered || actualParent.visibleStyle.background) {
@@ -759,10 +754,10 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                     }
                     if (valid) {
                         for (let i = 0; i < q; ++i) {
-                            processed.add(previousSiblings[i].id);
+                            processed.add(previousSiblings[i]);
                         }
                         for (let i = 0; i < r; ++i) {
-                            processed.add(nextSiblings[i].id);
+                            processed.add(nextSiblings[i]);
                         }
                     }
                 }

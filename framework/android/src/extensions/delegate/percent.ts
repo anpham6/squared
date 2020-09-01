@@ -37,14 +37,14 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                 parent.layoutVertical && !parent.hasAlign(NODE_ALIGNMENT.UNKNOWN) ||
                 parent.layoutFrame ||
                 node.blockStatic && node.alignedVertically(undefined, this.application.clearMap) > 0 ||
-                node.documentParent.length === 1 ||
+                node.documentParent.size() === 1 ||
                 !node.pageFlow
             );
         }
         if (!absoluteParent.hasPX('height', { percent: false })) {
             const percent = node.percentHeight;
             percentHeight = (percent > 0 && percent < 1 || node.has('maxHeight', { type: CSS_UNIT.PERCENT, not: '100%' }) && parent.hasHeight) && (node.cssInitial('height') !== '100%' || node.has('maxHeight', { type: CSS_UNIT.PERCENT, not: '100%' })) && (node.rootElement || parent.percentHeight > 0);
-            marginVertical = (validPercent(node.css('marginTop')) || validPercent(node.css('marginBottom'))) && node.documentParent.percentHeight > 0 && !node.inlineStatic && (node.documentParent.length === 1 || !node.pageFlow);
+            marginVertical = (validPercent(node.css('marginTop')) || validPercent(node.css('marginBottom'))) && node.documentParent.percentHeight > 0 && !node.inlineStatic && (node.documentParent.size() === 1 || !node.pageFlow);
         }
         if (percentWidth || percentHeight || marginHorizontal || marginVertical) {
             this.data.set(node, { percentWidth, percentHeight, marginHorizontal, marginVertical } as PercentData);

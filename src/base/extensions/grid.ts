@@ -52,8 +52,8 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
     }
 
     public condition(node: T) {
-        const length = node.length;
-        if (length > 1 && !node.layoutElement && node.tagName !== 'TABLE' && !node.has('listStyle')) {
+        const size = node.size();
+        if (size > 1 && !node.layoutElement && node.tagName !== 'TABLE' && !node.has('listStyle')) {
             if (node.display === 'table') {
                 return node.every(item => item.display === 'table-row' && item.every(child => child.display === 'table-cell')) || node.every(item => item.display === 'table-cell');
             }
@@ -61,10 +61,10 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                 let itemCount = 0,
                     minLength: Undef<boolean>;
                 const children = node.children;
-                for (let i = 0; i < length; ++i) {
+                for (let i = 0; i < size; ++i) {
                     const item = children[i];
                     if (item.blockStatic && !item.visibleStyle.background && (item.percentWidth === 0 || item.percentWidth === 1) && !item.autoMargin.leftRight && !item.autoMargin.left && item.pageFlow && !item.find((child: T) => !checkAlignment(child) || child.percentWidth > 0)) {
-                        if (item.length > 1) {
+                        if (item.size() > 1) {
                             minLength = true;
                         }
                         if (item.display === 'list-item' && !item.has('listStyleType')) {
@@ -75,7 +75,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         return false;
                     }
                 }
-                return itemCount === length || minLength === true && node.every(item => item.length > 0 && NodeUI.linearData(item.children as T[]).linearX);
+                return itemCount === size || minLength === true && node.every(item => !item.isEmpty() && NodeUI.linearData(item.children as T[]).linearX);
             }
         }
         return false;
@@ -202,7 +202,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
             }
         }
         const columnCount = columns.length;
-        if (columnCount > 1 && columns[0].length === node.length) {
+        if (columnCount > 1 && columns[0].length === node.size()) {
             const rows: Node[][] = [];
             const assigned = new Set<Node>();
             for (let i = 0, count = 0; i < columnCount; ++i) {
