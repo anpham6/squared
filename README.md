@@ -281,8 +281,7 @@ parseDocumentSync(...elements: (Element | string)[]) // skips preloadImages and 
 
 latest(count?: number) // most recent parseDocument session ids
 
-ready() // boolean indicating if parseDocument can be called
-close() // close current session preceding write to disk or local output
+close() // close current session preceding document write
 save() // save current session to a new archive using default settings
 reset() // clear cache and reopen new session
 

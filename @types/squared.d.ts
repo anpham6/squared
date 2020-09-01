@@ -29,7 +29,6 @@ export function extend(functionMap: PlainObject, framework?: number): void;
 export function parseDocument(...elements: (string | HTMLElement)[]): Promise<Void<Node | Node[]>>;
 export function parseDocumentSync(...elements: (string | HTMLElement)[]): Void<Node | Node[]>;
 export function latest(value?: number): string;
-export function ready(): boolean;
 export function close(): boolean;
 export function save(): PromiseResult;
 export function reset(): void;

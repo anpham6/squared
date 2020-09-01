@@ -369,10 +369,6 @@ export function latest(value = 1) {
     return '';
 }
 
-export function ready() {
-    return main ? !main.initializing && !main.closed : false;
-}
-
 export function close() {
     return checkWritable(main) && main.finalize();
 }

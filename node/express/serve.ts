@@ -2146,17 +2146,16 @@ app.post('/api/assets/copy', (req, res) => {
         }
         let cleared: Undef<boolean>;
         const manager = new FileManager(dirname, req.body as ExpressAsset[], function(this: FileManager, filepath?: string) {
-            if (this.delayed === Infinity) {
-                return;
-            }
-            if (filepath) {
-                this.add(filepath);
-            }
-            if (filepath === undefined || --this.delayed === 0 && cleared) {
-                this.finalizeAssetsAsync(req.query.release === '1').then(() => {
-                    res.json({ success: this.files.size > 0, files: Array.from(this.files) } as ResultOfFileAction);
-                    this.delayed = Infinity;
-                });
+            if (this.delayed !== Infinity) {
+                if (filepath) {
+                    this.add(filepath);
+                }
+                if (filepath === undefined || --this.delayed === 0 && cleared) {
+                    this.finalizeAssetsAsync(req.query.release === '1').then(() => {
+                        res.json({ success: this.files.size > 0, files: Array.from(this.files) } as ResultOfFileAction);
+                        this.delayed = Infinity;
+                    });
+                }
             }
         });
         try {
@@ -2229,7 +2228,7 @@ app.post('/api/assets/archive', (req, res) => {
             });
         }
     });
-    const resumeThread = (unzip_to = '') => {
+    const resumeThread = (unzip_to?: string) => {
         zipname = path.join(dirname_zip, (req.query.filename || zipname || uuid.v4()) + '.' + format);
         const output = fs.createWriteStream(zipname);
         output.on('close', () => {

@@ -846,9 +846,8 @@ export function trimEnd(value: string, pattern: string) {
 }
 
 export function fromLastIndexOf(value: string, ...char: string[]) {
-    let i = 0;
-    while (i < char.length) {
-        const index = value.lastIndexOf(char[i++]);
+    for (let i = 0; i < char.length; ++i) {
+        const index = value.lastIndexOf(char[i]);
         if (index !== -1) {
             return value.substring(index + 1);
         }
@@ -857,9 +856,8 @@ export function fromLastIndexOf(value: string, ...char: string[]) {
 }
 
 export function partitionLastIndexOf(value: string, ...char: string[]): [string, string] {
-    let i = 0;
-    while (i < char.length) {
-        const index = value.lastIndexOf(char[i++]);
+    for (let i = 0; i < char.length; ++i) {
+        const index = value.lastIndexOf(char[i]);
         if (index !== -1) {
             return [value.substring(0, index), value.substring(index + 1)];
         }
