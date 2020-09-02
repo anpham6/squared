@@ -363,9 +363,9 @@ export function latest(value = 1) {
     if (main && value) {
         const active = main.session.active;
         if (active.size) {
-            let session = Array.from(active.keys());
-            session = (value < 0 ? session.slice(0, Math.abs(value)) : session.slice(Math.max(0, active.size - value)).reverse());
-            return Math.abs(value) === 1 ? session[0] : session;
+            let items = Array.from(active.keys());
+            items = value < 0 ? items.slice(0, Math.abs(value)) : items.slice(Math.max(0, active.size - value)).reverse();
+            return Math.abs(value) === 1 ? items[0] : items;
         }
     }
     return '';

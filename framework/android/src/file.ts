@@ -16,12 +16,18 @@ import STYLE_TMPL from './template/resources/style';
 type FileArchivingOptions = squared.base.FileArchivingOptions;
 type FileCopyingOptions = squared.base.FileCopyingOptions;
 
+interface ItemData {
+    name: string;
+    parent: string;
+    item: ItemValue[];
+}
+
 interface ItemValue {
     name: string;
     innerText: string;
 }
 
-const { fromLastIndexOf, parseMimeType, splitPairStart } = squared.lib.util;
+const { fromLastIndexOf, parseMimeType, plainMap, splitPairStart } = squared.lib.util;
 
 const STORED = Resource.STORED as IResourceStoredMap;
 
@@ -167,30 +173,41 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     public resourceStringToXml(options: FileUniversalOptions = {}): string[] {
-        const item: ObjectMap<ItemValue[]> = { string: [] };
-        const itemArray = item.string;
-        if (!STORED.strings.has('app_name')) {
-            itemArray.push({ name: 'app_name', innerText: this.userSettings.manifestLabelAppName });
+        const items = Array.from(STORED.strings.entries()).sort((a, b) => a.toString().toLowerCase() >= b.toString().toLowerCase() ? 1 : -1);
+        const length = items.length;
+        let j: number,
+            itemArray: ItemValue[];
+        if (STORED.strings.has('app_name')) {
+            j = 0;
+            itemArray = new Array(length);
         }
-        for (const [name, innerText] of Array.from(STORED.strings.entries()).sort((a, b) => a.toString().toLowerCase() >= b.toString().toLowerCase() ? 1 : -1)) {
-            itemArray.push({ name, innerText });
+        else {
+            j = 1;
+            itemArray = new Array(length + 1);
+            itemArray[0] = { name: 'app_name', innerText: this.userSettings.manifestLabelAppName };
+        }
+        for (let i = 0; i < length; ++i) {
+            const item = items[i];
+            itemArray[j++] = { name: item[0], innerText: item[1] };
         }
         return this.checkFileAssets([
-            replaceTab(applyTemplate('resources', STRING_TMPL, [item]), this.userSettings.insertSpaces, true),
+            replaceTab(applyTemplate('resources', STRING_TMPL, [{ string: itemArray }]), this.userSettings.insertSpaces, true),
             this.directory.string,
             'strings.xml'
         ], options);
     }
 
     public resourceStringArrayToXml(options: FileUniversalOptions = {}): string[] {
-        if (STORED.arrays.size) {
-            const item: ObjectMap<any[]> = { 'string-array': [] };
-            const itemArray = item['string-array'];
-            for (const [name, values] of Array.from(STORED.arrays.entries()).sort()) {
-                itemArray.push({ name, item: values.map(innerText => ({ innerText })) });
+        const length = STORED.arrays.size;
+        if (length) {
+            const items = Array.from(STORED.arrays.entries()).sort();
+            const itemArray: { name: string, item: { innerText: string }[] }[] = new Array(length);
+            for (let i = 0; i < length; ++i) {
+                const item = items[i];
+                itemArray[i] = { name: item[0], item: plainMap(item[1], innerText => ({ innerText })) };
             }
             return this.checkFileAssets([
-                replaceTab(applyTemplate('resources', STRINGARRAY_TMPL, [item]), this.userSettings.insertSpaces, true),
+                replaceTab(applyTemplate('resources', STRINGARRAY_TMPL, [{ 'string-array': itemArray }]), this.userSettings.insertSpaces, true),
                 this.directory.string,
                 'string_arrays.xml'
             ], options);
@@ -199,22 +216,21 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     public resourceFontToXml(options: FileUniversalOptions = {}): string[] {
-        if (STORED.fonts.size) {
+        const length = STORED.fonts.size;
+        if (length) {
             const resource = this.resource;
-            const { insertSpaces, targetAPI } = this.userSettings;
+            const { insertSpaces, outputDirectory, targetAPI } = this.userSettings;
             const xmlns = XMLNS_ANDROID[targetAPI < BUILD_ANDROID.OREO ? 'app' : 'android'];
-            const outputDirectory = getOutputDirectory(this.userSettings.outputDirectory);
+            const directory = getOutputDirectory(outputDirectory);
             const pathname = this.directory.font;
-            const result: string[] = [];
-            for (const [name, font] of Array.from(STORED.fonts.entries()).sort()) {
-                const item: StandardMap = { 'xmlns:android': xmlns, font: [] };
-                const itemArray = item.font as StringMap[];
+            const items = Array.from(STORED.fonts.entries()).sort();
+            const result: string[] = new Array(length * 3);
+            for (let i = 0, j = 0; i < length; ++i) {
+                const [name, font] = items[i];
+                const itemArray: { font: string, fontStyle: string, fontWeight: string }[] = [];
                 for (const attr in font) {
                     const [fontFamily, fontStyle, fontWeight] = attr.split('|');
-                    const fontName = name + (fontStyle === 'normal'
-                        ? fontWeight === '400' ? '_normal' : '_' + font[attr]
-                        : '_' + fontStyle + (fontWeight !== '400' ? font[attr] : '')
-                    );
+                    const fontName = name + (fontStyle === 'normal' ? fontWeight === '400' ? '_normal' : '_' + font[attr] : '_' + fontStyle + (fontWeight !== '400' ? font[attr] : ''));
                     itemArray.push({
                         font: `@font/${fontName}`,
                         fontStyle,
@@ -223,17 +239,16 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     const uri = resource.getFont(fontFamily, fontStyle, fontWeight)?.srcUrl;
                     if (uri) {
                         this.addAsset({
-                            pathname: outputDirectory + pathname,
+                            pathname: directory + pathname,
                             filename: fontName + '.' + (Resource.getExtension(splitPairStart(uri, '?')).toLowerCase() || 'ttf'),
                             uri
                         });
                     }
                 }
-                let output = replaceTab(applyTemplate('font-family', FONTFAMILY_TMPL, [item]), insertSpaces);
-                if (targetAPI < BUILD_ANDROID.OREO) {
-                    output = output.replace(/\s+android:/g, ' app:');
-                }
-                result.push(output, pathname, `${name}.xml`);
+                const output = replaceTab(applyTemplate('font-family', FONTFAMILY_TMPL, [{ 'xmlns:android': xmlns, font: itemArray }]), insertSpaces);
+                result[j++] = targetAPI < BUILD_ANDROID.OREO ? output.replace(/\s+android:/g, ' app:') : output;
+                result[j++] = pathname;
+                result[j++] = `${name}.xml`;
             }
             return this.checkFileAssets(result, options);
         }
@@ -241,14 +256,16 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     public resourceColorToXml(options: FileUniversalOptions = {}): string[] {
-        if (STORED.colors.size) {
-            const item: ObjectMap<ItemValue[]> = { color: [] };
-            const itemArray = item.color;
-            for (const [innerText, name] of Array.from(STORED.colors.entries()).sort()) {
-                itemArray.push({ name, innerText });
+        const length = STORED.colors.size;
+        if (length) {
+            const items = Array.from(STORED.colors.entries()).sort();
+            const itemArray: ItemValue[] = new Array(length);
+            for (let i = 0; i < length; ++i) {
+                const item = items[i];
+                itemArray[i] = { name: item[1], innerText: item[0] };
             }
             return this.checkFileAssets([
-                replaceTab(applyTemplate('resources', COLOR_TMPL, [item]), this.userSettings.insertSpaces),
+                replaceTab(applyTemplate('resources', COLOR_TMPL, [{ color: itemArray }]), this.userSettings.insertSpaces),
                 this.directory.string,
                 'colors.xml'
             ], options);
@@ -259,41 +276,35 @@ export default class File<T extends View> extends squared.base.File<T> implement
     public resourceStyleToXml(options: FileUniversalOptions = {}): string[] {
         const result: string[] = [];
         if (STORED.styles.size) {
-            const item: ObjectMap<any[]> = { style: [] };
-            const itemArray = item.style;
+            const itemArray: ItemData[] = [];
             for (const style of Array.from(STORED.styles.values()).sort((a, b) => a.name.toString().toLowerCase() >= b.name.toString().toLowerCase() ? 1 : -1)) {
-                const styleArray = style.items;
-                if (Array.isArray(styleArray)) {
-                    itemArray.push({
-                        name: style.name,
-                        parent: style.parent,
-                        item: styleArray.sort((a, b) => a.key >= b.key ? 1 : -1).map(obj => ({ name: obj.key, innerText: obj.value }))
-                    });
-                }
+                itemArray.push({
+                    name: style.name,
+                    parent: style.parent,
+                    item: plainMap((style.items as StringValue[]).sort((a, b) => a.key >= b.key ? 1 : -1), obj => ({ name: obj.key, innerText: obj.value }))
+                });
             }
             result.push(
-                replaceTab(applyTemplate('resources', STYLE_TMPL, [item]), this.userSettings.insertSpaces),
+                replaceTab(applyTemplate('resources', STYLE_TMPL, [{ style: itemArray }]), this.userSettings.insertSpaces),
                 this.directory.string,
                 'styles.xml'
             );
         }
         if (STORED.themes.size) {
-            const userSettings = this.userSettings;
-            const { insertSpaces, manifestThemeName } = userSettings;
-            const convertPixels = userSettings.convertPixels === 'dp';
+            const { convertPixels, insertSpaces, manifestThemeName } = this.userSettings;
+            const dpUnit = convertPixels === 'dp';
             const appTheme: ObjectMap<boolean> = {};
             for (const [filename, theme] of STORED.themes.entries()) {
                 const match = /^(.+)\/(.+?\.\w+)$/.exec(filename);
                 if (match) {
-                    const item: ObjectMap<any[]> = { style: [] };
-                    const itemArray = item.style;
+                    const itemArray: ItemData[] = [];
                     for (const [themeName, themeData] of theme.entries()) {
-                        const themeArray: ItemValue[] = [];
-                        const items = themeData.items;
-                        for (const name in items) {
-                            themeArray.push({ name, innerText: items[name] });
-                        }
-                        if (!appTheme[filename] || themeName !== manifestThemeName || item.length) {
+                        if (!appTheme[filename] || themeName !== manifestThemeName) {
+                            const themeArray: ItemValue[] = [];
+                            const items = themeData.items as StringMap;
+                            for (const name in items) {
+                                themeArray.push({ name, innerText: items[name]! });
+                            }
                             itemArray.push({
                                 name: themeName,
                                 parent: themeData.parent,
@@ -304,12 +315,14 @@ export default class File<T extends View> extends squared.base.File<T> implement
                             appTheme[filename] = true;
                         }
                     }
-                    const value = applyTemplate('resources', STYLE_TMPL, [item]);
-                    result.push(
-                        replaceTab(convertPixels ? value.replace(/>(-?[\d.]+)px</g, (found, ...capture: string[]) => `>${capture[0]}dp<`) : value, insertSpaces),
-                        match[1],
-                        match[2]
-                    );
+                    if (itemArray.length) {
+                        const value = applyTemplate('resources', STYLE_TMPL, [{ style: itemArray }]);
+                        result.push(
+                            replaceTab(dpUnit ? value.replace(/>(-?[\d.]+)px</g, (found, ...capture: string[]) => `>${capture[0]}dp<`) : value, insertSpaces),
+                            match[1],
+                            match[2]
+                        );
+                    }
                 }
             }
         }
@@ -317,15 +330,17 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     public resourceDimenToXml(options: FileUniversalOptions = {}): string[] {
-        if (STORED.dimens.size) {
+        const length = STORED.dimens.size;
+        if (length) {
             const convertPixels = this.userSettings.convertPixels === 'dp';
-            const item: ObjectMap<ItemValue[]> = { dimen: [] };
-            const itemArray = item.dimen;
-            for (const [name, value] of Array.from(STORED.dimens.entries()).sort()) {
-                itemArray.push({ name, innerText: convertPixels ? value.replace(/px$/, 'dp') : value });
+            const items = Array.from(STORED.dimens.entries()).sort();
+            const itemArray: ItemValue[] = new Array(length);
+            for (let i = 0; i < length; ++i) {
+                const item = items[i];
+                itemArray[i] = { name: item[0], innerText: convertPixels ? item[1].replace(/px$/, 'dp') : item[1] };
             }
             return this.checkFileAssets([
-                replaceTab(applyTemplate('resources', DIMEN_TMPL, [item])),
+                replaceTab(applyTemplate('resources', DIMEN_TMPL, [{ dimen: itemArray }])),
                 this.directory.string,
                 'dimens.xml'
             ], options);
@@ -334,18 +349,18 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     public resourceDrawableToXml(options: FileUniversalOptions = {}): string[] {
-        if (STORED.drawables.size) {
+        const length = STORED.drawables.size;
+        if (length) {
             const userSettings = this.userSettings;
             const insertSpaces = userSettings.insertSpaces;
             const convertPixels = userSettings.convertPixels === 'dp';
             const directory = this.directory.image;
-            const result: string[] = [];
+            const result: string[] = new Array(length * 3);
+            let i = 0;
             for (const [name, value] of STORED.drawables.entries()) {
-                result.push(
-                    replaceTab(convertPixels ? value.replace(/"(-?[\d.]+)px"/g, (match, ...capture: string[]) => `"${capture[0]}dp"`) : value, insertSpaces),
-                    directory,
-                    `${name}.xml`
-                );
+                result[i++] = replaceTab(convertPixels ? value.replace(/"(-?[\d.]+)px"/g, (match, ...capture: string[]) => `"${capture[0]}dp"`) : value, insertSpaces);
+                result[i++] = directory;
+                result[i++] = `${name}.xml`;
             }
             return this.checkFileAssets(result, options);
         }
@@ -353,15 +368,15 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     public resourceAnimToXml(options: FileUniversalOptions = {}): string[] {
-        if (STORED.animators.size) {
+        const length = STORED.animators.size;
+        if (length) {
             const insertSpaces = this.userSettings.insertSpaces;
-            const result: string[] = [];
+            const result: string[] = new Array(length * 3);
+            let i = 0;
             for (const [name, value] of STORED.animators.entries()) {
-                result.push(
-                    replaceTab(value, insertSpaces),
-                    'res/anim',
-                    `${name}.xml`
-                );
+                result[i++] = replaceTab(value, insertSpaces);
+                result[i++] = 'res/anim';
+                result[i++] = `${name}.xml`;
             }
             return this.checkFileAssets(result, options);
         }
@@ -410,47 +425,11 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     public resourceRawVideoToString(options: FileUniversalOptions = {}): string[] {
-        if (Resource.ASSETS.video.size) {
-            const result: string[] = [];
-            for (const video of Resource.ASSETS.video.values()) {
-                const uri = video.uri!;
-                result.push(uri, video.mimeType || '', fromLastIndexOf(uri, '/', '\\'));
-            }
-            if (options.directory || options.filename) {
-                const assets = getRawAssets(getOutputDirectory(this.userSettings.outputDirectory) + this.directory.video, result);
-                options.assets = options.assets ? assets.concat(options.assets) : assets;
-                if (options.directory) {
-                    this.copying(options);
-                }
-                if (options.filename) {
-                    this.archiving(options);
-                }
-            }
-            return result;
-        }
-        return [];
+        return this.resourceRawToString('video', options);
     }
 
     public resourceRawAudioToString(options: FileUniversalOptions = {}): string[] {
-        if (Resource.ASSETS.audio.size) {
-            const result: string[] = [];
-            for (const audio of Resource.ASSETS.audio.values()) {
-                const uri = audio.uri!;
-                result.push(uri, audio.mimeType || '', fromLastIndexOf(uri, '/', '\\'));
-            }
-            if (options.directory || options.filename) {
-                const assets = getRawAssets(getOutputDirectory(this.userSettings.outputDirectory) + this.directory.audio, result);
-                options.assets = options.assets ? assets.concat(options.assets) : assets;
-                if (options.directory) {
-                    this.copying(options);
-                }
-                if (options.filename) {
-                    this.archiving(options);
-                }
-            }
-            return result;
-        }
-        return [];
+        return this.resourceRawToString('audio', options);
     }
 
     public layoutAllToXml(layouts: FileAsset[], options: FileUniversalOptions = {}) {
@@ -525,6 +504,32 @@ export default class File<T extends View> extends squared.base.File<T> implement
             }
         }
         return content;
+    }
+
+    private resourceRawToString(name: "video" | "audio", options: FileUniversalOptions) {
+        const length = Resource.ASSETS[name].size;
+        if (length) {
+            const result: string[] = new Array(length * 3);
+            let i = 0;
+            for (const item of Resource.ASSETS[name].values()) {
+                const uri = item.uri!;
+                result[i++] = uri;
+                result[i++] = item.mimeType || '';
+                result[i++] = fromLastIndexOf(uri, '/', '\\');
+            }
+            if (options.directory || options.filename) {
+                const assets = getRawAssets(getOutputDirectory(this.userSettings.outputDirectory) + this.directory[name], result);
+                options.assets = options.assets ? assets.concat(options.assets) : assets;
+                if (options.directory) {
+                    this.copying(options);
+                }
+                if (options.filename) {
+                    this.archiving(options);
+                }
+            }
+            return result;
+        }
+        return [];
     }
 
     get userSettings() {
