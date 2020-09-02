@@ -93,7 +93,7 @@
                         System.import('/build/extension/android/widget/toolbar/main.js'),
                         System.import('/build/extension/android/widget/drawer/main.js')
                     ]).then(() => {
-                        squared.assign('android.widget.drawer', {
+                        squared.apply('android.widget.drawer', {
                             settings: {
                                 self: {
                                     android: {
@@ -113,7 +113,7 @@
                                 }
                             }
                         });
-                        squared.assign('android.widget.toolbar', {
+                        squared.apply('android.widget.toolbar', {
                             settings: {
                                 toolbar_demo: {
                                     appBar: {

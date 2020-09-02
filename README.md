@@ -284,9 +284,9 @@ reset() // clear cache and reopen new session
 toString() // current framework loaded
 
 add(...names: (string | Extension | ExtensionRequestObject)[]) // see extension configuration section
-remove(...names: (string | Extension)[]) // remove an extension by namespace or control
-get(...names: (string | Extension)[]) // retrieve an extension by namespace or control
-assign(name: string | Extension, options: FrameworkOptions) // see extension configuration section
+remove(...names: (string | Extension)[]) // remove extensions by namespace or control
+get(...names: (string | Extension)[]) // retrieve extensions by namespace or control
+apply(name: string | Extension, options: FrameworkOptions) // see extension configuration section
 
 extend(functionMap: {}, framework?: number) // add extension functions to Node prototype (framework: 0 - ALL | 1 - vdom | 2 - android | 4 - chrome)
 
@@ -421,7 +421,7 @@ Layout rendering can also be customized using extensions as the program was buil
 <script src="/dist/extensions/android.widget.toolbar.min.js"></script>
 <script>
     // Configure an extension (optional)
-    squared.assign('android.widget.toolbar', {
+    squared.apply('android.widget.toolbar', {
         settings: {
             'elementId': { // HTML DOM
                 appBar: {
@@ -916,7 +916,7 @@ chrome.extension.options = { // internal representation
     replaceWith: true // convert
 };
 
-squared.assign('chrome.convert.png', {
+squared.apply('chrome.convert.png', {
     settings: {
         largerThan: 10000,
         replaceWith: false,

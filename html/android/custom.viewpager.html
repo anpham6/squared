@@ -74,7 +74,7 @@
                         System.import('/build/extension/android/widget/menu/main.js'),
                         System.import('/build/extension/android/widget/toolbar/main.js')
                     ]).then(() => {
-                        squared.assign('android.widget.toolbar', {
+                        squared.apply('android.widget.toolbar', {
                             settings: {
                                 toolbar_demo: {
                                     appBar: {}

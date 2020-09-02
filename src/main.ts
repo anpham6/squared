@@ -80,7 +80,7 @@ function loadExtensions() {
     }
     if (optionsQueue.size) {
         for (const [name, options] of optionsQueue.entries()) {
-            assign(name, options);
+            apply(name, options);
         }
         optionsQueue.clear();
     }
@@ -258,7 +258,7 @@ export function add(...values: ExtensionRequestObject[]) {
                     extensionsQueue.add(value);
                 }
                 if (options) {
-                    assign(value, options);
+                    apply(value, options);
                 }
                 ++success;
             }
@@ -312,7 +312,7 @@ export function get(...values: string[]) {
     }
 }
 
-export function assign(value: ExtensionRequest, options: FrameworkOptions) {
+export function apply(value: ExtensionRequest, options: FrameworkOptions) {
     if (extensionManager && util.isPlainObject(options)) {
         const mergeSettings = (name: string) => {
             const { loadAs, saveAs: saveAsLocal } = options;

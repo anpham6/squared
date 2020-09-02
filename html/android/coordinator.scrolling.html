@@ -79,7 +79,7 @@
                         System.import('/build/extension/android/widget/toolbar/main.js')
                     ]).then(() => {
                         squared.add('android.substitute');
-                        squared.assign('android.widget.toolbar', {
+                        squared.apply('android.widget.toolbar', {
                             settings: {
                                 toolbar_demo: {
                                     self: {

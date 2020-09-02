@@ -24,7 +24,7 @@ export function setFramework(value: PlainObject, options?: FrameworkOptions): vo
 export function add(...values: ExtensionRequestObject[]): number;
 export function remove(...values: ExtensionRequest[]): number;
 export function get(...values: string[]): Undef<PlainObject | PlainObject[]>;
-export function assign(value: ExtensionRequest, options: FrameworkOptions): boolean;
+export function apply(value: ExtensionRequest, options: FrameworkOptions): boolean;
 export function extend(functionMap: PlainObject, framework?: number): void;
 export function parseDocument(...elements: (string | HTMLElement)[]): Promise<Void<Node | Node[]>>;
 export function parseDocumentSync(...elements: (string | HTMLElement)[]): Void<Node | Node[]>;

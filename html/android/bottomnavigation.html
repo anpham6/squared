@@ -62,7 +62,7 @@
                             System.import('/build/extension/android/widget/menu/main.js'),
                             System.import('/build/extension/android/widget/bottomnavigation/main.js')
                         ]).then(() => {
-                            squared.assign('android.widget.bottomnavigation', {
+                            squared.apply('android.widget.bottomnavigation', {
                                 settings: {
                                     bottomnavigation_demo: {
                                         android: {
