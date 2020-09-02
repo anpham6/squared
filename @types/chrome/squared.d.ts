@@ -25,9 +25,6 @@ declare namespace base {
 
     class File<T extends Node> extends squared.base.File<T> {
         static parseUri(uri: string, options?: UriOptions): Null<ChromeAsset>;
-        get application(): Application<T>;
-        get userSettings(): IUserSettings;
-        get outputFileExclusions(): RegExp[];
         getHtmlPage(options?: FileActionAttribute): ChromeAsset[];
         getScriptAssets(options?: FileActionAttribute): ChromeAsset[];
         getLinkAssets(options?: FileActionAttribute): ChromeAsset[];
@@ -35,6 +32,9 @@ declare namespace base {
         getVideoAssets(options?: FileActionAttribute): ChromeAsset[];
         getAudioAssets(options?: FileActionAttribute): ChromeAsset[];
         getFontAssets(options?: FileActionAttribute): ChromeAsset[];
+        get application(): Application<T>;
+        get userSettings(): IUserSettings;
+        get outputFileExclusions(): RegExp[];
     }
 
     class Extension<T extends Node> extends squared.base.Extension<T> {

@@ -40,6 +40,23 @@ export const enum BOX_STANDARD {
     PADDING_HORIZONTAL = PADDING_RIGHT | PADDING_LEFT
 }
 
+export const enum NODE_TRAVERSE {
+    HORIZONTAL,
+    VERTICAL,
+    LINEBREAK,
+    INLINE_WRAP,
+    FLOAT_CLEAR,
+    FLOAT_BLOCK,
+    FLOAT_WRAP,
+    FLOAT_INTERSECT,
+    PERCENT_WRAP
+}
+
+export const enum NODE_TEMPLATE {
+    XML = 1,
+    INCLUDE
+}
+
 export enum APP_SECTION {
     DOM_TRAVERSE = 1,
     EXTENSION = 1 << 1,
@@ -65,21 +82,4 @@ export enum NODE_PROCEDURE {
     LOCALIZATION = 1 << 4,
     CUSTOMIZATION = 1 << 5,
     ALL = CONSTRAINT | LAYOUT | ALIGNMENT | ACCESSIBILITY | LOCALIZATION | CUSTOMIZATION
-}
-
-export const enum NODE_TRAVERSE {
-    HORIZONTAL,
-    VERTICAL,
-    LINEBREAK,
-    INLINE_WRAP,
-    FLOAT_CLEAR,
-    FLOAT_BLOCK,
-    FLOAT_WRAP,
-    FLOAT_INTERSECT,
-    PERCENT_WRAP
-}
-
-export const enum NODE_TEMPLATE {
-    XML = 1,
-    INCLUDE
 }

@@ -76,7 +76,7 @@ declare module "base" {
 
     class Application<T extends Node> implements FileActionAsync {
         static readonly KEY_NAME: string;
-        static prioritizeExtensions<T extends Node>(value: string, extensions: Extension<T>[]): Extension<T>[];
+        static prioritizeExtensions<U extends Node>(value: string, extensions: Extension<U>[]): Extension<U>[];
         userSettings: UserSettings;
         builtInExtensions: Map<string, Extension<T>>;
         closed: boolean;
@@ -239,8 +239,8 @@ declare module "base" {
         static getOptionArray(element: HTMLSelectElement | HTMLOptGroupElement, showDisabled?: boolean): Undef<string[]>[];
         static isBackgroundVisible(object: Undef<BoxStyle>): boolean;
         static parseBackgroundImage(node: NodeUI, value: string, screenDimension?: Null<Dimension>): Undef<string | Gradient>[];
-        static getBackgroundSize<T extends NodeUI>(node: T, value: string, screenDimension?: Null<Dimension>): Null<Dimension>;
-        static hasLineBreak<T extends NodeUI>(node: T, lineBreak?: boolean, trim?: boolean): boolean;
+        static getBackgroundSize<U extends NodeUI>(node: U, value: string, screenDimension?: Null<Dimension>): Null<Dimension>;
+        static hasLineBreak<U extends NodeUI>(node: U, lineBreak?: boolean, trim?: boolean): boolean;
         static checkPreIndent(node: NodeUI): Undef<[string, NodeUI]>;
         finalize(layouts: FileAsset[]): void;
         writeRawImage(options: RawDataOptions): Null<Partial<RawAsset>>;
@@ -273,7 +273,7 @@ declare module "base" {
     }
 
     class ExtensionUI<T extends NodeUI> extends Extension<T> {
-        static findNestedElement<T extends NodeUI>(node: T, name: string): Undef<HTMLElement>;
+        static findNestedElement<U extends NodeUI>(node: U, name: string): Undef<HTMLElement>;
         readonly tagNames: string[];
         readonly eventOnly?: boolean;
         readonly cascadeAll?: boolean;
@@ -305,7 +305,7 @@ declare module "base" {
         add(ext: Extension<T> | string): boolean;
         remove(ext: Extension<T> | string): boolean;
         get(name: string, builtIn?: boolean): Undef<Extension<T>>;
-        valueOf<T = unknown>(name: string, attr: string, fallback?: T): Undef<T>;
+        valueOf<U = unknown>(name: string, attr: string, fallback?: U): Undef<U>;
         valueAsObject(name: string, attr: string, fallback?: Null<PlainObject>): Null<PlainObject>;
         valueAsString(name: string, attr: string, fallback?: string): string;
         valueAsNumber(name: string, attr: string, fallback?: number): number;
@@ -335,7 +335,7 @@ declare module "base" {
     }
 
     class LayoutUI<T extends NodeUI> extends squared.lib.base.Container<T> implements LayoutType {
-        static create<T extends NodeUI>(options: LayoutOptions<T>): LayoutUI<T>;
+        static create<U extends NodeUI>(options: LayoutOptions<U>): LayoutUI<U>;
         parent: T;
         node: T;
         containerType: number;
@@ -777,6 +777,21 @@ declare module "base" {
                 PADDING_VERTICAL = PADDING_TOP | PADDING_BOTTOM,
                 PADDING_HORIZONTAL = PADDING_RIGHT | PADDING_LEFT
             }
+            const enum NODE_TRAVERSE {
+                HORIZONTAL,
+                VERTICAL,
+                LINEBREAK,
+                INLINE_WRAP,
+                FLOAT_CLEAR,
+                FLOAT_BLOCK,
+                FLOAT_WRAP,
+                FLOAT_INTERSECT,
+                PERCENT_WRAP
+            }
+            const enum NODE_TEMPLATE {
+                XML = 1,
+                INCLUDE
+            }
             enum APP_SECTION {
                 DOM_TRAVERSE = 1,
                 EXTENSION = 1 << 1,
@@ -800,21 +815,6 @@ declare module "base" {
                 LOCALIZATION = 1 << 4,
                 CUSTOMIZATION = 1 << 5,
                 ALL = CONSTRAINT | LAYOUT | ALIGNMENT | ACCESSIBILITY | LOCALIZATION | CUSTOMIZATION
-            }
-            const enum NODE_TRAVERSE {
-                HORIZONTAL,
-                VERTICAL,
-                LINEBREAK,
-                INLINE_WRAP,
-                FLOAT_CLEAR,
-                FLOAT_BLOCK,
-                FLOAT_WRAP,
-                FLOAT_INTERSECT,
-                PERCENT_WRAP
-            }
-            const enum NODE_TEMPLATE {
-                XML = 1,
-                INCLUDE
             }
         }
 

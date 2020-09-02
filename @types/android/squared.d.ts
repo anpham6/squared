@@ -2,9 +2,7 @@ import * as squared from '../squared';
 
 import LayoutUI = squared.base.LayoutUI;
 
-type View = base.View;
-
-declare interface AndroidFramework<T extends View> extends squared.base.AppFramework<T> {
+declare interface AndroidFramework<T extends base.View> extends squared.base.AppFramework<T> {
     setViewModel(data?: PlainObject, sessionId?: string): void;
 }
 
@@ -47,15 +45,13 @@ declare namespace base {
         static addImage(images: StringMap, prefix?: string, imageFormat?: MIMEOrAll): string;
         static addColor(value: ColorData | string, transparency?: boolean): string;
         readonly application: Application<T>;
-        get userSettings(): IUserResourceSettingsUI;
         addImageSrc(element: HTMLImageElement | string, prefix?: string, imageSet?: ImageSrcSet[]): string;
         addImageSet(images: StringMap, prefix?: string): string;
+        get userSettings(): IUserResourceSettingsUI;
     }
 
     class File<T extends View> extends squared.base.File<T> {
         resource: Resource<T>;
-        get userSettings(): IUserResourceSettingsUI;
-        get directory(): { string: string; image: string; video: string; audio: string; font: string };
         resourceAllToXml(options?: FileUniversalOptions): PlainObject;
         resourceStringToXml(options?: FileUniversalOptions): string[];
         resourceStringArrayToXml(options?: FileUniversalOptions): string[];
@@ -69,6 +65,8 @@ declare namespace base {
         resourceRawVideoToString(options?: FileUniversalOptions): string[];
         resourceRawAudioToString(options?: FileUniversalOptions): string[];
         layoutAllToXml(layouts: FileAsset[], options?: FileUniversalOptions): PlainObject;
+        get userSettings(): IUserResourceSettingsUI;
+        get directory(): { string: string; image: string; video: string; audio: string; font: string };
     }
 
     class View extends squared.base.NodeUI {
@@ -133,39 +131,39 @@ declare namespace base {
 }
 
 declare namespace extensions {
-    class Accessibility<T extends View> extends squared.base.extensions.Accessibility<T> {}
-    class Column<T extends View> extends squared.base.extensions.Column<T> {}
-    class CssGrid<T extends View> extends squared.base.extensions.CssGrid<T> {}
-    class External<T extends View> extends squared.base.ExtensionUI<T> {}
-    class Flexbox<T extends View> extends squared.base.extensions.Flexbox<T> {}
-    class Grid<T extends View> extends squared.base.extensions.Grid<T> {}
-    class List<T extends View> extends squared.base.extensions.List<T> {}
-    class Relative<T extends View> extends squared.base.extensions.Relative<T> {}
-    class Sprite<T extends View> extends squared.base.extensions.Sprite<T> {}
-    class Substitute<T extends View> extends squared.base.ExtensionUI<T> {}
-    class Table<T extends View> extends squared.base.extensions.Table<T> {}
-    class WhiteSpace<T extends View> extends squared.base.extensions.WhiteSpace<T> {}
+    class Accessibility<T extends base.View> extends squared.base.extensions.Accessibility<T> {}
+    class Column<T extends base.View> extends squared.base.extensions.Column<T> {}
+    class CssGrid<T extends base.View> extends squared.base.extensions.CssGrid<T> {}
+    class External<T extends base.View> extends squared.base.ExtensionUI<T> {}
+    class Flexbox<T extends base.View> extends squared.base.extensions.Flexbox<T> {}
+    class Grid<T extends base.View> extends squared.base.extensions.Grid<T> {}
+    class List<T extends base.View> extends squared.base.extensions.List<T> {}
+    class Relative<T extends base.View> extends squared.base.extensions.Relative<T> {}
+    class Sprite<T extends base.View> extends squared.base.extensions.Sprite<T> {}
+    class Substitute<T extends base.View> extends squared.base.ExtensionUI<T> {}
+    class Table<T extends base.View> extends squared.base.extensions.Table<T> {}
+    class WhiteSpace<T extends base.View> extends squared.base.extensions.WhiteSpace<T> {}
 
     namespace delegate {
-        class Background<T extends View> extends squared.base.ExtensionUI<T> {}
-        class MaxWidthHeight<T extends View> extends squared.base.ExtensionUI<T> {}
-        class Multiline<T extends View> extends squared.base.ExtensionUI<T> {}
-        class NegativeX<T extends View> extends squared.base.ExtensionUI<T> {}
-        class Percent<T extends View> extends squared.base.ExtensionUI<T> {}
-        class PositiveX<T extends View> extends squared.base.ExtensionUI<T> {}
-        class RadioGroup<T extends View> extends squared.base.ExtensionUI<T> {}
-        class ScrollBar<T extends View> extends squared.base.ExtensionUI<T> {}
+        class Background<T extends base.View> extends squared.base.ExtensionUI<T> {}
+        class MaxWidthHeight<T extends base.View> extends squared.base.ExtensionUI<T> {}
+        class Multiline<T extends base.View> extends squared.base.ExtensionUI<T> {}
+        class NegativeX<T extends base.View> extends squared.base.ExtensionUI<T> {}
+        class Percent<T extends base.View> extends squared.base.ExtensionUI<T> {}
+        class PositiveX<T extends base.View> extends squared.base.ExtensionUI<T> {}
+        class RadioGroup<T extends base.View> extends squared.base.ExtensionUI<T> {}
+        class ScrollBar<T extends base.View> extends squared.base.ExtensionUI<T> {}
     }
 
     namespace resource {
-        class Background<T extends View> extends squared.base.ExtensionUI<T> {}
-        class Data<T extends View> extends squared.base.ExtensionUI<T> {}
-        class Dimens<T extends View> extends squared.base.ExtensionUI<T> {}
-        class Fonts<T extends View> extends squared.base.ExtensionUI<T> {}
-        class Includes<T extends View> extends squared.base.ExtensionUI<T> {}
-        class Strings<T extends View> extends squared.base.ExtensionUI<T> {}
-        class Styles<T extends View> extends squared.base.ExtensionUI<T> {}
-        class Svg<T extends View> extends squared.base.ExtensionUI<T> {}
+        class Background<T extends base.View> extends squared.base.ExtensionUI<T> {}
+        class Data<T extends base.View> extends squared.base.ExtensionUI<T> {}
+        class Dimens<T extends base.View> extends squared.base.ExtensionUI<T> {}
+        class Fonts<T extends base.View> extends squared.base.ExtensionUI<T> {}
+        class Includes<T extends base.View> extends squared.base.ExtensionUI<T> {}
+        class Strings<T extends base.View> extends squared.base.ExtensionUI<T> {}
+        class Styles<T extends base.View> extends squared.base.ExtensionUI<T> {}
+        class Svg<T extends base.View> extends squared.base.ExtensionUI<T> {}
     }
 }
 
@@ -410,7 +408,7 @@ declare namespace lib {
     }
 
     namespace customizations {
-        const API_ANDROID: Customizations<View>;
+        const API_ANDROID: Customizations<base.View>;
         function getValue(api: number, tagName: string, obj: string, attr: string): string;
     }
 

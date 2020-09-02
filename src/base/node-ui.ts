@@ -169,10 +169,12 @@ function setOverflow(node: T) {
     return result;
 }
 
-function applyExclusionValue(enumeration: PlainObject, value: string) {
+function applyExclusionValue(enumeration: PlainObject, value: Undef<string>) {
     let offset = 0;
-    for (const name of value.split('|')) {
-        offset |= enumeration[name.trim().toUpperCase()] as number || 0;
+    if (value) {
+        for (const name of value.split('|')) {
+            offset |= enumeration[name.trim().toUpperCase()] as number || 0;
+        }
     }
     return offset;
 }
@@ -180,7 +182,7 @@ function applyExclusionValue(enumeration: PlainObject, value: string) {
 const canCascadeChildren = (node: T) => node.naturalElements.length > 0 && !node.layoutElement && !node.tableElement;
 
 export default abstract class NodeUI extends Node implements squared.base.NodeUI {
-    public static baseline<T extends NodeUI>(list: T[], text?: boolean, image?: boolean): Null<T> {
+    public static baseline(list: T[], text?: boolean, image?: boolean): Null<T> {
         const length = list.length;
         const result: T[] = new Array(length);
         let j = 0;
@@ -271,7 +273,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return result[0] || null;
     }
 
-    public static linearData<T extends NodeUI>(list: T[], cleared?: Map<T, string>): LinearData {
+    public static linearData(list: T[], cleared?: Map<T, string>): LinearData {
         let linearX = false,
             linearY = false;
         const length = list.length;
@@ -548,8 +550,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return Object.entries(this._namespaces);
     }
 
-    public unsafe<T = unknown>(name: string, value?: any): Undef<T> {
-        return (arguments.length === 1 ? this['_' + name] : this['_' + name] = value) as Undef<T>;
+    public unsafe<U = unknown>(name: string, value?: any): Undef<U> {
+        return (arguments.length === 1 ? this['_' + name] : this['_' + name] = value) as Undef<U>;
     }
 
     public lockAttr(name: string, attr: string) {
@@ -812,25 +814,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             if (hasKeys(dataset)) {
                 const systemName = this.localSettings.systemName;
                 const exclusions = this._exclusions || (this._exclusions = [0, 0, 0]);
-                let value = dataset['excludeResource' + systemName] || dataset.excludeResource;
-                if (value) {
-                    exclusions[0] |= applyExclusionValue(NODE_RESOURCE, value);
-                }
-                value = dataset['excludeProcedure' + systemName] || dataset.excludeProcedure;
-                if (value) {
-                    exclusions[1] |= applyExclusionValue(NODE_PROCEDURE, value);
-                }
-                value = dataset['excludeSection' + systemName] || dataset.excludeSection;
-                if (value) {
-                    exclusions[2] |= applyExclusionValue(APP_SECTION, value);
-                }
+                exclusions[0] |= applyExclusionValue(NODE_RESOURCE, dataset['excludeResource' + systemName] || dataset.excludeResource);
+                exclusions[1] |= applyExclusionValue(NODE_PROCEDURE, dataset['excludeProcedure' + systemName] || dataset.excludeProcedure);
+                exclusions[2] |= applyExclusionValue(APP_SECTION, dataset['excludeSection' + systemName] || dataset.excludeSection);
                 if (!this.isEmpty()) {
-                    value = dataset['excludeResourceChild' + systemName] || dataset.excludeResourceChild;
-                    const resource = value ? applyExclusionValue(NODE_RESOURCE, value) : undefined;
-                    value = dataset['excludeProcedureChild' + systemName] || dataset.excludeProcedureChild;
-                    const procedure = value ? applyExclusionValue(NODE_PROCEDURE, value) : undefined;
-                    value = dataset['excludeSectionChild' + systemName] || dataset.excludeSectionChild;
-                    const section = value ? applyExclusionValue(APP_SECTION, value) : undefined;
+                    const resource = applyExclusionValue(NODE_RESOURCE, dataset['excludeResourceChild' + systemName] || dataset.excludeResourceChild);
+                    const procedure = applyExclusionValue(NODE_PROCEDURE, dataset['excludeProcedureChild' + systemName] || dataset.excludeProcedureChild);
+                    const section = applyExclusionValue(APP_SECTION, dataset['excludeSectionChild' + systemName] || dataset.excludeSectionChild);
                     if (resource || procedure || section) {
                         const data: ExcludeOptions = { resource, procedure, section };
                         this.each((node: T) => node.exclude(data));

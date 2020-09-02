@@ -56,8 +56,8 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
             return false;
         }
 
-        public getBaseValue<T = unknown>(attr: string, fallback?: T): Undef<T> {
-            return this._baseVal[attr] as T ?? (!this.setBaseValue(attr) ? fallback : undefined);
+        public getBaseValue<U = unknown>(attr: string, fallback?: U): Undef<U> {
+            return this._baseVal[attr] as U ?? (!this.setBaseValue(attr) ? fallback : undefined);
         }
 
         public refitBaseValue(x: number, y: number, precision?: number, scaleX = 1, scaleY = 1) {

@@ -39,7 +39,7 @@ function checkAlignment(node: NodeUI) {
 }
 
 export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
-    public static createDataCellAttribute<T extends NodeUI>(): GridCellData<T> {
+    public static createDataCellAttribute<U extends NodeUI>(): GridCellData<U> {
         return {
             rowSpan: 0,
             columnSpan: 0,

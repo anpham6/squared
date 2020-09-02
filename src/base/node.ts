@@ -885,7 +885,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         };
     }
 
-    public data<T = unknown>(name: string, attr: string, value?: any, overwrite = true): Undef<T> {
+    public data<U = unknown>(name: string, attr: string, value?: any, overwrite = true): Undef<U> {
         const data = this._data ?? (this._data = {});
         if (value === null) {
             if (data[name]) {
@@ -905,7 +905,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         }
         const stored: PlainObject = data[name];
         if (isObject(stored)) {
-            return stored[attr] as T;
+            return stored[attr] as U;
         }
     }
 

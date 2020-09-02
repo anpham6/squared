@@ -74,9 +74,9 @@ export default class ExtensionManager<T extends Node> implements squared.base.Ex
         }
     }
 
-    public valueOf<T = unknown>(name: string, attr: string, fallback?: T): Undef<T> {
+    public valueOf<U = unknown>(name: string, attr: string, fallback?: U): Undef<U> {
         const options = this.get(name, true)?.options;
-        return isObject(options) ? options[attr] as T : fallback;
+        return isObject(options) ? options[attr] as U : fallback;
     }
 
     public valueAsObject(name: string, attr: string, fallback = null) {

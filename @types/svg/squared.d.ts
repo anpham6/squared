@@ -222,7 +222,6 @@ declare module "svg" {
         useParent?: SvgUse;
         patternParent?: SvgShapePattern;
         readonly element: SVGGElement;
-        constructor(element: SVGGElement);
         setPaint(d?: string[], precision?: number): void;
         resetPaint(): void;
         setAttribute(attr: string, computed?: boolean, inherited?: boolean): void;
@@ -240,6 +239,7 @@ declare module "svg" {
         get animations(): SvgAnimation[];
         get visible(): boolean;
         get opacity(): string;
+        constructor(element: SVGGElement);
     }
 
     class SvgUseG extends SvgG implements SvgUse {
@@ -659,6 +659,7 @@ declare module "svg" {
         get rotateValues(): Null<number[]>;
         get keyPoints(): number[];
         get offsetLength(): number;
+        constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimateTransformElement);
     }
 
     class SvgAnimationIntervalMap {

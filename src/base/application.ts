@@ -30,10 +30,10 @@ const operationNotSupported = (): Promise<void> => Promise.reject(new Error(OPER
 export default abstract class Application<T extends Node> implements squared.base.Application<T> {
     public static readonly KEY_NAME = 'squared.base.application';
 
-    public static prioritizeExtensions<T extends Node>(value: string, extensions: Extension<T>[]) {
+    public static prioritizeExtensions<U extends Node>(value: string, extensions: Extension<U>[]) {
         const included = value.trim().split(/\s*,\s*/);
-        const result: Extension<T>[] = [];
-        const untagged: Extension<T>[] = [];
+        const result: Extension<U>[] = [];
+        const untagged: Extension<U>[] = [];
         for (let i = 0, length = extensions.length; i < length; ++i) {
             const ext = extensions[i];
             const index = included.indexOf(ext.name);
