@@ -18,7 +18,7 @@ export function frameworkNotInstalled<T = void>(): Promise<T> {
     return Promise.reject(new Error(FRAMEWORK_NOT_INSTALLED));
 }
 
-export function setElementCache(element: Element, attr: string, sessionId: string, data: any) {
+export function setElementCache(element: Element, attr: string, data: any, sessionId = '0') {
     let elementMap = SESSION_MAP[sessionId].get(element);
     if (!elementMap) {
         elementMap = {};

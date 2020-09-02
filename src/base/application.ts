@@ -395,8 +395,8 @@ export default abstract class Application<T extends Node> implements squared.bas
             rootElement,
             sessionId,
             0,
-            extensions.length ? extensions : undefined,
-            processing.rootElements.size > 1 ? processing.rootElements : undefined
+            processing.rootElements,
+            extensions.length ? extensions : undefined
         );
         if (node) {
             node.documentRoot = true;
@@ -450,7 +450,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         return node;
     }
 
-    protected cascadeParentNode(cache: NodeList<T>, excluded: NodeList<T>, parentElement: HTMLElement, sessionId: string, depth: number, extensions?: Extension<T>[], rootElements?: Set<HTMLElement>) {
+    protected cascadeParentNode(cache: NodeList<T>, excluded: NodeList<T>, parentElement: HTMLElement, sessionId: string, depth: number, rootElements: Set<HTMLElement>, extensions?: Extension<T>[]) {
         const node = this.insertNode(parentElement, sessionId);
         if (node) {
             const controllerHandler = this.controllerHandler;
@@ -487,7 +487,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                             Application.prioritizeExtensions(use, extensions).some(item => item.init!(element, sessionId));
                         }
                     }
-                    child = element.childNodes.length === 0 ? this.insertNode(element, sessionId) : this.cascadeParentNode(cache, excluded, element, sessionId, childDepth, extensions, rootElements);
+                    child = element.childNodes.length === 0 ? this.insertNode(element, sessionId) : this.cascadeParentNode(cache, excluded, element, sessionId, childDepth, rootElements, extensions);
                     if (child) {
                         elements[k++] = child;
                         inlineText = false;
@@ -664,9 +664,9 @@ export default abstract class Application<T extends Node> implements squared.bas
                             for (const attr in styleMap) {
                                 specificityData[attr] = specificity + (important[attr] ? 1000 : 0);
                             }
-                            setElementCache(element, 'sessionId', '0', sessionId);
-                            setElementCache(element, attrStyle, sessionId, styleMap);
-                            setElementCache(element, attrSpecificity, sessionId, specificityData);
+                            setElementCache(element, 'sessionId', sessionId);
+                            setElementCache(element, attrStyle, styleMap, sessionId);
+                            setElementCache(element, attrSpecificity, specificityData, sessionId);
                         }
                     }
                 }

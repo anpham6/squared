@@ -84,8 +84,9 @@
     <script src="/common/system.js"></script>
     <script src="/common/transform.js"></script>
     <script src="/common/babel-transform.js"></script>
-    <script src="/common/dev.js"></script>
     <script>
+        var squared = {};
+        var android = null;
         System.import('/build/src/main.js').then(result => {
             squared = result;
             System.import('/build/src/base/main.js').then(result => {
@@ -100,8 +101,10 @@
                         System.import('/build/extension/android/widget/toolbar/main.js')
                     ]).then(() => {
                         squared.assign('android.widget.toolbar', {
-                            toolbar_demo: {
-                                appBar: {}
+                            settings: {
+                                toolbar_demo: {
+                                    appBar: {}
+                                }
                             }
                         });
                         squared.add('android.substitute', {
@@ -115,13 +118,21 @@
                             }
                         });
                         squared.parseDocument('squared_ui').then(function() {
-                            squared.close();
-
-                            var views = squared.system.writeLayoutAllXml();
-                            document.getElementById('output').innerHTML = stringify(views).replace(/</g, '&lt;');
-
-                            var resource = squared.system.writeResourceAllXml();
-                            document.getElementById('resource').innerHTML = stringify(resource).replace(/</g, '&lt;');
+                            squared.settings.outputEmptyCopyDirectory = true;
+                            squared.copyTo('D:/git/customviewpagertablayout', {
+                                assets: [
+                                    {
+                                        pathname: 'app/src/main/res/drawable',
+                                        filename: 'ic_launcher_background.xml',
+                                        uri: 'C:/Users/An/git/squared/html/common/images/ic_launcher_background.xml'
+                                    },
+                                    {
+                                        pathname: 'app/src/main/res/drawable-v24',
+                                        filename: 'ic_launcher_foreground.xml',
+                                        uri: 'C:/Users/An/git/squared/html/common/images/ic_launcher_foreground.xml'
+                                    }
+                                ]
+                            });
                         });
                     });
                 });
@@ -158,6 +169,7 @@
         <div id="viewpager_demo"
             data-use-android="android.substitute"
             data-android-substitute-tag="androidx.viewpager.widget.ViewPager"
+            data-android-attr-app="layout_behavior::@string/appbar_scrolling_view_behavior"
             data-exclude-section-android="DOM_TRAVERSE"
             data-exclude-resource-android="BOX_STYLE | FONT_STYLE">
             <div style="padding: 20px;" data-use-android="android.external" data-filename-android="fragment_main.xml">
@@ -179,24 +191,5 @@
         <button id="fab_browse_page" data-use-android="android.widget.floatingactionbutton" data-exclude-procedure-android="ACCESSIBILITY"></button>
     </div>
     <!-- END: DEMO -->
-
-    <div>
-        <div class="output">
-            <pre id="output"></pre>
-            <div>
-                <button onclick="copy('output');">Copy</button>
-                <button onclick="squared.system.saveLayoutAllXml();">Save</button>
-                <button onclick="squared.saveAs();">Save All</button>
-                <button onclick="squared.copyTo('D:/git/customviewpagertablayout');">Copy All</button>
-            </div>
-        </div>
-        <div class="output">
-            <pre id="resource"></pre>
-            <div>
-                <button onclick="copy('resource');">Copy</button>
-                <button onclick="squared.system.saveResourceAllXml();">Save</button>
-            </div>
-        </div>
-    </div>
 </body>
 </html>

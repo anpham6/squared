@@ -738,12 +738,6 @@ declare module "base" {
         }
 
         namespace enumeration {
-            const enum APP_FRAMEWORK {
-                UNIVERSAL = 0,
-                VDOM = 1,
-                ANDROID = 1 << 1,
-                CHROME = 1 << 2
-            }
             const enum NODE_ALIGNMENT {
                 UNKNOWN = 1,
                 AUTO_LAYOUT = 1 << 1,
@@ -791,6 +785,12 @@ declare module "base" {
             const enum NODE_TEMPLATE {
                 XML = 1,
                 INCLUDE
+            }
+            enum APP_FRAMEWORK {
+                UNIVERSAL = 0,
+                VDOM = 1,
+                ANDROID = 1 << 1,
+                CHROME = 1 << 2
             }
             enum APP_SECTION {
                 DOM_TRAVERSE = 1,

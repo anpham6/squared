@@ -42,7 +42,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
             if (target) {
                 const targetElement = document.getElementById(target);
                 if (targetElement && !includes(application.getDatasetName('use', targetElement), WIDGET_NAME.COORDINATOR)) {
-                    application.getProcessing(sessionId)?.rootElements.add(element);
+                    application.getProcessing(sessionId)!.rootElements.add(element);
                 }
             }
         }
@@ -149,7 +149,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
                     appBarOverlay = android.theme;
                 }
                 android.theme = `@style/${settings.manifestThemeName}.AppBarOverlay`;
-                node.data(WIDGET_NAME.TOOLBAR, 'themeData', { appBarOverlay, popupOverlay });
+                node.data(WIDGET_NAME.TOOLBAR, 'themeData', { appBarOverlay, popupOverlay } as ToolbarThemeData);
             }
             else {
                 assignEmptyValue(appBarOptions, 'android', 'theme', '@style/ThemeOverlay.AppCompat.Dark.ActionBar');

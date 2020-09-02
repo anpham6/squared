@@ -104,17 +104,15 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
                 if (!sameArray(element.children, (item: Element) => item.tagName)) {
                     return false;
                 }
-                const rootElements = this.application.getProcessing(sessionId)?.rootElements;
-                if (rootElements) {
-                    let current = element.parentElement;
-                    while (current) {
-                        if (current.tagName === 'NAV' && rootElements.has(current)) {
-                            return false;
-                        }
-                        current = current.parentElement;
+                const rootElements = this.application.getProcessing(sessionId)!.rootElements;
+                let current = element.parentElement;
+                while (current) {
+                    if (current.tagName === 'NAV' && rootElements.has(current)) {
+                        return false;
                     }
-                    rootElements.add(element);
+                    current = current.parentElement;
                 }
+                rootElements.add(element);
             }
         }
         return false;

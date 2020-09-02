@@ -4,6 +4,7 @@
     "../@types/**/object.d.ts",
     "../@types/**/index.d.ts",
     "../src/**/*.ts",
-    "../framework/**/*.ts"
+    "../framework/**/*.ts",
+    "../extension/**/*.ts"
   ]
 }

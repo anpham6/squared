@@ -917,9 +917,11 @@ chrome.extension.options = { // internal representation
 };
 
 squared.assign('chrome.convert.png', {
-    largerThan: 10000,
-    replaceWith: false,
-    whenSmaller: true
+    settings: {
+        largerThan: 10000,
+        replaceWith: false,
+        whenSmaller: true
+    }
 });
 ```
 

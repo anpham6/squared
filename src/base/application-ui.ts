@@ -558,7 +558,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return this.layouts[0]?.content || '';
     }
 
-    protected cascadeParentNode(cache: NodeList<T>, excluded: NodeList<T>, parentElement: HTMLElement, sessionId: string, depth: number, extensions?: ExtensionUI<T>[], rootElements?: Set<HTMLElement>, cascadeAll?: boolean) {
+    protected cascadeParentNode(cache: NodeList<T>, excluded: NodeList<T>, parentElement: HTMLElement, sessionId: string, depth: number, rootElements: Set<HTMLElement>, extensions?: ExtensionUI<T>[], cascadeAll?: boolean) {
         const node = this.insertNode(parentElement, sessionId, cascadeAll);
         if (depth === 0) {
             cache.add(node);
@@ -569,7 +569,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
         }
-        if (node.display !== 'none' || depth === 0 || cascadeAll) {
+        if (node.display !== 'none' || depth === 0 || cascadeAll || node.extensions.some(name => (this.extensionManager.get(name) as ExtensionUI<T>)?.documentBase)) {
             const controllerHandler = this.controllerHandler;
             if (node.excluded || controllerHandler.preventNodeCascade(node)) {
                 return node;
@@ -623,8 +623,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             ApplicationUI.prioritizeExtensions(use, extensions).some(item => item.init!(element, sessionId));
                         }
                     }
-                    if (!rootElements || !rootElements.has(element)) {
-                        child = element.childNodes.length === 0 ? this.insertNode(element, sessionId, cascadeAll) : this.cascadeParentNode(cache, excluded, element, sessionId, childDepth, extensions, rootElements, cascadeAll);
+                    if (!rootElements.has(element)) {
+                        child = element.childNodes.length === 0 ? this.insertNode(element, sessionId, cascadeAll) : this.cascadeParentNode(cache, excluded, element, sessionId, childDepth, rootElements, extensions, cascadeAll);
                         if (!child.excluded) {
                             inlineText = false;
                         }
@@ -1484,7 +1484,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (element.tagName === 'Q') {
             if (!styleMap) {
                 styleMap = {};
-                setElementCache(element, 'styleMap' + pseudoElt, sessionId, styleMap);
+                setElementCache(element, 'styleMap' + pseudoElt, styleMap, sessionId);
             }
             let content = styleMap.content;
             if (!content) {
@@ -1736,8 +1736,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             pseudoElement.style[attr] = styleMap[attr];
                         }
                     }
-                    setElementCache(pseudoElement, 'styleMap', sessionId, styleMap);
-                    setElementCache(pseudoElement, 'pseudoElt', sessionId, pseudoElt);
+                    setElementCache(pseudoElement, 'styleMap', styleMap, sessionId);
+                    setElementCache(pseudoElement, 'pseudoElt', pseudoElt, sessionId);
                     return pseudoElement;
                 }
             }

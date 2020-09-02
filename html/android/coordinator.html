@@ -47,8 +47,9 @@
     <script src="/common/system.js"></script>
     <script src="/common/transform.js"></script>
     <script src="/common/babel-transform.js"></script>
-    <script src="/common/dev.js"></script>
     <script>
+        var squared = {};
+        var android = null;
         System.import('/build/src/main.js').then(result => {
             squared = result;
             System.import('/build/src/base/main.js').then(result => {
@@ -61,13 +62,21 @@
                         System.import('/build/extension/android/widget/floatingactionbutton/main.js')
                     ]).then(() => {
                         squared.parseDocument('squared_ui').then(function() {
-                            squared.close();
-
-                            var views = squared.system.writeLayoutAllXml();
-                            document.getElementById('output').innerHTML = stringify(views).replace(/</g, '&lt;');
-
-                            var resource = squared.system.writeResourceAllXml();
-                            document.getElementById('resource').innerHTML = stringify(resource).replace(/</g, '&lt;');
+                            squared.settings.outputEmptyCopyDirectory = true;
+                            squared.copyTo('D:/git/coordinator', {
+                                assets: [
+                                    {
+                                        pathname: 'app/src/main/res/drawable',
+                                        filename: 'ic_launcher_background.xml',
+                                        uri: 'C:/Users/An/git/squared/html/common/images/ic_launcher_background.xml'
+                                    },
+                                    {
+                                        pathname: 'app/src/main/res/drawable-v24',
+                                        filename: 'ic_launcher_foreground.xml',
+                                        uri: 'C:/Users/An/git/squared/html/common/images/ic_launcher_foreground.xml'
+                                    }
+                                ]
+                            });
                         });
                     });
                 });
@@ -100,24 +109,5 @@
         <button id="fab_left" data-use-android="android.widget.floatingactionbutton"></button>
     </div>
     <!-- END: DEMO -->
-
-    <div>
-        <div class="output">
-            <pre id="output"></pre>
-            <div>
-                <button onclick="copy('output');">Copy</button>
-                <button onclick="squared.system.saveLayoutAllXml();">Save</button>
-                <button onclick="squared.saveAs();">Save All</button>
-                <button onclick="squared.copyTo('D:/git/coordinator');">Copy All</button>
-            </div>
-        </div>
-        <div class="output">
-            <pre id="resource"></pre>
-            <div>
-                <button onclick="copy('resource');">Copy</button>
-                <button onclick="squared.system.saveResourceAllXml();">Save</button>
-            </div>
-        </div>
-    </div>
 </body>
 </html>

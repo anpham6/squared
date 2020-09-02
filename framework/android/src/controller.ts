@@ -592,15 +592,16 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (parent) {
                     const template = node.removeTry({ alignSiblings: true }) as NodeTemplate<T>;
                     if (template) {
-                        const { renderChildren, renderTemplates } = parent;
+                        const renderChildren = parent.renderChildren;
+                        const renderTemplates = parent.renderTemplates || (parent.renderTemplates = []);
                         const index = parseInt(node.dataset.androidTargetIndex!);
                         if (!isNaN(index) && index >= 0 && index < renderChildren.length) {
                             renderChildren.splice(index, 0, node);
-                            renderTemplates!.splice(index, 0, template);
+                            renderTemplates.splice(index, 0, template);
                         }
                         else {
                             renderChildren.push(node);
-                            renderTemplates!.push(template);
+                            renderTemplates.push(template);
                         }
                         node.renderParent = parent;
                     }

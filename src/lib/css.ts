@@ -1562,7 +1562,7 @@ export function getStyle(element: Element, pseudoElt = '') {
     }
     if (hasComputedStyle(element)) {
         style = getComputedStyle(element, pseudoElt);
-        setElementCache(element, 'style' + pseudoElt, '0', style);
+        setElementCache(element, 'style' + pseudoElt, style);
         return style;
     }
     return PROXY_INLINESTYLE;

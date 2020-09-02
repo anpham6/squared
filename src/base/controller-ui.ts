@@ -132,18 +132,18 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
 
     public applyDefaultStyles(element: Element, sessionId: string) {
         if (element.nodeName.charAt(0) === '#') {
-            setElementCache(element, 'styleMap', sessionId, {
+            setElementCache(element, 'styleMap', {
                 position: 'static',
                 display: 'inline',
                 verticalAlign: 'baseline',
                 float: 'none'
-            });
+            }, sessionId);
         }
         else {
             let styleMap = getElementCache<StringMapChecked>(element, 'styleMap', sessionId);
             if (!styleMap) {
                 styleMap = {};
-                setElementCache(element, 'styleMap', sessionId, styleMap);
+                setElementCache(element, 'styleMap', styleMap, sessionId);
             }
             if (isUserAgent(USER_AGENT.FIREFOX)) {
                 switch (element.tagName) {
@@ -418,7 +418,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     return false;
                 }
                 ({ width, height } = bounds);
-                setElementCache(element, 'clientRect', sessionId, bounds);
+                setElementCache(element, 'clientRect', bounds, sessionId);
             }
             else {
                 return false;

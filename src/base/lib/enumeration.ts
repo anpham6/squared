@@ -1,10 +1,3 @@
-export const enum APP_FRAMEWORK {
-    UNIVERSAL = 0,
-    VDOM = 1,
-    ANDROID = 1 << 1,
-    CHROME = 1 << 2
-}
-
 export const enum NODE_ALIGNMENT {
     UNKNOWN = 1,
     AUTO_LAYOUT = 1 << 1,
@@ -55,6 +48,13 @@ export const enum NODE_TRAVERSE {
 export const enum NODE_TEMPLATE {
     XML = 1,
     INCLUDE
+}
+
+export enum APP_FRAMEWORK {
+    UNIVERSAL = 0,
+    VDOM = 1,
+    ANDROID = 1 << 1,
+    CHROME = 1 << 2
 }
 
 export enum APP_SECTION {

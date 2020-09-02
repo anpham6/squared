@@ -44,7 +44,7 @@ function setStyleCache(element: HTMLElement, attr: string, sessionId: string, va
         element.style.setProperty(attr, value);
         const newValue = element.style.getPropertyValue(attr);
         if (current !== newValue) {
-            setElementCache(element, attr, sessionId, value !== 'auto' ? current : '');
+            setElementCache(element, attr, value !== 'auto' ? current : '', sessionId);
             return STYLE_CACHE.CHANGED;
         }
         return STYLE_CACHE.FAIL;
@@ -796,7 +796,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (element) {
             this._element = element;
             if (sessionId !== '0') {
-                setElementCache(element, 'node', sessionId, this);
+                setElementCache(element, 'node', this, sessionId);
                 const elementData = getElementData(element, sessionId);
                 if (elementData) {
                     this._elementData = elementData;

@@ -174,13 +174,17 @@
                         builtInExtensions: ['chrome.convert.png', 'chrome.compress.gzip']
                     });
                     squared.assign('chrome.convert.png', {
-                        largerThan: 35000,
-                        smallerThan: 75000,
-                        whenSmaller: true,
-                        replaceWith: false
+                        settings: {
+                            largerThan: 35000,
+                            smallerThan: 75000,
+                            whenSmaller: true,
+                            replaceWith: false
+                        }
                     });
                     squared.assign('chrome.compress.gzip', {
-                        largerThan: 35000
+                        settings: {
+                            largerThan: 35000
+                        }
                     });
                     chrome.saveAsWebPage();
                     /*chrome.saveAsWebPage('bundle', {
