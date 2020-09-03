@@ -3,9 +3,13 @@ import type View from '../../view';
 import Resource from '../../resource';
 import ResourceSvg from './svg';
 
-import { CONTAINER_ANDROID, EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X, XMLNS_ANDROID } from '../../lib/constant';
-import { BUILD_ANDROID, CONTAINER_NODE } from '../../lib/enumeration';
+import { CONTAINER_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X, XMLNS_ANDROID } from '../../lib/constant';
+import { CONTAINER_NODE } from '../../lib/enumeration';
 import { applyTemplate } from '../../lib/util';
+
+import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
+import NODE_RESOURCE = squared.base.lib.enumeration.NODE_RESOURCE;
+import BUILD_ANDROID = android.lib.enumeration.BUILD_ANDROID;
 
 import LAYERLIST_TMPL from '../../template/layer-list';
 import SHAPE_TMPL from '../../template/shape';
@@ -63,8 +67,6 @@ const { reduceRGBA } = squared.lib.color;
 const { extractURL, formatPercent, formatPX } = squared.lib.css;
 const { truncate } = squared.lib.math;
 const { delimitString, isEqual, plainMap, resolvePath, spliceArray, splitPair } = squared.lib.util;
-
-const { BOX_STANDARD, NODE_RESOURCE } = squared.base.lib.enumeration;
 
 const CHAR_SEPARATOR = /\s*,\s*/;
 
@@ -457,7 +459,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
     private _resourceSvgInstance: Null<ResourceSvg<T>> = null;
 
     public beforeParseDocument() {
-        this._resourceSvgInstance = this.controller.localSettings.use.svg ? this.application.builtInExtensions.get(EXT_ANDROID.RESOURCE_SVG) as ResourceSvg<T> : null;
+        this._resourceSvgInstance = this.controller.localSettings.use.svg ? this.application.builtInExtensions.get(android.lib.enumeration.EXT_ANDROID.RESOURCE_SVG) as ResourceSvg<T> : null;
     }
 
     public afterResources(sessionId: string) {

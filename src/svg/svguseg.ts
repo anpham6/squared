@@ -2,10 +2,8 @@ import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgViewRect$MX from './svgviewrect-mx';
 import SvgG from './svgg';
 
-import { INSTANCE_TYPE } from './lib/constant';
-
 export default class SvgUseG extends SvgViewRect$MX(SvgBaseVal$MX(SvgG)) implements squared.svg.SvgUseG {
-    public readonly instanceType = INSTANCE_TYPE.SVG_USE_G;
+    public readonly instanceType = squared.svg.lib.enumeration.INSTANCE_TYPE.SVG_USE_G;
 
     constructor(
         public readonly element: SVGGElement,

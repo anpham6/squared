@@ -2,8 +2,9 @@ import type SvgPath from './svgpath';
 
 import SvgBuild from './svgbuild';
 
-import { FILL_MODE, INSTANCE_TYPE } from './lib/constant';
 import { getAttribute } from './lib/util';
+
+import FILL_MODE = squared.svg.lib.enumeration.FILL_MODE;
 
 type SvgContainer = squared.svg.SvgContainer;
 type SvgView = squared.svg.SvgView;
@@ -72,7 +73,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     public baseValue?: string;
     public companion?: NumberValue<SvgAnimation>;
     public readonly animationElement: Null<SVGAnimationElement> = null;
-    public readonly instanceType = INSTANCE_TYPE.SVG_ANIMATION;
+    public readonly instanceType = squared.svg.lib.enumeration.INSTANCE_TYPE.SVG_ANIMATION;
 
     protected _to = '';
     protected _duration = -1;

@@ -7,6 +7,9 @@ import LayoutUI = squared.base.LayoutUI;
 import { CONTAINER_ANDROID, STRING_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 
+import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
+import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
+
 interface ICssGridData<T> extends CssGridData<T> {
     unsetContentBox?: boolean;
     constraintData?: T[][];
@@ -16,7 +19,7 @@ const { formatPercent, formatPX, isLength, isPercent } = squared.lib.css;
 const { truncate } = squared.lib.math;
 const { flatArray } = squared.lib.util;
 
-const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.enumeration;
+const { NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.enumeration;
 
 const REGEXP_ALIGNSELF = /start|end|center|baseline/;
 const REGEXP_JUSTIFYSELF = /start|center|end|baseline|right|left/;

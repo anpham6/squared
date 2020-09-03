@@ -4,8 +4,12 @@ import ResourceUI = squared.base.ResourceUI;
 
 import { CONTAINER_ANDROID, CONTAINER_ANDROID_X, ELEMENT_ANDROID, LAYOUT_ANDROID, RESERVED_JAVA, STRING_ANDROID } from './lib/constant';
 import { API_ANDROID, DEPRECATED_ANDROID } from './lib/customization';
-import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
+import { CONTAINER_NODE } from './lib/enumeration';
 import { concatString, getDataSet, isHorizontalAlign, isVerticalAlign, localizeString } from './lib/util';
+
+import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
+import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
+import BUILD_ANDROID = android.lib.enumeration.BUILD_ANDROID;
 
 type T = android.base.View;
 
@@ -14,8 +18,7 @@ const { getNamedItem, getRangeClientRect } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
 const { capitalize, convertInt, convertWord, fromLastIndexOf, hasKeys, isString, replaceMap, splitPair } = squared.lib.util;
 
-const { EXT_NAME } = squared.base.lib.constant;
-const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE } = squared.base.lib.enumeration;
+const { NODE_PROCEDURE } = squared.base.lib.enumeration;
 
 const BOX_MARGIN = CSS_PROPERTIES.margin.value as string[];
 const BOX_PADDING = CSS_PROPERTIES.padding.value as string[];
@@ -1718,7 +1721,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 let maxHeight = 0,
                                     parentHeight = 0;
                                 for (const item of grandParent) {
-                                    const height = (item.data<BoxRectDimension>(EXT_NAME.FLEXBOX!, 'boundsData') || item.bounds).height;
+                                    const height = (item.data<BoxRectDimension>(squared.base.lib.enumeration.EXT_NAME.FLEXBOX, 'boundsData') || item.bounds).height;
                                     if (height > maxHeight) {
                                         maxHeight = height;
                                     }

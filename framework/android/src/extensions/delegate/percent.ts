@@ -5,6 +5,9 @@ import LayoutUI = squared.base.LayoutUI;
 import { LAYOUT_ANDROID, STRING_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
+import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
+import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
+
 interface PercentData {
     percentWidth?: boolean;
     percentHeight?: boolean;
@@ -14,8 +17,6 @@ interface PercentData {
 
 const { CSS_UNIT, formatPX } = squared.lib.css;
 const { truncate } = squared.lib.math;
-
-const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
 const validPercent = (value: string) => value.endsWith('%') && parseFloat(value) > 0;
 

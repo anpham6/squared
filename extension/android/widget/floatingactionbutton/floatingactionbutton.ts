@@ -1,14 +1,18 @@
 import { WIDGET_NAME } from '../lib/constant';
 
+import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
+import NODE_TEMPLATE = squared.base.lib.enumeration.NODE_TEMPLATE;
+import BUILD_ANDROID = android.lib.enumeration.BUILD_ANDROID;
+
 type View = android.base.View;
 
 const { parseColor } = squared.lib.color;
 const { assignEmptyValue } = squared.lib.util;
 const { createViewAttribute } = android.lib.util;
 
-const { BOX_STANDARD, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
-const { EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = android.lib.constant;
-const { BUILD_ANDROID, CONTAINER_NODE } = android.lib.enumeration;
+const { NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.enumeration;
+const { SUPPORT_ANDROID, SUPPORT_ANDROID_X } = android.lib.constant;
+const { CONTAINER_NODE } = android.lib.enumeration;
 
 const Resource = android.base.Resource;
 
@@ -64,7 +68,7 @@ export default class FloatingActionButton<T extends View> extends squared.base.E
         const controlName = node.api < BUILD_ANDROID.Q ? SUPPORT_ANDROID.FLOATING_ACTION_BUTTON : SUPPORT_ANDROID_X.FLOATING_ACTION_BUTTON;
         node.setControlType(controlName, CONTAINER_NODE.BUTTON);
         node.exclude({ resource: NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.ASSET });
-        Resource.formatOptions(options, this.application.extensionManager.valueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberAsResource'));
+        Resource.formatOptions(options, this.application.extensionManager.valueAsBoolean(android.lib.enumeration.EXT_ANDROID.RESOURCE_STRINGS, 'numberAsResource'));
         if (!node.pageFlow) {
             const offsetParent = (this.application as android.base.Application<T>).resolveTarget(node.sessionId, target) || parent;
             if (node.autoMargin.leftRight) {

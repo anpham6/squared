@@ -1,9 +1,13 @@
-import { USER_AGENT, getDeviceDPI, isUserAgent } from './client';
+import { getDeviceDPI, isUserAgent } from './client';
 import { parseColor } from './color';
 import { clamp, truncate, truncateFraction } from './math';
 import { CSS, STRING, TRANSFORM } from './regex';
 import { getElementCache, setElementCache } from './session';
 import { convertCamelCase, convertFloat, convertHyphenated, hasBit, isNumber, isString, iterateArray, replaceMap, resolvePath, spliceString, splitEnclosing, splitPair, trimBoth } from './util';
+
+import USER_AGENT = squared.lib.client.USER_AGENT;
+import CSS_TRAITS = squared.lib.css.CSS_TRAITS;
+import CSS_UNIT = squared.lib.css.CSS_UNIT;
 
 const DOCUMENT_ELEMENT = document.documentElement;
 const DOCUMENT_FIXEDMAP = [9/13, 10/13, 12/13, 16/13, 20/13, 2, 3];
@@ -292,28 +296,6 @@ const formatVar = (value: number) => !isNaN(value) ? value + 'px' : '';
 const formatDecimal = (value: number) => !isNaN(value) ? value.toString() : '';
 const trimEnclosing = (value: string) => value.substring(1, value.length - 1);
 const trimSelector = (value: string) => /^\*(\s+\*){0,2}$/.test(value) ? '*' : value.replace(/^(\*\s+){1,2}/, '');
-
-export const enum CSS_UNIT {
-    NONE = 0,
-    LENGTH = 1,
-    PERCENT = 1 << 1,
-    TIME = 1 << 2,
-    ANGLE = 1 << 3,
-    INTEGER = 1 << 4,
-    DECIMAL = 1 << 5
-}
-
-export const enum CSS_TRAITS {
-    CALC = 1,
-    SHORTHAND = 1 << 1,
-    LAYOUT = 1 << 2,
-    CONTAIN = 1 << 3,
-    COLOR = 1 << 4,
-    DEPRECATED = 1 << 5,
-    NONE = 1 << 6,
-    AUTO = 1 << 7,
-    UNIT = 1 << 8
-}
 
 export const CSS_PROPERTIES: CssProperties = {
     alignContent: {

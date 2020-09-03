@@ -4,7 +4,6 @@ import SvgViewRect$MX from './svgviewrect-mx';
 import SvgBuild from './svgbuild';
 import SvgElement from './svgelement';
 
-import { INSTANCE_TYPE } from './lib/constant';
 import { MATRIX, SVG } from './lib/util';
 
 const { resolvePath } = squared.lib.util;
@@ -12,7 +11,7 @@ const { resolvePath } = squared.lib.util;
 export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgElement))) implements squared.svg.SvgImage {
     public rotateAngle?: number;
     public readonly imageElement: Null<SVGImageElement> = null;
-    public readonly instanceType = INSTANCE_TYPE.SVG_IMAGE;
+    public readonly instanceType = squared.svg.lib.enumeration.INSTANCE_TYPE.SVG_IMAGE;
 
     constructor(
         public readonly element: SVGImageElement | SVGUseElement,

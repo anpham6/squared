@@ -6,10 +6,11 @@ import LayoutUI = squared.base.LayoutUI;
 
 import { CONTAINER_NODE } from '../lib/enumeration';
 
+import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
+import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
+
 const { formatPX } = squared.lib.css;
 const { withinRange } = squared.lib.util;
-
-const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
 export default class Grid <T extends View> extends squared.base.extensions.Grid<T> {
     public processNode(node: T, parent: T): Void<ExtensionResult<T>> {

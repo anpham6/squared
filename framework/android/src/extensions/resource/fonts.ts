@@ -4,7 +4,7 @@ import Resource from '../../resource';
 
 import { concatString } from '../../lib/util';
 
-import { BUILD_ANDROID } from '../../lib/enumeration';
+import BUILD_ANDROID = android.lib.enumeration.BUILD_ANDROID;
 
 type StyleList = ObjectMap<number[]>;
 type SharedAttributes = ObjectMapNested<number[]>;
@@ -12,8 +12,8 @@ type AttributeMap = ObjectMap<number[]>;
 type TagNameMap = ObjectMap<StyleAttribute[]>;
 type NodeStyleMap = ObjectMap<string[]>;
 
-const { capitalize, convertWord, hasKeys, replaceMap, spliceArray, trimBoth } = squared.lib.util;
 const { truncate } = squared.lib.math;
+const { capitalize, convertWord, hasKeys, replaceMap, spliceArray, trimBoth } = squared.lib.util;
 
 const { NODE_RESOURCE } = squared.base.lib.enumeration;
 

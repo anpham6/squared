@@ -1,6 +1,8 @@
+import USER_AGENT = squared.lib.client.USER_AGENT;
+
 type T = Node;
 
-const { USER_AGENT, isUserAgent } = squared.lib.client;
+const { isUserAgent } = squared.lib.client;
 const { CSS_PROPERTIES, CSS_TRAITS, CSS_UNIT, PROXY_INLINESTYLE, SVG_PROPERTIES, checkFontSizeValue, checkStyleValue, checkWritingMode, formatPX, getRemSize, getStyle, isAngle, isLength, isPercent, isTime, parseSelectorText, parseUnit } = squared.lib.css;
 const { assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { CSS, FILE } = squared.lib.regex;

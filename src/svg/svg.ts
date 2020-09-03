@@ -4,7 +4,6 @@ import SvgView$MX from './svgview-mx';
 import SvgViewRect$MX from './svgviewrect-mx';
 import SvgContainer from './svgcontainer';
 
-import { INSTANCE_TYPE } from './lib/constant';
 import { SVG, getParentAttribute, getTargetElement } from './lib/util';
 
 const { parseColor } = squared.lib.color;
@@ -63,7 +62,7 @@ function createRadialGradient(element: SVGRadialGradientElement): SvgGradient {
 export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer)))) implements squared.svg.Svg {
     public precision?: number;
     public keyframesMap?: KeyframesMap;
-    public readonly instanceType = INSTANCE_TYPE.SVG;
+    public readonly instanceType = squared.svg.lib.enumeration.INSTANCE_TYPE.SVG;
     public readonly definitions: SvgDefinitions = {
         clipPath: new Map<string, SVGClipPathElement>(),
         pattern: new Map<string, SVGPatternElement>(),

@@ -91,7 +91,7 @@ module.exports = {
         "no-redeclare": "error",
         "no-regex-spaces": "error",
         "no-self-assign": "error",
-        "no-shadow": "off",
+        "no-shadow": "warn",
         "no-shadow-restricted-names": "error",
         "no-sparse-arrays": "error",
         "no-this-before-super": "error",

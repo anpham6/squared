@@ -4,12 +4,12 @@ import LayoutUI = squared.base.LayoutUI;
 
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
+import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
+
 interface MaxWidthHeightData {
     maxWidth: boolean;
     maxHeight: boolean;
 }
-
-const { NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
 export default class MaxWidthHeight<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {

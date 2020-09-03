@@ -1,7 +1,8 @@
 import ExtensionUI from '../extension-ui';
 import NodeUI from '../node-ui';
 
-import { BOX_STANDARD, NODE_ALIGNMENT } from '../lib/enumeration';
+import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
+import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
 
 const { formatPX } = squared.lib.css;
 const { iterateReverseArray } = squared.lib.util;

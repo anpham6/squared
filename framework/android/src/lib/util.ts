@@ -1,5 +1,6 @@
 import { LOCALIZE_ANDROID, XMLNS_ANDROID } from './constant';
-import { BUILD_ANDROID } from './enumeration';
+
+import BUILD_ANDROID = android.lib.enumeration.BUILD_ANDROID;
 
 const { capitalize, joinArray, isPlainObject } = squared.lib.util;
 

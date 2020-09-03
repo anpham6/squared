@@ -674,7 +674,7 @@ declare module "svg" {
     }
 
     namespace lib {
-        namespace constant {
+        namespace enumeration {
             const enum INSTANCE_TYPE {
                 SVG_USE = 1,
                 SVG_CONTAINER = 1 << 1,
@@ -720,6 +720,9 @@ declare module "svg" {
                 USER_SPACE_ON_USE = 1,
                 OBJECT_BOUNDING_BOX
             }
+        }
+
+        namespace constant {
             const KEYSPLINE_NAME: {
                 'ease': string;
                 'ease-in': string;

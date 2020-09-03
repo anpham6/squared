@@ -42,6 +42,10 @@ import * as customization from './lib/customization';
 
 import SETTINGS from './settings';
 
+import EXT_NAME = squared.base.lib.enumeration.EXT_NAME;
+import EXT_ANDROID = android.lib.enumeration.EXT_ANDROID;
+
+const framework = squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID;
 let application: Null<Application<View>> = null;
 let file: Null<File<View>> = null;
 
@@ -278,10 +282,8 @@ const appBase: android.AndroidFramework<View> = {
         }
     },
     create() {
-        const EN = squared.base.lib.constant.EXT_NAME as StringMapChecked;
-        const EA = constant.EXT_ANDROID;
         application = new Application<View>(
-            squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID,
+            framework,
             View,
             Controller,
             Resource,
@@ -290,38 +292,38 @@ const appBase: android.AndroidFramework<View> = {
         file = new File();
         application.resourceHandler.fileHandler = file;
         application.builtInExtensions = new Map<string, squared.base.ExtensionUI<View>>([
-            [EN.ACCESSIBILITY, new Accessibility(EN.ACCESSIBILITY, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
-            [EA.DELEGATE_BACKGROUND, new DelegateBackground(EA.DELEGATE_BACKGROUND, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
-            [EA.DELEGATE_NEGATIVEX, new DelegateNegativeX(EA.DELEGATE_NEGATIVEX, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
-            [EA.DELEGATE_POSITIVEX, new DelegatePositiveX(EA.DELEGATE_POSITIVEX, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
-            [EA.DELEGATE_MAXWIDTHHEIGHT, new DelegateMaxWidthHeight(EA.DELEGATE_MAXWIDTHHEIGHT, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
-            [EA.DELEGATE_PERCENT, new DelegatePercent(EA.DELEGATE_PERCENT, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
-            [EA.DELEGATE_SCROLLBAR, new DelegateScrollBar(EA.DELEGATE_SCROLLBAR, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
-            [EA.DELEGATE_RADIOGROUP, new DelegateRadioGroup(EA.DELEGATE_RADIOGROUP, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
-            [EA.DELEGATE_MULTILINE, new DelegateMultiline(EA.DELEGATE_MULTILINE, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
-            [EN.RELATIVE, new Relative(EN.RELATIVE, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
-            [EN.CSS_GRID, new CssGrid(EN.CSS_GRID, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
-            [EN.FLEXBOX, new Flexbox(EN.FLEXBOX, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
-            [EN.TABLE, new Table(EN.TABLE, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID, { tagNames: ['TABLE'] })],
-            [EN.COLUMN, new Column(EN.COLUMN, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
-            [EN.LIST, new List(EN.LIST, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
-            [EN.GRID, new Grid(EN.GRID, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID, { tagNames: ['DIV', 'FORM', 'UL', 'OL', 'DL', 'NAV', 'SECTION', 'ASIDE', 'MAIN', 'HEADER', 'FOOTER', 'P', 'ARTICLE', 'FIELDSET'] })],
-            [EN.SPRITE, new Sprite(EN.SPRITE, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
-            [EN.WHITESPACE, new WhiteSpace(EN.WHITESPACE, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
-            [EA.RESOURCE_SVG, new ResourceSvg(EA.RESOURCE_SVG, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
-            [EA.RESOURCE_BACKGROUND, new ResourceBackground(EA.RESOURCE_BACKGROUND, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
-            [EA.RESOURCE_STRINGS, new ResourceStrings(EA.RESOURCE_STRINGS, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
-            [EA.RESOURCE_FONTS, new ResourceFonts(EA.RESOURCE_FONTS, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
-            [EA.RESOURCE_DIMENS, new ResourceDimens(EA.RESOURCE_DIMENS, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
-            [EA.RESOURCE_STYLES, new ResourceStyles(EA.RESOURCE_STYLES, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
-            [EA.RESOURCE_INCLUDES, new ResourceIncludes(EA.RESOURCE_INCLUDES, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
-            [EA.RESOURCE_DATA, new ResourceData(EA.RESOURCE_DATA, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
-            [EA.EXTERNAL, new External(EA.EXTERNAL, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)],
-            [EA.SUBSTITUTE, new Substitute(EA.SUBSTITUTE, squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID)]
+            [EXT_NAME.ACCESSIBILITY, new Accessibility(EXT_NAME.ACCESSIBILITY, framework)],
+            [EXT_ANDROID.DELEGATE_BACKGROUND, new DelegateBackground(EXT_ANDROID.DELEGATE_BACKGROUND, framework)],
+            [EXT_ANDROID.DELEGATE_NEGATIVEX, new DelegateNegativeX(EXT_ANDROID.DELEGATE_NEGATIVEX, framework)],
+            [EXT_ANDROID.DELEGATE_POSITIVEX, new DelegatePositiveX(EXT_ANDROID.DELEGATE_POSITIVEX, framework)],
+            [EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, new DelegateMaxWidthHeight(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, framework)],
+            [EXT_ANDROID.DELEGATE_PERCENT, new DelegatePercent(EXT_ANDROID.DELEGATE_PERCENT, framework)],
+            [EXT_ANDROID.DELEGATE_SCROLLBAR, new DelegateScrollBar(EXT_ANDROID.DELEGATE_SCROLLBAR, framework)],
+            [EXT_ANDROID.DELEGATE_RADIOGROUP, new DelegateRadioGroup(EXT_ANDROID.DELEGATE_RADIOGROUP, framework)],
+            [EXT_ANDROID.DELEGATE_MULTILINE, new DelegateMultiline(EXT_ANDROID.DELEGATE_MULTILINE, framework)],
+            [EXT_NAME.RELATIVE, new Relative(EXT_NAME.RELATIVE, framework)],
+            [EXT_NAME.CSS_GRID, new CssGrid(EXT_NAME.CSS_GRID, framework)],
+            [EXT_NAME.FLEXBOX, new Flexbox(EXT_NAME.FLEXBOX, framework)],
+            [EXT_NAME.TABLE, new Table(EXT_NAME.TABLE, framework, { tagNames: ['TABLE'] })],
+            [EXT_NAME.COLUMN, new Column(EXT_NAME.COLUMN, framework)],
+            [EXT_NAME.LIST, new List(EXT_NAME.LIST, framework)],
+            [EXT_NAME.GRID, new Grid(EXT_NAME.GRID, framework, { tagNames: ['DIV', 'FORM', 'UL', 'OL', 'DL', 'NAV', 'SECTION', 'ASIDE', 'MAIN', 'HEADER', 'FOOTER', 'P', 'ARTICLE', 'FIELDSET'] })],
+            [EXT_NAME.SPRITE, new Sprite(EXT_NAME.SPRITE, framework)],
+            [EXT_NAME.WHITESPACE, new WhiteSpace(EXT_NAME.WHITESPACE, framework)],
+            [EXT_ANDROID.RESOURCE_SVG, new ResourceSvg(EXT_ANDROID.RESOURCE_SVG, framework)],
+            [EXT_ANDROID.RESOURCE_BACKGROUND, new ResourceBackground(EXT_ANDROID.RESOURCE_BACKGROUND, framework)],
+            [EXT_ANDROID.RESOURCE_STRINGS, new ResourceStrings(EXT_ANDROID.RESOURCE_STRINGS, framework)],
+            [EXT_ANDROID.RESOURCE_FONTS, new ResourceFonts(EXT_ANDROID.RESOURCE_FONTS, framework)],
+            [EXT_ANDROID.RESOURCE_DIMENS, new ResourceDimens(EXT_ANDROID.RESOURCE_DIMENS, framework)],
+            [EXT_ANDROID.RESOURCE_STYLES, new ResourceStyles(EXT_ANDROID.RESOURCE_STYLES, framework)],
+            [EXT_ANDROID.RESOURCE_INCLUDES, new ResourceIncludes(EXT_ANDROID.RESOURCE_INCLUDES, framework)],
+            [EXT_ANDROID.RESOURCE_DATA, new ResourceData(EXT_ANDROID.RESOURCE_DATA, framework)],
+            [EXT_ANDROID.EXTERNAL, new External(EXT_ANDROID.EXTERNAL, framework)],
+            [EXT_ANDROID.SUBSTITUTE, new Substitute(EXT_ANDROID.SUBSTITUTE, framework)]
         ]);
         return {
             application,
-            framework: squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID,
+            framework,
             userSettings: { ...SETTINGS }
         };
     },
@@ -329,7 +331,7 @@ const appBase: android.AndroidFramework<View> = {
         if (application) {
             return {
                 application,
-                framework: squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID,
+                framework,
                 userSettings: application.userSettings
             };
         }

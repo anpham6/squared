@@ -1,11 +1,14 @@
 import type View from '../../view';
 
 import { CONTAINER_ANDROID, CONTAINER_ANDROID_X } from '../../lib/constant';
-import { BUILD_ANDROID, CONTAINER_NODE } from '../../lib/enumeration';
+import { CONTAINER_NODE } from '../../lib/enumeration';
+
+import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
+import BUILD_ANDROID = android.lib.enumeration.BUILD_ANDROID;
 
 const { formatPX } = squared.lib.css;
 
-const { BOX_STANDARD, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
+const { NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
 export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {

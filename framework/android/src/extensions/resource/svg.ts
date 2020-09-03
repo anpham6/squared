@@ -5,9 +5,10 @@ import Resource from '../../resource';
 import { convertColorStops } from './background';
 
 import { XMLNS_ANDROID } from '../../lib/constant';
-import { BUILD_ANDROID } from '../../lib/enumeration';
 import { applyTemplate, formatString } from '../../lib/util';
 import { VECTOR_GROUP, VECTOR_PATH } from '../../template/vector';
+
+import BUILD_ANDROID = android.lib.enumeration.BUILD_ANDROID;
 
 import ANIMATEDVECTOR_TMPL from '../../template/animated-vector';
 import LAYERLIST_TMPL from '../../template/layer-list';
@@ -25,6 +26,8 @@ import SvgBuild = squared.svg.SvgBuild;
 import SvgG = squared.svg.SvgG;
 import SvgPath = squared.svg.SvgPath;
 import SvgShape = squared.svg.SvgShape;
+
+import SYNCHRONIZE_MODE = squared.svg.lib.enumeration.SYNCHRONIZE_MODE;
 
 type SvgAnimation = squared.svg.SvgAnimation;
 type SvgGroup = squared.svg.SvgGroup;
@@ -138,8 +141,9 @@ const { truncate } = squared.lib.math;
 const { FILE } = squared.lib.regex;
 const { convertCamelCase, convertInt, convertWord, hasKeys, isArray, isNumber, lastItemOf, lastItemEquals, partitionArray, plainMap, replaceMap } = squared.lib.util;
 
-const { KEYSPLINE_NAME, SYNCHRONIZE_MODE } = squared.svg.lib.constant;
 const { CACHE_VIEWNAME, MATRIX, SVG, TRANSFORM, getAttribute, getRootOffset } = squared.svg.lib.util;
+
+const { KEYSPLINE_NAME } = squared.svg.lib.constant;
 
 const INTERPOLATOR_ANDROID = {
     accelerate_decelerate: '@android:anim/accelerate_decelerate_interpolator',

@@ -1,17 +1,7 @@
 import { hasBit } from './util';
 
-export const enum PLATFORM {
-    WINDOWS = 1,
-    MAC = 1 << 1,
-    LINUX = 1 << 2
-}
-
-export const enum USER_AGENT {
-    CHROME = 1,
-    SAFARI = 1 << 1,
-    FIREFOX = 1 << 2,
-    EDGE = 1 << 3
-}
+import PLATFORM = squared.lib.client.PLATFORM;
+import USER_AGENT = squared.lib.client.USER_AGENT;
 
 export function isPlatform(value: NumString) {
     const platform = navigator.platform.toLowerCase();

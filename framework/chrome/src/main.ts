@@ -15,7 +15,7 @@ import ConvertTiff from './extensions/convert/tiff';
 
 import SETTINGS from './settings';
 
-import * as constant from './lib/constant';
+import EXT_CHROME = chrome.lib.enumeration.EXT_CHROME;
 
 type Node = squared.base.Node;
 type FileOptions = IFileArchivingOptions | IFileCopyingOptions;
@@ -25,6 +25,7 @@ const { util, session } = squared.lib;
 const { isString, isPlainObject } = util;
 const { frameworkNotInstalled } = session;
 
+const framework = squared.base.lib.enumeration.APP_FRAMEWORK.CHROME;
 let application: Null<Application<Node>> = null;
 let file: Null<File<Node>> = null;
 
@@ -49,9 +50,7 @@ const appBase: chrome.ChromeFramework<Node> = {
         Extension,
         File
     },
-    lib: {
-        constant
-    },
+    lib: {},
     extensions: {
         compress: {
             Brotli: CompressBrotli,
@@ -133,9 +132,9 @@ const appBase: chrome.ChromeFramework<Node> = {
         }
     },
     create() {
-        const EC = constant.EXT_CHROME;
         application = new Application<Node>(
-            squared.base.lib.enumeration.APP_FRAMEWORK.CHROME, squared.base.Node,
+            framework,
+            squared.base.Node,
             squared.base.Controller,
             squared.base.Resource,
             squared.base.ExtensionManager
@@ -143,19 +142,19 @@ const appBase: chrome.ChromeFramework<Node> = {
         file = new File();
         application.resourceHandler!.fileHandler = file;
         application.builtInExtensions = new Map<string, Extension<Node>>([
-            [EC.COMPRESS_BROTLI, new CompressBrotli(EC.COMPRESS_BROTLI, squared.base.lib.enumeration.APP_FRAMEWORK.CHROME)],
-            [EC.COMPRESS_GZIP, new CompressGzip(EC.COMPRESS_GZIP, squared.base.lib.enumeration.APP_FRAMEWORK.CHROME)],
-            [EC.COMPRESS_JPEG, new CompressJpeg(EC.COMPRESS_JPEG, squared.base.lib.enumeration.APP_FRAMEWORK.CHROME)],
-            [EC.COMPRESS_PNG, new CompressPng(EC.COMPRESS_PNG, squared.base.lib.enumeration.APP_FRAMEWORK.CHROME)],
-            [EC.CONVERT_BMP, new ConvertBmp(EC.CONVERT_BMP, squared.base.lib.enumeration.APP_FRAMEWORK.CHROME)],
-            [EC.CONVERT_GIF, new ConvertGif(EC.CONVERT_GIF, squared.base.lib.enumeration.APP_FRAMEWORK.CHROME)],
-            [EC.CONVERT_JPEG, new ConvertJpeg(EC.CONVERT_JPEG, squared.base.lib.enumeration.APP_FRAMEWORK.CHROME)],
-            [EC.CONVERT_PNG, new ConvertPng(EC.CONVERT_PNG, squared.base.lib.enumeration.APP_FRAMEWORK.CHROME)],
-            [EC.CONVERT_TIFF, new ConvertTiff(EC.CONVERT_TIFF, squared.base.lib.enumeration.APP_FRAMEWORK.CHROME)]
+            [EXT_CHROME.COMPRESS_BROTLI, new CompressBrotli(EXT_CHROME.COMPRESS_BROTLI, framework)],
+            [EXT_CHROME.COMPRESS_GZIP, new CompressGzip(EXT_CHROME.COMPRESS_GZIP, framework)],
+            [EXT_CHROME.COMPRESS_JPEG, new CompressJpeg(EXT_CHROME.COMPRESS_JPEG, framework)],
+            [EXT_CHROME.COMPRESS_PNG, new CompressPng(EXT_CHROME.COMPRESS_PNG, framework)],
+            [EXT_CHROME.CONVERT_BMP, new ConvertBmp(EXT_CHROME.CONVERT_BMP, framework)],
+            [EXT_CHROME.CONVERT_GIF, new ConvertGif(EXT_CHROME.CONVERT_GIF, framework)],
+            [EXT_CHROME.CONVERT_JPEG, new ConvertJpeg(EXT_CHROME.CONVERT_JPEG, framework)],
+            [EXT_CHROME.CONVERT_PNG, new ConvertPng(EXT_CHROME.CONVERT_PNG, framework)],
+            [EXT_CHROME.CONVERT_TIFF, new ConvertTiff(EXT_CHROME.CONVERT_TIFF, framework)]
         ]);
         return {
             application,
-            framework: squared.base.lib.enumeration.APP_FRAMEWORK.CHROME,
+            framework,
             userSettings: { ...SETTINGS }
         };
     },
@@ -163,7 +162,7 @@ const appBase: chrome.ChromeFramework<Node> = {
         if (application) {
             return {
                 application,
-                framework: squared.base.lib.enumeration.APP_FRAMEWORK.CHROME,
+                framework,
                 userSettings: application.userSettings
             };
         }

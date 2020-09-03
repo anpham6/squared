@@ -5,9 +5,12 @@ import CssGrid = squared.base.extensions.CssGrid;
 
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
+import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
+import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
+
 const { CSS_UNIT, isLength } = squared.lib.css;
 
-const { BOX_STANDARD, NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
+const { NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
 const hasVisibleWidth = (node: View) => !node.blockStatic && !node.hasPX('width') || node.has('width', { type: CSS_UNIT.LENGTH | CSS_UNIT.PERCENT, not: '100%' }) && node.css('minWidth') !== '100%' || node.has('maxWidth', { type: CSS_UNIT.LENGTH | CSS_UNIT.PERCENT, not: '100%' });
 const hasFullHeight = (node: View) => node.css('height') === '100%' || node.css('minHeight') === '100%';

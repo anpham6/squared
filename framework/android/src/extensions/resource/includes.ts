@@ -2,6 +2,8 @@ import type View from '../../view';
 
 import { getRootNs } from '../../lib/util';
 
+import NODE_TEMPLATE = squared.base.lib.enumeration.NODE_TEMPLATE;
+
 type RenderData = Undef<NodeIndex[]>;
 
 interface NodeIndex {
@@ -10,8 +12,6 @@ interface NodeIndex {
     index: number;
     include: boolean;
 }
-
-const { NODE_TEMPLATE } = squared.base.lib.enumeration;
 
 export default class ResourceIncludes<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;

@@ -61,11 +61,18 @@ declare namespace extensions {
 }
 
 declare namespace lib {
-    namespace constant {
-        const EXT_CHROME: {
-            COMPRESS_BROTLI: string;
-            COMPRESS_GZIP: string;
-        };
+    namespace enumeration {
+        const enum EXT_CHROME {
+            COMPRESS_BROTLI = 'chrome.compress.brotli',
+            COMPRESS_GZIP = 'chrome.compress.gzip',
+            COMPRESS_JPEG = 'chrome.compress.jpeg',
+            COMPRESS_PNG = 'chrome.compress.png',
+            CONVERT_BMP = 'chrome.convert.bmp',
+            CONVERT_GIF = 'chrome.convert.gif',
+            CONVERT_JPEG = 'chrome.convert.jpeg',
+            CONVERT_PNG = 'chrome.convert.png',
+            CONVERT_TIFF = 'chrome.convert.tiff'
+        }
     }
 }
 

@@ -5,6 +5,9 @@ import LayoutUI = squared.base.LayoutUI;
 
 import { CONTAINER_NODE } from '../lib/enumeration';
 
+import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
+import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
+
 interface FlexBasis {
     item: View;
     basis: number;
@@ -16,8 +19,6 @@ interface FlexBasis {
 const { isLength } = squared.lib.css;
 const { truncate } = squared.lib.math;
 const { capitalize, iterateReverseArray, sameArray, withinRange } = squared.lib.util;
-
-const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
 function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
     const horizontal = attr === 'width';

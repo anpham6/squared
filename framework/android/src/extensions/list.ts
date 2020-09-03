@@ -8,9 +8,11 @@ import { CONTAINER_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 import { createViewAttribute } from '../lib/util';
 
-const { formatPX } = squared.lib.css;
+import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
+import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
+import NODE_TEMPLATE = squared.base.lib.enumeration.NODE_TEMPLATE;
 
-const { BOX_STANDARD, NODE_ALIGNMENT, NODE_TEMPLATE } = squared.base.lib.enumeration;
+const { formatPX } = squared.lib.css;
 
 export default class <T extends View> extends squared.base.extensions.List<T> {
     public readonly options: ExtensionListOptions = {

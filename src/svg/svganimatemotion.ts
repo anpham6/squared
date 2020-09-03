@@ -1,7 +1,7 @@
 import SvgAnimateTransform from './svganimatetransform';
 import SvgBuild from './svgbuild';
 
-import { INSTANCE_TYPE, KEYSPLINE_NAME } from './lib/constant';
+import { KEYSPLINE_NAME } from './lib/constant';
 import { SVG, getAttribute, getPathLength, getTargetElement } from './lib/util';
 
 const { isPercent, parseAngle } = squared.lib.css;
@@ -19,7 +19,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     public rotateData?: NumberValue[];
     public framesPerSecond?: number;
     public readonly type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
-    public readonly instanceType = INSTANCE_TYPE.SVG_ANIMATE_MOTION;
+    public readonly instanceType = squared.svg.lib.enumeration.INSTANCE_TYPE.SVG_ANIMATE_MOTION;
 
     private _offsetLength = 0;
     private _keyPoints: number[] = [];

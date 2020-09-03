@@ -2,7 +2,6 @@ import type SvgUseSymbol from './svgusesymbol';
 
 import SvgBuild from './svgbuild';
 
-import { INSTANCE_TYPE } from './lib/constant';
 import { SVG, getAttribute, getDOMRect, getTargetElement } from './lib/util';
 
 type Svg = squared.svg.Svg;
@@ -186,7 +185,7 @@ const hasLength = (value: string) => REGEXP_LENGTHPERCENTAGE.test(value);
 export default class SvgContainer extends squared.lib.base.Container<SvgView> implements squared.svg.SvgContainer {
     public parent: Null<SvgContainer> = null;
     public viewport?: Svg;
-    public readonly instanceType = INSTANCE_TYPE.SVG_CONTAINER;
+    public readonly instanceType = squared.svg.lib.enumeration.INSTANCE_TYPE.SVG_CONTAINER;
     public readonly aspectRatio: SvgAspectRatio = {
         x: 0,
         y: 0,

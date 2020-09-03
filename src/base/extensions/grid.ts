@@ -1,7 +1,7 @@
 import ExtensionUI from '../extension-ui';
 import NodeUI from '../node-ui';
 
-import { BOX_STANDARD } from '../lib/enumeration';
+import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
 
 interface Node extends NodeUI {
     spacer?: number;

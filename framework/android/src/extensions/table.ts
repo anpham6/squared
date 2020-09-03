@@ -4,10 +4,10 @@ import LayoutUI = squared.base.LayoutUI;
 
 import { CONTAINER_NODE } from '../lib/enumeration';
 
+import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
+
 const { formatPX } = squared.lib.css;
 const { trimEnd } = squared.lib.util;
-
-const { NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
 function setLayoutHeight(node: View) {
     if (node.hasPX('height') && node.height + node.contentBoxHeight < Math.floor(node.bounds.height) && node.css('verticalAlign') !== 'top') {

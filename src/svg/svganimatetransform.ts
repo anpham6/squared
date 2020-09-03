@@ -1,7 +1,6 @@
 import SvgAnimate from './svganimate';
 import SvgBuild from './svgbuild';
 
-import { INSTANCE_TYPE } from './lib/constant';
 import { TRANSFORM } from './lib/util';
 
 const { getNamedItem } = squared.lib.dom;
@@ -107,7 +106,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
 
     public transformFrom?: string;
     public transformOrigin?: Point[];
-    public readonly instanceType = INSTANCE_TYPE.SVG_ANIMATE_TRANSFORM;
+    public readonly instanceType = squared.svg.lib.enumeration.INSTANCE_TYPE.SVG_ANIMATE_TRANSFORM;
 
     constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimateTransformElement) {
         super(element, animationElement);

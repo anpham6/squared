@@ -1,7 +1,7 @@
 import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 
-import { INSTANCE_TYPE, KEYSPLINE_NAME, PATTERN_CUBICBEZIER } from './lib/constant';
+import { KEYSPLINE_NAME, PATTERN_CUBICBEZIER } from './lib/constant';
 
 const { getHexCode, parseColor } = squared.lib.color;
 const { getFontSize, hasEm, isLength, parseUnit } = squared.lib.css;
@@ -179,7 +179,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public by?: number;
     public end?: number;
     public synchronized?: NumberValue;
-    public readonly instanceType = INSTANCE_TYPE.SVG_ANIMATE;
+    public readonly instanceType = squared.svg.lib.enumeration.INSTANCE_TYPE.SVG_ANIMATE;
 
     protected _reverse = false;
     protected _alternate = false;

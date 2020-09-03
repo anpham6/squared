@@ -7,8 +7,9 @@ import SvgPath from './svgpath';
 import SvgPattern from './svgpattern';
 import SvgShape from './svgshape';
 
-import { INSTANCE_TYPE, REGION_UNIT } from './lib/constant';
 import { TRANSFORM } from './lib/util';
+
+import REGION_UNIT = squared.svg.lib.enumeration.REGION_UNIT;
 
 const { isPercent } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
@@ -17,7 +18,7 @@ const getPercent = (value: string) => isPercent(value) ? parseFloat(value) / 100
 
 export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer))) implements squared.svg.SvgShapePattern {
     public drawRegion?: BoxRect;
-    public readonly instanceType = INSTANCE_TYPE.SVG_SHAPE_PATTERN;
+    public readonly instanceType = squared.svg.lib.enumeration.INSTANCE_TYPE.SVG_SHAPE_PATTERN;
     public readonly patternUnits: number;
     public readonly patternContentUnits: number;
 

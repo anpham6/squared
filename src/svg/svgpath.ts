@@ -9,8 +9,9 @@ import SvgAnimationIntervalMap from './svganimationintervalmap';
 import SvgBuild from './svgbuild';
 import SvgElement from './svgelement';
 
-import { INSTANCE_TYPE, REGION_UNIT } from './lib/constant';
 import { SVG, TRANSFORM, getPathLength } from './lib/util';
+
+import REGION_UNIT = squared.svg.lib.enumeration.REGION_UNIT;
 
 type SvgContainer = squared.svg.SvgContainer;
 
@@ -220,7 +221,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
     public parent: Null<SvgContainer> = null;
     public transformed: Null<SvgTransform[]> = null;
     public transformResidual?: SvgTransform[][];
-    public readonly instanceType = INSTANCE_TYPE.SVG_PATH;
+    public readonly instanceType = squared.svg.lib.enumeration.INSTANCE_TYPE.SVG_PATH;
 
     private _transforms?: SvgTransform[];
 

@@ -4,13 +4,14 @@ import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import LayoutUI = squared.base.LayoutUI;
 
+import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
+import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
+
 interface PositiveXData {
     children: View[];
     right?: boolean;
     bottom?: boolean;
 }
-
-const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
 const checkMarginLeft = (node: View, item: View) => item.marginLeft < 0 && (node.rootElement || item.linear.left < Math.floor(node.box.left));
 const checkMarginRight = (node: View, item: View) => item.marginRight < 0 && (node.rootElement || item.linear.right > Math.ceil(node.box.right));

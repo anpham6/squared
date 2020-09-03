@@ -8,10 +8,16 @@ import NodeUI = squared.base.NodeUI;
 import LayoutUI = squared.base.LayoutUI;
 
 import { CONTAINER_ANDROID, CONTAINER_ANDROID_X } from './lib/constant';
-import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
+import { CONTAINER_NODE } from './lib/enumeration';
 import { concatString, createViewAttribute, getDocumentId, getRootNs, replaceTab } from './lib/util';
 
-const { PLATFORM, isPlatform } = squared.lib.client;
+import PLATFORM = squared.lib.client.PLATFORM;
+import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
+import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
+import NODE_TEMPLATE = squared.base.lib.enumeration.NODE_TEMPLATE;
+import BUILD_ANDROID = android.lib.enumeration.BUILD_ANDROID;
+
+const { isPlatform } = squared.lib.client;
 const { parseColor } = squared.lib.color;
 const { formatPX, getSrcSet, hasCoords, hasComputedStyle } = squared.lib.css;
 const { getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
@@ -19,7 +25,7 @@ const { truncate } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
 const { assignEmptyValue, capitalize, convertWord, hasBit, isString, iterateArray, lastItemOf, parseMimeType, partitionArray, plainMap, withinRange } = squared.lib.util;
 
-const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
+const { APP_SECTION, NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.enumeration;
 
 const REGEXP_TEXTSYMBOL = /^[^\w\s\n]+[\s\n]+$/;
 

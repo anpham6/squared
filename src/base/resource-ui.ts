@@ -5,9 +5,12 @@ import NodeUI from './node-ui';
 
 import { appendSeparator } from './lib/util';
 
-import { NODE_ALIGNMENT, NODE_RESOURCE } from './lib/enumeration';
+import { NODE_RESOURCE } from './lib/enumeration';
 
-const { USER_AGENT, isUserAgent } = squared.lib.client;
+import USER_AGENT = squared.lib.client.USER_AGENT;
+import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
+
+const { isUserAgent } = squared.lib.client;
 const { parseColor } = squared.lib.color;
 const { CSS_PROPERTIES, calculate, convertAngle, formatPercent, formatPX, hasComputedStyle, hasCoords, isCalc, isLength, isPercent, parseAngle, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;

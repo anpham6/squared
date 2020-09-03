@@ -6,8 +6,10 @@ import SvgAnimateTransform from './svganimatetransform';
 import SvgBuild from './svgbuild';
 import SvgAnimationIntervalMap from './svganimationintervalmap';
 
-import { SYNCHRONIZE_MODE, SYNCHRONIZE_STATE } from './lib/constant';
 import { SVG, TRANSFORM } from './lib/util';
+
+import SYNCHRONIZE_MODE = squared.svg.lib.enumeration.SYNCHRONIZE_MODE;
+import SYNCHRONIZE_STATE = squared.svg.lib.enumeration.SYNCHRONIZE_STATE;
 
 type SvgContainer = squared.svg.SvgContainer;
 type AnimateValue = NumString | Point[];

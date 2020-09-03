@@ -1,10 +1,8 @@
 import SvgView$MX from './svgview-mx';
 import SvgContainer from './svgcontainer';
 
-import { INSTANCE_TYPE } from './lib/constant';
-
 export default class SvgPattern extends SvgView$MX(SvgContainer) implements squared.svg.SvgPattern {
-    public readonly instanceType = INSTANCE_TYPE.SVG_PATTERN;
+    public readonly instanceType = squared.svg.lib.enumeration.INSTANCE_TYPE.SVG_PATTERN;
 
     constructor(
         public element: SVGGraphicsElement,

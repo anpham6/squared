@@ -1,27 +1,5 @@
 import { CONTAINER_NODE } from './enumeration';
 
-export const EXT_ANDROID = {
-    EXTERNAL: 'android.external',
-    SUBSTITUTE: 'android.substitute',
-    DELEGATE_BACKGROUND: 'android.delegate.background',
-    DELEGATE_MAXWIDTHHEIGHT: 'android.delegate.max-width-height',
-    DELEGATE_MULTILINE: 'android.delegate.multiline',
-    DELEGATE_NEGATIVEX: 'android.delegate.negative-x',
-    DELEGATE_PERCENT: 'android.delegate.percent',
-    DELEGATE_POSITIVEX: 'android.delegate.positive-x',
-    DELEGATE_RADIOGROUP: 'android.delegate.radiogroup',
-    DELEGATE_SCROLLBAR: 'android.delegate.scrollbar',
-    DELEGATE_VERTICALALIGN: 'android.delegate.verticalalign',
-    RESOURCE_INCLUDES: 'android.resource.includes',
-    RESOURCE_BACKGROUND: 'android.resource.background',
-    RESOURCE_SVG: 'android.resource.svg',
-    RESOURCE_STRINGS: 'android.resource.strings',
-    RESOURCE_FONTS: 'android.resource.fonts',
-    RESOURCE_DIMENS: 'android.resource.dimens',
-    RESOURCE_DATA: 'android.resource.data',
-    RESOURCE_STYLES: 'android.resource.styles'
-};
-
 export const CONTAINER_ANDROID = {
     RADIO: 'RadioButton',
     CHECKBOX: 'CheckBox',

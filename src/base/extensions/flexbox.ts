@@ -2,7 +2,7 @@ import type NodeUI from '../node-ui';
 
 import ExtensionUI from '../extension-ui';
 
-import { NODE_ALIGNMENT } from '../lib/enumeration';
+import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
 
 type NodeIntersectXY = "intersectY" | "intersectX";
 

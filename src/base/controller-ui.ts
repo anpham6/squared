@@ -5,9 +5,10 @@ import type NodeList from './nodelist';
 import Controller from './controller';
 import NodeUI from './node-ui';
 
-import { NODE_TEMPLATE } from './lib/enumeration';
+import USER_AGENT = squared.lib.client.USER_AGENT;
+import NODE_TEMPLATE = squared.base.lib.enumeration.NODE_TEMPLATE;
 
-const { USER_AGENT, isUserAgent } = squared.lib.client;
+const { isUserAgent } = squared.lib.client;
 const { CSS_PROPERTIES, formatPX, getStyle, hasCoords, isLength } = squared.lib.css;
 const { withinViewport } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;

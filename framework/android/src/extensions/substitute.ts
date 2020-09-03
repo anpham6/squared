@@ -2,13 +2,14 @@ import type View from '../view';
 
 import Resource from '../resource';
 
-import { EXT_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 import { createViewAttribute, getDataSet } from '../lib/util';
 
-const { convertCamelCase } = squared.lib.util;
+import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
+import NODE_TEMPLATE = squared.base.lib.enumeration.NODE_TEMPLATE;
+import EXT_ANDROID = android.lib.enumeration.EXT_ANDROID;
 
-const { NODE_ALIGNMENT, NODE_TEMPLATE } = squared.base.lib.enumeration;
+const { convertCamelCase } = squared.lib.util;
 
 export default class Substitute<T extends View> extends squared.base.ExtensionUI<T> {
     constructor(name: string, framework: number, options?: ExtensionUIOptions) {

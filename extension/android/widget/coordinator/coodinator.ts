@@ -1,20 +1,23 @@
 import { WIDGET_NAME } from '../lib/constant';
 
+import NODE_TEMPLATE = squared.base.lib.enumeration.NODE_TEMPLATE;
+import BUILD_ANDROID = android.lib.enumeration.BUILD_ANDROID;
+
 type View = android.base.View;
 
 const { getElementAsNode } = squared.lib.session;
 const { createViewAttribute } = android.lib.util;
 
-const { NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
-const { EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = android.lib.constant;
-const { BUILD_ANDROID, CONTAINER_NODE } =android.lib.enumeration;
+const { NODE_RESOURCE } = squared.base.lib.enumeration;
+const { SUPPORT_ANDROID, SUPPORT_ANDROID_X } = android.lib.constant;
+const { CONTAINER_NODE } = android.lib.enumeration;
 
 const Resource = android.base.Resource;
 
 export default class Coordinator<T extends View> extends squared.base.ExtensionUI<T> {
     public processNode(node: T, parent: T) {
         const options = createViewAttribute(this.options[node.elementId]);
-        Resource.formatOptions(options, this.application.extensionManager.valueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberAsResource'));
+        Resource.formatOptions(options, this.application.extensionManager.valueAsBoolean(android.lib.enumeration.EXT_ANDROID.RESOURCE_STRINGS, 'numberAsResource'));
         const element = Coordinator.findNestedElement(node, WIDGET_NAME.TOOLBAR);
         if (element) {
             const toolbar = getElementAsNode<T>(element, node.sessionId);

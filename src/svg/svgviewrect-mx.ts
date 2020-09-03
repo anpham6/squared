@@ -1,4 +1,6 @@
-const { USER_AGENT, isUserAgent } = squared.lib.client;
+import USER_AGENT = squared.lib.client.USER_AGENT;
+
+const { isUserAgent } = squared.lib.client;
 
 function hasUnsupportedAccess(element: SVGElement) {
     if (element.tagName === 'svg') {

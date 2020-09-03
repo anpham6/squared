@@ -736,11 +736,20 @@ declare module "base" {
     }
 
     namespace lib {
-        namespace constant {
-            const EXT_NAME: StringMap;
-        }
-
         namespace enumeration {
+            const enum EXT_NAME {
+                ACCESSIBILITY = 'squared.accessibility',
+                COLUMN = 'squared.column',
+                CSS_GRID = 'squared.css-grid',
+                FLEXBOX = 'squared.flexbox',
+                GRID = 'squared.grid',
+                LIST = 'squared.list',
+                RELATIVE = 'squared.relative',
+                SPRITE = 'squared.sprite',
+                TABLE = 'squared.table',
+                VERTICAL_ALIGN = 'squared.verticalalign',
+                WHITESPACE = 'squared.whitespace'
+            }
             const enum NODE_ALIGNMENT {
                 UNKNOWN = 1,
                 AUTO_LAYOUT = 1 << 1,

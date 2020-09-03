@@ -169,7 +169,29 @@ declare namespace extensions {
 
 declare namespace lib {
     namespace enumeration {
+        const enum EXT_ANDROID {
+            EXTERNAL = 'android.external',
+            SUBSTITUTE = 'android.substitute',
+            DELEGATE_BACKGROUND = 'android.delegate.background',
+            DELEGATE_MAXWIDTHHEIGHT = 'android.delegate.max-width-height',
+            DELEGATE_MULTILINE = 'android.delegate.multiline',
+            DELEGATE_NEGATIVEX = 'android.delegate.negative-x',
+            DELEGATE_PERCENT = 'android.delegate.percent',
+            DELEGATE_POSITIVEX = 'android.delegate.positive-x',
+            DELEGATE_RADIOGROUP = 'android.delegate.radiogroup',
+            DELEGATE_SCROLLBAR = 'android.delegate.scrollbar',
+            DELEGATE_VERTICALALIGN = 'android.delegate.verticalalign',
+            RESOURCE_INCLUDES = 'android.resource.includes',
+            RESOURCE_BACKGROUND = 'android.resource.background',
+            RESOURCE_SVG = 'android.resource.svg',
+            RESOURCE_STRINGS = 'android.resource.strings',
+            RESOURCE_FONTS = 'android.resource.fonts',
+            RESOURCE_DIMENS = 'android.resource.dimens',
+            RESOURCE_DATA = 'android.resource.data',
+            RESOURCE_STYLES = 'android.resource.styles'
+        }
         const enum BUILD_ANDROID {
+            R = 30,
             Q = 29,
             PIE = 28,
             OREO_1 = 27,
@@ -187,7 +209,7 @@ declare namespace lib {
             ICE_CREAM_SANDWICH_1 = 15,
             ICE_CREAM_SANDWICH = 14,
             ALL = 0,
-            LATEST = 29
+            LATEST = 30
         }
         const enum DENSITY_ANDROID {
             LDPI = 120,
@@ -224,27 +246,6 @@ declare namespace lib {
     }
 
     namespace constant {
-        const EXT_ANDROID: {
-            EXTERNAL: string;
-            SUBSTITUTE: string;
-            DELEGATE_BACKGROUND: string;
-            DELEGATE_FIXED: string;
-            DELEGATE_MAXWIDTHHEIGHT: string;
-            DELEGATE_NEGATIVEVIEWPORT: string;
-            DELEGATE_NEGATIVEX: string;
-            DELEGATE_PERCENT: string;
-            DELEGATE_RADIOGROUP: string;
-            DELEGATE_SCROLLBAR: string;
-            DELEGATE_VERTICALALIGN: string;
-            CONSTRAINT_GUIDELINE: string;
-            RESOURCE_INCLUDES: string;
-            RESOURCE_BACKGROUND: string;
-            RESOURCE_SVG: string;
-            RESOURCE_STRINGS: string;
-            RESOURCE_FONTS: string;
-            RESOURCE_DIMENS: string;
-            RESOURCE_STYLES: string;
-        };
         const CONTAINER_ANDROID: {
             CHECKBOX: string;
             RADIO: string;

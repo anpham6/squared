@@ -5,11 +5,14 @@ import { concatString } from '../../lib/util';
 import { CONTAINER_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
+import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
+import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
+
 type MultilineData<T> = [number, T][];
 
 const { getTextMetrics } = squared.lib.dom;
 
-const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
+const { APP_SECTION, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
 const REGEXP_WORD = /(?:[^\w\s\n]+[\s\n]+|(?:&#?[A-Za-z0-9]{2};[^\w]*|[^\w]+|\b)*\w+?(?:'[A-Za-z]\s*|[^\w]*&#?[A-Za-z0-9]{2};|[^\w]+|\b))/g;
 

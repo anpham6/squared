@@ -5,9 +5,12 @@ import NodeUI = squared.base.NodeUI;
 import { CONTAINER_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
+import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
+import NODE_TEMPLATE = squared.base.lib.enumeration.NODE_TEMPLATE;
+
 const { getElementAsNode } = squared.lib.session;
 
-const { NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
+const { NODE_RESOURCE } = squared.base.lib.enumeration;
 
 const getInputName = (element: HTMLInputElement) => element.name?.trim() || '';
 

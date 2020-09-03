@@ -3,8 +3,9 @@ import type SvgAnimation from './svganimation';
 
 import SvgBuild from './svgbuild';
 
-import { FILL_MODE } from './lib/constant';
 import { TRANSFORM } from './lib/util';
+
+import FILL_MODE = squared.svg.lib.enumeration.FILL_MODE;
 
 type IntervalMap = ObjectMap<ObjectIndex<SvgAnimationIntervalValue<SvgAnimation>[]>>;
 type IntervalTime = ObjectMap<Set<number>>;
