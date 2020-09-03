@@ -1,10 +1,10 @@
+import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
+
 import View from '../view';
 
 import LayoutUI = squared.base.LayoutUI;
 
 import { CONTAINER_NODE } from '../lib/enumeration';
-
-import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
 
 const { formatPX } = squared.lib.css;
 const { trimEnd } = squared.lib.util;

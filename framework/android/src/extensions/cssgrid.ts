@@ -1,3 +1,6 @@
+import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
+import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
+
 import type View from '../view';
 
 import Resource from '../resource';
@@ -6,9 +9,6 @@ import LayoutUI = squared.base.LayoutUI;
 
 import { CONTAINER_ANDROID, STRING_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
-
-import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
-import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
 
 interface ICssGridData<T> extends CssGridData<T> {
     unsetContentBox?: boolean;

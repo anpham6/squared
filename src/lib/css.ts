@@ -1,13 +1,13 @@
+import USER_AGENT = squared.lib.client.USER_AGENT;
+import CSS_TRAITS = squared.lib.css.CSS_TRAITS;
+import CSS_UNIT = squared.lib.css.CSS_UNIT;
+
 import { getDeviceDPI, isUserAgent } from './client';
 import { parseColor } from './color';
 import { clamp, truncate, truncateFraction } from './math';
 import { CSS, STRING, TRANSFORM } from './regex';
 import { getElementCache, setElementCache } from './session';
 import { convertCamelCase, convertFloat, convertHyphenated, hasBit, isNumber, isString, iterateArray, replaceMap, resolvePath, spliceString, splitEnclosing, splitPair, trimBoth } from './util';
-
-import USER_AGENT = squared.lib.client.USER_AGENT;
-import CSS_TRAITS = squared.lib.css.CSS_TRAITS;
-import CSS_UNIT = squared.lib.css.CSS_UNIT;
 
 const DOCUMENT_ELEMENT = document.documentElement;
 const DOCUMENT_FIXEDMAP = [9/13, 10/13, 12/13, 16/13, 20/13, 2, 3];

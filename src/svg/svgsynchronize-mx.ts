@@ -1,3 +1,6 @@
+import SYNCHRONIZE_MODE = squared.svg.lib.enumeration.SYNCHRONIZE_MODE;
+import SYNCHRONIZE_STATE = squared.svg.lib.enumeration.SYNCHRONIZE_STATE;
+
 import type SvgAnimation from './svganimation';
 import type SvgPath from './svgpath';
 
@@ -7,9 +10,6 @@ import SvgBuild from './svgbuild';
 import SvgAnimationIntervalMap from './svganimationintervalmap';
 
 import { SVG, TRANSFORM } from './lib/util';
-
-import SYNCHRONIZE_MODE = squared.svg.lib.enumeration.SYNCHRONIZE_MODE;
-import SYNCHRONIZE_STATE = squared.svg.lib.enumeration.SYNCHRONIZE_STATE;
 
 type SvgContainer = squared.svg.SvgContainer;
 type AnimateValue = NumString | Point[];

@@ -1,11 +1,11 @@
+import BUILD_ANDROID = android.lib.enumeration.BUILD_ANDROID;
+
 import type View from './view';
 
 import Resource from './resource';
 
 import { XMLNS_ANDROID } from './lib/constant';
 import { applyTemplate, replaceTab } from './lib/util';
-
-import BUILD_ANDROID = android.lib.enumeration.BUILD_ANDROID;
 
 import COLOR_TMPL from './template/resources/color';
 import DIMEN_TMPL from './template/resources/dimen';

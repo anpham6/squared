@@ -1,8 +1,8 @@
+import NODE_TEMPLATE = squared.base.lib.enumeration.NODE_TEMPLATE;
+
 import type View from '../../view';
 
 import { getRootNs } from '../../lib/util';
-
-import NODE_TEMPLATE = squared.base.lib.enumeration.NODE_TEMPLATE;
 
 type RenderData = Undef<NodeIndex[]>;
 

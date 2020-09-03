@@ -1,8 +1,8 @@
+import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
+
 import ExtensionUI from '../extension-ui';
 import LayoutUI from '../layout-ui';
 import NodeUI from '../node-ui';
-
-import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
 
 export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> {
     public is(node: T) {

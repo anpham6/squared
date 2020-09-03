@@ -1,3 +1,6 @@
+import EXT_NAME = squared.base.lib.enumeration.EXT_NAME;
+import EXT_ANDROID = android.lib.enumeration.EXT_ANDROID;
+
 import Application from './application';
 import Controller from './controller';
 import File from './file';
@@ -41,9 +44,6 @@ import * as util from './lib/util';
 import * as customization from './lib/customization';
 
 import SETTINGS from './settings';
-
-import EXT_NAME = squared.base.lib.enumeration.EXT_NAME;
-import EXT_ANDROID = android.lib.enumeration.EXT_ANDROID;
 
 const framework = squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID;
 let application: Null<Application<View>> = null;

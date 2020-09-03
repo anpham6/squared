@@ -1,3 +1,6 @@
+import SYNCHRONIZE_MODE = squared.svg.lib.enumeration.SYNCHRONIZE_MODE;
+import BUILD_ANDROID = android.lib.enumeration.BUILD_ANDROID;
+
 import type View from '../../view';
 
 import Resource from '../../resource';
@@ -7,8 +10,6 @@ import { convertColorStops } from './background';
 import { XMLNS_ANDROID } from '../../lib/constant';
 import { applyTemplate, formatString } from '../../lib/util';
 import { VECTOR_GROUP, VECTOR_PATH } from '../../template/vector';
-
-import BUILD_ANDROID = android.lib.enumeration.BUILD_ANDROID;
 
 import ANIMATEDVECTOR_TMPL from '../../template/animated-vector';
 import LAYERLIST_TMPL from '../../template/layer-list';
@@ -26,8 +27,6 @@ import SvgBuild = squared.svg.SvgBuild;
 import SvgG = squared.svg.SvgG;
 import SvgPath = squared.svg.SvgPath;
 import SvgShape = squared.svg.SvgShape;
-
-import SYNCHRONIZE_MODE = squared.svg.lib.enumeration.SYNCHRONIZE_MODE;
 
 type SvgAnimation = squared.svg.SvgAnimation;
 type SvgGroup = squared.svg.SvgGroup;

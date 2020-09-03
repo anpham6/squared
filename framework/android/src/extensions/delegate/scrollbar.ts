@@ -1,10 +1,10 @@
+import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
+import BUILD_ANDROID = android.lib.enumeration.BUILD_ANDROID;
+
 import type View from '../../view';
 
 import { CONTAINER_ANDROID, CONTAINER_ANDROID_X } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
-
-import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
-import BUILD_ANDROID = android.lib.enumeration.BUILD_ANDROID;
 
 const { formatPX } = squared.lib.css;
 

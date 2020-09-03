@@ -270,7 +270,7 @@ export function add(...values: ExtensionRequestObject[]) {
                 continue;
             }
         }
-        if (value instanceof squared.base.Extension) {
+        if (squared.base && value instanceof squared.base.Extension) {
             extensionCache.add(value);
             if (!extensionManager || !extensionManager.add(value)) {
                 addQueue.add(value);
@@ -306,7 +306,7 @@ export function remove(...values: ExtensionRequest[]) {
                 continue;
             }
         }
-        if (value instanceof squared.base.Extension) {
+        if (squared.base && value instanceof squared.base.Extension) {
             addQueue.delete(value);
             if (!extensionManager || !extensionManager.remove(value)) {
                 removeQueue.add(value);
@@ -377,7 +377,7 @@ export function apply(value: ExtensionRequest, options: FrameworkOptions) {
                 value = extension;
             }
         }
-        if (value instanceof squared.base.Extension) {
+        if (squared.base && value instanceof squared.base.Extension) {
             Object.assign(value.options, mergeSettings(value.name));
             return true;
         }

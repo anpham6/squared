@@ -1,7 +1,7 @@
-import { hasBit } from './util';
-
 import PLATFORM = squared.lib.client.PLATFORM;
 import USER_AGENT = squared.lib.client.USER_AGENT;
+
+import { hasBit } from './util';
 
 export function isPlatform(value: NumString) {
     const platform = navigator.platform.toLowerCase();

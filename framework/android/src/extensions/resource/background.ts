@@ -1,3 +1,7 @@
+import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
+import NODE_RESOURCE = squared.base.lib.enumeration.NODE_RESOURCE;
+import BUILD_ANDROID = android.lib.enumeration.BUILD_ANDROID;
+
 import type View from '../../view';
 
 import Resource from '../../resource';
@@ -6,10 +10,6 @@ import ResourceSvg from './svg';
 import { CONTAINER_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X, XMLNS_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 import { applyTemplate } from '../../lib/util';
-
-import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
-import NODE_RESOURCE = squared.base.lib.enumeration.NODE_RESOURCE;
-import BUILD_ANDROID = android.lib.enumeration.BUILD_ANDROID;
 
 import LAYERLIST_TMPL from '../../template/layer-list';
 import SHAPE_TMPL from '../../template/shape';

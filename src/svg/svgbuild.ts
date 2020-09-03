@@ -1,3 +1,4 @@
+import INSTANCE_TYPE = squared.svg.lib.enumeration.INSTANCE_TYPE;
 
 import type Svg from './svg';
 import type SvgAnimate from './svganimate';
@@ -18,8 +19,6 @@ import type SvgUseSymbol from './svgusesymbol';
 import { MATRIX, SVG, TRANSFORM, createPath, truncateString } from './lib/util';
 
 import Pattern = squared.lib.base.Pattern;
-
-import INSTANCE_TYPE = squared.svg.lib.enumeration.INSTANCE_TYPE;
 
 type SvgContainer = squared.svg.SvgContainer;
 type SvgGroup = squared.svg.SvgGroup;

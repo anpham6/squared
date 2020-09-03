@@ -1,3 +1,5 @@
+import REGION_UNIT = squared.svg.lib.enumeration.REGION_UNIT;
+
 import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgPaint$MX from './svgpaint-mx';
 import SvgView$MX from './svgview-mx';
@@ -8,8 +10,6 @@ import SvgPattern from './svgpattern';
 import SvgShape from './svgshape';
 
 import { TRANSFORM } from './lib/util';
-
-import REGION_UNIT = squared.svg.lib.enumeration.REGION_UNIT;
 
 const { isPercent } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;

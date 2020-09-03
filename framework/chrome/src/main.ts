@@ -1,3 +1,5 @@
+import EXT_CHROME = chrome.lib.enumeration.EXT_CHROME;
+
 import Application from './application';
 import Extension from './extension';
 import File from './file';
@@ -14,8 +16,6 @@ import ConvertGif from './extensions/convert/gif';
 import ConvertTiff from './extensions/convert/tiff';
 
 import SETTINGS from './settings';
-
-import EXT_CHROME = chrome.lib.enumeration.EXT_CHROME;
 
 type Node = squared.base.Node;
 type FileOptions = IFileArchivingOptions | IFileCopyingOptions;

@@ -1,10 +1,10 @@
+import BUILD_ANDROID = android.lib.enumeration.BUILD_ANDROID;
+
 import type View from '../../view';
 
 import Resource from '../../resource';
 
 import { concatString } from '../../lib/util';
-
-import BUILD_ANDROID = android.lib.enumeration.BUILD_ANDROID;
 
 type StyleList = ObjectMap<number[]>;
 type SharedAttributes = ObjectMapNested<number[]>;

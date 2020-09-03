@@ -1,12 +1,12 @@
+import USER_AGENT = squared.lib.client.USER_AGENT;
+import NODE_TEMPLATE = squared.base.lib.enumeration.NODE_TEMPLATE;
+
 import type ApplicationUI from './application-ui';
 import type LayoutUI from './layout-ui';
 import type NodeList from './nodelist';
 
 import Controller from './controller';
 import NodeUI from './node-ui';
-
-import USER_AGENT = squared.lib.client.USER_AGENT;
-import NODE_TEMPLATE = squared.base.lib.enumeration.NODE_TEMPLATE;
 
 const { isUserAgent } = squared.lib.client;
 const { CSS_PROPERTIES, formatPX, getStyle, hasCoords, isLength } = squared.lib.css;

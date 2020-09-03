@@ -1,12 +1,12 @@
+import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
+import NODE_TEMPLATE = squared.base.lib.enumeration.NODE_TEMPLATE;
+
 import type View from '../../view';
 
 import NodeUI = squared.base.NodeUI;
 
 import { CONTAINER_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
-
-import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
-import NODE_TEMPLATE = squared.base.lib.enumeration.NODE_TEMPLATE;
 
 const { getElementAsNode } = squared.lib.session;
 

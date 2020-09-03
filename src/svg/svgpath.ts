@@ -1,3 +1,5 @@
+import REGION_UNIT = squared.svg.lib.enumeration.REGION_UNIT;
+
 import type SvgShape from './svgshape';
 import type SvgShapePattern from './svgshapepattern';
 
@@ -10,8 +12,6 @@ import SvgBuild from './svgbuild';
 import SvgElement from './svgelement';
 
 import { SVG, TRANSFORM, getPathLength } from './lib/util';
-
-import REGION_UNIT = squared.svg.lib.enumeration.REGION_UNIT;
 
 type SvgContainer = squared.svg.SvgContainer;
 

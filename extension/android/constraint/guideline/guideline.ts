@@ -1,6 +1,6 @@
-import LayoutUI = squared.base.LayoutUI;
-
 import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
+
+import LayoutUI = squared.base.LayoutUI;
 
 type View = android.base.View;
 

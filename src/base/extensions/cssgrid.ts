@@ -1,8 +1,8 @@
+import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
+
 import type NodeUI from '../node-ui';
 
 import ExtensionUI from '../extension-ui';
-
-import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
 
 type RowData = Undef<NodeUI[]>[][];
 

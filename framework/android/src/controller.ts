@@ -1,3 +1,9 @@
+import PLATFORM = squared.lib.client.PLATFORM;
+import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
+import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
+import NODE_TEMPLATE = squared.base.lib.enumeration.NODE_TEMPLATE;
+import BUILD_ANDROID = android.lib.enumeration.BUILD_ANDROID;
+
 import type Application from './application';
 
 import Resource from './resource';
@@ -10,12 +16,6 @@ import LayoutUI = squared.base.LayoutUI;
 import { CONTAINER_ANDROID, CONTAINER_ANDROID_X } from './lib/constant';
 import { CONTAINER_NODE } from './lib/enumeration';
 import { concatString, createViewAttribute, getDocumentId, getRootNs, replaceTab } from './lib/util';
-
-import PLATFORM = squared.lib.client.PLATFORM;
-import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
-import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
-import NODE_TEMPLATE = squared.base.lib.enumeration.NODE_TEMPLATE;
-import BUILD_ANDROID = android.lib.enumeration.BUILD_ANDROID;
 
 const { isPlatform } = squared.lib.client;
 const { parseColor } = squared.lib.color;

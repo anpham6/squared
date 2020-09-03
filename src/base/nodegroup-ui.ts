@@ -1,6 +1,6 @@
-import NodeUI from './node-ui';
-
 import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
+
+import NodeUI from './node-ui';
 
 const { hasCoords } = squared.lib.css;
 

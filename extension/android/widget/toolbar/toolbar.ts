@@ -1,8 +1,8 @@
-import { WIDGET_NAME } from '../lib/constant';
-
 import NODE_TEMPLATE = squared.base.lib.enumeration.NODE_TEMPLATE;
 import BUILD_ANDROID = android.lib.enumeration.BUILD_ANDROID;
 import EXT_ANDROID = android.lib.enumeration.EXT_ANDROID;
+
+import { WIDGET_NAME } from '../lib/constant';
 
 type View = android.base.View;
 

@@ -1,10 +1,10 @@
+import FILL_MODE = squared.svg.lib.enumeration.FILL_MODE;
+
 import type SvgPath from './svgpath';
 
 import SvgBuild from './svgbuild';
 
 import { getAttribute } from './lib/util';
-
-import FILL_MODE = squared.svg.lib.enumeration.FILL_MODE;
 
 type SvgContainer = squared.svg.SvgContainer;
 type SvgView = squared.svg.SvgView;
