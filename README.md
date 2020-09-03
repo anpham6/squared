@@ -783,7 +783,7 @@ JS and CSS files can be optimized further using these settings (node-express):
 You can also define your own optimizations in squared.settings.json:
 
 * [npm i @babel/core && npm i @babel/preset-env](https://github.com/babel/babel)
-* [npm i terser@4.8](https://github.com/terser/terser) - <b>NOTE</b>: Incompatible with 5.0+
+* [npm i terser](https://github.com/terser/terser)
 * [npm i uglify-js](https://github.com/mishoo/UglifyJS)
 * [npm i prettier](https://github.com/prettier/prettier)
 * [npm i clean-css](https://github.com/jakubpawlowicz/clean-css)

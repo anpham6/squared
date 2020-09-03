@@ -190,19 +190,21 @@ export function setFramework(value: Framework, options?: FrameworkOptions) {
         }
     };
     if (!main || framework !== value || cache === false) {
+        if (framework !== value) {
+            if (reloading) {
+                clearProperties(settings);
+                clearProperties(system);
+            }
+            Object.assign(system, value.system);
+        }
         const appBase = cache ? value.cached() : value.create();
         main = appBase.application;
         extensionManager = main.extensionManager;
         mergeSettings(appBase.userSettings, main.systemName);
-        clearProperties(settings);
         Object.assign(settings, appBase.userSettings);
         main.userSettings = settings;
         main.setExtensions();
         extendPrototype(main.framework);
-        if (reloading) {
-            clearProperties(system);
-        }
-        Object.assign(system, value.system);
         framework = value;
     }
     else if (options) {

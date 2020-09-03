@@ -560,7 +560,7 @@ let Node: serve.INode,
                     return [];
             }
         }
-        minifyHtml(format: string, value: string, transpileMap?: TranspileMap) {
+        async minifyHtml(format: string, value: string, transpileMap?: TranspileMap) {
             const html = this.external?.html;
             if (html) {
                 let valid: Undef<boolean>;
@@ -573,7 +573,7 @@ let Node: serve.INode,
                                 const result = options(require(module), value);
                                 if (typeof result === 'string' && result !== '') {
                                     if (j === length - 1) {
-                                        return result;
+                                        return Promise.resolve(result);
                                     }
                                     value = result;
                                     valid = true;
@@ -583,10 +583,10 @@ let Node: serve.INode,
                                 switch (module) {
                                     case 'prettier': {
                                         options.plugins = this.getPrettierParser(options.parser);
-                                        const result = require('prettier').format(value, options);
+                                        const result: Undef<string> = require('prettier').format(value, options);
                                         if (result) {
                                             if (j === length - 1) {
-                                                return result;
+                                                return Promise.resolve(result);
                                             }
                                             value = result;
                                             valid = true;
@@ -594,10 +594,10 @@ let Node: serve.INode,
                                         break;
                                     }
                                     case 'html-minifier-terser': {
-                                        const result = require('html-minifier-terser').minify(value, options);
+                                        const result: Undef<string> = require('html-minifier-terser').minify(value, options);
                                         if (result) {
                                             if (j === length - 1) {
-                                                return result;
+                                                return Promise.resolve(result);
                                             }
                                             value = result;
                                             valid = true;
@@ -613,11 +613,12 @@ let Node: serve.INode,
                     }
                 }
                 if (valid) {
-                    return value;
+                    return Promise.resolve(value);
                 }
             }
+            return Promise.resolve();
         }
-        minifyCss(format: string, value: string, transpileMap?: TranspileMap) {
+        async minifyCss(format: string, value: string, transpileMap?: TranspileMap) {
             const css = this.external?.css;
             if (css) {
                 let valid: Undef<boolean>;
@@ -630,7 +631,7 @@ let Node: serve.INode,
                                 const result = options(require(module), value);
                                 if (typeof result === 'string' && result !== '') {
                                     if (j === length - 1) {
-                                        return result;
+                                        return Promise.resolve(result);
                                     }
                                     value = result;
                                     valid = true;
@@ -640,10 +641,10 @@ let Node: serve.INode,
                                 switch (module) {
                                     case 'prettier': {
                                         options.plugins = this.getPrettierParser(options.parser);
-                                        const result = require('prettier').format(value, options);
+                                        const result: Undef<string> = require('prettier').format(value, options);
                                         if (result) {
                                             if (j === length - 1) {
-                                                return result;
+                                                return Promise.resolve(result);
                                             }
                                             value = result;
                                             valid = true;
@@ -652,10 +653,10 @@ let Node: serve.INode,
                                     }
                                     case 'clean-css': {
                                         const clean_css = require('clean-css');
-                                        const result = new clean_css(options).minify(value).styles;
+                                        const result: Undef<string> = new clean_css(options).minify(value).styles;
                                         if (result) {
                                             if (j === length - 1) {
-                                                return result;
+                                                return Promise.resolve(result);
                                             }
                                             value = result;
                                             valid = true;
@@ -671,11 +672,12 @@ let Node: serve.INode,
                     }
                 }
                 if (valid) {
-                    return value;
+                    return Promise.resolve(value);
                 }
             }
+            return Promise.resolve();
         }
-        minifyJs(format: string, value: string, transpileMap?: TranspileMap) {
+        async minifyJs(format: string, value: string, transpileMap?: TranspileMap) {
             const js = this.external?.js;
             if (js) {
                 const formatters = format.split('+');
@@ -685,10 +687,10 @@ let Node: serve.INode,
                     if (module) {
                         try {
                             if (typeof options === 'function') {
-                                const result = options(require(module), value);
+                                const result: Undef<string> = options(require(module), value);
                                 if (typeof result === 'string' && result !== '') {
                                     if (j === length - 1) {
-                                        return result;
+                                        return Promise.resolve(result);
                                     }
                                     value = result;
                                     modified = true;
@@ -697,10 +699,10 @@ let Node: serve.INode,
                             else {
                                 switch (module) {
                                     case '@babel/core': {
-                                        const result = require('@babel/core').transformSync(value, options).code;
+                                        const result: Undef<string> = require('@babel/core').transformSync(value, options).code;
                                         if (result) {
                                             if (j === length - 1) {
-                                                return result;
+                                                return Promise.resolve(result);
                                             }
                                             value = result;
                                             modified = true;
@@ -709,22 +711,33 @@ let Node: serve.INode,
                                     }
                                     case 'prettier': {
                                         options.plugins = this.getPrettierParser(options.parser);
-                                        const result = require('prettier').format(value, options);
+                                        const result: Undef<string> = require('prettier').format(value, options);
                                         if (result) {
                                             if (j === length - 1) {
-                                                return result;
+                                                return Promise.resolve(result);
                                             }
                                             value = result;
                                             modified = true;
                                         }
                                         break;
                                     }
-                                    case 'terser':
-                                    case 'uglify-js': {
-                                        const result = require(module).minify(value, options).code;
+                                    case 'terser': {
+                                        const terser = require(module);
+                                        const result: Undef<string> = (await terser.minify(value, options)).code;
                                         if (result) {
                                             if (j === length - 1) {
-                                                return result;
+                                                return Promise.resolve(result);
+                                            }
+                                            value = result;
+                                            modified = true;
+                                        }
+                                        break;
+                                    }
+                                    case 'uglify-js': {
+                                        const result: Undef<string> = require(module).minify(value, options).code;
+                                        if (result) {
+                                            if (j === length - 1) {
+                                                return Promise.resolve(result);
                                             }
                                             value = result;
                                             modified = true;
@@ -740,9 +753,10 @@ let Node: serve.INode,
                     }
                 }
                 if (modified) {
-                    return value;
+                    return Promise.resolve(value);
                 }
             }
+            return Promise.resolve();
         }
         formatContent(value: string, mimeType: string, format: string, transpileMap?: TranspileMap) {
             if (mimeType.endsWith('text/html') || mimeType.endsWith('application/xhtml+xml')) {
@@ -754,6 +768,7 @@ let Node: serve.INode,
             else if (mimeType.endsWith('text/javascript')) {
                 return this.minifyJs(format, value, transpileMap);
             }
+            return Promise.resolve();
         }
         removeCss(source: string, styles: string[]) {
             let output: Undef<string>,
@@ -1048,12 +1063,12 @@ class FileManager implements serve.IFileManager {
         }
     }
     replacePath(source: string, segment: string, value: string, base64?: boolean) {
-        segment = !base64 ? segment.replace(/[\\/]/g, '[\\\\/]') : '[^"\'\\s]+' + segment;
+        segment = !base64 ? segment.replace(/[\\/]/g, '[\\\\/]') : '[^"\',]+,\\s*' + segment;
         let output: Undef<string>,
-            pattern = new RegExp(`(?:([sS][rR][cC]|[hH][rR][eE][fF]|[dD][aA][tT][aA]|[pP][oO][sS][tT][eE][rR])=)?(["'])(\\s*)${segment}(\\s*)\\2`, 'g'),
+            pattern = new RegExp(`([sS][rR][cC]|[hH][rR][eE][fF]|[dD][aA][tT][aA]|[pP][oO][sS][tT][eE][rR]=)?(["'])(\\s*)${segment}(\\s*)\\2`, 'g'),
             match: Null<RegExpExecArray>;
         while (match = pattern.exec(source)) {
-            output = (output || source).replace(match[0], match[1]?.toLowerCase() + `="${value}"` || match[2] + match[3] + value + match[4] + match[2]);
+            output = (output || source).replace(match[0], match[1] ? match[1].toLowerCase() + `"${value}"` : match[2] + match[3] + value + match[4] + match[2]);
         }
         pattern = new RegExp(`[uU][rR][lL]\\(\\s*(["'])?\\s*${segment}\\s*\\1?\\s*\\)`, 'g');
         while (match = pattern.exec(source)) {
@@ -1065,7 +1080,7 @@ class FileManager implements serve.IFileManager {
         const index = value.lastIndexOf('.');
         return value.substring(0, index !== -1 ? index : value.length) + '.' + ext;
     }
-    appendContent(file: ExpressAsset, content: string, outputOnly?: boolean) {
+    async appendContent(file: ExpressAsset, content: string, outputOnly?: boolean) {
         const filepath = file.filepath || this.getFileOutput(file).filepath;
         if (filepath && file.bundleIndex !== undefined) {
             const { mimeType, format } = file;
@@ -1088,71 +1103,73 @@ class FileManager implements serve.IFileManager {
                     }
                 }
                 if (format) {
-                    const result = Chrome.formatContent(content, mimeType, format, this.dataMap?.transpileMap);
+                    const result = await Chrome.formatContent(content, mimeType, format, this.dataMap?.transpileMap);
                     if (result) {
                         content = result;
                     }
                 }
             }
-            const trailing = this.getTrailingContent(file);
+            const trailing = await this.getTrailingContent(file);
             if (trailing) {
                 content += trailing;
             }
             if (outputOnly || file.bundleIndex === 0) {
-                return content;
+                return Promise.resolve(content);
             }
             const items = this.contentToAppend.get(filepath) || [];
             items.splice(file.bundleIndex - 1, 0, content);
             this.contentToAppend.set(filepath, items);
         }
+        return Promise.resolve();
     }
     compressFile(assets: ExpressAsset[], file: ExpressAsset, filepath: string) {
         const compress = file.compress;
         const jpeg = Image.isJpeg(file, filepath) && Compress.findFormat(compress, 'jpeg');
         const resumeThread = () => {
-            this.transformBuffer(assets, file, filepath);
-            const gzip = Compress.findFormat(compress, 'gz');
-            const brotli = Compress.findFormat(compress, 'br');
-            if (gzip && Compress.withinSizeRange(filepath, gzip.condition)) {
-                ++this.delayed;
-                let gz = `${filepath}.gz`;
-                Compress.createGzipWriteStream(filepath, gz, gzip.level)
-                    .on('finish', () => {
-                        if (gzip.condition?.includes('%') && Compress.getFileSize(gz) >= Compress.getFileSize(filepath)) {
-                            try {
-                                fs.unlinkSync(gz);
+            this.transformBuffer(assets, file, filepath).then(() => {
+                const gzip = Compress.findFormat(compress, 'gz');
+                const brotli = Compress.findFormat(compress, 'br');
+                if (gzip && Compress.withinSizeRange(filepath, gzip.condition)) {
+                    ++this.delayed;
+                    let gz = `${filepath}.gz`;
+                    Compress.createGzipWriteStream(filepath, gz, gzip.level)
+                        .on('finish', () => {
+                            if (gzip.condition?.includes('%') && Compress.getFileSize(gz) >= Compress.getFileSize(filepath)) {
+                                try {
+                                    fs.unlinkSync(gz);
+                                }
+                                catch {
+                                }
+                                gz = '';
                             }
-                            catch {
+                            this.finalize(gz);
+                        })
+                        .on('error', err => {
+                            Node.writeFail(gz, err);
+                            this.finalize('');
+                        });
+                }
+                if (brotli && Node.checkVersion(11, 7) && Compress.withinSizeRange(filepath, brotli.condition)) {
+                    ++this.delayed;
+                    let br = `${filepath}.br`;
+                    Compress.createBrotliWriteStream(filepath, br, brotli.level, file.mimeType)
+                        .on('finish', () => {
+                            if (brotli.condition?.includes('%') && Compress.getFileSize(br) >= Compress.getFileSize(filepath)) {
+                                try {
+                                    fs.unlinkSync(br);
+                                }
+                                catch {
+                                }
+                                br = '';
                             }
-                            gz = '';
-                        }
-                        this.finalize(gz);
-                    })
-                    .on('error', err => {
-                        Node.writeFail(gz, err);
-                        this.finalize('');
-                    });
-            }
-            if (brotli && Node.checkVersion(11, 7) && Compress.withinSizeRange(filepath, brotli.condition)) {
-                ++this.delayed;
-                let br = `${filepath}.br`;
-                Compress.createBrotliWriteStream(filepath, br, brotli.level, file.mimeType)
-                    .on('finish', () => {
-                        if (brotli.condition?.includes('%') && Compress.getFileSize(br) >= Compress.getFileSize(filepath)) {
-                            try {
-                                fs.unlinkSync(br);
-                            }
-                            catch {
-                            }
-                            br = '';
-                        }
-                        this.finalize(br);
-                    })
-                    .on('error', err => {
-                        Node.writeFail(br, err);
-                        this.finalize('');
-                    });
-            }
+                            this.finalize(br);
+                        })
+                        .on('error', err => {
+                            Node.writeFail(br, err);
+                            this.finalize('');
+                        });
+                }
+            });
         };
         if (jpeg && Compress.withinSizeRange(filepath, jpeg.condition)) {
             ++this.delayed;
@@ -1189,10 +1206,10 @@ class FileManager implements serve.IFileManager {
             resumeThread();
         }
     }
-    transformBuffer(assets: ExpressAsset[], file: ExpressAsset, filepath: string) {
+    async transformBuffer(assets: ExpressAsset[], file: ExpressAsset, filepath: string) {
         const mimeType = file.mimeType;
         if (!mimeType || mimeType[0] === '&') {
-            return;
+            return Promise.resolve();
         }
         const format = file.format;
         const transpileMap = this.dataMap?.transpileMap;
@@ -1309,13 +1326,13 @@ class FileManager implements serve.IFileManager {
                     .replace(/\s*<script[^>]*?data-chrome-template="([^"]|\\")+?"[^>]*>[\s\S]*?<\/script>\n*/ig, '')
                     .replace(/\s*<(script|link)[^>]+?data-chrome-file="exclude"[^>]*>\n*/ig, '')
                     .replace(/\s+data-(?:use|chrome-[\w-]+)="([^"]|\\")+?"/g, '');
-                fs.writeFileSync(filepath, format && Chrome.minifyHtml(format, source, transpileMap) || source);
+                fs.writeFileSync(filepath, format && await Chrome.minifyHtml(format, source, transpileMap) || source);
                 break;
             }
             case 'text/html':
             case 'application/xhtml+xml': {
                 if (format) {
-                    const result = Chrome.minifyHtml(format, fs.readFileSync(filepath, 'utf8'), transpileMap);
+                    const result = await Chrome.minifyHtml(format, fs.readFileSync(filepath, 'utf8'), transpileMap);
                     if (result) {
                         fs.writeFileSync(filepath, result);
                     }
@@ -1326,7 +1343,7 @@ class FileManager implements serve.IFileManager {
             case '@text/css': {
                 const unusedStyles = file.preserve !== true && this.dataMap?.unusedStyles;
                 const transforming = mimeType[0] === '@';
-                const trailing = this.getTrailingContent(file);
+                const trailing = await this.getTrailingContent(file);
                 if (!unusedStyles && !transforming && !format) {
                     if (trailing) {
                         try {
@@ -1353,7 +1370,7 @@ class FileManager implements serve.IFileManager {
                     }
                 }
                 if (format) {
-                    const result = Chrome.minifyCss(format, source || content, transpileMap);
+                    const result = await Chrome.minifyCss(format, source || content, transpileMap);
                     if (result) {
                         source = result;
                     }
@@ -1378,7 +1395,7 @@ class FileManager implements serve.IFileManager {
             }
             case 'text/javascript':
             case '@text/javascript': {
-                const trailing = this.getTrailingContent(file);
+                const trailing = await this.getTrailingContent(file);
                 if (!format) {
                     if (trailing) {
                         try {
@@ -1393,7 +1410,7 @@ class FileManager implements serve.IFileManager {
                 const content = fs.readFileSync(filepath, 'utf8');
                 let source: Undef<string>;
                 if (format) {
-                    const result = Chrome.minifyJs(format, content, transpileMap);
+                    const result = await Chrome.minifyJs(format, content, transpileMap);
                     if (result) {
                         source = result;
                     }
@@ -1614,8 +1631,9 @@ class FileManager implements serve.IFileManager {
                 }
                 break;
         }
+        return Promise.resolve();
     }
-    getTrailingContent(file: ExpressAsset) {
+    async getTrailingContent(file: ExpressAsset) {
         const trailingContent = file.trailingContent;
         if (trailingContent) {
             let unusedStyles: Undef<string[]>,
@@ -1643,7 +1661,7 @@ class FileManager implements serve.IFileManager {
                         }
                     }
                     if (item.format) {
-                        const result = Chrome.formatContent(value, mimeType, item.format, transpileMap);
+                        const result = await Chrome.formatContent(value, mimeType, item.format, transpileMap);
                         if (result) {
                             output += '\n' + result;
                             continue;
@@ -1652,8 +1670,9 @@ class FileManager implements serve.IFileManager {
                 }
                 output += '\n' + value;
             }
-            return output;
+            return Promise.resolve(output);
         }
+        return Promise.resolve();
     }
     transformCss(file: ExpressAsset, content: string) {
         const baseUrl = file.uri!;
@@ -1770,11 +1789,11 @@ class FileManager implements serve.IFileManager {
             }
             return false;
         };
-        const processQueue = (file: ExpressAsset, filepath: string, bundleMain?: ExpressAsset) => {
+        const processQueue = async (file: ExpressAsset, filepath: string, bundleMain?: ExpressAsset) => {
             if (file.bundleIndex !== undefined) {
                 if (file.bundleIndex === 0) {
                     if (Compress.getFileSize(filepath) && !file.excluded) {
-                        const content = this.appendContent(file, fs.readFileSync(filepath, 'utf8'), true);
+                        const content = await this.appendContent(file, fs.readFileSync(filepath, 'utf8'), true);
                         if (content) {
                             try {
                                 fs.writeFileSync(filepath, content, 'utf8');
@@ -1786,7 +1805,7 @@ class FileManager implements serve.IFileManager {
                     }
                     else {
                         file.excluded = true;
-                        const content = this.getTrailingContent(file);
+                        const content = await this.getTrailingContent(file);
                         if (content) {
                             try {
                                 fs.writeFileSync(filepath, content, 'utf8');
@@ -1801,12 +1820,12 @@ class FileManager implements serve.IFileManager {
                 const queue = appending[filepath]?.shift();
                 if (queue) {
                     const uri = queue.uri;
-                    const verifyBundle = (value: string) => {
+                    const verifyBundle = async (value: string) => {
                         if (Compress.getFileSize(filepath)) {
-                            this.appendContent(queue, value);
+                            return this.appendContent(queue, value);
                         }
                         else {
-                            const content = this.appendContent(queue, value, true);
+                            const content = await this.appendContent(queue, value, true);
                             if (content) {
                                 try {
                                     fs.writeFileSync(filepath, content, 'utf8');
@@ -1818,10 +1837,12 @@ class FileManager implements serve.IFileManager {
                                     Node.writeFail(filepath, err);
                                 }
                             }
+                            return Promise.resolve();
                         }
                     };
+                    const resumeQueue = () => processQueue(queue, filepath, !bundleMain || bundleMain.excluded ? !file.excluded && file || queue : bundleMain);
                     if (queue.content) {
-                        verifyBundle(queue.content);
+                        verifyBundle(queue.content).then(resumeQueue);
                     }
                     else if (uri) {
                         request(uri, (err, response) => {
@@ -1829,6 +1850,7 @@ class FileManager implements serve.IFileManager {
                                 notFound[uri] = true;
                                 queue.excluded = true;
                                 Node.writeFail(uri, err);
+                                resumeQueue();
                             }
                             else {
                                 const statusCode = response.statusCode;
@@ -1836,23 +1858,27 @@ class FileManager implements serve.IFileManager {
                                     notFound[uri] = true;
                                     queue.excluded = true;
                                     Node.writeFail(uri, statusCode + ' ' + response.statusMessage);
+                                    resumeQueue();
                                 }
                                 else {
-                                    verifyBundle(response.body);
+                                    verifyBundle(response.body).then(resumeQueue);
                                 }
                             }
                         });
                     }
-                    processQueue(queue, filepath, !bundleMain || bundleMain.excluded ? !file.excluded && file || queue : bundleMain);
+                    else {
+                        resumeQueue();
+                    }
                 }
                 else if (Compress.getFileSize(filepath)) {
                     this.compressFile(assets, bundleMain || file, filepath);
+                    this.finalize(filepath);
                 }
                 else {
                     filepath = '';
                     (bundleMain || file).excluded = true;
+                    this.finalize(filepath);
                 }
-                this.finalize(filepath);
             }
             else if (Array.isArray(processing[filepath])) {
                 completed.push(filepath);

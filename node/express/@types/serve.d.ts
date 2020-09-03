@@ -1,7 +1,6 @@
 import * as express from 'express';
 import * as cors from 'cors';
 import * as fs from 'fs';
-import * as archiver from 'archiver';
 import * as jimp from 'jimp';
 
 type BoolString = boolean | string;
@@ -63,10 +62,10 @@ interface IChrome {
     createTranspilerFunction(value: string): Null<FunctionType<string>>;
     findExternalPlugin(data: ObjectMap<StandardMap>, name: string): [string, StandardMap | FunctionType<string>];
     getPrettierParser(name: string): NodeModule[];
-    minifyHtml(format: string, value: string, transpileMap?: TranspileMap): Undef<string>;
-    minifyCss(format: string, value: string, transpileMap?: TranspileMap): Undef<string>;
-    minifyJs(format: string, value: string, transpileMap?: TranspileMap): Undef<string>;
-    formatContent(value: string, mimeType: string, format: string, transpileMap?: TranspileMap): Undef<string>;
+    minifyHtml(format: string, value: string, transpileMap?: TranspileMap): Promise<Void<string>>;
+    minifyCss(format: string, value: string, transpileMap?: TranspileMap): Promise<Void<string>>;
+    minifyJs(format: string, value: string, transpileMap?: TranspileMap): Promise<Void<string>>;
+    formatContent(value: string, mimeType: string, format: string, transpileMap?: TranspileMap): Promise<Void<string>>;
     removeCss(source: string, styles: string[]): Undef<string>;
 }
 
@@ -87,9 +86,9 @@ interface IFileManager {
     getRelativeUrl(file: ExpressAsset, url: string): Undef<string>;
     replacePath(source: string, segment: string, value: string, base64?: boolean): Undef<string>;
     replaceExtension(value: string, ext: string): string;
-    getTrailingContent(file: ExpressAsset): Undef<string>;
-    appendContent(file: ExpressAsset, content: string, outputOnly?: boolean): Undef<string>;
-    transformBuffer(assets: ExpressAsset[], file: ExpressAsset, filepath: string): void;
+    getTrailingContent(file: ExpressAsset): Promise<Void<string>>;
+    appendContent(file: ExpressAsset, content: string, outputOnly?: boolean): Promise<Void<string>>;
+    transformBuffer(assets: ExpressAsset[], file: ExpressAsset, filepath: string): Promise<void>;
     transformCss(file: ExpressAsset, content: string): Undef<string>;
     compressFile(assets: ExpressAsset[], file: ExpressAsset, filepath: string): void;
     writeBuffer(assets: ExpressAsset[], file: ExpressAsset, filepath: string): void;
