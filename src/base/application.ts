@@ -416,7 +416,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     const children = currentElement.children;
                     const length = children.length;
                     const elements: T[] = new Array(length);
-                    const parent = new this.Node(id--, sessionId, currentElement, elements);
+                    const parent = new this.Node(id--, sessionId, currentElement, [previousNode]);
                     this._afterInsertNode(parent);
                     let j = 0;
                     for (let i = 0; i < length; ++i) {
@@ -426,7 +426,8 @@ export default abstract class Application<T extends Node> implements squared.bas
                             child = previousNode;
                         }
                         else {
-                            child = this.insertNode(element, sessionId);
+                            child = new this.Node(id--, sessionId, element);
+                            this._afterInsertNode(child);
                         }
                         if (child) {
                             child.init(parent, depth + 1, j);
@@ -435,8 +436,8 @@ export default abstract class Application<T extends Node> implements squared.bas
                         }
                     }
                     elements.length = j;
-                    parent.naturalChildren = elements.slice(0);
-                    parent.naturalElements = parent.naturalChildren;
+                    parent.naturalChildren = elements;
+                    parent.naturalElements = elements;
                     if (currentElement === document.documentElement) {
                         processing.documentElement = parent;
                         break;

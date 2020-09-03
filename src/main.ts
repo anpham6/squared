@@ -24,9 +24,10 @@ type FrameworkOptions = squared.FrameworkOptions;
 type FileActionOptions = squared.FileActionOptions;
 type ExtendPrototypeMap = ObjectMap<FunctionType<any> | { get?: () => any, set?: (value: any) => void }>;
 
-const extensionsQueue = new Set<Extension>();
-const extensionsExternal = new Set<Extension>();
+const addQueue = new Set<ExtensionRequest>();
+const removeQueue = new Set<ExtensionRequest>();
 const optionsQueue = new Map<string, StandardMap>();
+const extensionCache = new Set<Extension>();
 const prototypeMap = new Map<number, ExtendPrototypeMap>();
 const settings = {} as UserSettings;
 const system = {} as FunctionMap<any>;
@@ -71,11 +72,17 @@ function extendPrototype(id: number) {
 
 function loadExtensions() {
     if (extensionManager) {
-        if (extensionsQueue.size) {
-            for (const item of extensionsQueue) {
+        if (addQueue.size) {
+            for (const item of addQueue) {
                 extensionManager.add(item);
             }
-            extensionsQueue.clear();
+            addQueue.clear();
+        }
+        if (removeQueue.size) {
+            for (const item of removeQueue) {
+                extensionManager.remove(item);
+            }
+            removeQueue.clear();
         }
         if (optionsQueue.size) {
             for (const [name, options] of optionsQueue.entries()) {
@@ -244,26 +251,34 @@ export function parseDocumentSync(...elements: (HTMLElement | string)[]) {
 
 export function add(...values: ExtensionRequestObject[]) {
     let success = 0;
-    if (extensionManager) {
-        for (let i = 0, length = values.length; i < length; ++i) {
-            let value = values[i],
-                options: Undef<PlainObject>;
-            if (Array.isArray(value)) {
-                [value, options] = value;
+    for (let i = 0, length = values.length; i < length; ++i) {
+        let value = values[i],
+            options: Undef<PlainObject>;
+        if (Array.isArray(value)) {
+            [value, options] = value;
+        }
+        if (typeof value === 'string') {
+            const ext = get(value) || util.findSet(extensionCache, item => item.name === value);
+            if (ext) {
+                value = ext as Extension;
             }
-            if (typeof value === 'string') {
-                value = get(value) as Extension;
-            }
-            if (value instanceof squared.base.Extension) {
-                extensionsExternal.add(value);
-                if (!extensionManager.add(value)) {
-                    extensionsQueue.add(value);
-                }
+            else {
+                addQueue.add(value);
                 if (options) {
                     apply(value, options);
                 }
-                ++success;
+                continue;
             }
+        }
+        if (value instanceof squared.base.Extension) {
+            extensionCache.add(value);
+            if (!extensionManager || !extensionManager.add(value)) {
+                addQueue.add(value);
+            }
+            if (options) {
+                apply(value, options);
+            }
+            ++success;
         }
     }
     return success;
@@ -271,19 +286,32 @@ export function add(...values: ExtensionRequestObject[]) {
 
 export function remove(...values: ExtensionRequest[]) {
     let success = 0;
-    if (extensionManager) {
-        for (let i = 0, length = values.length; i < length; ++i) {
-            let value = values[i];
-            if (typeof value === 'string') {
-                value = extensionManager.get(value) as Extension;
-            }
-            if (value instanceof squared.base.Extension) {
-                extensionsQueue.delete(value);
-                extensionsExternal.delete(value);
-                if (extensionManager.remove(value)) {
+    for (let i = 0, length = values.length; i < length; ++i) {
+        let value = values[i];
+        if (typeof value === 'string') {
+            if (extensionManager) {
+                const ext = extensionManager.get(value);
+                if (ext) {
+                    value = ext;
+                }
+                else {
                     ++success;
+                    continue;
                 }
             }
+            else {
+                addQueue.delete(value);
+                removeQueue.add(value);
+                ++success;
+                continue;
+            }
+        }
+        if (value instanceof squared.base.Extension) {
+            addQueue.delete(value);
+            if (!extensionManager || !extensionManager.remove(value)) {
+                removeQueue.add(value);
+            }
+            ++success;
         }
     }
     return success;
@@ -296,7 +324,7 @@ export function get(...values: string[]) {
             const value = values[i];
             let item = extensionManager.get(value, true);
             if (!item) {
-                for (const ext of extensionsExternal) {
+                for (const ext of extensionCache) {
                     if (ext.name === value) {
                         item = ext;
                         break;
@@ -315,7 +343,7 @@ export function get(...values: string[]) {
 }
 
 export function apply(value: ExtensionRequest, options: FrameworkOptions) {
-    if (extensionManager && util.isPlainObject(options)) {
+    if (util.isPlainObject(options)) {
         const mergeSettings = (name: string) => {
             const { loadAs, saveAs: saveAsLocal } = options;
             const result: PlainObject = {};
@@ -340,7 +368,7 @@ export function apply(value: ExtensionRequest, options: FrameworkOptions) {
             return result;
         };
         if (typeof value === 'string') {
-            const extension = extensionManager.get(value, true) || util.findSet(extensionsQueue, item => item.name === value);
+            const extension = extensionManager && extensionManager.get(value, true) || util.findSet(addQueue, item => typeof item !== 'string' && item.name === value);
             if (!extension) {
                 optionsQueue.set(value, mergeSettings(value));
                 return true;

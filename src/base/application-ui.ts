@@ -373,7 +373,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public createNode(sessionId: string, options: CreateNodeUIOptions<T>) {
         const { element, parent, children } = options;
-        const cache = this.getProcessingCache(sessionId);
         const node = new this.Node(this.nextId, sessionId, element);
         this.controllerHandler.afterInsertNode(node);
         if (parent) {
@@ -393,7 +392,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
         }
         if (options.append !== false) {
-            cache.add(node, options.delegate === true, options.cascade === true);
+            this.getProcessingCache(sessionId).add(node, options.delegate === true, options.cascade === true);
         }
         return node;
     }
