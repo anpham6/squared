@@ -77,12 +77,12 @@ function loadExtensions() {
             }
             extensionsQueue.clear();
         }
-    }
-    if (optionsQueue.size) {
-        for (const [name, options] of optionsQueue.entries()) {
-            apply(name, options);
+        if (optionsQueue.size) {
+            for (const [name, options] of optionsQueue.entries()) {
+                apply(name, options);
+            }
+            optionsQueue.clear();
         }
-        optionsQueue.clear();
     }
 }
 
@@ -164,10 +164,10 @@ export function setFramework(value: Framework, options?: FrameworkOptions) {
     if (options) {
         ({ settings: userSettings, saveAs: saveAsLocal, loadAs, cache } = options);
     }
-    const mergeSettings = (baseSettings: UserSettings, frameworkId: number) => {
+    const mergeSettings = (baseSettings: UserSettings, name: string) => {
         if (loadAs) {
             try {
-                const storedSettings = localStorage.getItem(loadAs + '-' + frameworkId);
+                const storedSettings = localStorage.getItem(loadAs + '-' + name);
                 if (storedSettings) {
                     Object.assign(baseSettings, JSON.parse(storedSettings));
                 }
@@ -183,19 +183,19 @@ export function setFramework(value: Framework, options?: FrameworkOptions) {
         }
         if (saveAsLocal) {
             try {
-                localStorage.setItem(saveAsLocal + '-' + frameworkId, JSON.stringify(baseSettings));
+                localStorage.setItem(saveAsLocal + '-' + name, JSON.stringify(baseSettings));
             }
             catch {
             }
         }
     };
-    if (framework !== value || cache === false) {
+    if (!main || framework !== value || cache === false) {
         const appBase = cache ? value.cached() : value.create();
-        mergeSettings(appBase.userSettings, appBase.framework);
-        clearProperties(settings);
-        Object.assign(settings, appBase.userSettings);
         main = appBase.application;
         extensionManager = main.extensionManager;
+        mergeSettings(appBase.userSettings, main.systemName);
+        clearProperties(settings);
+        Object.assign(settings, appBase.userSettings);
         main.userSettings = settings;
         main.setExtensions();
         extendPrototype(main.framework);
@@ -206,10 +206,10 @@ export function setFramework(value: Framework, options?: FrameworkOptions) {
         framework = value;
     }
     else if (options) {
-        mergeSettings(main!.userSettings, main!.framework);
+        mergeSettings(main.userSettings, main.systemName);
     }
     if (reloading) {
-        main!.reset();
+        main.reset();
     }
 }
 
@@ -392,13 +392,6 @@ export function saveAs(value: string, options?: FileActionOptions) {
     return session.frameworkNotInstalled();
 }
 
-export function createFrom(value: string, options: FileActionOptions) {
-    if (main) {
-        return checkFrom(value, options) ? main.createFrom(value, options) : Promise.reject(new Error(error.INVALID_ASSET_REQUEST));
-    }
-    return session.frameworkNotInstalled();
-}
-
 export function appendTo(value: string, options?: FileActionOptions) {
     if (main) {
         return util.isString(value) && close() ? main.appendTo(value, options) : Promise.reject(new Error(error.UNABLE_TO_FINALIZE_DOCUMENT));
@@ -406,16 +399,30 @@ export function appendTo(value: string, options?: FileActionOptions) {
     return session.frameworkNotInstalled();
 }
 
-export function appendFrom(value: string, options: FileActionOptions) {
+export function copyTo(value: string, options?: FileActionOptions) {
     if (main) {
-        return checkFrom(value, options) ? main.appendFrom(value, options) : Promise.reject(new Error(error.INVALID_ASSET_REQUEST));
+        return util.isString(value) && close() ? main.copyTo(value, options) : Promise.reject(new Error(error.UNABLE_TO_FINALIZE_DOCUMENT));
     }
     return session.frameworkNotInstalled();
 }
 
-export function copyTo(value: string, options?: FileActionOptions) {
+export function saveFiles(value: string, options: FileActionOptions) {
     if (main) {
-        return util.isString(value) && close() ? main.copyTo(value, options) : Promise.reject(new Error(error.UNABLE_TO_FINALIZE_DOCUMENT));
+        return checkFrom(value, options) ? main.saveFiles(value, options) : Promise.reject(new Error(error.INVALID_ASSET_REQUEST));
+    }
+    return session.frameworkNotInstalled();
+}
+
+export function appendFiles(value: string, options: FileActionOptions) {
+    if (main) {
+        return checkFrom(value, options) ? main.appendFiles(value, options) : Promise.reject(new Error(error.INVALID_ASSET_REQUEST));
+    }
+    return session.frameworkNotInstalled();
+}
+
+export function copyFiles(value: string, options: FileActionOptions) {
+    if (main) {
+        return checkFrom(value, options) ? main.copyFiles(value, options) : Promise.reject(new Error(error.INVALID_ASSET_REQUEST));
     }
     return session.frameworkNotInstalled();
 }

@@ -13,8 +13,8 @@ export default class Application<T extends View> extends squared.base.Applicatio
     }
 
     public reset() {
-        super.reset();
         this._viewModel.clear();
+        super.reset();
     }
 
     public resolveTarget(sessionId: string, target: Null<HTMLElement | string>) {

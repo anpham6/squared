@@ -1204,7 +1204,7 @@ class FileManager implements serve.IFileManager {
                 const baseUri = file.uri!;
                 const saved = new Set<string>();
                 let html = fs.readFileSync(filepath, 'utf8'),
-                    source: Undef<string>,
+                    source = html,
                     pattern = /(\s*)<(script|link|style)[^>]*?([\s\n]+data-chrome-file="\s*(save|export)As:\s*((?:[^"]|\\")+)")[^>]*>(?:[\s\S]*?<\/\2>\n*)?/ig,
                     match: Null<RegExpExecArray>;
                 while (match = pattern.exec(html)) {
@@ -1212,24 +1212,22 @@ class FileManager implements serve.IFileManager {
                     const script = match[2].toLowerCase() === 'script';
                     const location = Express.getAbsoluteUrl(match[5].split('::')[0].trim(), baseUri);
                     if (saved.has(location) || match[4] === 'export' && new RegExp(`<${script ? 'script' : 'link'}[^>]+?(?:${script ? 'src' : 'href'}=(["'])${location}\\1|data-chrome-file="saveAs:${location}[:"])[^>]*>`, 'i').test(html)) {
-                        source = (source || html).replace(segment, '');
+                        source = source.replace(segment, '');
                     }
                     else if (match[4] === 'save') {
                         const content = segment.replace(match[3], '');
                         const src = new RegExp(`\\s+${script ? 'src' : 'href'}="(?:[^"]|\\\\")+"`, 'i').exec(content) || new RegExp(`\\s+${script ? 'src' : 'href'}='(?:[^']|\\\\')+'`, 'i').exec(content);
                         if (src) {
-                            source = (source || html).replace(segment, content.replace(src[0], `${script ? ' src' : ' href'}="${location}"`));
+                            source = source.replace(segment, content.replace(src[0], `${script ? ' src' : ' href'}="${location}"`));
                             saved.add(location);
                         }
                     }
                     else {
-                        source = (source || html).replace(segment, match[1] + getOuterHTML(script, location));
+                        source = source.replace(segment, match[1] + getOuterHTML(script, location));
                         saved.add(location);
                     }
                 }
-                if (source) {
-                    html = source;
-                }
+                html = source;
                 pattern = /(\s*)<(script|style)[^>]*>([\s\S]*?)<\/\2>\n*/ig;
                 for (const item of assets) {
                     if (item.excluded) {
@@ -1239,23 +1237,21 @@ class FileManager implements serve.IFileManager {
                     if (bundleIndex !== undefined) {
                         const outerHTML = item.outerHTML;
                         if (outerHTML) {
-                            const original = source || html;
                             let replaceWith = '',
                                 replaced: string;
                             if (bundleIndex === 0 || bundleIndex === Infinity) {
                                 replaceWith = getOuterHTML(item.mimeType === 'text/javascript', Express.getFullUri(item));
-                                replaced = original.replace(outerHTML, replaceWith);
+                                replaced = source.replace(outerHTML, replaceWith);
                             }
                             else {
-                                replaced = original.replace(new RegExp(`\\s*${outerHTML}\\n*`), '');
+                                replaced = source.replace(new RegExp(`\\s*${outerHTML}\\n*`), '');
                             }
-                            if (replaced === original) {
+                            if (replaced === source) {
                                 const content = item.content && minifySpace(item.content);
                                 const outerContent = minifySpace(outerHTML);
                                 while (match = pattern.exec(html)) {
                                     if (outerContent === minifySpace(match[0]) || content && content === minifySpace(match[3])) {
-                                        source = original.replace(match[0], (replaceWith ? match[1] : '') + replaceWith);
-                                        html = source;
+                                        source = source.replace(match[0], (replaceWith ? match[1] : '') + replaceWith);
                                         break;
                                     }
                                 }
@@ -1263,22 +1259,18 @@ class FileManager implements serve.IFileManager {
                             }
                             else {
                                 source = replaced;
-                                html = source;
                             }
+                            html = source;
                         }
                     }
                     if (trailingContent) {
                         const content = trailingContent.map(trailing => minifySpace(trailing.value));
-                        let modified = false;
                         while (match = pattern.exec(html)) {
                             if (content.includes(minifySpace(match[3]))) {
-                                source = (source || html).replace(match[0], '');
-                                modified = true;
+                                source = source.replace(match[0], '');
                             }
                         }
-                        if (modified) {
-                            html = source!;
-                        }
+                        html = source;
                         pattern.lastIndex = 0;
                     }
                 }
@@ -1287,7 +1279,7 @@ class FileManager implements serve.IFileManager {
                         continue;
                     }
                     if (item.base64) {
-                        const replaced = this.replacePath(source || html, item.base64.replace(/\+/g, '\\+'), Express.getFullUri(item), true);
+                        const replaced = this.replacePath(source, item.base64.replace(/\+/g, '\\+'), Express.getFullUri(item), true);
                         if (replaced) {
                             source = replaced;
                             html = source;
@@ -1298,26 +1290,21 @@ class FileManager implements serve.IFileManager {
                         continue;
                     }
                     const value = Express.getFullUri(item);
-                    let modified = false;
                     if (item.rootDir || Express.fromSameOrigin(baseUri, item.uri)) {
                         pattern = new RegExp(`(["'\\s\\n,=])(((?:\\.\\.)?(?:[\\\\/]\\.\\.|\\.\\.[\\\\/]|[\\\\/])*)?${path.join(item.pathname, item.filename).replace(/[\\/]/g, '[\\\\/]')})`, 'g');
                         while (match = pattern.exec(html)) {
                             if (match[2] !== value && item.uri === Express.resolvePath(match[2], baseUri)) {
-                                source = (source || html).replace(match[0], match[1] + value);
-                                modified = true;
+                                source = source.replace(match[0], match[1] + value);
                             }
                         }
                     }
-                    const replaced = this.replacePath(source || html, item.uri, value);
+                    const replaced = this.replacePath(source, item.uri, value);
                     if (replaced) {
                         source = replaced;
-                        modified = true;
                     }
-                    if (modified) {
-                        html = source!;
-                    }
+                    html = source;
                 }
-                source = (source || html)
+                source = source
                     .replace(/\s*<(script|link|style)[^>]+?data-chrome-file="exclude"[^>]*>[\s\S]*?<\/\1>\n*/ig, '')
                     .replace(/\s*<script[^>]*?data-chrome-template="([^"]|\\")+?"[^>]*>[\s\S]*?<\/script>\n*/ig, '')
                     .replace(/\s*<(script|link)[^>]+?data-chrome-file="exclude"[^>]*>\n*/ig, '')
@@ -1631,8 +1618,11 @@ class FileManager implements serve.IFileManager {
     getTrailingContent(file: ExpressAsset) {
         const trailingContent = file.trailingContent;
         if (trailingContent) {
-            const unusedStyles = this.dataMap?.unusedStyles;
-            const transpileMap = this.dataMap?.transpileMap;
+            let unusedStyles: Undef<string[]>,
+                transpileMap: Undef<TranspileMap>;
+            if (this.dataMap) {
+                ({ unusedStyles, transpileMap } = this.dataMap);
+            }
             const mimeType = file.mimeType;
             let output = '';
             for (const item of trailingContent) {

@@ -16,8 +16,9 @@ declare module "base" {
         copyTo(directory: string, options?: FileActionOptions): FileActionResult;
         appendTo(pathname: string, options?: FileActionOptions): FileActionResult;
         saveAs(filename?: string, options?: FileActionOptions): FileActionResult;
-        createFrom(format: string, options: FileActionOptions): FileActionResult;
-        appendFrom(filename: string, options: FileActionOptions): FileActionResult;
+        saveFiles(format: string, options: FileActionOptions): FileActionResult;
+        appendFiles(filename: string, options: FileActionOptions): FileActionResult;
+        copyFiles(directory: string, options: FileActionOptions): FileActionResult;
     }
 
     interface AppBase<T extends Node> {
@@ -103,10 +104,11 @@ declare module "base" {
         getDatasetName(attr: string, element: HTMLElement): Undef<string>;
         setDatasetName(attr: string, element: HTMLElement, value: string): void;
         copyTo(directory: string, options?: FileCopyingOptions): FileActionResult;
-        appendTo(pathname: string, options?: FileCopyingOptions): FileActionResult;
+        appendTo(pathname: string, options?: FileArchivingOptions): FileActionResult;
         saveAs(filename?: string, options?: FileArchivingOptions): FileActionResult;
-        createFrom(format: string, options: FileArchivingOptions): FileActionResult;
-        appendFrom(filename: string, options: FileArchivingOptions): FileActionResult;
+        saveFiles(format: string, options: FileArchivingOptions): FileActionResult;
+        appendFiles(filename: string, options: FileArchivingOptions): FileActionResult;
+        copyFiles(directory: string, options: FileCopyingOptions): FileActionResult;
         toString(): string;
         get mainElement(): Element;
         get controllerHandler(): Controller<T>;
@@ -324,8 +326,9 @@ declare module "base" {
         copyTo(directory: string, options?: FileCopyingOptions): FileActionResult;
         appendTo(pathname: string, options?: FileCopyingOptions): FileActionResult;
         saveAs(filename: string, options?: FileArchivingOptions): FileActionResult;
-        createFrom(format: string, options: FileArchivingOptions): FileActionResult;
-        appendFrom(filename: string, options: FileArchivingOptions): FileActionResult;
+        saveFiles(format: string, options: FileArchivingOptions): FileActionResult;
+        appendFiles(filename: string, options: FileArchivingOptions): FileActionResult;
+        copyFiles(directory: string, options: FileCopyingOptions): FileActionResult;
         getDataMap(options: squared.FileActionOptions): Void<StandardMap>;
         getCopyQueryParameters(options: FileCopyingOptions): string;
         getArchiveQueryParameters(options: FileArchivingOptions): string;

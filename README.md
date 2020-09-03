@@ -277,8 +277,8 @@ parseDocumentSync(...elements: (Element | string)[]) // skips preloadImages and 
 
 latest(count?: number) // most recent parseDocument session ids (1 newest / -1 oldest: string, other: string[])
 
-close() // close current session preceding document write
-save() // save current session to a new archive using default settings
+close() // close current session preceding document write (android)
+save() // save current session to a new archive using default settings (android)
 reset() // clear cache and reopen new session
 
 toString() // current framework loaded
@@ -305,17 +305,18 @@ resetCache() // clear element data map
 Packaging methods will return a Promise and require either node-express or squared-apache installed. These features are not supported when the framework is VDOM.
 
 ```javascript
-saveAs(filename: string, options?: {}) // save current sessionas a new archive
-createFrom(format: string, options: {}) // create new archive from RequestAsset[]
+saveAs(filename: string, options?: {}) // save current sessionas a new archive (android)
+saveFiles(format: string, options: {}) // create new archive from RequestAsset[]
 
 // Required (local archives): --disk-read | --unc-read | --access-all (command-line)
 
-appendTo(pathname: string, options?: {}) // create new archive from a preexisting archive and current session
-appendFrom(pathname: string, options: {}) // create new archive from a preexisting archive and RequestAsset[]
+appendTo(pathname: string, options?: {}) // create new archive from a preexisting archive and current session (android)
+appendFiles(pathname: string, options: {}) // create new archive from a preexisting archive and RequestAsset[]
 
 // Required (all): --disk-write | --unc-write | --access-all (command-line)
 
-copyTo(directory: string, options?: {}) // copy current session to local directory
+copyTo(directory: string, options?: {}) // copy current session to local directory (android)
+copyFiles(directory: string, options: {}) // copy RequestAsset[] to local directory
 ```
 
 ### ANDROID: Public Methods

@@ -70,11 +70,12 @@
                                 }
                             ]
                         };
-                        squared.createFrom('gz', options);
+                        squared.saveFiles('gz', options);
                         options.filename = 'chrome-base-7z';
-                        squared.appendFrom('http://localhost:3000/common/base_project.7z', options);
+                        squared.appendFiles('http://localhost:3000/common/base_project.7z', options);
                         options.filename = 'chrome-base-zip';
-                        squared.appendFrom('C:/Users/An/git/squared/html/common/base_project.zip', options);
+                        squared.appendFiles('C:/Users/An/git/squared/html/common/base_project.zip', options);
+                        squared.copyFiles('C:/Users/An/Downloads/chrome_data', options);
                         chrome.saveAsWebPage();
                     });
                 });

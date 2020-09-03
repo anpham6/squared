@@ -87,6 +87,8 @@ export default abstract class Application<T extends Node> implements squared.bas
     public abstract init(): void;
     public abstract insertNode(element: Element, sessionId: string): Undef<T>;
 
+    public finalize() { return true; }
+
     public afterCreateCache(node: T) {
         if (this.userSettings.createElementMap) {
             const elementMap = this.elementMap;
@@ -112,16 +114,16 @@ export default abstract class Application<T extends Node> implements squared.bas
         return this._resourceHandler?.fileHandler?.saveAs(filename || this._resourceHandler.userSettings.outputArchiveName, options) || operationNotSupported();
     }
 
-    public createFrom(format: string, options: FileActionOptions) {
-        return this._resourceHandler?.fileHandler?.createFrom(format, options) || operationNotSupported();
+    public saveFiles(format: string, options: FileActionOptions) {
+        return this._resourceHandler?.fileHandler?.saveFiles(format, options) || operationNotSupported();
     }
 
-    public appendFrom(filename: string, options: FileActionOptions) {
-        return this._resourceHandler?.fileHandler?.appendFrom(filename, options) || operationNotSupported();
+    public appendFiles(filename: string, options: FileActionOptions) {
+        return this._resourceHandler?.fileHandler?.appendFiles(filename, options) || operationNotSupported();
     }
 
-    public finalize() {
-        return this.closed;
+    public copyFiles(directory: string, options: FileActionOptions) {
+        return this._resourceHandler?.fileHandler?.copyFiles(directory, options) || operationNotSupported();
     }
 
     public reset() {

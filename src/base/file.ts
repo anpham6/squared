@@ -41,21 +41,16 @@ export default abstract class File<T extends Node> implements squared.base.File<
     public getCopyQueryParameters(options: FileCopyingOptions) { return ''; }
     public getArchiveQueryParameters(options: FileArchivingOptions) { return ''; }
 
-    public createFrom(format: string, options: FileArchivingOptions) {
-        return this.archiving({
-            filename: this.userSettings.outputArchiveName,
-            ...options,
-            format
-        });
+    public saveFiles(format: string, options: FileArchivingOptions) {
+        return this.archiving({ filename: this.userSettings.outputArchiveName, ...options, format });
     }
 
-    public appendFrom(filename: string, options: FileArchivingOptions) {
-        return this.archiving({
-            filename: this.userSettings.outputArchiveName,
-            format: fromLastIndexOf(filename),
-            ...options,
-            appendTo: filename
-        });
+    public appendFiles(filename: string, options: FileArchivingOptions) {
+        return this.archiving({ ...options, appendTo: filename });
+    }
+
+    public copyFiles(directory: string, options: FileCopyingOptions) {
+        return this.copying({ ...options, directory });
     }
 
     public addAsset(asset: Partial<RawAsset>) {

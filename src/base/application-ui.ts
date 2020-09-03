@@ -171,8 +171,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     public finalize() {
-        if (super.finalize()) {
-            return false;
+        if (this.closed) {
+            return true;
         }
         const controllerHandler = this.controllerHandler;
         const baseTemplate = this._controllerSettings.layout.baseTemplate;
@@ -239,8 +239,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             (extensions[i] as ExtensionUI<T>).afterFinalize();
         }
         removeElementsByClassName('__squared.pseudo');
-        this.closed = true;
-        return true;
+        return this.closed = true;
     }
 
     public copyTo(directory: string, options?: FileActionOptions) {
@@ -263,10 +262,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 delete element.dataset[iterationName];
             }
         }
-        super.reset();
         session.extensionMap.clear();
         session.clearMap.clear();
         this._layouts.length = 0;
+        super.reset();
     }
 
     public conditionElement(element: HTMLElement, sessionId: string, cascadeAll?: boolean, pseudoElt?: PseudoElt) {
