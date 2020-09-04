@@ -99,6 +99,10 @@ export default abstract class Application<T extends Node> implements squared.bas
     public createNode(sessionId: string, options: CreateNodeOptions) {
         const node = new this.Node(this.nextId, sessionId, options.element);
         this.controllerHandler.afterInsertNode(node);
+        const afterInsertNode = this.getProcessing(sessionId)!.afterInsertNode;
+        if (afterInsertNode) {
+            afterInsertNode.some(item => item.afterInsertNode!(node));
+        }
         return node;
     }
 
@@ -390,7 +394,7 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     protected createRootNode(rootElement: HTMLElement, sessionId: string) {
         const processing = this.getProcessing(sessionId)!;
-        const extensions = processing.extensions.filter(item => !!item.init) as Extension<T>[];
+        const extensions = processing.extensions.filter(item => !!item.beforeInsertNode) as Extension<T>[];
         const node = this.cascadeParentNode(
             processing.cache,
             processing.excluded,
@@ -486,9 +490,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 else if (controllerHandler.includeElement(element)) {
                     if (extensions) {
                         const use = this.getDatasetName('use', element);
-                        if (use) {
-                            Application.prioritizeExtensions(use, extensions).some(item => item.init!(element, sessionId));
-                        }
+                        (use ? Application.prioritizeExtensions(use, extensions) : extensions).some(item => item.beforeInsertNode!(element, sessionId));
                     }
                     child = element.childNodes.length === 0 ? this.insertNode(element, sessionId) : this.cascadeParentNode(cache, excluded, element, sessionId, childDepth, rootElements, extensions);
                     if (child) {
@@ -778,6 +780,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     private createSessionThread(elements: (string | HTMLElement)[]): [squared.base.AppProcessing<T>, Set<HTMLElement>] {
         const sessionId = this._controllerHandler.generateSessionId;
         const rootElements = new Set<HTMLElement>();
+        const extensions = this.extensionsAll;
         const processing: squared.base.AppProcessing<T> = {
             sessionId,
             initializing: false,
@@ -785,8 +788,12 @@ export default abstract class Application<T extends Node> implements squared.bas
             excluded: new NodeList<T>(undefined, sessionId),
             rootElements,
             elementMap: newSessionInit(sessionId),
-            extensions: this.extensionsAll
+            extensions
         };
+        const afterInsertNode = extensions.filter(item => !!item.afterInsertNode);
+        if (afterInsertNode.length) {
+            processing.afterInsertNode = afterInsertNode;
+        }
         this.session.active.set(sessionId, processing);
         this._controllerHandler.init();
         this.setStyleMap(sessionId, processing);

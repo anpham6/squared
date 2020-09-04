@@ -3,7 +3,7 @@ import type View from '../view';
 export default class <T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
 
-    public init(element: HTMLElement, sessionId: string) {
+    public beforeInsertNode(element: HTMLElement, sessionId: string) {
         if (this.included(element)) {
             this.application.getProcessing(sessionId)!.rootElements.add(element);
         }

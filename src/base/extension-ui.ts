@@ -25,6 +25,8 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
     public readonly eventOnly?: boolean;
     public readonly cascadeAll?: boolean;
     public readonly documentBase?: boolean;
+    public abstract controller: ControllerUI<T>;
+    public abstract resource: Null<ResourceUI<T>>;
 
     private readonly _isAll: boolean;
 
@@ -36,8 +38,6 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
 
     public abstract set application(value);
     public abstract get application(): ApplicationUI<T>;
-    public abstract get controller(): ControllerUI<T>;
-    public abstract get resource(): Null<ResourceUI<T>>;
 
     public is(node: T) {
         return this._isAll || this.tagNames.includes(node.tagName);

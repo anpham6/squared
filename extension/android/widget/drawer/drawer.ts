@@ -25,7 +25,7 @@ export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> 
         this.require(WIDGET_NAME.COORDINATOR);
     }
 
-    public init(element: HTMLElement, sessionId: string) {
+    public beforeInsertNode(element: HTMLElement, sessionId: string) {
         if (this.included(element)) {
             const application = this.application;
             iterateArray(element.children, (item: HTMLElement) => {

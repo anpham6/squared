@@ -373,8 +373,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public createNode(sessionId: string, options: CreateNodeUIOptions<T>) {
         const { element, parent, children } = options;
+        const { cache, afterInsertNode } = this.getProcessing(sessionId)!;
         const node = new this.Node(this.nextId, sessionId, element);
         this.controllerHandler.afterInsertNode(node);
+        if (afterInsertNode) {
+            afterInsertNode.some(item => item.afterInsertNode!(node));
+        }
         if (parent) {
             node.depth = parent.depth + 1;
             if (!element && parent.naturalElement) {
@@ -392,7 +396,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
         }
         if (options.append !== false) {
-            this.getProcessingCache(sessionId).add(node, options.delegate === true, options.cascade === true);
+            cache.add(node, options.delegate === true, options.cascade === true);
         }
         return node;
     }
@@ -621,9 +625,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 else if (controllerHandler.includeElement(element)) {
                     if (extensions) {
                         const use = this.getDatasetName('use', element);
-                        if (use) {
-                            ApplicationUI.prioritizeExtensions(use, extensions).some(item => item.init!(element, sessionId));
-                        }
+                        (use ? ApplicationUI.prioritizeExtensions(use, extensions) : extensions).some(item => item.beforeInsertNode!(element, sessionId));
                     }
                     if (!rootElements.has(element)) {
                         child = element.childNodes.length === 0 ? this.insertNode(element, sessionId, cascadeAll) : this.cascadeParentNode(cache, excluded, element, sessionId, childDepth, rootElements, extensions, cascadeAll);
@@ -828,7 +830,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         continue;
                     }
                     let parentY = nodeY.parent as T;
-                    if (q > 1 && i < q - 1 && nodeY.pageFlow && !nodeY.nodeGroup && (parentY.alignmentType === 0 || parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) || nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) && !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
+                    if (q > 1 && i < q - 1 && nodeY.pageFlow && (parentY.alignmentType === 0 || parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) || nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) && !nodeY.nodeGroup && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
                         const horizontal: T[] = [];
                         const vertical: T[] = [];
                         let j = i, k = 0;

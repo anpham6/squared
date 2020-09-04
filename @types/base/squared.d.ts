@@ -55,6 +55,7 @@ declare module "base" {
         extensions: Extension<T>[];
         elementMap: Map<Element, ElementData>;
         keyframesMap?: KeyframesMap;
+        afterInsertNode?: Extension<T>[],
         node?: T;
         documentElement?: T;
     }
@@ -256,26 +257,29 @@ declare module "base" {
 
     class Extension<T extends Node> {
         enabled: boolean;
+        controller: Controller<T>;
+        resource: Null<Resource<T>>;
         readonly framework: number;
         readonly name: string;
         readonly options: StandardMap;
         readonly dependencies: ExtensionDependency[];
         readonly subscribers: Set<T>;
         readonly data: Map<T, unknown>;
-        init?(element: HTMLElement, sessionId: string): boolean;
         reset(): void;
         require(name: string, preload?: boolean): void;
+        beforeInsertNode?(element: HTMLElement, sessionId: string): boolean;
+        afterInsertNode?(node: T): boolean;
         beforeParseDocument(sessionId: string): void;
         afterParseDocument(sessionId: string): void;
         set application(value);
         get application(): Application<T>;
-        get controller(): Controller<T>;
-        get resource(): Null<Resource<T>>;
-        constructor(name: string, framework: number, options?: StandardMap);
+        constructor(name: string, framework: number, options?: ExtensionOptions);
     }
 
     class ExtensionUI<T extends NodeUI> extends Extension<T> {
         static findNestedElement<U extends NodeUI>(node: U, name: string): Undef<HTMLElement>;
+        controller: ControllerUI<T>;
+        resource: Null<ResourceUI<T>>;
         readonly tagNames: string[];
         readonly eventOnly?: boolean;
         readonly cascadeAll?: boolean;
@@ -297,8 +301,6 @@ declare module "base" {
         afterFinalize(): void;
         set application(value);
         get application(): ApplicationUI<T>;
-        get controller(): ControllerUI<T>;
-        get resource(): Null<ResourceUI<T>>;
         constructor(name: string, framework: number, options?: ExtensionUIOptions);
     }
 

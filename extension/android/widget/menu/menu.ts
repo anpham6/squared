@@ -100,7 +100,7 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
         this.require(EXT_ANDROID.EXTERNAL, true);
     }
 
-    public init(element: HTMLElement, sessionId: string) {
+    public beforeInsertNode(element: HTMLElement, sessionId: string) {
         if (this.included(element)) {
             if (element.childElementCount) {
                 if (!sameArray(element.children, (item: Element) => item.tagName)) {
@@ -115,6 +115,7 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
                     current = current.parentElement;
                 }
                 rootElements.add(element);
+                return true;
             }
         }
         return false;
