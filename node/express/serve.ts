@@ -593,8 +593,9 @@ let Node: serve.INode,
                                         }
                                         break;
                                     }
+                                    case 'html-minifier':
                                     case 'html-minifier-terser': {
-                                        const result: Undef<string> = require('html-minifier-terser').minify(value, options);
+                                        const result: Undef<string> = require(module).minify(value, options);
                                         if (result) {
                                             if (j === length - 1) {
                                                 return Promise.resolve(result);
@@ -721,20 +722,10 @@ let Node: serve.INode,
                                         }
                                         break;
                                     }
-                                    case 'terser': {
-                                        const terser = require('terser');
-                                        const result: Undef<string> = (await terser.minify(value, options)).code;
-                                        if (result) {
-                                            if (j === length - 1) {
-                                                return Promise.resolve(result);
-                                            }
-                                            value = result;
-                                            modified = true;
-                                        }
-                                        break;
-                                    }
+                                    case 'terser':
                                     case 'uglify-js': {
-                                        const result: Undef<string> = require('uglify-js').minify(value, options).code;
+                                        const terser = require(module);
+                                        const result: Undef<string> = (await terser.minify(value, options)).code;
                                         if (result) {
                                             if (j === length - 1) {
                                                 return Promise.resolve(result);
