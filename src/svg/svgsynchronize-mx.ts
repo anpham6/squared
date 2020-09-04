@@ -1,5 +1,5 @@
-import SYNCHRONIZE_MODE = squared.svg.lib.enumeration.SYNCHRONIZE_MODE;
-import SYNCHRONIZE_STATE = squared.svg.lib.enumeration.SYNCHRONIZE_STATE;
+import SYNCHRONIZE_MODE = squared.svg.constant.SYNCHRONIZE_MODE;
+import SYNCHRONIZE_STATE = squared.svg.constant.SYNCHRONIZE_STATE;
 
 import type SvgAnimation from './svganimation';
 import type SvgPath from './svgpath';

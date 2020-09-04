@@ -1,12 +1,13 @@
-import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
-import NODE_TEMPLATE = squared.base.lib.enumeration.NODE_TEMPLATE;
-import EXT_ANDROID = android.lib.enumeration.EXT_ANDROID;
+import NODE_ALIGNMENT = squared.base.constant.NODE_ALIGNMENT;
+import NODE_TEMPLATE = squared.base.constant.NODE_TEMPLATE;
+import EXT_ANDROID = android.base.constant.EXT_ANDROID;
+
+import { CONTAINER_NODE } from '../lib/constant';
 
 import type View from '../view';
 
 import Resource from '../resource';
 
-import { CONTAINER_NODE } from '../lib/enumeration';
 import { createViewAttribute, getDataSet } from '../lib/util';
 
 const { convertCamelCase } = squared.lib.util;

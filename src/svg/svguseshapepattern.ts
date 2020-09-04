@@ -5,7 +5,7 @@ import SvgViewRect$MX from './svgviewrect-mx';
 import SvgShapePattern from './svgshapepattern';
 
 export default class SvgUseShapePattern extends SvgSynchronize$MX(SvgViewRect$MX(SvgShapePattern)) implements squared.svg.SvgUseShapePattern {
-    public readonly instanceType = squared.svg.lib.enumeration.INSTANCE_TYPE.SVG_USE_SHAPE_PATTERN;
+    public readonly instanceType = squared.svg.constant.INSTANCE_TYPE.SVG_USE_SHAPE_PATTERN;
 
     constructor(
         public readonly element: SVGGeometryElement,

@@ -1,4 +1,4 @@
-import FILL_MODE = squared.svg.lib.enumeration.FILL_MODE;
+import FILL_MODE = squared.svg.constant.FILL_MODE;
 
 import type SvgAnimate from './svganimate';
 import type SvgAnimation from './svganimation';

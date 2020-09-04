@@ -1,4 +1,4 @@
-import EXT_CHROME = chrome.lib.enumeration.EXT_CHROME;
+import EXT_CHROME = chrome.base.constant.EXT_CHROME;
 
 import Application from './application';
 import Extension from './extension';
@@ -25,7 +25,7 @@ const { util, session } = squared.lib;
 const { isString, isPlainObject } = util;
 const { frameworkNotInstalled } = session;
 
-const framework = squared.base.lib.enumeration.APP_FRAMEWORK.CHROME;
+const framework = squared.base.lib.constant.APP_FRAMEWORK.CHROME;
 let application: Null<Application<Node>> = null;
 let file: Null<File<Node>> = null;
 

@@ -1,10 +1,10 @@
-import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
+import BOX_STANDARD = squared.base.constant.BOX_STANDARD;
+
+import { NODE_RESOURCE } from '../lib/constant';
 
 import type NodeUI from '../node-ui';
 
 import ExtensionUI from '../extension-ui';
-
-import { NODE_RESOURCE } from '../lib/enumeration';
 
 const { formatPercent, formatPX, getStyle, isLength, isPercent } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;

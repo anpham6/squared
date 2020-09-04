@@ -4,7 +4,7 @@ import SETTINGS from './settings';
 
 type Node = squared.base.Node;
 
-const framework = squared.base.lib.enumeration.APP_FRAMEWORK.VDOM;
+const framework = squared.base.lib.constant.APP_FRAMEWORK.VDOM;
 let application: Null<Application<Node>> = null;
 
 const appBase: squared.base.AppFramework<Node> = {

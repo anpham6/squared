@@ -1,5 +1,7 @@
-import USER_AGENT = squared.lib.client.USER_AGENT;
-import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
+import USER_AGENT = squared.lib.constant.USER_AGENT;
+import NODE_ALIGNMENT = squared.base.constant.NODE_ALIGNMENT;
+
+import { NODE_RESOURCE } from './lib/constant';
 
 import type ControllerUI from './controller-ui';
 
@@ -7,8 +9,6 @@ import Resource from './resource';
 import NodeUI from './node-ui';
 
 import { appendSeparator } from './lib/util';
-
-import { NODE_RESOURCE } from './lib/enumeration';
 
 const { isUserAgent } = squared.lib.client;
 const { parseColor } = squared.lib.color;

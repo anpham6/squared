@@ -185,7 +185,7 @@ const hasLength = (value: string) => REGEXP_LENGTHPERCENTAGE.test(value);
 export default class SvgContainer extends squared.lib.base.Container<SvgView> implements squared.svg.SvgContainer {
     public parent: Null<SvgContainer> = null;
     public viewport?: Svg;
-    public readonly instanceType = squared.svg.lib.enumeration.INSTANCE_TYPE.SVG_CONTAINER;
+    public readonly instanceType = squared.svg.constant.INSTANCE_TYPE.SVG_CONTAINER;
     public readonly aspectRatio: SvgAspectRatio = {
         x: 0,
         y: 0,

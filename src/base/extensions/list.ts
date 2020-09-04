@@ -1,10 +1,10 @@
+import { NODE_RESOURCE } from '../lib/constant';
+
 import type NodeUI from '../node-ui';
 
 import ExtensionUI from '../extension-ui';
 
 import { convertListStyle } from '../lib/util';
-
-import { NODE_RESOURCE } from '../lib/enumeration';
 
 const { isNumber } = squared.lib.util;
 

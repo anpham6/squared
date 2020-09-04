@@ -82,6 +82,12 @@ declare module "lib" {
     }
 
     namespace client {
+        function isPlatform(value: NumString): boolean;
+        function isUserAgent(value: NumString): boolean;
+        function getDeviceDPI(): number;
+    }
+
+    namespace constant {
         const enum PLATFORM {
             WINDOWS = 1,
             MAC = 1 << 1,
@@ -93,12 +99,6 @@ declare module "lib" {
             FIREFOX = 1 << 2,
             EDGE = 1 << 3
         }
-        function isPlatform(value: NumString): boolean;
-        function isUserAgent(value: NumString): boolean;
-        function getDeviceDPI(): number;
-    }
-
-    namespace css {
         const enum CSS_UNIT {
             NONE = 0,
             LENGTH = 1,
@@ -119,6 +119,9 @@ declare module "lib" {
             AUTO = 1 << 7,
             UNIT = 1 << 8
         }
+    }
+
+    namespace css {
         const PROXY_INLINESTYLE: Readonly<CSSStyleDeclaration>;
         const CSS_PROPERTIES: CssProperties;
         const SVG_PROPERTIES: CssProperties;

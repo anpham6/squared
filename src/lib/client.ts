@@ -1,5 +1,5 @@
-import PLATFORM = squared.lib.client.PLATFORM;
-import USER_AGENT = squared.lib.client.USER_AGENT;
+import PLATFORM = squared.lib.constant.PLATFORM;
+import USER_AGENT = squared.lib.constant.USER_AGENT;
 
 import { hasBit } from './util';
 

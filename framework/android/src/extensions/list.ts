@@ -1,6 +1,8 @@
-import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
-import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
-import NODE_TEMPLATE = squared.base.lib.enumeration.NODE_TEMPLATE;
+import BOX_STANDARD = squared.base.constant.BOX_STANDARD;
+import NODE_ALIGNMENT = squared.base.constant.NODE_ALIGNMENT;
+import NODE_TEMPLATE = squared.base.constant.NODE_TEMPLATE;
+
+import { CONTAINER_ANDROID, CONTAINER_NODE } from '../lib/constant';
 
 import type View from '../view';
 
@@ -8,8 +10,6 @@ import Resource from '../resource';
 
 import LayoutUI = squared.base.LayoutUI;
 
-import { CONTAINER_ANDROID } from '../lib/constant';
-import { CONTAINER_NODE } from '../lib/enumeration';
 import { createViewAttribute } from '../lib/util';
 
 const { formatPX } = squared.lib.css;

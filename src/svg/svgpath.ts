@@ -1,4 +1,4 @@
-import REGION_UNIT = squared.svg.lib.enumeration.REGION_UNIT;
+import REGION_UNIT = squared.svg.constant.REGION_UNIT;
 
 import type SvgShape from './svgshape';
 import type SvgShapePattern from './svgshapepattern';
@@ -221,7 +221,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
     public parent: Null<SvgContainer> = null;
     public transformed: Null<SvgTransform[]> = null;
     public transformResidual?: SvgTransform[][];
-    public readonly instanceType = squared.svg.lib.enumeration.INSTANCE_TYPE.SVG_PATH;
+    public readonly instanceType = squared.svg.constant.INSTANCE_TYPE.SVG_PATH;
 
     private _transforms?: SvgTransform[];
 

@@ -1,9 +1,9 @@
+import { RESERVED_JAVA } from './lib/constant';
+
 import type Application from './application';
 import type View from './view';
 
 import { concatString } from './lib/util';
-
-import { RESERVED_JAVA } from './lib/constant';
 
 const { findColorShade, parseColor } = squared.lib.color;
 const { extractURL, getSrcSet } = squared.lib.css;

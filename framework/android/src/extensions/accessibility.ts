@@ -2,9 +2,9 @@ import type View from '../view';
 
 import Resource from '../resource';
 
-const { formatPX } = squared.lib.css;
+const { NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.constant;
 
-const { NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.enumeration;
+const { formatPX } = squared.lib.css;
 
 export default class <T extends View> extends squared.base.extensions.Accessibility<T> {
     public readonly options: ExtensionAccessibilityOptions = {

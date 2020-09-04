@@ -3,7 +3,7 @@ import SvgView$MX from './svgview-mx';
 import SvgContainer from './svgcontainer';
 
 export default class SvgG extends SvgPaint$MX(SvgView$MX(SvgContainer)) implements squared.svg.SvgG {
-    public readonly instanceType = squared.svg.lib.enumeration.INSTANCE_TYPE.SVG_G;
+    public readonly instanceType = squared.svg.constant.INSTANCE_TYPE.SVG_G;
 
     constructor(public readonly element: SVGGElement) {
         super(element);

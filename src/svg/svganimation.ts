@@ -1,4 +1,4 @@
-import FILL_MODE = squared.svg.lib.enumeration.FILL_MODE;
+import FILL_MODE = squared.svg.constant.FILL_MODE;
 
 import type SvgPath from './svgpath';
 
@@ -73,7 +73,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     public baseValue?: string;
     public companion?: NumberValue<SvgAnimation>;
     public readonly animationElement: Null<SVGAnimationElement> = null;
-    public readonly instanceType = squared.svg.lib.enumeration.INSTANCE_TYPE.SVG_ANIMATION;
+    public readonly instanceType = squared.svg.constant.INSTANCE_TYPE.SVG_ANIMATION;
 
     protected _to = '';
     protected _duration = -1;

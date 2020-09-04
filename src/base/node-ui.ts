@@ -1,12 +1,12 @@
-import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
-import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
-import NODE_TRAVERSE = squared.base.lib.enumeration.NODE_TRAVERSE;
+import BOX_STANDARD = squared.base.constant.BOX_STANDARD;
+import NODE_ALIGNMENT = squared.base.constant.NODE_ALIGNMENT;
+import NODE_TRAVERSE = squared.base.constant.NODE_TRAVERSE;
+
+import { APP_SECTION, NODE_PROCEDURE, NODE_RESOURCE } from './lib/constant';
 
 import type ExtensionUI from './extension-ui';
 
 import Node from './node';
-
-import { APP_SECTION, NODE_PROCEDURE, NODE_RESOURCE } from './lib/enumeration';
 
 type T = NodeUI;
 

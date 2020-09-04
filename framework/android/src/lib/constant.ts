@@ -1,4 +1,27 @@
-import { CONTAINER_NODE } from './enumeration';
+export enum CONTAINER_NODE {
+    RADIO = 1,
+    CHECKBOX,
+    SELECT,
+    SVG,
+    IMAGE,
+    PROGRESS,
+    RANGE,
+    EDIT,
+    BUTTON,
+    TEXT,
+    INLINE,
+    LINE,
+    SPACE,
+    BLOCK,
+    FRAME,
+    LINEAR,
+    GRID,
+    RELATIVE,
+    CONSTRAINT,
+    WEBVIEW,
+    VIDEOVIEW,
+    UNKNOWN
+}
 
 export const CONTAINER_ANDROID = {
     RADIO: 'RadioButton',

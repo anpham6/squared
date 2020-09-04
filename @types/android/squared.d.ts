@@ -128,47 +128,8 @@ declare namespace base {
         retainAs(children: View[], node?: View, parent?: View): this;
         constructor(id: number, node: View, children: View[], parent?: View);
     }
-}
 
-declare namespace extensions {
-    class Accessibility<T extends base.View> extends squared.base.extensions.Accessibility<T> {}
-    class Column<T extends base.View> extends squared.base.extensions.Column<T> {}
-    class CssGrid<T extends base.View> extends squared.base.extensions.CssGrid<T> {}
-    class External<T extends base.View> extends squared.base.ExtensionUI<T> {}
-    class Flexbox<T extends base.View> extends squared.base.extensions.Flexbox<T> {}
-    class Grid<T extends base.View> extends squared.base.extensions.Grid<T> {}
-    class List<T extends base.View> extends squared.base.extensions.List<T> {}
-    class Relative<T extends base.View> extends squared.base.extensions.Relative<T> {}
-    class Sprite<T extends base.View> extends squared.base.extensions.Sprite<T> {}
-    class Substitute<T extends base.View> extends squared.base.ExtensionUI<T> {}
-    class Table<T extends base.View> extends squared.base.extensions.Table<T> {}
-    class WhiteSpace<T extends base.View> extends squared.base.extensions.WhiteSpace<T> {}
-
-    namespace delegate {
-        class Background<T extends base.View> extends squared.base.ExtensionUI<T> {}
-        class MaxWidthHeight<T extends base.View> extends squared.base.ExtensionUI<T> {}
-        class Multiline<T extends base.View> extends squared.base.ExtensionUI<T> {}
-        class NegativeX<T extends base.View> extends squared.base.ExtensionUI<T> {}
-        class Percent<T extends base.View> extends squared.base.ExtensionUI<T> {}
-        class PositiveX<T extends base.View> extends squared.base.ExtensionUI<T> {}
-        class RadioGroup<T extends base.View> extends squared.base.ExtensionUI<T> {}
-        class ScrollBar<T extends base.View> extends squared.base.ExtensionUI<T> {}
-    }
-
-    namespace resource {
-        class Background<T extends base.View> extends squared.base.ExtensionUI<T> {}
-        class Data<T extends base.View> extends squared.base.ExtensionUI<T> {}
-        class Dimens<T extends base.View> extends squared.base.ExtensionUI<T> {}
-        class Fonts<T extends base.View> extends squared.base.ExtensionUI<T> {}
-        class Includes<T extends base.View> extends squared.base.ExtensionUI<T> {}
-        class Strings<T extends base.View> extends squared.base.ExtensionUI<T> {}
-        class Styles<T extends base.View> extends squared.base.ExtensionUI<T> {}
-        class Svg<T extends base.View> extends squared.base.ExtensionUI<T> {}
-    }
-}
-
-declare namespace lib {
-    namespace enumeration {
+    namespace constant {
         const enum EXT_ANDROID {
             EXTERNAL = 'android.external',
             SUBSTITUTE = 'android.substitute',
@@ -235,6 +196,48 @@ declare namespace lib {
             XXHDPI = 480,
             XXXHDPI = 640
         }
+    }
+}
+
+declare namespace extensions {
+    class Accessibility<T extends base.View> extends squared.base.extensions.Accessibility<T> {}
+    class Column<T extends base.View> extends squared.base.extensions.Column<T> {}
+    class CssGrid<T extends base.View> extends squared.base.extensions.CssGrid<T> {}
+    class External<T extends base.View> extends squared.base.ExtensionUI<T> {}
+    class Flexbox<T extends base.View> extends squared.base.extensions.Flexbox<T> {}
+    class Grid<T extends base.View> extends squared.base.extensions.Grid<T> {}
+    class List<T extends base.View> extends squared.base.extensions.List<T> {}
+    class Relative<T extends base.View> extends squared.base.extensions.Relative<T> {}
+    class Sprite<T extends base.View> extends squared.base.extensions.Sprite<T> {}
+    class Substitute<T extends base.View> extends squared.base.ExtensionUI<T> {}
+    class Table<T extends base.View> extends squared.base.extensions.Table<T> {}
+    class WhiteSpace<T extends base.View> extends squared.base.extensions.WhiteSpace<T> {}
+
+    namespace delegate {
+        class Background<T extends base.View> extends squared.base.ExtensionUI<T> {}
+        class MaxWidthHeight<T extends base.View> extends squared.base.ExtensionUI<T> {}
+        class Multiline<T extends base.View> extends squared.base.ExtensionUI<T> {}
+        class NegativeX<T extends base.View> extends squared.base.ExtensionUI<T> {}
+        class Percent<T extends base.View> extends squared.base.ExtensionUI<T> {}
+        class PositiveX<T extends base.View> extends squared.base.ExtensionUI<T> {}
+        class RadioGroup<T extends base.View> extends squared.base.ExtensionUI<T> {}
+        class ScrollBar<T extends base.View> extends squared.base.ExtensionUI<T> {}
+    }
+
+    namespace resource {
+        class Background<T extends base.View> extends squared.base.ExtensionUI<T> {}
+        class Data<T extends base.View> extends squared.base.ExtensionUI<T> {}
+        class Dimens<T extends base.View> extends squared.base.ExtensionUI<T> {}
+        class Fonts<T extends base.View> extends squared.base.ExtensionUI<T> {}
+        class Includes<T extends base.View> extends squared.base.ExtensionUI<T> {}
+        class Strings<T extends base.View> extends squared.base.ExtensionUI<T> {}
+        class Styles<T extends base.View> extends squared.base.ExtensionUI<T> {}
+        class Svg<T extends base.View> extends squared.base.ExtensionUI<T> {}
+    }
+}
+
+declare namespace lib {
+    namespace constant {
         enum CONTAINER_NODE {
             EDIT = 1,
             RANGE,
@@ -259,9 +262,6 @@ declare namespace lib {
             WEBVIEW,
             UNKNOWN
         }
-    }
-
-    namespace constant {
         const CONTAINER_ANDROID: {
             CHECKBOX: string;
             RADIO: string;

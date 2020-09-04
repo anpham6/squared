@@ -6,7 +6,7 @@ import SvgViewRect$MX from './svgviewrect-mx';
 import SvgContainer from './svgcontainer';
 
 export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer))))) implements squared.svg.SvgUseSymbol {
-    public readonly instanceType = squared.svg.lib.enumeration.INSTANCE_TYPE.SVG_USE_SYMBOL;
+    public readonly instanceType = squared.svg.constant.INSTANCE_TYPE.SVG_USE_SYMBOL;
 
     constructor(
         public readonly symbolElement: SVGSymbolElement,

@@ -1,13 +1,13 @@
-import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
-import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
+import BOX_STANDARD = squared.base.constant.BOX_STANDARD;
+import NODE_ALIGNMENT = squared.base.constant.NODE_ALIGNMENT;
+
+import { CONTAINER_NODE } from '../lib/constant';
 
 import type View from '../view';
 
 import Resource from '../resource';
 
 import LayoutUI = squared.base.LayoutUI;
-
-import { CONTAINER_NODE } from '../lib/enumeration';
 
 const { formatPX } = squared.lib.css;
 const { withinRange } = squared.lib.util;

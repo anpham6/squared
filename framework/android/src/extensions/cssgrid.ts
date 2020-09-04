@@ -1,6 +1,8 @@
-import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
-import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
-import STRING_ANDROID = android.lib.enumeration.STRING_ANDROID;
+import BOX_STANDARD = squared.base.constant.BOX_STANDARD;
+import NODE_ALIGNMENT = squared.base.constant.NODE_ALIGNMENT;
+import STRING_ANDROID = android.base.constant.STRING_ANDROID;
+
+import { CONTAINER_ANDROID, CONTAINER_NODE } from '../lib/constant';
 
 import type View from '../view';
 
@@ -8,19 +10,16 @@ import Resource from '../resource';
 
 import LayoutUI = squared.base.LayoutUI;
 
-import { CONTAINER_ANDROID } from '../lib/constant';
-import { CONTAINER_NODE } from '../lib/enumeration';
-
 interface ICssGridData<T> extends CssGridData<T> {
     unsetContentBox?: boolean;
     constraintData?: T[][];
 }
 
+const { NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.constant;
+
 const { formatPercent, formatPX, isLength, isPercent } = squared.lib.css;
 const { truncate } = squared.lib.math;
 const { flatArray } = squared.lib.util;
-
-const { NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.enumeration;
 
 const REGEXP_ALIGNSELF = /start|end|center|baseline/;
 const REGEXP_JUSTIFYSELF = /start|center|end|baseline|right|left/;

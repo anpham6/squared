@@ -1,9 +1,12 @@
+import { CONTAINER_ANDROID } from '../../lib/constant';
+
 import type View from '../../view';
 
 import Resource from '../../resource';
 
-import { CONTAINER_ANDROID } from '../../lib/constant';
 import { replaceCharacterData } from '../../lib/util';
+
+const { NODE_RESOURCE } = squared.base.lib.constant;
 
 const { parseAngle } = squared.lib.css;
 const { getTextMetrics } = squared.lib.dom;
@@ -11,8 +14,6 @@ const { clamp } = squared.lib.math;
 const { delimitString } = squared.lib.util;
 
 const { lowerCaseString, upperCaseString } = squared.base.lib.util;
-
-const { NODE_RESOURCE } = squared.base.lib.enumeration;
 
 const REGEXP_FONTVARIATION = /oblique(?:\s+(-?[\d.]+[a-z]+))?/;
 

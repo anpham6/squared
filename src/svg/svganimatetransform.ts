@@ -106,7 +106,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
 
     public transformFrom?: string;
     public transformOrigin?: Point[];
-    public readonly instanceType = squared.svg.lib.enumeration.INSTANCE_TYPE.SVG_ANIMATE_TRANSFORM;
+    public readonly instanceType = squared.svg.constant.INSTANCE_TYPE.SVG_ANIMATE_TRANSFORM;
 
     constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimateTransformElement) {
         super(element, animationElement);

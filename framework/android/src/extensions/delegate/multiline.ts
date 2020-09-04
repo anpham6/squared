@@ -1,18 +1,18 @@
-import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
-import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
+import BOX_STANDARD = squared.base.constant.BOX_STANDARD;
+import NODE_ALIGNMENT = squared.base.constant.NODE_ALIGNMENT;
+import NODE_TEMPLATE = squared.base.constant.NODE_TEMPLATE;
+
+import { CONTAINER_ANDROID, CONTAINER_NODE } from '../../lib/constant';
 
 import View from '../../view';
 
 import { concatString } from '../../lib/util';
 
-import { CONTAINER_ANDROID } from '../../lib/constant';
-import { CONTAINER_NODE } from '../../lib/enumeration';
-
 type MultilineData<T> = [number, T][];
 
-const { getTextMetrics } = squared.lib.dom;
+const { APP_SECTION, NODE_RESOURCE } = squared.base.lib.constant;
 
-const { APP_SECTION, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
+const { getTextMetrics } = squared.lib.dom;
 
 const REGEXP_WORD = /(?:[^\w\s\n]+[\s\n]+|(?:&#?[A-Za-z0-9]{2};[^\w]*|[^\w]+|\b)*\w+?(?:'[A-Za-z]\s*|[^\w]*&#?[A-Za-z0-9]{2};|[^\w]+|\b))/g;
 

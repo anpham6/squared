@@ -722,7 +722,7 @@ let Node: serve.INode,
                                         break;
                                     }
                                     case 'terser': {
-                                        const terser = require(module);
+                                        const terser = require('terser');
                                         const result: Undef<string> = (await terser.minify(value, options)).code;
                                         if (result) {
                                             if (j === length - 1) {
@@ -734,7 +734,7 @@ let Node: serve.INode,
                                         break;
                                     }
                                     case 'uglify-js': {
-                                        const result: Undef<string> = require(module).minify(value, options).code;
+                                        const result: Undef<string> = require('uglify-js').minify(value, options).code;
                                         if (result) {
                                             if (j === length - 1) {
                                                 return Promise.resolve(result);
@@ -758,7 +758,7 @@ let Node: serve.INode,
             }
             return Promise.resolve();
         }
-        formatContent(value: string, mimeType: string, format: string, transpileMap?: TranspileMap) {
+        formatContent(mimeType: string, format: string, value: string, transpileMap?: TranspileMap) {
             if (mimeType.endsWith('text/html') || mimeType.endsWith('application/xhtml+xml')) {
                 return this.minifyHtml(format, value, transpileMap);
             }
@@ -1103,7 +1103,7 @@ class FileManager implements serve.IFileManager {
                     }
                 }
                 if (format) {
-                    const result = await Chrome.formatContent(content, mimeType, format, this.dataMap?.transpileMap);
+                    const result = await Chrome.formatContent(mimeType, format, content, this.dataMap?.transpileMap);
                     if (result) {
                         content = result;
                     }
@@ -1122,89 +1122,46 @@ class FileManager implements serve.IFileManager {
         }
         return Promise.resolve();
     }
-    compressFile(assets: ExpressAsset[], file: ExpressAsset, filepath: string) {
-        const compress = file.compress;
-        const jpeg = Image.isJpeg(file, filepath) && Compress.findFormat(compress, 'jpeg');
-        const resumeThread = () => {
-            this.transformBuffer(assets, file, filepath).then(() => {
-                const gzip = Compress.findFormat(compress, 'gz');
-                const brotli = Compress.findFormat(compress, 'br');
-                if (gzip && Compress.withinSizeRange(filepath, gzip.condition)) {
-                    ++this.delayed;
-                    let gz = `${filepath}.gz`;
-                    Compress.createGzipWriteStream(filepath, gz, gzip.level)
-                        .on('finish', () => {
-                            if (gzip.condition?.includes('%') && Compress.getFileSize(gz) >= Compress.getFileSize(filepath)) {
-                                try {
-                                    fs.unlinkSync(gz);
-                                }
-                                catch {
-                                }
-                                gz = '';
-                            }
-                            this.finalize(gz);
-                        })
-                        .on('error', err => {
-                            Node.writeFail(gz, err);
-                            this.finalize('');
-                        });
-                }
-                if (brotli && Node.checkVersion(11, 7) && Compress.withinSizeRange(filepath, brotli.condition)) {
-                    ++this.delayed;
-                    let br = `${filepath}.br`;
-                    Compress.createBrotliWriteStream(filepath, br, brotli.level, file.mimeType)
-                        .on('finish', () => {
-                            if (brotli.condition?.includes('%') && Compress.getFileSize(br) >= Compress.getFileSize(filepath)) {
-                                try {
-                                    fs.unlinkSync(br);
-                                }
-                                catch {
-                                }
-                                br = '';
-                            }
-                            this.finalize(br);
-                        })
-                        .on('error', err => {
-                            Node.writeFail(br, err);
-                            this.finalize('');
-                        });
-                }
-            });
-        };
-        if (jpeg && Compress.withinSizeRange(filepath, jpeg.condition)) {
-            ++this.delayed;
-            const jpg = filepath + (jpeg.condition?.includes('%') ? '.jpg' : '');
-            jimp.read(filepath)
-                .then(image => {
-                    image.quality(jpeg.level ?? Compress.jpeg_quality).write(jpg, err => {
-                        if (err) {
-                            Node.writeFail(filepath, err);
-                        }
-                        else if (jpg !== filepath) {
-                            try {
-                                if (Compress.getFileSize(jpg) >= Compress.getFileSize(filepath)) {
-                                    fs.unlinkSync(jpg);
-                                }
-                                else {
-                                    fs.renameSync(jpg, filepath);
-                                }
-                            }
-                            catch {
+    async getTrailingContent(file: ExpressAsset) {
+        const trailingContent = file.trailingContent;
+        if (trailingContent) {
+            let unusedStyles: Undef<string[]>,
+                transpileMap: Undef<TranspileMap>;
+            if (this.dataMap) {
+                ({ unusedStyles, transpileMap } = this.dataMap);
+            }
+            const mimeType = file.mimeType;
+            let output = '';
+            for (const item of trailingContent) {
+                let value = item.value;
+                if (mimeType) {
+                    if (mimeType.endsWith('text/css')) {
+                        if (unusedStyles && !item.preserve) {
+                            const result = Chrome.removeCss(value, unusedStyles);
+                            if (result) {
+                                value = result;
                             }
                         }
-                        this.finalize('');
-                        resumeThread();
-                    });
-                })
-                .catch(err => {
-                    Node.writeFail(filepath, err);
-                    this.finalize('');
-                    resumeThread();
-                });
+                        if (mimeType[0] === '@') {
+                            const result = this.transformCss(file, value);
+                            if (result) {
+                                value = result;
+                            }
+                        }
+                    }
+                    if (item.format) {
+                        const result = await Chrome.formatContent(mimeType, item.format, value, transpileMap);
+                        if (result) {
+                            output += '\n' + result;
+                            continue;
+                        }
+                    }
+                }
+                output += '\n' + value;
+            }
+            return Promise.resolve(output);
         }
-        else {
-            resumeThread();
-        }
+        return Promise.resolve();
     }
     async transformBuffer(assets: ExpressAsset[], file: ExpressAsset, filepath: string) {
         const mimeType = file.mimeType;
@@ -1633,46 +1590,89 @@ class FileManager implements serve.IFileManager {
         }
         return Promise.resolve();
     }
-    async getTrailingContent(file: ExpressAsset) {
-        const trailingContent = file.trailingContent;
-        if (trailingContent) {
-            let unusedStyles: Undef<string[]>,
-                transpileMap: Undef<TranspileMap>;
-            if (this.dataMap) {
-                ({ unusedStyles, transpileMap } = this.dataMap);
-            }
-            const mimeType = file.mimeType;
-            let output = '';
-            for (const item of trailingContent) {
-                let value = item.value;
-                if (mimeType) {
-                    if (mimeType.endsWith('text/css')) {
-                        if (unusedStyles && !item.preserve) {
-                            const result = Chrome.removeCss(value, unusedStyles);
-                            if (result) {
-                                value = result;
+    compressFile(assets: ExpressAsset[], file: ExpressAsset, filepath: string) {
+        const compress = file.compress;
+        const jpeg = Image.isJpeg(file, filepath) && Compress.findFormat(compress, 'jpeg');
+        const resumeThread = () => {
+            this.transformBuffer(assets, file, filepath).then(() => {
+                const gzip = Compress.findFormat(compress, 'gz');
+                const brotli = Compress.findFormat(compress, 'br');
+                if (gzip && Compress.withinSizeRange(filepath, gzip.condition)) {
+                    ++this.delayed;
+                    let gz = `${filepath}.gz`;
+                    Compress.createGzipWriteStream(filepath, gz, gzip.level)
+                        .on('finish', () => {
+                            if (gzip.condition?.includes('%') && Compress.getFileSize(gz) >= Compress.getFileSize(filepath)) {
+                                try {
+                                    fs.unlinkSync(gz);
+                                }
+                                catch {
+                                }
+                                gz = '';
                             }
-                        }
-                        if (mimeType[0] === '@') {
-                            const result = this.transformCss(file, value);
-                            if (result) {
-                                value = result;
-                            }
-                        }
-                    }
-                    if (item.format) {
-                        const result = await Chrome.formatContent(value, mimeType, item.format, transpileMap);
-                        if (result) {
-                            output += '\n' + result;
-                            continue;
-                        }
-                    }
+                            this.finalize(gz);
+                        })
+                        .on('error', err => {
+                            Node.writeFail(gz, err);
+                            this.finalize('');
+                        });
                 }
-                output += '\n' + value;
-            }
-            return Promise.resolve(output);
+                if (brotli && Node.checkVersion(11, 7) && Compress.withinSizeRange(filepath, brotli.condition)) {
+                    ++this.delayed;
+                    let br = `${filepath}.br`;
+                    Compress.createBrotliWriteStream(filepath, br, brotli.level, file.mimeType)
+                        .on('finish', () => {
+                            if (brotli.condition?.includes('%') && Compress.getFileSize(br) >= Compress.getFileSize(filepath)) {
+                                try {
+                                    fs.unlinkSync(br);
+                                }
+                                catch {
+                                }
+                                br = '';
+                            }
+                            this.finalize(br);
+                        })
+                        .on('error', err => {
+                            Node.writeFail(br, err);
+                            this.finalize('');
+                        });
+                }
+            });
+        };
+        if (jpeg && Compress.withinSizeRange(filepath, jpeg.condition)) {
+            ++this.delayed;
+            const jpg = filepath + (jpeg.condition?.includes('%') ? '.jpg' : '');
+            jimp.read(filepath)
+                .then(image => {
+                    image.quality(jpeg.level ?? Compress.jpeg_quality).write(jpg, err => {
+                        if (err) {
+                            Node.writeFail(filepath, err);
+                        }
+                        else if (jpg !== filepath) {
+                            try {
+                                if (Compress.getFileSize(jpg) >= Compress.getFileSize(filepath)) {
+                                    fs.unlinkSync(jpg);
+                                }
+                                else {
+                                    fs.renameSync(jpg, filepath);
+                                }
+                            }
+                            catch {
+                            }
+                        }
+                        this.finalize('');
+                        resumeThread();
+                    });
+                })
+                .catch(err => {
+                    Node.writeFail(filepath, err);
+                    this.finalize('');
+                    resumeThread();
+                });
         }
-        return Promise.resolve();
+        else {
+            resumeThread();
+        }
     }
     transformCss(file: ExpressAsset, content: string) {
         const baseUrl = file.uri!;
@@ -1746,7 +1746,7 @@ class FileManager implements serve.IFileManager {
             this.compressFile(assets, file, filepath);
         }
     }
-    processAssetsSync(empty: boolean) {
+    processAssets(empty: boolean) {
         const emptyDir = new Set<string>();
         const notFound: ObjectMap<boolean> = {};
         const processing: ObjectMap<ExpressAsset[]> = {};
@@ -2175,7 +2175,7 @@ app.post('/api/assets/copy', (req, res) => {
             }
         });
         try {
-            manager.processAssetsSync(req.query.empty === '1');
+            manager.processAssets(req.query.empty === '1');
             if (manager.delayed === 0) {
                 manager.finalize();
             }
@@ -2284,9 +2284,8 @@ app.post('/api/assets/archive', (req, res) => {
             if (unzip_to) {
                 archive.directory(unzip_to, false);
             }
-            manager.processAssetsSync(false);
+            manager.processAssets(false);
             if (manager.delayed === 0) {
-                manager.processAssetsSync(false);
                 manager.finalize();
             }
             else {

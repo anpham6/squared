@@ -1,4 +1,4 @@
-import USER_AGENT = squared.lib.client.USER_AGENT;
+import USER_AGENT = squared.lib.constant.USER_AGENT;
 
 const { isUserAgent } = squared.lib.client;
 

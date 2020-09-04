@@ -1,5 +1,5 @@
-import BUILD_ANDROID = android.lib.enumeration.BUILD_ANDROID;
-import STRING_ANDROID = android.lib.enumeration.STRING_ANDROID;
+import BUILD_ANDROID = android.base.constant.BUILD_ANDROID;
+import STRING_ANDROID = android.base.constant.STRING_ANDROID;
 
 import type View from '../view';
 

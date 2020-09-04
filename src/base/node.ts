@@ -1,9 +1,11 @@
-import USER_AGENT = squared.lib.client.USER_AGENT;
+import CSS_TRAITS = squared.lib.constant.CSS_TRAITS;
+import CSS_UNIT = squared.lib.constant.CSS_UNIT;
+import USER_AGENT = squared.lib.constant.USER_AGENT;
 
 type T = Node;
 
 const { isUserAgent } = squared.lib.client;
-const { CSS_PROPERTIES, CSS_TRAITS, CSS_UNIT, PROXY_INLINESTYLE, SVG_PROPERTIES, checkFontSizeValue, checkStyleValue, checkWritingMode, formatPX, getRemSize, getStyle, isAngle, isLength, isPercent, isTime, parseSelectorText, parseUnit } = squared.lib.css;
+const { CSS_PROPERTIES, PROXY_INLINESTYLE, SVG_PROPERTIES, checkFontSizeValue, checkStyleValue, checkWritingMode, formatPX, getRemSize, getStyle, isAngle, isLength, isPercent, isTime, parseSelectorText, parseUnit } = squared.lib.css;
 const { assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { CSS, FILE } = squared.lib.regex;
 const { getElementData, getElementAsNode, getElementCache, setElementCache } = squared.lib.session;

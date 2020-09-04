@@ -7,7 +7,7 @@ import SvgPath from './svgpath';
 import SvgShape from './svgshape';
 
 export default class SvgUseShape extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgShape))) implements squared.svg.SvgUseShape {
-    public readonly instanceType = squared.svg.lib.enumeration.INSTANCE_TYPE.SVG_USE_SHAPE;
+    public readonly instanceType = squared.svg.constant.INSTANCE_TYPE.SVG_USE_SHAPE;
 
     constructor(
         public readonly element: SVGGeometryElement,

@@ -6,6 +6,7 @@ type FileArchivingOptions = squared.base.FileArchivingOptions;
 type FileCopyingOptions = squared.base.FileCopyingOptions;
 
 const { SERVER_REQUIRED } = squared.lib.error;
+
 const { fromLastIndexOf, trimEnd } = squared.lib.util;
 
 export default abstract class File<T extends Node> implements squared.base.File<T> {

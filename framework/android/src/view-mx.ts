@@ -1,25 +1,26 @@
-import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
-import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
-import BUILD_ANDROID = android.lib.enumeration.BUILD_ANDROID;
-import STRING_ANDROID = android.lib.enumeration.STRING_ANDROID;
+import CSS_UNIT = squared.lib.constant.CSS_UNIT;
+import BOX_STANDARD = squared.base.constant.BOX_STANDARD;
+import NODE_ALIGNMENT = squared.base.constant.NODE_ALIGNMENT;
+import BUILD_ANDROID = android.base.constant.BUILD_ANDROID;
+import STRING_ANDROID = android.base.constant.STRING_ANDROID;
+
+import { CONTAINER_ANDROID, CONTAINER_ANDROID_X, CONTAINER_NODE, ELEMENT_ANDROID, LAYOUT_ANDROID, RESERVED_JAVA } from './lib/constant';
+import { API_ANDROID, DEPRECATED_ANDROID } from './lib/customization';
 
 import Resource from './resource';
 
 import ResourceUI = squared.base.ResourceUI;
 
-import { CONTAINER_ANDROID, CONTAINER_ANDROID_X, ELEMENT_ANDROID, LAYOUT_ANDROID, RESERVED_JAVA } from './lib/constant';
-import { API_ANDROID, DEPRECATED_ANDROID } from './lib/customization';
-import { CONTAINER_NODE } from './lib/enumeration';
 import { concatString, getDataSet, isHorizontalAlign, isVerticalAlign, localizeString } from './lib/util';
 
 type T = android.base.View;
 
-const { CSS_PROPERTIES, CSS_UNIT, formatPX, isLength, isPercent, parseTransform } = squared.lib.css;
+const { NODE_PROCEDURE } = squared.base.lib.constant;
+
+const { CSS_PROPERTIES, formatPX, isLength, isPercent, parseTransform } = squared.lib.css;
 const { getNamedItem, getRangeClientRect } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
 const { capitalize, convertInt, convertWord, fromLastIndexOf, hasKeys, isString, replaceMap, splitPair } = squared.lib.util;
-
-const { NODE_PROCEDURE } = squared.base.lib.enumeration;
 
 const BOX_MARGIN = CSS_PROPERTIES.margin.value as string[];
 const BOX_PADDING = CSS_PROPERTIES.padding.value as string[];
@@ -1722,7 +1723,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 let maxHeight = 0,
                                     parentHeight = 0;
                                 for (const item of grandParent) {
-                                    const height = (item.data<BoxRectDimension>(squared.base.lib.enumeration.EXT_NAME.FLEXBOX, 'boundsData') || item.bounds).height;
+                                    const height = (item.data<BoxRectDimension>(squared.base.constant.EXT_NAME.FLEXBOX, 'boundsData') || item.bounds).height;
                                     if (height > maxHeight) {
                                         maxHeight = height;
                                     }

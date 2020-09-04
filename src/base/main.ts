@@ -25,7 +25,7 @@ import Sprite from './extensions/sprite';
 import Table from './extensions/table';
 import WhiteSpace from './extensions/whitespace';
 
-import * as enumeration from './lib/enumeration';
+import * as constant from './lib/constant';
 import * as util from './lib/util';
 
 const extensions = {
@@ -42,7 +42,7 @@ const extensions = {
 };
 
 const lib = {
-    enumeration,
+    constant,
     util
 };
 

@@ -1,6 +1,8 @@
+import CSS_UNIT = squared.lib.constant.CSS_UNIT;
+
 import Pattern = squared.lib.base.Pattern;
 
-const { CSS_UNIT, calculateStyle: calculateCssStyle, calculateVar, calculateVarAsString, convertAngle, getFontSize, hasEm, isLength, isPercent, parseUnit } = squared.lib.css;
+const { calculateStyle: calculateCssStyle, calculateVar, calculateVarAsString, convertAngle, getFontSize, hasEm, isLength, isPercent, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { clamp, convertRadian, hypotenuse, truncateFraction, truncateTrailingZero } = squared.lib.math;
 const { TRANSFORM: REGEXP_TRANSFORM } = squared.lib.regex;

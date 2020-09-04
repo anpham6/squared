@@ -1,14 +1,14 @@
-import NODE_TEMPLATE = squared.base.lib.enumeration.NODE_TEMPLATE;
-import BUILD_ANDROID = android.lib.enumeration.BUILD_ANDROID;
+import NODE_TEMPLATE = squared.base.constant.NODE_TEMPLATE;
+import BUILD_ANDROID = android.base.constant.BUILD_ANDROID;
 
 import { WIDGET_NAME } from '../lib/constant';
 
+const { NODE_RESOURCE } = squared.base.lib.constant;
+const { SUPPORT_ANDROID, SUPPORT_ANDROID_X } = android.lib.constant;
+const { CONTAINER_NODE } = android.lib.constant;
+
 const { assignEmptyValue, capitalize, iterateArray } = squared.lib.util;
 const { createStyleAttribute, createViewAttribute } = android.lib.util;
-
-const { NODE_RESOURCE } = squared.base.lib.enumeration;
-const { SUPPORT_ANDROID, SUPPORT_ANDROID_X } = android.lib.constant;
-const { CONTAINER_NODE } = android.lib.enumeration;
 
 const Resource = android.base.Resource;
 
@@ -29,7 +29,7 @@ export default class BottomNavigation<T extends android.base.View> extends squar
         node.setControlType(controlName, CONTAINER_NODE.BLOCK);
         node.exclude({ resource: NODE_RESOURCE.ASSET });
         node.render(parent);
-        node.apply(Resource.formatOptions(options, this.application.extensionManager.valueAsBoolean(android.lib.enumeration.EXT_ANDROID.RESOURCE_STRINGS, 'numberAsResource')));
+        node.apply(Resource.formatOptions(options, this.application.extensionManager.valueAsBoolean(android.base.constant.EXT_ANDROID.RESOURCE_STRINGS, 'numberAsResource')));
         node.setLayoutWidth('match_parent');
         node.setLayoutHeight('wrap_content');
         node.cascade((item: T) => this.addDescendant(item));

@@ -1,5 +1,5 @@
-import EXT_NAME = squared.base.lib.enumeration.EXT_NAME;
-import EXT_ANDROID = android.lib.enumeration.EXT_ANDROID;
+import EXT_NAME = squared.base.constant.EXT_NAME;
+import EXT_ANDROID = android.base.constant.EXT_ANDROID;
 
 import Application from './application';
 import Controller from './controller';
@@ -39,13 +39,12 @@ import ResourceStyles from './extensions/resource/styles';
 import ResourceSvg from './extensions/resource/svg';
 
 import * as constant from './lib/constant';
-import * as enumeration from './lib/enumeration';
 import * as util from './lib/util';
 import * as customization from './lib/customization';
 
 import SETTINGS from './settings';
 
-const framework = squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID;
+const framework = squared.base.lib.constant.APP_FRAMEWORK.ANDROID;
 let application: Null<Application<View>> = null;
 let file: Null<File<View>> = null;
 
@@ -97,7 +96,6 @@ const appBase: android.AndroidFramework<View> = {
     lib: {
         constant,
         customization,
-        enumeration,
         util
     },
     system: {

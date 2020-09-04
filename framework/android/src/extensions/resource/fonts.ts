@@ -1,4 +1,4 @@
-import BUILD_ANDROID = android.lib.enumeration.BUILD_ANDROID;
+import BUILD_ANDROID = android.base.constant.BUILD_ANDROID;
 
 import type View from '../../view';
 
@@ -12,10 +12,10 @@ type AttributeMap = ObjectMap<number[]>;
 type TagNameMap = ObjectMap<StyleAttribute[]>;
 type NodeStyleMap = ObjectMap<string[]>;
 
+const { NODE_RESOURCE } = squared.base.lib.constant;
+
 const { truncate } = squared.lib.math;
 const { capitalize, convertWord, hasKeys, replaceMap, spliceArray, trimBoth } = squared.lib.util;
-
-const { NODE_RESOURCE } = squared.base.lib.enumeration;
 
 const REGEXP_FONTATTRIBUTE = /([^\s]+)="((?:[^"]|\\")+)"/;
 const REGEXP_FONTNAME = /^(\w*?)(?:_(\d+))?$/;

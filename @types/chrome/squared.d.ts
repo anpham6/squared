@@ -42,6 +42,20 @@ declare namespace base {
         static getCompressOptions(name: string, options: CompressOptions): string;
         processFile(data: ChromeAsset, override?: boolean): boolean;
     }
+
+    namespace constant {
+        const enum EXT_CHROME {
+            COMPRESS_BROTLI = 'chrome.compress.brotli',
+            COMPRESS_GZIP = 'chrome.compress.gzip',
+            COMPRESS_JPEG = 'chrome.compress.jpeg',
+            COMPRESS_PNG = 'chrome.compress.png',
+            CONVERT_BMP = 'chrome.convert.bmp',
+            CONVERT_GIF = 'chrome.convert.gif',
+            CONVERT_JPEG = 'chrome.convert.jpeg',
+            CONVERT_PNG = 'chrome.convert.png',
+            CONVERT_TIFF = 'chrome.convert.tiff'
+        }
+    }
 }
 
 declare namespace extensions {
@@ -57,22 +71,6 @@ declare namespace extensions {
         class Jpeg<T extends Node> extends squared.base.Extension<T> {}
         class Png<T extends Node> extends squared.base.Extension<T> {}
         class Tiff<T extends Node> extends squared.base.Extension<T> {}
-    }
-}
-
-declare namespace lib {
-    namespace enumeration {
-        const enum EXT_CHROME {
-            COMPRESS_BROTLI = 'chrome.compress.brotli',
-            COMPRESS_GZIP = 'chrome.compress.gzip',
-            COMPRESS_JPEG = 'chrome.compress.jpeg',
-            COMPRESS_PNG = 'chrome.compress.png',
-            CONVERT_BMP = 'chrome.convert.bmp',
-            CONVERT_GIF = 'chrome.convert.gif',
-            CONVERT_JPEG = 'chrome.convert.jpeg',
-            CONVERT_PNG = 'chrome.convert.png',
-            CONVERT_TIFF = 'chrome.convert.tiff'
-        }
     }
 }
 

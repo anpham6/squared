@@ -1,20 +1,20 @@
-import SYNCHRONIZE_MODE = squared.svg.lib.enumeration.SYNCHRONIZE_MODE;
-import BUILD_ANDROID = android.lib.enumeration.BUILD_ANDROID;
-
-import type View from '../../view';
-
-import Resource from '../../resource';
-
-import { convertColorStops } from './background';
+import SYNCHRONIZE_MODE = squared.svg.constant.SYNCHRONIZE_MODE;
+import BUILD_ANDROID = android.base.constant.BUILD_ANDROID;
 
 import { XMLNS_ANDROID } from '../../lib/constant';
-import { applyTemplate, formatString } from '../../lib/util';
 import { VECTOR_GROUP, VECTOR_PATH } from '../../template/vector';
 
 import ANIMATEDVECTOR_TMPL from '../../template/animated-vector';
 import LAYERLIST_TMPL from '../../template/layer-list';
 import SET_TMPL from '../../template/set';
 import VECTOR_TMPL from '../../template/vector';
+
+import type View from '../../view';
+
+import Resource from '../../resource';
+
+import { convertColorStops } from './background';
+import { applyTemplate, formatString } from '../../lib/util';
 
 if (!squared.svg) {
     Object.assign(squared, { svg: { lib: { constant: {}, util: {} } } });
@@ -135,14 +135,14 @@ interface AnimateGroup {
     pathData?: string;
 }
 
+const { KEYSPLINE_NAME } = squared.svg.lib.constant;
+
 const { extractURL, formatPX, isPercent } = squared.lib.css;
 const { truncate } = squared.lib.math;
 const { FILE } = squared.lib.regex;
 const { convertCamelCase, convertInt, convertWord, hasKeys, isArray, isNumber, lastItemOf, lastItemEquals, partitionArray, plainMap, replaceMap } = squared.lib.util;
 
 const { CACHE_VIEWNAME, MATRIX, SVG, TRANSFORM, getAttribute, getRootOffset } = squared.svg.lib.util;
-
-const { KEYSPLINE_NAME } = squared.svg.lib.constant;
 
 const INTERPOLATOR_ANDROID = {
     accelerate_decelerate: '@android:anim/accelerate_decelerate_interpolator',

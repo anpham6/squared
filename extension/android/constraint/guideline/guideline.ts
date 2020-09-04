@@ -1,4 +1,4 @@
-import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
+import NODE_ALIGNMENT = squared.base.constant.NODE_ALIGNMENT;
 
 import LayoutUI = squared.base.LayoutUI;
 
@@ -8,11 +8,11 @@ interface ConstraintGuidelineOptions {
     circlePosition: boolean;
 }
 
+const { CONTAINER_NODE } = android.lib.constant;
+
 const { formatPX } = squared.lib.css;
 const { hypotenuse } = squared.lib.math;
 const { withinRange } = squared.lib.util;
-
-const { CONTAINER_NODE } = android.lib.enumeration;
 
 export default class Guideline<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly options: ConstraintGuidelineOptions = {

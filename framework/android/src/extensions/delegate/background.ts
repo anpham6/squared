@@ -1,16 +1,18 @@
-import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
-import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
+import CSS_UNIT = squared.lib.constant.CSS_UNIT;
+import BOX_STANDARD = squared.base.constant.BOX_STANDARD;
+import NODE_ALIGNMENT = squared.base.constant.NODE_ALIGNMENT;
+import NODE_TEMPLATE = squared.base.constant.NODE_TEMPLATE;
+
+import { CONTAINER_NODE } from '../../lib/constant';
 
 import View from '../../view';
 
 import LayoutUI = squared.base.LayoutUI;
 import CssGrid = squared.base.extensions.CssGrid;
 
-import { CONTAINER_NODE } from '../../lib/enumeration';
+const { NODE_RESOURCE } = squared.base.lib.constant;
 
-const { CSS_UNIT, isLength } = squared.lib.css;
-
-const { NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
+const { isLength } = squared.lib.css;
 
 const hasVisibleWidth = (node: View) => !node.blockStatic && !node.hasPX('width') || node.has('width', { type: CSS_UNIT.LENGTH | CSS_UNIT.PERCENT, not: '100%' }) && node.css('minWidth') !== '100%' || node.has('maxWidth', { type: CSS_UNIT.LENGTH | CSS_UNIT.PERCENT, not: '100%' });
 const hasFullHeight = (node: View) => node.css('height') === '100%' || node.css('minHeight') === '100%';

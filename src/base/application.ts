@@ -1,3 +1,5 @@
+import CSS_TRAITS = squared.lib.constant.CSS_TRAITS;
+
 import type Extension from './extension';
 import type ExtensionManager from './extensionmanager';
 import type Resource from './resource';
@@ -9,8 +11,9 @@ import NodeList from './nodelist';
 type FileActionOptions = squared.FileActionOptions;
 type PreloadItem = HTMLImageElement | string;
 
-const { CSS_PROPERTIES, CSS_TRAITS, checkMediaRule, getSpecificity, hasComputedStyle, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText } = squared.lib.css;
 const { DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, CSS_CANNOT_BE_PARSED } = squared.lib.error;
+
+const { CSS_PROPERTIES, checkMediaRule, getSpecificity, hasComputedStyle, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText } = squared.lib.css;
 const { FILE, STRING } = squared.lib.regex;
 const { getElementCache, newSessionInit, resetSessionAll, setElementCache } = squared.lib.session;
 const { capitalize, convertCamelCase, isEmptyString, parseMimeType, resolvePath, splitPair, splitPairStart, trimBoth } = squared.lib.util;

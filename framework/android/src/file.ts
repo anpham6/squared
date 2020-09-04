@@ -1,11 +1,6 @@
-import BUILD_ANDROID = android.lib.enumeration.BUILD_ANDROID;
-
-import type View from './view';
-
-import Resource from './resource';
+import BUILD_ANDROID = android.base.constant.BUILD_ANDROID;
 
 import { XMLNS_ANDROID } from './lib/constant';
-import { applyTemplate, replaceTab } from './lib/util';
 
 import COLOR_TMPL from './template/resources/color';
 import DIMEN_TMPL from './template/resources/dimen';
@@ -13,6 +8,12 @@ import FONTFAMILY_TMPL from './template/font-family';
 import STRING_TMPL from './template/resources/string';
 import STRINGARRAY_TMPL from './template/resources/string-array';
 import STYLE_TMPL from './template/resources/style';
+
+import type View from './view';
+
+import Resource from './resource';
+
+import { applyTemplate, replaceTab } from './lib/util';
 
 type FileArchivingOptions = squared.base.FileArchivingOptions;
 type FileCopyingOptions = squared.base.FileCopyingOptions;

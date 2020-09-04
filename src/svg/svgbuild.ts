@@ -1,4 +1,4 @@
-import INSTANCE_TYPE = squared.svg.lib.enumeration.INSTANCE_TYPE;
+import INSTANCE_TYPE = squared.svg.constant.INSTANCE_TYPE;
 
 import type Svg from './svg';
 import type SvgAnimate from './svganimate';

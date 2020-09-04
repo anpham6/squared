@@ -65,7 +65,7 @@ interface IChrome {
     minifyHtml(format: string, value: string, transpileMap?: TranspileMap): Promise<Void<string>>;
     minifyCss(format: string, value: string, transpileMap?: TranspileMap): Promise<Void<string>>;
     minifyJs(format: string, value: string, transpileMap?: TranspileMap): Promise<Void<string>>;
-    formatContent(value: string, mimeType: string, format: string, transpileMap?: TranspileMap): Promise<Void<string>>;
+    formatContent(mimeType: string, format: string, value: string, transpileMap?: TranspileMap): Promise<Void<string>>;
     removeCss(source: string, styles: string[]): Undef<string>;
 }
 
@@ -92,7 +92,7 @@ interface IFileManager {
     transformCss(file: ExpressAsset, content: string): Undef<string>;
     compressFile(assets: ExpressAsset[], file: ExpressAsset, filepath: string): void;
     writeBuffer(assets: ExpressAsset[], file: ExpressAsset, filepath: string): void;
-    processAssetsSync(empty: boolean): void;
+    processAssets(empty: boolean): void;
     finalizeAssetsAsync(release: boolean): Promise<void>;
 }
 

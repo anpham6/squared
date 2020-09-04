@@ -1,17 +1,17 @@
-import NODE_TEMPLATE = squared.base.lib.enumeration.NODE_TEMPLATE;
-import BUILD_ANDROID = android.lib.enumeration.BUILD_ANDROID;
-import EXT_ANDROID = android.lib.enumeration.EXT_ANDROID;
+import NODE_TEMPLATE = squared.base.constant.NODE_TEMPLATE;
+import BUILD_ANDROID = android.base.constant.BUILD_ANDROID;
+import EXT_ANDROID = android.base.constant.EXT_ANDROID;
 
 import { WIDGET_NAME } from '../lib/constant';
 
 type View = android.base.View;
 
+const { NODE_RESOURCE } = squared.base.lib.constant;
+const { SUPPORT_ANDROID, SUPPORT_ANDROID_X } = android.lib.constant;
+const { CONTAINER_NODE } = android.lib.constant;
+
 const { assignEmptyValue, cloneObject, includes, iterateArray } = squared.lib.util;
 const { createStyleAttribute, createViewAttribute } = android.lib.util;
-
-const { NODE_RESOURCE } = squared.base.lib.enumeration;
-const { SUPPORT_ANDROID, SUPPORT_ANDROID_X } = android.lib.constant;
-const { CONTAINER_NODE } = android.lib.enumeration;
 
 const Resource = android.base.Resource;
 

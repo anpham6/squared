@@ -1,6 +1,6 @@
-import USER_AGENT = squared.lib.client.USER_AGENT;
-import CSS_TRAITS = squared.lib.css.CSS_TRAITS;
-import CSS_UNIT = squared.lib.css.CSS_UNIT;
+import CSS_TRAITS = squared.lib.constant.CSS_TRAITS;
+import CSS_UNIT = squared.lib.constant.CSS_UNIT;
+import USER_AGENT = squared.lib.constant.USER_AGENT;
 
 import { getDeviceDPI, isUserAgent } from './client';
 import { parseColor } from './color';

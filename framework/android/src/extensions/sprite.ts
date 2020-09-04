@@ -1,16 +1,15 @@
-import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
-import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
+import BOX_STANDARD = squared.base.constant.BOX_STANDARD;
+import NODE_ALIGNMENT = squared.base.constant.NODE_ALIGNMENT;
+
+import { CONTAINER_ANDROID, CONTAINER_NODE } from '../lib/constant';
 
 import type View from '../view';
 
 import LayoutUI = squared.base.LayoutUI;
 
-import { CONTAINER_ANDROID } from '../lib/constant';
-import { CONTAINER_NODE } from '../lib/enumeration';
+const { APP_SECTION, NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.constant;
 
 const { formatPX } = squared.lib.css;
-
-const { APP_SECTION, NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.enumeration;
 
 export default class <T extends View> extends squared.base.extensions.Sprite<T> {
     public processNode(node: T, parent: T): Void<ExtensionResult<T>> {

@@ -1,3 +1,5 @@
+import { KEYSPLINE_NAME, PATTERN_CUBICBEZIER } from './lib/constant';
+
 import type SvgElement from './svgelement';
 
 import SvgAnimate from './svganimate';
@@ -6,7 +8,6 @@ import SvgAnimateTransform from './svganimatetransform';
 import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 
-import { KEYSPLINE_NAME, PATTERN_CUBICBEZIER } from './lib/constant';
 import { CACHE_VIEWNAME, TRANSFORM, calculateStyle, getAttribute } from './lib/util';
 
 import Pattern = squared.lib.base.Pattern;

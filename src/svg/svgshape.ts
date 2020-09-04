@@ -4,7 +4,7 @@ import SvgElement from './svgelement';
 import SvgPath from './svgpath';
 
 export default class SvgShape extends SvgSynchronize$MX(SvgView$MX(SvgElement)) implements squared.svg.SvgShape {
-    public readonly instanceType = squared.svg.lib.enumeration.INSTANCE_TYPE.SVG_SHAPE;
+    public readonly instanceType = squared.svg.constant.INSTANCE_TYPE.SVG_SHAPE;
 
     private _path: Null<SvgPath> = null;
 

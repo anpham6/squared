@@ -1,6 +1,6 @@
-import NODE_TEMPLATE = squared.base.lib.enumeration.NODE_TEMPLATE;
-import BUILD_ANDROID = android.lib.enumeration.BUILD_ANDROID;
-import EXT_ANDROID = android.lib.enumeration.EXT_ANDROID;
+import NODE_TEMPLATE = squared.base.constant.NODE_TEMPLATE;
+import BUILD_ANDROID = android.base.constant.BUILD_ANDROID;
+import EXT_ANDROID = android.base.constant.EXT_ANDROID;
 
 import { WIDGET_NAME } from '../lib/constant';
 
@@ -11,14 +11,13 @@ interface ToolbarThemeData {
     popupOverlay: string;
 }
 
+const { NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.constant;
+const { CONTAINER_ANDROID, CONTAINER_NODE, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = android.lib.constant;
+
 const { formatPX } = squared.lib.css;
 const { getElementAsNode } = squared.lib.session;
 const { assignEmptyValue, capitalize, includes, iterateArray } = squared.lib.util;
 const { createStyleAttribute, createViewAttribute, getDocumentId } = android.lib.util;
-
-const { NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.enumeration;
-const { CONTAINER_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = android.lib.constant;
-const { CONTAINER_NODE } = android.lib.enumeration;
 
 const Resource = android.base.Resource;
 

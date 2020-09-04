@@ -1,16 +1,16 @@
-import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
-import NODE_TEMPLATE = squared.base.lib.enumeration.NODE_TEMPLATE;
-import EXT_ANDROID = android.lib.enumeration.EXT_ANDROID;
+import NODE_ALIGNMENT = squared.base.constant.NODE_ALIGNMENT;
+import NODE_TEMPLATE = squared.base.constant.NODE_TEMPLATE;
+import EXT_ANDROID = android.base.constant.EXT_ANDROID;
 
 type View = android.base.View;
+
+const { NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.constant;
+const { CONTAINER_NODE } = android.lib.constant;
 
 const { capitalize, sameArray } = squared.lib.util;
 const { createViewAttribute } = android.lib.util;
 
 const { appendSeparator } = squared.base.lib.util;
-
-const { NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.enumeration;
-const { CONTAINER_NODE } = android.lib.enumeration;
 
 const Resource = android.base.Resource;
 
