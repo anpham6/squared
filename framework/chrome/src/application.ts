@@ -13,8 +13,8 @@ export default class Application<T extends squared.base.Node> extends squared.ba
     }
 
     public reset() {
-        super.reset();
         this.session.unusedStyles!.clear();
+        super.reset();
     }
 
     public insertNode(element: Element, sessionId: string) {

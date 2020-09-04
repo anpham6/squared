@@ -134,23 +134,6 @@ export const XMLNS_ANDROID = {
     aapt: 'http://schemas.android.com/aapt'
 };
 
-export const STRING_ANDROID = {
-    MARGIN: 'layout_margin',
-    MARGIN_VERTICAL: 'layout_marginVertical',
-    MARGIN_HORIZONTAL: 'layout_marginHorizontal',
-    MARGIN_TOP: 'layout_marginTop',
-    MARGIN_RIGHT: 'layout_marginRight',
-    MARGIN_BOTTOM: 'layout_marginBottom',
-    MARGIN_LEFT: 'layout_marginLeft',
-    PADDING: 'padding',
-    PADDING_VERTICAL: 'paddingVertical',
-    PADDING_HORIZONTAL: 'paddingHorizontal',
-    PADDING_TOP: 'paddingTop',
-    PADDING_RIGHT: 'paddingRight',
-    PADDING_BOTTOM: 'paddingBottom',
-    PADDING_LEFT: 'paddingLeft'
-};
-
 export const LOCALIZE_ANDROID = {
     left: 'start',
     right: 'end',

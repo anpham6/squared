@@ -2,7 +2,7 @@ type Node = squared.base.Node;
 type PromiseResult = Promise<Void<PlainObject>>;
 
 export interface FrameworkOptions {
-    settings?: StandardMap;
+    settings?: PlainObject;
     loadAs?: string;
     saveAs?: string;
     cache?: boolean;

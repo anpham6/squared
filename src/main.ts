@@ -26,7 +26,7 @@ type ExtendPrototypeMap = ObjectMap<FunctionType<any> | { get?: () => any, set?:
 
 const addQueue = new Set<ExtensionRequest>();
 const removeQueue = new Set<ExtensionRequest>();
-const optionsQueue = new Map<string, StandardMap>();
+const optionsQueue = new Map<string, PlainObject>();
 const extensionCache = new Set<Extension>();
 const prototypeMap = new Map<number, ExtendPrototypeMap>();
 const settings = {} as UserSettings;
@@ -36,7 +36,7 @@ let main: Null<Main> = null;
 let framework: Null<Framework> = null;
 let extensionManager: Null<ExtensionManager> = null;
 
-function clearProperties(data: StandardMap) {
+function clearProperties(data: PlainObject) {
     for (const attr in data) {
         delete data[attr];
     }
@@ -164,7 +164,7 @@ export function setHostname(value: string) {
 
 export function setFramework(value: Framework, options?: FrameworkOptions) {
     const reloading = framework !== null;
-    let userSettings: Undef<StandardMap>,
+    let userSettings: Undef<PlainObject>,
         saveAsLocal: Undef<string>,
         loadAs: Undef<string>,
         cache: Undef<boolean>;

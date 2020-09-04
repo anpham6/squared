@@ -1,12 +1,13 @@
 import BOX_STANDARD = squared.base.lib.enumeration.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.lib.enumeration.NODE_ALIGNMENT;
 import BUILD_ANDROID = android.lib.enumeration.BUILD_ANDROID;
+import STRING_ANDROID = android.lib.enumeration.STRING_ANDROID;
 
 import Resource from './resource';
 
 import ResourceUI = squared.base.ResourceUI;
 
-import { CONTAINER_ANDROID, CONTAINER_ANDROID_X, ELEMENT_ANDROID, LAYOUT_ANDROID, RESERVED_JAVA, STRING_ANDROID } from './lib/constant';
+import { CONTAINER_ANDROID, CONTAINER_ANDROID_X, ELEMENT_ANDROID, LAYOUT_ANDROID, RESERVED_JAVA } from './lib/constant';
 import { API_ANDROID, DEPRECATED_ANDROID } from './lib/customization';
 import { CONTAINER_NODE } from './lib/enumeration';
 import { concatString, getDataSet, isHorizontalAlign, isVerticalAlign, localizeString } from './lib/util';

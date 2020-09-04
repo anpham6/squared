@@ -246,7 +246,7 @@ Custom named user settings per framework can be saved to local storage and reloa
 
 ```javascript
 interface FrameworkOptions {
-    settings?: {};
+    settings?: PlainObject;
     loadAs?: string;
     saveAs?: string;
     cache?: boolean;

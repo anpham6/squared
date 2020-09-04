@@ -190,6 +190,22 @@ declare namespace lib {
             RESOURCE_DATA = 'android.resource.data',
             RESOURCE_STYLES = 'android.resource.styles'
         }
+        const enum STRING_ANDROID {
+            MARGIN = 'layout_margin',
+            MARGIN_VERTICAL = 'layout_marginVertical',
+            MARGIN_HORIZONTAL = 'layout_marginHorizontal',
+            MARGIN_TOP = 'layout_marginTop',
+            MARGIN_RIGHT = 'layout_marginRight',
+            MARGIN_BOTTOM = 'layout_marginBottom',
+            MARGIN_LEFT = 'layout_marginLeft',
+            PADDING = 'padding',
+            PADDING_VERTICAL = 'paddingVertical',
+            PADDING_HORIZONTAL = 'paddingHorizontal',
+            PADDING_TOP = 'paddingTop',
+            PADDING_RIGHT = 'paddingRight',
+            PADDING_BOTTOM = 'paddingBottom',
+            PADDING_LEFT = 'paddingLeft'
+        }
         const enum BUILD_ANDROID {
             R = 30,
             Q = 29,
@@ -368,24 +384,6 @@ declare namespace lib {
             android: string;
             app: string;
             aapt: string;
-        };
-        const STRING_ANDROID: {
-            MARGIN: string;
-            MARGIN_VERTICAL: string;
-            MARGIN_HORIZONTAL: string;
-            MARGIN_TOP: string;
-            MARGIN_RIGHT: string;
-            MARGIN_BOTTOM: string;
-            MARGIN_LEFT: string;
-            PADDING: string;
-            PADDING_VERTICAL: string;
-            PADDING_HORIZONTAL: string;
-            PADDING_TOP: string;
-            PADDING_RIGHT: string;
-            PADDING_BOTTOM: string;
-            PADDING_LEFT: string;
-            CENTER_HORIZONTAL: string;
-            CENTER_VERTICAL: string;
         };
         const LOCALIZE_ANDROID: {
             left: string;
