@@ -554,7 +554,7 @@ export function fromCache(...elements: (Element | string)[]) {
 
 export function resetCache() {
     if (main) {
-        main.elementMap.clear();
+        main.elementMap = new WeakMap();
     }
 }
 

@@ -53,8 +53,8 @@ export default abstract class Application<T extends Node> implements squared.bas
     public extensions: Extension<T>[] = [];
     public closed = false;
     public builtInExtensions!: Map<string, Extension<T>>;
+    public elementMap = new WeakMap<Element, T>();
     public readonly Node: Constructor<T>;
-    public readonly elementMap = new Map<Element, T>();
     public readonly session: squared.base.AppSession<T> = {
         active: new Map<string, squared.base.AppProcessing<T>>()
     };
@@ -135,7 +135,7 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     public reset() {
         this._nextId = 0;
-        this.elementMap.clear();
+        this.elementMap = new WeakMap();
         resetSessionAll();
         this.session.active.clear();
         this._controllerHandler.reset();

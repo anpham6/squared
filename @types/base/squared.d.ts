@@ -82,9 +82,9 @@ declare module "base" {
         userSettings: UserSettings;
         builtInExtensions: Map<string, Extension<T>>;
         closed: boolean;
+        elementMap: WeakMap<Element, T>;
         readonly systemName: string;
         readonly framework: number;
-        readonly elementMap: Map<Element, T>;
         readonly session: AppSession<T>;
         readonly extensions: Extension<T>[];
         readonly initializing: boolean;

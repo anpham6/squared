@@ -1,11 +1,11 @@
 import { FRAMEWORK_NOT_INSTALLED } from './error';
 
-let SESSION_MAP: ObjectMap<Map<Element, ElementData>> = {};
+let SESSION_MAP: ObjectMap<WeakMap<Element, ElementData>> = {};
 
 newSessionInit('0');
 
 export function newSessionInit(value: string) {
-    const elementMap = new Map<Element, ElementData>();
+    const elementMap = new WeakMap<Element, ElementData>();
     SESSION_MAP[value] = elementMap;
     return elementMap;
 }
