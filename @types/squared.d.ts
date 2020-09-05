@@ -18,7 +18,6 @@ export type ExtensionRequest = squared.base.Extension<Node> | string;
 export type ExtensionRequestObject = ExtensionRequest | [ExtensionRequest, PlainObject];
 
 export const settings: StandardMap;
-export const system: FunctionMap<any>;
 export function setHostname(value: string): void;
 export function setFramework(value: PlainObject, options?: FrameworkOptions): void;
 export function add(...values: ExtensionRequestObject[]): number;

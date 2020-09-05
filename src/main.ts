@@ -30,7 +30,6 @@ const optionsQueue = new Map<string, PlainObject>();
 const extensionCache = new Set<Extension>();
 const prototypeMap = new Map<number, ExtendPrototypeMap>();
 const settings = {} as UserSettings;
-const system = {} as FunctionMap<any>;
 
 let main: Null<Main> = null;
 let framework: Null<Framework> = null;
@@ -200,9 +199,7 @@ export function setFramework(value: Framework, options?: FrameworkOptions) {
         if (framework !== value) {
             if (reloading) {
                 clearProperties(settings);
-                clearProperties(system);
             }
-            Object.assign(system, value.system);
         }
         const appBase = cache ? value.cached() : value.create();
         main = appBase.application;
@@ -583,4 +580,4 @@ const lib = {
     util
 };
 
-export { lib, system, settings };
+export { lib, settings };

@@ -28,12 +28,12 @@
                     squared.settings.preloadImages = false;
                     squared.settings.compressImages = false;
                     squared.parseDocument('squared_ui').then(function() {
-                        squared.system.saveHtmlPage();
-                        squared.system.saveImageAssets();
-                        squared.system.saveScriptAssets();
-                        squared.system.saveLinkAssets();
-                        // squared.system.saveAudioAssets();
-                        // squared.system.saveVideoAssets();
+                        chrome.system.saveHtmlPage();
+                        chrome.system.saveImageAssets();
+                        chrome.system.saveScriptAssets();
+                        chrome.system.saveLinkAssets();
+                        // chrome.system.saveAudioAssets();
+                        // chrome.system.saveVideoAssets();
                         const options = {
                             assets: [
                                 {

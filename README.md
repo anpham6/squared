@@ -326,59 +326,59 @@ The system methods are used internally to create the entire project and generall
 ```javascript
 android.setViewModel(data: {}, sessionId?: string) // object data for layout bindings
 
-squared.system.customize(build: number, widget: string, options: {}) // global attributes applied to specific views
-squared.system.addXmlNs(name: string, uri: string) // add global namespaces for third-party controls
+android.system.customize(build: number, widget: string, options: {}) // global attributes applied to specific views
+android.system.addXmlNs(name: string, uri: string) // add global namespaces for third-party controls
 
-squared.system.copyLayoutAllXml(directory: string, options?: {}) // copy generated xml
-squared.system.copyResourceAllXml(directory: string, options?: {})
-squared.system.copyResourceAnimXml(directory: string, options?: {})
-squared.system.copyResourceArrayXml(directory: string, options?: {})
-squared.system.copyResourceColorXml(directory: string, options?: {})
-squared.system.copyResourceDimenXml(directory: string, options?: {})
-squared.system.copyResourceDrawableXml(directory: string, options?: {})
-squared.system.copyResourceFontXml(directory: string, options?: {})
-squared.system.copyResourceStringXml(directory: string, options?: {})
-squared.system.copyResourceStyleXml(directory: string, options?: {})
+android.system.copyLayoutAllXml(directory: string, options?: {}) // copy generated xml
+android.system.copyResourceAllXml(directory: string, options?: {})
+android.system.copyResourceAnimXml(directory: string, options?: {})
+android.system.copyResourceArrayXml(directory: string, options?: {})
+android.system.copyResourceColorXml(directory: string, options?: {})
+android.system.copyResourceDimenXml(directory: string, options?: {})
+android.system.copyResourceDrawableXml(directory: string, options?: {})
+android.system.copyResourceFontXml(directory: string, options?: {})
+android.system.copyResourceStringXml(directory: string, options?: {})
+android.system.copyResourceStyleXml(directory: string, options?: {})
 
-squared.system.saveLayoutAllXml(filename?: string, options?: {}) // save generated xml
-squared.system.saveResourceAllXml(filename?: string, options?: {})
-squared.system.saveResourceAnimXml(filename?: string, options?: {})
-squared.system.saveResourceArrayXml(filename?: string, options?: {})
-squared.system.saveResourceColorXml(filename?: string, options?: {})
-squared.system.saveResourceDimenXml(filename?: string, options?: {})
-squared.system.saveResourceDrawableXml(filename?: string, options?: {})
-squared.system.saveResourceFontXml(filename?: string, options?: {})
-squared.system.saveResourceStringXml(filename?: string, options?: {})
-squared.system.saveResourceStyleXml(filename?: string, options?: {})
+android.system.saveLayoutAllXml(filename?: string, options?: {}) // save generated xml
+android.system.saveResourceAllXml(filename?: string, options?: {})
+android.system.saveResourceAnimXml(filename?: string, options?: {})
+android.system.saveResourceArrayXml(filename?: string, options?: {})
+android.system.saveResourceColorXml(filename?: string, options?: {})
+android.system.saveResourceDimenXml(filename?: string, options?: {})
+android.system.saveResourceDrawableXml(filename?: string, options?: {})
+android.system.saveResourceFontXml(filename?: string, options?: {})
+android.system.saveResourceStringXml(filename?: string, options?: {})
+android.system.saveResourceStyleXml(filename?: string, options?: {})
 
-squared.system.writeLayoutAllXml() // write string[] generated xml
-squared.system.writeResourceAllXml()
-squared.system.writeResourceAnimXml()
-squared.system.writeResourceArrayXml()
-squared.system.writeResourceColorXml()
-squared.system.writeResourceDimenXml()
-squared.system.writeResourceDrawableXml()
-squared.system.writeResourceFontXml()
-squared.system.writeResourceStringXml()
-squared.system.writeResourceStyleXml()
+android.system.writeLayoutAllXml() // write string[] generated xml
+android.system.writeResourceAllXml()
+android.system.writeResourceAnimXml()
+android.system.writeResourceArrayXml()
+android.system.writeResourceColorXml()
+android.system.writeResourceDimenXml()
+android.system.writeResourceDrawableXml()
+android.system.writeResourceFontXml()
+android.system.writeResourceStringXml()
+android.system.writeResourceStyleXml()
 
-squared.system.copyResourceDrawableImage(directory: string, options?: {})
-squared.system.saveResourceDrawableImage(filename?: string, options?: {})
-squared.system.writeResourceDrawableImage()
+android.system.copyResourceDrawableImage(directory: string, options?: {})
+android.system.saveResourceDrawableImage(filename?: string, options?: {})
+android.system.writeResourceDrawableImage()
 
-squared.system.copyResourceRawVideo(directory: string, options?: {})
-squared.system.saveResourceRawVideo(filename?: string, options?: {})
-squared.system.writeResourceRawVideo()
+android.system.copyResourceRawVideo(directory: string, options?: {})
+android.system.saveResourceRawVideo(filename?: string, options?: {})
+android.system.writeResourceRawVideo()
 
-squared.system.copyResourceRawAudio(directory: string, options?: {})
-squared.system.saveResourceRawAudio(filename?: string, options?: {})
-squared.system.writeResourceRawAudio()
+android.system.copyResourceRawAudio(directory: string, options?: {})
+android.system.saveResourceRawAudio(filename?: string, options?: {})
+android.system.writeResourceRawAudio()
 ```
 
 ```javascript
 // targetAPI: 0 - ALL, 30 - Android R
 
-squared.system.customize(squared.settings.targetAPI, 'Button', {
+android.system.customize(squared.settings.targetAPI, 'Button', {
     android: {
         minWidth: '35px',
         minHeight: '25px'
@@ -387,7 +387,7 @@ squared.system.customize(squared.settings.targetAPI, 'Button', {
 ```
 
 ```javascript
-squared.system.addXmlNs('tools', 'http://schemas.android.com/tools');
+android.system.addXmlNs('tools', 'http://schemas.android.com/tools');
 ```
 
 ### CHROME: Public Methods
@@ -395,21 +395,21 @@ squared.system.addXmlNs('tools', 'http://schemas.android.com/tools');
 ```javascript
 chrome.saveAsWebPage(filename?: string, options?: {}) // create archive with html and web page assets (Promise)
 
-squared.system.copyHtmlPage(directory: string, options?: {}) // option "name": e.g. "index.html"
-squared.system.copyScriptAssets(directory: string, options?: {})
-squared.system.copyLinkAssets(directory: string, options?: {}) // option "rel": e.g. "stylesheet"
-squared.system.copyImageAssets(directory: string, options?: {})
-squared.system.copyVideoAssets(directory: string, options?: {})
-squared.system.copyAudioAssets(directory: string, options?: {})
-squared.system.copyFontAssets(directory: string, options?: {})
+chrome.system.copyHtmlPage(directory: string, options?: {}) // option "name": e.g. "index.html"
+chrome.system.copyScriptAssets(directory: string, options?: {})
+chrome.system.copyLinkAssets(directory: string, options?: {}) // option "rel": e.g. "stylesheet"
+chrome.system.copyImageAssets(directory: string, options?: {})
+chrome.system.copyVideoAssets(directory: string, options?: {})
+chrome.system.copyAudioAssets(directory: string, options?: {})
+chrome.system.copyFontAssets(directory: string, options?: {})
 
-squared.system.saveHtmlPage(filename?: string, options?: {}) // option "name": e.g. "index.html"
-squared.system.saveScriptAssets(filename?: string, options?: {})
-squared.system.saveLinkAssets(filename?: string, options?: {}) // option "rel": e.g. "stylesheet"
-squared.system.saveImageAssets(filename?: string, options?: {})
-squared.system.saveVideoAssets(filename?: string, options?: {})
-squared.system.saveAudioAssets(filename?: string, options?: {})
-squared.system.saveFontAssets(filename?: string, options?: {})
+chrome.system.saveHtmlPage(filename?: string, options?: {}) // option "name": e.g. "index.html"
+chrome.system.saveScriptAssets(filename?: string, options?: {})
+chrome.system.saveLinkAssets(filename?: string, options?: {}) // option "rel": e.g. "stylesheet"
+chrome.system.saveImageAssets(filename?: string, options?: {})
+chrome.system.saveVideoAssets(filename?: string, options?: {})
+chrome.system.saveAudioAssets(filename?: string, options?: {})
+chrome.system.saveFontAssets(filename?: string, options?: {})
 ```
 
 ### ALL: Extension Configuration (example: android)
