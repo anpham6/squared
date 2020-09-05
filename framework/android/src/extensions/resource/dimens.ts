@@ -14,9 +14,9 @@ function getResourceName(map: Map<string, string>, name: string, value: string) 
     if (map.get(name) === value) {
         return name;
     }
-    for (const [storedName, storedValue] of map.entries()) {
-        if (value === storedValue && storedName.startsWith(name)) {
-            return storedName;
+    for (const data of map) {
+        if (value === data[1] && data[0].startsWith(name)) {
+            return data[0];
         }
     }
     return Resource.generateId('dimen', name, 0);

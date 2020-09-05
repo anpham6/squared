@@ -632,9 +632,9 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
         if (stored && hasValue(value)) {
             let result = '';
             if (stored) {
-                for (const [id, data] of stored.entries()) {
-                    if (isEqual(value, data)) {
-                        result = id;
+                for (const data of stored) {
+                    if (isEqual(value, data[1])) {
+                        result = data[0];
                         break;
                     }
                 }

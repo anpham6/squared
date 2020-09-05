@@ -116,11 +116,12 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
                         break;
                     }
                 }
-                for (const [group, value] of data.entries()) {
-                    if (value === length) {
+                for (const item of data) {
+                    if (item[1] === length) {
+                        const group = item[0];
                         group.unsafe('controlName', controlName);
                         group.containerType = CONTAINER_NODE.RADIO;
-                        const template = group.renderParent?.renderTemplates?.find(item => item.node === group) as Undef<NodeXmlTemplate<T>>;
+                        const template = group.renderParent?.renderTemplates?.find(template => template.node === group) as Undef<NodeXmlTemplate<T>>;
                         if (template) {
                             template.controlName = controlName;
                         }

@@ -460,14 +460,14 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 }
             }
         });
-        for (const [uri, rawData] of Resource.ASSETS.rawData.entries()) {
-            const mimeType = rawData.mimeType;
-            if (mimeType === 'text/css') {
-                const data = File.parseUri(resolvePath(uri), { preserveCrossOrigin, format: saveAs && saveAs.format });
-                if (this.validFile(data)) {
-                    data.mimeType = mimeType;
-                    processExtensions.call(this, data, []);
-                    result.push(data);
+        for (const data of Resource.ASSETS.rawData) {
+            const item = data[1];
+            if (item.mimeType === 'text/css') {
+                const asset = File.parseUri(resolvePath(data[0]), { preserveCrossOrigin, format: saveAs && saveAs.format });
+                if (this.validFile(asset)) {
+                    asset.mimeType = item.mimeType;
+                    processExtensions.call(this, asset, []);
+                    result.push(asset);
                 }
             }
         }
@@ -645,12 +645,12 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     element.querySelectorAll('source, track').forEach((source: HTMLSourceElement | HTMLTrackElement) => resolveAssetSource(source, items));
                     break;
             }
-            for (const [item, uri] of items.entries()) {
-                const saveAs = parseFileAs('saveTo', item.dataset.chromeFile)?.[0];
-                const data = File.parseUri(uri, { preserveCrossOrigin, saveAs, saveTo: !!saveAs });
-                if (this.validFile(data)) {
-                    processExtensions.call(this, data, getExtensions(item));
-                    result.push(data);
+            for (const data of items) {
+                const saveAs = parseFileAs('saveTo', data[0].dataset.chromeFile)?.[0];
+                const asset = File.parseUri(data[1], { preserveCrossOrigin, saveAs, saveTo: !!saveAs });
+                if (this.validFile(asset)) {
+                    processExtensions.call(this, asset, getExtensions(data[0]));
+                    result.push(asset);
                 }
             }
         });

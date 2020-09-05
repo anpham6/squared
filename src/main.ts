@@ -43,8 +43,9 @@ function clearProperties(data: PlainObject) {
 
 function extendPrototype(id: number) {
     const proto = main!.Node.prototype;
-    for (const [value, functionMap] of prototypeMap.entries()) {
-        if (value === 0 || util.hasBit(value, id)) {
+    for (const data of prototypeMap) {
+        if (data[0] === 0 || util.hasBit(data[0], id)) {
+            const functionMap = data[1];
             for (const method in functionMap) {
                 const item = functionMap[method];
                 if (util.isPlainObject(item)) {
@@ -84,8 +85,8 @@ function loadExtensions() {
             removeQueue.clear();
         }
         if (optionsQueue.size) {
-            for (const [name, options] of optionsQueue.entries()) {
-                apply(name, options);
+            for (const data of optionsQueue) {
+                apply(data[0], data[1]);
             }
             optionsQueue.clear();
         }

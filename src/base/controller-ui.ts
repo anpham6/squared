@@ -578,11 +578,10 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         for (const node of removed) {
             node.each((item: T, index) => item.containerIndex = index);
         }
-        for (const [previousParent, data] of escaped.entries()) {
-            const parent = data.parent;
-            if (parent.contains(previousParent)) {
-                const { childIndex, containerIndex } = previousParent;
-                const appending = data.appending;
+        for (const data of escaped) {
+            const { parent, appending } = data[1];
+            if (parent.contains(data[0])) {
+                const { childIndex, containerIndex } = data[0];
                 const children = parent.children;
                 const documentChildren = parent.naturalChildren.slice(0);
                 const target = children[containerIndex] as T;

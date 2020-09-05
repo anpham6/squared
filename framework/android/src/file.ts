@@ -296,11 +296,12 @@ export default class File<T extends View> extends squared.base.File<T> implement
             const { convertPixels, insertSpaces, manifestThemeName } = this.userSettings;
             const dpUnit = convertPixels === 'dp';
             const appTheme: ObjectMap<boolean> = {};
-            for (const [filename, theme] of STORED.themes.entries()) {
+            for (const data of STORED.themes) {
+                const filename = data[0];
                 const match = /^(.+)\/(.+?\.\w+)$/.exec(filename);
                 if (match) {
                     const itemArray: ItemData[] = [];
-                    for (const [themeName, themeData] of theme.entries()) {
+                    for (const [themeName, themeData] of data[1]) {
                         if (!appTheme[filename] || themeName !== manifestThemeName) {
                             const themeArray: ItemValue[] = [];
                             const items = themeData.items as StringMap;
@@ -359,10 +360,10 @@ export default class File<T extends View> extends squared.base.File<T> implement
             const directory = this.directory.image;
             const result: string[] = new Array(length * 3);
             let i = 0;
-            for (const [name, value] of STORED.drawables.entries()) {
-                result[i++] = replaceTab(convertPixels ? value.replace(/"(-?[\d.]+)px"/g, (match, ...capture: string[]) => `"${capture[0]}dp"`) : value, insertSpaces);
+            for (const data of STORED.drawables) {
+                result[i++] = replaceTab(convertPixels ? data[1].replace(/"(-?[\d.]+)px"/g, (match, ...capture: string[]) => `"${capture[0]}dp"`) : data[1], insertSpaces);
                 result[i++] = directory;
-                result[i++] = `${name}.xml`;
+                result[i++] = `${data[0]}.xml`;
             }
             return this.checkFileAssets(result, options);
         }
@@ -375,10 +376,10 @@ export default class File<T extends View> extends squared.base.File<T> implement
             const insertSpaces = this.userSettings.insertSpaces;
             const result: string[] = new Array(length * 3);
             let i = 0;
-            for (const [name, value] of STORED.animators.entries()) {
-                result[i++] = replaceTab(value, insertSpaces);
+            for (const data of STORED.animators) {
+                result[i++] = replaceTab(data[1], insertSpaces);
                 result[i++] = 'res/anim';
-                result[i++] = `${name}.xml`;
+                result[i++] = `${data[0]}.xml`;
             }
             return this.checkFileAssets(result, options);
         }
@@ -389,14 +390,15 @@ export default class File<T extends View> extends squared.base.File<T> implement
         if (STORED.images.size) {
             const imageDirectory = this.directory.image;
             const result: string[] = [];
-            for (const [name, images] of STORED.images.entries()) {
+            for (const data of STORED.images) {
+                const images = data[1];
                 if (Object.keys(images).length > 1) {
                     for (const dpi in images) {
                         const value = images[dpi]!;
                         result.push(
                             value,
                             imageDirectory + '-' + dpi,
-                            name + '.' + (Resource.getExtension(value).toLowerCase() || 'unknown')
+                            data[0] + '.' + (Resource.getExtension(value).toLowerCase() || 'unknown')
                         );
                     }
                 }
@@ -406,7 +408,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                         result.push(
                             value,
                             imageDirectory,
-                            name + '.' + (Resource.getExtension(value).toLowerCase() || 'unknown')
+                            data[0] + '.' + (Resource.getExtension(value).toLowerCase() || 'unknown')
                         );
                     }
                 }

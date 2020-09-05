@@ -129,9 +129,9 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
             const numeric = isNumber(value);
             if (!numeric || numberAlias) {
                 const strings = STORED.strings;
-                for (const [resourceName, resourceValue] of strings.entries()) {
-                    if (resourceValue === value) {
-                        return `@string/${resourceName}`;
+                for (const data of strings) {
+                    if (data[1] === value) {
+                        return `@string/${data[0]}`;
                     }
                 }
                 const partial =

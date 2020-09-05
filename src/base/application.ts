@@ -213,15 +213,16 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                 }
             }
-            for (const [uri, data] of rawData.entries()) {
-                const mimeType = data.mimeType;
+            for (const data of rawData) {
+                const item = data[1];
+                const mimeType = item.mimeType;
                 if (mimeType && mimeType.startsWith('image/') && !mimeType.endsWith('svg+xml')) {
                     let src = `data:${mimeType};`;
-                    if (data.base64) {
-                        src += 'base64,' + data.base64;
+                    if (item.base64) {
+                        src += 'base64,' + item.base64;
                     }
-                    else if (data.content) {
-                        src += data.content;
+                    else if (item.content) {
+                        src += item.content;
                     }
                     else {
                         continue;
@@ -230,9 +231,9 @@ export default abstract class Application<T extends Node> implements squared.bas
                     element.src = src;
                     const { naturalWidth: width, naturalHeight: height } = element;
                     if (width && height) {
-                        data.width = width;
-                        data.height = height;
-                        image.set(uri, { width, height, uri: data.filename });
+                        item.width = width;
+                        item.height = height;
+                        image.set(data[0], { width, height, uri: item.filename });
                     }
                     else {
                         document.body.appendChild(element);
@@ -357,18 +358,20 @@ export default abstract class Application<T extends Node> implements squared.bas
         const { builtInExtensions, extensions } = this;
         extensions.length = 0;
         for (let i = 0, length = namespaces.length; i < length; ++i) {
-            let name = namespaces[i],
-                ext = builtInExtensions.get(name);
+            let ext = builtInExtensions.get(namespaces[i]);
             if (ext) {
                 ext.application = this;
                 extensions.push(ext);
             }
             else {
-                const namespace = name + '.';
-                for ([name, ext] of builtInExtensions.entries()) {
-                    if (name.startsWith(namespace) && !extensions.includes(ext)) {
-                        ext.application = this;
-                        extensions.push(ext);
+                const namespace = namespaces[i] + '.';
+                for (const data of builtInExtensions) {
+                    if (data[0].startsWith(namespace)) {
+                        ext = data[1];
+                        if (!extensions.includes(ext)) {
+                            ext.application = this;
+                            extensions.push(ext);
+                        }
                     }
                 }
             }

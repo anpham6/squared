@@ -738,9 +738,10 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
     public afterResources(sessionId: string) {
         if (SvgBuild) {
             const contentMap: StringMap = {};
-            for (const [uri, data] of Resource.ASSETS.rawData.entries()) {
-                if (data.mimeType === 'image/svg+xml' && data.content) {
-                    contentMap[uri] = data.content;
+            for (const data of Resource.ASSETS.rawData) {
+                const item = data[1];
+                if (item.mimeType === 'image/svg+xml' && item.content) {
+                    contentMap[data[0]] = item.content;
                 }
             }
             const { cache, keyframesMap } = this.application.getProcessing(sessionId)!;
@@ -1422,10 +1423,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                 if (path) {
                                     const { value, baseValue } = path;
                                     if (value !== baseValue) {
-                                        if (!objectAnimator) {
-                                            objectAnimator = [];
-                                        }
-                                        objectAnimator.push(createPropertyValue('pathData', 'pathType', baseValue, '0', precision, value));
+                                        (objectAnimator || (objectAnimator = [])).push(createPropertyValue('pathData', 'pathType', baseValue, '0', precision, value));
                                         if (item.iterationCount !== -1 && !item.setterType) {
                                             objectAnimator.push(createPropertyValue('pathData', 'pathType', value, '0', precision, baseValue, item.getTotalDuration().toString()));
                                         }
