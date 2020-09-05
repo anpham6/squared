@@ -204,7 +204,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
         const columnCount = columns.length;
         if (columnCount > 1 && columns[0].length === node.size()) {
             const rows: Node[][] = [];
-            const assigned = new Set<Node>();
+            const assigned = new WeakSet<Node>();
             for (let i = 0, count = 0; i < columnCount; ++i) {
                 const column = columns[i];
                 const rowCount = column.length;

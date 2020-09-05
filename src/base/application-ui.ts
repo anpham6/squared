@@ -417,7 +417,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             node.rootElement = true;
             const preAlignment: ObjectIndex<StringMap> = {};
-            const direction = new Set<HTMLElement>();
+            const direction = new WeakSet<HTMLElement>();
             const pseudoElements: T[] = [];
             let resetBounds: Undef<boolean>;
             cache.each(item => {

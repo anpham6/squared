@@ -1026,7 +1026,7 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 const rowCount = Math.max(rowUnit.length, rowMain.length);
                 const rowMax: number[] = new Array(rowCount).fill(0);
                 const columnMax: number[] = new Array(columnCount).fill(0);
-                const modified = new Set<T>();
+                const modified = new WeakSet<T>();
                 let minCellHeight = 0;
                 row.length = rowCount;
                 column.length = columnCount;

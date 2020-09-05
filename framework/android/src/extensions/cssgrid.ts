@@ -108,7 +108,7 @@ function setContentSpacing(mainData: ICssGridData<View>, data: CssGridDirectionD
         if (offset > 0) {
             const rowData = getRowData(mainData, horizontal);
             const itemCount = data.length;
-            const adjusted = new Set<View>();
+            const adjusted = new WeakSet<View>();
             switch (alignment) {
                 case 'space-around': {
                     const [marginSize, marginExcess] = getMarginSize(itemCount * 2, offset);
