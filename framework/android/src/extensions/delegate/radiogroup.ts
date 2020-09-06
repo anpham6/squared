@@ -121,12 +121,12 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
                         const group = item[0];
                         group.unsafe('controlName', controlName);
                         group.containerType = CONTAINER_NODE.RADIO;
-                        const template = group.renderParent?.renderTemplates?.find(template => template.node === group) as Undef<NodeXmlTemplate<T>>;
-                        if (template) {
-                            template.controlName = controlName;
+                        const renderTemplate = group.renderParent?.renderTemplates?.find(template => template.node === group) as Undef<NodeXmlTemplate<T>>;
+                        if (renderTemplate) {
+                            renderTemplate.controlName = controlName;
                         }
                         this.setBaselineIndex(group, radiogroup);
-                        return;
+                        break;
                     }
                 }
             }

@@ -47,6 +47,7 @@ const getViewportArea = (viewBox: DOMRect, min?: boolean) => min ? Math.min(view
 const createParseUnitOptions = (element: Element, value: string): Undef<ParseUnitOptions> => hasEm(value) ? { fontSize: getFontSize(element) } : undefined;
 
 export const CACHE_VIEWNAME = new Map<string, number>();
+export const PATTERN_CUBICBEZIER = '([01](?:\\.\\d+)?),?\\s+(-?\\d+(?:\\.\\d+)?),?\\s+([01](?:\\.\\d+)?),?\\s+(-?\\d+(?:\\.\\d+)?)';
 
 export const SVG = {
     svg: (element: Element): element is SVGSVGElement => {

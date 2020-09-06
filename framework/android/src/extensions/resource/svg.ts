@@ -135,7 +135,7 @@ interface AnimateGroup {
     pathData?: string;
 }
 
-const { KEYSPLINE_NAME } = squared.svg.lib.constant;
+const KEYSPLINE_NAME = SvgAnimate.KEYSPLINE_NAME;
 
 const { extractURL, formatPX, isPercent } = squared.lib.css;
 const { truncate } = squared.lib.math;

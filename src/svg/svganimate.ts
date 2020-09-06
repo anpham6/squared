@@ -1,7 +1,7 @@
-import { KEYSPLINE_NAME, PATTERN_CUBICBEZIER } from './lib/constant';
-
 import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
+
+import { PATTERN_CUBICBEZIER } from './lib/util';
 
 const { getHexCode, parseColor } = squared.lib.color;
 const { getFontSize, hasEm, isLength, parseUnit } = squared.lib.css;
@@ -14,12 +14,22 @@ const REGEXP_BEZIERCSS = new RegExp(`cubic-bezier\\(${PATTERN_CUBICBEZIER}\\)`);
 const invertControlPoint = (value: number) => parseFloat((1 - value).toPrecision(5));
 
 export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgAnimate {
+    public static KEYSPLINE_NAME = {
+        'ease': '0.25 0.1 0.25 1',
+        'ease-in': '0.42 0 1 1',
+        'ease-in-out': '0.42 0 0.58 1',
+        'ease-out': '0 0 0.58 1',
+        'linear': '0 0 1 1',
+        'step-start': '0 1 0 1',
+        'step-end': '1 0 1 0'
+    };
+
     public static getSplitValue(value: number, next: number, percent: number) {
         return value + (next - value) * percent;
     }
 
     public static findTimingFunction(value: string) {
-        const keySpline = KEYSPLINE_NAME[value] as Undef<string>;
+        const keySpline = SvgAnimate.KEYSPLINE_NAME[value] as Undef<string>;
         if (keySpline) {
             return keySpline;
         }
@@ -27,10 +37,10 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             return value.trim();
         }
         else if (value.startsWith('step')) {
-            return KEYSPLINE_NAME.linear;
+            return SvgAnimate.KEYSPLINE_NAME.linear;
         }
         const match = REGEXP_BEZIERCSS.exec(value);
-        return match ? match[1] + ' ' + match[2] + ' ' + match[3] + ' ' + match[4] : KEYSPLINE_NAME.ease;
+        return match ? match[1] + ' ' + match[2] + ' ' + match[3] + ' ' + match[4] : SvgAnimate.KEYSPLINE_NAME.ease;
     }
 
     public static fromStepTimingFunction(element: SVGElement, attributeName: string, timingFunction: string, keyTimes: number[], values: string[], index: number): Null<[number[], string[]]> {
@@ -255,7 +265,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                         values.push(valuesBase.pop()!);
                         this._values = values;
                         this._keyTimes = keyTimes;
-                        this._keySplines = [KEYSPLINE_NAME['step-end']];
+                        this._keySplines = [SvgAnimate.KEYSPLINE_NAME['step-end']];
                     }
                     break;
                 }
@@ -467,7 +477,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     set keySplines(value) {
         if (value && value.length) {
             const minSegment = this.keyTimes.length - 1;
-            if (value.length >= minSegment && !value.every(spline => spline === '' || spline === KEYSPLINE_NAME.linear)) {
+            if (value.length >= minSegment && !value.every(spline => spline === '' || spline === SvgAnimate.KEYSPLINE_NAME.linear)) {
                 const keySplines: string[] = [];
                 for (let i = 0; i < minSegment; ++i) {
                     const points = replaceMap(value[i].split(/\s+/), pt => parseFloat(pt));
@@ -475,7 +485,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                         keySplines.push(points.join(' '));
                     }
                     else {
-                        keySplines.push(KEYSPLINE_NAME.linear);
+                        keySplines.push(SvgAnimate.KEYSPLINE_NAME.linear);
                     }
                 }
                 this._keySplines = keySplines;
@@ -511,7 +521,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 const keySplines: string[] = [];
                 for (let i = keySplinesBase.length - 1; i >= 0; --i) {
                     const points = replaceMap(keySplinesBase[i].split(' '), pt => parseFloat(pt));
-                    keySplines.push(points.length === 4 ? invertControlPoint(points[2]) + ' ' + invertControlPoint(points[3]) + ' ' + invertControlPoint(points[0]) + ' ' + invertControlPoint(points[1]) : KEYSPLINE_NAME.linear);
+                    keySplines.push(points.length === 4 ? invertControlPoint(points[2]) + ' ' + invertControlPoint(points[3]) + ' ' + invertControlPoint(points[0]) + ' ' + invertControlPoint(points[1]) : SvgAnimate.KEYSPLINE_NAME.linear);
                 }
                 this._keySplines = keySplines;
             }

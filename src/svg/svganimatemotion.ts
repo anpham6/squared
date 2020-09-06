@@ -1,5 +1,3 @@
-import { KEYSPLINE_NAME } from './lib/constant';
-
 import SvgAnimateTransform from './svganimatetransform';
 import SvgBuild from './svgbuild';
 
@@ -327,7 +325,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                     }
                 }
                 this.keySplines = null;
-                this.timingFunction = KEYSPLINE_NAME.linear;
+                this.timingFunction = SvgAnimateTransform.KEYSPLINE_NAME.linear;
             }
         }
     }

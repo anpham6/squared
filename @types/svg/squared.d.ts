@@ -591,6 +591,15 @@ declare module "svg" {
     }
 
     class SvgAnimate extends SvgAnimation {
+        static KEYSPLINE_NAME: {
+            'ease': string;
+            'ease-in': string;
+            'ease-in-out': string;
+            'ease-out': string;
+            'linear': string;
+            'step-start': string;
+            'step-end': string;
+        };
         static getSplitValue(value: number, next: number, percent: number): number;
         static findTimingFunction(value: string): string;
         static fromStepTimingFunction(element: SVGElement, attributeName: string, keyTimes: number[], values: string[], keySpline: string, index: number): Null<[number[], string[]]>;
@@ -722,21 +731,9 @@ declare module "svg" {
     }
 
     namespace lib {
-        namespace constant {
-            const KEYSPLINE_NAME: {
-                'ease': string;
-                'ease-in': string;
-                'ease-in-out': string;
-                'ease-out': string;
-                'linear': string;
-                'step-start': string;
-                'step-end': string;
-            };
-            const PATTERN_CUBICBEZIER: string;
-        }
-
         namespace util {
             const CACHE_VIEWNAME: Map<string, number>;
+            const PATTERN_CUBICBEZIER: string;
             const MATRIX: {
                 applyX(matrix: SvgMatrix | DOMMatrix, x: number, y: number): number;
                 applyY(matrix: SvgMatrix | DOMMatrix, x: number, y: number): number;

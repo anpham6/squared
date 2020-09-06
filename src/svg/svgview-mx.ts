@@ -1,5 +1,3 @@
-import { KEYSPLINE_NAME, PATTERN_CUBICBEZIER } from './lib/constant';
-
 import type SvgElement from './svgelement';
 
 import SvgAnimate from './svganimate';
@@ -8,7 +6,7 @@ import SvgAnimateTransform from './svganimatetransform';
 import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 
-import { CACHE_VIEWNAME, TRANSFORM, calculateStyle, getAttribute } from './lib/util';
+import { CACHE_VIEWNAME, PATTERN_CUBICBEZIER, TRANSFORM, calculateStyle, getAttribute } from './lib/util';
 
 import Pattern = squared.lib.base.Pattern;
 
@@ -410,7 +408,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                                     }
                                                     keyTimesData.push(keyTime);
                                                     valuesData.push(stepValue[k]);
-                                                    keySplinesData.push(KEYSPLINE_NAME[keySpline.includes('start') ? 'step-start' : 'step-end']);
+                                                    keySplinesData.push(SvgAnimate.KEYSPLINE_NAME[keySpline.includes('start') ? 'step-start' : 'step-end']);
                                                 }
                                                 continue;
                                             }

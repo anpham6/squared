@@ -24,11 +24,9 @@ import SvgSynchronize from './svgsynchronize-mx';
 import SvgView from './svgview-mx';
 import SvgViewRect from './svgviewrect-mx';
 
-import * as constant from './lib/constant';
 import * as util from './lib/util';
 
 const lib = {
-    constant,
     util
 };
 
