@@ -1,6 +1,6 @@
-import BOX_STANDARD = squared.base.constant.BOX_STANDARD;
-import NODE_ALIGNMENT = squared.base.constant.NODE_ALIGNMENT;
-import NODE_TRAVERSE = squared.base.constant.NODE_TRAVERSE;
+import BOX_STANDARD = squared.base.BOX_STANDARD;
+import NODE_ALIGNMENT = squared.base.NODE_ALIGNMENT;
+import NODE_TRAVERSE = squared.base.NODE_TRAVERSE;
 
 import { APP_SECTION, NODE_PROCEDURE, NODE_RESOURCE } from './lib/constant';
 

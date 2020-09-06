@@ -1,5 +1,5 @@
 import SYNCHRONIZE_MODE = squared.svg.constant.SYNCHRONIZE_MODE;
-import BUILD_ANDROID = android.base.constant.BUILD_ANDROID;
+import BUILD_ANDROID = android.base.BUILD_ANDROID;
 
 import { XMLNS_ANDROID } from '../../lib/constant';
 import { VECTOR_GROUP, VECTOR_PATH } from '../../template/vector';

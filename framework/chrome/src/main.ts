@@ -1,4 +1,4 @@
-import EXT_CHROME = chrome.base.constant.EXT_CHROME;
+import EXT_CHROME = chrome.base.EXT_CHROME;
 
 import Application from './application';
 import Extension from './extension';

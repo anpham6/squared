@@ -1,5 +1,5 @@
-import NODE_ALIGNMENT = squared.base.constant.NODE_ALIGNMENT;
-import NODE_TEMPLATE = squared.base.constant.NODE_TEMPLATE;
+import NODE_ALIGNMENT = squared.base.NODE_ALIGNMENT;
+import NODE_TEMPLATE = squared.base.NODE_TEMPLATE;
 
 import { CONTAINER_ANDROID, CONTAINER_NODE } from '../../lib/constant';
 

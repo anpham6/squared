@@ -1,4 +1,4 @@
-import BUILD_ANDROID = android.base.constant.BUILD_ANDROID;
+import BUILD_ANDROID = android.base.BUILD_ANDROID;
 
 import { XMLNS_ANDROID } from './lib/constant';
 

@@ -1,5 +1,5 @@
-import EXT_NAME = squared.base.constant.EXT_NAME;
-import EXT_ANDROID = android.base.constant.EXT_ANDROID;
+import EXT_NAME = squared.base.EXT_NAME;
+import EXT_ANDROID = android.base.EXT_ANDROID;
 
 import Application from './application';
 import Controller from './controller';

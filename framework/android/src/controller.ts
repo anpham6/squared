@@ -1,8 +1,8 @@
+import BOX_STANDARD = squared.base.BOX_STANDARD;
+import NODE_ALIGNMENT = squared.base.NODE_ALIGNMENT;
+import NODE_TEMPLATE = squared.base.NODE_TEMPLATE;
+import BUILD_ANDROID = android.base.BUILD_ANDROID;
 import PLATFORM = squared.lib.constant.PLATFORM;
-import BOX_STANDARD = squared.base.constant.BOX_STANDARD;
-import NODE_ALIGNMENT = squared.base.constant.NODE_ALIGNMENT;
-import NODE_TEMPLATE = squared.base.constant.NODE_TEMPLATE;
-import BUILD_ANDROID = android.base.constant.BUILD_ANDROID;
 
 import { CONTAINER_ANDROID, CONTAINER_ANDROID_X, CONTAINER_NODE } from './lib/constant';
 

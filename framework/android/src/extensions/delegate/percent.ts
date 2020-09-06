@@ -1,7 +1,7 @@
+import BOX_STANDARD = squared.base.BOX_STANDARD;
+import NODE_ALIGNMENT = squared.base.NODE_ALIGNMENT;
+import STRING_ANDROID = android.base.STRING_ANDROID;
 import CSS_UNIT = squared.lib.constant.CSS_UNIT;
-import BOX_STANDARD = squared.base.constant.BOX_STANDARD;
-import NODE_ALIGNMENT = squared.base.constant.NODE_ALIGNMENT;
-import STRING_ANDROID = android.base.constant.STRING_ANDROID;
 
 import { CONTAINER_NODE, LAYOUT_ANDROID } from '../../lib/constant';
 

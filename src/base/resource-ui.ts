@@ -1,5 +1,5 @@
+import NODE_ALIGNMENT = squared.base.NODE_ALIGNMENT;
 import USER_AGENT = squared.lib.constant.USER_AGENT;
-import NODE_ALIGNMENT = squared.base.constant.NODE_ALIGNMENT;
 
 import { NODE_RESOURCE } from './lib/constant';
 

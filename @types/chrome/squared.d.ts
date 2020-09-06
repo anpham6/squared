@@ -7,6 +7,18 @@ declare interface ChromeFramework<T extends Node> extends squared.base.AppFramew
 }
 
 declare namespace base {
+    const enum EXT_CHROME {
+        COMPRESS_BROTLI = 'chrome.compress.brotli',
+        COMPRESS_GZIP = 'chrome.compress.gzip',
+        COMPRESS_JPEG = 'chrome.compress.jpeg',
+        COMPRESS_PNG = 'chrome.compress.png',
+        CONVERT_BMP = 'chrome.convert.bmp',
+        CONVERT_GIF = 'chrome.convert.gif',
+        CONVERT_JPEG = 'chrome.convert.jpeg',
+        CONVERT_PNG = 'chrome.convert.png',
+        CONVERT_TIFF = 'chrome.convert.tiff'
+    }
+
     interface AppSession<T extends Node> extends squared.base.AppSession<T> {
         transpileMap: { html: ObjectMap<StringMap>; js: ObjectMap<StringMap>; css: ObjectMap<StringMap> };
     }
@@ -41,20 +53,6 @@ declare namespace base {
         static getConvertOptions(name: string, options: ConvertOptions): Undef<string>;
         static getCompressOptions(name: string, options: CompressOptions): string;
         processFile(data: ChromeAsset, override?: boolean): boolean;
-    }
-
-    namespace constant {
-        const enum EXT_CHROME {
-            COMPRESS_BROTLI = 'chrome.compress.brotli',
-            COMPRESS_GZIP = 'chrome.compress.gzip',
-            COMPRESS_JPEG = 'chrome.compress.jpeg',
-            COMPRESS_PNG = 'chrome.compress.png',
-            CONVERT_BMP = 'chrome.convert.bmp',
-            CONVERT_GIF = 'chrome.convert.gif',
-            CONVERT_JPEG = 'chrome.convert.jpeg',
-            CONVERT_PNG = 'chrome.convert.png',
-            CONVERT_TIFF = 'chrome.convert.tiff'
-        }
     }
 }
 

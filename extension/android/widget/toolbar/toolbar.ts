@@ -1,6 +1,6 @@
-import NODE_TEMPLATE = squared.base.constant.NODE_TEMPLATE;
-import BUILD_ANDROID = android.base.constant.BUILD_ANDROID;
-import EXT_ANDROID = android.base.constant.EXT_ANDROID;
+import NODE_TEMPLATE = squared.base.NODE_TEMPLATE;
+import BUILD_ANDROID = android.base.BUILD_ANDROID;
+import EXT_ANDROID = android.base.EXT_ANDROID;
 
 import { WIDGET_NAME } from '../lib/constant';
 

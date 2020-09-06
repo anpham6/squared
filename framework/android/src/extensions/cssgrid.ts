@@ -1,6 +1,6 @@
-import BOX_STANDARD = squared.base.constant.BOX_STANDARD;
-import NODE_ALIGNMENT = squared.base.constant.NODE_ALIGNMENT;
-import STRING_ANDROID = android.base.constant.STRING_ANDROID;
+import BOX_STANDARD = squared.base.BOX_STANDARD;
+import NODE_ALIGNMENT = squared.base.NODE_ALIGNMENT;
+import STRING_ANDROID = android.base.STRING_ANDROID;
 
 import { CONTAINER_ANDROID, CONTAINER_NODE } from '../lib/constant';
 

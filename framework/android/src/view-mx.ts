@@ -1,8 +1,8 @@
+import BOX_STANDARD = squared.base.BOX_STANDARD;
+import NODE_ALIGNMENT = squared.base.NODE_ALIGNMENT;
+import BUILD_ANDROID = android.base.BUILD_ANDROID;
+import STRING_ANDROID = android.base.STRING_ANDROID;
 import CSS_UNIT = squared.lib.constant.CSS_UNIT;
-import BOX_STANDARD = squared.base.constant.BOX_STANDARD;
-import NODE_ALIGNMENT = squared.base.constant.NODE_ALIGNMENT;
-import BUILD_ANDROID = android.base.constant.BUILD_ANDROID;
-import STRING_ANDROID = android.base.constant.STRING_ANDROID;
 
 import { CONTAINER_ANDROID, CONTAINER_ANDROID_X, CONTAINER_NODE, ELEMENT_ANDROID, LAYOUT_ANDROID, RESERVED_JAVA } from './lib/constant';
 import { API_ANDROID, DEPRECATED_ANDROID } from './lib/customization';
@@ -1723,7 +1723,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 let maxHeight = 0,
                                     parentHeight = 0;
                                 for (const item of grandParent) {
-                                    const height = (item.data<BoxRectDimension>(squared.base.constant.EXT_NAME.FLEXBOX, 'boundsData') || item.bounds).height;
+                                    const height = (item.data<BoxRectDimension>(squared.base.EXT_NAME.FLEXBOX, 'boundsData') || item.bounds).height;
                                     if (height > maxHeight) {
                                         maxHeight = height;
                                     }

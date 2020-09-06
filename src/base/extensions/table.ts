@@ -1,4 +1,4 @@
-import BOX_STANDARD = squared.base.constant.BOX_STANDARD;
+import BOX_STANDARD = squared.base.BOX_STANDARD;
 
 import { NODE_RESOURCE } from '../lib/constant';
 

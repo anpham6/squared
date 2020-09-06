@@ -1,5 +1,5 @@
-import BOX_STANDARD = squared.base.constant.BOX_STANDARD;
-import BUILD_ANDROID = android.base.constant.BUILD_ANDROID;
+import BOX_STANDARD = squared.base.BOX_STANDARD;
+import BUILD_ANDROID = android.base.BUILD_ANDROID;
 
 import { CONTAINER_ANDROID, CONTAINER_NODE, SUPPORT_ANDROID, SUPPORT_ANDROID_X, XMLNS_ANDROID } from '../../lib/constant';
 
@@ -460,7 +460,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
     private _resourceSvgInstance: Null<ResourceSvg<T>> = null;
 
     public beforeParseDocument() {
-        this._resourceSvgInstance = this.controller.localSettings.use.svg ? this.application.builtInExtensions.get(android.base.constant.EXT_ANDROID.RESOURCE_SVG) as ResourceSvg<T> : null;
+        this._resourceSvgInstance = this.controller.localSettings.use.svg ? this.application.builtInExtensions.get(android.base.EXT_ANDROID.RESOURCE_SVG) as ResourceSvg<T> : null;
     }
 
     public afterResources(sessionId: string) {

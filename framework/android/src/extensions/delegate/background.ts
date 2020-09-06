@@ -1,7 +1,7 @@
+import BOX_STANDARD = squared.base.BOX_STANDARD;
+import NODE_ALIGNMENT = squared.base.NODE_ALIGNMENT;
+import NODE_TEMPLATE = squared.base.NODE_TEMPLATE;
 import CSS_UNIT = squared.lib.constant.CSS_UNIT;
-import BOX_STANDARD = squared.base.constant.BOX_STANDARD;
-import NODE_ALIGNMENT = squared.base.constant.NODE_ALIGNMENT;
-import NODE_TEMPLATE = squared.base.constant.NODE_TEMPLATE;
 
 import { CONTAINER_NODE } from '../../lib/constant';
 

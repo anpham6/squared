@@ -1,6 +1,6 @@
-import NODE_ALIGNMENT = squared.base.constant.NODE_ALIGNMENT;
-import NODE_TEMPLATE = squared.base.constant.NODE_TEMPLATE;
-import EXT_ANDROID = android.base.constant.EXT_ANDROID;
+import NODE_ALIGNMENT = squared.base.NODE_ALIGNMENT;
+import NODE_TEMPLATE = squared.base.NODE_TEMPLATE;
+import EXT_ANDROID = android.base.EXT_ANDROID;
 
 import { CONTAINER_NODE } from '../lib/constant';
 

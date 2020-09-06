@@ -1,6 +1,6 @@
-import BOX_STANDARD = squared.base.constant.BOX_STANDARD;
-import NODE_TEMPLATE = squared.base.constant.NODE_TEMPLATE;
-import BUILD_ANDROID = android.base.constant.BUILD_ANDROID;
+import BOX_STANDARD = squared.base.BOX_STANDARD;
+import NODE_TEMPLATE = squared.base.NODE_TEMPLATE;
+import BUILD_ANDROID = android.base.BUILD_ANDROID;
 
 import { WIDGET_NAME } from '../lib/constant';
 
@@ -68,7 +68,7 @@ export default class FloatingActionButton<T extends View> extends squared.base.E
         const controlName = node.api < BUILD_ANDROID.Q ? SUPPORT_ANDROID.FLOATING_ACTION_BUTTON : SUPPORT_ANDROID_X.FLOATING_ACTION_BUTTON;
         node.setControlType(controlName, CONTAINER_NODE.BUTTON);
         node.exclude({ resource: NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.ASSET });
-        Resource.formatOptions(options, this.application.extensionManager.valueAsBoolean(android.base.constant.EXT_ANDROID.RESOURCE_STRINGS, 'numberAsResource'));
+        Resource.formatOptions(options, this.application.extensionManager.valueAsBoolean(android.base.EXT_ANDROID.RESOURCE_STRINGS, 'numberAsResource'));
         if (!node.pageFlow) {
             const offsetParent = (this.application as android.base.Application<T>).resolveTarget(node.sessionId, target) || parent;
             if (node.autoMargin.leftRight) {

@@ -7,6 +7,65 @@ declare interface AndroidFramework<T extends base.View> extends squared.base.App
 }
 
 declare namespace base {
+    const enum EXT_ANDROID {
+        EXTERNAL = 'android.external',
+        SUBSTITUTE = 'android.substitute',
+        DELEGATE_BACKGROUND = 'android.delegate.background',
+        DELEGATE_MAXWIDTHHEIGHT = 'android.delegate.max-width-height',
+        DELEGATE_MULTILINE = 'android.delegate.multiline',
+        DELEGATE_NEGATIVEX = 'android.delegate.negative-x',
+        DELEGATE_PERCENT = 'android.delegate.percent',
+        DELEGATE_POSITIVEX = 'android.delegate.positive-x',
+        DELEGATE_RADIOGROUP = 'android.delegate.radiogroup',
+        DELEGATE_SCROLLBAR = 'android.delegate.scrollbar',
+        DELEGATE_VERTICALALIGN = 'android.delegate.verticalalign',
+        RESOURCE_INCLUDES = 'android.resource.includes',
+        RESOURCE_BACKGROUND = 'android.resource.background',
+        RESOURCE_SVG = 'android.resource.svg',
+        RESOURCE_STRINGS = 'android.resource.strings',
+        RESOURCE_FONTS = 'android.resource.fonts',
+        RESOURCE_DIMENS = 'android.resource.dimens',
+        RESOURCE_DATA = 'android.resource.data',
+        RESOURCE_STYLES = 'android.resource.styles'
+    }
+    const enum STRING_ANDROID {
+        MARGIN = 'layout_margin',
+        MARGIN_VERTICAL = 'layout_marginVertical',
+        MARGIN_HORIZONTAL = 'layout_marginHorizontal',
+        MARGIN_TOP = 'layout_marginTop',
+        MARGIN_RIGHT = 'layout_marginRight',
+        MARGIN_BOTTOM = 'layout_marginBottom',
+        MARGIN_LEFT = 'layout_marginLeft',
+        PADDING = 'padding',
+        PADDING_VERTICAL = 'paddingVertical',
+        PADDING_HORIZONTAL = 'paddingHorizontal',
+        PADDING_TOP = 'paddingTop',
+        PADDING_RIGHT = 'paddingRight',
+        PADDING_BOTTOM = 'paddingBottom',
+        PADDING_LEFT = 'paddingLeft'
+    }
+    const enum BUILD_ANDROID {
+        R = 30,
+        Q = 29,
+        PIE = 28,
+        OREO_1 = 27,
+        OREO = 26,
+        NOUGAT_1 = 25,
+        NOUGAT = 24,
+        MARSHMALLOW = 23,
+        LOLLIPOP_1 = 22,
+        LOLLIPOP = 21,
+        KITKAT_1 = 20,
+        KITKAT = 19,
+        JELLYBEAN_2 = 18,
+        JELLYBEAN_1 = 17,
+        JELLYBEAN = 16,
+        ICE_CREAM_SANDWICH_1 = 15,
+        ICE_CREAM_SANDWICH = 14,
+        ALL = 0,
+        LATEST = 30
+    }
+
     interface AppViewModel extends StandardMap {
         import?: string[];
         variable?: { name: string; type: string }[];
@@ -127,75 +186,6 @@ declare namespace base {
     class ViewGroup extends View {
         retainAs(children: View[], node?: View, parent?: View): this;
         constructor(id: number, node: View, children: View[], parent?: View);
-    }
-
-    namespace constant {
-        const enum EXT_ANDROID {
-            EXTERNAL = 'android.external',
-            SUBSTITUTE = 'android.substitute',
-            DELEGATE_BACKGROUND = 'android.delegate.background',
-            DELEGATE_MAXWIDTHHEIGHT = 'android.delegate.max-width-height',
-            DELEGATE_MULTILINE = 'android.delegate.multiline',
-            DELEGATE_NEGATIVEX = 'android.delegate.negative-x',
-            DELEGATE_PERCENT = 'android.delegate.percent',
-            DELEGATE_POSITIVEX = 'android.delegate.positive-x',
-            DELEGATE_RADIOGROUP = 'android.delegate.radiogroup',
-            DELEGATE_SCROLLBAR = 'android.delegate.scrollbar',
-            DELEGATE_VERTICALALIGN = 'android.delegate.verticalalign',
-            RESOURCE_INCLUDES = 'android.resource.includes',
-            RESOURCE_BACKGROUND = 'android.resource.background',
-            RESOURCE_SVG = 'android.resource.svg',
-            RESOURCE_STRINGS = 'android.resource.strings',
-            RESOURCE_FONTS = 'android.resource.fonts',
-            RESOURCE_DIMENS = 'android.resource.dimens',
-            RESOURCE_DATA = 'android.resource.data',
-            RESOURCE_STYLES = 'android.resource.styles'
-        }
-        const enum STRING_ANDROID {
-            MARGIN = 'layout_margin',
-            MARGIN_VERTICAL = 'layout_marginVertical',
-            MARGIN_HORIZONTAL = 'layout_marginHorizontal',
-            MARGIN_TOP = 'layout_marginTop',
-            MARGIN_RIGHT = 'layout_marginRight',
-            MARGIN_BOTTOM = 'layout_marginBottom',
-            MARGIN_LEFT = 'layout_marginLeft',
-            PADDING = 'padding',
-            PADDING_VERTICAL = 'paddingVertical',
-            PADDING_HORIZONTAL = 'paddingHorizontal',
-            PADDING_TOP = 'paddingTop',
-            PADDING_RIGHT = 'paddingRight',
-            PADDING_BOTTOM = 'paddingBottom',
-            PADDING_LEFT = 'paddingLeft'
-        }
-        const enum BUILD_ANDROID {
-            R = 30,
-            Q = 29,
-            PIE = 28,
-            OREO_1 = 27,
-            OREO = 26,
-            NOUGAT_1 = 25,
-            NOUGAT = 24,
-            MARSHMALLOW = 23,
-            LOLLIPOP_1 = 22,
-            LOLLIPOP = 21,
-            KITKAT_1 = 20,
-            KITKAT = 19,
-            JELLYBEAN_2 = 18,
-            JELLYBEAN_1 = 17,
-            JELLYBEAN = 16,
-            ICE_CREAM_SANDWICH_1 = 15,
-            ICE_CREAM_SANDWICH = 14,
-            ALL = 0,
-            LATEST = 30
-        }
-        const enum DENSITY_ANDROID {
-            LDPI = 120,
-            MDPI = 160,
-            HDPI = 240,
-            XHDPI = 320,
-            XXHDPI = 480,
-            XXXHDPI = 640
-        }
     }
 }
 

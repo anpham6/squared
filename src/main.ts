@@ -149,6 +149,7 @@ async function findElementAllAsync(query: NodeListOf<Element>, length: number) {
 
 const checkWritable = (app: Null<Main>): app is Main => app ? !app.initializing && app.length > 0 : false;
 const checkFrom = (value: string, options: FileActionOptions) => checkWritable(main) && util.isString(value) && util.isPlainObject<FileActionOptions>(options) && !!options.assets && options.assets.length > 0;
+const findExtension = (value: string) => extensionManager!.get(value, true) || util.findSet(extensionCache, item => item.name === value);
 
 export function setHostname(value: string) {
     if (main) {
@@ -197,10 +198,8 @@ export function setFramework(value: Framework, options?: FrameworkOptions) {
         }
     };
     if (!main || framework !== value || cache === false) {
-        if (framework !== value) {
-            if (reloading) {
-                clearProperties(settings);
-            }
+        if (reloading && framework !== value) {
+            clearProperties(settings);
         }
         const appBase = cache ? value.cached() : value.create();
         main = appBase.application;
@@ -256,7 +255,7 @@ export function add(...values: ExtensionRequestObject[]) {
             [value, options] = value;
         }
         if (typeof value === 'string') {
-            const ext = get(value) || util.findSet(extensionCache, item => item.name === value);
+            const ext = get(value);
             if (ext) {
                 value = ext as Extension;
             }
@@ -317,26 +316,20 @@ export function remove(...values: ExtensionRequest[]) {
 
 export function get(...values: string[]) {
     if (extensionManager) {
-        const result: Extension[] = [];
-        for (let i = 0, length = values.length; i < length; ++i) {
-            const value = values[i];
-            let item = extensionManager.get(value, true);
-            if (!item) {
-                for (const ext of extensionCache) {
-                    if (ext.name === value) {
-                        item = ext;
-                        break;
-                    }
+        const length = values.length;
+        if (length === 1) {
+            return findExtension(values[0]);
+        }
+        else {
+            const result: Extension[] = [];
+            for (let i = 0; i < length; ++i) {
+                const item = findExtension(values[i]);
+                if (item) {
+                    result.push(item);
                 }
             }
-            if (length === 1) {
-                return item;
-            }
-            else if (item) {
-                result.push(item);
-            }
+            return result;
         }
-        return result;
     }
 }
 

@@ -1,4 +1,4 @@
-import NODE_ALIGNMENT = squared.base.constant.NODE_ALIGNMENT;
+import NODE_ALIGNMENT = squared.base.NODE_ALIGNMENT;
 
 import LayoutUI = squared.base.LayoutUI;
 

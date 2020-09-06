@@ -1,5 +1,5 @@
+import NODE_TEMPLATE = squared.base.NODE_TEMPLATE;
 import USER_AGENT = squared.lib.constant.USER_AGENT;
-import NODE_TEMPLATE = squared.base.constant.NODE_TEMPLATE;
 
 import type ApplicationUI from './application-ui';
 import type LayoutUI from './layout-ui';
