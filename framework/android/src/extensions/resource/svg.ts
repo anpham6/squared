@@ -135,7 +135,7 @@ interface AnimateGroup {
     pathData?: string;
 }
 
-const KEYSPLINE_NAME = SvgAnimate.KEYSPLINE_NAME;
+const KEYSPLINE_NAME = SvgAnimate ? SvgAnimate.KEYSPLINE_NAME : null;
 
 const { extractURL, formatPX, isPercent } = squared.lib.css;
 const { truncate } = squared.lib.math;
@@ -1286,7 +1286,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                                     }
                                                                     if (direction) {
                                                                         const valueData = createPropertyValue(direction, 'floatType', truncate(translateTo, precision), duration.toString(), precision);
-                                                                        valueData.interpolator = createPathInterpolator(KEYSPLINE_NAME['step-start']);
+                                                                        valueData.interpolator = createPathInterpolator(KEYSPLINE_NAME!['step-start']);
                                                                         translateData.objectAnimator.push(valueData);
                                                                     }
                                                                 }

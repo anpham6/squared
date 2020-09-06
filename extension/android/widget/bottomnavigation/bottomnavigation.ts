@@ -15,7 +15,7 @@ const Resource = android.base.Resource;
 export default class BottomNavigation<T extends android.base.View> extends squared.base.ExtensionUI<T> {
     constructor(name: string, framework: number, options?: ExtensionUIOptions) {
         super(name, framework, options);
-        this.require(WIDGET_NAME.MENU);
+        this.require({ name: WIDGET_NAME.MENU });
     }
 
     public processNode(node: T, parent: T) {

@@ -26,7 +26,7 @@ const PREFIX_MENU = 'ic_menu_';
 export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T> {
     constructor(name: string, framework: number, options?: ExtensionUIOptions) {
         super(name, framework, options);
-        this.require(WIDGET_NAME.MENU);
+        this.require({ name: WIDGET_NAME.MENU });
     }
 
     public beforeInsertNode(element: HTMLElement, sessionId: string) {

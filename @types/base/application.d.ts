@@ -84,7 +84,8 @@ interface ControllerSettingsDeviationsUI {
 
 interface ExtensionDependency {
     name: string;
-    preload: boolean;
+    leading?: boolean;
+    trailing?: boolean;
 }
 
 interface ExtensionResult<T> {

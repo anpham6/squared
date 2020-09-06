@@ -15,7 +15,7 @@ const { convertCamelCase } = squared.lib.util;
 export default class Substitute<T extends View> extends squared.base.ExtensionUI<T> {
     constructor(name: string, framework: number, options?: ExtensionUIOptions) {
         super(name, framework, options);
-        this.require(EXT_ANDROID.EXTERNAL, true);
+        this.require({ name: EXT_ANDROID.EXTERNAL, leading: true });
     }
 
     public processNode(node: T, parent: T): Void<ExtensionResult<T>> {

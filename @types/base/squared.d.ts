@@ -328,7 +328,7 @@ declare module "base" {
         readonly subscribers: Set<T>;
         readonly data: Map<T, unknown>;
         reset(): void;
-        require(name: string, preload?: boolean): void;
+        require(value: ExtensionDependency): void;
         beforeInsertNode?(element: HTMLElement, sessionId: string): boolean;
         afterInsertNode?(node: T): boolean;
         beforeParseDocument(sessionId: string): void;
@@ -368,9 +368,11 @@ declare module "base" {
 
     class ExtensionManager<T extends Node> {
         readonly application: Application<T>;
+        readonly cache: Set<Extension<T>>;
         add(ext: Extension<T> | string): boolean;
         remove(ext: Extension<T> | string): boolean;
         get(name: string, builtIn?: boolean): Undef<Extension<T>>;
+        checkDependencies(): Undef<string[]>;
         valueOf<U = unknown>(name: string, attr: string, fallback?: U): Undef<U>;
         valueAsObject(name: string, attr: string, fallback?: Null<PlainObject>): Null<PlainObject>;
         valueAsString(name: string, attr: string, fallback?: string): string;

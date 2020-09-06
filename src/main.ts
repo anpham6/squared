@@ -34,12 +34,7 @@ const settings = {} as UserSettings;
 let main: Null<Main> = null;
 let framework: Null<Framework> = null;
 let extensionManager: Null<ExtensionManager> = null;
-
-function clearProperties(data: PlainObject) {
-    for (const attr in data) {
-        delete data[attr];
-    }
-}
+let extensionCheck = false;
 
 function extendPrototype(id: number) {
     const proto = main!.Node.prototype;
@@ -89,6 +84,19 @@ function loadExtensions() {
                 apply(data[0], data[1]);
             }
             optionsQueue.clear();
+        }
+        if (extensionCache.size) {
+            for (const item of extensionCache) {
+                extensionManager.cache.add(item);
+            }
+            extensionCache.clear();
+        }
+        if (extensionCheck) {
+            const extensions = extensionManager.checkDependencies();
+            if (extensions) {
+                console.log('FAIL: ' + extensions.join(', '));
+            }
+            extensionCheck = false;
         }
     }
 }
@@ -149,7 +157,7 @@ async function findElementAllAsync(query: NodeListOf<Element>, length: number) {
 
 const checkWritable = (app: Null<Main>): app is Main => app ? !app.initializing && app.length > 0 : false;
 const checkFrom = (value: string, options: FileActionOptions) => checkWritable(main) && util.isString(value) && util.isPlainObject<FileActionOptions>(options) && !!options.assets && options.assets.length > 0;
-const findExtension = (value: string) => extensionManager!.get(value, true) || util.findSet(extensionCache, item => item.name === value);
+const findExtension = (value: string) => extensionManager!.get(value, true) || util.findSet(extensionManager!.cache, item => item.name === value) || util.findSet(extensionCache, item => item.name === value);
 
 export function setHostname(value: string) {
     if (main) {
@@ -199,7 +207,9 @@ export function setFramework(value: Framework, options?: FrameworkOptions) {
     };
     if (!main || framework !== value || cache === false) {
         if (reloading && framework !== value) {
-            clearProperties(settings);
+            for (const attr in settings) {
+                delete settings[attr];
+            }
         }
         const appBase = cache ? value.cached() : value.create();
         main = appBase.application;
@@ -268,13 +278,20 @@ export function add(...values: ExtensionRequestObject[]) {
             }
         }
         if (squared.base && value instanceof squared.base.Extension) {
-            extensionCache.add(value);
-            if (!extensionManager || !extensionManager.add(value)) {
+            if (!extensionManager) {
                 addQueue.add(value);
+                extensionCache.add(value);
+            }
+            else {
+                if (!extensionManager.add(value)) {
+                    addQueue.add(value);
+                }
+                extensionManager.cache.add(value);
             }
             if (options) {
                 apply(value, options);
             }
+            extensionCheck = true;
             ++success;
         }
     }
@@ -299,6 +316,7 @@ export function remove(...values: ExtensionRequest[]) {
             else {
                 addQueue.delete(value);
                 removeQueue.add(value);
+                extensionCheck = true;
                 ++success;
                 continue;
             }
@@ -308,6 +326,7 @@ export function remove(...values: ExtensionRequest[]) {
             if (!extensionManager || !extensionManager.remove(value)) {
                 removeQueue.add(value);
             }
+            extensionCheck = true;
             ++success;
         }
     }

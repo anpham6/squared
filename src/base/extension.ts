@@ -34,8 +34,8 @@ export default class Extension<T extends Node> implements squared.base.Extension
     public beforeInsertNode?: (element: HTMLElement, sessionId: string) => boolean;
     public afterInsertNode?: (node: T) => boolean;
 
-    public require(name: string, preload = false) {
-        this.dependencies.push({ name, preload });
+    public require(value: ExtensionDependency) {
+        this.dependencies.push(value);
     }
 
     public reset() {

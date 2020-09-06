@@ -325,9 +325,8 @@ The system methods are used internally to create the entire project and generall
 
 ```javascript
 android.setViewModel(data: {}, sessionId?: string) // object data for layout bindings
-
-android.system.customize(build: number, widget: string, options: {}) // global attributes applied to specific views
-android.system.addXmlNs(name: string, uri: string) // add global namespaces for third-party controls
+android.addXmlNs(name: string, uri: string) // add global namespaces for third-party controls
+android.customize(build: number, widget: string, options: {}) // global attributes applied to specific views
 
 android.system.copyLayoutAllXml(directory: string, options?: {}) // copy generated xml
 android.system.copyResourceAllXml(directory: string, options?: {})
@@ -378,7 +377,7 @@ android.system.writeResourceRawAudio()
 ```javascript
 // targetAPI: 0 - ALL, 30 - Android R
 
-android.system.customize(squared.settings.targetAPI, 'Button', {
+android.customize(squared.settings.targetAPI, 'Button', {
     android: {
         minWidth: '35px',
         minHeight: '25px'
@@ -387,7 +386,7 @@ android.system.customize(squared.settings.targetAPI, 'Button', {
 ```
 
 ```javascript
-android.system.addXmlNs('tools', 'http://schemas.android.com/tools');
+android.addXmlNs('tools', 'http://schemas.android.com/tools');
 ```
 
 ### CHROME: Public Methods

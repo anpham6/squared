@@ -99,16 +99,6 @@ const appBase: android.AndroidFramework<View> = {
         util
     },
     system: {
-        customize(build: number, widget: string, options: ObjectMap<StringMap>) {
-            const api = customization.API_ANDROID[build];
-            if (api) {
-                const data = api.assign[widget];
-                return data ? Object.assign(data, options) : api.assign[widget] = options;
-            }
-        },
-        addXmlNs(name: string, uri: string) {
-            constant.XMLNS_ANDROID[name] = uri;
-        },
         copyLayoutAllXml(directory: string, options?: FileUniversalOptions) {
             if (checkApplication()) {
                 file!.layoutAllToXml(application!.layouts, createAssetsOptions(options, directory));
@@ -339,6 +329,16 @@ const appBase: android.AndroidFramework<View> = {
         if (application) {
             application.setViewModel(data, sessionId);
         }
+    },
+    customize(build: number, widget: string, options: ObjectMap<StringMap>) {
+        const api = customization.API_ANDROID[build];
+        if (api) {
+            const data = api.assign[widget];
+            return data ? Object.assign(data, options) : api.assign[widget] = options;
+        }
+    },
+    addXmlNs(name: string, uri: string) {
+        constant.XMLNS_ANDROID[name] = uri;
     }
 };
 

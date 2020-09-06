@@ -20,9 +20,9 @@ export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> 
 
     constructor(name: string, framework: number, options?: ExtensionUIOptions) {
         super(name, framework, options);
-        this.require(EXT_ANDROID.EXTERNAL, true);
-        this.require(WIDGET_NAME.MENU);
-        this.require(WIDGET_NAME.COORDINATOR);
+        this.require({ name: EXT_ANDROID.EXTERNAL, leading: true });
+        this.require({ name: WIDGET_NAME.MENU });
+        this.require({ name: WIDGET_NAME.COORDINATOR });
     }
 
     public beforeInsertNode(element: HTMLElement, sessionId: string) {
