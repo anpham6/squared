@@ -238,7 +238,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 const width = td.bounds.width;
                 if (i === 0 || reevaluate || !mainData.layoutFixed) {
                     if (columnWidth === '' || columnWidth === 'auto') {
-                        if (mapWidth[j] === undefined) {
+                        if (!mapWidth[j]) {
                             mapWidth[j] = columnWidth || '0px';
                             mapBounds[j] = 0;
                         }

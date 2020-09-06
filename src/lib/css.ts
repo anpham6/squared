@@ -3044,8 +3044,8 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
             for (const value of sizes.trim().split(CHAR_SEPARATOR)) {
                 let match = REGEXP_SOURCESIZES.exec(value);
                 if (match) {
-                    const ruleA = match[2] ? checkMediaRule(match[2]) : undefined;
-                    const ruleB = match[6] ? checkMediaRule(match[6]) : undefined;
+                    const ruleA = match[2] ? checkMediaRule(match[2]) : null;
+                    const ruleB = match[6] ? checkMediaRule(match[6]) : null;
                     switch (match[5]) {
                         case 'and':
                             if (!ruleA || !ruleB) {
@@ -3058,12 +3058,12 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
                             }
                             break;
                         case 'not':
-                            if (ruleA !== undefined || ruleB) {
+                            if (ruleA !== null || ruleB) {
                                 continue;
                             }
                             break;
                         default:
-                            if (ruleA === false || ruleB !== undefined) {
+                            if (ruleA === false || ruleB !== null) {
                                 continue;
                             }
                             break;

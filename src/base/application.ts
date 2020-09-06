@@ -408,7 +408,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             sessionId,
             0,
             processing.rootElements,
-            extensions.length ? extensions : undefined
+            extensions.length ? extensions : null
         );
         if (node) {
             node.documentRoot = true;
@@ -463,7 +463,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         return node;
     }
 
-    protected cascadeParentNode(cache: NodeList<T>, excluded: NodeList<T>, parentElement: HTMLElement, sessionId: string, depth: number, rootElements: Set<HTMLElement>, extensions?: Extension<T>[]) {
+    protected cascadeParentNode(cache: NodeList<T>, excluded: NodeList<T>, parentElement: HTMLElement, sessionId: string, depth: number, rootElements: Set<HTMLElement>, extensions: Null<Extension<T>[]>) {
         const node = this.insertNode(parentElement, sessionId);
         if (node) {
             const controllerHandler = this.controllerHandler;

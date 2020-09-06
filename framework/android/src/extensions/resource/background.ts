@@ -351,16 +351,18 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LATEST
     return result;
 }
 
-function createLayerList(boxStyle: BoxStyle, images: BackgroundImageData[] = [], borderOnly: boolean, stroke?: StandardMap | false, corners?: StringMap | false, indentOffset?: string) {
+function createLayerList(boxStyle: BoxStyle, images: UndefNull<BackgroundImageData[]>, borderOnly: boolean, stroke?: StandardMap | false, corners?: StringMap | false, indentOffset?: string) {
     const item: LayerData[] = [];
     const result: LayerList[] = [{ 'xmlns:android': XMLNS_ANDROID.android, item }];
     const solid = !borderOnly && getBackgroundColor(boxStyle.backgroundColor);
-    if (solid && !images.find(image => !!image.gradient)) {
+    if (solid && (!images || !images.find(image => !!image.gradient))) {
         item.push({ shape: { 'android:shape': 'rectangle', solid, corners } });
     }
-    for (let i = 0, length = images.length; i < length; ++i) {
-        const image = images[i];
-        item.push(image.gradient ? { shape: { 'android:shape': 'rectangle', gradient: image.gradient, corners } } : image);
+    if (images) {
+        for (let i = 0, length = images.length; i < length; ++i) {
+            const image = images[i];
+            item.push(image.gradient ? { shape: { 'android:shape': 'rectangle', gradient: image.gradient, corners } } : image);
+        }
     }
     if (stroke) {
         item.push({
@@ -540,7 +542,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 let [shapeData, layerList] = this.getDrawableBorder(stored, images, indentWidth);
                 const emptyBackground = shapeData === null && layerList === null;
                 if (outline && (drawOutline || emptyBackground)) {
-                    const [outlineShapeData, outlineLayerList] = this.getDrawableBorder(stored, emptyBackground ? images : undefined, 0, !emptyBackground, outline);
+                    const [outlineShapeData, outlineLayerList] = this.getDrawableBorder(stored, emptyBackground ? images : null, 0, !emptyBackground, outline);
                     if (outlineShapeData) {
                         if (!shapeData) {
                             shapeData = outlineShapeData;
@@ -594,7 +596,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         });
     }
 
-    public getDrawableBorder(data: BoxStyle, images: Undef<BackgroundImageData[]>, indentWidth: number, borderOnly = false, outline?: BorderAttribute): [Null<StandardMap[]>, Null<LayerList[]>] {
+    public getDrawableBorder(data: BoxStyle, images: UndefNull<BackgroundImageData[]>, indentWidth: number, borderOnly = false, outline?: BorderAttribute): [Null<StandardMap[]>, Null<LayerList[]>] {
         const borderVisible: boolean[] = new Array(4);
         const indentOffset = indentWidth ? formatPX(indentWidth) : '';
         let shapeData: Null<StandardMap[]> = null,

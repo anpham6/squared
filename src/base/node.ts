@@ -1651,15 +1651,17 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 }
             }
             const value = parseFloat(self ? item[attr] as string : initial ? item.cssInitial(attr, options) : item.css(attr));
-            if (last) {
-                if (value <= min) {
+            if (!isNaN(value)) {
+                if (last) {
+                    if (value <= min) {
+                        result = item;
+                        min = value;
+                    }
+                }
+                else if (value < min) {
                     result = item;
                     min = value;
                 }
-            }
-            else if (value < min) {
-                result = item;
-                min = value;
             }
         });
         return result || this;
@@ -1683,15 +1685,17 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 }
             }
             const value = parseFloat(self ? item[attr] as string : initial ? item.cssInitial(attr, options) : item.css(attr));
-            if (last) {
-                if (value >= max) {
+            if (!isNaN(value)) {
+                if (last) {
+                    if (value >= max) {
+                        result = item;
+                        max = value;
+                    }
+                }
+                else if (value > max) {
                     result = item;
                     max = value;
                 }
-            }
-            else if (value > max) {
-                result = item;
-                max = value;
             }
         });
         return result || this;
@@ -1716,9 +1720,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 }
                 else {
                     invalid: {
-                        let segment: string,
+                        let adjacent = '',
+                            segment: string,
                             all: boolean,
-                            adjacent: Undef<string>,
                             match: Null<RegExpExecArray>;
                         while (match = SELECTOR_G.exec(query)) {
                             segment = match[1];
@@ -1730,7 +1734,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                     case '~':
                                         --offset;
                                     case '>':
-                                        if (adjacent || selectors.length === 0) {
+                                        if (adjacent !== '' || selectors.length === 0) {
                                             selectors.length = 0;
                                             break invalid;
                                         }
@@ -1850,7 +1854,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                 });
                             }
                             ++offset;
-                            adjacent = undefined;
+                            adjacent = '';
                         }
                     }
                     SELECTOR_G.lastIndex = 0;
@@ -1909,24 +1913,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         }
                     }
                     else {
-                        const r = pending.length;
-                        if (resultCount > 0) {
-                            let count = currentCount;
-                            for (let j = 0; j < r; ++j) {
-                                const node = pending[j];
-                                if (!result.includes(node)) {
-                                    result.push(node);
-                                    if (++count === resultCount) {
-                                        return result.sort(sortById);
-                                    }
-                                }
-                            }
-                        }
-                        else {
-                            for (let j = 0; j < r; ++j) {
-                                const node = pending[j];
-                                if (!result.includes(node)) {
-                                    result.push(node);
+                        let count = currentCount;
+                        for (let j = 0, r = pending.length; j < r; ++j) {
+                            const node = pending[j];
+                            if (currentCount === 0 || !result.includes(node)) {
+                                result.push(node);
+                                if (resultCount > 0 && ++count === resultCount) {
+                                    return result.sort(sortById);
                                 }
                             }
                         }
@@ -1972,7 +1965,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     }
                     length = result.length;
                     for (let i = 0; i < length; ++i) {
-                        if (result[i] === undefined) {
+                        if (!result[i]) {
                             result[i] = [];
                         }
                     }
@@ -3096,8 +3089,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get style() {
-        const result = this._style;
-        return result === undefined ? this._style = this.styleElement ? !this.pseudoElt ? getStyle(this._element!) : getStyle(this._element!.parentElement!, this.pseudoElt) : PROXY_INLINESTYLE : result;
+        return this._style || (this._style = this.styleElement ? !this.pseudoElt ? getStyle(this._element!) : getStyle(this._element!.parentElement!, this.pseudoElt) : PROXY_INLINESTYLE);
     }
 
     get cssStyle() {

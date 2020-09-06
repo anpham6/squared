@@ -670,7 +670,7 @@ declare module "base" {
         actualPadding(attr: "paddingTop" | "paddingBottom", value: number): number;
         actualBoxWidth(value?: number): number;
         actualTextHeight(options?: TextHeightOptions): number;
-        alignedVertically(siblings?: Node[], cleared?: Map<Node, string>, horizontal?: boolean): number;
+        alignedVertically(siblings?: Node[], cleared?: Null<Map<Node, string>>, horizontal?: boolean): number;
         previousSiblings(options?: TraverseSiblingsOptions): NodeUI[];
         nextSiblings(options?: TraverseSiblingsOptions): NodeUI[];
         modifyBox(region: number, value: number, negative?: boolean): void;

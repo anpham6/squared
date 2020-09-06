@@ -493,13 +493,11 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
         }
 
         get transforms() {
-            const result = this._transforms;
-            return result === undefined ? this._transforms = this.getTransforms() : result;
+            return this._transforms || (this._transforms = this.getTransforms());
         }
 
         get animations() {
-            const result = this._animations;
-            return result === undefined ? this._animations = this.getAnimations() : result;
+            return this._animations || (this._animations = this.getAnimations());
         }
 
         get visible() {

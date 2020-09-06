@@ -219,7 +219,10 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
         if (options) {
             element = options.targetElement || this.element;
             precision = options.precision;
-            options = { ...options, targetElement: undefined };
+            options = { ...options };
+            if ('targetElement' in options) {
+                delete options.targetElement;
+            }
             if (options.initialize === false) {
                 initialize = false;
             }

@@ -398,7 +398,7 @@ declare module "svg" {
         verifyBaseValue(attr: string, value?: any): number;
         build(options?: SvgBuildOptions): void;
         synchronize(options?: SvgSynchronizeOptions): void;
-        draw(transforms?: SvgTransform[], options?: SvgBuildOptions): string;
+        draw(transforms?: Null<SvgTransform[]>, options?: SvgBuildOptions): string;
         extendLength(data: SvgPathExtendData, precision?: number): SvgPathExtendData;
         flattenStrokeDash(valueArray: number[], valueOffset: number, totalLength: number, pathLength?: number): SvgPathExtendData;
         extractStrokeDash(animations?: SvgAnimation[], precision?: number): [Undef<SvgAnimation[]>, Undef<SvgStrokeDash[]>, string, string];

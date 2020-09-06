@@ -10,7 +10,6 @@ export default class ExtensionManager<T extends Node> implements squared.base.Ex
     constructor(public readonly application: Application<T>) {}
 
     public add(ext: Extension<T> | string) {
-        const { application, extensions } = this;
         if (typeof ext === 'string') {
             const item = this.get(ext, true);
             if (!item) {
@@ -18,6 +17,7 @@ export default class ExtensionManager<T extends Node> implements squared.base.Ex
             }
             ext = item;
         }
+        const { application, extensions } = this;
         if (ext.framework === 0 || hasBit(ext.framework, application.framework)) {
             ext.application = application;
             if (!extensions.includes(ext)) {

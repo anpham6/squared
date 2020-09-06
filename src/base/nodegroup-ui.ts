@@ -117,8 +117,7 @@ export default abstract class NodeGroupUI extends NodeUI {
     }
 
     get float() {
-        const result = this._cache.float;
-        return result === undefined ? this._cache.float = !this.floating ? 'none' : this.hasAlign(NODE_ALIGNMENT.RIGHT) ? 'right' : 'left' : result;
+        return this._cache.float || (this._cache.float = !this.floating ? 'none' : this.hasAlign(NODE_ALIGNMENT.RIGHT) ? 'right' : 'left');
     }
 
     get floating() {

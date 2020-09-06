@@ -304,7 +304,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     y = 1;
                 for (let i = 1; i < n; ++i) {
                     const node = nodes[i];
-                    if (node.alignedVertically(siblings, floated ? cleared : undefined)) {
+                    if (node.alignedVertically(siblings, floated ? cleared : null)) {
                         ++y;
                     }
                     else {
@@ -546,8 +546,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public namespace(name: string) {
-        const result = this._namespaces[name];
-        return result === undefined ? this._namespaces[name] = {} : result;
+        return this._namespaces[name] || (this._namespaces[name] = {});
     }
 
     public namespaces() {
@@ -925,7 +924,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return this;
     }
 
-    public alignedVertically(siblings?: T[], cleared?: Map<T, string>, horizontal?: boolean) {
+    public alignedVertically(siblings?: T[], cleared?: Null<Map<T, string>>, horizontal?: boolean) {
         if (this.lineBreak) {
             return NODE_TRAVERSE.LINEBREAK;
         }
@@ -1536,8 +1535,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get float() {
-        const result = this._cache.float;
-        return result === undefined ? this._cache.float = super.float : result;
+        return this._cache.float || (this._cache.float = super.float);
     }
 
     set textContent(value) {
@@ -1599,7 +1597,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get nodeGroup() { return false; }
 
     set renderAs(value) {
-        this._renderAs = !this.rendered && value && !value.renderParent ? value : undefined;
+        if (!this.rendered && value && !value.renderParent) {
+            this._renderAs = value;
+        }
+        else {
+            delete this._renderAs;
+        }
     }
     get renderAs() {
         return this._renderAs;

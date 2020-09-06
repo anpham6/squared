@@ -41,12 +41,12 @@ function checkTextAlign(value: string, ignoreStart?: boolean) {
     switch (value) {
         case 'left':
         case 'start':
-            return !ignoreStart ? value : undefined;
+            return !ignoreStart ? value : '';
         case 'center':
             return 'center_horizontal';
         case 'justify':
         case 'initial':
-            return !ignoreStart ? 'start' : undefined;
+            return !ignoreStart ? 'start' : '';
         default:
             return value;
     }
@@ -1104,7 +1104,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 else if (!textAutoMargin && !this.inputElement) {
                     const textAlignParent = checkTextAlign(this.cssAscend('textAlign'), true);
-                    if (textAlignParent) {
+                    if (textAlignParent !== '') {
                         if (this.imageContainer) {
                             if (this.pageFlow) {
                                 this.mergeGravity('layout_gravity', textAlignParent);
@@ -1464,8 +1464,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 if (dataset) {
                     const pattern = /^attr[A-Z]/;
                     for (const namespace in dataset) {
-                        const name = namespace === 'attr' ? 'android' : pattern.test(namespace) ? capitalize(namespace.substring(4), false) : undefined;
-                        if (name) {
+                        const name = namespace === 'attr' ? 'android' : pattern.test(namespace) ? capitalize(namespace.substring(4), false) : '';
+                        if (name !== '') {
                             for (const values of dataset[namespace]!.split(';')) {
                                 const [key, value] = splitPair(values, '::');
                                 if (value) {
@@ -2636,8 +2636,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             else {
                 const matchParent = this.css(dimension) === '100%' || this.css(horizontal ? 'minWidth' : 'minHeight') === '100%';
                 if (matchParent) {
-                    const offsetA = hasA ? parent.adjustAbsolutePaddingOffset(paddingA, this[posA]) : undefined;
-                    const offsetB = hasB ? parent.adjustAbsolutePaddingOffset(paddingB, this[posB]) : undefined;
+                    const offsetA = hasA && parent.adjustAbsolutePaddingOffset(paddingA, this[posA]);
+                    const offsetB = hasB && parent.adjustAbsolutePaddingOffset(paddingB, this[posB]);
                     if (modifyAnchor) {
                         this.anchorParent(orientation as OrientationAttr);
                         if (horizontal) {
@@ -2654,8 +2654,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                     }
                     else {
-                        result[posA] = offsetA;
-                        result[posB] = offsetB;
+                        if (offsetA) {
+                            result[posA] = offsetA;
+                        }
+                        if (offsetB) {
+                            result[posB] = offsetB;
+                        }
                     }
                 }
                 else {

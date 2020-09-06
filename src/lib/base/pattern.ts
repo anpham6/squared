@@ -90,7 +90,9 @@ export default class Pattern implements squared.lib.base.Pattern {
     }
 
     public group(index: NumString = 0) {
-        return this._matchResult ? typeof index === 'number' ? this._matchResult[index] : this._matchResult.groups?.[index] : undefined;
+        if (this._matchResult) {
+            return typeof index === 'number' ? this._matchResult[index] : this._matchResult.groups?.[index];
+        }
     }
 
     public groups(start = 0, end?: number) {

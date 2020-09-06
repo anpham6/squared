@@ -797,7 +797,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         else {
             const siblings: T[] = [];
-            const clearMap = layout.parent.floatContainer ? this.application.clearMap : undefined;
+            const clearMap = layout.parent.floatContainer ? this.application.clearMap : null;
             for (const item of layout) {
                 if (item.alignedVertically(siblings, clearMap)) {
                     layout.setContainerType(getVerticalLayout(layout), NODE_ALIGNMENT.VERTICAL | NODE_ALIGNMENT.UNKNOWN);
@@ -1271,7 +1271,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 break;
             }
             default:
-                return layout.isEmpty() ? this.renderNode(layout) : undefined;
+                if (layout.isEmpty()) {
+                    return this.renderNode(layout);
+                }
+                return;
         }
         node.setControlType(View.getControlName(containerType, node.api), containerType);
         node.addAlign(layout.alignmentType);
@@ -1768,7 +1771,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             node.apply(options);
             options.documentId = node.documentId;
         }
-        return this.getEnclosingXmlTag(controlName, this.userSettings.showAttributes ? node.extractAttributes(1) : undefined, attrs.content);
+        return this.getEnclosingXmlTag(controlName, this.userSettings.showAttributes ? node.extractAttributes(1) : '', attrs.content);
     }
 
     public renderSpace(attrs: RenderSpaceAttribute) {

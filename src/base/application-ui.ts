@@ -564,7 +564,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return this.layouts[0]?.content || '';
     }
 
-    protected cascadeParentNode(cache: NodeList<T>, excluded: NodeList<T>, parentElement: HTMLElement, sessionId: string, depth: number, rootElements: Set<HTMLElement>, extensions?: ExtensionUI<T>[], cascadeAll?: boolean) {
+    protected cascadeParentNode(cache: NodeList<T>, excluded: NodeList<T>, parentElement: HTMLElement, sessionId: string, depth: number, rootElements: Set<HTMLElement>, extensions: Null<ExtensionUI<T>[]>, cascadeAll?: boolean) {
         const node = this.insertNode(parentElement, sessionId, cascadeAll);
         if (depth === 0) {
             cache.add(node);

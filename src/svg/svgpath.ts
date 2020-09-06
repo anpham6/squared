@@ -231,10 +231,10 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
     }
 
     public build(options?: SvgBuildOptions) {
-        this.draw(options && options.transforms ? SvgBuild.filterTransforms(options.transforms, options.exclude?.[this.element.tagName]) : undefined, options);
+        this.draw(options && options.transforms ? SvgBuild.filterTransforms(options.transforms, options.exclude?.[this.element.tagName]) : null, options);
     }
 
-    public draw(transforms?: SvgTransform[], options?: SvgBuildOptions) {
+    public draw(transforms?: Null<SvgTransform[]>, options?: SvgBuildOptions) {
         let residualHandler: Undef<SvgTransformResidualHandler>,
             precision: Undef<number>;
         if (options) {

@@ -41,7 +41,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                         break;
                     }
                     default: {
-                        const object: SVGAnimatedLength = this.element[attr];
+                        const object: Undef<SVGAnimatedLength> = this.element[attr];
                         if (object) {
                             const baseVal = object.baseVal;
                             if (baseVal) {
