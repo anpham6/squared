@@ -416,28 +416,36 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
             node.rootElement = true;
-            const preAlignment: ObjectIndex<StringMap> = {};
+            const preAlignment = new WeakMap<T, StringMap>();
             const direction = new WeakSet<HTMLElement>();
             const pseudoElements: T[] = [];
             let resetBounds: Undef<boolean>;
             cache.each(item => {
                 if (item.styleElement) {
                     const element = item.element as HTMLElement;
+                    let data: Undef<StringMap>;
                     if (!item.isEmpty()) {
                         const textAlign = item.cssInitial('textAlign');
                         switch (textAlign) {
                             case 'center':
                             case 'right':
                             case 'end':
-                                (preAlignment[item.id] || (preAlignment[item.id] = {}))['text-align'] = textAlign;
+                            case 'justify': {
+                                data = { 'text-align': textAlign };
                                 element.style.setProperty('text-align', 'left');
+                                preAlignment.set(item, data);
                                 break;
+                            }
                         }
                     }
                     if (item.positionRelative) {
                         const setPosition = (attr: string) => {
                             if (item.hasPX(attr)) {
-                                (preAlignment[item.id] || (preAlignment[item.id] = {}))[attr] = item.css(attr);
+                                if (!data) {
+                                    data = {};
+                                    preAlignment.set(item, data);
+                                }
+                                data[attr] = item.css(attr);
                                 element.style.setProperty(attr, 'auto');
                                 resetBounds = true;
                             }
@@ -461,7 +469,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             });
             cache.each(item => {
                 if (!item.pseudoElt) {
-                    item.setBounds(!resetBounds && preAlignment[item.id] === undefined);
+                    item.setBounds(!resetBounds && preAlignment.get(item) === undefined);
                 }
                 else {
                     pseudoElements.push(item);
@@ -518,7 +526,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             cache.each(item => {
                 if (item.styleElement) {
                     const element = item.element as HTMLElement;
-                    const reset = preAlignment[item.id];
+                    const reset = preAlignment.get(item);
                     if (reset) {
                         for (const attr in reset) {
                             element.style.setProperty(attr, reset[attr]!);

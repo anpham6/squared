@@ -14,8 +14,7 @@ type FunctionMap<T> = ObjectMap<FunctionType<T>>;
 type FunctionSelf<T, U = void> = (this: T, ...args: any[]) => U;
 type FunctionVoid = () => void;
 
-type ObjectKeyed<T> = ObjectMap<T> | ObjectIndex<T>;
-type ObjectMapNested<T> = ObjectKeyed<ObjectKeyed<T>>;
+type ObjectMapNested<T> = ObjectMap<ObjectMap<T>>;
 type StringMap = ObjectMap<Undef<string>>;
 type StringMapChecked = ObjectMap<string>;
 type CallbackResult = (result: any) => void;
@@ -27,8 +26,4 @@ type PlainObject = Record<string | number | symbol, unknown>;
 
 interface ObjectMap<T> {
     [key: string]: T;
-}
-
-interface ObjectIndex<T> {
-    [key: number]: T;
 }

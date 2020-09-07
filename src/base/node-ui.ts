@@ -449,19 +449,19 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public horizontalRows?: T[][];
 
     protected _preferInitial = true;
+    protected _boxRegister: Null<T[]> = null;
     protected _cache!: CacheValueUI;
     protected _cacheState!: CacheStateUI<T>;
     protected _documentParent?: T;
     protected _controlName?: string;
     protected _boxReset?: number[];
     protected _boxAdjustment?: number[];
-    protected _boxRegister?: ObjectIndex<T>;
 
     protected abstract _namespaces: ObjectMap<StringMapChecked>;
 
     private _containerIndex = Infinity;
+    private _locked: Null<ObjectMapNested<boolean>> = null;
     private _renderAs?: T;
-    private _locked?: ObjectMapNested<boolean>;
     private _siblingsLeading?: T[];
     private _siblingsTrailing?: T[];
     private _innerMostWrapped?: T;
@@ -567,7 +567,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public unlockAttr(name: string, attr: string) {
         const locked = this._locked;
         if (locked) {
-            const data: Undef<ObjectKeyed<boolean>> = locked[name];
+            const data: Undef<ObjectMap<boolean>> = locked[name];
             if (data) {
                 data[attr] = false;
             }
@@ -1094,14 +1094,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public modifyBox(region: number, value: number, negative = true) {
         if (value !== 0) {
-            const node = this._boxRegister?.[region];
+            const index = CSS_SPACING.get(region)!;
+            const node = this._boxRegister?.[index];
             if (node) {
                 node.modifyBox(region, value, negative);
             }
             else {
                 const boxReset = this.boxReset;
                 const boxAdjustment = this.boxAdjustment;
-                const index = CSS_SPACING.get(region)!;
                 if (!negative && (boxReset[index] === 0 ? getSpacingOffset(this, index) : 0) + boxAdjustment[index] + value <= 0) {
                     boxAdjustment[index] = 0;
                     if (value < 0 && getSpacingOffset(this, index) >= 0) {
@@ -1121,14 +1121,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public setBox(region: number, options: BoxOptions) {
-        const node = this._boxRegister?.[region];
+        const index = CSS_SPACING.get(region)!;
+        const node = this._boxRegister?.[index];
         if (node) {
             node.setBox(region, options);
         }
         else {
             const { reset, adjustment } = options;
             const { boxReset, boxAdjustment } = this;
-            const index = CSS_SPACING.get(region)!;
             if (reset !== undefined) {
                 boxReset[index] = reset;
             }
@@ -1179,16 +1179,17 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public registerBox(region: number, node?: T): Null<T> {
         if (!this._boxRegister) {
-            this._boxRegister = {};
+            this._boxRegister = new Array(8);
         }
+        const index = CSS_SPACING.get(region)!;
         if (node) {
-            this._boxRegister[region] = node;
+            this._boxRegister[index] = node;
         }
         else {
-            node = this._boxRegister[region];
+            node = this._boxRegister[index];
         }
         while (node) {
-            const next: Undef<T> = node.unsafe<ObjectIndex<T>>('boxRegister')?.[region];
+            const next: Undef<T> = node.unsafe<T[]>('boxRegister')?.[index];
             if (next) {
                 node = next;
             }

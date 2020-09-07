@@ -52,12 +52,13 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
             }
         }
         for (const containerName in groups) {
-            const group = groups[containerName] as ObjectMap<T[]>;
+            const group = groups[containerName];
             for (const name in group) {
                 const [namespace, attr, value] = name.split(',');
                 const key = getResourceName(dimens, fromLastIndexOf(containerName, '.') + '_' + convertHyphenated(attr, '_'), value);
-                for (const node of group[name]) {
-                    node.attr(namespace, attr, `@dimen/${key}`);
+                const items = group[name];
+                for (let i = 0, length = items.length; i < length; ++i) {
+                    items[i].attr(namespace, attr, `@dimen/${key}`);
                 }
                 dimens.set(key, value);
             }

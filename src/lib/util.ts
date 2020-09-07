@@ -905,7 +905,7 @@ export function assignEmptyProperty(dest: PlainObject, source: PlainObject) {
     return dest;
 }
 
-export function assignEmptyValue(dest: PlainObject | ObjectIndex<any>, ...attrs: string[]) {
+export function assignEmptyValue(dest: PlainObject, ...attrs: string[]) {
     const length = attrs.length;
     if (length > 1) {
         let current = dest,

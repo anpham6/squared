@@ -23,5 +23,5 @@ interface Constraint {
     vertical: boolean;
     current: ObjectMap<{ documentId: string; horizontal: boolean }>;
     barrier?: StringMap;
-    guideline?: ObjectMapNested<ObjectMapNested<number>>;
+    guideline?: ObjectMapNested<ObjectMapNested<string>>;
 }

@@ -7,14 +7,18 @@ import SvgBuild from './svgbuild';
 
 import { TRANSFORM } from './lib/util';
 
-type IntervalMap = ObjectMap<ObjectIndex<SvgAnimationIntervalValue<SvgAnimation>[]>>;
-type IntervalTime = ObjectMap<Set<number>>;
+type IntervalMap = ObjectMap<Map<number, SvgAnimationIntervalValue<SvgAnimation>[]>>;
 
 const { sortNumber, splitPairStart } = squared.lib.util;
 
-function insertIntervalValue(intervalMap: IntervalMap, intervalTimes: IntervalTime, keyName: string, time: number, value: string, endTime = 0, animation?: SvgAnimation, start = false, end = false, fillMode = 0, infinite = false, valueFrom?: string) {
+function insertIntervalValue(intervalMap: Map<number, SvgAnimationIntervalValue<SvgAnimation>[]>, time: number, value: string, endTime = 0, animation?: SvgAnimation, start = false, end = false, fillMode = 0, infinite = false, valueFrom?: string) {
     if (value) {
-        (intervalMap[keyName][time] || (intervalMap[keyName][time] = [])).push({
+        let data = intervalMap.get(time);
+        if (!data) {
+            data = [];
+            intervalMap.set(time, data);
+        }
+        data.push({
             time,
             value,
             animation,
@@ -25,7 +29,6 @@ function insertIntervalValue(intervalMap: IntervalMap, intervalTimes: IntervalTi
             infinite,
             valueFrom
         });
-        intervalTimes[keyName].add(time);
     }
 }
 
@@ -53,47 +56,46 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
         }
         const map: SvgAnimationIntervalAttributeMap<SvgAnimation> = {};
         const intervalMap: IntervalMap = {};
-        const intervalTimes: IntervalTime = {};
         for (let i = 0, q = attrs.length; i < q; ++i) {
             const keyName = attrs[i];
             map[keyName] = new Map<number, SvgAnimationIntervalValue<SvgAnimation>[]>();
-            intervalMap[keyName] = {};
-            intervalTimes[keyName] = new Set<number>();
+            intervalMap[keyName] = new Map<number, SvgAnimationIntervalValue<SvgAnimation>[]>();
             const attributeName = splitPairStart(keyName, ':');
             const backwards = animations.filter(item => item.fillBackwards && item.attributeName === attributeName).sort((a, b) => b.group.id - a.group.id)[0] as SvgAnimate;
             if (backwards) {
                 const delay = backwards.delay;
-                insertIntervalValue(intervalMap, intervalTimes, keyName, 0, backwards.values[0], delay, backwards, delay === 0, false, FILL_MODE.BACKWARDS);
+                insertIntervalValue(intervalMap[keyName], 0, backwards.values[0], delay, backwards, delay === 0, false, FILL_MODE.BACKWARDS);
             }
         }
         for (let i = 0; i < length; ++i) {
             const item = animations[i];
             const keyName = SvgAnimationIntervalMap.getKeyName(item);
+            const mapData = intervalMap[keyName];
             if (item.baseValue && !intervalMap[keyName][-1]) {
-                insertIntervalValue(intervalMap, intervalTimes, keyName, -1, item.baseValue);
+                insertIntervalValue(mapData, -1, item.baseValue);
             }
             if (item.setterType) {
                 const { delay, duration } = item;
                 const fillReplace = item.fillReplace && duration > 0;
-                insertIntervalValue(intervalMap, intervalTimes, keyName, delay, item.to, fillReplace ? delay + duration : 0, item, fillReplace, !fillReplace, FILL_MODE.FREEZE);
+                insertIntervalValue(mapData, delay, item.to, fillReplace ? delay + duration : 0, item, fillReplace, !fillReplace, FILL_MODE.FREEZE);
                 if (fillReplace) {
-                    insertIntervalValue(intervalMap, intervalTimes, keyName, delay + duration, '', 0, item, false, true, FILL_MODE.FREEZE);
+                    insertIntervalValue(mapData, delay + duration, '', 0, item, false, true, FILL_MODE.FREEZE);
                 }
             }
             else if (SvgBuild.isAnimate(item) && item.duration > 0) {
                 const infinite = item.iterationCount === -1;
                 const timeEnd = item.getTotalDuration();
-                insertIntervalValue(intervalMap, intervalTimes, keyName, item.delay, item.valueTo, timeEnd, item, true, false, 0, infinite, item.valueFrom);
+                insertIntervalValue(mapData, item.delay, item.valueTo, timeEnd, item, true, false, 0, infinite, item.valueFrom);
                 if (!infinite && !item.fillReplace) {
-                    insertIntervalValue(intervalMap, intervalTimes, keyName, timeEnd, item.valueTo, 0, item, false, true, item.fillForwards ? FILL_MODE.FORWARDS : FILL_MODE.FREEZE);
+                    insertIntervalValue(mapData, timeEnd, item.valueTo, 0, item, false, true, item.fillForwards ? FILL_MODE.FORWARDS : FILL_MODE.FREEZE);
                 }
             }
         }
         for (const keyName in intervalMap) {
-            const keyTimes = sortNumber(Array.from(intervalTimes[keyName]));
+            const keyTimes = sortNumber(Array.from(intervalMap[keyName].keys()));
             for (let i = 0, q = keyTimes.length; i < q; ++i) {
                 const time = keyTimes[i];
-                const values = intervalMap[keyName][time];
+                const values = intervalMap[keyName].get(time)!;
                 for (let j = 0; j < values.length; ++j) {
                     const interval = values[j];
                     const animation = interval.animation;

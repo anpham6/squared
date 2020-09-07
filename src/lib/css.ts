@@ -24,7 +24,7 @@ const REGEXP_ANGLE = new RegExp(`^${STRING.CSS_ANGLE}$`);
 const REGEXP_TIME = new RegExp(`^${STRING.CSS_TIME}$`);
 const REGEXP_CALC = new RegExp(`^${STRING.CSS_CALC}$`);
 const REGEXP_CALCWITHIN = new RegExp(STRING.CSS_CALC);
-const REGEXP_SOURCESIZES = new RegExp(`\\s*(?:(\\(\\s*)?${PATTERN_SIZES}|(\\(\\s*))?\\s*(and|or|not)?\\s*(?:${PATTERN_SIZES}(\\s*\\))?)?\\s*(.+)`);
+const REGEXP_SOURCESIZES = new RegExp(`\\s*(?:(?:\\(\\s*)?${PATTERN_SIZES}|(?:\\(\\s*))?\\s*(and|or|not)?\\s*(?:${PATTERN_SIZES}(?:\\s*\\))?)?\\s*(.+)`);
 const REGEXP_KEYFRAMES = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
 const REGEXP_MEDIARULE = /(?:(not|only)?\s*(?:all|screen)\s+and\s+)?((?:\([^)]+\)(?:\s+and\s+)?)+),?\s*/g;
 const REGEXP_MEDIARULECONDITION = /\(([a-z-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?:\s+and\s+)?/g;
@@ -3044,9 +3044,9 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
             for (const value of sizes.trim().split(CHAR_SEPARATOR)) {
                 let match = REGEXP_SOURCESIZES.exec(value);
                 if (match) {
-                    const ruleA = match[2] ? checkMediaRule(match[2]) : null;
-                    const ruleB = match[6] ? checkMediaRule(match[6]) : null;
-                    switch (match[5]) {
+                    const ruleA = match[1] ? checkMediaRule(match[1]) : null;
+                    const ruleB = match[4] ? checkMediaRule(match[4]) : null;
+                    switch (match[3]) {
                         case 'and':
                             if (!ruleA || !ruleB) {
                                 continue;
@@ -3068,7 +3068,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
                             }
                             break;
                     }
-                    const unit = match[9];
+                    const unit = match[6];
                     if (unit) {
                         match = REGEXP_CALC.exec(unit);
                         if (match) {

@@ -83,22 +83,25 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
 
     public processNode(node: T) {
         const columnEnd: number[] = [];
-        const nextMapX: ObjectIndex<T[]> = {};
-        const columns: Node[][] = [];
+        const nextMapX = new Map<number, T[]>();
+        let columns: Node[][] = [];
         node.each(row => {
             row.each((column: T) => {
                 if (column.visible) {
                     const index = Math.floor(column.linear.left);
-                    (nextMapX[index] || (nextMapX[index] = [])).push(column);
+                    let mapX = nextMapX.get(index);
+                    if (!mapX) {
+                        mapX = [];
+                        nextMapX.set(index, mapX);
+                    }
+                    mapX.push(column);
                 }
             });
         });
-        const nextCoordsX = Object.keys(nextMapX);
-        const length = nextCoordsX.length;
-        if (length) {
-            let columnLength = -1;
-            for (let i = 0; i < length; ++i) {
-                const nextAxisX: T[] = nextMapX[nextCoordsX[i]];
+        if (nextMapX.size) {
+            let columnLength = -1,
+                i = 0;
+            for (const nextAxisX of nextMapX) {
                 if (i === 0) {
                     columnLength = length;
                 }
@@ -106,16 +109,15 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                     columnLength = -1;
                     break;
                 }
+                ++i;
             }
             if (columnLength !== -1) {
-                for (let i = 0; i < length; ++i) {
-                    columns.push(nextMapX[nextCoordsX[i]]);
-                }
+                columns = Array.from(nextMapX.values());
             }
             else {
                 const columnRight: number[] = [];
-                for (let i = 0; i < length; ++i) {
-                    const nextAxisX: T[] = nextMapX[nextCoordsX[i]];
+                i = 0;
+                for (const nextAxisX of nextMapX.values()) {
                     const q = nextAxisX.length;
                     if (i === 0 && q === 0) {
                         return;
@@ -167,8 +169,10 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         }
                         columnRight[i] = Math.max(right, columnRight[i]);
                     }
+                    ++i;
                 }
-                for (let i = 0, j = -1, q = columnRight.length; i < q; ++i) {
+                i = 0;
+                for (let j = -1, q = columnRight.length; i < q; ++i) {
                     if (!columns[i]) {
                         if (j === -1) {
                             j = i - 1;
@@ -182,7 +186,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         j = -1;
                     }
                 }
-                for (let i = 0; i < columns.length; ++i) {
+                for (i = 0; i < columns.length; ++i) {
                     if (columns[i]?.length) {
                         columnEnd.push(columnRight[i]);
                     }

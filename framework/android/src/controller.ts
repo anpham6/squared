@@ -3631,10 +3631,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         else {
             const guideline = parent.constraint.guideline || {};
-            const anchors = guideline[axis]?.[attr]?.[LT] as Undef<StringMapChecked>;
+            const anchors = guideline[axis]?.[attr]?.[LT] as Undef<StringMap>;
             if (anchors) {
                 for (const id in anchors) {
-                    if (parseInt(anchors[id]) === location) {
+                    if (withinRange(parseFloat(anchors[id]!), location)) {
                         node.anchor(LT, id, true);
                         node.anchorDelete(RB);
                         return;
