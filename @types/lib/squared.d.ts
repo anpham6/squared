@@ -5,25 +5,25 @@ declare module "lib" {
             [Symbol.iterator](): Iterator<T>;
             item(index: number, value?: T): Undef<T>;
             add(item: T): this;
+            addAt(index: number, ...items: T[]): this;
             addAll(list: T[] | Container<T>): this;
             remove(item: T): Undef<T>;
-            removeAll(list: T[] | Container<T>): T[];
             removeAt(index: number): Undef<T>;
+            removeAll(list: T[] | Container<T>): T[];
             retainAs(list: T[]): this;
-            contains(item: T): boolean;
-            clear(): this;
-            each(predicate: IteratorPredicate<T, void>, options?: ContainerFindOptions<T>): this;
+            each(predicate: IteratorPredicate<T, void>, options?: ContainerRangeOptions): this;
             every(predicate: IteratorPredicate<T, boolean>, options?: ContainerRangeOptions): boolean;
             removeIf(predicate: IteratorPredicate<T, boolean>, options?: ContainerCascadeOptions<T>): T[];
             find(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>): Undef<T>;
             cascade(predicate?: IteratorPredicate<T, void | boolean>, options?: ContainerCascadeOptions<T>): T[];
             map<U = unknown>(predicate: IteratorPredicate<T, U>): U[];
-            partition(predicate: IteratorPredicate<T, boolean>): [T[], T[]];
             sort(predicate: (a: T, b: T) => number): this;
-            toArray(): T[];
+            contains(item: T): boolean;
+            clear(): this;
             iterator(): ListIterator<T>;
             isEmpty(): boolean;
             size(): number;
+            toArray(): T[];
             constructor(children?: T[]);
         }
 

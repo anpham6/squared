@@ -7,7 +7,7 @@ import View from '../view';
 import LayoutUI = squared.base.LayoutUI;
 
 const { formatPX } = squared.lib.css;
-const { trimEnd } = squared.lib.util;
+const { truncateTrailingZero } = squared.lib.math;
 
 function setLayoutHeight(node: View) {
     if (node.hasPX('height') && node.height + node.contentBoxHeight < Math.floor(node.bounds.height) && node.css('verticalAlign') !== 'top') {
@@ -39,7 +39,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                             const value = parseFloat(cellData.percent) / 100;
                             if (value) {
                                 item.setLayoutWidth('0px');
-                                item.android('layout_columnWeight', trimEnd(value.toPrecision(3), '0'));
+                                item.android('layout_columnWeight', truncateTrailingZero(value.toPrecision(3)));
                                 requireWidth = true;
                             }
                         }

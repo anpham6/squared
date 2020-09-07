@@ -10,6 +10,8 @@ interface XMLTagData {
 const CACHE_CAMELCASE: StringMap = {};
 const CACHE_HYPHENATED: StringMap = {};
 const CACHE_UNDERSCORE: StringMap = {};
+const CACHE_TRIMBOTH: ObjectMap<RegExp> = {};
+const CACHE_TRIMSTRING: ObjectMap<RegExp> = {};
 const REGEXP_DECIMAL = new RegExp(`^${STRING.DECIMAL}$`);
 
 export function promisify<T>(fn: FunctionType<any>): FunctionType<Promise<T>> {
@@ -829,12 +831,13 @@ export function resolvePath(value: string, href?: string) {
 }
 
 export function trimBoth(value: string, pattern: string) {
-    const match = new RegExp(`^(${pattern})+(.*?)\\1$`).exec(value);
+    const match = (CACHE_TRIMBOTH[pattern] || (CACHE_TRIMBOTH[pattern] = new RegExp(`^(${pattern})+([\\s\\S]*?)\\1$`))).exec(value);
     return match ? match[2] : value;
 }
 
 export function trimString(value: string, pattern: string) {
-    return trimStart(trimEnd(value, pattern), pattern);
+    const match = (CACHE_TRIMSTRING[pattern] || (CACHE_TRIMSTRING[pattern] = new RegExp(`^(?:${pattern})*([\\s\\S]*?)(?:${pattern})*$`))).exec(value);
+    return match ? match[1] : value;
 }
 
 export function trimStart(value: string, pattern: string) {

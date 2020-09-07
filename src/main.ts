@@ -67,29 +67,32 @@ function extendPrototype(id: number) {
 
 function loadExtensions() {
     if (extensionManager) {
+        if (extensionCache.size) {
+            for (const item of extensionCache) {
+                extensionManager.cache.add(item);
+            }
+            extensionCache.clear();
+        }
         if (addQueue.size) {
             for (const item of addQueue) {
                 extensionManager.add(item);
             }
             addQueue.clear();
         }
+        if (optionsQueue.size) {
+            for (const data of optionsQueue) {
+                const ext = extensionManager.get(data[0], true);
+                if (ext) {
+                    Object.assign(ext.options, data[1]);
+                }
+            }
+            optionsQueue.clear();
+        }
         if (removeQueue.size) {
             for (const item of removeQueue) {
                 extensionManager.remove(item);
             }
             removeQueue.clear();
-        }
-        if (optionsQueue.size) {
-            for (const data of optionsQueue) {
-                apply(data[0], data[1]);
-            }
-            optionsQueue.clear();
-        }
-        if (extensionCache.size) {
-            for (const item of extensionCache) {
-                extensionManager.cache.add(item);
-            }
-            extensionCache.clear();
         }
         if (extensionCheck) {
             const extensions = extensionManager.checkDependencies();
@@ -161,11 +164,11 @@ const findExtension = (value: string) => extensionManager!.get(value, true) || u
 
 export function setHostname(value: string) {
     if (main) {
-        const fileHandler = main.resourceHandler?.fileHandler;
-        if (fileHandler) {
+        const file = main.resourceHandler?.fileHandler;
+        if (file) {
             const match = regex.FILE.PROTOCOL.exec(value);
             if (match && match[1].startsWith('http')) {
-                fileHandler.hostname = match[1] + match[2] + (match[3] || '');
+                file.hostname = match[1] + match[2] + (match[3] || '');
             }
         }
     }

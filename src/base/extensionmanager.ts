@@ -56,7 +56,7 @@ export default class ExtensionManager<T extends Node> implements squared.base.Ex
             if (q === 0) {
                 continue;
             }
-            for (let j = 0, k = 0; j < q; ++j) {
+            for (let j = 0, k = 1; j < q; ++j) {
                 const dependency = dependencies[j];
                 const name = dependency.name;
                 const index = extensions.findIndex(item => item.name === name);
@@ -68,7 +68,7 @@ export default class ExtensionManager<T extends Node> implements squared.base.Ex
                             extensions.splice(i - 1, 0, ext);
                         }
                         else if (dependency.trailing) {
-                            extensions.splice(i + 1 + k++, 0, ext);
+                            extensions.splice(i + k++, 0, ext);
                         }
                         else {
                             extensions.push(ext);

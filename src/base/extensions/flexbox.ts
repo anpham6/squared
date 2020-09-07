@@ -6,7 +6,7 @@ import ExtensionUI from '../extension-ui';
 
 type NodeIntersectXY = "intersectY" | "intersectX";
 
-const { withinRange } = squared.lib.util;
+const { partitionArray, withinRange } = squared.lib.util;
 
 const OPTIONS_BOUNDSDATA: StringMap = {
     'align-self': 'start',
@@ -32,7 +32,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
     }
 
     public processNode(node: T) {
-        const [children, absolute] = node.partition((item: T) => item.pageFlow) as [T[], T[]];
+        const [children, absolute] = partitionArray(node.children, (item: T) => item.pageFlow) as [T[], T[]];
         const mainData = createDataAttribute(node, children);
         const dataName = this.name;
         node.cssTryAll({ 'align-items': 'start', 'justify-items': 'start' }, () => {
