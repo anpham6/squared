@@ -9,6 +9,7 @@ type BundleIndex = ObjectMap<ChromeAsset[]>;
 const ASSETS = squared.base.Resource.ASSETS;
 
 const { FILE } = squared.lib.regex;
+
 const { convertWord, fromLastIndexOf, isString, iterateReverseArray, parseMimeType, partitionLastIndexOf, resolvePath, splitPairStart, trimEnd } = squared.lib.util;
 
 const { appendSeparator, randomUUID } = squared.base.lib.util;
@@ -566,10 +567,19 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                             continue;
                         }
                     }
-                    data = { pathname: '__generated__/base64', filename, mimeType, base64 };
+                    data = {
+                        pathname: '__generated__/base64',
+                        filename,
+                        mimeType,
+                        base64
+                    };
                 }
                 else if (mimeType && rawData.content) {
-                    data = { pathname: `__generated__/${mimeType.split('/').pop()!}`, filename, content: rawData.content };
+                    data = {
+                        pathname: `__generated__/${mimeType.split('/').pop()!}`,
+                        filename,
+                        content: rawData.content
+                    };
                 }
                 else {
                     continue;
@@ -695,6 +705,6 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     get userSettings() {
-        return this.resource.userSettings as IUserSettings;
+        return this.resource.userSettings as IUserResourceSettings;
     }
 }

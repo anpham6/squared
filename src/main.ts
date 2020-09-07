@@ -13,15 +13,15 @@ import ArrayIterator from './lib/base/arrayiterator';
 import ListIterator from './lib/base/listiterator';
 import Pattern from './lib/base/pattern';
 
-type Node = squared.base.Node;
-type Main = squared.base.Application<Node>;
 type ExtensionRequest = squared.ExtensionRequest;
 type ExtensionRequestObject = squared.ExtensionRequestObject;
+type FileActionOptions = squared.FileActionOptions;
+type FrameworkOptions = squared.FrameworkOptions;
+type Node = squared.base.Node;
+type Main = squared.base.Application<Node>;
+type Framework = squared.base.AppFramework<Node>;
 type Extension = squared.base.Extension<Node>;
 type ExtensionManager = squared.base.ExtensionManager<Node>;
-type Framework = squared.base.AppFramework<Node>;
-type FrameworkOptions = squared.FrameworkOptions;
-type FileActionOptions = squared.FileActionOptions;
 type ExtendPrototypeMap = ObjectMap<FunctionType<any> | { get?: () => any, set?: (value: any) => void }>;
 
 const addQueue = new Set<ExtensionRequest>();

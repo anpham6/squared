@@ -12,16 +12,16 @@ type FileActionOptions = squared.FileActionOptions;
 type PreloadItem = HTMLImageElement | string;
 
 const { DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, CSS_CANNOT_BE_PARSED } = squared.lib.error;
+const { FILE, STRING } = squared.lib.regex;
 
 const { CSS_PROPERTIES, checkMediaRule, getSpecificity, hasComputedStyle, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText } = squared.lib.css;
-const { FILE, STRING } = squared.lib.regex;
 const { getElementCache, newSessionInit, resetSessionAll, setElementCache } = squared.lib.session;
 const { capitalize, convertCamelCase, isEmptyString, parseMimeType, resolvePath, splitPair, splitPairStart, trimBoth } = squared.lib.util;
 
 const REGEXP_IMPORTANT = /\s*([a-z-]+):[^!;]+!important;/g;
 const REGEXP_FONTFACE = /\s*@font-face\s*{([^}]+)}\s*/;
 const REGEXP_FONTSRC = /\s*src:\s*([^;]+);/;
-const REGEXP_FONTFAMILY = /\s*font-family:([^;]+);/;
+const REGEXP_FONTFAMILY = /\s*font-family:\s*([^;]+);/;
 const REGEXP_FONTSTYLE = /\s*font-style:\s*(\w+)\s*;/;
 const REGEXP_FONTWEIGHT = /\s*font-weight:\s*(\d+)\s*;/;
 const REGEXP_FONTURL = /\s*(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*format\("?([\w-]+)"?\))?\s*/;
@@ -687,7 +687,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 if (resourceHandler) {
                     const attr = REGEXP_FONTFACE.exec(cssText)?.[1];
                     if (attr) {
-                        const src = REGEXP_FONTSRC.exec(attr)?.[1];
+                        const src = REGEXP_FONTSRC.exec(attr)?.[1].trim();
                         let fontFamily = REGEXP_FONTFAMILY.exec(attr)?.[1].trim();
                         if (src && fontFamily) {
                             fontFamily = trimBoth(fontFamily, '"');

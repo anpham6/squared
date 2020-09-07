@@ -1,4 +1,4 @@
-interface IUserSettings extends UserResourceSettings {
+interface IUserResourceSettings extends UserResourceSettings {
     excludePlainText: boolean;
     outputFileExclusions: string[];
 }

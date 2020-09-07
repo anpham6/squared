@@ -36,7 +36,7 @@ let Node: serve.INode,
     Chrome: serve.IChrome,
     Image: serve.IImage;
 
-{
+    {
     let DISK_READ = false,
         DISK_WRITE = false,
         UNC_READ = false,
@@ -44,7 +44,7 @@ let Node: serve.INode,
         GZIP_LEVEL = 9,
         BROTLI_QUALITY = 11,
         JPEG_QUALITY = 100,
-        TINIFY_API_KEY = false,
+        TINIFY_API_KEY = '',
         ROUTING: Undef<serve.Routing>,
         CORS: Undef<cors.CorsOptions>,
         ENV: serve.Environment = process.env.NODE_ENV?.toLowerCase().startsWith('prod') ? 'production' : 'development',
@@ -102,7 +102,7 @@ let Node: serve.INode,
             tinify.key = tinypng_api_key;
             tinify.validate(err => {
                 if (!err) {
-                    TINIFY_API_KEY = true;
+                    TINIFY_API_KEY = tinypng_api_key;
                 }
             });
         }
@@ -801,10 +801,10 @@ let Node: serve.INode,
     (EXTERNAL);
 
     Image = new class implements serve.IImage {
-        constructor(public tinify_api_key: boolean) {}
+        constructor() {}
 
         findCompress(compress: Undef<CompressFormat[]>) {
-            if (this.tinify_api_key) {
+            if (TINIFY_API_KEY) {
                 return Compress.findFormat(compress, 'png');
             }
         }
@@ -909,8 +909,7 @@ let Node: serve.INode,
         opacity(self: jimp, value: Undef<number>) {
             return value !== undefined && value >= 0 && value <= 1 ? self.opacity(value) : self;
         }
-    }
-    (TINIFY_API_KEY);
+    }();
 }
 
 class FileManager implements serve.IFileManager {
@@ -1412,6 +1411,7 @@ class FileManager implements serve.IFileManager {
                         catch (err) {
                             this.finalize('');
                             Node.writeFail(location, err);
+                            tinify.validate();
                         }
                     };
                     if (mimeType === 'image/unknown') {
@@ -1731,6 +1731,7 @@ class FileManager implements serve.IFileManager {
             catch (err) {
                 this.compressFile(assets, file, filepath);
                 Node.writeFail(filepath, err);
+                tinify.validate();
             }
         }
         else {
@@ -2241,7 +2242,10 @@ app.post('/api/assets/archive', (req, res) => {
         output.on('close', () => {
             const success = manager.files.size > 0;
             const bytes = archive.pointer();
-            const response: ResultOfFileAction = { success, files: Array.from(manager.files) };
+            const response: ResultOfFileAction = {
+                success,
+                files: Array.from(manager.files)
+            };
             if (!copy_to) {
                 response.zipname = zipname;
                 response.bytes = bytes;

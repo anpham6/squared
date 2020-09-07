@@ -25,10 +25,11 @@ type SvgGroup = squared.svg.SvgGroup;
 type SvgUse = squared.svg.SvgUse;
 type SvgView = squared.svg.SvgView;
 
+const { STRING } = squared.lib.regex;
+
 const { isAngle, parseAngle } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { absoluteAngle, offsetAngleY, relativeAngle, truncate, truncateFraction } = squared.lib.math;
-const { STRING } = squared.lib.regex;
 const { hasBit, isArray, plainMap, splitPair } = squared.lib.util;
 
 const RE_DECIMAL = new Pattern(STRING.DECIMAL);
@@ -757,7 +758,10 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         if (length % 2 === 0) {
             const result: Point[] = new Array(length / 2);
             for (let i = 0, j = 0; i < length; i += 2) {
-                result[j++] = { x: values[i], y: values[i] };
+                result[j++] = {
+                    x: values[i],
+                    y: values[i + 1]
+                };
             }
             return result;
         }

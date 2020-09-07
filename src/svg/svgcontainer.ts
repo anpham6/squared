@@ -9,6 +9,7 @@ type SvgGroup = squared.svg.SvgGroup;
 type SvgView = squared.svg.SvgView;
 
 const { STRING } = squared.lib.regex;
+
 const { cloneObject, iterateArray } = squared.lib.util;
 
 const REGEXP_LENGTHPERCENTAGE = new RegExp(STRING.LENGTH_PERCENTAGE);

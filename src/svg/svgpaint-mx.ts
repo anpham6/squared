@@ -7,10 +7,11 @@ import { calculateStyle, getAttribute } from './lib/util';
 type SvgShapePattern = squared.svg.SvgShapePattern;
 type SvgUse = squared.svg.SvgUse;
 
+const { STRING } = squared.lib.regex;
+
 const { parseColor } = squared.lib.color;
 const { extractURL, getFontSize, hasCalc, hasEm, isCustomProperty, isLength, isPercent, parseUnit, parseVar } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { STRING } = squared.lib.regex;
 const { convertCamelCase, isNumber, joinArray, plainMap } = squared.lib.util;
 
 const REGEXP_CACHE: ObjectMap<RegExp> = {

@@ -10,12 +10,13 @@ import NodeUI from './node-ui';
 
 import { appendSeparator } from './lib/util';
 
+const { STRING } = squared.lib.regex;
+
 const { isUserAgent } = squared.lib.client;
 const { parseColor } = squared.lib.color;
 const { CSS_PROPERTIES, calculate, convertAngle, formatPercent, formatPX, hasComputedStyle, hasCoords, isCalc, isLength, isPercent, parseAngle, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = squared.lib.math;
-const { STRING } = squared.lib.regex;
 const { getElementAsNode } = squared.lib.session;
 const { convertCamelCase, hasValue, isEqual, isNumber, isString, iterateArray, splitPair, splitPairEnd } = squared.lib.util;
 

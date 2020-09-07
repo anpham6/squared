@@ -1807,7 +1807,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if (attrs.rowSpan) {
             android.layout_rowSpan = attrs.rowSpan.toString();
         }
-        const result: ViewAttribute = { android, app: attrs.app };
+        const result: ViewAttribute = {
+            android,
+            app: attrs.app
+        };
         const output = this.renderNodeStatic({ controlName: CONTAINER_ANDROID.SPACE, width, height }, result);
         attrs.documentId = result.documentId;
         return output;

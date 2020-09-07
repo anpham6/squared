@@ -52,10 +52,13 @@ function getFileAssets(pathname: string, items: string[]) {
 function getImageAssets(pathname: string, items: string[], convertExt: string, compress: boolean) {
     const length = items.length;
     if (length) {
-        convertExt = convertExt.toLowerCase();
-        let mimeTypeTo = parseMimeType(convertExt);
-        if (!mimeTypeTo.startsWith('image/')) {
-            mimeTypeTo = '';
+        let mimeTypeTo: Undef<string>;
+        if (convertExt) {
+            convertExt = convertExt.toLowerCase();
+            mimeTypeTo = parseMimeType(/^[a-z]+/.exec(convertExt)?.[0] || '');
+            if (!mimeTypeTo.startsWith('image/')) {
+                mimeTypeTo = '';
+            }
         }
         const result: FileAsset[] = new Array(length / 3);
         for (let i = 0, j = 0; i < length; i += 3) {
@@ -64,7 +67,7 @@ function getImageAssets(pathname: string, items: string[], convertExt: string, c
             if (filename.endsWith('.unknown')) {
                 mimeType = (compress ? 'png@:' : '') + 'image/unknown';
             }
-            else if (mimeTypeTo !== '') {
+            else if (mimeTypeTo) {
                 const mimeTypeFrom = parseMimeType(filename);
                 if (mimeTypeFrom !== mimeTypeTo && mimeTypeFrom.startsWith('image/')) {
                     mimeType = convertExt + `${!/[@%]/.test(convertExt) ? '@' : ''}:${mimeTypeFrom}`;
@@ -186,11 +189,17 @@ export default class File<T extends View> extends squared.base.File<T> implement
         else {
             j = 1;
             itemArray = new Array(length + 1);
-            itemArray[0] = { name: 'app_name', innerText: this.userSettings.manifestLabelAppName };
+            itemArray[0] = {
+                name: 'app_name',
+                innerText: this.userSettings.manifestLabelAppName
+            };
         }
         for (let i = 0; i < length; ++i) {
             const item = items[i];
-            itemArray[j++] = { name: item[0], innerText: item[1] };
+            itemArray[j++] = {
+                name: item[0],
+                innerText: item[1]
+            };
         }
         return this.checkFileAssets([
             replaceTab(applyTemplate('resources', STRING_TMPL, [{ string: itemArray }]), this.userSettings.insertSpaces, true),
@@ -264,7 +273,10 @@ export default class File<T extends View> extends squared.base.File<T> implement
             const itemArray: ItemValue[] = new Array(length);
             for (let i = 0; i < length; ++i) {
                 const item = items[i];
-                itemArray[i] = { name: item[1], innerText: item[0] };
+                itemArray[i] = {
+                    name: item[1],
+                    innerText: item[0]
+                };
             }
             return this.checkFileAssets([
                 replaceTab(applyTemplate('resources', COLOR_TMPL, [{ color: itemArray }]), this.userSettings.insertSpaces),
@@ -340,7 +352,10 @@ export default class File<T extends View> extends squared.base.File<T> implement
             const itemArray: ItemValue[] = new Array(length);
             for (let i = 0; i < length; ++i) {
                 const item = items[i];
-                itemArray[i] = { name: item[0], innerText: convertPixels ? item[1].replace(/px$/, 'dp') : item[1] };
+                itemArray[i] = {
+                    name: item[0],
+                    innerText: convertPixels ? item[1].replace(/px$/, 'dp') : item[1]
+                };
             }
             return this.checkFileAssets([
                 replaceTab(applyTemplate('resources', DIMEN_TMPL, [{ dimen: itemArray }])),

@@ -24,7 +24,7 @@ declare namespace base {
     }
 
     class Application<T extends Node> extends squared.base.Application<T> {
-        userSettings: IUserSettings;
+        userSettings: IUserResourceSettings;
         builtInExtensions: Map<string, Extension<T>>;
         readonly session: AppSession<T>;
         readonly extensions: Extension<T>[];
@@ -45,7 +45,7 @@ declare namespace base {
         getAudioAssets(options?: FileActionAttribute): ChromeAsset[];
         getFontAssets(options?: FileActionAttribute): ChromeAsset[];
         get application(): Application<T>;
-        get userSettings(): IUserSettings;
+        get userSettings(): IUserResourceSettings;
         get outputFileExclusions(): RegExp[];
     }
 

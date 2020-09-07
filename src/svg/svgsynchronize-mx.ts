@@ -41,7 +41,10 @@ function insertAdjacentSplitValue(map: TimelineIndex, attr: string, time: number
             break;
         }
         else if (time > previousTime && time < key && previousValue !== undefined) {
-            previous = { key: previousTime, value: previousValue };
+            previous = {
+                key: previousTime,
+                value: previousValue
+            };
             next = { key, value };
             break;
         }

@@ -759,7 +759,12 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     if (q > 1) {
                                         segStart.constraint[orientation] = false;
                                         segEnd.constraint[orientation] = false;
-                                        const options: GuidelineOptions<T> = { target: segStart, parent: node, orientation, percent: true };
+                                        const options: GuidelineOptions<T> = {
+                                            target: segStart,
+                                            parent: node,
+                                            orientation,
+                                            percent: true
+                                        };
                                         controller.addGuideline(options);
                                         options.target = segEnd;
                                         options.opposing = true;

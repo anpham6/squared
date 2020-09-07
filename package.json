@@ -8,9 +8,7 @@
     "express-r": "node ./serve.js --disk-read --unc-read",
     "express-w": "node ./serve.js --disk-write --unc-write",
     "express-rw": "node ./serve.js --access-all",
-    "install-chrome": "npm i @babel/core && npm i @babel/preset-env && npm i terser && npm i uglify-js && npm i prettier && npm i clean-css && npm i html-minifier-terser && npm i html-minifier",
     "watch": "tsc -w -p ./config/tsconfig.dev.json",
-    "lint": "eslint **/*.ts --no-ignore",
     "bundles": "node bundle.js -f base -o ./dist/bundles/squared.base.bundle.$npm_package_version.js && node bundle.js -f base -m svg -o ./dist/bundles/squared+svg.base.bundle.$npm_package_version.js && node bundle.js -f android -o ./dist/bundles/squared.android.bundle.$npm_package_version.js && node bundle.js -f android -m svg -o ./dist/bundles/squared+svg.android.bundle.$npm_package_version.js && node bundle.js -f android -e android.widget.* -o ./dist/bundles/squared.android+widget.bundle.$npm_package_version.js && node bundle.js -f android -m svg -e android.widget.* -o ./dist/bundles/squared+svg.android+widget.bundle.$npm_package_version.js && node bundle.js -f chrome -o ./dist/bundles/squared.chrome.bundle.$npm_package_version.js && node bundle.js -f chrome -m svg -o ./dist/bundles/squared+svg.chrome.bundle.$npm_package_version.js && node bundle.js -f vdom -o ./dist/bundles/squared.vdom.bundle.$npm_package_version.js && node bundle.js -f vdom -m svg -o ./dist/bundles/squared+svg.vdom.bundle.$npm_package_version.js && node bundle.js -f vdom-lite -o ./dist/bundles/squared.vdom-lite.bundle.$npm_package_version.js",
     "bundles-win": "node bundle.js -f base -o ./dist/bundles/squared.base.bundle.%npm_package_version%.js && node bundle.js -f base -m svg -o ./dist/bundles/squared+svg.base.bundle.%npm_package_version%.js && node bundle.js -f android -o ./dist/bundles/squared.android.bundle.%npm_package_version%.js && node bundle.js -f android -m svg -o ./dist/bundles/squared+svg.android.bundle.%npm_package_version%.js && node bundle.js -f android -e android.widget.* -o ./dist/bundles/squared.android+widget.bundle.%npm_package_version%.js && node bundle.js -f android -m svg -e android.widget.* -o ./dist/bundles/squared+svg.android+widget.bundle.%npm_package_version%.js && node bundle.js -f chrome -o ./dist/bundles/squared.chrome.bundle.%npm_package_version%.js && node bundle.js -f chrome -m svg -o ./dist/bundles/squared+svg.chrome.bundle.%npm_package_version%.js && node bundle.js -f vdom -o ./dist/bundles/squared.vdom.bundle.%npm_package_version%.js && node bundle.js -f vdom -m svg -o ./dist/bundles/squared+svg.vdom.bundle.%npm_package_version%.js && node bundle.js -f vdom-lite -o ./dist/bundles/squared.vdom-lite.bundle.%npm_package_version%.js",
     "md5-check": "npm run md5-chromium && npm run md5-chromium-diff",
@@ -59,6 +57,7 @@
     "prod-scripts": "cd ./node/scripts && eslint **/*.ts && tsc -outDir ../../",
     "prod-all": "npm run prod && npm run prod-android-extension && npm run prod-express && npm run prod-scripts && npm run bundles",
     "prod-win": "npm run prod && npm run prod-android-extension && npm run prod-express && npm run prod-scripts && npm run bundles-win",
+    "install-chrome": "npm i @babel/core && npm i @babel/preset-env && npm i terser && npm i uglify-js && npm i prettier && npm i clean-css && npm i html-minifier-terser && npm i html-minifier",
     "clean": "rimraf build/* && rimraf dist/* && rimraf temp/*"
   },
   "repository": {
@@ -97,7 +96,6 @@
   "homepage": "https://github.com/anpham6/squared#readme",
   "dependencies": {
     "7zip-min": "^1.1.3",
-    "@types/terser": "^3.12.0",
     "archiver": "^5.0.0",
     "chalk": "^4.1.0",
     "cors": "^2.8.5",

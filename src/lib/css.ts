@@ -2326,7 +2326,11 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                         const result: string[] = [];
                         let [radius, position] = shape.split(/\s+at\s+/);
                         if (hasCalc(radius)) {
-                            const options: CalculateVarAsStringOptions = { boundingBox, min: 0, parent: true };
+                            const options: CalculateVarAsStringOptions = {
+                                boundingBox,
+                                min: 0,
+                                parent: true
+                            };
                             if (prefix === 'circle') {
                                 if (radius.includes('%')) {
                                     const { width, height } = boundingBox || getContentBoxDimension(element.parentElement);

@@ -76,10 +76,6 @@ declare module "svg" {
     }
 
     interface SvgViewRect extends SvgBaseVal, SvgRect {
-        x: number;
-        y: number;
-        width: number;
-        height: number;
         rectElement?: SvgRectElement;
         setRect(): void;
     }

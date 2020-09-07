@@ -1,7 +1,7 @@
 import type Extension from './extension';
 
 export default class Application<T extends squared.base.Node> extends squared.base.Application<T> implements chrome.base.Application<T> {
-    public userSettings!: IUserSettings;
+    public userSettings!: IUserResourceSettings;
     public builtInExtensions!: Map<string, Extension<T>>;
     public readonly session!: chrome.base.AppSession<T>;
     public readonly extensions: Extension<T>[] = [];

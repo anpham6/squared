@@ -5,9 +5,10 @@ import type View from './view';
 
 import { concatString } from './lib/util';
 
+const { FILE } = squared.lib.regex;
+
 const { findColorShade, parseColor } = squared.lib.color;
 const { extractURL, getSrcSet } = squared.lib.css;
-const { FILE } = squared.lib.regex;
 const { fromLastIndexOf, isNumber, isPlainObject, isString, resolvePath, trimString } = squared.lib.util;
 
 const STORED = squared.base.ResourceUI.STORED as IResourceStoredMap;

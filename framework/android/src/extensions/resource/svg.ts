@@ -137,9 +137,10 @@ interface AnimateGroup {
 
 const KEYSPLINE_NAME = SvgAnimate ? SvgAnimate.KEYSPLINE_NAME : null;
 
+const { FILE } = squared.lib.regex;
+
 const { extractURL, formatPX, isPercent } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { FILE } = squared.lib.regex;
 const { convertCamelCase, convertInt, convertWord, hasKeys, isArray, isNumber, lastItemOf, lastItemEquals, partitionArray, plainMap, replaceMap } = squared.lib.util;
 
 const { CACHE_VIEWNAME, MATRIX, SVG, TRANSFORM, getAttribute, getRootOffset } = squared.svg.lib.util;
@@ -486,7 +487,11 @@ function getTileMode(value: number) {
 
 function createFillGradient(gradient: Gradient, path: SvgPath, precision?: number) {
     const { colorStops, type } = gradient;
-    const result: GradientTemplate = { type, item: convertColorStops(colorStops, precision), positioning: false };
+    const result: GradientTemplate = {
+        type,
+        item: convertColorStops(colorStops, precision),
+        positioning: false
+    };
     switch (type) {
         case 'radial': {
             const { cxAsString, cyAsString, rAsString, spreadMethod } = gradient as SvgRadialGradient;

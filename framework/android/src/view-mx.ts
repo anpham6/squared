@@ -2714,7 +2714,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                         this.setLayoutHeight('0px');
                                     }
                                     if (parent.innerMostWrapped.documentBody) {
-                                        const options: HasOptions = { type: CSS_UNIT.LENGTH | CSS_UNIT.PERCENT, not: '100%' };
+                                        const options: HasOptions = {
+                                            type: CSS_UNIT.LENGTH | CSS_UNIT.PERCENT,
+                                            not: '100%'
+                                        };
                                         do {
                                             if (!parent.has(dimension, options) && !parent.has(horizontal ? 'maxWidth' : 'maxHeight', options)) {
                                                 if (horizontal) {

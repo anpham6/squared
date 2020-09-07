@@ -11,13 +11,10 @@ interface FileAsset extends Asset {
     exclusions?: Exclusions;
 }
 
+interface ImageAsset extends Asset, Dimension {}
+
 interface LayoutAsset extends FileAsset {
     index?: number;
-}
-
-interface ImageAsset extends Asset {
-    width: number;
-    height: number;
 }
 
 interface RequestAsset extends FileAsset {

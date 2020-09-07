@@ -83,6 +83,17 @@ declare module "base" {
         copyFiles(directory: string, options: FileActionOptions): FileActionResult;
     }
 
+    interface LayoutRoot<T extends NodeUI> {
+        node: T;
+        layoutName: string;
+        renderTemplates: NodeTemplate<T>[];
+    }
+
+    interface DocumentWriteDataExtensionUI<T extends NodeUI> {
+        rendered: T[];
+        documentRoot: LayoutRoot<T>[];
+    }
+
     interface AppBase<T extends Node> {
         application: Application<T>;
         framework: number;
@@ -90,7 +101,7 @@ declare module "base" {
     }
 
     interface AppHandler<T extends Node> {
-        application: Application<T>;
+        readonly application: Application<T>;
         readonly userSettings: UserSettings;
     }
 
@@ -125,17 +136,6 @@ declare module "base" {
     interface AppSessionUI<T extends NodeUI> extends AppSession<T> {
         extensionMap: Map<T, ExtensionUI<T>[]>;
         clearMap: Map<T, string>;
-    }
-
-    interface LayoutRoot<T extends NodeUI> {
-        node: T;
-        layoutName: string;
-        renderTemplates: NodeTemplate<T>[];
-    }
-
-    interface DocumentWriteDataExtensionUI<T extends NodeUI> {
-        rendered: T[];
-        documentRoot: LayoutRoot<T>[];
     }
 
     class Application<T extends Node> implements FileActionAsync {
@@ -608,10 +608,11 @@ declare module "base" {
         lineBreakLeading: boolean;
         lineBreakTrailing: boolean;
         floatContainer: boolean;
+        renderChildren: NodeUI[];
         renderParent: Null<NodeUI>;
+        renderExtension: Null<Extension<NodeUI>[]>;
+        renderTemplates: Null<NodeTemplate<NodeUI>[]>;
         documentChildren?: NodeUI[];
-        renderExtension?: Extension<NodeUI>[];
-        renderTemplates?: NodeTemplate<NodeUI>[];
         renderedAs?: NodeTemplate<NodeUI>;
         outerWrapper?: NodeUI;
         innerBefore?: NodeUI;
@@ -620,7 +621,6 @@ declare module "base" {
         horizontalRowStart?: boolean;
         horizontalRowEnd?: boolean;
         horizontalRows?: NodeUI[][];
-        renderChildren: NodeUI[];
         setControlType(controlName: string, containerType?: number): void;
         setExclusions(): void;
         setLayout(): void;

@@ -45,7 +45,6 @@ interface ICompress {
 }
 
 interface IImage {
-    readonly tinify_api_key: boolean;
     findCompress(compress: Undef<CompressFormat[]>): Undef<CompressFormat>;
     isJpeg(file: ExpressAsset, filepath?: string): boolean;
     parseResizeMode(value: string): Undef<ResizeMode>;

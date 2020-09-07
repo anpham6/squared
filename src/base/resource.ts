@@ -4,8 +4,9 @@ import type Node from './node';
 
 import { randomUUID } from './lib/util';
 
-const { extractURL } = squared.lib.css;
 const { STRING } = squared.lib.regex;
+
+const { extractURL } = squared.lib.css;
 const { fromLastIndexOf, fromMimeType, parseMimeType } = squared.lib.util;
 
 const REGEXP_DATAURI = new RegExp(`^${STRING.DATAURI}$`);

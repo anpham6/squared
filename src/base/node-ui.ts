@@ -436,6 +436,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public visible = true;
     public renderChildren: T[] = [];
     public renderParent: Null<T> = null;
+    public renderExtension: Null<ExtensionUI<T>[]> = null;
+    public renderTemplates: Null<NodeTemplate<T>[]> = null;
     public documentChildren?: T[];
     public horizontalRowStart?: boolean;
     public horizontalRowEnd?: boolean;
@@ -443,19 +445,17 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public innerBefore?: T;
     public innerAfter?: T;
     public companion?: T;
-    public renderExtension?: ExtensionUI<T>[];
-    public renderTemplates?: NodeTemplate<T>[];
     public renderedAs?: NodeTemplate<T>;
     public horizontalRows?: T[][];
 
     protected _preferInitial = true;
-    protected _boxRegister: Null<T[]> = null;
     protected _cache!: CacheValueUI;
     protected _cacheState!: CacheStateUI<T>;
-    protected _documentParent?: T;
-    protected _controlName?: string;
+    protected _boxRegister: Null<T[]> = null;
     protected _boxReset?: number[];
     protected _boxAdjustment?: number[];
+    protected _documentParent?: T;
+    protected _controlName?: string;
 
     protected abstract _namespaces: ObjectMap<StringMapChecked>;
 
