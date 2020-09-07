@@ -4,8 +4,7 @@ import BUILD_ANDROID = android.base.BUILD_ANDROID;
 import { WIDGET_NAME } from '../lib/constant';
 
 const { NODE_RESOURCE } = squared.base.lib.constant;
-const { SUPPORT_ANDROID, SUPPORT_ANDROID_X } = android.lib.constant;
-const { CONTAINER_NODE } = android.lib.constant;
+const { CONTAINER_NODE, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = android.lib.constant;
 
 const { assignEmptyValue, capitalize, iterateArray } = squared.lib.util;
 const { createStyleAttribute, createViewAttribute } = android.lib.util;

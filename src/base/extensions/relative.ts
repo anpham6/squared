@@ -11,7 +11,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
 
     public condition() { return true; }
 
-    public processNode(node: T) {
+    public processNode() {
         return { subscribe: true };
     }
 

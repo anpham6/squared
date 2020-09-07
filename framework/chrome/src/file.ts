@@ -1,12 +1,12 @@
 import type Application from './application';
 import type Extension from './extension';
 
-import Resource = squared.base.Resource;
-
 import Pattern = squared.lib.base.Pattern;
 
 type Node = squared.base.Node;
 type BundleIndex = ObjectMap<ChromeAsset[]>;
+
+const ASSETS = squared.base.Resource.ASSETS;
 
 const { FILE } = squared.lib.regex;
 const { convertWord, fromLastIndexOf, isString, iterateReverseArray, parseMimeType, partitionLastIndexOf, resolvePath, splitPairStart, trimEnd } = squared.lib.util;
@@ -460,7 +460,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 }
             }
         });
-        for (const data of Resource.ASSETS.rawData) {
+        for (const data of ASSETS.rawData) {
             const item = data[1];
             if (item.mimeType === 'text/css') {
                 const asset = File.parseUri(resolvePath(data[0]), { preserveCrossOrigin, format: saveAs && saveAs.format });
@@ -530,10 +530,10 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 processUri(element, src);
             }
         });
-        for (const uri of Resource.ASSETS.image.keys()) {
+        for (const uri of ASSETS.image.keys()) {
             processUri(null, uri);
         }
-        for (const rawData of Resource.ASSETS.rawData.values()) {
+        for (const rawData of ASSETS.rawData.values()) {
             if (rawData.pathname) {
                 continue;
             }
@@ -595,7 +595,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     public getFontAssets(options?: FileActionAttribute) {
         const preserveCrossOrigin = options && options.preserveCrossOrigin;
         const result: ChromeAsset[] = [];
-        for (const fonts of Resource.ASSETS.fonts.values()) {
+        for (const fonts of ASSETS.fonts.values()) {
             for (let i = 0, length = fonts.length; i < length; ++i) {
                 const url = fonts[i].srcUrl;
                 if (url) {

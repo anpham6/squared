@@ -998,7 +998,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         ext.subscribers.add(nodeY);
                                     }
                                     next = result.next === true;
-                                    if (result.complete || next) {
+                                    if (next || result.complete) {
                                         break;
                                     }
                                 }
@@ -1039,7 +1039,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                 }
                                             }
                                             next = result.next === true;
-                                            if (result.complete || next) {
+                                            if (next || result.complete) {
                                                 break;
                                             }
                                         }

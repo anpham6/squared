@@ -185,8 +185,8 @@ declare module "base" {
             framework: number,
             nodeConstructor: Constructor<T>,
             ControllerConstructor: Constructor<Controller<T>>,
-            ResourceConstructor?: Constructor<Resource<T>>,
-            ExtensionManagerConstructor?: Constructor<ExtensionManager<T>>
+            ExtensionManagerConstructor?: Constructor<ExtensionManager<T>>,
+            ResourceConstructor?: Constructor<Resource<T>>
         );
     }
 
@@ -209,13 +209,6 @@ declare module "base" {
         get extensionManager(): ExtensionManager<T>;
         get layouts(): FileAsset[];
         get clearMap(): Map<T, string>;
-        constructor(
-            framework: number,
-            nodeConstructor: Constructor<T>,
-            ControllerConstructor: Constructor<ControllerUI<T>>,
-            ResourceConstructor: Constructor<ResourceUI<T>>,
-            ExtensionManagerConstructor: Constructor<ExtensionManager<T>>
-        );
     }
 
     class Controller<T extends Node> implements AppHandler<T> {

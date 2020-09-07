@@ -19,7 +19,6 @@ const appBase: squared.base.AppFramework<Node> = {
             framework,
             squared.base.Node,
             squared.base.Controller,
-            undefined,
             squared.base.ExtensionManager
         );
         return {

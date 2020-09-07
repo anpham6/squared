@@ -274,8 +274,8 @@ const appBase: android.AndroidFramework<View> = {
             framework,
             View,
             Controller,
-            Resource,
-            squared.base.ExtensionManager
+            squared.base.ExtensionManager,
+            Resource
         );
         file = new File();
         application.resourceHandler.fileHandler = file;

@@ -7,8 +7,7 @@ import { WIDGET_NAME } from '../lib/constant';
 type View = android.base.View;
 
 const { NODE_RESOURCE } = squared.base.lib.constant;
-const { SUPPORT_ANDROID, SUPPORT_ANDROID_X } = android.lib.constant;
-const { CONTAINER_NODE } = android.lib.constant;
+const { CONTAINER_NODE, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = android.lib.constant;
 
 const { assignEmptyValue, cloneObject, includes, iterateArray } = squared.lib.util;
 const { createStyleAttribute, createViewAttribute } = android.lib.util;

@@ -12,7 +12,7 @@ const appBase: squared.base.AppFramework<Node> = {
         application = new Application<Node>(
             framework,
             Node,
-            (Controller as unknown) as Constructor<Node>
+            Controller
         );
         return {
             application,

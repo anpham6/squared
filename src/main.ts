@@ -75,7 +75,10 @@ function loadExtensions() {
         }
         if (addQueue.size) {
             for (const item of addQueue) {
-                extensionManager.add(item);
+                if (!extensionManager.add(item)) {
+                    console.log('FAIL: ' + (typeof item === 'string' ? item : item.name));
+                    extensionCheck = true;
+                }
             }
             addQueue.clear();
         }
@@ -90,7 +93,9 @@ function loadExtensions() {
         }
         if (removeQueue.size) {
             for (const item of removeQueue) {
-                extensionManager.remove(item);
+                if (extensionManager.remove(item)) {
+                    extensionCheck = true;
+                }
             }
             removeQueue.clear();
         }

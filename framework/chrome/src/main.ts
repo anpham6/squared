@@ -136,8 +136,8 @@ const appBase: chrome.ChromeFramework<Node> = {
             framework,
             squared.base.Node,
             squared.base.Controller,
-            squared.base.Resource,
-            squared.base.ExtensionManager
+            squared.base.ExtensionManager,
+            squared.base.Resource
         );
         file = new File();
         application.resourceHandler!.fileHandler = file;

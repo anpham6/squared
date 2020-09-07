@@ -71,16 +71,16 @@ export default abstract class Application<T extends Node> implements squared.bas
     constructor(
         public readonly framework: number,
         nodeConstructor: Constructor<T>,
-        ControllerConstructor: Constructor<T>,
-        ResourceConstructor?: Constructor<T>,
-        ExtensionManagerConstructor?: Constructor<T>)
+        ControllerConstructor: Constructor<Controller<T>>,
+        ExtensionManagerConstructor?: Constructor<ExtensionManager<T>>,
+        ResourceConstructor?: Constructor<Resource<T>>)
     {
-        this._controllerHandler = (new ControllerConstructor(this) as unknown) as Controller<T>;
-        if (ResourceConstructor) {
-            this._resourceHandler = (new ResourceConstructor(this) as unknown) as Resource<T>;
-        }
+        this._controllerHandler = new ControllerConstructor(this);
         if (ExtensionManagerConstructor) {
-            this._extensionManager = (new ExtensionManagerConstructor(this) as unknown) as ExtensionManager<T>;
+            this._extensionManager = new ExtensionManagerConstructor(this);
+        }
+        if (ResourceConstructor) {
+            this._resourceHandler = new ResourceConstructor(this);
         }
         this._afterInsertNode = this._controllerHandler.afterInsertNode;
         this.Node = nodeConstructor;
