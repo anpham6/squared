@@ -879,7 +879,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     this.setLayoutWidth(this.getMatchConstraint(renderParent));
                 }
                 else {
-                    this.android('minWidth', formatPX(this.parseWidth(minWidth) + (this.contentBox ? this.contentBoxWidth : 0)), false);
+                    const width = this.parseWidth(minWidth) + (this.contentBox ? this.contentBoxWidth : 0);
+                    if (width) {
+                        this.android('minWidth', formatPX(width), false);
+                    }
                 }
             }
             if (this.hasPX('minHeight') && this.display !== 'table-cell' && (!this.hasFlex('column') || actualParent.flexElement && !this.flexibleHeight)) {
@@ -888,7 +891,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     this.setLayoutHeight('match_parent');
                 }
                 else {
-                    this.android('minHeight', formatPX(this.parseHeight(minHeight) + (this.contentBox ? this.contentBoxHeight : 0)), false);
+                    const height = this.parseHeight(minHeight) + (this.contentBox ? this.contentBoxHeight : 0);
+                    if (height) {
+                        this.android('minHeight', formatPX(height), false);
+                    }
                 }
             }
             if (this.support.maxDimension) {

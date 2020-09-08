@@ -1304,6 +1304,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             node.setCacheValue('centerAligned', centerAligned);
             node.setCacheValue('rightAligned', rightAligned);
         };
+        const setBoundsWidth = () => node.css('width', formatPX(node.bounds.width - (node.contentBox ? node.contentBoxWidth : 0)), true);
+        const setBoundsHeight = () => node.css('height', formatPX(node.bounds.height - (node.contentBox ? node.contentBoxHeight : 0)), true);
         switch (node.tagName) {
             case 'IMG':
             case 'CANVAS': {
@@ -1320,9 +1322,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                         };
                         const image = imageSet[0];
-                        const actualWidth = image.actualWidth;
-                        if (actualWidth) {
-                            setImageDimension(actualWidth, this.application.resourceHandler.getImage(element.src));
+                        if (image.actualWidth) {
+                            setImageDimension(image.actualWidth, this.application.resourceHandler.getImage(element.src));
                         }
                         else {
                             const stored = this.application.resourceHandler.getImage(image.src);
@@ -1493,7 +1494,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     case 'image':
                     case 'color':
                         if (!node.hasWidth) {
-                            node.css('width', formatPX(node.bounds.width));
+                            setBoundsWidth();
                         }
                         break;
                 }
@@ -1527,7 +1528,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     node.css('width', formatPX(cols * 8));
                 }
                 if (!node.hasHeight) {
-                    node.css('height', formatPX(node.bounds.height));
+                    setBoundsHeight();
                 }
                 node.android('scrollbars', 'vertical');
                 node.android('inputType', 'textMultiLine');
@@ -1573,10 +1574,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                 }
                 if (!node.hasWidth) {
-                    node.css('width', formatPX(node.bounds.width));
+                    setBoundsWidth();
                 }
                 if (!node.hasHeight) {
-                    node.css('height', formatPX(node.bounds.height));
+                    setBoundsHeight();
                 }
                 node.android('progressTint', `@color/${Resource.addColor(foregroundColor!)}`);
                 node.android('progressBackgroundTint', `@color/${Resource.addColor(backgroundColor!)}`);
@@ -1613,10 +1614,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     });
                 }
                 if (!node.hasPX('width')) {
-                    node.css('width', formatPX(node.actualWidth), true);
+                    setBoundsWidth();
                 }
                 if (!node.hasPX('height')) {
-                    node.css('height', formatPX(node.actualHeight), true);
+                    setBoundsHeight();
                 }
                 if (node.inline) {
                     setInlineBlock();
@@ -1731,7 +1732,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 setReadOnly();
             case CONTAINER_ANDROID.RANGE:
                 if (!node.hasPX('width')) {
-                    node.css('width', formatPX(node.bounds.width));
+                    setBoundsWidth();
                 }
                 break;
             case CONTAINER_ANDROID.LINE:

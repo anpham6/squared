@@ -2866,7 +2866,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         break;
                 }
             }
-            else if (this.inlineStatic || this.display === 'table-cell' || this.actualParent?.flexdata.row) {
+            else if (this.inlineStatic && this.cssInitial('width') === '' || this.display === 'table-cell' || this.actualParent?.flexdata.row) {
                 result = this.bounds.width;
             }
             else {
@@ -2888,7 +2888,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     get actualHeight() {
         let result = this._cache.actualHeight;
         if (result === undefined) {
-            if (this.inlineStatic || this.display === 'table-cell' || this.actualParent?.flexdata.column) {
+            if (this.inlineStatic && this.cssInitial('height') === '' || this.display === 'table-cell' || this.actualParent?.flexdata.column) {
                 result = this.bounds.height;
             }
             else {
