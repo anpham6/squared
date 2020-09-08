@@ -402,7 +402,7 @@ function ascendFlexibleHeight(node: T) {
         return true;
     }
     const parent = node.renderParent as Undef<T>;
-    return !!parent && (parent.hasHeight || parent.layoutConstraint && parent.blockHeight) || node.absoluteParent?.hasHeight === true;
+    return !!parent && (parent.hasHeight || parent.layoutConstraint && parent.blockHeight) || !!node.absoluteParent?.hasHeight;
 }
 
 function setLayoutDimension(node: T, value: string, horizontal: boolean, overwrite: boolean) {
@@ -2880,7 +2880,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 if (controlName) {
                     let name: Undef<string>;
                     if (this.styleElement) {
-                        const value = this.elementId?.trim() || getNamedItem(this.element as HTMLElement, 'name');
+                        const value = this.elementId || getNamedItem(this.element as HTMLElement, 'name');
                         if (value !== '') {
                             name = value.replace(/[^\w$\-_.]/g, '_').toLowerCase();
                             if (name === 'parent' || RESERVED_JAVA.has(name)) {

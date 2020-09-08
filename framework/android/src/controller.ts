@@ -12,8 +12,9 @@ import Resource from './resource';
 import View from './view';
 import ViewGroup from './viewgroup';
 
-import NodeUI = squared.base.NodeUI;
+import ContentUI = squared.base.ContentUI;
 import LayoutUI = squared.base.LayoutUI;
+import NodeUI = squared.base.NodeUI;
 
 import { concatString, createViewAttribute, getDocumentId, getRootNs, replaceTab } from './lib/util';
 
@@ -202,7 +203,7 @@ function constraintAlignTop(node: View, boxTop: number) {
     }
 }
 
-function setObjectContainer(layout: LayoutUI<View>) {
+function setObjectContainer(layout: ContentUI<View>) {
     const node = layout.node;
     const element = node.element as HTMLEmbedElement & HTMLObjectElement;
     const src = (element.tagName === 'OBJECT' ? element.data : element.src).trim();
@@ -211,20 +212,20 @@ function setObjectContainer(layout: LayoutUI<View>) {
         node.setCacheValue('tagName', 'IMG');
         node.setCacheValue('imageElement', true);
         element.src = src;
-        layout.setContainerType(CONTAINER_NODE.IMAGE);
+        layout.containerType = CONTAINER_NODE.IMAGE;
     }
     else if (type.startsWith('video/')) {
         node.setCacheValue('tagName', 'VIDEO');
         element.src = src;
-        layout.setContainerType(CONTAINER_NODE.VIDEOVIEW);
+        layout.containerType = CONTAINER_NODE.VIDEOVIEW;
     }
     else if (type.startsWith('audio/')) {
         node.setCacheValue('tagName', 'AUDIO');
         element.src = src;
-        layout.setContainerType(CONTAINER_NODE.VIDEOVIEW);
+        layout.containerType = CONTAINER_NODE.VIDEOVIEW;
     }
     else {
-        layout.setContainerType(CONTAINER_NODE.TEXT);
+        layout.containerType = CONTAINER_NODE.TEXT;
     }
 }
 
@@ -718,7 +719,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.PERCENT);
                 }
                 else if (child.autoMargin.leftRight || child.autoMargin.left || child.hasPX('maxWidth') && !child.support.maxDimension && !child.inputElement) {
-                    layout.setContainerType(CONTAINER_NODE.CONSTRAINT);
+                    layout.containerType = CONTAINER_NODE.CONSTRAINT;
                 }
                 else {
                     const parent = layout.parent;
@@ -730,14 +731,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             layout.setContainerType(CONTAINER_NODE.LINEAR, NODE_ALIGNMENT.HORIZONTAL);
                         }
                         else {
-                            layout.setContainerType(CONTAINER_NODE.FRAME);
+                            layout.containerType = CONTAINER_NODE.FRAME;
                         }
                     }
                     else if (child.baselineElement && (parent.layoutGrid || parent.flexElement && node.flexbox.alignSelf === 'baseline')) {
                         layout.setContainerType(CONTAINER_NODE.LINEAR, NODE_ALIGNMENT.HORIZONTAL);
                     }
                     else {
-                        layout.setContainerType(CONTAINER_NODE.FRAME);
+                        layout.containerType = CONTAINER_NODE.FRAME;
                     }
                 }
                 layout.addAlign(NODE_ALIGNMENT.SINGLE);
@@ -750,7 +751,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             layout.setContainerType(getVerticalAlignedLayout(layout), NODE_ALIGNMENT.VERTICAL | NODE_ALIGNMENT.UNKNOWN);
         }
         else if (this.checkConstraintFloat(layout)) {
-            layout.setContainerType(CONTAINER_NODE.CONSTRAINT);
+            layout.containerType = CONTAINER_NODE.CONSTRAINT;
             if (!setConstraintFloatAligmnment(layout)) {
                 if (layout.linearY) {
                     layout.addAlign(NODE_ALIGNMENT.VERTICAL);
@@ -766,20 +767,19 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         else if (layout.linearX || layout.singleRowAligned) {
             if (this.checkFrameHorizontal(layout)) {
-                layout.addRender(NODE_ALIGNMENT.FLOAT);
-                layout.addRender(NODE_ALIGNMENT.HORIZONTAL);
+                layout.addRender(NODE_ALIGNMENT.FLOAT | NODE_ALIGNMENT.HORIZONTAL);
             }
             else if (this.checkConstraintHorizontal(layout)) {
-                layout.setContainerType(CONTAINER_NODE.CONSTRAINT);
+                layout.containerType = CONTAINER_NODE.CONSTRAINT;
             }
             else if (this.checkLinearHorizontal(layout)) {
-                layout.setContainerType(CONTAINER_NODE.LINEAR);
+                layout.containerType = CONTAINER_NODE.LINEAR;
                 if (layout.floated) {
                     sortHorizontalFloat(layout.children);
                 }
             }
             else {
-                layout.setContainerType(layout.singleRowAligned && isConstraintLayout(layout, false) ? CONTAINER_NODE.CONSTRAINT : CONTAINER_NODE.RELATIVE);
+                layout.containerType = layout.singleRowAligned && isConstraintLayout(layout, false) ? CONTAINER_NODE.CONSTRAINT : CONTAINER_NODE.RELATIVE;
             }
             layout.addAlign(NODE_ALIGNMENT.HORIZONTAL);
         }
@@ -809,17 +809,17 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
     }
 
-    public processUnknownChild(layout: LayoutUI<T>) {
+    public processUnknownChild(layout: ContentUI<T>) {
         const node = layout.node;
         const background = node.visibleStyle.background;
         if (node.tagName === 'OBJECT') {
             setObjectContainer(layout);
         }
         else if (node.inlineText && (background || !node.textEmpty)) {
-            layout.setContainerType(CONTAINER_NODE.TEXT);
+            layout.containerType = CONTAINER_NODE.TEXT;
         }
         else if (node.blockStatic && node.naturalChildren.length === 0 && (background || node.contentBoxHeight)) {
-            layout.setContainerType(CONTAINER_NODE.FRAME);
+            layout.containerType = CONTAINER_NODE.FRAME;
         }
         else if (
             node.bounds.height === 0 &&
@@ -832,7 +832,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             node.marginLeft === 0 &&
             !background &&
             !node.rootElement &&
-            !node.use)
+            node.use === '')
         {
             node.hide();
             layout.next = true;
@@ -841,15 +841,15 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             switch (node.tagName) {
                 case 'LI':
                 case 'OUTPUT':
-                    layout.setContainerType(CONTAINER_NODE.TEXT);
+                    layout.containerType = CONTAINER_NODE.TEXT;
                     break;
                 default:
                     if (node.textContent !== '' && (background || !node.pageFlow || node.pseudoElt === '::after')) {
-                        layout.setContainerType(CONTAINER_NODE.TEXT);
+                        layout.containerType = CONTAINER_NODE.TEXT;
                         node.inlineText = true;
                     }
                     else {
-                        layout.setContainerType(CONTAINER_NODE.FRAME);
+                        layout.containerType = CONTAINER_NODE.FRAME;
                         node.exclude({ resource: NODE_RESOURCE.VALUE_STRING });
                     }
                     break;
@@ -858,8 +858,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public processTraverseHorizontal(layout: LayoutUI<T>, siblings: T[]) {
-        const parent = layout.parent;
-        if (layout.floated?.size === 1 && layout.every(item => item.floating)) {
+        const { parent, floated } = layout;
+        if (floated && floated.size === 1 && layout.every(item => item.floating)) {
             if (isUnknownParent(parent, CONTAINER_NODE.CONSTRAINT, layout.size())) {
                 parent.addAlign(NODE_ALIGNMENT.FLOAT);
                 parent.removeAlign(NODE_ALIGNMENT.UNKNOWN);
@@ -890,8 +890,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public processTraverseVertical(layout: LayoutUI<T>) {
         const clearMap = this.application.clearMap;
-        const parent = layout.parent;
-        const floatSize = layout.floated?.size;
+        const { parent, floated } = layout;
         if (layout.find((item, index) => item.lineBreakTrailing && index < layout.size() - 1)) {
             if (!parent.hasAlign(NODE_ALIGNMENT.VERTICAL)) {
                 const containerType = getVerticalLayout(layout);
@@ -911,8 +910,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
             }
         }
-        else if (floatSize) {
-            if (floatSize === 1 && layout.every(item => item.floating)) {
+        else if (floated) {
+            if (floated.size === 1 && layout.every(item => item.floating)) {
                 layout.node = this.createLayoutGroup(layout);
                 layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.FLOAT);
             }
@@ -949,7 +948,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public processLayoutHorizontal(layout: LayoutUI<T>) {
         if (this.checkConstraintFloat(layout)) {
-            layout.setContainerType(CONTAINER_NODE.CONSTRAINT);
+            layout.containerType = CONTAINER_NODE.CONSTRAINT;
             if (!setConstraintFloatAligmnment(layout)) {
                 layout.addAlign(NODE_ALIGNMENT.INLINE);
             }
@@ -1286,7 +1285,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         };
     }
 
-    public renderNode(layout: LayoutUI<T>): NodeXmlTemplate<T> {
+    public renderNode(layout: ContentUI<T>): NodeXmlTemplate<T> {
         const node = layout.node;
         let { parent, containerType } = layout,
             controlName = View.getControlName(containerType, node.api);
@@ -1971,7 +1970,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         else {
             container.containerIndex = node.containerIndex;
         }
-        this.application.getProcessingCache(node.sessionId).add(container, delegate === true, cascade === true);
+        this.application.getProcessingCache(node.sessionId).add(container, !!delegate, !!cascade);
         return container;
     }
 
@@ -1983,7 +1982,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             append: true,
             innerWrapped: node,
             delegate: true,
-            cascade: options.cascade === true || !!children && children.length > 0 && !node.rootElement
+            cascade: !!options.cascade || !!children && children.length > 0 && !node.rootElement
         });
         container.inherit(node, 'base', 'alignment');
         if (node.documentRoot) {
@@ -3206,7 +3205,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             previousAlignParent: Undef<boolean>;
         for (let i = 0, length = horizontal.length, start = false; i < length; ++i) {
             const partition = horizontal[i];
-            const [floatingRight, floatingLeft] = partitionArray(partition, item => item.float === 'right' || item.autoMargin.left === true);
+            const [floatingRight, floatingLeft] = partitionArray(partition, item => item.float === 'right' || !!item.autoMargin.left);
             let alignParent: Undef<boolean>,
                 aboveRowEnd: Undef<T>,
                 currentRowTop: Undef<T>;

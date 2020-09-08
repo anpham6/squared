@@ -615,7 +615,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                     node.setLayoutWidth('match_parent');
                     node.lockAttr('android', 'layout_width');
                     mainData.constraintData = constraintData;
-                    layout.setContainerType(CONTAINER_NODE.CONSTRAINT);
+                    layout.containerType = CONTAINER_NODE.CONSTRAINT;
                 }
             }
             if (layout.containerType === CONTAINER_NODE.GRID) {
@@ -743,7 +743,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
         if (mainData) {
             const controller = this.controller as android.base.Controller<T>;
             const { children, column, row, rowData } = mainData;
-            const wrapped = mainData.unsetContentBox === true;
+            const wrapped = !!mainData.unsetContentBox;
             const insertId = children[children.length - 1].id;
             if (CssGrid.isJustified(node)) {
                 setContentSpacing(mainData, column, node, true, controller.userSettings.resolutionScreenWidth - node.bounds.left, 0);

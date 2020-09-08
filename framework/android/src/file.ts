@@ -55,9 +55,12 @@ function getImageAssets(pathname: string, items: string[], convertExt: string, c
         let mimeTypeTo: Undef<string>;
         if (convertExt) {
             convertExt = convertExt.toLowerCase();
-            mimeTypeTo = parseMimeType(/^[a-z]+/.exec(convertExt)?.[0] || '');
-            if (!mimeTypeTo.startsWith('image/')) {
-                mimeTypeTo = '';
+            const match = /^[a-z]+/.exec(convertExt);
+            if (match) {
+                mimeTypeTo = parseMimeType(match[0]);
+                if (!mimeTypeTo.startsWith('image/')) {
+                    mimeTypeTo = '';
+                }
             }
         }
         const result: FileAsset[] = new Array(length / 3);

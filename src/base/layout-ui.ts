@@ -61,11 +61,9 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
         this._initialized = true;
     }
 
-    public setContainerType(containerType: number, alignmentType?: number) {
+    public setContainerType(containerType: number, alignmentType: number) {
         this.containerType = containerType;
-        if (alignmentType) {
-            this.addAlign(alignmentType);
-        }
+        this.addAlign(alignmentType);
     }
 
     public addAlign(value: number) {
@@ -93,10 +91,6 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
     }
     get itemCount() {
         return this._itemCount ?? this.size();
-    }
-
-    set type(value: LayoutType) {
-        this.setContainerType(value.containerType, value.alignmentType);
     }
 
     get linearX() {

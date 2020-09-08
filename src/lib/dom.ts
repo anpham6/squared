@@ -110,7 +110,10 @@ export function removeElementsByClassName(className: string) {
     const elements = Array.from(document.getElementsByClassName(className));
     for (let i = 0, length = elements.length; i < length; ++i) {
         const element = elements[i];
-        element.parentElement?.removeChild(element);
+        const parentElement = element.parentElement;
+        if (parentElement) {
+            parentElement.removeChild(element);
+        }
     }
 }
 

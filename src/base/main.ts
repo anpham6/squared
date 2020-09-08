@@ -7,6 +7,7 @@ import Node from './node';
 import NodeList from './nodelist';
 import Resource from './resource';
 import ApplicationUI from './application-ui';
+import ContentUI from './content-ui';
 import ControllerUI from './controller-ui';
 import ExtensionUI from './extension-ui';
 import LayoutUI from './layout-ui';
@@ -49,6 +50,7 @@ const lib = {
 export {
     Application,
     ApplicationUI,
+    ContentUI,
     Controller,
     ControllerUI,
     Extension,

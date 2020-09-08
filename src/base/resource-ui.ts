@@ -4,9 +4,9 @@ import USER_AGENT = squared.lib.constant.USER_AGENT;
 import { NODE_RESOURCE } from './lib/constant';
 
 import type ControllerUI from './controller-ui';
+import type NodeUI from './node-ui';
 
 import Resource from './resource';
-import NodeUI from './node-ui';
 
 import { appendSeparator } from './lib/util';
 
@@ -1238,7 +1238,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
             switch (node.css('whiteSpace')) {
                 case 'pre':
                 case 'pre-wrap': {
-                    if (node.renderParent?.layoutVertical === false) {
+                    if (!node.renderParent!.layoutVertical) {
                         value = value.replace(/^\s*\n/, '');
                     }
                     const preIndent = ResourceUI.checkPreIndent(node);

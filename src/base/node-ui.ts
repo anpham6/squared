@@ -575,7 +575,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public lockedAttr(name: string, attr: string) {
-        return this._locked?.[name]?.[attr] === true;
+        return !!this._locked?.[name]?.[attr];
     }
 
     public render(parent: T) {
@@ -1450,7 +1450,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get pseudoElement() {
-        return this._element?.className === '__squared.pseudo';
+        return this._element ? this._element.className === '__squared.pseudo' : false;
     }
 
     get scrollElement() {
@@ -1628,7 +1628,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     get inlineFlow() {
         const result = this._cache.inlineFlow;
-        return result === undefined ? this._cache.inlineFlow = (this.inline || this.inlineDimension || this.inlineVertical || this.floating || this.imageElement || this.svgElement && this.hasPX('width', { percent: false }) || this.tableElement && this.previousSibling?.floating === true) && this.pageFlow : result;
+        return result === undefined ? this._cache.inlineFlow = (this.inline || this.inlineDimension || this.inlineVertical || this.floating || this.imageElement || this.svgElement && this.hasPX('width', { percent: false }) || this.tableElement && !!this.previousSibling?.floating) && this.pageFlow : result;
     }
 
     get blockStatic() {
@@ -2144,18 +2144,19 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     set use(value) {
         const use = this.use;
-        this.dataset['use' + this.localSettings.systemName] = (use ? use + ', ' : '') + value;
+        this.dataset['use' + this.localSettings.systemName] = (use !== '' ? use + ', ' : '') + value;
     }
     get use() {
         const dataset = this.dataset;
-        return dataset['use' + this.localSettings.systemName] || dataset.use;
+        const use = dataset['use' + this.localSettings.systemName] || dataset.use;
+        return use ? use.trim() : '';
     }
 
     get extensions() {
         const result = this._cacheState.extensions;
         if (result === undefined) {
-            const use = this.use?.trim();
-            return this._cacheState.extensions = use ? use.split(/\s*,\s*/) : [];
+            const use = this.use;
+            return this._cacheState.extensions = use !== '' ? use.split(/\s*,\s*/) : [];
         }
         return result;
     }

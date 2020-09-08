@@ -145,7 +145,10 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
             element.querySelectorAll('set, animate, animateTransform, animateMotion').forEach((animation: SVGAnimationElement) => {
                 const target = getTargetElement(animation, element);
                 if (target) {
-                    animation.parentElement?.removeChild(animation);
+                    const parentElement = animation.parentElement;
+                    if (parentElement) {
+                        parentElement.removeChild(animation);
+                    }
                     target.appendChild(animation);
                 }
             });

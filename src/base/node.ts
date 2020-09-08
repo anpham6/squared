@@ -1406,20 +1406,19 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     public cssFinally(attrs: string | StringMap) {
         if (this.styleElement) {
-            const element = this._element as HTMLElement;
             const elementData = this._elementData;
             if (elementData) {
                 if (typeof attrs === 'string') {
                     const value = elementData[attrs] as Undef<string>;
                     if (value) {
-                        element.style.setProperty(attrs, value);
+                        (this._element as HTMLElement).style.setProperty(attrs, value);
                     }
                 }
                 else {
                     for (const attr in attrs) {
                         const value = elementData[attr] as Undef<string>;
                         if (value) {
-                            element.style.setProperty(attr, value);
+                            (this._element as HTMLElement).style.setProperty(attr, value);
                         }
                     }
                 }
@@ -2092,7 +2091,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get parentElement() {
-        return this._element?.parentElement || this.actualParent?.element || null;
+        return this._element ? this._element.parentElement : this.actualParent?.element || null;
     }
 
     get textElement() {
@@ -2530,7 +2529,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get bottomAligned() {
         const result = this._cache.bottomAligned;
-        return result === undefined ? this._cache.bottomAligned = !this.pageFlow ? this.hasPX('bottom') && !this.hasPX('top') : this.actualParent?.hasHeight === true && this.autoMargin.top === true : result;
+        return result === undefined ? this._cache.bottomAligned = !this.pageFlow ? this.hasPX('bottom') && !this.hasPX('top') : !!this.actualParent?.hasHeight && !!this.autoMargin.top : result;
     }
 
     get autoMargin() {
@@ -2867,7 +2866,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         break;
                 }
             }
-            else if (this.inlineStatic || this.display === 'table-cell' || this.actualParent?.flexdata.row === true) {
+            else if (this.inlineStatic || this.display === 'table-cell' || this.actualParent?.flexdata.row) {
                 result = this.bounds.width;
             }
             else {
@@ -2889,7 +2888,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     get actualHeight() {
         let result = this._cache.actualHeight;
         if (result === undefined) {
-            if (this.inlineStatic || this.display === 'table-cell' || this.actualParent?.flexdata.column === true) {
+            if (this.inlineStatic || this.display === 'table-cell' || this.actualParent?.flexdata.column) {
                 result = this.bounds.height;
             }
             else {

@@ -5,15 +5,15 @@ import NODE_TRAVERSE = squared.base.NODE_TRAVERSE;
 import { APP_SECTION, NODE_PROCEDURE, NODE_RESOURCE } from './lib/constant';
 
 import type ExtensionManager from './extensionmanager';
+import type ControllerUI from './controller-ui';
+import type ExtensionUI from './extension-ui';
+import type NodeUI from './node-ui';
 import type NodeList from './nodelist';
 
 import Application from './application';
-import File from './file';
-import ControllerUI from './controller-ui';
-import ExtensionUI from './extension-ui';
-import LayoutUI from './layout-ui';
-import NodeUI from './node-ui';
 import ResourceUI from './resource-ui';
+import ContentUI from './content-ui';
+import LayoutUI from './layout-ui';
 
 import { appendSeparator, convertListStyle } from './lib/util';
 
@@ -155,7 +155,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         clearMap: new Map<T, string>()
     };
     public readonly extensions: ExtensionUI<T>[] = [];
-    public readonly fileHandler?: File<T>;
     public abstract userSettings: UserResourceSettingsUI;
 
     private _controllerSettings!: ControllerSettingsUI;
@@ -326,21 +325,21 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
     }
 
-    public renderNode(layout: LayoutUI<T>) {
-        return layout.itemCount === 0 ? this.controllerHandler.renderNode(layout) : this.controllerHandler.renderNodeGroup(layout);
+    public renderNode(layout: ContentUI<T>) {
+        return layout.itemCount === 0 ? this.controllerHandler.renderNode(layout) : this.controllerHandler.renderNodeGroup(layout as LayoutUI<T>);
     }
 
-    public addLayout(layout: LayoutUI<T>) {
+    public addLayout(layout: ContentUI<T>) {
         const renderType = layout.renderType;
         if (renderType && hasBit(renderType, NODE_ALIGNMENT.FLOAT)) {
             if (hasBit(renderType, NODE_ALIGNMENT.HORIZONTAL)) {
-                layout = this.processFloatHorizontal(layout);
+                layout = this.processFloatHorizontal(layout as LayoutUI<T>);
             }
             else if (hasBit(renderType, NODE_ALIGNMENT.VERTICAL)) {
-                layout = this.processFloatVertical(layout);
+                layout = this.processFloatVertical(layout as LayoutUI<T>);
             }
         }
-        if (layout.containerType !== 0) {
+        if (layout.containerType) {
             const template = this.renderNode(layout);
             if (template) {
                 this.addLayoutTemplate(template.parent || layout.parent, layout.node, template, layout.renderIndex);
@@ -396,7 +395,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
         }
         if (options.append !== false) {
-            cache.add(node, options.delegate === true, options.cascade === true);
+            cache.add(node, !!options.delegate, !!options.cascade);
         }
         return node;
     }
@@ -1016,7 +1015,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             }
                         }
                         if (nodeY.styleElement) {
-                            combined = nodeY.use ? ApplicationUI.prioritizeExtensions<T>(nodeY.use, extensionsTraverse) as ExtensionUI<T>[] : extensionsTraverse;
+                            combined = nodeY.use !== '' ? ApplicationUI.prioritizeExtensions<T>(nodeY.use, extensionsTraverse) as ExtensionUI<T>[] : extensionsTraverse;
                             for (let j = 0, r = combined.length; j < r; ++j) {
                                 const ext = combined[j];
                                 if (ext.is(nodeY)) {
@@ -1060,17 +1059,32 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                     }
                     if (!nodeY.rendered && nodeY.hasSection(APP_SECTION.RENDER)) {
-                        const layout = this.createLayoutControl(parentY, nodeY);
-                        if (layout.containerType === 0) {
-                            if (!nodeY.isEmpty()) {
-                                controllerHandler.processUnknownParent(layout);
+                        const containerType = nodeY.containerType;
+                        let layout: ContentUI<T>;
+                        if (!nodeY.isEmpty()) {
+                            layout = new LayoutUI(
+                                parentY,
+                                nodeY,
+                                containerType,
+                                nodeY.alignmentType
+                            );
+                            if (containerType === 0) {
+                                controllerHandler.processUnknownParent(layout as LayoutUI<T>);
                             }
-                            else {
+                        }
+                        else {
+                            layout = new ContentUI(
+                                parentY,
+                                nodeY,
+                                containerType,
+                                nodeY.alignmentType
+                            );
+                            if (containerType === 0) {
                                 controllerHandler.processUnknownChild(layout);
                             }
-                            if (layout.next) {
-                                continue;
-                            }
+                        }
+                        if (layout.next) {
+                            continue;
                         }
                         this.addLayout(layout);
                     }
@@ -1151,6 +1165,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     protected processFloatHorizontal(layout: LayoutUI<T>) {
         const { clearMap, controllerHandler } = this;
         const { containerType, alignmentType } = controllerHandler.containerTypeVertical;
+        const verticalMargin = controllerHandler.containerTypeVerticalMargin;
         const layerIndex: Array<T[] | T[][]> = [];
         const inlineAbove: T[] = [];
         const leftAbove: T[] = [];
@@ -1280,9 +1295,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             ));
             layout.parent = wrapper;
         }
-        layout.type = controllerHandler.containerTypeVerticalMargin;
+        layout.setContainerType(verticalMargin.containerType, verticalMargin.alignmentType | NODE_ALIGNMENT.BLOCK);
         layout.itemCount = layerIndex.length;
-        layout.addAlign(NODE_ALIGNMENT.BLOCK);
         for (let i = 0; i < layout.itemCount; ++i) {
             const item = layerIndex[i];
             let segments: T[][],
@@ -1335,7 +1349,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     group.addAlign(getFloatAlignmentType(seg));
                 }
                 if (seg.some(child => child.percentWidth > 0 || child.percentHeight > 0)) {
-                    group.type = controllerHandler.containerTypePercent;
+                    const percent = controllerHandler.containerTypePercent;
+                    group.setContainerType(percent.containerType, percent.alignmentType);
                     if (seg.length === 1) {
                         group.node.innerWrapped = seg[0];
                     }
@@ -1758,15 +1773,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     protected createAssetOptions(options?: FileActionOptions) {
         return options ? { ...options, assets: options.assets ? this.layouts.concat(options.assets) : this.layouts } : { assets: this.layouts };
-    }
-
-    protected createLayoutControl(parent: T, node: T) {
-        return new LayoutUI(
-            parent,
-            node,
-            node.containerType,
-            node.alignmentType
-        );
     }
 
     protected setFloatPadding(parent: T, target: T, inlineAbove: T[], leftAbove: T[] = [], rightAbove: T[] = []) {

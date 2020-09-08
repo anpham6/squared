@@ -169,11 +169,11 @@ const findExtension = (value: string) => extensionManager!.get(value, true) || u
 
 export function setHostname(value: string) {
     if (main) {
-        const file = main.resourceHandler?.fileHandler;
-        if (file) {
+        const fileHandler = main.fileHandler;
+        if (fileHandler) {
             const match = regex.FILE.PROTOCOL.exec(value);
             if (match && match[1].startsWith('http')) {
-                file.hostname = match[1] + match[2] + (match[3] || '');
+                fileHandler.hostname = match[1] + match[2] + (match[3] || '');
             }
         }
     }

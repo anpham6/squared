@@ -96,17 +96,20 @@ export default class Pattern implements squared.lib.base.Pattern {
     }
 
     public groups(start = 0, end?: number) {
-        if (end !== undefined) {
-            ++end;
+        if (this._matchResult) {
+            if (end !== undefined) {
+                ++end;
+            }
+            else if (start === 0) {
+                return this._matchResult;
+            }
+            return this._matchResult.slice(start, end);
         }
-        else if (start === 0) {
-            return this._matchResult as string[];
-        }
-        return this._matchResult?.slice(start, end) || [];
+        return [];
     }
 
     public groupCount() {
-        return this._matchResult?.length || 0;
+        return this._matchResult ? this._matchResult.length : 0;
     }
 
     public map<T>(predicate: IteratorPredicate<string, T>, start = 0, end?: number): T[] {

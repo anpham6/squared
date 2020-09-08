@@ -176,6 +176,7 @@ declare module "base" {
         get mainElement(): Element;
         get controllerHandler(): Controller<T>;
         get resourceHandler(): Null<Resource<T>>;
+        get fileHandler(): Null<File<T>>;
         get extensionManager(): Null<ExtensionManager<T>>;
         get extensionsAll(): Extension<T>[];
         get sessionAll(): [Extension<T>[], T[]];
@@ -193,15 +194,14 @@ declare module "base" {
     class ApplicationUI<T extends NodeUI> extends Application<T> {
         userSettings: UserResourceSettingsUI;
         builtInExtensions: Map<string, ExtensionUI<T>>;
-        readonly fileHandler?: File<T>;
         readonly session: AppSessionUI<T>;
         readonly extensions: ExtensionUI<T>[];
         conditionElement(element: HTMLElement, sessionId: string, cacadeAll?: boolean, pseudoElt?: string): boolean;
         useElement(element: HTMLElement): boolean;
         insertNode(element: Element, sessionId: string, cacadeAll?: boolean, pseudoElt?: string): Undef<T>;
         createNode(sessionId: string, options: CreateNodeUIOptions<T>): T;
-        renderNode(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
-        addLayout(layout: LayoutUI<T>): void;
+        renderNode(layout: ContentUI<T>): Undef<NodeTemplate<T>>;
+        addLayout(layout: ContentUI<T>): void;
         addLayoutTemplate(parent: T, node: T, template: NodeTemplate<T>, index?: number): void;
         saveDocument(filename: string, content: string, pathname?: string, index?: number): void;
         get controllerHandler(): ControllerUI<T>;
@@ -232,12 +232,12 @@ declare module "base" {
         evaluateNonStatic(documentRoot: T, cache: NodeList<T>): void;
         visibleElement(element: HTMLElement, sessionId: string, pseudoElt?: string): boolean;
         processUnknownParent(layout: LayoutUI<T>): void;
-        processUnknownChild(layout: LayoutUI<T>): void;
+        processUnknownChild(layout: ContentUI<T>): void;
         processTraverseHorizontal(layout: LayoutUI<T>, siblings: T[]): Undef<LayoutUI<T>>;
         processTraverseVertical(layout: LayoutUI<T>, siblings: T[]): Undef<LayoutUI<T>>;
         processLayoutHorizontal(layout: LayoutUI<T>): LayoutUI<T>;
         setConstraints(rendering: NodeList<T>): void;
-        renderNode(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
+        renderNode(layout: ContentUI<T>): Undef<NodeTemplate<T>>;
         renderNodeGroup(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
         createNodeGroup(node: T, children: T[], parent?: T, options?: CreateNodeGroupUIOptions): T;
         sortRenderPosition(parent: T, templates: NodeTemplate<T>[]): NodeTemplate<T>[];
@@ -396,25 +396,37 @@ declare module "base" {
         get hostname(): string;
     }
 
-    class LayoutUI<T extends NodeUI> extends squared.lib.base.Container<T> implements LayoutType {
+    class ContentUI<T extends NodeUI> implements LayoutType {
+        parent: T;
+        node: T;
+        containerType: number;
+        alignmentType: number;
+        renderType?: number;
+        renderIndex?: number;
+        next?: boolean;
+        set itemCount(value);
+        get itemCount(): number;
+        constructor(parent: T, node: T, containerType?: number, alignmentType?: number);
+    }
+
+    class LayoutUI<T extends NodeUI> extends squared.lib.base.Container<T> implements ContentUI<T> {
         static create<U extends NodeUI>(options: LayoutOptions<U>): LayoutUI<U>;
         parent: T;
         node: T;
         containerType: number;
         alignmentType: number;
-        rowCount?: number;
-        columnCount?: number;
         renderType?: number;
         renderIndex?: number;
         next?: boolean;
+        rowCount?: number;
+        columnCount?: number;
         init(): void;
-        setContainerType(containerType: number, alignmentType?: number): void;
+        setContainerType(containerType: number, alignmentType: number): void;
         addAlign(value: number): number;
         hasAlign(value: number): boolean;
         addRender(value: number): number;
         set itemCount(value);
         get itemCount(): number;
-        set type(value: LayoutType);
         get linearX(): boolean;
         get linearY(): boolean;
         get floated(): Null<Set<string>>;
@@ -422,7 +434,7 @@ declare module "base" {
         constructor(parent: T, node: T, containerType?: number, alignmentType?: number, children?: T[]);
     }
 
-    class Node extends squared.lib.base.Container<Node> implements BoxModel {
+    class Node extends squared.lib.base.Container<Node> implements BoxModel, Dimension {
         static readonly TEXT_STYLE: string[];
         static sanitizeCss(element: StyleElement, styleMap: StringMap, writingMode?: string): StringMap;
         depth: number;
@@ -719,8 +731,8 @@ declare module "base" {
         get labelFor(): Undef<NodeUI>;
         set innerWrapped(value);
         get innerWrapped(): Undef<NodeUI>;
-        set use(value: Undef<string>);
-        get use(): Undef<string>;
+        set use(value);
+        get use(): string;
         set localSettings(value);
         get localSettings(): LocalSettingsUI;
         get extensions(): string[];

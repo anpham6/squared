@@ -107,6 +107,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                     if (times.length === 0) {
                         return;
                     }
+                    const precision = this.viewport?.precision;
                     switch (item.tagName) {
                         case 'set':
                             for (const time of times) {
@@ -122,7 +123,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                             for (const time of times) {
                                 const animate = new SvgAnimateTransform(element, item as SVGAnimateTransformElement);
                                 if (SvgBuild.isShape(this) && this.path) {
-                                    animate.transformFrom = SvgBuild.drawRefit(element, this.parent, this.viewport?.precision);
+                                    animate.transformFrom = SvgBuild.drawRefit(element, this.parent, precision);
                                 }
                                 addAnimation(animate, time);
                             }
@@ -132,7 +133,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                 const animate = new SvgAnimateMotion(element, item as SVGAnimateMotionElement);
                                 const motionPathElement = animate.motionPathElement;
                                 if (motionPathElement) {
-                                    animate.path = SvgBuild.drawRefit(motionPathElement, this.parent, this.viewport?.precision);
+                                    animate.path = SvgBuild.drawRefit(motionPathElement, this.parent, precision);
                                 }
                                 addAnimation(animate, time);
                             }

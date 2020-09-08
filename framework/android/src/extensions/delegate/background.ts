@@ -35,7 +35,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
         const controller = this.controller as android.base.Controller<T>;
         const { backgroundColor, backgroundImage, visibleStyle } = node;
         const backgroundSeparate = isBackgroundSeparate(node, parent, visibleStyle.backgroundColor, visibleStyle.backgroundImage, visibleStyle.backgroundRepeatX, visibleStyle.backgroundRepeatY, visibleStyle.borderWidth);
-        const hasHeight = node.hasHeight || node.actualParent!.hasHeight === true;
+        const hasHeight = node.hasHeight || node.actualParent!.hasHeight;
         const parentVisible = isParentVisible(node, parent);
         const fixed = node.css('backgroundAttachment') === 'fixed';
         let renderParent = parent,

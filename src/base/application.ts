@@ -1,9 +1,9 @@
 import CSS_TRAITS = squared.lib.constant.CSS_TRAITS;
 
+import type Controller from './controller';
+import type Resource from './resource';
 import type Extension from './extension';
 import type ExtensionManager from './extensionmanager';
-import type Resource from './resource';
-import type Controller from './controller';
 
 import Node from './node';
 import NodeList from './nodelist';
@@ -110,27 +110,27 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     public copyTo(directory: string, options?: FileActionOptions) {
-        return this._resourceHandler?.fileHandler?.copyTo(directory, options) || operationNotSupported();
+        return this.fileHandler?.copyTo(directory, options) || operationNotSupported();
     }
 
     public appendTo(pathname: string, options?: FileActionOptions) {
-        return this._resourceHandler?.fileHandler?.appendTo(pathname, options) || operationNotSupported();
+        return this.fileHandler?.appendTo(pathname, options) || operationNotSupported();
     }
 
     public saveAs(filename?: string, options?: FileActionOptions) {
-        return this._resourceHandler?.fileHandler?.saveAs(filename || this._resourceHandler.userSettings.outputArchiveName, options) || operationNotSupported();
+        return this.fileHandler?.saveAs(filename || this._resourceHandler!.userSettings.outputArchiveName, options) || operationNotSupported();
     }
 
     public saveFiles(format: string, options: FileActionOptions) {
-        return this._resourceHandler?.fileHandler?.saveFiles(format, options) || operationNotSupported();
+        return this.fileHandler?.saveFiles(format, options) || operationNotSupported();
     }
 
     public appendFiles(filename: string, options: FileActionOptions) {
-        return this._resourceHandler?.fileHandler?.appendFiles(filename, options) || operationNotSupported();
+        return this.fileHandler?.appendFiles(filename, options) || operationNotSupported();
     }
 
     public copyFiles(directory: string, options: FileActionOptions) {
-        return this._resourceHandler?.fileHandler?.copyFiles(directory, options) || operationNotSupported();
+        return this.fileHandler?.copyFiles(directory, options) || operationNotSupported();
     }
 
     public reset() {
@@ -139,7 +139,9 @@ export default abstract class Application<T extends Node> implements squared.bas
         resetSessionAll();
         this.session.active.clear();
         this._controllerHandler.reset();
-        this._resourceHandler?.reset();
+        if (this._resourceHandler) {
+            this._resourceHandler.reset();
+        }
         for (const ext of this.extensions) {
             ext.reset();
         }
@@ -876,6 +878,10 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     get resourceHandler() {
         return this._resourceHandler;
+    }
+
+    get fileHandler() {
+        return this._resourceHandler ? this._resourceHandler.fileHandler : null;
     }
 
     get extensionManager() {

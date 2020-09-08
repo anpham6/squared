@@ -1,8 +1,9 @@
 import BOX_STANDARD = squared.base.BOX_STANDARD;
 
+import type NodeUI from '../node-ui';
+
 import ExtensionUI from '../extension-ui';
-import LayoutUI from '../layout-ui';
-import NodeUI from '../node-ui';
+import ContentUI from '../content-ui';
 
 export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> {
     public is(node: T) {
@@ -65,7 +66,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                 target = node.clone(this.application.nextId) as T;
                 target.baselineAltered = true;
                 this.application.getProcessingCache(node.sessionId).add(target);
-                const layout = new LayoutUI(renderParent, target, target.containerType, target.alignmentType);
+                const layout = new ContentUI(renderParent, target, target.containerType, target.alignmentType);
                 const index = renderParent.renderChildren.findIndex(item => item === node);
                 if (index !== -1) {
                     layout.renderIndex = index + 1;

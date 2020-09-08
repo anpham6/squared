@@ -559,12 +559,11 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         }
     }
     get length() {
-        return this._values?.length || 0;
+        return this._values ? this._values.length : 0;
     }
 
     get valueTo() {
-        const values = this._values;
-        return values && lastItemOf(values) || '';
+        return this._values && lastItemOf(this._values) || '';
     }
 
     get valueFrom() {

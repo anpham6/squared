@@ -11,7 +11,7 @@ const { NODE_RESOURCE } = squared.base.lib.constant;
 
 const { getElementAsNode } = squared.lib.session;
 
-const getInputName = (element: HTMLInputElement) => element.name?.trim() || '';
+const getInputName = (node: View) => node.toElementString('name').trim();
 
 export default class RadioGroup<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
@@ -19,11 +19,11 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
     }
 
     public condition(node: T) {
-        return getInputName(node.element as HTMLInputElement) !== '' && !this.data.has(node);
+        return getInputName(node) !== '' && !this.data.has(node);
     }
 
     public processNode(node: T, parent: T): Void<ExtensionResult<T>> {
-        const inputName = getInputName(node.element as HTMLInputElement);
+        const inputName = getInputName(node);
         const radiogroup: T[] = [];
         const removeable: T[] = [];
         let first = -1,
@@ -37,7 +37,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
                 }
                 item = renderAs;
             }
-            if (item.is(CONTAINER_NODE.RADIO) && !item.rendered && getInputName(item.element as HTMLInputElement) === inputName) {
+            if (item.is(CONTAINER_NODE.RADIO) && !item.rendered && getInputName(item) === inputName) {
                 radiogroup.push(item);
                 if (first === -1) {
                     first = index;
@@ -89,9 +89,8 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
         }
         else {
             radiogroup.length = 0;
-            const name = getInputName(node.element as HTMLInputElement);
             const sessionId = node.sessionId;
-            document.querySelectorAll(`input[type=radio][name=${name}]`).forEach((element: Element) => {
+            document.querySelectorAll(`input[type=radio][name=${getInputName(node)}]`).forEach((element: Element) => {
                 const item = getElementAsNode(element, sessionId) as T;
                 if (item) {
                     radiogroup.push(item);

@@ -2,11 +2,12 @@ import NODE_TEMPLATE = squared.base.NODE_TEMPLATE;
 import USER_AGENT = squared.lib.constant.USER_AGENT;
 
 import type ApplicationUI from './application-ui';
+import type ContentUI from './content-ui';
 import type LayoutUI from './layout-ui';
+import type NodeUI from './node-ui';
 import type NodeList from './nodelist';
 
 import Controller from './controller';
-import NodeUI from './node-ui';
 
 const { isUserAgent } = squared.lib.client;
 const { CSS_PROPERTIES, formatPX, getStyle, hasCoords, isLength } = squared.lib.css;
@@ -86,14 +87,14 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     private _unsupportedTagName!: Set<string>;
     private _settingsStyle!: ControllerSettingsStyleUI;
 
-    public abstract processUnknownParent(layout: LayoutUI<T>): LayoutUI<T>;
-    public abstract processUnknownChild(layout: LayoutUI<T>): LayoutUI<T>;
+    public abstract processUnknownParent(layout: LayoutUI<T>): void;
+    public abstract processUnknownChild(layout: ContentUI<T>): void;
     public abstract processTraverseHorizontal(layout: LayoutUI<T>, siblings: T[]): Undef<LayoutUI<T>>;
     public abstract processTraverseVertical(layout: LayoutUI<T>, siblings: T[]): Undef<LayoutUI<T>>;
     public abstract processLayoutHorizontal(layout: LayoutUI<T>): LayoutUI<T>;
     public abstract createNodeGroup(node: T, children: T[], parent?: T, options?: CreateNodeGroupUIOptions): T;
     public abstract createNodeWrapper(node: T, parent: T, options?: CreateNodeWrapperUIOptions<T>): T;
-    public abstract renderNode(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
+    public abstract renderNode(layout: ContentUI<T>): Undef<NodeTemplate<T>>;
     public abstract renderNodeGroup(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
     public abstract sortRenderPosition(parent: T, templates: NodeTemplate<T>[]): NodeTemplate<T>[];
     public abstract setConstraints(rendering: NodeList<T>): void;

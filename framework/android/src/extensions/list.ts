@@ -82,7 +82,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 ordinal.render(parent);
                 const layout = new LayoutUI(parent, ordinal);
                 if (ordinal.inlineText || ordinal.isEmpty()) {
-                    layout.setContainerType(CONTAINER_NODE.TEXT);
+                    layout.containerType = CONTAINER_NODE.TEXT;
                 }
                 else {
                     layout.retainAs(ordinal.children as T[]);

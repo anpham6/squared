@@ -30,7 +30,8 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
     }
 
     public static getExtension(value: string) {
-        return /\.(\w+)\s*$/.exec(value)?.[1] || '';
+        const match = /\.(\w+)\s*$/.exec(value);
+        return match ? match[1] : '';
     }
 
     private _fileHandler: Null<File<T>> = null;
@@ -42,7 +43,9 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
         for (const name in ASSETS) {
             (ASSETS[name] as Map<unknown, unknown>).clear();
         }
-        this._fileHandler?.reset();
+        if (this._fileHandler) {
+            this._fileHandler.reset();
+        }
     }
 
     public addImage(element: HTMLImageElement) {

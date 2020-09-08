@@ -529,7 +529,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                 }
                 const images = this.getDrawableImages(node, stored);
-                if (node.controlName === CONTAINER_ANDROID.BUTTON && stored.borderRadius?.length === 1 && images && images.some(item => item.vectorGradient === true) && node.api >= BUILD_ANDROID.PIE) {
+                if (node.controlName === CONTAINER_ANDROID.BUTTON && stored.borderRadius?.length === 1 && images && images.some(item => item.vectorGradient) && node.api >= BUILD_ANDROID.PIE) {
                     node.android('buttonCornerRadius', stored.borderRadius[0]);
                     delete stored.borderRadius;
                 }

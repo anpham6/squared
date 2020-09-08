@@ -799,7 +799,7 @@ export function cloneObject<T>(data: T, options?: CloneObjectOptions<T>) {
 export function resolvePath(value: string, href?: string) {
     value = value.trim();
     if (value !== '' && !FILE.PROTOCOL.test(value)) {
-        const pathname = (href?.replace(location.origin, '') || location.pathname).replace(/\\/g, '/').split('/');
+        const pathname = (href ? href.replace(location.origin, '') : location.pathname).replace(/\\/g, '/').split('/');
         --pathname.length;
         value = value.replace(/\\/g, '/');
         if (value[0] === '/') {
