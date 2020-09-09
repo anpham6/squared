@@ -27,7 +27,7 @@ interface IControllerSettingsDeviationsUI extends ControllerSettingsDeviationsUI
 
 interface IResourceStoredMap extends ResourceStoredMap {
     styles: Map<string, StyleAttribute>;
-    themes: Map<string, Map<string, StyleAttribute>>;
+    themes: Map<string, Map<string, ThemeAttribute>>;
     dimens: Map<string, string>;
     drawables: Map<string, string>;
     animators: Map<string, string>;
@@ -46,15 +46,22 @@ interface RenderNodeStaticAttribute extends Partial<Dimension<string>> {
     content?: string;
 }
 
-interface StyleAttribute {
+interface GroupAttribute {
     name: string;
     parent: string;
-    items: StringMap | StringValue[];
+    ids?: number[];
+}
+
+interface StyleAttribute extends GroupAttribute {
+    items: StringValue[];
+}
+
+interface ThemeAttribute extends GroupAttribute {
+    items: StringMap;
     output?: {
         path: string;
         file: string;
     };
-    ids?: number[];
 }
 
 type CustomizationResult<T> = (this: T, result: PlainObject, api: number, value: string) => boolean;

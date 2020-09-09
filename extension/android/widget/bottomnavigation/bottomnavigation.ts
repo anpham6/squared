@@ -7,7 +7,7 @@ const { NODE_RESOURCE } = squared.base.lib.constant;
 const { CONTAINER_NODE, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = android.lib.constant;
 
 const { assignEmptyValue, capitalize, iterateArray } = squared.lib.util;
-const { createStyleAttribute, createViewAttribute } = android.lib.util;
+const { createThemeAttribute, createViewAttribute } = android.lib.util;
 
 const Resource = android.base.Resource;
 
@@ -64,7 +64,7 @@ export default class BottomNavigation<T extends android.base.View> extends squar
     }
 
     public setStyleTheme() {
-        const options = createStyleAttribute(this.options.resource);
+        const options = createThemeAttribute(this.options.resource);
         assignEmptyValue(options, 'name', (this.application.userSettings as IUserResourceSettingsUI).manifestThemeName);
         assignEmptyValue(options, 'parent', 'Theme.AppCompat.Light.DarkActionBar');
         Resource.addTheme(options);

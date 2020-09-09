@@ -379,8 +379,8 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 let c: NumString = a.ids!.length,
                     d: NumString = b.ids!.length;
                 if (c === d) {
-                    c = (a.items as StringValue[]).length;
-                    d = (b.items as StringValue[]).length;
+                    c = a.items.length;
+                    d = b.items.length;
                     if (c === d) {
                         c = a.name;
                         d = b.name;
@@ -431,7 +431,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         if (i === 0) {
                             parent = name;
                             if (q === 1) {
-                                items = styleData.items as StringValue[];
+                                items = styleData.items;
                             }
                             else if (!styles.has(name)) {
                                 styles.set(name, { name, parent: '', items: styleData.items });
@@ -439,7 +439,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         }
                         else {
                             if (items) {
-                                const styleItems = styleData.items as StringValue[];
+                                const styleItems = styleData.items;
                                 for (let j = 0, r = styleItems.length; j < r; ++j) {
                                     const item = styleItems[j];
                                     const key = item.key;
@@ -453,7 +453,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                 }
                             }
                             else {
-                                items = (styleData.items as StringValue[]).slice(0);
+                                items = styleData.items.slice(0);
                             }
                             styleName.push(name);
                         }

@@ -10,7 +10,7 @@ const { NODE_RESOURCE } = squared.base.lib.constant;
 const { CONTAINER_NODE, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = android.lib.constant;
 
 const { assignEmptyValue, cloneObject, includes, iterateArray } = squared.lib.util;
-const { createStyleAttribute, createViewAttribute } = android.lib.util;
+const { createThemeAttribute, createViewAttribute } = android.lib.util;
 
 const Resource = android.base.Resource;
 
@@ -121,13 +121,13 @@ export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> 
 
     public setStyleTheme(api: number) {
         const settings = this.application.userSettings as IUserResourceSettingsUI;
-        const options = createStyleAttribute(this.options.resource);
+        const options = createThemeAttribute(this.options.resource);
         assignEmptyValue(options, 'name', settings.manifestThemeName);
         assignEmptyValue(options, 'parent', settings.manifestParentThemeName);
-        assignEmptyValue(options.items as StringMap, 'android:windowTranslucentStatus', 'true');
+        assignEmptyValue(options.items, 'android:windowTranslucentStatus', 'true');
         Resource.addTheme(options);
         if (api >= BUILD_ANDROID.LOLLIPOP) {
-            const themeOptions = createStyleAttribute(cloneObject(options));
+            const themeOptions = createThemeAttribute(cloneObject(options));
             const items: StringMap = {};
             assignEmptyValue(themeOptions.output, 'path', 'res/values-v21');
             assignEmptyValue(items, 'android:windowDrawsSystemBarBackgrounds', 'true');

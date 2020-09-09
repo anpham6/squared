@@ -2,8 +2,6 @@ import type View from '../../view';
 
 import Resource from '../../resource';
 
-import { createStyleAttribute } from '../../lib/util';
-
 const { capitalize } = squared.lib.util;
 
 const REGEXP_STYLEATTR = /(\w+:(\w+))="([^"]+)"/;
@@ -71,7 +69,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                         const name = (style !== '' ? style + '.' : '') + capitalize(controlId);
                         if (!styles.has(name)) {
                             items.sort((a, b) => a.key < b.key ? -1 : 1);
-                            styles.set(name, Object.assign(createStyleAttribute(), { name, items }));
+                            styles.set(name, { name, parent: '', items } as StyleAttribute);
                         }
                         for (let j = 0; j < q; ++j) {
                             const item = renderChildren[j];

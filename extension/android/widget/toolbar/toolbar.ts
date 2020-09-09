@@ -17,7 +17,7 @@ const { CONTAINER_ANDROID, CONTAINER_NODE, SUPPORT_ANDROID, SUPPORT_ANDROID_X } 
 const { formatPX } = squared.lib.css;
 const { getElementAsNode } = squared.lib.session;
 const { assignEmptyValue, capitalize, includes, iterateArray } = squared.lib.util;
-const { createStyleAttribute, createViewAttribute, getDocumentId } = android.lib.util;
+const { createThemeAttribute, createViewAttribute, getDocumentId } = android.lib.util;
 
 const Resource = android.base.Resource;
 
@@ -308,14 +308,14 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
         }
         const themeData = node.data<ToolbarThemeData>(WIDGET_NAME.TOOLBAR, 'themeData');
         if (themeData) {
-            const options = createStyleAttribute(this.options.resource);
-            const optionsActionBar = createStyleAttribute({ name: '.NoActionBar', output: options.output });
-            const optionsAppBar = createStyleAttribute({ name: '.AppBarOverlay', output: options.output });
-            const optionsPopup = createStyleAttribute({ name: '.PopupOverlay', output: options.output });
+            const options = createThemeAttribute(this.options.resource);
+            const optionsActionBar = createThemeAttribute({ name: '.NoActionBar', output: options.output });
+            const optionsAppBar = createThemeAttribute({ name: '.AppBarOverlay', output: options.output });
+            const optionsPopup = createThemeAttribute({ name: '.PopupOverlay', output: options.output });
             assignEmptyValue(options, 'name', (this.application.userSettings as IUserResourceSettingsUI).manifestThemeName);
             assignEmptyValue(options, 'parent', 'Theme.AppCompat.Light.DarkActionBar');
-            assignEmptyValue(optionsActionBar.items as StringMap, 'windowActionBar', 'false');
-            assignEmptyValue(optionsActionBar.items as StringMap, 'windowNoTitle', 'true');
+            assignEmptyValue(optionsActionBar.items, 'windowActionBar', 'false');
+            assignEmptyValue(optionsActionBar.items, 'windowNoTitle', 'true');
             assignEmptyValue(optionsAppBar, 'parent', themeData.appBarOverlay || 'ThemeOverlay.AppCompat.Dark.ActionBar');
             assignEmptyValue(optionsPopup, 'parent', themeData.popupOverlay || 'ThemeOverlay.AppCompat.Light');
             Resource.addTheme(options);

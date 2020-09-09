@@ -148,24 +148,17 @@ export function createViewAttribute(data?: StandardMap) {
     return options;
 }
 
-export function createStyleAttribute(data?: StandardMap) {
-    const result: StyleAttribute = {
+export function createThemeAttribute(data?: StandardMap) {
+    return {
         output: {
             path: 'res/values',
             file: ''
         },
         name: '',
         parent: '',
-        items: {}
-    };
-    if (isPlainObject(data)) {
-        for (const attr in result) {
-            if (typeof data[attr] === typeof result[attr]) {
-                result[attr] = data[attr];
-            }
-        }
-    }
-    return result;
+        items: {},
+        ...data
+    } as ThemeAttribute;
 }
 
 export function replaceTab(value: string, spaces = 4, preserve?: boolean) {

@@ -131,7 +131,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         return this.archiving({ ...options, assets: this.combineAssets(options?.assets), filename });
     }
 
-    public resourceAllToXml(options: FileUniversalOptions = {}) {
+    public resourceAllToXml(options?: FileUniversalOptions) {
         const result: ObjectMap<string[]> = {
             string: this.resourceStringToXml(),
             stringArray: this.resourceStringArrayToXml(),
@@ -150,7 +150,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 delete result[name];
             }
         }
-        if (options.directory || options.filename) {
+        if (options && (options.directory || options.filename)) {
             const outputDirectory = getOutputDirectory(this.userSettings.outputDirectory);
             let assets: FileAsset[] = [];
             for (const name in result) {
@@ -180,7 +180,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         return result;
     }
 
-    public resourceStringToXml(options: FileUniversalOptions = {}): string[] {
+    public resourceStringToXml(options?: FileUniversalOptions): string[] {
         const items = Array.from(STORED.strings.entries()).sort((a, b) => a.toString().toLowerCase() >= b.toString().toLowerCase() ? 1 : -1);
         const length = items.length;
         let j: number,
@@ -211,7 +211,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         ], options);
     }
 
-    public resourceStringArrayToXml(options: FileUniversalOptions = {}): string[] {
+    public resourceStringArrayToXml(options?: FileUniversalOptions): string[] {
         const length = STORED.arrays.size;
         if (length) {
             const items = Array.from(STORED.arrays.entries()).sort();
@@ -229,7 +229,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         return [];
     }
 
-    public resourceFontToXml(options: FileUniversalOptions = {}): string[] {
+    public resourceFontToXml(options?: FileUniversalOptions): string[] {
         const length = STORED.fonts.size;
         if (length) {
             const resource = this.resource;
@@ -269,7 +269,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         return [];
     }
 
-    public resourceColorToXml(options: FileUniversalOptions = {}): string[] {
+    public resourceColorToXml(options?: FileUniversalOptions): string[] {
         const length = STORED.colors.size;
         if (length) {
             const items = Array.from(STORED.colors.entries()).sort();
@@ -290,7 +290,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         return [];
     }
 
-    public resourceStyleToXml(options: FileUniversalOptions = {}): string[] {
+    public resourceStyleToXml(options?: FileUniversalOptions): string[] {
         const result: string[] = [];
         if (STORED.styles.size) {
             const itemArray: ItemData[] = [];
@@ -298,7 +298,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 itemArray.push({
                     name: style.name,
                     parent: style.parent,
-                    item: plainMap((style.items as StringValue[]).sort((a, b) => a.key >= b.key ? 1 : -1), obj => ({ name: obj.key, innerText: obj.value }))
+                    item: plainMap(style.items.sort((a, b) => a.key >= b.key ? 1 : -1), obj => ({ name: obj.key, innerText: obj.value }))
                 });
             }
             result.push(
@@ -319,7 +319,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     for (const [themeName, themeData] of data[1]) {
                         if (!appTheme[filename] || themeName !== manifestThemeName) {
                             const themeArray: ItemValue[] = [];
-                            const items = themeData.items as StringMap;
+                            const items = themeData.items;
                             for (const name in items) {
                                 themeArray.push({ name, innerText: items[name]! });
                             }
@@ -347,7 +347,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         return this.checkFileAssets(result, options);
     }
 
-    public resourceDimenToXml(options: FileUniversalOptions = {}): string[] {
+    public resourceDimenToXml(options?: FileUniversalOptions): string[] {
         const length = STORED.dimens.size;
         if (length) {
             const convertPixels = this.userSettings.convertPixels === 'dp';
@@ -369,7 +369,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         return [];
     }
 
-    public resourceDrawableToXml(options: FileUniversalOptions = {}): string[] {
+    public resourceDrawableToXml(options?: FileUniversalOptions): string[] {
         const length = STORED.drawables.size;
         if (length) {
             const userSettings = this.userSettings;
@@ -388,7 +388,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         return [];
     }
 
-    public resourceAnimToXml(options: FileUniversalOptions = {}): string[] {
+    public resourceAnimToXml(options?: FileUniversalOptions): string[] {
         const length = STORED.animators.size;
         if (length) {
             const insertSpaces = this.userSettings.insertSpaces;
@@ -404,7 +404,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         return [];
     }
 
-    public resourceDrawableImageToString(options: FileUniversalOptions = {}): string[] {
+    public resourceDrawableImageToString(options?: FileUniversalOptions): string[] {
         if (STORED.images.size) {
             const imageDirectory = this.directory.image;
             const result: string[] = [];
@@ -431,7 +431,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     }
                 }
             }
-            if (options.directory || options.filename) {
+            if (options && (options.directory || options.filename)) {
                 const assets = getImageAssets(getOutputDirectory(this.userSettings.outputDirectory), result, this.userSettings.convertImages, this.userSettings.compressImages);
                 options.assets = options.assets ? assets.concat(options.assets) : assets;
                 if (options.directory) {
@@ -446,16 +446,16 @@ export default class File<T extends View> extends squared.base.File<T> implement
         return [];
     }
 
-    public resourceRawVideoToString(options: FileUniversalOptions = {}): string[] {
+    public resourceRawVideoToString(options?: FileUniversalOptions): string[] {
         return this.resourceRawToString('video', options);
     }
 
-    public resourceRawAudioToString(options: FileUniversalOptions = {}): string[] {
+    public resourceRawAudioToString(options?: FileUniversalOptions): string[] {
         return this.resourceRawToString('audio', options);
     }
 
-    public layoutAllToXml(layouts: FileAsset[], options: FileUniversalOptions = {}) {
-        const actionable = options.directory || options.filename;
+    public layoutAllToXml(layouts: FileAsset[], options?: FileUniversalOptions) {
+        const actionable = options && (options.directory || options.filename);
         const result = {};
         const assets: FileAsset[] = [];
         for (let i = 0, length = layouts.length; i < length; ++i) {
@@ -466,12 +466,12 @@ export default class File<T extends View> extends squared.base.File<T> implement
             }
         }
         if (actionable) {
-            options.assets = options.assets ? assets.concat(options.assets) : assets;
-            if (options.directory) {
-                this.copying(options);
+            options!.assets = options!.assets ? assets.concat(options!.assets) : assets;
+            if (options!.directory) {
+                this.copying(options!);
             }
-            if (options.filename) {
-                this.archiving(options);
+            if (options!.filename) {
+                this.archiving(options!);
             }
         }
         return result;
@@ -514,21 +514,23 @@ export default class File<T extends View> extends squared.base.File<T> implement
         );
     }
 
-    protected checkFileAssets(content: string[], options: FileUniversalOptions) {
-        if (options.directory || options.filename) {
-            const assets = getFileAssets(getOutputDirectory(this.userSettings.outputDirectory), content);
-            options.assets = options.assets ? assets.concat(options.assets) : assets;
-            if (options.directory) {
-                this.copying(options);
-            }
-            if (options.filename) {
-                this.archiving(options);
+    protected checkFileAssets(content: string[], options?: FileUniversalOptions) {
+        if (options) {
+            if (options.directory || options.filename) {
+                const assets = getFileAssets(getOutputDirectory(this.userSettings.outputDirectory), content);
+                options.assets = options.assets ? assets.concat(options.assets) : assets;
+                if (options.directory) {
+                    this.copying(options);
+                }
+                if (options.filename) {
+                    this.archiving(options);
+                }
             }
         }
         return content;
     }
 
-    private resourceRawToString(name: "video" | "audio", options: FileUniversalOptions) {
+    private resourceRawToString(name: "video" | "audio", options?: FileUniversalOptions) {
         const length = Resource.ASSETS[name].size;
         if (length) {
             const result: string[] = new Array(length * 3);
@@ -539,7 +541,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 result[i++] = item.mimeType || '';
                 result[i++] = fromLastIndexOf(uri, '/', '\\');
             }
-            if (options.directory || options.filename) {
+            if (options && (options.directory || options.filename)) {
                 const assets = getRawAssets(getOutputDirectory(this.userSettings.outputDirectory) + this.directory[name], result);
                 options.assets = options.assets ? assets.concat(options.assets) : assets;
                 if (options.directory) {

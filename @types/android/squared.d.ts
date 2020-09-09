@@ -101,7 +101,7 @@ declare namespace base {
         static STORED: IResourceStoredMap;
         static formatOptions(options: ViewAttribute, numberAlias?: boolean): ViewAttribute;
         static formatName(value: string): string;
-        static addTheme(theme: StyleAttribute): boolean;
+        static addTheme(theme: ThemeAttribute): boolean;
         static addString(value: string, name?: string, numberAlias?: boolean): string;
         static addImage(images: StringMap, prefix?: string, imageFormat?: MIMEOrAll): string;
         static addColor(value: ColorData | string, transparency?: boolean): string;
@@ -409,7 +409,7 @@ declare namespace lib {
         function isHorizontalAlign(value: string): boolean;
         function isVerticalAlign(value: string): boolean;
         function createViewAttribute(data?: StandardMap): ViewAttribute;
-        function createStyleAttribute(data?: StandardMap): Required<StyleAttribute>;
+        function createThemeAttribute(data?: StandardMap): Required<ThemeAttribute>;
         function getDataSet(dataset: StringMap | DOMStringMap, prefix: string): Undef<StringMap>;
         function localizeString(value: string, rtl: boolean, api: number): string;
         function concatString(list: (string | number)[], char?: string): string;
