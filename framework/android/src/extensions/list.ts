@@ -2,7 +2,7 @@ import BOX_STANDARD = squared.base.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.NODE_ALIGNMENT;
 import NODE_TEMPLATE = squared.base.NODE_TEMPLATE;
 
-import { CONTAINER_ANDROID, CONTAINER_NODE } from '../lib/constant';
+import { CONTAINER_NODE, CONTAINER_TAGNAME } from '../lib/constant';
 
 import type View from '../view';
 
@@ -77,7 +77,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     }
                 }
                 ordinal.parent = parent;
-                ordinal.setControlType(CONTAINER_ANDROID.TEXT, CONTAINER_NODE.INLINE);
+                ordinal.setControlType(CONTAINER_TAGNAME.TEXT, CONTAINER_NODE.INLINE);
                 ordinal.setBox(BOX_STANDARD.MARGIN_LEFT, { reset: 1 });
                 ordinal.render(parent);
                 const layout = new LayoutUI(parent, ordinal);
@@ -177,7 +177,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 }
                 else {
                     if (image) {
-                        ordinal.setControlType(CONTAINER_ANDROID.IMAGE, CONTAINER_NODE.IMAGE);
+                        ordinal.setControlType(CONTAINER_TAGNAME.IMAGE, CONTAINER_NODE.IMAGE);
                         Object.assign(options.android, {
                             src: `@drawable/${image}`,
                             scaleType: gravity === 'right' ? 'fitEnd' : 'fitStart',
@@ -187,14 +187,14 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     else if (value) {
                         ordinal.textContent = value;
                         ordinal.inlineText = true;
-                        ordinal.setControlType(CONTAINER_ANDROID.TEXT, CONTAINER_NODE.TEXT);
+                        ordinal.setControlType(CONTAINER_TAGNAME.TEXT, CONTAINER_NODE.TEXT);
                         if (tagName === 'DFN') {
                             minWidth += 8;
                             ordinal.modifyBox(BOX_STANDARD.PADDING_RIGHT, 8);
                         }
                     }
                     else {
-                        ordinal.setControlType(CONTAINER_ANDROID.SPACE, CONTAINER_NODE.SPACE);
+                        ordinal.setControlType(CONTAINER_TAGNAME.SPACE, CONTAINER_NODE.SPACE);
                         ordinal.renderExclude = false;
                         node.setBox(BOX_STANDARD.PADDING_LEFT, { reset: 1 });
                     }

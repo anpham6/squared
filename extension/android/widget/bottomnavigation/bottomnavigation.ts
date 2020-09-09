@@ -1,10 +1,10 @@
 import NODE_TEMPLATE = squared.base.NODE_TEMPLATE;
-import BUILD_ANDROID = android.base.BUILD_ANDROID;
+import BUILD_VERSION = android.base.BUILD_VERSION;
 
 import { WIDGET_NAME } from '../lib/constant';
 
 const { NODE_RESOURCE } = squared.base.lib.constant;
-const { CONTAINER_NODE, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = android.lib.constant;
+const { CONTAINER_NODE, SUPPORT_TAGNAME, SUPPORT_TAGNAME_X } = android.lib.constant;
 
 const { assignEmptyValue, capitalize, iterateArray } = squared.lib.util;
 const { createThemeAttribute, createViewAttribute } = android.lib.util;
@@ -24,7 +24,7 @@ export default class BottomNavigation<T extends android.base.View> extends squar
             item.hide();
             item.cascade((child: T) => child.hide());
         }, 5);
-        const controlName = node.api < BUILD_ANDROID.Q ? SUPPORT_ANDROID.BOTTOM_NAVIGATION : SUPPORT_ANDROID_X.BOTTOM_NAVIGATION;
+        const controlName = node.api < BUILD_VERSION.Q ? SUPPORT_TAGNAME.BOTTOM_NAVIGATION : SUPPORT_TAGNAME_X.BOTTOM_NAVIGATION;
         node.setControlType(controlName, CONTAINER_NODE.BLOCK);
         node.exclude({ resource: NODE_RESOURCE.ASSET });
         node.render(parent);

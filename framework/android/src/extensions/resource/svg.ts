@@ -1,7 +1,7 @@
 import SYNCHRONIZE_MODE = squared.svg.constant.SYNCHRONIZE_MODE;
-import BUILD_ANDROID = android.base.BUILD_ANDROID;
+import BUILD_VERSION = android.base.BUILD_VERSION;
 
-import { XMLNS_ANDROID } from '../../lib/constant';
+import { XML_NAMESPACE } from '../../lib/constant';
 import { VECTOR_GROUP, VECTOR_PATH } from '../../template/vector';
 
 import ANIMATEDVECTOR_TMPL from '../../template/animated-vector';
@@ -145,7 +145,7 @@ const { convertCamelCase, convertInt, convertWord, hasKeys, isArray, isNumber, l
 
 const { CACHE_VIEWNAME, MATRIX, SVG, TRANSFORM, getAttribute, getRootOffset } = squared.svg.lib.util;
 
-const INTERPOLATOR_ANDROID = {
+const INTERPOLATOR_NAME = {
     accelerate_decelerate: '@android:anim/accelerate_decelerate_interpolator',
     accelerate:	'@android:anim/accelerate_interpolator',
     anticipate:	'@android:anim/anticipate_interpolator',
@@ -174,11 +174,11 @@ const PATH_ATTRIBUTES = [
 ];
 
 if (KEYSPLINE_NAME) {
-    Object.assign(INTERPOLATOR_ANDROID, {
-        [KEYSPLINE_NAME['ease-in']]: INTERPOLATOR_ANDROID.accelerate,
-        [KEYSPLINE_NAME['ease-out']]: INTERPOLATOR_ANDROID.decelerate,
-        [KEYSPLINE_NAME['ease-in-out']]: INTERPOLATOR_ANDROID.accelerate_decelerate,
-        [KEYSPLINE_NAME['linear']]: INTERPOLATOR_ANDROID.linear
+    Object.assign(INTERPOLATOR_NAME, {
+        [KEYSPLINE_NAME['ease-in']]: INTERPOLATOR_NAME.accelerate,
+        [KEYSPLINE_NAME['ease-out']]: INTERPOLATOR_NAME.decelerate,
+        [KEYSPLINE_NAME['ease-in-out']]: INTERPOLATOR_NAME.accelerate_decelerate,
+        [KEYSPLINE_NAME['linear']]: INTERPOLATOR_NAME.linear
     });
 }
 
@@ -190,7 +190,7 @@ const INTERPOLATOR_XML = `<?xml version="1.0" encoding="utf-8"?>
     android:controlY2="{3}" />
 `;
 
-const ATTRIBUTE_ANDROID = {
+const ATTRIBUTE_PATH = {
     'stroke': ['strokeColor'],
     'fill': ['fillColor'],
     'opacity': ['alpha'],
@@ -205,11 +205,11 @@ const ATTRIBUTE_ANDROID = {
 
 function getPathInterpolator(keySplines: Null<string[]>, index: number) {
     const name = keySplines && keySplines[index];
-    return name ? INTERPOLATOR_ANDROID[name] as string || createPathInterpolator(name) : '';
+    return name ? INTERPOLATOR_NAME[name] as string || createPathInterpolator(name) : '';
 }
 
 function createPathInterpolator(value: string) {
-    const interpolator: string = INTERPOLATOR_ANDROID[value];
+    const interpolator: string = INTERPOLATOR_NAME[value];
     if (interpolator) {
         return interpolator;
     }
@@ -419,7 +419,7 @@ function createAnimateFromTo(attributeName: string, delay: number, to: string, f
 }
 
 function getAttributePropertyName(value: string, checkTransform = true) {
-    let result: Undef<string[]> = ATTRIBUTE_ANDROID[value];
+    let result: Undef<string[]> = ATTRIBUTE_PATH[value];
     if (!result && checkTransform && getTransformInitialValue(value)) {
         result = [value];
     }
@@ -600,7 +600,7 @@ function insertTargetAnimation(data: AnimatedVectorTemplate[], name: string, tar
                 break;
             }
         }
-        targetSetTemplate['xmlns:android'] = XMLNS_ANDROID.android;
+        targetSetTemplate['xmlns:android'] = XML_NAMESPACE.android;
         if (modified) {
             targetSetTemplate['android:ordering'] = targetSetTemplate.ordering;
             delete targetSetTemplate.ordering;
@@ -656,8 +656,8 @@ function insertFillAfter(propertyName: string, valueType: string, item: SvgAnima
                                 valueTo = path.value;
                             }
                             else {
-                                for (const attr in ATTRIBUTE_ANDROID) {
-                                    if ((ATTRIBUTE_ANDROID[attr] as string[]).includes(propertyName)) {
+                                for (const attr in ATTRIBUTE_PATH) {
+                                    if ((ATTRIBUTE_PATH[attr] as string[]).includes(propertyName)) {
                                         valueTo = path[convertCamelCase(attr)];
                                         break;
                                     }
@@ -753,7 +753,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
             const addSvgElement = (node: T, element: SVGSVGElement, parentElement?: HTMLElement) => {
                 const drawable = this.createSvgDrawable(node, element, keyframesMap, contentMap);
                 if (drawable) {
-                    if (node.api >= BUILD_ANDROID.LOLLIPOP) {
+                    if (node.api >= BUILD_VERSION.LOLLIPOP) {
                         node.android('src', getDrawableSrc(drawable));
                     }
                     else {
@@ -836,7 +836,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         if (contentMap) {
             svg.contentMap = contentMap;
         }
-        const supportedKeyframes = node.api >= BUILD_ANDROID.MARSHMALLOW;
+        const supportedKeyframes = node.api >= BUILD_VERSION.MARSHMALLOW;
         const keyTimeMode = SYNCHRONIZE_MODE.FROMTO_ANIMATE | (supportedKeyframes ? SYNCHRONIZE_MODE.KEYTIME_TRANSFORM : SYNCHRONIZE_MODE.IGNORE_TRANSFORM);
         const animateData = this._animateData;
         const imageData = this._imageData;
@@ -870,8 +870,8 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 'drawables',
                 getTemplateFilename(templateName, imageLength),
                 applyTemplate('vector', VECTOR_TMPL, [{
-                    'xmlns:android': XMLNS_ANDROID.android,
-                    'xmlns:aapt': this._namespaceAapt ? XMLNS_ANDROID.aapt : '',
+                    'xmlns:android': XML_NAMESPACE.android,
+                    'xmlns:aapt': this._namespaceAapt ? XML_NAMESPACE.aapt : '',
                     'android:name': animateData.size ? svg.name : '',
                     'android:width': formatPX(width),
                     'android:height': formatPX(height),
@@ -883,7 +883,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
             );
             if (animateData.size) {
                 const data: AnimatedVectorTemplate[] = [{
-                    'xmlns:android': XMLNS_ANDROID.android,
+                    'xmlns:android': XML_NAMESPACE.android,
                     'android:drawable': getDrawableSrc(vectorName),
                     target: []
                 }];
@@ -899,7 +899,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     for (let i = 0, length = animations.length; i < length; ++i) {
                         const item = animations[i];
                         if (item.setterType) {
-                            if (ATTRIBUTE_ANDROID[item.attributeName] && item.to) {
+                            if (ATTRIBUTE_PATH[item.attributeName] && item.to) {
                                 if (item.fillReplace && item.duration > 0) {
                                     isolatedData.push(item);
                                 }
@@ -1458,7 +1458,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         if (imageLength) {
             const resource = this.resource as android.base.Resource<T>;
             const item: StandardMap[] = [];
-            const layerData: StandardMap[] = [{ 'xmlns:android': XMLNS_ANDROID.android, item }];
+            const layerData: StandardMap[] = [{ 'xmlns:android': XML_NAMESPACE.android, item }];
             if (vectorName) {
                 item.push({ drawable: getDrawableSrc(vectorName) });
             }

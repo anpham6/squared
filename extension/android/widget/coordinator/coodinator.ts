@@ -1,12 +1,12 @@
 import NODE_TEMPLATE = squared.base.NODE_TEMPLATE;
-import BUILD_ANDROID = android.base.BUILD_ANDROID;
+import BUILD_VERSION = android.base.BUILD_VERSION;
 
 import { WIDGET_NAME } from '../lib/constant';
 
 type View = android.base.View;
 
 const { NODE_RESOURCE } = squared.base.lib.constant;
-const { CONTAINER_NODE, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = android.lib.constant;
+const { CONTAINER_NODE, SUPPORT_TAGNAME, SUPPORT_TAGNAME_X } = android.lib.constant;
 
 const { getElementAsNode } = squared.lib.session;
 const { createViewAttribute } = android.lib.util;
@@ -27,7 +27,7 @@ export default class Coordinator<T extends View> extends squared.base.ExtensionU
                 }
             }
         }
-        const controlName = node.api < BUILD_ANDROID.Q ? SUPPORT_ANDROID.COORDINATOR : SUPPORT_ANDROID_X.COORDINATOR;
+        const controlName = node.api < BUILD_VERSION.Q ? SUPPORT_TAGNAME.COORDINATOR : SUPPORT_TAGNAME_X.COORDINATOR;
         node.setControlType(controlName, CONTAINER_NODE.BLOCK);
         node.exclude({ resource: NODE_RESOURCE.ASSET });
         node.render(parent);

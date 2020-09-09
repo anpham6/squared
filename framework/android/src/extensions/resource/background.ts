@@ -1,7 +1,7 @@
 import BOX_STANDARD = squared.base.BOX_STANDARD;
-import BUILD_ANDROID = android.base.BUILD_ANDROID;
+import BUILD_VERSION = android.base.BUILD_VERSION;
 
-import { CONTAINER_ANDROID, CONTAINER_NODE, SUPPORT_ANDROID, SUPPORT_ANDROID_X, XMLNS_ANDROID } from '../../lib/constant';
+import { CONTAINER_NODE, CONTAINER_TAGNAME, SUPPORT_TAGNAME, SUPPORT_TAGNAME_X, XML_NAMESPACE } from '../../lib/constant';
 
 import LAYERLIST_TMPL from '../../template/layer-list';
 import SHAPE_TMPL from '../../template/shape';
@@ -269,9 +269,9 @@ function insertDoubleBorder(items: StandardMap[], border: BorderAttribute, top: 
     });
 }
 
-function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LATEST, imageCount: number, borderRadius?: string[], precision?: number) {
+function createBackgroundGradient(gradient: Gradient, api = BUILD_VERSION.LATEST, imageCount: number, borderRadius?: string[], precision?: number) {
     const { colorStops, type } = gradient;
-    let positioning = api >= BUILD_ANDROID.LOLLIPOP;
+    let positioning = api >= BUILD_VERSION.LOLLIPOP;
     const result = { type, positioning } as GradientTemplate;
     const length = colorStops.length;
     switch (type) {
@@ -353,7 +353,7 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LATEST
 
 function createLayerList(boxStyle: BoxStyle, images: UndefNull<BackgroundImageData[]>, borderOnly: boolean, stroke?: StandardMap | false, corners?: StringMap | false, indentOffset?: string) {
     const item: LayerData[] = [];
-    const result: LayerList[] = [{ 'xmlns:android': XMLNS_ANDROID.android, item }];
+    const result: LayerList[] = [{ 'xmlns:android': XML_NAMESPACE.android, item }];
     const solid = !borderOnly && getBackgroundColor(boxStyle.backgroundColor);
     if (solid && (!images || !images.find(image => image.gradient))) {
         item.push({ shape: { 'android:shape': 'rectangle', solid, corners } });
@@ -529,7 +529,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                 }
                 const images = this.getDrawableImages(node, stored);
-                if (node.controlName === CONTAINER_ANDROID.BUTTON && stored.borderRadius?.length === 1 && images && images.some(item => item.vectorGradient) && node.api >= BUILD_ANDROID.PIE) {
+                if (node.controlName === CONTAINER_TAGNAME.BUTTON && stored.borderRadius?.length === 1 && images && images.some(item => item.vectorGradient) && node.api >= BUILD_VERSION.PIE) {
                     node.android('buttonCornerRadius', stored.borderRadius[0]);
                     delete stored.borderRadius;
                 }
@@ -671,7 +671,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             }
             else {
                 shapeData = [{
-                    'xmlns:android': XMLNS_ANDROID.android,
+                    'xmlns:android': XML_NAMESPACE.android,
                     'android:shape': 'rectangle',
                     stroke,
                     solid: !borderOnly && getBackgroundColor(data.backgroundColor),
@@ -1423,8 +1423,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                 }
                 switch (node.controlName) {
-                    case SUPPORT_ANDROID.TOOLBAR:
-                    case SUPPORT_ANDROID_X.TOOLBAR:
+                    case SUPPORT_TAGNAME.TOOLBAR:
+                    case SUPPORT_TAGNAME_X.TOOLBAR:
                         gravityX = '';
                         gravityY = '';
                         gravityAlign = 'fill';
@@ -1520,8 +1520,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         'drawables',
                         `${node.controlId}_gradient_${i + 1}`,
                         applyTemplate('vector', VECTOR_TMPL, [{
-                            'xmlns:android': XMLNS_ANDROID.android,
-                            'xmlns:aapt': XMLNS_ANDROID.aapt,
+                            'xmlns:android': XML_NAMESPACE.android,
+                            'xmlns:aapt': XML_NAMESPACE.aapt,
                             'android:width': formatPX(width),
                             'android:height': formatPX(height),
                             'android:viewportWidth': width.toString(),

@@ -93,11 +93,13 @@ module.exports = {
         "no-self-assign": "error",
         "no-shadow": ["error", {
             "allow": [
-                "EXT_ANDROID",
-                "STRING_ANDROID",
-                "BUILD_ANDROID",
-                "CONTAINER_NODE",
                 "EXT_NAME",
+                "EXT_ANDROID",
+                "EXT_CHROME",
+                "LAYOUT_STRING",
+                "BUILD_VERSION",
+                "CONTAINER_NODE",
+                "SCREEN_DENSITY",
                 "NODE_ALIGNMENT",
                 "BOX_STANDARD",
                 "NODE_TRAVERSE",
@@ -106,7 +108,6 @@ module.exports = {
                 "APP_SECTION",
                 "NODE_RESOURCE",
                 "NODE_PROCEDURE",
-                "EXT_CHROME",
                 "PLATFORM",
                 "USER_AGENT",
                 "CSS_UNIT",
@@ -117,7 +118,6 @@ module.exports = {
                 "FILL_MODE",
                 "REGION_UNIT",
                 "WIDGET_NAME",
-                "CONTAINER_NODE",
                 "LAYOUT_TABLE",
                 "STYLE_CACHE"
             ]

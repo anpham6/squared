@@ -30,7 +30,7 @@ declare namespace base {
         RESOURCE_DATA = 'android.resource.data',
         RESOURCE_STYLES = 'android.resource.styles'
     }
-    const enum STRING_ANDROID {
+    const enum LAYOUT_STRING {
         MARGIN = 'layout_margin',
         MARGIN_VERTICAL = 'layout_marginVertical',
         MARGIN_HORIZONTAL = 'layout_marginHorizontal',
@@ -46,7 +46,7 @@ declare namespace base {
         PADDING_BOTTOM = 'paddingBottom',
         PADDING_LEFT = 'paddingLeft'
     }
-    const enum BUILD_ANDROID {
+    const enum BUILD_VERSION {
         R = 30,
         Q = 29,
         PIE = 28,
@@ -230,6 +230,14 @@ declare namespace extensions {
 
 declare namespace lib {
     namespace constant {
+        enum SCREEN_DENSITY {
+            LDPI = 120,
+            MDPI = 160,
+            HDPI = 240,
+            XHDPI = 320,
+            XXHDPI = 480,
+            XXXHDPI = 640
+        }
         enum CONTAINER_NODE {
             EDIT = 1,
             RANGE,
@@ -254,61 +262,7 @@ declare namespace lib {
             WEBVIEW,
             UNKNOWN
         }
-        const CONTAINER_ANDROID: {
-            CHECKBOX: string;
-            RADIO: string;
-            EDIT: string;
-            EDIT_LIST: string;
-            SELECT: string;
-            RANGE: string;
-            SVG: string;
-            TEXT: string;
-            IMAGE: string;
-            BUTTON: string;
-            METER: string;
-            PROGRESS: string;
-            LINE: string;
-            SPACE: string;
-            FRAME: string;
-            LINEAR: string;
-            GRID: string;
-            RELATIVE: string;
-            WEBVIEW: string;
-            VIDEOVIEW: string;
-            RADIOGROUP: string;
-            HORIZONTAL_SCROLL: string;
-            VERTICAL_SCROLL: string;
-            CONSTRAINT: string;
-            GUIDELINE: string;
-            BARRIER: string;
-        };
-        const CONTAINER_ANDROID_X: {
-            VERTICAL_SCROLL: string;
-            CONSTRAINT: string;
-            GUIDELINE: string;
-            BARRIER: string;
-        };
-        const SUPPORT_ANDROID: {
-            DRAWER: string;
-            NAVIGATION_VIEW: string;
-            COORDINATOR: string;
-            APPBAR: string;
-            COLLAPSING_TOOLBAR: string;
-            TOOLBAR: string;
-            FLOATING_ACTION_BUTTON: string;
-            BOTTOM_NAVIGATION: string;
-        };
-        const SUPPORT_ANDROID_X: {
-            DRAWER: string;
-            NAVIGATION_VIEW: string;
-            COORDINATOR: string;
-            APPBAR: string;
-            COLLAPSING_TOOLBAR: string;
-            TOOLBAR: string;
-            FLOATING_ACTION_BUTTON: string;
-            BOTTOM_NAVIGATION: string;
-        };
-        const ELEMENT_ANDROID: {
+        const CONTAINER_ELEMENT: {
             PLAINTEXT: string;
             HR: string;
             SVG: string;
@@ -340,7 +294,61 @@ declare namespace lib {
             INPUT_RADIO: string;
             'INPUT_DATETIME-LOCAL': string;
         };
-        const LAYOUT_ANDROID: {
+        const CONTAINER_TAGNAME: {
+            CHECKBOX: string;
+            RADIO: string;
+            EDIT: string;
+            EDIT_LIST: string;
+            SELECT: string;
+            RANGE: string;
+            SVG: string;
+            TEXT: string;
+            IMAGE: string;
+            BUTTON: string;
+            METER: string;
+            PROGRESS: string;
+            LINE: string;
+            SPACE: string;
+            FRAME: string;
+            LINEAR: string;
+            GRID: string;
+            RELATIVE: string;
+            WEBVIEW: string;
+            VIDEOVIEW: string;
+            RADIOGROUP: string;
+            HORIZONTAL_SCROLL: string;
+            VERTICAL_SCROLL: string;
+            CONSTRAINT: string;
+            GUIDELINE: string;
+            BARRIER: string;
+        };
+        const CONTAINER_TAGNAME_X: {
+            VERTICAL_SCROLL: string;
+            CONSTRAINT: string;
+            GUIDELINE: string;
+            BARRIER: string;
+        };
+        const SUPPORT_TAGNAME: {
+            DRAWER: string;
+            NAVIGATION_VIEW: string;
+            COORDINATOR: string;
+            APPBAR: string;
+            COLLAPSING_TOOLBAR: string;
+            TOOLBAR: string;
+            FLOATING_ACTION_BUTTON: string;
+            BOTTOM_NAVIGATION: string;
+        };
+        const SUPPORT_TAGNAME_X: {
+            DRAWER: string;
+            NAVIGATION_VIEW: string;
+            COORDINATOR: string;
+            APPBAR: string;
+            COLLAPSING_TOOLBAR: string;
+            TOOLBAR: string;
+            FLOATING_ACTION_BUTTON: string;
+            BOTTOM_NAVIGATION: string;
+        };
+        const LAYOUT_MAP: {
             relativeParent: {
                 left: string;
                 top: string;
@@ -372,12 +380,7 @@ declare namespace lib {
                 bottomTop: string;
             };
         };
-        const XMLNS_ANDROID: {
-            android: string;
-            app: string;
-            aapt: string;
-        };
-        const LOCALIZE_ANDROID: {
+        const LOCALIZE_MAP: {
             left: string;
             right: string;
             paddingLeft: string;
@@ -395,11 +398,16 @@ declare namespace lib {
             layout_constraintLeft_toRightOf: string;
             layout_constraintRight_toLeftOf: string;
         };
+        const XML_NAMESPACE: {
+            android: string;
+            app: string;
+            aapt: string;
+        };
         const RESERVED_JAVA: Set<string>;
     }
 
     namespace customizations {
-        const API_ANDROID: Customizations<base.View>;
+        const API_VERSION: Customizations<base.View>;
         function getValue(api: number, tagName: string, obj: string, attr: string): string;
     }
 

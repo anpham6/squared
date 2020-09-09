@@ -1,4 +1,4 @@
-import { CONTAINER_ANDROID } from '../../lib/constant';
+import { CONTAINER_TAGNAME } from '../../lib/constant';
 
 import type View from '../../view';
 
@@ -59,7 +59,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                     }
                 }
                 if (node.inputElement) {
-                    if (node.controlName === CONTAINER_ANDROID.EDIT_LIST) {
+                    if (node.controlName === CONTAINER_TAGNAME.EDIT_LIST) {
                         const list = (node.element as HTMLInputElement).list;
                         if (list) {
                             this.createOptionArray(list as HTMLSelectElement, node.controlId);

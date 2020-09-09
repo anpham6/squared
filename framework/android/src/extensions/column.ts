@@ -2,7 +2,7 @@ import BOX_STANDARD = squared.base.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.NODE_ALIGNMENT;
 import NODE_TEMPLATE = squared.base.NODE_TEMPLATE;
 
-import { CONTAINER_ANDROID, CONTAINER_NODE } from '../lib/constant';
+import { CONTAINER_NODE, CONTAINER_TAGNAME } from '../lib/constant';
 
 import type View from '../view';
 
@@ -50,7 +50,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                 const rule = application.createNode(node.sessionId, { parent: node, append: true });
                 rule.containerName = node.containerName + '_COLUMNRULE';
                 rule.inherit(node, 'base');
-                rule.setControlType(CONTAINER_ANDROID.LINE, CONTAINER_NODE.LINE);
+                rule.setControlType(CONTAINER_TAGNAME.LINE, CONTAINER_NODE.LINE);
                 rule.exclude({ resource: NODE_RESOURCE.ASSET, procedure: NODE_PROCEDURE.ALL });
                 let width: string;
                 if (borderVisible) {

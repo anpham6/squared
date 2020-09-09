@@ -1,4 +1,4 @@
-import BUILD_ANDROID = android.base.BUILD_ANDROID;
+import BUILD_VERSION = android.base.BUILD_VERSION;
 
 import type View from '../../view';
 
@@ -17,24 +17,24 @@ const { capitalize, convertWord, hasKeys, joinArray, spliceArray, trimBoth } = s
 const REGEXP_FONTATTRIBUTE = /([^\s]+)="((?:[^"]|\\")+)"/;
 const REGEXP_FONTNAME = /^(\w*?)(?:_(\d+))?$/;
 
-const FONT_ANDROID = {
-    'sans-serif': BUILD_ANDROID.ICE_CREAM_SANDWICH,
-    'sans-serif-thin': BUILD_ANDROID.JELLYBEAN,
-    'sans-serif-light': BUILD_ANDROID.JELLYBEAN,
-    'sans-serif-condensed': BUILD_ANDROID.JELLYBEAN,
-    'sans-serif-condensed-light': BUILD_ANDROID.JELLYBEAN,
-    'sans-serif-medium': BUILD_ANDROID.LOLLIPOP,
-    'sans-serif-black': BUILD_ANDROID.LOLLIPOP,
-    'sans-serif-smallcaps': BUILD_ANDROID.LOLLIPOP,
-    'serif-monospace' : BUILD_ANDROID.LOLLIPOP,
-    'serif': BUILD_ANDROID.LOLLIPOP,
-    'casual' : BUILD_ANDROID.LOLLIPOP,
-    'cursive': BUILD_ANDROID.LOLLIPOP,
-    'monospace': BUILD_ANDROID.LOLLIPOP,
-    'sans-serif-condensed-medium': BUILD_ANDROID.OREO
+const FONT_NAME = {
+    'sans-serif': BUILD_VERSION.ICE_CREAM_SANDWICH,
+    'sans-serif-thin': BUILD_VERSION.JELLYBEAN,
+    'sans-serif-light': BUILD_VERSION.JELLYBEAN,
+    'sans-serif-condensed': BUILD_VERSION.JELLYBEAN,
+    'sans-serif-condensed-light': BUILD_VERSION.JELLYBEAN,
+    'sans-serif-medium': BUILD_VERSION.LOLLIPOP,
+    'sans-serif-black': BUILD_VERSION.LOLLIPOP,
+    'sans-serif-smallcaps': BUILD_VERSION.LOLLIPOP,
+    'serif-monospace' : BUILD_VERSION.LOLLIPOP,
+    'serif': BUILD_VERSION.LOLLIPOP,
+    'casual' : BUILD_VERSION.LOLLIPOP,
+    'cursive': BUILD_VERSION.LOLLIPOP,
+    'monospace': BUILD_VERSION.LOLLIPOP,
+    'sans-serif-condensed-medium': BUILD_VERSION.OREO
 };
 
-const FONTALIAS_ANDROID = {
+const FONT_ALIAS = {
     'arial': 'sans-serif',
     'helvetica': 'sans-serif',
     'tahoma': 'sans-serif',
@@ -53,7 +53,7 @@ const FONTALIAS_ANDROID = {
     'courier new': 'serif-monospace'
 };
 
-const FONTREPLACE_ANDROID = {
+const FONT_REPLACE = {
     'arial black': 'sans-serif',
     'ms shell dlg \\32': 'sans-serif',
     'system-ui': 'sans-serif',
@@ -61,7 +61,7 @@ const FONTREPLACE_ANDROID = {
     '-webkit-standard': 'sans-serif'
 };
 
-const FONTWEIGHT_ANDROID = {
+const FONT_WEIGHT = {
     '100': 'thin',
     '200': 'extra_light',
     '300': 'light',
@@ -153,10 +153,10 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     value = trimBoth(value.trim(), "'").toLowerCase();
                     let fontName = value,
                         actualFontWeight = '';
-                    if (!disableFontAlias && FONTREPLACE_ANDROID[fontName]) {
+                    if (!disableFontAlias && FONT_REPLACE[fontName]) {
                         fontName = defaultFontFamily;
                     }
-                    if (api >= FONT_ANDROID[fontName] || !disableFontAlias && api >= FONT_ANDROID[FONTALIAS_ANDROID[fontName]]) {
+                    if (api >= FONT_NAME[fontName] || !disableFontAlias && api >= FONT_NAME[FONT_ALIAS[fontName]]) {
                         fontFamily = fontName;
                     }
                     else if (fontStyle && fontWeight) {
@@ -181,7 +181,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         if (createFont) {
                             fontName = convertWord(fontName);
                             const font = fonts.get(fontName) || {};
-                            font[`${value}|${fontStyle}|${fontWeight}`] = FONTWEIGHT_ANDROID[fontWeight] || fontWeight;
+                            font[`${value}|${fontStyle}|${fontWeight}`] = FONT_WEIGHT[fontWeight] || fontWeight;
                             fonts.set(fontName, font);
                             fontFamily = `@font/${fontName}`;
                         }
@@ -195,7 +195,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     if (actualFontWeight !== '') {
                         fontWeight = actualFontWeight;
                     }
-                    else if (fontWeight === '400' || node.api < BUILD_ANDROID.OREO) {
+                    else if (fontWeight === '400' || node.api < BUILD_VERSION.OREO) {
                         fontWeight = '';
                     }
                     if (parseInt(fontWeight) > 500) {

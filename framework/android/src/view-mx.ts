@@ -1,11 +1,11 @@
 import BOX_STANDARD = squared.base.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.NODE_ALIGNMENT;
-import BUILD_ANDROID = android.base.BUILD_ANDROID;
-import STRING_ANDROID = android.base.STRING_ANDROID;
+import BUILD_VERSION = android.base.BUILD_VERSION;
+import LAYOUT_STRING = android.base.LAYOUT_STRING;
 import CSS_UNIT = squared.lib.constant.CSS_UNIT;
 
-import { CONTAINER_ANDROID, CONTAINER_ANDROID_X, CONTAINER_NODE, ELEMENT_ANDROID, LAYOUT_ANDROID, RESERVED_JAVA } from './lib/constant';
-import { API_ANDROID, DEPRECATED_ANDROID } from './lib/customization';
+import { CONTAINER_ELEMENT, CONTAINER_NODE, CONTAINER_TAGNAME, CONTAINER_TAGNAME_X, LAYOUT_MAP, RESERVED_JAVA } from './lib/constant';
+import { API_VERSION, DEPRECATED_ATTRIBUTE } from './lib/customization';
 
 import Resource from './resource';
 
@@ -28,7 +28,7 @@ const BOX_PADDING = CSS_PROPERTIES.padding.value as string[];
 const {
     constraint: LAYOUT_CONSTRAINT,
     relative: LAYOUT_RELATIVE,
-    relativeParent: LAYOUT_RELATIVE_PARENT } = LAYOUT_ANDROID;
+    relativeParent: LAYOUT_RELATIVE_PARENT } = LAYOUT_MAP;
 
 const OPTIONS_LINEHEIGHT: StringMap = {
     'height': 'auto',
@@ -81,7 +81,7 @@ function setMultiline(node: T, lineHeight: number, overwrite: boolean) {
     if (lineHeightAdjust !== 'false') {
         let offset = getLineSpacingExtra(node, lineHeight);
         lineHeight *= lineHeightAdjust && parseFloat(lineHeightAdjust) || node.localSettings.lineHeightAdjust;
-        if (node.api >= BUILD_ANDROID.PIE) {
+        if (node.api >= BUILD_VERSION.PIE) {
             node.android('lineHeight', truncate(lineHeight, node.localSettings.floatPrecision) + 'px', overwrite);
         }
         else if (offset > 0) {
@@ -526,12 +526,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return valid ? Math.max(0, percent) : 1;
         }
 
-        public static getControlName(containerType: number, api = BUILD_ANDROID.LATEST) {
+        public static getControlName(containerType: number, api = BUILD_VERSION.LATEST) {
             const name = CONTAINER_NODE[containerType];
-            return api >= BUILD_ANDROID.Q && CONTAINER_ANDROID_X[name] as string || CONTAINER_ANDROID[name] as string || '';
+            return api >= BUILD_VERSION.Q && CONTAINER_TAGNAME_X[name] as string || CONTAINER_TAGNAME[name] as string || '';
         }
 
-        public api = BUILD_ANDROID.LATEST;
+        public api = BUILD_VERSION.LATEST;
         public renderChildren!: T[];
         public renderParent!: Null<T>;
         public horizontalRows?: T[][];
@@ -1257,12 +1257,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         right += 4;
                     }
                     switch (this.controlName) {
-                        case CONTAINER_ANDROID.RADIO:
-                        case CONTAINER_ANDROID.CHECKBOX:
+                        case CONTAINER_TAGNAME.RADIO:
+                        case CONTAINER_TAGNAME.CHECKBOX:
                             top = Math.max(top - 4, 0);
                             bottom = Math.max(bottom - 4, 0);
                             break;
-                        case CONTAINER_ANDROID.SELECT:
+                        case CONTAINER_TAGNAME.SELECT:
                             top = Math.max(top - 2, 0);
                             bottom = Math.max(bottom - 2, 0);
                             break;
@@ -1345,10 +1345,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     right = Math.round(right);
                     bottom = Math.round(bottom);
                     left = Math.round(left);
-                    if ((!margin || !(this.renderParent as T).layoutGrid) && this.api >= BUILD_ANDROID.OREO) {
+                    if ((!margin || !(this.renderParent as T).layoutGrid) && this.api >= BUILD_VERSION.OREO) {
                         if (top === right && right === bottom && bottom === left) {
                             if (top !== 0) {
-                                this.android(margin ? STRING_ANDROID.MARGIN : STRING_ANDROID.PADDING, top + 'px');
+                                this.android(margin ? LAYOUT_STRING.MARGIN : LAYOUT_STRING.PADDING, top + 'px');
                             }
                             continue;
                         }
@@ -1363,28 +1363,28 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                     if (!isNaN(horizontal)) {
                         if (horizontal !== 0) {
-                            this.android(margin ? STRING_ANDROID.MARGIN_HORIZONTAL : STRING_ANDROID.PADDING_HORIZONTAL, horizontal + 'px');
+                            this.android(margin ? LAYOUT_STRING.MARGIN_HORIZONTAL : LAYOUT_STRING.PADDING_HORIZONTAL, horizontal + 'px');
                         }
                     }
                     else {
                         if (left !== 0) {
-                            this.android(this.localizeString(margin ? STRING_ANDROID.MARGIN_LEFT : STRING_ANDROID.PADDING_LEFT), left + 'px');
+                            this.android(this.localizeString(margin ? LAYOUT_STRING.MARGIN_LEFT : LAYOUT_STRING.PADDING_LEFT), left + 'px');
                         }
                         if (right !== 0) {
-                            this.android(this.localizeString(margin ? STRING_ANDROID.MARGIN_RIGHT : STRING_ANDROID.PADDING_RIGHT), right + 'px');
+                            this.android(this.localizeString(margin ? LAYOUT_STRING.MARGIN_RIGHT : LAYOUT_STRING.PADDING_RIGHT), right + 'px');
                         }
                     }
                     if (!isNaN(vertical)) {
                         if (vertical !== 0) {
-                            this.android(margin ? STRING_ANDROID.MARGIN_VERTICAL : STRING_ANDROID.PADDING_VERTICAL, vertical + 'px');
+                            this.android(margin ? LAYOUT_STRING.MARGIN_VERTICAL : LAYOUT_STRING.PADDING_VERTICAL, vertical + 'px');
                         }
                     }
                     else {
                         if (top !== 0) {
-                            this.android(margin ? STRING_ANDROID.MARGIN_TOP : STRING_ANDROID.PADDING_TOP, top + 'px');
+                            this.android(margin ? LAYOUT_STRING.MARGIN_TOP : LAYOUT_STRING.PADDING_TOP, top + 'px');
                         }
                         if (bottom !== 0) {
-                            this.android(margin ? STRING_ANDROID.MARGIN_BOTTOM : STRING_ANDROID.PADDING_BOTTOM, bottom + 'px');
+                            this.android(margin ? LAYOUT_STRING.MARGIN_BOTTOM : LAYOUT_STRING.PADDING_BOTTOM, bottom + 'px');
                         }
                     }
                 }
@@ -2025,14 +2025,14 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         public supported(attr: string, value: string, result: PlainObject): boolean {
             const api = this.api;
-            if (DEPRECATED_ANDROID.android[attr]) {
-                const valid = DEPRECATED_ANDROID.android[attr].call(this, result, api, value);
+            if (DEPRECATED_ATTRIBUTE.android[attr]) {
+                const valid = DEPRECATED_ATTRIBUTE.android[attr].call(this, result, api, value);
                 if (!valid || hasKeys(result)) {
                     return valid;
                 }
             }
-            for (let i = api; i <= BUILD_ANDROID.LATEST; ++i) {
-                const callback = API_ANDROID[i].android[attr];
+            for (let i = api; i <= BUILD_VERSION.LATEST; ++i) {
+                const callback = API_VERSION[i].android[attr];
                 switch (typeof callback) {
                     case 'boolean':
                         return callback;
@@ -2054,7 +2054,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     let prefix = name + ':';
                     switch (name) {
                         case 'android':
-                            if (this.api < BUILD_ANDROID.LATEST) {
+                            if (this.api < BUILD_VERSION.LATEST) {
                                 for (let attr in obj) {
                                     if (attr === 'id') {
                                         id = obj.id;
@@ -2481,10 +2481,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                 }
             };
-            let assign = API_ANDROID[0].assign;
+            let assign = API_VERSION[0].assign;
             setCustomization(assign[tagName]);
             setCustomization(assign[controlName]);
-            const api = API_ANDROID[this.api];
+            const api = API_VERSION[this.api];
             if (api) {
                 assign = api.assign;
                 setCustomization(assign[tagName]);
@@ -2868,7 +2868,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
         get containerType() {
             if (this._containerType === 0) {
-                const value: Undef<number> = ELEMENT_ANDROID[this.containerName];
+                const value: Undef<number> = CONTAINER_ELEMENT[this.containerName];
                 if (value) {
                     this._containerType = value;
                 }
@@ -2999,11 +2999,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                     else if (this.inputElement) {
                         switch (this.controlName) {
-                            case CONTAINER_ANDROID.RADIO:
-                            case CONTAINER_ANDROID.CHECKBOX:
+                            case CONTAINER_TAGNAME.RADIO:
+                            case CONTAINER_TAGNAME.CHECKBOX:
                                 result += 8;
                                 break;
-                            case CONTAINER_ANDROID.SELECT:
+                            case CONTAINER_TAGNAME.SELECT:
                                 result /= this.toElementInt('size') || 1;
                                 result += 4;
                                 break;

@@ -1,6 +1,6 @@
-import BUILD_ANDROID = android.base.BUILD_ANDROID;
+import BUILD_VERSION = android.base.BUILD_VERSION;
 
-import { LOCALIZE_ANDROID, XMLNS_ANDROID } from './constant';
+import { LOCALIZE_MAP, XML_NAMESPACE } from './constant';
 
 const { capitalize, joinArray, isPlainObject } = squared.lib.util;
 
@@ -221,16 +221,16 @@ export function formatString(value: string, ...params: string[]) {
 }
 
 export function localizeString(value: string, rtl: boolean, api: number) {
-    return rtl && api >= BUILD_ANDROID.JELLYBEAN_1 && LOCALIZE_ANDROID[value] as string || value;
+    return rtl && api >= BUILD_VERSION.JELLYBEAN_1 && LOCALIZE_MAP[value] as string || value;
 }
 
 export function getXmlNs(value: string) {
-    return XMLNS_ANDROID[value] ? `xmlns:${value}="${XMLNS_ANDROID[value] as string}"` : '';
+    return XML_NAMESPACE[value] ? `xmlns:${value}="${XML_NAMESPACE[value] as string}"` : '';
 }
 
 export function getRootNs(value: string) {
     let output = '';
-    for (const namespace in XMLNS_ANDROID) {
+    for (const namespace in XML_NAMESPACE) {
         if (namespace === 'android' || namespace !== 'aapt' && value.includes(namespace + ':')) {
             output += '\n\t' + getXmlNs(namespace);
         }

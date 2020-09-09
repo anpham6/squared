@@ -1,7 +1,7 @@
 import BOX_STANDARD = squared.base.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.NODE_ALIGNMENT;
 
-import { CONTAINER_ANDROID, CONTAINER_NODE } from '../lib/constant';
+import { CONTAINER_NODE, CONTAINER_TAGNAME } from '../lib/constant';
 
 import type View from '../view';
 
@@ -18,9 +18,9 @@ export default class <T extends View> extends squared.base.extensions.Sprite<T> 
             const { image, position } = this.data.get(node) as SpriteData;
             const container = this.application.createNode(node.sessionId, { parent, innerWrapped: node });
             container.inherit(node, 'base', 'initial', 'styleMap');
-            container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
+            container.setControlType(CONTAINER_TAGNAME.FRAME, CONTAINER_NODE.FRAME);
             container.exclude({ resource: NODE_RESOURCE.ASSET, procedure: NODE_PROCEDURE.CUSTOMIZATION, section: APP_SECTION.ALL });
-            node.setControlType(CONTAINER_ANDROID.IMAGE, CONTAINER_NODE.IMAGE);
+            node.setControlType(CONTAINER_TAGNAME.IMAGE, CONTAINER_NODE.IMAGE);
             node.resetBox(BOX_STANDARD.MARGIN);
             node.resetBox(BOX_STANDARD.PADDING);
             node.registerBox(BOX_STANDARD.MARGIN_TOP, container);

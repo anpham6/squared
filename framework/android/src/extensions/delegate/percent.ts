@@ -1,9 +1,9 @@
 import BOX_STANDARD = squared.base.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.NODE_ALIGNMENT;
-import STRING_ANDROID = android.base.STRING_ANDROID;
+import LAYOUT_STRING = android.base.LAYOUT_STRING;
 import CSS_UNIT = squared.lib.constant.CSS_UNIT;
 
-import { CONTAINER_NODE, LAYOUT_ANDROID } from '../../lib/constant';
+import { CONTAINER_NODE, LAYOUT_MAP } from '../../lib/constant';
 
 import View from '../../view';
 
@@ -106,7 +106,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
         const mainData = this.data.get(node) as Undef<PercentData>;
         if (mainData) {
             const controller = this.controller as android.base.Controller<T>;
-            const constraint = LAYOUT_ANDROID.constraint;
+            const constraint = LAYOUT_MAP.constraint;
             const renderParent = node.renderParent as T;
             const templateId = node.anchorTarget.renderParent!.id;
             if (mainData.marginHorizontal) {
@@ -132,7 +132,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                         width: '0px',
                         height: 'wrap_content',
                         android: {
-                            [node.localizeString(STRING_ANDROID.MARGIN_LEFT)]: boxRect.left ? formatPX(boxRect.left) : ''
+                            [node.localizeString(LAYOUT_STRING.MARGIN_LEFT)]: boxRect.left ? formatPX(boxRect.left) : ''
                         },
                         app: {
                             layout_constraintHorizontal_chainStyle: styleBias ? 'packed' : '',
@@ -167,7 +167,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                         width: '0px',
                         height: 'wrap_content',
                         android: {
-                            [node.localizeString(STRING_ANDROID.MARGIN_RIGHT)]: boxRect.right ? formatPX(boxRect.right) : ''
+                            [node.localizeString(LAYOUT_STRING.MARGIN_RIGHT)]: boxRect.right ? formatPX(boxRect.right) : ''
                         },
                         app: {
                             layout_constraintHorizontal_chainStyle: rightAligned ? 'packed' : '',
@@ -246,7 +246,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                         width: 'wrap_content',
                         height: '0px',
                         android: {
-                            [STRING_ANDROID.MARGIN_TOP]: boxRect.top ? formatPX(boxRect.top) : ''
+                            [LAYOUT_STRING.MARGIN_TOP]: boxRect.top ? formatPX(boxRect.top) : ''
                         },
                         app: {
                             layout_constraintVertical_chainStyle: !bottomAligned ? 'packed' : '',
@@ -281,7 +281,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                         width: 'wrap_content',
                         height: '0px',
                         android: {
-                            [STRING_ANDROID.MARGIN_BOTTOM]: boxRect.bottom ? formatPX(boxRect.bottom) : ''
+                            [LAYOUT_STRING.MARGIN_BOTTOM]: boxRect.bottom ? formatPX(boxRect.bottom) : ''
                         },
                         app: {
                             layout_constraintVertical_chainStyle: bottomAligned ? 'packed' : '',

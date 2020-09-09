@@ -1,8 +1,8 @@
 import BOX_STANDARD = squared.base.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.NODE_ALIGNMENT;
-import STRING_ANDROID = android.base.STRING_ANDROID;
+import LAYOUT_STRING = android.base.LAYOUT_STRING;
 
-import { CONTAINER_ANDROID, CONTAINER_NODE } from '../lib/constant';
+import { CONTAINER_NODE, CONTAINER_TAGNAME } from '../lib/constant';
 
 import type View from '../view';
 
@@ -646,7 +646,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
             if (REGEXP_ALIGNSELF.test(alignSelf) || REGEXP_JUSTIFYSELF.test(justifySelf) || parent.layoutConstraint) {
                 renderAs = this.application.createNode(node.sessionId, { parent, innerWrapped: node });
                 renderAs.containerName = node.containerName;
-                renderAs.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
+                renderAs.setControlType(CONTAINER_TAGNAME.FRAME, CONTAINER_NODE.FRAME);
                 renderAs.inherit(node, 'base', 'initial');
                 renderAs.exclude({ resource: NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.ASSET, procedure: NODE_PROCEDURE.CUSTOMIZATION });
                 renderAs.resetBox(BOX_STANDARD.MARGIN);
@@ -996,8 +996,8 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                                 rowSpan,
                                 columnSpan,
                                 android: {
-                                    [horizontal ? node.localizeString(STRING_ANDROID.MARGIN_RIGHT) : 'bottom']: gapSize && (k + l) < unitData.length ? `@dimen/${Resource.insertStoredAsset('dimens', `${node.controlId}_cssgrid_${horizontal ? 'column' : 'row'}_gap`, formatPX(gapSize))}` : '',
-                                    [horizontal ? 'bottom' : node.localizeString(STRING_ANDROID.MARGIN_RIGHT)]: opposingMargin ? `@dimen/${Resource.insertStoredAsset('dimens', `${node.controlId}_cssgrid_${horizontal ? 'row' : 'column'}_gap`, formatPX(opposingMargin))}` : '',
+                                    [horizontal ? node.localizeString(LAYOUT_STRING.MARGIN_RIGHT) : 'bottom']: gapSize && (k + l) < unitData.length ? `@dimen/${Resource.insertStoredAsset('dimens', `${node.controlId}_cssgrid_${horizontal ? 'column' : 'row'}_gap`, formatPX(gapSize))}` : '',
+                                    [horizontal ? 'bottom' : node.localizeString(LAYOUT_STRING.MARGIN_RIGHT)]: opposingMargin ? `@dimen/${Resource.insertStoredAsset('dimens', `${node.controlId}_cssgrid_${horizontal ? 'row' : 'column'}_gap`, formatPX(opposingMargin))}` : '',
                                     layout_row,
                                     layout_column,
                                     layout_rowWeight,

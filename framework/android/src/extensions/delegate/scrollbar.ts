@@ -1,8 +1,8 @@
 import BOX_STANDARD = squared.base.BOX_STANDARD;
 import NODE_TEMPLATE = squared.base.NODE_TEMPLATE;
-import BUILD_ANDROID = android.base.BUILD_ANDROID;
+import BUILD_VERSION = android.base.BUILD_VERSION;
 
-import { CONTAINER_ANDROID, CONTAINER_ANDROID_X, CONTAINER_NODE } from '../../lib/constant';
+import { CONTAINER_NODE, CONTAINER_TAGNAME, CONTAINER_TAGNAME_X } from '../../lib/constant';
 
 import type View from '../../view';
 
@@ -22,8 +22,8 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
     public processNode(node: T, parent: T): Void<ExtensionResult<T>> {
         const overflow: string[] = [];
         const scrollView: T[] = [];
-        const horizontalScroll = CONTAINER_ANDROID.HORIZONTAL_SCROLL;
-        const verticalScroll = node.api < BUILD_ANDROID.Q ? CONTAINER_ANDROID.VERTICAL_SCROLL : CONTAINER_ANDROID_X.VERTICAL_SCROLL;
+        const horizontalScroll = CONTAINER_TAGNAME.HORIZONTAL_SCROLL;
+        const verticalScroll = node.api < BUILD_VERSION.Q ? CONTAINER_TAGNAME.VERTICAL_SCROLL : CONTAINER_TAGNAME_X.VERTICAL_SCROLL;
         const children: T[] = [];
         let boxWidth = NaN;
         if (node.overflowX && node.overflowY) {

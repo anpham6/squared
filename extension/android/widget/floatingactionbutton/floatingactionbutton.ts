@@ -1,13 +1,13 @@
 import BOX_STANDARD = squared.base.BOX_STANDARD;
 import NODE_TEMPLATE = squared.base.NODE_TEMPLATE;
-import BUILD_ANDROID = android.base.BUILD_ANDROID;
+import BUILD_VERSION = android.base.BUILD_VERSION;
 
 import { WIDGET_NAME } from '../lib/constant';
 
 type View = android.base.View;
 
 const { NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.constant;
-const { CONTAINER_NODE, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = android.lib.constant;
+const { CONTAINER_NODE, SUPPORT_TAGNAME, SUPPORT_TAGNAME_X } = android.lib.constant;
 
 const { parseColor } = squared.lib.color;
 const { assignEmptyValue } = squared.lib.util;
@@ -64,7 +64,7 @@ export default class FloatingActionButton<T extends View> extends squared.base.E
         if (src) {
             assignEmptyValue(options.app || (options.app = {}), 'srcCompat', `@drawable/${src}`);
         }
-        const controlName = node.api < BUILD_ANDROID.Q ? SUPPORT_ANDROID.FLOATING_ACTION_BUTTON : SUPPORT_ANDROID_X.FLOATING_ACTION_BUTTON;
+        const controlName = node.api < BUILD_VERSION.Q ? SUPPORT_TAGNAME.FLOATING_ACTION_BUTTON : SUPPORT_TAGNAME_X.FLOATING_ACTION_BUTTON;
         node.setControlType(controlName, CONTAINER_NODE.BUTTON);
         node.exclude({ resource: NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.ASSET });
         Resource.formatOptions(options, this.application.extensionManager.valueAsBoolean(android.base.EXT_ANDROID.RESOURCE_STRINGS, 'numberAsResource'));
@@ -128,7 +128,7 @@ export default class FloatingActionButton<T extends View> extends squared.base.E
         if (target) {
             const layoutGravity = node.android('layout_gravity');
             let anchor = parent.documentId;
-            if (parent.controlName === (node.api < BUILD_ANDROID.Q ? SUPPORT_ANDROID.TOOLBAR : SUPPORT_ANDROID_X.TOOLBAR)) {
+            if (parent.controlName === (node.api < BUILD_VERSION.Q ? SUPPORT_TAGNAME.TOOLBAR : SUPPORT_TAGNAME_X.TOOLBAR)) {
                 const value = parent.data<string>(WIDGET_NAME.TOOLBAR, 'outerParent');
                 if (value) {
                     anchor = value;

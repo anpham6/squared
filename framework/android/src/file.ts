@@ -1,6 +1,6 @@
-import BUILD_ANDROID = android.base.BUILD_ANDROID;
+import BUILD_VERSION = android.base.BUILD_VERSION;
 
-import { XMLNS_ANDROID } from './lib/constant';
+import { XML_NAMESPACE } from './lib/constant';
 
 import COLOR_TMPL from './template/resources/color';
 import DIMEN_TMPL from './template/resources/dimen';
@@ -234,7 +234,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         if (length) {
             const resource = this.resource;
             const { insertSpaces, outputDirectory, targetAPI } = this.userSettings;
-            const xmlns = XMLNS_ANDROID[targetAPI < BUILD_ANDROID.OREO ? 'app' : 'android'];
+            const xmlns = XML_NAMESPACE[targetAPI < BUILD_VERSION.OREO ? 'app' : 'android'];
             const directory = getOutputDirectory(outputDirectory);
             const pathname = this.directory.font;
             const items = Array.from(STORED.fonts.entries()).sort();
@@ -260,7 +260,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     }
                 }
                 const output = replaceTab(applyTemplate('font-family', FONTFAMILY_TMPL, [{ 'xmlns:android': xmlns, font: itemArray }]), insertSpaces);
-                result[j++] = targetAPI < BUILD_ANDROID.OREO ? output.replace(/\s+android:/g, ' app:') : output;
+                result[j++] = targetAPI < BUILD_VERSION.OREO ? output.replace(/\s+android:/g, ' app:') : output;
                 result[j++] = pathname;
                 result[j++] = `${name}.xml`;
             }

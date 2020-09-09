@@ -2,7 +2,7 @@ import BOX_STANDARD = squared.base.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.NODE_ALIGNMENT;
 import NODE_TEMPLATE = squared.base.NODE_TEMPLATE;
 
-import { CONTAINER_ANDROID, CONTAINER_NODE } from '../../lib/constant';
+import { CONTAINER_NODE, CONTAINER_TAGNAME } from '../../lib/constant';
 
 import View from '../../view';
 
@@ -268,7 +268,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                         const textBounds = { ...boxRect, width: getTextMetrics(value, fontSize, fontFamily).width + (value.length * adjustment) } as BoxRectDimension;
                         container.textBounds = textBounds;
                         container.unsafe('bounds', textBounds);
-                        container.setControlType(CONTAINER_ANDROID.TEXT, CONTAINER_NODE.TEXT);
+                        container.setControlType(CONTAINER_TAGNAME.TEXT, CONTAINER_NODE.TEXT);
                         container.exclude({ resource: NODE_RESOURCE.BOX_STYLE, section: APP_SECTION.DOM_TRAVERSE | APP_SECTION.EXTENSION });
                         return container;
                     };
@@ -318,7 +318,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                                     {
                                         type: NODE_TEMPLATE.XML,
                                         node: container,
-                                        controlName: CONTAINER_ANDROID.TEXT
+                                        controlName: CONTAINER_TAGNAME.TEXT
                                     } as NodeXmlTemplate<T>
                                 );
                             }

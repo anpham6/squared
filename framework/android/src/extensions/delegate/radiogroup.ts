@@ -1,7 +1,7 @@
 import NODE_ALIGNMENT = squared.base.NODE_ALIGNMENT;
 import NODE_TEMPLATE = squared.base.NODE_TEMPLATE;
 
-import { CONTAINER_ANDROID, CONTAINER_NODE } from '../../lib/constant';
+import { CONTAINER_NODE, CONTAINER_TAGNAME } from '../../lib/constant';
 
 import type View from '../../view';
 
@@ -55,7 +55,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
         if (length > 1) {
             const linearX = NodeUI.linearData(parent.children.slice(first, last + 1)).linearX;
             const container = this.controller.createNodeGroup(node, radiogroup, parent, { delegate: true });
-            const controlName = CONTAINER_ANDROID.RADIOGROUP;
+            const controlName = CONTAINER_TAGNAME.RADIOGROUP;
             container.setControlType(controlName, CONTAINER_NODE.LINEAR);
             if (linearX) {
                 container.addAlign(NODE_ALIGNMENT.HORIZONTAL | NODE_ALIGNMENT.SEGMENTED);
@@ -98,7 +98,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
             });
             length = radiogroup.length;
             if (length > 1 && radiogroup.includes(node)) {
-                const controlName = CONTAINER_ANDROID.RADIOGROUP;
+                const controlName = CONTAINER_TAGNAME.RADIOGROUP;
                 const data = new Map<T, number>();
                 for (let i = 0; i < length; ++i) {
                     const radio = radiogroup[i];

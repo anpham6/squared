@@ -1,10 +1,10 @@
 import BOX_STANDARD = squared.base.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.NODE_ALIGNMENT;
 import NODE_TEMPLATE = squared.base.NODE_TEMPLATE;
-import BUILD_ANDROID = android.base.BUILD_ANDROID;
+import BUILD_VERSION = android.base.BUILD_VERSION;
 import PLATFORM = squared.lib.constant.PLATFORM;
 
-import { CONTAINER_ANDROID, CONTAINER_ANDROID_X, CONTAINER_NODE } from './lib/constant';
+import { CONTAINER_NODE, CONTAINER_TAGNAME, CONTAINER_TAGNAME_X } from './lib/constant';
 
 import type Application from './application';
 
@@ -267,10 +267,10 @@ function canControlAscendItems(node: View) {
             return false;
     }
     switch (node.controlName) {
-        case CONTAINER_ANDROID.HORIZONTAL_SCROLL:
-        case CONTAINER_ANDROID.VERTICAL_SCROLL:
-        case CONTAINER_ANDROID_X.VERTICAL_SCROLL:
-        case CONTAINER_ANDROID.RADIOGROUP:
+        case CONTAINER_TAGNAME.HORIZONTAL_SCROLL:
+        case CONTAINER_TAGNAME.VERTICAL_SCROLL:
+        case CONTAINER_TAGNAME_X.VERTICAL_SCROLL:
+        case CONTAINER_TAGNAME.RADIOGROUP:
             return false;
         default:
             return true;
@@ -567,7 +567,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     public init() {
         const userSettings = this.userSettings;
         const dpiRatio = 160 / userSettings.resolutionDPI;
-        this._targetAPI = userSettings.targetAPI || BUILD_ANDROID.LATEST;
+        this._targetAPI = userSettings.targetAPI || BUILD_VERSION.LATEST;
         this._screenDimension = {
             width: userSettings.resolutionScreenWidth * dpiRatio,
             height: userSettings.resolutionScreenHeight * dpiRatio
@@ -1381,7 +1381,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 if (!node.pageFlow && parent === node.absoluteParent && (node.left < 0 && parent.css('overflowX') === 'hidden' || node.top < 0 && parent.css('overflowY') === 'hidden')) {
                     const container = this.application.createNode(node.sessionId, { parent, innerWrapped: node });
-                    container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
+                    container.setControlType(CONTAINER_TAGNAME.FRAME, CONTAINER_NODE.FRAME);
                     container.inherit(node, 'base');
                     container.cssCopy(node, 'position', 'zIndex');
                     container.exclude({ resource: NODE_RESOURCE.ALL, procedure: NODE_PROCEDURE.ALL });
@@ -1416,7 +1416,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         {
                             type: NODE_TEMPLATE.XML,
                             node: container,
-                            controlName: CONTAINER_ANDROID.FRAME
+                            controlName: CONTAINER_TAGNAME.FRAME
                         } as NodeXmlTemplate<T>
                     );
                     parent = container;
@@ -1648,7 +1648,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
         }
         switch (controlName) {
-            case CONTAINER_ANDROID.TEXT: {
+            case CONTAINER_TAGNAME.TEXT: {
                 let overflow = '';
                 if (node.overflowX) {
                     overflow += 'horizontal';
@@ -1699,19 +1699,19 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 break;
             }
-            case CONTAINER_ANDROID.BUTTON:
+            case CONTAINER_TAGNAME.BUTTON:
                 if (!node.hasHeight) {
                     node.android('minHeight', formatPX(Math.ceil(node.actualHeight)));
                 }
                 node.mergeGravity('gravity', 'center_vertical');
                 setReadOnly();
                 break;
-            case CONTAINER_ANDROID.SELECT:
-            case CONTAINER_ANDROID.CHECKBOX:
-            case CONTAINER_ANDROID.RADIO:
+            case CONTAINER_TAGNAME.SELECT:
+            case CONTAINER_TAGNAME.CHECKBOX:
+            case CONTAINER_TAGNAME.RADIO:
                 setReadOnly();
                 break;
-            case CONTAINER_ANDROID.EDIT:
+            case CONTAINER_TAGNAME.EDIT:
                 if (!node.companion && node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
                     [node.previousSibling, node.nextSibling].some((sibling: T) => {
                         if (sibling && sibling.visible && sibling.pageFlow) {
@@ -1729,18 +1729,18 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     });
                 }
                 if ((node.element as HTMLInputElement).list?.children.length) {
-                    controlName = CONTAINER_ANDROID.EDIT_LIST;
+                    controlName = CONTAINER_TAGNAME.EDIT_LIST;
                 }
-                else if (node.api >= BUILD_ANDROID.OREO) {
+                else if (node.api >= BUILD_VERSION.OREO) {
                     node.android('importantForAutofill', 'no');
                 }
                 setReadOnly();
-            case CONTAINER_ANDROID.RANGE:
+            case CONTAINER_TAGNAME.RANGE:
                 if (!node.hasPX('width')) {
                     setBoundsWidth();
                 }
                 break;
-            case CONTAINER_ANDROID.LINE:
+            case CONTAINER_TAGNAME.LINE:
                 if (!node.hasHeight) {
                     node.setLayoutHeight(formatPX(node.contentBoxHeight || 1));
                 }
@@ -1816,7 +1816,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             android,
             app: attrs.app
         };
-        const output = this.renderNodeStatic({ controlName: CONTAINER_ANDROID.SPACE, width, height }, result);
+        const output = this.renderNodeStatic({ controlName: CONTAINER_TAGNAME.SPACE, width, height }, result);
         attrs.documentId = result.documentId;
         return output;
     }
@@ -1849,7 +1849,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
             };
             const { api, anchorTarget } = unbound[length - 1];
-            const content = this.renderNodeStatic({ controlName: api < BUILD_ANDROID.Q ? CONTAINER_ANDROID.BARRIER : CONTAINER_ANDROID_X.BARRIER }, options);
+            const content = this.renderNodeStatic({ controlName: api < BUILD_VERSION.Q ? CONTAINER_TAGNAME.BARRIER : CONTAINER_TAGNAME_X.BARRIER }, options);
             switch (barrierDirection) {
                 case 'top':
                 case 'left':
@@ -3657,7 +3657,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     [attr]: percent ? location.toString() : `@dimen/${Resource.insertStoredAsset('dimens', 'constraint_guideline_' + (!opposing ? LT : RB), formatPX(location))}`
                 }
             };
-            this.addAfterOutsideTemplate(node.id, this.renderNodeStatic({ controlName: node.api < BUILD_ANDROID.Q ? CONTAINER_ANDROID.GUIDELINE : CONTAINER_ANDROID_X.GUIDELINE }, templateOptions), false);
+            this.addAfterOutsideTemplate(node.id, this.renderNodeStatic({ controlName: node.api < BUILD_VERSION.Q ? CONTAINER_TAGNAME.GUIDELINE : CONTAINER_TAGNAME_X.GUIDELINE }, templateOptions), false);
             const documentId = templateOptions.documentId;
             if (documentId) {
                 node.anchor(LT, documentId, true);

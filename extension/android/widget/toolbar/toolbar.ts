@@ -1,5 +1,5 @@
 import NODE_TEMPLATE = squared.base.NODE_TEMPLATE;
-import BUILD_ANDROID = android.base.BUILD_ANDROID;
+import BUILD_VERSION = android.base.BUILD_VERSION;
 import EXT_ANDROID = android.base.EXT_ANDROID;
 
 import { WIDGET_NAME } from '../lib/constant';
@@ -12,7 +12,7 @@ interface ToolbarThemeData {
 }
 
 const { NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.constant;
-const { CONTAINER_ANDROID, CONTAINER_NODE, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = android.lib.constant;
+const { CONTAINER_TAGNAME, CONTAINER_NODE, SUPPORT_TAGNAME, SUPPORT_TAGNAME_X } = android.lib.constant;
 
 const { formatPX } = squared.lib.css;
 const { getElementAsNode } = squared.lib.session;
@@ -107,15 +107,15 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
             controlName: string,
             appBarName: string,
             collapsingToolbarName: string;
-        if (node.api < BUILD_ANDROID.Q) {
-            controlName = SUPPORT_ANDROID.TOOLBAR;
-            appBarName = SUPPORT_ANDROID.APPBAR;
-            collapsingToolbarName = SUPPORT_ANDROID.COLLAPSING_TOOLBAR;
+        if (node.api < BUILD_VERSION.Q) {
+            controlName = SUPPORT_TAGNAME.TOOLBAR;
+            appBarName = SUPPORT_TAGNAME.APPBAR;
+            collapsingToolbarName = SUPPORT_TAGNAME.COLLAPSING_TOOLBAR;
         }
         else {
-            controlName = SUPPORT_ANDROID_X.TOOLBAR;
-            appBarName = SUPPORT_ANDROID_X.APPBAR;
-            collapsingToolbarName = SUPPORT_ANDROID_X.COLLAPSING_TOOLBAR;
+            controlName = SUPPORT_TAGNAME_X.TOOLBAR;
+            appBarName = SUPPORT_TAGNAME_X.APPBAR;
+            collapsingToolbarName = SUPPORT_TAGNAME_X.COLLAPSING_TOOLBAR;
         }
         if (hasCollapsingToolbar) {
             assignEmptyValue(app, 'layout_collapseMode', 'pin');
@@ -244,7 +244,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
                             node.id,
                             controller.renderNodeStatic(
                                 {
-                                    controlName: CONTAINER_ANDROID.IMAGE,
+                                    controlName: CONTAINER_TAGNAME.IMAGE,
                                     width: 'match_parent',
                                     height: 'match_parent'
                                 },

@@ -1,5 +1,5 @@
 import NODE_TEMPLATE = squared.base.NODE_TEMPLATE;
-import BUILD_ANDROID = android.base.BUILD_ANDROID;
+import BUILD_VERSION = android.base.BUILD_VERSION;
 import EXT_ANDROID = android.base.EXT_ANDROID;
 
 import { WIDGET_NAME } from '../lib/constant';
@@ -7,7 +7,7 @@ import { WIDGET_NAME } from '../lib/constant';
 type View = android.base.View;
 
 const { NODE_RESOURCE } = squared.base.lib.constant;
-const { CONTAINER_NODE, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = android.lib.constant;
+const { CONTAINER_NODE, SUPPORT_TAGNAME, SUPPORT_TAGNAME_X } = android.lib.constant;
 
 const { assignEmptyValue, cloneObject, includes, iterateArray } = squared.lib.util;
 const { createThemeAttribute, createViewAttribute } = android.lib.util;
@@ -57,7 +57,7 @@ export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> 
         }
         node.documentRoot = true;
         node.renderExclude = false;
-        const controlName = node.api < BUILD_ANDROID.Q ? SUPPORT_ANDROID.DRAWER : SUPPORT_ANDROID_X.DRAWER;
+        const controlName = node.api < BUILD_VERSION.Q ? SUPPORT_TAGNAME.DRAWER : SUPPORT_TAGNAME_X.DRAWER;
         node.setControlType(controlName, CONTAINER_NODE.BLOCK);
         node.exclude({ resource: NODE_RESOURCE.FONT_STYLE });
         node.apply(Resource.formatOptions(options, this.application.extensionManager.valueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberAsResource')));
@@ -99,7 +99,7 @@ export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> 
                         node.id,
                         controller.renderNodeStatic(
                             {
-                                controlName: node.api < BUILD_ANDROID.Q ? SUPPORT_ANDROID.NAVIGATION_VIEW : SUPPORT_ANDROID_X.NAVIGATION_VIEW,
+                                controlName: node.api < BUILD_VERSION.Q ? SUPPORT_TAGNAME.NAVIGATION_VIEW : SUPPORT_TAGNAME_X.NAVIGATION_VIEW,
                                 width: 'wrap_content',
                                 height: 'match_parent'
                             },
@@ -126,7 +126,7 @@ export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> 
         assignEmptyValue(options, 'parent', settings.manifestParentThemeName);
         assignEmptyValue(options.items, 'android:windowTranslucentStatus', 'true');
         Resource.addTheme(options);
-        if (api >= BUILD_ANDROID.LOLLIPOP) {
+        if (api >= BUILD_VERSION.LOLLIPOP) {
             const themeOptions = createThemeAttribute(cloneObject(options));
             const items: StringMap = {};
             assignEmptyValue(themeOptions.output, 'path', 'res/values-v21');

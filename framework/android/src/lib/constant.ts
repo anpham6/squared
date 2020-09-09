@@ -1,3 +1,12 @@
+export enum SCREEN_DENSITY {
+    LDPI = 120,
+    MDPI = 160,
+    HDPI = 240,
+    XHDPI = 320,
+    XXHDPI = 480,
+    XXXHDPI = 640
+}
+
 export enum CONTAINER_NODE {
     RADIO = 1,
     CHECKBOX,
@@ -23,65 +32,7 @@ export enum CONTAINER_NODE {
     UNKNOWN
 }
 
-export const CONTAINER_ANDROID = {
-    RADIO: 'RadioButton',
-    CHECKBOX: 'CheckBox',
-    EDIT_LIST: 'AutoCompleteTextView',
-    SELECT: 'Spinner',
-    EDIT: 'EditText',
-    SVG: 'ImageView',
-    IMAGE: 'ImageView',
-    BUTTON: 'Button',
-    RANGE: 'SeekBar',
-    METER: 'ProgressBar',
-    PROGRESS: 'ProgressBar',
-    TEXT: 'TextView',
-    LINE: 'View',
-    SPACE: 'Space',
-    FRAME: 'FrameLayout',
-    LINEAR: 'LinearLayout',
-    GRID: 'GridLayout',
-    RELATIVE: 'RelativeLayout',
-    WEBVIEW: 'WebView',
-    VIDEOVIEW: 'VideoView',
-    RADIOGROUP: 'RadioGroup',
-    HORIZONTAL_SCROLL: 'HorizontalScrollView',
-    VERTICAL_SCROLL: 'android.support.v4.widget.NestedScrollView',
-    CONSTRAINT: 'android.support.constraint.ConstraintLayout',
-    GUIDELINE: 'android.support.constraint.Guideline',
-    BARRIER: 'android.support.constraint.Barrier'
-};
-
-export const CONTAINER_ANDROID_X = {
-    VERTICAL_SCROLL: 'androidx.core.widget.NestedScrollView',
-    CONSTRAINT: 'androidx.constraintlayout.widget.ConstraintLayout',
-    GUIDELINE: 'androidx.constraintlayout.widget.Guideline',
-    BARRIER: 'androidx.constraintlayout.widget.Barrier'
-};
-
-export const SUPPORT_ANDROID = {
-    DRAWER: 'android.support.v4.widget.DrawerLayout',
-    NAVIGATION_VIEW: 'android.support.design.widget.NavigationView',
-    COORDINATOR: 'android.support.design.widget.CoordinatorLayout',
-    APPBAR: 'android.support.design.widget.AppBarLayout',
-    COLLAPSING_TOOLBAR: 'android.support.design.widget.CollapsingToolbarLayout',
-    TOOLBAR: 'android.support.v7.widget.Toolbar',
-    FLOATING_ACTION_BUTTON: 'android.support.design.widget.FloatingActionButton',
-    BOTTOM_NAVIGATION: 'android.support.design.widget.BottomNavigationView'
-};
-
-export const SUPPORT_ANDROID_X = {
-    DRAWER: 'androidx.drawerlayout.widget.DrawerLayout',
-    NAVIGATION_VIEW: 'com.google.android.material.navigation.NavigationView',
-    COORDINATOR: 'androidx.coordinatorlayout.widget.CoordinatorLayout',
-    APPBAR: 'com.google.android.material.appbar.AppBarLayout',
-    COLLAPSING_TOOLBAR: 'com.google.android.material.appbar.CollapsingToolbarLayout',
-    TOOLBAR: 'androidx.appcompat.widget.Toolbar',
-    FLOATING_ACTION_BUTTON: 'com.google.android.material.floatingactionbutton.FloatingActionButton',
-    BOTTOM_NAVIGATION: 'com.google.android.material.bottomnavigation.BottomNavigationView'
-};
-
-export const ELEMENT_ANDROID = {
+export const CONTAINER_ELEMENT = {
     PLAINTEXT: CONTAINER_NODE.TEXT,
     HR: CONTAINER_NODE.LINE,
     SVG: CONTAINER_NODE.SVG,
@@ -118,7 +69,65 @@ export const ELEMENT_ANDROID = {
     'INPUT_DATETIME_LOCAL': CONTAINER_NODE.EDIT
 };
 
-export const LAYOUT_ANDROID = {
+export const CONTAINER_TAGNAME = {
+    RADIO: 'RadioButton',
+    CHECKBOX: 'CheckBox',
+    EDIT_LIST: 'AutoCompleteTextView',
+    SELECT: 'Spinner',
+    EDIT: 'EditText',
+    SVG: 'ImageView',
+    IMAGE: 'ImageView',
+    BUTTON: 'Button',
+    RANGE: 'SeekBar',
+    METER: 'ProgressBar',
+    PROGRESS: 'ProgressBar',
+    TEXT: 'TextView',
+    LINE: 'View',
+    SPACE: 'Space',
+    FRAME: 'FrameLayout',
+    LINEAR: 'LinearLayout',
+    GRID: 'GridLayout',
+    RELATIVE: 'RelativeLayout',
+    WEBVIEW: 'WebView',
+    VIDEOVIEW: 'VideoView',
+    RADIOGROUP: 'RadioGroup',
+    HORIZONTAL_SCROLL: 'HorizontalScrollView',
+    VERTICAL_SCROLL: 'android.support.v4.widget.NestedScrollView',
+    CONSTRAINT: 'android.support.constraint.ConstraintLayout',
+    GUIDELINE: 'android.support.constraint.Guideline',
+    BARRIER: 'android.support.constraint.Barrier'
+};
+
+export const CONTAINER_TAGNAME_X = {
+    VERTICAL_SCROLL: 'androidx.core.widget.NestedScrollView',
+    CONSTRAINT: 'androidx.constraintlayout.widget.ConstraintLayout',
+    GUIDELINE: 'androidx.constraintlayout.widget.Guideline',
+    BARRIER: 'androidx.constraintlayout.widget.Barrier'
+};
+
+export const SUPPORT_TAGNAME = {
+    DRAWER: 'android.support.v4.widget.DrawerLayout',
+    NAVIGATION_VIEW: 'android.support.design.widget.NavigationView',
+    COORDINATOR: 'android.support.design.widget.CoordinatorLayout',
+    APPBAR: 'android.support.design.widget.AppBarLayout',
+    COLLAPSING_TOOLBAR: 'android.support.design.widget.CollapsingToolbarLayout',
+    TOOLBAR: 'android.support.v7.widget.Toolbar',
+    FLOATING_ACTION_BUTTON: 'android.support.design.widget.FloatingActionButton',
+    BOTTOM_NAVIGATION: 'android.support.design.widget.BottomNavigationView'
+};
+
+export const SUPPORT_TAGNAME_X = {
+    DRAWER: 'androidx.drawerlayout.widget.DrawerLayout',
+    NAVIGATION_VIEW: 'com.google.android.material.navigation.NavigationView',
+    COORDINATOR: 'androidx.coordinatorlayout.widget.CoordinatorLayout',
+    APPBAR: 'com.google.android.material.appbar.AppBarLayout',
+    COLLAPSING_TOOLBAR: 'com.google.android.material.appbar.CollapsingToolbarLayout',
+    TOOLBAR: 'androidx.appcompat.widget.Toolbar',
+    FLOATING_ACTION_BUTTON: 'com.google.android.material.floatingactionbutton.FloatingActionButton',
+    BOTTOM_NAVIGATION: 'com.google.android.material.bottomnavigation.BottomNavigationView'
+};
+
+export const LAYOUT_MAP = {
     relativeParent: {
         left: 'layout_alignParentLeft',
         top: 'layout_alignParentTop',
@@ -151,13 +160,7 @@ export const LAYOUT_ANDROID = {
     }
 };
 
-export const XMLNS_ANDROID = {
-    android: 'http://schemas.android.com/apk/res/android',
-    app: 'http://schemas.android.com/apk/res-auto',
-    aapt: 'http://schemas.android.com/aapt'
-};
-
-export const LOCALIZE_ANDROID = {
+export const LOCALIZE_MAP = {
     left: 'start',
     right: 'end',
     paddingLeft: 'paddingStart',
@@ -174,6 +177,12 @@ export const LOCALIZE_ANDROID = {
     layout_constraintRight_toRightOf: 'layout_constraintEnd_toEndOf',
     layout_constraintLeft_toRightOf: 'layout_constraintStart_toEndOf',
     layout_constraintRight_toLeftOf: 'layout_constraintEnd_toStartOf'
+};
+
+export const XML_NAMESPACE = {
+    android: 'http://schemas.android.com/apk/res/android',
+    app: 'http://schemas.android.com/apk/res-auto',
+    aapt: 'http://schemas.android.com/aapt'
 };
 
 export const RESERVED_JAVA = new Set([
