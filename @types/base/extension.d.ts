@@ -2,7 +2,7 @@ interface CssGridData<T> {
     children: T[];
     row: CssGridDirectionData;
     column: CssGridDirectionData;
-    emptyRows: Array<Undef<number[]>>;
+    emptyRows: Undef<number[]>[];
     rowData: Undef<T[]>[][];
     rowSpanMultiple: Undef<true>[];
     rowDirection: boolean;

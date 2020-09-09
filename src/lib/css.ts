@@ -3075,8 +3075,9 @@ export function calculateVar(element: StyleElement, value: string, options: Calc
             options.fontSize = getFontSize(element);
         }
         const result = calculate(output, options);
-        if (options.precision !== undefined) {
-            return options.precision === 0 ? Math.floor(result) : parseFloat(truncate(result, options.precision));
+        const precision = options.precision;
+        if (precision !== undefined) {
+            return precision === 0 ? Math.floor(result) : parseFloat(truncate(result, precision));
         }
         else if (options.roundValue) {
             return Math.round(result);

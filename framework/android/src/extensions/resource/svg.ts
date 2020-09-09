@@ -1009,14 +1009,14 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                 synchronized: Undef<boolean>,
                                 checkBefore: Undef<boolean>,
                                 useKeyframes = true;
-                            if (index <= 1 && items.some((item: SvgAnimate) => !!item.synchronized && item.synchronized.value !== '')) {
+                            if (index <= 1 && items.some((item: SvgAnimate) => item.synchronized && item.synchronized.value)) {
                                 if (!SvgBuild.isAnimateTransform(items[0])) {
                                     ordering = 'sequentially';
                                 }
                                 synchronized = true;
                                 useKeyframes = false;
                             }
-                            else if (index <= 1 && items.some((item: SvgAnimate) => !!item.synchronized && item.synchronized.value === '')) {
+                            else if (index <= 1 && items.some((item: SvgAnimate) => item.synchronized && !item.synchronized.value)) {
                                 ordering = 'sequentially';
                                 synchronized = true;
                                 checkBefore = true;
@@ -1062,7 +1062,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                         const propertyNames = getAttributePropertyName(item.attributeName);
                                         if (propertyNames) {
                                             const values = isColorType(item.attributeName) ? getColorValue(item.to, true) : item.to.trim().split(/\s+/);
-                                            if (values && values.length === propertyNames.length && !values.some(value => value === '')) {
+                                            if (values && values.length === propertyNames.length && !values.some(value => !value)) {
                                                 let companionBefore: Undef<PropertyValue[]>,
                                                     companionAfter: Undef<PropertyValue[]>;
                                                 for (let k = 0, q = propertyNames.length; k < q; ++k) {

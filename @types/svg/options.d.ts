@@ -2,18 +2,18 @@ interface SvgBuildOptions {
     exclude?: SvgTransformExclude;
     transforms?: SvgTransform[];
     residualHandler?: SvgTransformResidualHandler;
-    precision?: number;
     initialize?: boolean;
     targetElement?: SvgUseElement;
     keyframesMap?: KeyframesMap;
     contentMap?: StringMap;
+    precision?: number;
 }
 
 interface SvgSynchronizeOptions {
     keyTimeMode?: number;
     framesPerSecond?: number;
-    precision?: number;
     element?: SVGGraphicsElement;
+    precision?: number;
 }
 
 interface SvgTransformRefitOptions<T, U> {

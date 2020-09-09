@@ -336,7 +336,7 @@ let Node: serve.INode,
         fromSameOrigin(base: string, other: string) {
             const baseMatch = this.PATTERN_URL.exec(base);
             const otherMatch = this.PATTERN_URL.exec(other);
-            return !!baseMatch && !!otherMatch && baseMatch[1] === otherMatch[1];
+            return !!(baseMatch && otherMatch && baseMatch[1] === otherMatch[1]);
         }
         getBaseDirectory(location: string, asset: string): [string[], string[]] {
             const locationDir = location.split(/[\\/]/);
@@ -1747,12 +1747,11 @@ class FileManager implements serve.IFileManager {
         const assets = this.assets;
         const exclusions = assets[0].exclusions;
         const checkQueue = (file: ExpressAsset, filepath: string, content?: boolean) => {
-            const bundleIndex = file.bundleIndex;
-            if (bundleIndex !== undefined) {
+            if (file.bundleIndex !== undefined) {
                 if (!appending[filepath]) {
                     appending[filepath] = [];
                 }
-                if (bundleIndex === 0) {
+                if (file.bundleIndex === 0) {
                     return false;
                 }
                 else {

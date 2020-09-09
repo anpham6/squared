@@ -273,7 +273,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                     this._keySplines = null;
                     break;
                 case 'spline':
-                    this.keySplines = replaceMap(getNamedItem(animationElement, 'keySplines').split(';'), value => value.trim()).filter(value => value !== '');
+                    this.keySplines = replaceMap(getNamedItem(animationElement, 'keySplines').split(';'), value => value.trim()).filter(value => value);
                 case 'linear': {
                     const keyTimesBase = this.keyTimes;
                     if (keyTimesBase[0] !== 0 && lastItemOf(keyTimesBase) !== 1) {

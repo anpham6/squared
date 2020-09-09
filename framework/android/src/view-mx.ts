@@ -402,7 +402,7 @@ function ascendFlexibleHeight(node: T) {
         return true;
     }
     const parent = node.renderParent as Undef<T>;
-    return !!parent && (parent.hasHeight || parent.layoutConstraint && parent.blockHeight) || !!node.absoluteParent?.hasHeight;
+    return parent && (parent.hasHeight || parent.layoutConstraint && parent.blockHeight) || node.absoluteParent?.hasHeight;
 }
 
 function setLayoutDimension(node: T, value: string, horizontal: boolean, overwrite: boolean) {

@@ -120,7 +120,7 @@ const getFromToValue = (item?: SvgStrokeDash) => item ? item.start + ' ' + item.
 export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) implements squared.svg.SvgPath {
     public static extrapolate(attr: string, pathData: string, values: string[], transforms: Null<SvgTransform[]>, parent: Null<SvgShape>, precision?: number) {
         const container = parent && parent.parent;
-        const transformRefit = !!transforms && transforms.length > 0 || !!container && container.requireRefit;
+        const transformRefit = transforms && transforms.length > 0 || container && container.requireRefit;
         const result: string[] = [];
         let commands: Undef<SvgPathCommand[]>;
         for (let i = 0, length = values.length; i < length; ++i) {

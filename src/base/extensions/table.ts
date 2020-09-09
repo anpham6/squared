@@ -121,7 +121,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         const hasWidth = node.hasWidth;
         const colgroup = node.element!.querySelector('COLGROUP');
         const caption = node.find(item => item.tagName === 'CAPTION');
-        const captionBottom = !!caption && node.css('captionSide') === 'bottom';
+        const captionBottom = caption && node.css('captionSide') === 'bottom';
         const rowWidth: number[] = [];
         const mapBounds: number[] = [];
         const tableFilled: T[][] = [];
@@ -234,7 +234,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         break;
                 }
                 const columnWidth = td.cssInitial('width');
-                const reevaluate = mapWidth[j] === undefined || mapWidth[j] === 'auto';
+                const reevaluate = !mapWidth[j] || mapWidth[j] === 'auto';
                 const width = td.bounds.width;
                 if (i === 0 || reevaluate || !mainData.layoutFixed) {
                     if (columnWidth === '' || columnWidth === 'auto') {
@@ -246,13 +246,17 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             mapBounds[j] = width;
                         }
                     }
+                    else if (reevaluate) {
+                        mapWidth[j] = columnWidth;
+                        mapBounds[j] = width;
+                    }
                     else {
                         const percent = isPercent(columnWidth);
                         const length = isLength(mapWidth[j]);
-                        if (reevaluate || width < mapBounds[j] || width === mapBounds[j] && (length && percent || percent && isPercent(mapWidth[j]) && td.parseWidth(columnWidth) >= td.parseWidth(mapWidth[j]) || length && isLength(columnWidth) && td.parseWidth(columnWidth) > td.parseWidth(mapWidth[j]))) {
+                        if (width < mapBounds[j] || width === mapBounds[j] && (percent && length || percent && isPercent(mapWidth[j]) && td.parseWidth(columnWidth) >= td.parseWidth(mapWidth[j]) || length && isLength(columnWidth) && td.parseWidth(columnWidth) > td.parseWidth(mapWidth[j]))) {
                             mapWidth[j] = columnWidth;
                         }
-                        if (reevaluate || element.colSpan === 1) {
+                        if (element.colSpan === 1) {
                             mapBounds[j] = width;
                         }
                     }

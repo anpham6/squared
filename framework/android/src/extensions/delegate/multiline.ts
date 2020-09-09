@@ -47,7 +47,7 @@ function isTextElement(node: View) {
     return node.textElement && !(node.tagName === 'LABEL' && node.toElementString('htmlFor') !== '');
 }
 
-const checkBreakable = (node: View, checkMargin?: boolean) => node.plainText || node.naturalChild && node.naturalElements.length === 0 && !node.floating && node.innerAfter === undefined && node.innerBefore === undefined && node.isUnstyled(checkMargin);
+const checkBreakable = (node: View, checkMargin?: boolean) => node.plainText || node.naturalChild && node.naturalElements.length === 0 && !node.floating && !node.innerAfter && !node.innerBefore && node.isUnstyled(checkMargin);
 const hasTextIndent = (node: View) => node.textElement && node.textIndent < 0 && node.naturalElement && !node.floating;
 
 export default class Multiline<T extends View> extends squared.base.ExtensionUI<T> {
@@ -137,7 +137,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                     else if (isTextElement(child) && !(child.lineBreakLeading && (i === length - 1 || child.lineBreakTrailing) || i === 0 && child.lineBreakTrailing)) {
                         if (checkBreakable(child) && !child.preserveWhiteSpace) {
                             if (valid === undefined) {
-                                valid = !!node.firstLineStyle || node.textAlignLast !== '';
+                                valid = !!(node.firstLineStyle || node.textAlignLast);
                             }
                             if (child.multiline) {
                                 ++j;

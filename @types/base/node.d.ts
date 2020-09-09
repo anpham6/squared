@@ -133,7 +133,7 @@ interface QueryData {
 }
 
 interface QueryAttribute extends StringValue {
+    caseInsensitive: boolean;
     symbol?: string;
     endsWith?: boolean;
-    caseInsensitive: boolean;
 }

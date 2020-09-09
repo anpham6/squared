@@ -1988,7 +1988,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             append: true,
             innerWrapped: node,
             delegate: true,
-            cascade: !!options.cascade || !!children && children.length > 0 && !node.rootElement
+            cascade: !!(options.cascade || children && children.length > 0 && !node.rootElement)
         });
         container.inherit(node, 'base', 'alignment');
         if (node.documentRoot) {
@@ -2307,7 +2307,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 lastItemOf(rowsAll)![2] = true;
                             }
                             items.push(item);
-                            if (siblings && siblings.some(element => !!getElementAsNode<T>(element, item.sessionId) || causesLineBreak(element))) {
+                            if (siblings && siblings.some(element => getElementAsNode<T>(element, item.sessionId) || causesLineBreak(element))) {
                                 const betweenStart = getRangeClientRect(siblings[0]);
                                 if (betweenStart && !betweenStart.numberOfLines) {
                                     const betweenEnd = siblings.length > 1 && getRangeClientRect(siblings.pop()!);
@@ -3241,7 +3241,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (i === 1 || previousAlignParent) {
                     alignParent =
                         !rowStart.pageFlow && (!rowStart.autoPosition || q === 1) ||
-                        !!previousRow && (
+                        previousRow && (
                             !rowStart.floating && previousRow.every(item => item.floating || !item.pageFlow) && (clearMap.size === 0 || !partition.some((item: T) => checkClearMap(item))) ||
                             previousRow.every(item => !item.pageFlow)
                         );

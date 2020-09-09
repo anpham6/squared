@@ -355,7 +355,7 @@ function createLayerList(boxStyle: BoxStyle, images: UndefNull<BackgroundImageDa
     const item: LayerData[] = [];
     const result: LayerList[] = [{ 'xmlns:android': XMLNS_ANDROID.android, item }];
     const solid = !borderOnly && getBackgroundColor(boxStyle.backgroundColor);
-    if (solid && (!images || !images.find(image => !!image.gradient))) {
+    if (solid && (!images || !images.find(image => image.gradient))) {
         item.push({ shape: { 'android:shape': 'rectangle', solid, corners } });
     }
     if (images) {
@@ -540,7 +540,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     indentWidth = width === 2 && outline.style === 'double' ? 3 : width;
                 }
                 let [shapeData, layerList] = this.getDrawableBorder(stored, images, indentWidth);
-                const emptyBackground = shapeData === null && layerList === null;
+                const emptyBackground = !shapeData && !layerList;
                 if (outline && (drawOutline || emptyBackground)) {
                     const [outlineShapeData, outlineLayerList] = this.getDrawableBorder(stored, emptyBackground ? images : null, 0, !emptyBackground, outline);
                     if (outlineShapeData) {

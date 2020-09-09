@@ -1360,7 +1360,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                     [keyTimes, values, keySplines] = cloneKeyTimes(item);
                                                     const r = data.length;
                                                     if (item.evaluateStart) {
-                                                        const pending = incomplete.concat(data.slice(j + 1, r)).filter(previous => !!previous.animationElement && previous.delay < maxThreadTime);
+                                                        const pending = incomplete.concat(data.slice(j + 1, r)).filter(previous => previous.animationElement && previous.delay < maxThreadTime);
                                                         const s = pending.length;
                                                         if (s > 0) {
                                                             sortEvaluateStart(pending, actualMaxTime);
@@ -1375,7 +1375,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                     }
                                                     if (item.evaluateEnd) {
                                                         if (item.getIntervalEndTime(actualMaxTime) < maxThreadTime && (incomplete.length || j < r - 1)) {
-                                                            const pending = incomplete.filter(previous => !!previous.animationElement);
+                                                            const pending = incomplete.filter(previous => previous.animationElement);
                                                             for (let l = j + 1; l < r; ++l) {
                                                                 const previous = data[l];
                                                                 if (previous.animationElement) {

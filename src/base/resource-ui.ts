@@ -293,7 +293,7 @@ function newBoxRectPosition(orientation = ['left', 'top']) {
 
 const convertLength = (value: string, dimension: number, options?: ParseUnitOptions) => isPercent(value) ? Math.round((parseFloat(value) || 0) / 100 * dimension) : parseUnit(value, options);
 const convertPercent = (value: string, dimension: number, options?: ParseUnitOptions) => isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, options) / dimension;
-const checkPreviousSibling = (node: Undef<NodeUI>) => node === undefined || node.lineBreak || node.floating || node.plainText && CHAR_TRAILINGSPACE.test(node.textContent);
+const checkPreviousSibling = (node: Undef<NodeUI>) => !node || node.lineBreak || node.floating || node.plainText && CHAR_TRAILINGSPACE.test(node.textContent);
 
 export default class ResourceUI<T extends NodeUI> extends Resource<T> implements squared.base.ResourceUI<T> {
     public static STRING_SPACE = '&#160;';

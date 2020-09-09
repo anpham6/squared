@@ -45,7 +45,7 @@ function setButtonStyle(styleMap: StringMap, applied: boolean, defaultColor: str
     if (!styleMap.textAlign) {
         styleMap.textAlign = 'center';
     }
-    if (!styleMap.padding && !(CSS_PROPERTIES.padding.value as string[]).some(attr => !!styleMap[attr])) {
+    if (!styleMap.padding && !(CSS_PROPERTIES.padding.value as string[]).some(attr => styleMap[attr])) {
         styleMap.paddingTop = '2px';
         styleMap.paddingRight = '6px';
         styleMap.paddingBottom = '3px';
@@ -511,7 +511,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                             if (outsideX && (node.left < 0 || node.right > 0) ||
                                                 outsideY && (node.top < 0 || node.bottom !== 0) ||
                                                 outsideX && outsideY && (!parent.pageFlow || parent.actualParent!.documentRoot && (node.top > 0 || node.left > 0)) ||
-                                                !overflowX && ((node.left < 0 || node.right > 0) && Math.ceil(node.bounds.right) < linear.left || (node.left > 0 || node.right < 0) && Math.floor(node.bounds.left) > linear.right) && !!parent.find(item => item.pageFlow) ||
+                                                !overflowX && ((node.left < 0 || node.right > 0) && Math.ceil(node.bounds.right) < linear.left || (node.left > 0 || node.right < 0) && Math.floor(node.bounds.left) > linear.right) && parent.find(item => item.pageFlow) ||
                                                 !overflowY && ((node.top < 0 || node.bottom > 0) && Math.ceil(node.bounds.bottom) < parent.bounds.top || (node.top > 0 || node.bottom < 0) && Math.floor(node.bounds.top) > parent.bounds.bottom) ||
                                                 !overflowX && !overflowY && !node.intersectX(linear) && !node.intersectY(linear))
                                             {
@@ -701,7 +701,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             }
         }
         for (const node of altered) {
-            const layers: Array<T[]> = [];
+            const layers: T[][] = [];
             let maxIndex = -1;
             node.each((item: T) => {
                 if (item.containerIndex === Infinity) {

@@ -22,7 +22,7 @@ type Main = squared.base.Application<Node>;
 type Framework = squared.base.AppFramework<Node>;
 type Extension = squared.base.Extension<Node>;
 type ExtensionManager = squared.base.ExtensionManager<Node>;
-type ExtendPrototypeMap = ObjectMap<FunctionType<any> | { get?: () => any, set?: (value: any) => void }>;
+type ExtendPrototypeMap = ObjectMap<FunctionType<any> | { set?: (value: any) => void, get?: () => any }>;
 
 const addQueue = new Set<ExtensionRequest>();
 const removeQueue = new Set<ExtensionRequest>();
@@ -109,7 +109,7 @@ function loadExtensions() {
     }
 }
 
-function findElement(element: HTMLElement, sync: boolean, cache: boolean) {
+function findElement(element: HTMLElement, sync?: boolean, cache?: boolean) {
     if (cache) {
         const result = main!.elementMap.get(element);
         if (result) {
@@ -136,7 +136,7 @@ function findElementAll(query: NodeListOf<Element>, length: number) {
     return !incomplete ? result : result.filter(item => item);
 }
 
-async function findElementAsync(element: HTMLElement, cache: boolean) {
+async function findElementAsync(element: HTMLElement, cache?: boolean) {
     if (cache) {
         const result = main!.elementMap.get(element);
         if (result) {
@@ -164,7 +164,7 @@ async function findElementAllAsync(query: NodeListOf<Element>, length: number) {
 }
 
 const checkWritable = (app: Null<Main>): app is Main => app ? !app.initializing && app.length > 0 : false;
-const checkFrom = (value: string, options: FileActionOptions) => checkWritable(main) && util.isString(value) && util.isPlainObject<FileActionOptions>(options) && !!options.assets && options.assets.length > 0;
+const checkFrom = (value: string, options: FileActionOptions) => util.isPlainObject<FileActionOptions>(options) && options.assets ? checkWritable(main) && util.isString(value) && options.assets.length > 0 : false;
 const findExtension = (value: string) => extensionManager!.get(value, true) || util.findSet(extensionManager!.cache, item => item.name === value) || util.findSet(extensionCache, item => item.name === value);
 
 export function setHostname(value: string) {
@@ -475,7 +475,7 @@ export function copyFiles(value: string, options: FileActionOptions) {
     return session.frameworkNotInstalled();
 }
 
-export function getElementById(value: string, sync = false, cache = true) {
+export function getElementById(value: string, sync?: boolean, cache = true) {
     if (main) {
         const element = document.getElementById(value);
         if (element) {
@@ -485,7 +485,7 @@ export function getElementById(value: string, sync = false, cache = true) {
     return sync ? null : Promise.resolve(null);
 }
 
-export function querySelector(value: string, sync = false, cache = true) {
+export function querySelector(value: string, sync?: boolean, cache = true) {
     if (main) {
         const element = document.querySelector(value);
         if (element) {
@@ -495,7 +495,7 @@ export function querySelector(value: string, sync = false, cache = true) {
     return sync ? null : Promise.resolve(null);
 }
 
-export function querySelectorAll(value: string, sync = false, cache = true) {
+export function querySelectorAll(value: string, sync?: boolean, cache = true) {
     if (main) {
         const query = document.querySelectorAll(value);
         const length = query.length;
@@ -523,7 +523,7 @@ export function querySelectorAll(value: string, sync = false, cache = true) {
     return sync ? [] : Promise.resolve([]);
 }
 
-export function fromElement(element: HTMLElement, sync = false, cache = false) {
+export function fromElement(element: HTMLElement, sync?: boolean, cache?: boolean) {
     if (main) {
         return findElement(element, sync, cache);
     }

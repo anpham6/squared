@@ -564,7 +564,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public useElement(element: HTMLElement) {
         const use = this.getDatasetName('use', element);
-        return isString(use) && use.split(',').some(value => !!this.extensionManager.get(value.trim()));
+        return use ? use.split(',').some(value => this.extensionManager.get(value.trim())) : false;
     }
 
     public toString() {
@@ -1166,7 +1166,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const { clearMap, controllerHandler } = this;
         const { containerType, alignmentType } = controllerHandler.containerTypeVertical;
         const verticalMargin = controllerHandler.containerTypeVerticalMargin;
-        const layerIndex: Array<T[] | T[][]> = [];
+        const layerIndex: (T[] | T[][])[] = [];
         const inlineAbove: T[] = [];
         const leftAbove: T[] = [];
         const rightAbove: T[] = [];

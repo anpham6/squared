@@ -2186,7 +2186,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get bounds() {
-        return this._bounds || this.setBounds(false) || this.boundingClientRect as BoxRectDimension || newBoxRectDimension();
+        return this._bounds || this.setBounds(false) || newBoxRectDimension();
     }
 
     get linear() {
@@ -2542,7 +2542,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get bottomAligned() {
         const result = this._cache.bottomAligned;
-        return result === undefined ? this._cache.bottomAligned = !this.pageFlow ? this.hasPX('bottom') && !this.hasPX('top') : !!this.actualParent?.hasHeight && !!this.autoMargin.top : result;
+        return result === undefined ? this._cache.bottomAligned = !this.pageFlow ? this.hasPX('bottom') && !this.hasPX('top') : !!(this.actualParent?.hasHeight && this.autoMargin.top) : result;
     }
 
     get autoMargin() {
@@ -3004,12 +3004,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (this.styleElement) {
             return this._element!.getBoundingClientRect();
         }
-        const bounds = this._bounds || this.setBounds(false);
-        if (bounds) {
-            const domRect = assignRect(bounds) as DOMRect;
-            domRect.x = domRect.left;
-            domRect.y = domRect.top;
-            return domRect;
+        else if (this.plainText && this.naturalChild) {
+            const rect = getRangeClientRect(this._element!) as DOMRect;
+            rect.x = rect.left;
+            rect.y = rect.top;
+            return rect;
         }
         return null;
     }

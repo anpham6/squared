@@ -8,7 +8,7 @@ const { getNamedItem } = squared.lib.dom;
 const { truncateFraction } = squared.lib.math;
 const { isEqual, isNumber, iterateArray, lastItemOf, plainMap } = squared.lib.util;
 
-const equalPoint = (item: Undef<SvgOffsetPath>, time: number, point: DOMPoint, rotate: number) => !!item && item.key === time && item.rotate === rotate && isEqual(item.value, point);
+const equalPoint = (item: Undef<SvgOffsetPath>, time: number, point: DOMPoint, rotate: number) => item && item.key === time && item.rotate === rotate && isEqual(item.value, point);
 
 export default class SvgAnimateMotion extends SvgAnimateTransform implements squared.svg.SvgAnimateMotion {
     public path = '';

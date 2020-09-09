@@ -18,9 +18,9 @@ b340a823755a3fc6b865a71456244d20  ./app/src/main/res/drawable/logo.png
 cc29508fa0534833161f19213ad4cb59  ./app/src/main/res/drawable/logo_small.png
 06e2dfea6a6f0863d8957ea38f0df65c  ./app/src/main/res/drawable/socks_horses.png
 26b1ec306156e58ff5c90d7b8efdcf57  ./app/src/main/res/drawable/ul_constraintlayout_13.xml
-48fad903eb97ed8c5ae08929d7042b30  ./app/src/main/res/layout/activity_main.xml
+358e2c5ed18cd471251d84bba8da8e9e  ./app/src/main/res/layout/activity_main.xml
 c642f7c8dc38cf64ff6246660577f68f  ./app/src/main/res/values/colors.xml
-8a27ae0694aa3c45a91f44a5d20dc56e  ./app/src/main/res/values/dimens.xml
+c5407e9514b50795ea90a4cb207ab9ae  ./app/src/main/res/values/dimens.xml
 bf50a64d8cf4f6e58bde66ccaa57e32e  ./app/src/main/res/values/strings.xml
 e4b7b8d520bcacdac5eb55747304c946  ./app/src/main/res/values/styles.xml
 52c67f62aa6c536ce4abf014773d4e49  ./app/src/main/res/values/themes.xml

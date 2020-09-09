@@ -1444,7 +1444,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         const result = this._cacheState.naturalChild;
         if (result === undefined) {
             const element = this._element;
-            return this._cacheState.naturalChild = element !== null && (element.parentElement !== null || element === document.documentElement);
+            return this._cacheState.naturalChild = !!(element && (element.parentElement || element === document.documentElement));
         }
         return result;
     }
