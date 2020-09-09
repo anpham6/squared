@@ -4,21 +4,13 @@
   "disk_write": false,
   "unc_read": false,
   "unc_write": false,
-  "cors": {
-    "origin": false
-  },
-  "request_post_limit": "250mb",
-  "gzip_level": "9",
-  "brotli_quality": "11",
-  "jpeg_quality": "100",
-  "tinypng_api_key": "",
   "env": "development",
   "port": {
     "production": "80",
     "development": "3000"
   },
   "routing": {
-    "shared": [
+    "__SHARED__": [
       { "mount": "html", "path": "/" },
       { "mount": "dist", "path": "/dist" }
     ],
@@ -28,6 +20,14 @@
       { "mount": "temp", "path": "/temp" }
     ]
   },
+  "cors": {
+    "origin": false
+  },
+  "request_post_limit": "250mb",
+  "gzip_level": "9",
+  "brotli_quality": "11",
+  "jpeg_quality": "100",
+  "tinypng_api_key": "",
   "external": {
     "html": {
       "prettier": {

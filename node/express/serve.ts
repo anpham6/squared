@@ -45,15 +45,16 @@ let Node: serve.INode,
         BROTLI_QUALITY = 11,
         JPEG_QUALITY = 100,
         TINIFY_API_KEY = '',
-        ROUTING: Undef<serve.Routing>,
-        CORS: Undef<cors.CorsOptions>,
-        ENV: serve.Environment = process.env.NODE_ENV?.toLowerCase().startsWith('prod') ? 'production' : 'development',
-        PORT = process.env.PORT || '3000',
-        EXTERNAL: Undef<ExternalModules>;
+        SETTINGS_ENV: Undef<string>,
+        SETTINGS_PORT: Undef<StringMap>,
+        SETTINGS_ROUTING: Undef<serve.Routing>,
+        SETTINGS_CORS: Undef<cors.CorsOptions>,
+        SETTINGS_EXTERNAL: Undef<ExternalModules>,
+        ENV = process.env.NODE_ENV,
+        PORT = process.env.PORT;
 
     try {
         const settings = require('./squared.settings.json') as serve.Settings;
-
         const {
             disk_read,
             disk_write,
@@ -63,27 +64,15 @@ let Node: serve.INode,
             gzip_level,
             brotli_quality,
             jpeg_quality,
-            tinypng_api_key,
-            env,
-            port
+            tinypng_api_key
         } = settings;
 
-        ({ cors: CORS, external: EXTERNAL, routing: ROUTING } = settings);
+        ({ env: SETTINGS_ENV, port: SETTINGS_PORT, cors: SETTINGS_CORS, external: SETTINGS_EXTERNAL, routing: SETTINGS_ROUTING } = settings);
 
         DISK_READ = disk_read === true || disk_read === 'true';
         DISK_WRITE = disk_write === true || disk_write === 'true';
         UNC_READ = unc_read === true || unc_read === 'true';
         UNC_WRITE = unc_write === true || unc_write === 'true';
-
-        if (!process.env.NODE_ENV && env && env.startsWith('prod')) {
-            ENV = 'production';
-        }
-        if (!process.env.PORT && port) {
-            const value = parseInt(port[ENV] as string);
-            if (!isNaN(value) && value >= 0) {
-                PORT = value.toString();
-            }
-        }
 
         const gzip = parseInt(gzip_level as string);
         const brotli = parseInt(brotli_quality as string);
@@ -153,20 +142,18 @@ let Node: serve.INode,
             alias: 'e',
             type: 'string',
             description: 'Set environment <prod|dev>',
-            default: ENV,
             nargs: 1
         })
         .option('port', {
             alias: 'p',
             type: 'number',
-            description: 'Port number for HTTP',
-            default: parseInt(PORT),
+            description: 'Set HTTP port number',
             nargs: 1
         })
         .option('cors', {
             alias: 'c',
             type: 'string',
-            description: 'Enable CORS access to <origin>',
+            description: 'Enable CORS access to <origin|"*">',
             nargs: 1
         })
         .epilogue('For more information and source: https://github.com/anpham6/squared')
@@ -204,12 +191,20 @@ let Node: serve.INode,
             }
         }
     }
-    ENV = argv.env.startsWith('prod') ? 'production' : 'development';
 
-    if (ROUTING) {
+    if (SETTINGS_ROUTING) {
+        if (argv.env && SETTINGS_ROUTING[argv.env.trim()]) {
+            ENV = argv.env.trim();
+        }
+        else if (ENV && !SETTINGS_ROUTING[ENV]) {
+            ENV = SETTINGS_ENV;
+        }
+        if (!ENV || !SETTINGS_ROUTING[ENV]) {
+            ENV = 'development';
+        }
         console.log('');
         let mounted = 0;
-        for (const routes of [ROUTING.shared, ROUTING[ENV]]) {
+        for (const routes of [SETTINGS_ROUTING['__SHARED__'], SETTINGS_ROUTING[ENV]]) {
             if (Array.isArray(routes)) {
                 for (const route of routes) {
                     const { path: dirname, mount } = route;
@@ -230,6 +225,9 @@ let Node: serve.INode,
         console.log(`\n${chalk.bold(mounted)} directories were mounted.\n`);
     }
     else {
+        if (!ENV) {
+            ENV = 'development';
+        }
         app.use(body_parser.json({ limit: '250mb' }));
         app.use('/', express.static(path.join(__dirname, 'html')));
         app.use('/dist', express.static(path.join(__dirname, 'dist')));
@@ -240,6 +238,17 @@ let Node: serve.INode,
         console.log(`${chalk.bold.bgGrey.blackBright('FAIL')}: Routing not defined.`);
     }
 
+    {
+        if (argv.port) {
+            PORT = argv.port.toString();
+        }
+        else if (!PORT && SETTINGS_PORT) {
+            PORT = SETTINGS_PORT[ENV];
+        }
+        const port = parseInt(PORT!);
+        PORT = !isNaN(port) && port >= 0 ? port.toString() : '3000';
+    }
+
     console.log(`${chalk.blue('DISK')}: ${DISK_READ ? chalk.green('+') : chalk.red('-')}r ${DISK_WRITE ? chalk.green('+') : chalk.red('-')}w`);
     console.log(`${chalk.blue(' UNC')}: ${UNC_READ ? chalk.green('+') : chalk.red('-')}r ${UNC_WRITE ? chalk.green('+') : chalk.red('-')}w`);
 
@@ -247,19 +256,16 @@ let Node: serve.INode,
         app.use(cors({ origin: argv.cors }));
         app.options('*', cors());
     }
-    else if (CORS && CORS.origin) {
-        app.use(cors(CORS));
+    else if (SETTINGS_CORS && SETTINGS_CORS.origin) {
+        app.use(cors(SETTINGS_CORS));
         app.options('*', cors());
-        argv.cors = typeof CORS.origin === 'string' ? CORS.origin : 'true';
-    }
-    if (isNaN(argv.port)) {
-        argv.port = parseInt(PORT);
+        argv.cors = typeof SETTINGS_CORS.origin === 'string' ? SETTINGS_CORS.origin : 'true';
     }
 
     console.log(`${chalk.blue('CORS')}: ${argv.cors ? chalk.green(argv.cors) : chalk.grey('disabled')}`);
 
     app.use(body_parser.urlencoded({ extended: true }));
-    app.listen(argv.port, () => console.log(`\n${chalk[ENV === 'production' ? 'green' : 'yellow'](ENV.toUpperCase())}: Express server listening on port ${chalk.bold(argv.port)}\n`));
+    app.listen(PORT, () => console.log(`\n${chalk[ENV!.startsWith('prod') ? 'green' : 'yellow'](ENV!.toUpperCase())}: Express server listening on port ${chalk.bold(PORT)}\n`));
 
     Node = new class implements serve.INode {
         public major: number;
@@ -798,7 +804,7 @@ let Node: serve.INode,
             return output;
         }
     }
-    (EXTERNAL);
+    (SETTINGS_EXTERNAL);
 
     Image = new class implements serve.IImage {
         constructor() {}

@@ -108,14 +108,12 @@ interface Settings {
     jpeg_quality?: NumString;
     tinypng_api_key?: string;
     env?: string;
-    port?: { development?: string; production?: string };
+    port?: StringMap;
     routing?: Routing;
     external?: ExternalModules;
 }
 
 interface Arguments {
-    env: "prod" | "dev";
-    port: number;
     accessAll?: boolean;
     accessDisk?: boolean;
     accessUnc?: boolean;
@@ -123,15 +121,13 @@ interface Arguments {
     diskWrite?: boolean;
     uncRead?: boolean;
     uncWrite?: boolean;
+    env?: string;
+    port?: number;
     cors?: string;
 }
 
-type Environment = "production" | "development";
-
 interface Routing {
-    shared?: Route[];
-    production?: Route[];
-    development?: Route[];
+    [key: string]: Route[];
 }
 
 interface Route {
