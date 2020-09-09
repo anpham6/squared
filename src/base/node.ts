@@ -748,11 +748,24 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         for (let attr in styleMap) {
             let value = styleMap[attr]!;
             const alias = checkWritingMode(attr, writingMode);
-            if (alias !== '') {
-                if (!styleMap[alias]) {
-                    attr = alias;
+            if (alias !== attr) {
+                if (typeof alias === 'string') {
+                    if (!styleMap[alias]) {
+                        attr = alias;
+                    }
+                    else {
+                        continue;
+                    }
                 }
                 else {
+                    for (const attrAlt of alias) {
+                        if (!styleMap[attrAlt]) {
+                            const valueAlt = checkStyleValue(element, attrAlt, value);
+                            if (valueAlt !== '') {
+                                result[attrAlt] = valueAlt;
+                            }
+                        }
+                    }
                     continue;
                 }
             }

@@ -1691,6 +1691,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     case 'pre':
                         node.android('breakStrategy', 'simple');
                         break;
+                    default:
+                        if (node.css('overflowWrap') === 'break-word') {
+                            node.android('breakStrategy', 'high_quality');
+                        }
+                        break;
                 }
                 break;
             }

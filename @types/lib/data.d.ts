@@ -6,6 +6,7 @@ interface CssPropertyData {
     name?: string;
     readonly trait: number;
     readonly value: string | string[];
+    readonly alias?: string;
     readonly valueOfNone?: string;
 }
 
