@@ -139,10 +139,7 @@ export function createViewAttribute(data?: StandardMap) {
             Object.assign(options.android, data.android);
         }
         if (data.app) {
-            if (!options.app) {
-                options.app = {};
-            }
-            Object.assign(options.app, data.app);
+            Object.assign(options.app || (options.app = {}), data.app);
         }
     }
     return options;

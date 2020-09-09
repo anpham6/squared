@@ -25,8 +25,8 @@ interface IControllerSettingsDeviationsUI extends ControllerSettingsDeviationsUI
     legendBottomOffset: number;
 }
 
-interface IResourceStoredMap extends ResourceStoredMap {
-    styles: Map<string, StyleAttribute>;
+interface IResourceStoredMap<T> extends ResourceStoredMap {
+    styles: Map<string, StyleAttribute<T>>;
     themes: Map<string, Map<string, ThemeAttribute>>;
     dimens: Map<string, string>;
     drawables: Map<string, string>;
@@ -49,11 +49,11 @@ interface RenderNodeStaticAttribute extends Partial<Dimension<string>> {
 interface GroupAttribute {
     name: string;
     parent: string;
-    ids?: number[];
-}
+ }
 
-interface StyleAttribute extends GroupAttribute {
+interface StyleAttribute<T> extends GroupAttribute {
     items: StringValue[];
+    nodes?: T[];
 }
 
 interface ThemeAttribute extends GroupAttribute {

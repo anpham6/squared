@@ -213,7 +213,7 @@ function createPathInterpolator(value: string) {
     if (interpolator) {
         return interpolator;
     }
-    const animators = (Resource.STORED as IResourceStoredMap).animators;
+    const animators = (Resource.STORED as IResourceStoredMap<View>).animators;
     const name = 'path_interpolator_' + convertWord(value);
     if (!animators.has(name)) {
         animators.set(name, formatString(INTERPOLATOR_XML, ...value.split(/\s+/)));

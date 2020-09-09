@@ -10,7 +10,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
     public readonly eventOnly = true;
 
     public beforeDocumentWrite(data: squared.base.DocumentWriteDataExtensionUI<T>) {
-        const styles = (Resource.STORED as IResourceStoredMap).styles;
+        const styles = (Resource.STORED as IResourceStoredMap<T>).styles;
         const rendered = data.rendered;
         for (let i = 0, length = rendered.length; i < length; ++i) {
             next: {
@@ -69,7 +69,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                         const name = (style !== '' ? style + '.' : '') + capitalize(controlId);
                         if (!styles.has(name)) {
                             items.sort((a, b) => a.key < b.key ? -1 : 1);
-                            styles.set(name, { name, parent: '', items } as StyleAttribute);
+                            styles.set(name, { name, parent: '', items } as StyleAttribute<T>);
                         }
                         for (let j = 0; j < q; ++j) {
                             const item = renderChildren[j];

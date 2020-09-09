@@ -6,16 +6,13 @@ import Resource from '../../resource';
 
 import { concatString } from '../../lib/util';
 
-type StyleList = ObjectMap<number[]>;
-type SharedAttributes = ObjectMapNested<number[]>;
-type AttributeMap = ObjectMap<number[]>;
-type TagNameMap = ObjectMap<StyleAttribute[]>;
-type NodeStyleMap = ObjectMap<string[]>;
+type StyleList<T> = ObjectMap<T[]>;
+type AttributeMap<T> = ObjectMap<T[]>;
 
 const { NODE_RESOURCE } = squared.base.lib.constant;
 
 const { truncate } = squared.lib.math;
-const { capitalize, convertWord, hasKeys, replaceMap, spliceArray, trimBoth } = squared.lib.util;
+const { capitalize, convertWord, hasKeys, joinArray, spliceArray, trimBoth } = squared.lib.util;
 
 const REGEXP_FONTATTRIBUTE = /([^\s]+)="((?:[^"]|\\")+)"/;
 const REGEXP_FONTNAME = /^(\w*?)(?:_(\d+))?$/;
@@ -85,10 +82,9 @@ const FONT_STYLE = {
     'backgroundColor': 'android:background="@color/'
 };
 
-function deleteStyleAttribute(sorted: AttributeMap[], attrs: string, ids: number[]) {
-    const items = attrs.split(';');
-    for (let i = 0, length = items.length, q = sorted.length; i < length; ++i) {
-        const value = items[i];
+function deleteStyleAttribute(sorted: AttributeMap<View>[], attrs: string[], ids: View[]) {
+    for (let i = 0, length = attrs.length, q = sorted.length; i < length; ++i) {
+        const value = attrs[i];
         found: {
             for (let j = 0; j < q; ++j) {
                 const data = sorted[j];
@@ -120,31 +116,38 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         const { defaultFontFamily, floatPrecision, disableFontAlias } = this.options;
         const api = userSettings.targetAPI;
         const convertPixels = userSettings.convertPixels === 'dp';
-        const { fonts, styles } = resource.mapOfStored as IResourceStoredMap;
+        const { fonts, styles } = resource.mapOfStored as IResourceStoredMap<T>;
         const nameMap: ObjectMap<T[]> = {};
-        const groupMap: ObjectMap<StyleList[]> = {};
+        const groupMap: ObjectMap<StyleList<T>[]> = {};
         let cache: T[] = [];
         this.application.getProcessingCache(sessionId).each(node => {
             if (node.data(Resource.KEY_NAME, 'fontStyle') && node.hasResource(NODE_RESOURCE.FONT_STYLE)) {
-                (nameMap[node.containerName] || (nameMap[node.containerName] = [])).push(node);
+                const containerName = node.containerName;
+                (nameMap[containerName] || (nameMap[containerName] = [])).push(node);
             }
         });
         for (const tag in nameMap) {
             const data = nameMap[tag];
-            const sorted: StyleList[] = [{}, {}, {}];
-            const addFontItem = (index: number, attr: string, value: string, id: number) => {
+            const sorted: StyleList<T>[] = [{}, {}, {}];
+            const addFontItem = (node: T, index: number, attr: string, value: string) => {
                 const items = sorted[index] ?? (sorted[index] = {});
                 const name = FONT_STYLE[attr] + value + '"';
-                (items[name] || (items[name] = [])).push(id);
+                (items[name] || (items[name] = [])).push(node);
             };
             cache = cache.concat(data);
             for (let i = 0, length = data.length; i < length; ++i) {
-                let node = data[i];
+                const node = data[i];
+                const companion = node.companion;
                 const stored = node.data<FontAttribute>(Resource.KEY_NAME, 'fontStyle')!;
-                const { id, companion } = node;
                 let { fontFamily, fontStyle, fontWeight } = stored;
                 if (companion && companion.tagName === 'LABEL' && !companion.visible) {
-                    node = companion as T;
+                    const fontData = companion.data<FontAttribute>(Resource.KEY_NAME, 'fontStyle');
+                    if (fontData) {
+                        ({ fontFamily, fontStyle, fontWeight } = fontData);
+                        if (!stored.backgroundColor) {
+                            stored.backgroundColor = fontData.backgroundColor;
+                        }
+                    }
                 }
                 fontFamily.replace(/"/g, '').split(',').some((value, index, array) => {
                     value = trimBoth(value.trim(), "'").toLowerCase();
@@ -200,24 +203,24 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     }
                     return true;
                 });
-                addFontItem(0, 'fontFamily', fontFamily, id);
-                addFontItem(1, 'fontSize', truncate(stored.fontSize, floatPrecision) + (convertPixels ? 'sp' : 'px'), id);
-                addFontItem(2, 'color', Resource.addColor(stored.color), id);
+                addFontItem(node, 0, 'fontFamily', fontFamily);
+                addFontItem(node, 1, 'fontSize', truncate(stored.fontSize, floatPrecision) + (convertPixels ? 'sp' : 'px'));
+                addFontItem(node, 2, 'color', Resource.addColor(stored.color));
                 if (fontWeight !== '') {
-                    addFontItem(3, 'fontWeight', fontWeight, id);
+                    addFontItem(node, 3, 'fontWeight', fontWeight);
                 }
                 if (fontStyle !== '') {
-                    addFontItem(4, 'fontStyle', fontStyle, id);
+                    addFontItem(node, 4, 'fontStyle', fontStyle);
                 }
                 if (stored.backgroundColor) {
-                    addFontItem(5, 'backgroundColor', Resource.addColor(stored.backgroundColor, node.inputElement), id);
+                    addFontItem(node, 5, 'backgroundColor', Resource.addColor(stored.backgroundColor, node.inputElement));
                 }
             }
             groupMap[tag] = sorted;
         }
-        const style: SharedAttributes = {};
+        const style: ObjectMapNested<T[]> = {};
         for (const tag in groupMap) {
-            const styleTag = {};
+            const styleTag: ObjectMap<T[]> = {};
             style[tag] = styleTag;
             const sorted = groupMap[tag].filter(item => item).sort((a, b) => {
                 let maxA = 0,
@@ -258,10 +261,10 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     break;
                 }
                 else {
-                    const styleKey: AttributeMap = {};
+                    const styleKey: AttributeMap<T> = {};
                     for (let i = 0; i < length; ++i) {
                         const dataA = sorted[i];
-                        const filtered: AttributeMap = {};
+                        const filtered: AttributeMap<T> = {};
                         for (const attrA in dataA) {
                             const ids = dataA[attrA];
                             if (ids.length === 0) {
@@ -272,7 +275,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                 sorted[i] = {};
                                 break;
                             }
-                            const found: AttributeMap = {};
+                            const found: AttributeMap<T> = {};
                             let merged: Undef<boolean>;
                             for (let j = 0; j < length; ++j) {
                                 if (i !== j) {
@@ -303,14 +306,17 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         if (hasKeys(filtered)) {
                             const combined: ObjectMap<Set<string>> = {};
                             const deleteKeys = new Set<string>();
-                            const joined: StringMap = {};
+                            const joinedMap: ObjectMap<T[]> = {};
+                            const joinedIndex: StringMap = {};
                             for (const attr in filtered) {
-                                joined[attr] = concatString(filtered[attr], ',');
+                                const ids = joinArray(filtered[attr], item => item.id.toString(), ',');
+                                joinedIndex[attr] = ids;
+                                joinedMap[ids] = filtered[attr];
                             }
                             for (const attrA in filtered) {
                                 for (const attrB in filtered) {
-                                    const index = joined[attrA]!;
-                                    if (attrA !== attrB && index === joined[attrB]) {
+                                    const index = joinedIndex[attrA]!;
+                                    if (attrA !== attrB && index === joinedIndex[attrB]) {
                                         let data = combined[index];
                                         if (!data) {
                                             data = new Set(attrA.split(';'));
@@ -327,14 +333,20 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                 if (deleteKeys.has(attr)) {
                                     continue;
                                 }
-                                deleteStyleAttribute(sorted, attr, filtered[attr]);
+                                deleteStyleAttribute(sorted, attr.split(';'), filtered[attr]);
                                 styleTag[attr] = filtered[attr];
                             }
                             for (const attr in combined) {
-                                const attrs = concatString(Array.from(combined[attr]), ';');
-                                const ids = replaceMap(attr.split(','), value => parseInt(value));
-                                deleteStyleAttribute(sorted, attrs, ids);
-                                styleTag[attrs] = ids;
+                                const items = combined[attr];
+                                const attrs = new Array(items.size);
+                                let index = '',
+                                    j = 0;
+                                for (const name of items) {
+                                    index += (index !== '' ? ';' : '') + name;
+                                    attrs[j++] = name;
+                                }
+                                deleteStyleAttribute(sorted, attrs, joinedMap[attr]);
+                                styleTag[index] = joinedMap[attr];
                             }
                         }
                     }
@@ -354,12 +366,12 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             }
             while (sorted.length);
         }
-        const resourceMap: TagNameMap = {};
-        const nodeMap: NodeStyleMap = {};
+        const resourceMap: ObjectMap<StyleAttribute<T>[]> = {};
+        const nodeMap = new WeakMap<T, string[]>();
         const parentStyle = new Set<string>();
         for (const tag in style) {
             const styleTag = style[tag];
-            const styleData: StyleAttribute[] = [];
+            const styleData: StyleAttribute<T>[] = [];
             for (const attrs in styleTag) {
                 const items: StringValue[] = [];
                 for (const value of attrs.split(';')) {
@@ -372,12 +384,12 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     name: '',
                     parent: '',
                     items,
-                    ids: styleTag[attrs]
+                    nodes: styleTag[attrs]
                 });
             }
             styleData.sort((a, b) => {
-                let c: NumString = a.ids!.length,
-                    d: NumString = b.ids!.length;
+                let c: NumString = a.nodes!.length,
+                    d: NumString = b.nodes!.length;
                 if (c === d) {
                     c = a.items.length;
                     d = b.items.length;
@@ -395,17 +407,23 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         }
         for (const tag in resourceMap) {
             for (const group of resourceMap[tag]) {
-                const ids = group.ids;
-                if (ids) {
-                    for (let i = 0, length = ids.length; i < length; ++i) {
-                        (nodeMap[ids[i]] || (nodeMap[ids[i]] = [])).push(group.name);
+                const nodes = group.nodes;
+                if (nodes) {
+                    for (let i = 0, length = nodes.length; i < length; ++i) {
+                        const item = nodes[i];
+                        let data = nodeMap.get(item);
+                        if (!data) {
+                            data = [];
+                            nodeMap.set(item, data);
+                        }
+                        data.push(group.name);
                     }
                 }
             }
         }
         for (let i = 0, length = cache.length; i < length; ++i) {
             const node = cache[i];
-            const styleData = nodeMap[node.id];
+            const styleData = nodeMap.get(node);
             if (styleData) {
                 if (styleData.length > 1) {
                     parentStyle.add(concatString(styleData, '.'));

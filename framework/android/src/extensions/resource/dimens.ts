@@ -39,7 +39,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
     public readonly eventOnly = true;
 
     public beforeDocumentWrite(data: squared.base.DocumentWriteDataExtensionUI<T>) {
-        const dimens = (Resource.STORED as IResourceStoredMap).dimens;
+        const dimens = (Resource.STORED as IResourceStoredMap<View>).dimens;
         const rendered = data.rendered;
         const groups: ObjectMapNested<T[]> = {};
         for (let i = 0, length = rendered.length; i < length; ++i) {
@@ -67,7 +67,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
 
     public afterFinalize() {
         if (this.controller.hasAppendProcessing()) {
-            const dimens = (Resource.STORED as IResourceStoredMap).dimens;
+            const dimens = (Resource.STORED as IResourceStoredMap<View>).dimens;
             for (const layout of this.application.layouts) {
                 let content = layout.content!;
                 RE_DIMENS.matcher(content);

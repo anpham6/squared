@@ -98,7 +98,7 @@ declare namespace base {
     }
 
     class Resource<T extends View> extends squared.base.ResourceUI<T> {
-        static STORED: IResourceStoredMap;
+        static STORED: IResourceStoredMap<View>;
         static formatOptions(options: ViewAttribute, numberAlias?: boolean): ViewAttribute;
         static formatName(value: string): string;
         static addTheme(theme: ThemeAttribute): boolean;

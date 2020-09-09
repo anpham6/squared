@@ -11,7 +11,7 @@ const { findColorShade, parseColor } = squared.lib.color;
 const { extractURL, getSrcSet } = squared.lib.css;
 const { fromLastIndexOf, isNumber, isPlainObject, isString, resolvePath, trimString } = squared.lib.util;
 
-const STORED = squared.base.ResourceUI.STORED as IResourceStoredMap;
+const STORED = squared.base.ResourceUI.STORED as IResourceStoredMap<View>;
 
 const REGEXP_STRINGNAME = /(\\[nt]|<\/?[A-Za-z]+>|&#?[A-Za-z\d]{2,};)/g;
 const REGEXP_STRINGWORD = /[^A-Za-z\d]+/g;
