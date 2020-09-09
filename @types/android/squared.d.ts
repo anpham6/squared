@@ -230,14 +230,6 @@ declare namespace extensions {
 
 declare namespace lib {
     namespace constant {
-        enum SCREEN_DENSITY {
-            LDPI = 120,
-            MDPI = 160,
-            HDPI = 240,
-            XHDPI = 320,
-            XXHDPI = 480,
-            XXXHDPI = 640
-        }
         enum CONTAINER_NODE {
             EDIT = 1,
             RANGE,
@@ -262,6 +254,14 @@ declare namespace lib {
             WEBVIEW,
             UNKNOWN
         }
+        const SCREEN_DENSITY: {
+            LDPI: number,
+            MDPI: number,
+            HDPI: number,
+            XHDPI: number,
+            XXHDPI: number,
+            XXXHDPI: number;
+        };
         const CONTAINER_ELEMENT: {
             PLAINTEXT: string;
             HR: string;

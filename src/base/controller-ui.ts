@@ -78,10 +78,10 @@ function pushIndentArray(values: string[], depth: number, char = '\t', separator
 export default abstract class ControllerUI<T extends NodeUI> extends Controller<T> implements squared.base.ControllerUI<T> {
     public abstract readonly localSettings: ControllerSettingsUI;
 
-    private _beforeOutside = new Map<number, string[]>();
-    private _beforeInside = new Map<number, string[]>();
-    private _afterInside = new Map<number, string[]>();
-    private _afterOutside = new Map<number, string[]>();
+    private _beforeOutside = new WeakMap<T, string[]>();
+    private _beforeInside = new WeakMap<T, string[]>();
+    private _afterInside = new WeakMap<T, string[]>();
+    private _afterOutside = new WeakMap<T, string[]>();
     private _requireFormat = false;
     private _unsupportedCascade!: Set<string>;
     private _unsupportedTagName!: Set<string>;
@@ -125,10 +125,6 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public reset() {
-        this._beforeOutside.clear();
-        this._beforeInside.clear();
-        this._afterInside.clear();
-        this._afterOutside.clear();
         this._requireFormat = false;
     }
 
@@ -316,13 +312,13 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         }
     }
 
-    public addBeforeOutsideTemplate(id: number, value: string, format = true, index = -1) {
-        let template = this._beforeOutside.get(id);
+    public addBeforeOutsideTemplate(node: T, value: string, format = true, index = -1) {
+        let template = this._beforeOutside.get(node);
         if (!template) {
             template = [];
-            this._beforeOutside.set(id, template);
+            this._beforeOutside.set(node, template);
         }
-        if (index !== -1 && index < template.length) {
+        if (index >= 0 && index < template.length) {
             template.splice(index, 0, value);
         }
         else {
@@ -333,13 +329,13 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         }
     }
 
-    public addBeforeInsideTemplate(id: number, value: string, format = true, index = -1) {
-        let template = this._beforeInside.get(id);
+    public addBeforeInsideTemplate(node: T, value: string, format = true, index = -1) {
+        let template = this._beforeInside.get(node);
         if (!template) {
             template = [];
-            this._beforeInside.set(id, template);
+            this._beforeInside.set(node, template);
         }
-        if (index !== -1 && index < template.length) {
+        if (index >= 0 && index < template.length) {
             template.splice(index, 0, value);
         }
         else {
@@ -350,13 +346,13 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         }
     }
 
-    public addAfterInsideTemplate(id: number, value: string, format = true, index = -1) {
-        let template = this._afterInside.get(id);
+    public addAfterInsideTemplate(node: T, value: string, format = true, index = -1) {
+        let template = this._afterInside.get(node);
         if (!template) {
             template = [];
-            this._afterInside.set(id, template);
+            this._afterInside.set(node, template);
         }
-        if (index !== -1 && index < template.length) {
+        if (index >= 0 && index < template.length) {
             template.splice(index, 0, value);
         }
         else {
@@ -367,13 +363,13 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         }
     }
 
-    public addAfterOutsideTemplate(id: number, value: string, format = true, index = -1) {
-        let template = this._afterOutside.get(id);
+    public addAfterOutsideTemplate(node: T, value: string, format = true, index = -1) {
+        let template = this._afterOutside.get(node);
         if (!template) {
             template = [];
-            this._afterOutside.set(id, template);
+            this._afterOutside.set(node, template);
         }
-        if (index !== -1 && index < template.length) {
+        if (index >= 0 && index < template.length) {
             template.splice(index, 0, value);
         }
         else {
@@ -384,28 +380,28 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         }
     }
 
-    public getBeforeOutsideTemplate(id: number, depth: number): string {
-        const template = this._beforeOutside.get(id);
+    public getBeforeOutsideTemplate(node: T, depth: number): string {
+        const template = this._beforeOutside.get(node);
         return template ? pushIndentArray(template, depth) : '';
     }
 
-    public getBeforeInsideTemplate(id: number, depth: number): string {
-        const template = this._beforeInside.get(id);
+    public getBeforeInsideTemplate(node: T, depth: number): string {
+        const template = this._beforeInside.get(node);
         return template ? pushIndentArray(template, depth) : '';
     }
 
-    public getAfterInsideTemplate(id: number, depth: number): string {
-        const template = this._afterInside.get(id);
+    public getAfterInsideTemplate(node: T, depth: number): string {
+        const template = this._afterInside.get(node);
         return template ? pushIndentArray(template, depth) : '';
     }
 
-    public getAfterOutsideTemplate(id: number, depth: number): string {
-        const template = this._afterOutside.get(id);
+    public getAfterOutsideTemplate(node: T, depth: number): string {
+        const template = this._afterOutside.get(node);
         return template ? pushIndentArray(template, depth) : '';
     }
 
-    public hasAppendProcessing(id?: number) {
-        return id === undefined ? this._requireFormat : this._beforeOutside.has(id) || this._beforeInside.has(id) || this._afterInside.has(id) || this._afterOutside.has(id);
+    public hasAppendProcessing(node?: T) {
+        return node ? this._beforeOutside.has(node) || this._beforeInside.has(node) || this._afterInside.has(node) || this._afterOutside.has(node) : this._requireFormat;
     }
 
     public visibleElement(element: HTMLElement, sessionId: string, pseudoElt?: PseudoElt) {
@@ -783,13 +779,13 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             switch (item.type) {
                 case NODE_TEMPLATE.XML: {
                     const { node, controlName, attributes } = item as NodeXmlTemplate<T>;
-                    const { id, renderTemplates } = node;
+                    const renderTemplates = node.renderTemplates;
                     const next = depth + 1;
                     const previous = node.depth < 0 ? depth + node.depth : depth;
-                    const beforeInside = this.getBeforeInsideTemplate(id, next);
-                    const afterInside = this.getAfterInsideTemplate(id, next);
+                    const beforeInside = this.getBeforeInsideTemplate(node, next);
+                    const afterInside = this.getAfterInsideTemplate(node, next);
                     output +=
-                        this.getBeforeOutsideTemplate(id, previous) + indent +
+                        this.getBeforeOutsideTemplate(node, previous) + indent +
                         `<${controlName + (depth === 0 ? '{#0}' : '')}` +
                             (showAttributes ? !attributes ? node.extractAttributes(next) : pushIndent(attributes, next) : '') +
                             (renderTemplates || beforeInside !== '' || afterInside !== ''
@@ -799,7 +795,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                     afterInside +
                                     indent + `</${controlName}>\n`
                                 : ' />\n') +
-                        this.getAfterOutsideTemplate(id, previous);
+                        this.getAfterOutsideTemplate(node, previous);
                     break;
                 }
                 case NODE_TEMPLATE.INCLUDE:

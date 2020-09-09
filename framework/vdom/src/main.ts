@@ -35,7 +35,7 @@ const appBase: squared.base.AppFramework<Node> = {
                 userSettings: application.userSettings
             };
         }
-        return appBase.create();
+        return this.create();
     }
 };
 

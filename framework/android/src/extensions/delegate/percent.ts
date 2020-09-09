@@ -108,7 +108,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
             const controller = this.controller as android.base.Controller<T>;
             const constraint = LAYOUT_MAP.constraint;
             const renderParent = node.renderParent as T;
-            const templateId = node.anchorTarget.renderParent!.id;
+            const renderNode = node.anchorTarget.renderParent as T;
             if (mainData.marginHorizontal) {
                 const [marginLeft, marginRight] = node.cssAsTuple('marginLeft', 'marginRight');
                 const boxRect = node.getAnchorPosition(renderParent, true, false);
@@ -159,7 +159,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                             }
                         }
                         node.constraint.horizontal = true;
-                        controller.addAfterInsideTemplate(templateId, output);
+                        controller.addAfterInsideTemplate(renderNode, output);
                     }
                 }
                 if (rightPercent > 0) {
@@ -194,7 +194,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                             }
                         }
                         node.constraint.horizontal = true;
-                        controller.addAfterInsideTemplate(templateId, output);
+                        controller.addAfterInsideTemplate(renderNode, output);
                     }
                 }
                 if (node.blockStatic && !node.hasWidth) {
@@ -273,7 +273,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                             }
                         }
                         node.constraint.vertical = true;
-                        controller.addAfterInsideTemplate(templateId, output);
+                        controller.addAfterInsideTemplate(renderNode, output);
                     }
                 }
                 if (bottomPercent > 0) {
@@ -308,7 +308,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                             }
                         }
                         node.constraint.vertical = true;
-                        controller.addAfterInsideTemplate(templateId, output);
+                        controller.addAfterInsideTemplate(renderNode, output);
                     }
                 }
                 if (node.css('height') === '100%' || node.css('minHeight') === '100%') {

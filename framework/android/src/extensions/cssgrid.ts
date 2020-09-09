@@ -744,7 +744,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
             const controller = this.controller as android.base.Controller<T>;
             const { children, column, row, rowData } = mainData;
             const wrapped = mainData.unsetContentBox;
-            const insertId = children[children.length - 1].id;
+            const insertNode = children[children.length - 1];
             if (CssGrid.isJustified(node)) {
                 setContentSpacing(mainData, column, node, true, controller.userSettings.resolutionScreenWidth - node.bounds.left, 0);
                 switch (mainData.justifyContent) {
@@ -781,7 +781,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                     if (percent !== 0 && percent < 100) {
                         if (percent > 0) {
                             controller.addAfterOutsideTemplate(
-                                insertId,
+                                insertNode,
                                 controller.renderSpace({
                                     width: formatPercent((100 - percent) / 100),
                                     height: 'match_parent',
@@ -832,7 +832,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                     if (percent !== 0 && percent < 100) {
                         if (percent > 0) {
                             controller.addAfterOutsideTemplate(
-                                insertId,
+                                insertNode,
                                 controller.renderSpace({
                                     width: 'match_parent',
                                     height: formatPercent((100 - percent) / 100),
@@ -923,7 +923,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                                     layout_constraintWidth_percent: (column.unit.slice(j, length).reduce((a, b) => a + parseFloat(b), 0) / column.frTotal).toString()
                                 }
                             } as RenderSpaceAttribute;
-                            controller.addAfterInsideTemplate(node.id, controller.renderSpace(options), false);
+                            controller.addAfterInsideTemplate(node, controller.renderSpace(options), false);
                             previousItem.anchor('rightLeft', options.documentId);
                             break;
                         }
@@ -989,7 +989,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                             }
                         }
                         controller.addAfterOutsideTemplate(
-                            insertId,
+                            insertNode,
                             controller.renderSpace({
                                 width,
                                 height,

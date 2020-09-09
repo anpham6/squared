@@ -241,7 +241,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
                         assignEmptyValue(backgroundImageOptions, 'android', 'fitsSystemWindows', 'true');
                         assignEmptyValue(app, 'layout_collapseMode', 'parallax');
                         controller.addBeforeOutsideTemplate(
-                            node.id,
+                            node,
                             controller.renderNodeStatic(
                                 {
                                     controlName: CONTAINER_TAGNAME.IMAGE,

@@ -1853,10 +1853,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             switch (barrierDirection) {
                 case 'top':
                 case 'left':
-                    this.addBeforeOutsideTemplate(anchorTarget.id, content, false);
+                    this.addBeforeOutsideTemplate(anchorTarget as T, content, false);
                     break;
                 default:
-                    this.addAfterOutsideTemplate(anchorTarget.id, content, false);
+                    this.addAfterOutsideTemplate(anchorTarget as T, content, false);
                     break;
             }
             const documentId = options.documentId;
@@ -3657,7 +3657,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     [attr]: percent ? location.toString() : `@dimen/${Resource.insertStoredAsset('dimens', 'constraint_guideline_' + (!opposing ? LT : RB), formatPX(location))}`
                 }
             };
-            this.addAfterOutsideTemplate(node.id, this.renderNodeStatic({ controlName: node.api < BUILD_VERSION.Q ? CONTAINER_TAGNAME.GUIDELINE : CONTAINER_TAGNAME_X.GUIDELINE }, templateOptions), false);
+            this.addAfterOutsideTemplate(node, this.renderNodeStatic({ controlName: node.api < BUILD_VERSION.Q ? CONTAINER_TAGNAME.GUIDELINE : CONTAINER_TAGNAME_X.GUIDELINE }, templateOptions), false);
             const documentId = templateOptions.documentId;
             if (documentId) {
                 node.anchor(LT, documentId, true);

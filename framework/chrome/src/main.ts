@@ -166,7 +166,7 @@ const appBase: chrome.ChromeFramework<Node> = {
                 userSettings: application.userSettings
             };
         }
-        return appBase.create();
+        return this.create();
     },
     saveAsWebPage: (filename?: string, options?: IFileArchivingOptions) => {
         if (application) {

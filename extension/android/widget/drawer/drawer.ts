@@ -96,7 +96,7 @@ export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> 
                     assignEmptyValue(options, 'android', 'fitsSystemWindows', 'true');
                     assignEmptyValue(options, 'android', 'layout_gravity', node.localizeString('left'));
                     controller.addAfterInsideTemplate(
-                        node.id,
+                        node,
                         controller.renderNodeStatic(
                             {
                                 controlName: node.api < BUILD_VERSION.Q ? SUPPORT_TAGNAME.NAVIGATION_VIEW : SUPPORT_TAGNAME_X.NAVIGATION_VIEW,

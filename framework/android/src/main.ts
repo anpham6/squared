@@ -323,7 +323,7 @@ const appBase: android.AndroidFramework<View> = {
                 userSettings: application.userSettings
             };
         }
-        return appBase.create();
+        return this.create();
     },
     setViewModel(data: PlainObject, sessionId?: string) {
         if (application) {

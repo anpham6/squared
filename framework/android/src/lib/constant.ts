@@ -1,12 +1,3 @@
-export enum SCREEN_DENSITY {
-    LDPI = 120,
-    MDPI = 160,
-    HDPI = 240,
-    XHDPI = 320,
-    XXHDPI = 480,
-    XXXHDPI = 640
-}
-
 export enum CONTAINER_NODE {
     RADIO = 1,
     CHECKBOX,
@@ -31,6 +22,15 @@ export enum CONTAINER_NODE {
     VIDEOVIEW,
     UNKNOWN
 }
+
+export const SCREEN_DENSITY = {
+    LDPI: 120,
+    MDPI: 160,
+    HDPI: 240,
+    XHDPI: 320,
+    XXHDPI: 480,
+    XXXHDPI: 640
+};
 
 export const CONTAINER_ELEMENT = {
     PLAINTEXT: CONTAINER_NODE.TEXT,
