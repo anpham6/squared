@@ -1,14 +1,14 @@
 type Node = squared.base.Node;
 type PromiseResult = Promise<Void<PlainObject>>;
 
-export interface FrameworkOptions {
+export interface FrameworkOptions extends PlainObject {
     settings?: PlainObject;
     loadAs?: string;
     saveAs?: string;
     cache?: boolean;
 }
 
-export interface FileActionOptions {
+export interface FileActionOptions extends PlainObject {
     assets?: FileAsset[];
     exclusions?: Exclusions;
     callback?: CallbackResult;

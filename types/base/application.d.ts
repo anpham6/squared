@@ -1,4 +1,4 @@
-interface UserSettings extends PlainObject {
+interface UserSettings extends StandardMap {
     builtInExtensions: string[];
     showErrorMessages: boolean;
     createElementMap: boolean;

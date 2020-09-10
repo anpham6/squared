@@ -68,7 +68,7 @@ declare namespace base {
         LATEST = 30
     }
 
-    interface AppViewModel extends StandardMap {
+    interface AppViewModel extends PlainObject {
         import?: string[];
         variable?: { name: string; type: string }[];
     }
@@ -416,8 +416,8 @@ declare namespace lib {
         function getDocumentId(value: string): string;
         function isHorizontalAlign(value: string): boolean;
         function isVerticalAlign(value: string): boolean;
-        function createViewAttribute(data?: StandardMap): ViewAttribute;
-        function createThemeAttribute(data?: StandardMap): Required<ThemeAttribute>;
+        function createViewAttribute(data?: PlainObject): ViewAttribute;
+        function createThemeAttribute(data?: PlainObject): Required<ThemeAttribute>;
         function getDataSet(dataset: StringMap | DOMStringMap, prefix: string): Undef<StringMap>;
         function localizeString(value: string, rtl: boolean, api: number): string;
         function concatString(list: (string | number)[], char?: string): string;

@@ -414,7 +414,7 @@ export const API_VERSION: Customizations<View> = {
             slideEdge: false,
             splitTrack: false,
             spotShadowAlpha: false,
-            src(this: View, result: PlainObject) {
+            src(this: View, result: StandardMap) {
                 if (this.svgElement) {
                     result['obj'] = 'app';
                     result['attr'] = 'srcCompat';

@@ -14,16 +14,14 @@ type FunctionMap<T> = ObjectMap<FunctionType<T>>;
 type FunctionSelf<T, U = void> = (this: T, ...args: any[]) => U;
 type FunctionVoid = () => void;
 
-type ObjectMapNested<T> = ObjectMap<ObjectMap<T>>;
-type StringMap = ObjectMap<Undef<string>>;
-type StringMapChecked = ObjectMap<string>;
+type StringMap = Record<string, Undef<string>>;
+type StringMapChecked = Record<string, string>;
 type CallbackResult = (result: any) => void;
 
 type NumString = number | string;
 
-type StandardMap = ObjectMap<any>;
+type StandardMap = Record<string, any>;
 type PlainObject = Record<string | number | symbol, unknown>;
 
-interface ObjectMap<T> {
-    [key: string]: T;
-}
+type ObjectMap<T> = Record<string, T>;
+type ObjectMapNested<T> = ObjectMap<ObjectMap<T>>;

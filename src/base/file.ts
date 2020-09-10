@@ -38,7 +38,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
 
     public abstract get userSettings(): UserResourceSettings;
 
-    public getDataMap(options: FileActionOptions): Void<StandardMap> {}
+    public getDataMap(options: FileActionOptions): Void<PlainObject> {}
     public getCopyQueryParameters(options: FileCopyingOptions) { return ''; }
     public getArchiveQueryParameters(options: FileArchivingOptions) { return ''; }
 
@@ -168,11 +168,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
     }
 
     set hostname(value) {
-        if (value.startsWith('http')) {
-            this._hostname = trimEnd(value, '/');
-            return;
-        }
-        this._hostname = '';
+        this._hostname = value.startsWith('http') ? trimEnd(value, '/') : '';
     }
     get hostname() {
         return this._hostname || location.origin;

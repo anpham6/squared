@@ -364,7 +364,7 @@ export function apply(value: ExtensionRequest, options: FrameworkOptions) {
     if (util.isPlainObject(options)) {
         const mergeSettings = (name: string) => {
             const { loadAs, saveAs: saveAsLocal } = options;
-            const result: PlainObject = {};
+            const result: StandardMap = {};
             if (loadAs) {
                 try {
                     const storedSettings = localStorage.getItem(loadAs + '-' + name);

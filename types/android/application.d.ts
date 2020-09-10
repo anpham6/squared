@@ -64,4 +64,4 @@ interface ThemeAttribute extends GroupAttribute {
     };
 }
 
-type CustomizationResult<T> = (this: T, result: PlainObject, api: number, value: string) => boolean;
+type CustomizationResult<T> = (this: T, result: StandardMap, api: number, value: string) => boolean;

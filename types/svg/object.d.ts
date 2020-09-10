@@ -1,6 +1,6 @@
 interface SvgRect extends Point, Dimension {}
 
-interface SvgAspectRatio extends SvgRect, PlainObject {
+interface SvgAspectRatio extends SvgRect, StandardMap {
     position: Point;
     parent: Point;
     unit: number;

@@ -173,7 +173,7 @@ function setOverflow(node: T) {
     return result;
 }
 
-function applyExclusionValue(enumeration: PlainObject, value: Undef<string>) {
+function applyExclusionValue(enumeration: StandardMap, value: Undef<string>) {
     let offset = 0;
     if (value) {
         for (const name of value.split('|')) {

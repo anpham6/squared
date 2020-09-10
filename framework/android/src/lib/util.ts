@@ -132,7 +132,7 @@ export function getDataSet(dataset: StringMap | DOMStringMap, prefix: string) {
     return result;
 }
 
-export function createViewAttribute(data?: StandardMap) {
+export function createViewAttribute(data?: PlainObject) {
     const options: ViewAttribute = { android: {} };
     if (data) {
         if (data.android) {
@@ -145,7 +145,7 @@ export function createViewAttribute(data?: StandardMap) {
     return options;
 }
 
-export function createThemeAttribute(data?: StandardMap) {
+export function createThemeAttribute(data?: PlainObject) {
     return {
         output: {
             path: 'res/values',
