@@ -58,9 +58,8 @@ function getFloatAlignmentType(nodes: NodeUI[]) {
 
 function checkPseudoDimension(styleMap: StringMapChecked, after: boolean, absolute: boolean) {
     switch (styleMap.display) {
-        case undefined:
-        case 'block':
         case 'inline':
+        case 'block':
         case 'inherit':
         case 'initial':
             if ((after || !parseFloat(styleMap.width)) && !parseFloat(styleMap.height)) {
@@ -178,16 +177,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             return true;
         }
         const controllerHandler = this.controllerHandler;
-        const baseTemplate = this._controllerSettings.layout.baseTemplate;
-        const showAttributes = this.userSettings.showAttributes;
-        const systemName = capitalize(this.systemName);
         const [extensions, children] = this.sessionAll;
         let length = children.length,
             j = 0;
         const rendered: T[] = new Array(length);
         for (let i = 0; i < length; ++i) {
             const node = children[i];
-            if (node.visible && node.renderParent) {
+            if (node.renderParent && node.visible) {
                 if (node.hasProcedure(NODE_PROCEDURE.LAYOUT)) {
                     node.setLayout();
                 }
@@ -212,10 +208,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (node.hasResource(NODE_RESOURCE.BOX_SPACING)) {
                 node.setBoxSpacing();
             }
-            if (node.documentRoot) {
-                if (!node.rendering && !node.inlineText && node.naturalElements.length && node.naturalElements.every(item => item.documentRoot)) {
-                    continue;
-                }
+            if (node.documentRoot && !(!node.rendering && !node.inlineText && node.naturalElements.length && node.naturalElements.every(item => item.documentRoot))) {
                 const layoutName = node.innerMostWrapped.data<string>(Application.KEY_NAME, 'layoutName');
                 const renderTemplates = node.renderParent?.renderTemplates as Undef<NodeTemplate<T>[]>;
                 if (layoutName && renderTemplates) {
@@ -231,8 +224,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             const { node, layoutName, renderTemplates } = documentRoot[i];
             this.saveDocument(
                 layoutName,
-                baseTemplate + controllerHandler.writeDocument(renderTemplates, Math.abs(node.depth), showAttributes),
-                node.dataset['pathname' + systemName],
+                this._controllerSettings.layout.baseTemplate + controllerHandler.writeDocument(renderTemplates, Math.abs(node.depth), this.userSettings.showAttributes),
+                node.dataset['pathname' + capitalize(this.systemName)],
                 node.renderExtension?.some(item => item.documentBase) ? 0 : undefined
             );
         }
@@ -1151,8 +1144,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const { cache, extensions } = this.getProcessing(sessionId)!;
         const resourceHandler = this.resourceHandler;
         cache.each(node => {
-            resourceHandler.setBoxStyle(node);
-            if (node.hasResource(NODE_RESOURCE.VALUE_STRING) && node.visible && !node.imageElement && !node.svgElement) {
+            if (node.hasResource(NODE_RESOURCE.BOX_STYLE)) {
+                resourceHandler.setBoxStyle(node);
+            }
+            if (node.hasResource(NODE_RESOURCE.VALUE_STRING) && !node.imageContainer && (node.visible || node.labelFor)) {
                 resourceHandler.setFontStyle(node);
                 resourceHandler.setValueString(node);
             }
@@ -1520,6 +1515,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
         }
         if (styleMap) {
+            if (!styleMap.display) {
+                styleMap.display = 'inline';
+            }
             let value = styleMap.content;
             if (value) {
                 const textContent = trimBoth(value, '"');
@@ -1536,7 +1534,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         for (let i = 0, length = childNodes.length; i < length; ++i) {
                             const child = childNodes[i] as Element;
                             if (child.nodeName[0] === '#') {
-                                if (child.nodeName === '#text' && isString(child.textContent!)) {
+                                if (child.nodeName === '#text' && isString(child.textContent)) {
                                     break;
                                 }
                             }
@@ -1725,9 +1723,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         break;
                     }
                 }
-                if (!styleMap.display) {
-                    styleMap.display = 'inline';
-                }
                 if (content !== '' || value === '""') {
                     if (!tagName) {
                         tagName = /^(inline|table)/.test(styleMap.display) ? 'span' : 'div';
@@ -1769,10 +1764,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
         }
-    }
-
-    protected createAssetOptions(options?: FileActionOptions) {
-        return options ? { ...options, assets: options.assets ? this.layouts.concat(options.assets) : this.layouts } : { assets: this.layouts };
     }
 
     protected setFloatPadding(parent: T, target: T, inlineAbove: T[], leftAbove: T[] = [], rightAbove: T[] = []) {
@@ -1874,6 +1865,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
         }
+    }
+
+    protected createAssetOptions(options?: FileActionOptions) {
+        return options ? { ...options, assets: options.assets ? this.layouts.concat(options.assets) : this.layouts } : { assets: this.layouts };
     }
 
     get mainElement() {

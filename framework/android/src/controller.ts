@@ -2388,6 +2388,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                             textContent += next.textContent;
                                             width += next.bounds.width;
                                             next.hide({ remove: true });
+                                            next.exclude({ resource: NODE_RESOURCE.VALUE_STRING });
                                             index = l;
                                         }
                                         else {
@@ -2429,7 +2430,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                             if (textRemainder !== '') {
                                                 const s = nodes.length;
                                                 for (let l = 0; l < s; ++l) {
-                                                    nodes[l].hide({ remove: true });
+                                                    const sibling = nodes[l];
+                                                    sibling.hide({ remove: true });
+                                                    sibling.exclude({ resource: NODE_RESOURCE.VALUE_STRING });
                                                 }
                                                 last = nodes[s - 1];
                                                 item.multiline = true;

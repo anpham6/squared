@@ -130,22 +130,22 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             const data = nameMap[tag];
             const sorted: StyleList<T>[] = [{}, {}, {}];
             const addFontItem = (node: T, index: number, attr: string, value: string) => {
-                const items = sorted[index] ?? (sorted[index] = {});
+                const items = sorted[index] || (sorted[index] = {});
                 const name = FONT_STYLE[attr] + value + '"';
                 (items[name] || (items[name] = [])).push(node);
             };
             cache = cache.concat(data);
             for (let i = 0, length = data.length; i < length; ++i) {
                 const node = data[i];
-                const companion = node.companion;
                 const stored = node.data<FontAttribute>(Resource.KEY_NAME, 'fontStyle')!;
-                let { fontFamily, fontStyle, fontWeight } = stored;
-                if (companion && companion.tagName === 'LABEL' && !companion.visible) {
+                let { backgroundColor, fontFamily, fontStyle, fontWeight } = stored;
+                const companion = node.companion;
+                if (companion && !companion.visible && companion.tagName === 'LABEL') {
                     const fontData = companion.data<FontAttribute>(Resource.KEY_NAME, 'fontStyle');
                     if (fontData) {
                         ({ fontFamily, fontStyle, fontWeight } = fontData);
-                        if (!stored.backgroundColor) {
-                            stored.backgroundColor = fontData.backgroundColor;
+                        if (!backgroundColor) {
+                            backgroundColor = fontData.backgroundColor;
                         }
                     }
                 }
@@ -212,8 +212,11 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 if (fontStyle !== '') {
                     addFontItem(node, 4, 'fontStyle', fontStyle);
                 }
-                if (stored.backgroundColor) {
-                    addFontItem(node, 5, 'backgroundColor', Resource.addColor(stored.backgroundColor, node.inputElement));
+                if (backgroundColor) {
+                    const color = Resource.addColor(backgroundColor, node.inputElement);
+                    if (color !== '') {
+                        addFontItem(node, 5, 'backgroundColor', color);
+                    }
                 }
             }
             groupMap[tag] = sorted;
