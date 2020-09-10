@@ -135,7 +135,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                         for (let j = 0; j < length; ++j) {
                             const coordinates = SvgBuild.parseCoordinates(valuesBase[j]);
                             const q = coordinates.length;
-                            if (q > 0) {
+                            if (q) {
                                 let currentValues: Undef<number[]>;
                                 switch (type) {
                                     case SVGTransform.SVG_TRANSFORM_TRANSLATE:

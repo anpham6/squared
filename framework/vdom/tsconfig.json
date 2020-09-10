@@ -4,8 +4,8 @@
     "outDir": "../../build"
   },
   "include": [
-    "../../@types/index.d.ts",
-    "../../@types/vdom/index.d.ts",
+    "../../types/index.d.ts",
+    "../../types/vdom/index.d.ts",
     "**/*.ts"
   ],
   "exclude": []

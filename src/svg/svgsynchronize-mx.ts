@@ -1362,7 +1362,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                     if (item.evaluateStart) {
                                                         const pending = incomplete.concat(data.slice(j + 1, r)).filter(previous => previous.animationElement && previous.delay < maxThreadTime);
                                                         const s = pending.length;
-                                                        if (s > 0) {
+                                                        if (s) {
                                                             sortEvaluateStart(pending, actualMaxTime);
                                                             [keyTimes, values, keySplines] = appendPartialKeyTimes(intervalMap, forwardMap, baseValueMap, k, item, keyTimes, values, keySplines, baseValue, pending, true);
                                                             for (let l = 0; l < s; ++l) {

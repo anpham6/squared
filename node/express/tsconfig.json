@@ -7,10 +7,10 @@
     "lib": ["dom", "es2016"]
   },
   "include": [
-    "../../@types/**/file.d.ts",
-    "../../@types/type.d.ts",
-    "../../@types/object.d.ts",
-    "@types/index.d.ts",
+    "../../types/**/file.d.ts",
+    "../../types/type.d.ts",
+    "../../types/object.d.ts",
+    "types/index.d.ts",
     "*.ts"
   ],
   "exclude": []

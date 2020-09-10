@@ -4,8 +4,8 @@
     "outDir": "../../build",
   },
   "include": [
-    "../../@types/svg/object.d.ts",
-    "../../@types/index.d.ts",
+    "../../types/svg/object.d.ts",
+    "../../types/index.d.ts",
     "**/*"
   ],
   "exclude": []

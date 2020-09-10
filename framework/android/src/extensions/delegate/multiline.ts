@@ -275,8 +275,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                     let previous!: T;
                     if (partition) {
                         const { marginLeft, marginRight } = seg;
-                        let r: number;
-                        for (let j = 0, k = 0, l = q; j < columns; ++j, l -= r, k += r) {
+                        for (let j = 0, k = 0, l = q, r: number; j < columns; ++j, l -= r, k += r) {
                             r = j === columns - 1 ? l : Math.floor(q / columns);
                             const container = createContainer(seg.tagName, concatString(words.slice(k, k + r)));
                             container.multiline = true;

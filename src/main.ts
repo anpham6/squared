@@ -100,9 +100,9 @@ function loadExtensions() {
             removeQueue.clear();
         }
         if (extensionCheck) {
-            const extensions = extensionManager.checkDependencies();
-            if (extensions) {
-                console.log('FAIL: ' + extensions.join(', '));
+            const errors = extensionManager.checkDependencies();
+            if (errors) {
+                console.log('FAIL: ' + errors.join(', '));
             }
             extensionCheck = false;
         }
@@ -386,13 +386,13 @@ export function apply(value: ExtensionRequest, options: FrameworkOptions) {
             return result;
         };
         if (typeof value === 'string') {
-            const extension = extensionManager && extensionManager.get(value, true) || util.findSet(addQueue, item => typeof item !== 'string' && item.name === value);
-            if (!extension) {
+            const ext = extensionManager && extensionManager.get(value, true) || util.findSet(addQueue, item => typeof item !== 'string' && item.name === value);
+            if (!ext) {
                 optionsQueue.set(value, mergeSettings(value));
                 return true;
             }
             else {
-                value = extension;
+                value = ext;
             }
         }
         if (squared.base && value instanceof squared.base.Extension) {

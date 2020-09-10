@@ -345,7 +345,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                             case 'js':
                             case 'css': {
                                 const data = this.application.session.transpileMap[category];
-                                (data[module] ?? (data[module] = {}))[name] = element.textContent!.trim();
+                                (data[module] || (data[module] = {}))[name] = element.textContent!.trim();
                                 break;
                             }
                         }

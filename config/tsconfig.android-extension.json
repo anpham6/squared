@@ -1,9 +1,8 @@
 {
   "extends": "../tsconfig.json",
   "include": [
-    "../@types/**/object.d.ts",
-    "../@types/index.d.ts",
-    "../@types/android/index.d.ts",
+    "../types/index.d.ts",
+    "../types/android/index.d.ts",
     "../extension/android/**/*.ts"
   ]
 }

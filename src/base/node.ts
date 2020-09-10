@@ -903,7 +903,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public data<U = unknown>(name: string, attr: string, value?: any, overwrite = true): Undef<U> {
-        const data = this._data ?? (this._data = {});
+        const data = this._data || (this._data = {});
         if (value === null) {
             if (data[name]) {
                 delete data[name][attr];

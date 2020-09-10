@@ -1,7 +1,7 @@
 {
   "name": "android-constraint",
   "version": "1.13.0",
-  "description": "Extensions for the Android framework which uses ConstraintLayout features.",
+  "description": "Extensions for the Android framework using ConstraintLayout from the Android Support library.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/anpham6/squared.git"
@@ -11,8 +11,5 @@
     "email": "anpham6@gmail.com"
   },
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/anpham6/squared/issues"
-  },
   "homepage": "https://github.com/anpham6/squared#readme"
 }

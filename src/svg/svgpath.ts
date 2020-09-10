@@ -838,7 +838,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                                 keyTime = keyTimeTo;
                                                 keyTimes.push(keyTime);
                                                 const q = values.length;
-                                                if (q > 0) {
+                                                if (q) {
                                                     values.push(values[q - 1]);
                                                     previousRemaining = parseFloat(values[q - 1]);
                                                 }

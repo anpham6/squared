@@ -1,9 +1,8 @@
 {
   "extends": "./tsconfig.dev.options.json",
   "include": [
-    "../@types/**/object.d.ts",
-    "../@types/index.d.ts",
-    "../@types/chrome/index.d.ts",
+    "../types/index.d.ts",
+    "../types/chrome/index.d.ts",
     "../src/**/*.ts",
     "../framework/chrome/**/*.ts"
   ]

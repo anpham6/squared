@@ -130,7 +130,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
         if (!this._offsetPath && this.path) {
             let offsetPath = SvgBuild.toOffsetPath(this.path, this.rotate),
                 distance = offsetPath.length;
-            if (distance > 0) {
+            if (distance) {
                 const { duration, keyPoints, rotateData, framesPerSecond } = this;
                 let increment = 1;
                 if (duration >= distance) {

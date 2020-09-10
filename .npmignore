@@ -1,9 +1,9 @@
 .idea/
 .vscode/
-@types/
 build/
 config/
 dist/bundles/
+dist/extensions/
 extension/
 framework/
 html/*
@@ -11,6 +11,9 @@ md5/
 node/
 src/
 temp/
+types/android
+types/chrome
+types/vdom
 .eslint*
 .git*
 *.code-workspace
