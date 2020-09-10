@@ -792,7 +792,7 @@ You can also define your own optimizations in squared.settings.json:
 These particular plugins can be configured using a plain object literal. These packages have to manually be installed [<b>npm run install-chrome</b>] since it is only relevant to the Chrome framework. Transpiling with Babel is also configurable with a .babelrc file in the base folder for any presets and additional settings. Other non-builtin minifiers can similarly be applied and chained by defining a custom string-based synchronous function.
 
 ```xml
-external -> html | js | css -> npm package name -> custom name
+chrome -> html | js | css -> npm package name -> custom name
 ```
 
 * Function object
@@ -802,7 +802,7 @@ external -> html | js | css -> npm package name -> custom name
 ```javascript
 // squared.settings.json
 {
-  "external": {
+  "chrome": {
     "html": { // built-in minifier
       "prettier": {
         "beautify": {
@@ -812,7 +812,7 @@ external -> html | js | css -> npm package name -> custom name
         }
       }
     },
-    "js": { // custom function
+    "js": { // custom function (chrome -> eval_function: true)
       "terser": {
         "minify-example": "const options = { keep_classnames: true }; return context.minify(value, options).code;" // arguments are always 'context' and 'value'
       },
@@ -843,7 +843,7 @@ function (context, value) {
 The same concept can also be used locally anywhere in the HTML page using a &lt;script&gt; tag with the type attribute set to "text/template". The script template will be removed from the final output.
 
 ```javascript
-// "es5-example" is a custom name and cannot be chained
+// "es5-example" is a custom name and cannot be chained (chrome -> eval_text_template: true)
 
 <script type="text/template" data-chrome-template="js::@babel/core::es5-example">
     function (context, value) {

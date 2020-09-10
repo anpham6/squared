@@ -67,8 +67,8 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                         break;
                     case 'BUTTON':
                         if (!node.isEmpty()) {
-                            let { width, height } = node.bounds;
-                            let modified: Undef<boolean>;
+                            let { width, height } = node.bounds,
+                                modified: Undef<boolean>;
                             node.cascade((item: T) => {
                                 if (item.width >= width && item.height >= height) {
                                     ({ width, height } = item);

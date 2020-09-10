@@ -582,7 +582,6 @@ declare module "svg" {
         get group(): SvgAnimationGroup;
         get parentContainer(): Null<SvgContainer>;
         get fillReplace(): boolean;
-        get dataset(): SvgDataSet;
         constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimationElement);
     }
 

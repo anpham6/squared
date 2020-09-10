@@ -638,7 +638,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const children: T[] = [];
                 let title: T[] = [],
                     content: T[] = [],
-                    active = false;
+                    active: Undef<boolean>;
                 const createColumn = () => {
                     let rt: Undef<T>,
                         text: Undef<T>,
@@ -1061,7 +1061,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                     else if (floated.has('right')) {
                         let pageFlow = 0,
-                            multiline = false;
+                            multiline: Undef<boolean>;
                         for (const node of layout) {
                             if (node.floating) {
                                 if (multiline) {

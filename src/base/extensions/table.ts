@@ -138,8 +138,8 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             tr.each((td: T, index) => {
                 const element = td.element as HTMLTableCellElement;
                 const rowSpan = element.rowSpan;
-                let colSpan = element.colSpan;
-                let j = 0;
+                let colSpan = element.colSpan,
+                    j = 0;
                 while (row[j]) {
                     ++j;
                 }

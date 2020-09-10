@@ -518,7 +518,7 @@ function appendPartialKeyTimes(map: SvgAnimationIntervalMap, forwardMap: Forward
 function setTimelineValue(map: TimelineIndex, time: number, value: AnimateValue, duplicate?: boolean) {
     if (value !== '') {
         let stored = map.get(time),
-            previousTime = false;
+            previousTime: Undef<boolean>;
         if (stored === undefined) {
             stored = map.get(time - 1);
             previousTime = true;

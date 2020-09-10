@@ -28,7 +28,9 @@
   "brotli_quality": "11",
   "jpeg_quality": "100",
   "tinypng_api_key": "",
-  "external": {
+  "chrome": {
+    "eval_function": true,
+    "eval_text_template": true,
     "html": {
       "prettier": {
         "beautify": {

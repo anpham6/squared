@@ -71,8 +71,8 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                 const patternElement = this.patternElement;
                 const contentBoundingBox = this.patternContentUnits === REGION_UNIT.OBJECT_BOUNDING_BOX;
                 const y = boundingY + (i * tileHeight) - offsetY;
-                let remainingWidth = width;
-                let j = 0;
+                let remainingWidth = width,
+                    j = 0;
                 do {
                     const x = boundingX + (j++ * tileWidth) - offsetX;
                     const pattern = new SvgPattern(element, patternElement);

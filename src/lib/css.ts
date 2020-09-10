@@ -2745,7 +2745,7 @@ export function getKeyframesRules(): KeyframesMap {
 
 export function parseKeyframes(rules: CSSRuleList) {
     const result: KeyframeData = {};
-    let valid = false;
+    let valid: Undef<boolean>;
     for (let i = 0, length = rules.length; i < length; ++i) {
         const item = rules[i];
         const match = REGEXP_KEYFRAMES.exec(item.cssText);

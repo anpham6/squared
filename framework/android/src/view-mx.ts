@@ -22,13 +22,10 @@ const { getNamedItem, getRangeClientRect } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
 const { capitalize, convertInt, convertWord, fromLastIndexOf, hasKeys, isString, replaceMap, splitPair } = squared.lib.util;
 
+const { constraint: LAYOUT_CONSTRAINT, relative: LAYOUT_RELATIVE, relativeParent: LAYOUT_RELATIVE_PARENT } = LAYOUT_MAP;
+
 const BOX_MARGIN = CSS_PROPERTIES.margin.value as string[];
 const BOX_PADDING = CSS_PROPERTIES.padding.value as string[];
-
-const {
-    constraint: LAYOUT_CONSTRAINT,
-    relative: LAYOUT_RELATIVE,
-    relativeParent: LAYOUT_RELATIVE_PARENT } = LAYOUT_MAP;
 
 const OPTIONS_LINEHEIGHT: StringMap = {
     'height': 'auto',

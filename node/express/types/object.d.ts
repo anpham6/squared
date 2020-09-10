@@ -16,7 +16,9 @@ interface TranspileMap {
     css: ObjectMap<StringMap>
 }
 
-interface ExternalModules {
+interface ChromeModules {
+    eval_function?: boolean;
+    eval_text_template?: boolean;
     html?: ObjectMap<StandardMap>;
     css?: ObjectMap<StandardMap>;
     js?: ObjectMap<StandardMap>;

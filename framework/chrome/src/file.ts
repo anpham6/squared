@@ -488,7 +488,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             uri = uri.trim();
             if (uri !== '') {
                 let file: Undef<string>,
-                    saveTo = false;
+                    saveTo: Undef<boolean>;
                 if (element) {
                     const fileAs = parseFileAs('saveTo', element.dataset.chromeFile);
                     if (fileAs) {

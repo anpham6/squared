@@ -49,7 +49,7 @@ let Node: serve.INode,
         SETTINGS_PORT: Undef<StringMap>,
         SETTINGS_ROUTING: Undef<serve.Routing>,
         SETTINGS_CORS: Undef<cors.CorsOptions>,
-        SETTINGS_EXTERNAL: Undef<ExternalModules>,
+        SETTINGS_CHROME: Undef<ChromeModules>,
         ENV = process.env.NODE_ENV,
         PORT = process.env.PORT;
 
@@ -67,7 +67,7 @@ let Node: serve.INode,
             tinypng_api_key
         } = settings;
 
-        ({ env: SETTINGS_ENV, port: SETTINGS_PORT, cors: SETTINGS_CORS, external: SETTINGS_EXTERNAL, routing: SETTINGS_ROUTING } = settings);
+        ({ env: SETTINGS_ENV, port: SETTINGS_PORT, cors: SETTINGS_CORS, chrome: SETTINGS_CHROME, routing: SETTINGS_ROUTING } = settings);
 
         DISK_READ = disk_read === true || disk_read === 'true';
         DISK_WRITE = disk_write === true || disk_write === 'true';
@@ -477,14 +477,15 @@ let Node: serve.INode,
     (GZIP_LEVEL, BROTLI_QUALITY, JPEG_QUALITY);
 
     Chrome = new class implements serve.IChrome {
-        constructor(public external: Undef<ExternalModules>) {}
+        constructor(public modules: Undef<ChromeModules>) {}
 
         configureTranspiler(config: ObjectMap<StandardMap>, name: string, category: serve.ExternalCategory, transpileMap?: TranspileMap): [string, StandardMap | FunctionType<string>] {
-            if (transpileMap) {
+            if (transpileMap && this.modules?.eval_text_template) {
                 const data = transpileMap[category];
                 for (const attr in data) {
-                    if (data[attr][name]) {
-                        const result = this.createTranspilerFunction(data[attr]![name]!);
+                    const item = data[attr][name];
+                    if (item) {
+                        const result = this.createTranspilerFunction(item);
                         if (result) {
                             return [attr, result];
                         }
@@ -515,13 +516,14 @@ let Node: serve.INode,
                             options = {};
                         }
                         else if (typeof options === 'string') {
-                            options = options.trim();
-                            if (options !== '') {
-                                const result = this.createTranspilerFunction(options);
-                                if (!result) {
-                                    continue;
+                            if (this.modules?.eval_function) {
+                                options = options.trim();
+                                if (options !== '') {
+                                    const result = this.createTranspilerFunction(options);
+                                    if (result) {
+                                        return [module, result];
+                                    }
                                 }
-                                return [module, result];
                             }
                             break;
                         }
@@ -567,7 +569,7 @@ let Node: serve.INode,
             }
         }
         async minifyHtml(format: string, value: string, transpileMap?: TranspileMap) {
-            const html = this.external?.html;
+            const html = this.modules?.html;
             if (html) {
                 let valid: Undef<boolean>;
                 const formatters = format.split('+');
@@ -626,7 +628,7 @@ let Node: serve.INode,
             return Promise.resolve();
         }
         async minifyCss(format: string, value: string, transpileMap?: TranspileMap) {
-            const css = this.external?.css;
+            const css = this.modules?.css;
             if (css) {
                 let valid: Undef<boolean>;
                 const formatters = format.split('+');
@@ -685,7 +687,7 @@ let Node: serve.INode,
             return Promise.resolve();
         }
         async minifyJs(format: string, value: string, transpileMap?: TranspileMap) {
-            const js = this.external?.js;
+            const js = this.modules?.js;
             if (js) {
                 const formatters = format.split('+');
                 let modified: Undef<boolean>;
@@ -804,7 +806,7 @@ let Node: serve.INode,
             return output;
         }
     }
-    (SETTINGS_EXTERNAL);
+    (SETTINGS_CHROME);
 
     Image = new class implements serve.IImage {
         constructor() {}

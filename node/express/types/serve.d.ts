@@ -56,7 +56,7 @@ interface IImage {
 }
 
 interface IChrome {
-    readonly external: Undef<ExternalModules>;
+    readonly modules: Undef<ChromeModules>;
     configureTranspiler(config: ObjectMap<StandardMap>, name: string, category: ExternalCategory, transpileMap?: TranspileMap): [string, StandardMap | FunctionType<string>];
     createTranspilerFunction(value: string): Null<FunctionType<string>>;
     findExternalPlugin(data: ObjectMap<StandardMap>, name: string): [string, StandardMap | FunctionType<string>];
@@ -110,7 +110,7 @@ interface Settings {
     env?: string;
     port?: StringMap;
     routing?: Routing;
-    external?: ExternalModules;
+    chrome?: ChromeModules;
 }
 
 interface Arguments {

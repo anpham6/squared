@@ -1788,7 +1788,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (q) {
             let floatPosition = -Infinity,
                 marginOffset = 0,
-                spacing = false;
+                spacing: Undef<boolean>;
             for (let i = 0; i < q; ++i) {
                 const child = leftAbove[i];
                 if (child.bounds.top < bottom) {
@@ -1830,7 +1830,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (q) {
             let floatPosition = Infinity,
                 marginOffset = 0,
-                spacing = false;
+                spacing: Undef<boolean>;
             for (let i = 0; i < q; ++i) {
                 const child = rightAbove[i];
                 if (child.bounds.top < bottom) {

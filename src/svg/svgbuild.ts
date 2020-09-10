@@ -795,8 +795,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     }
 
     public static minMaxOf(values: SvgPoint[], radius?: boolean): BoxRect {
-        let { x: minX, y: minY } = values[0];
-        let maxX = minX,
+        let { x: minX, y: minY } = values[0],
+            maxX = minX,
             maxY = minY;
         for (let i = 1, length = values.length; i < length; ++i) {
             const { x, y } = values[i];

@@ -1787,7 +1787,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                         attrList = [];
                                     }
                                     let key = subMatch[1].replace('\\:', ':'),
-                                        endsWith = false;
+                                        endsWith: Undef<boolean>;
                                     switch (key.indexOf('|')) {
                                         case -1:
                                             break;

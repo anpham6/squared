@@ -81,7 +81,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     protected _parent: Null<SvgView | SvgPath> = null;
 
     private _attributeName = '';
-    private _dataset: SvgDataSet = {};
+    private _dataset: Null<SvgDataSet> = null;
     private _group?: SvgAnimationGroup;
 
     constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimationElement) {
@@ -91,7 +91,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
                 const value = dataset[name];
                 if (isString(value)) {
                     try {
-                        this._dataset[name] = JSON.parse(value);
+                        (this._dataset || (this._dataset = {}))[name] = JSON.parse(value);
                     }
                     catch {
                     }
@@ -148,7 +148,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
 
     set attributeName(value) {
         if (value !== 'transform' && !this.baseValue) {
-            let baseValue = this._dataset.baseValue?.[value];
+            let baseValue = this._dataset?.baseValue?.[value];
             if (baseValue !== undefined) {
                 this.baseValue = baseValue.toString().trim();
             }
@@ -240,9 +240,9 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
 
     set group(value) {
         this._group = value;
-     }
+    }
     get group() {
-        return this._group || { id: -Infinity, name: '' };
+        return this._group || (this._group = { id: -Infinity, name: '' });
     }
 
     set setterType(value) {}
@@ -264,9 +264,5 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
             result = result.parent;
         }
         return result;
-    }
-
-    get dataset() {
-        return this._dataset;
     }
 }
