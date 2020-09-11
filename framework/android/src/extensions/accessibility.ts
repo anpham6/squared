@@ -62,7 +62,7 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                     }
                     case 'INPUT_IMAGE':
                         if (node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
-                            node.data(Resource.KEY_NAME, 'embedded', [node]);
+                            node.data(Resource.KEY_NAME, 'boxImage', [node]);
                         }
                         break;
                     case 'BUTTON':
@@ -80,9 +80,9 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                                 node.css('minWidth', formatPX(width));
                                 node.css('minHeight', formatPX(height));
                             }
-                            const embedded = node.removeIf((item: T) => !item.textElement) as T[];
-                            if (embedded.length && node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
-                                node.data(Resource.KEY_NAME, 'embedded', embedded);
+                            const boxImage = node.removeIf((item: T) => !item.textElement) as T[];
+                            if (boxImage.length && node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
+                                node.data(Resource.KEY_NAME, 'boxImage', boxImage);
                             }
                             node.clear();
                         }

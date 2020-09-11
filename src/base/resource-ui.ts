@@ -694,203 +694,201 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
     }
 
     public static parseBackgroundImage(node: NodeUI, backgroundImage: string, screenDimension?: Null<Dimension>) {
-        if (backgroundImage !== '') {
-            const backgroundSize = node.css('backgroundSize').split(/\s*,\s*/);
-            const images: (string | Gradient)[] = [];
-            const getGradientPosition = (value: string) => isString(value) ? value.includes('at ') ? /(.+?)?\s*at (.+?)\s*$/.exec(value) : [value, value] as RegExpExecArray : null;
-            const getAngle = (value: string, fallback = 0) => {
-                value = value.trim();
-                if (value !== '') {
-                    let degree = parseAngle(value, fallback);
-                    if (!isNaN(degree)) {
-                        if (degree < 0) {
-                            degree += 360;
-                        }
-                        return degree;
+        const backgroundSize = node.css('backgroundSize').split(/\s*,\s*/);
+        const images: (string | Gradient)[] = [];
+        const getGradientPosition = (value: string) => isString(value) ? value.includes('at ') ? /(.+?)?\s*at (.+?)\s*$/.exec(value) : [value, value] as RegExpExecArray : null;
+        const getAngle = (value: string, fallback = 0) => {
+            value = value.trim();
+            if (value !== '') {
+                let degree = parseAngle(value, fallback);
+                if (!isNaN(degree)) {
+                    if (degree < 0) {
+                        degree += 360;
                     }
+                    return degree;
                 }
-                return fallback;
-            };
-            let i = 0,
-                match: Null<RegExpExecArray>;
-            while (match = REGEXP_BACKGROUNDIMAGE.exec(backgroundImage)) {
-                const value = match[0];
-                if (value.startsWith('url(') || value === 'initial') {
-                    images.push(value);
-                }
-                else {
-                    const repeating = !!match[1];
-                    const type = match[2];
-                    const direction = match[3];
-                    const imageDimension = backgroundSize.length ? ResourceUI.getBackgroundSize(node, backgroundSize[i % backgroundSize.length], screenDimension) : null;
-                    const dimension = node.fitToScreen(imageDimension || node.actualDimension);
-                    let gradient: Undef<Gradient>;
-                    switch (type) {
-                        case 'linear': {
-                            const { width, height } = dimension;
-                            let angle = 180;
-                            switch (direction) {
-                                case 'to top':
-                                    angle = 360;
-                                    break;
-                                case 'to right top':
-                                    angle = 45;
-                                    break;
-                                case 'to right':
-                                    angle = 90;
-                                    break;
-                                case 'to right bottom':
-                                    angle = 135;
-                                    break;
-                                case 'to bottom':
-                                    break;
-                                case 'to left bottom':
-                                    angle = 225;
-                                    break;
-                                case 'to left':
-                                    angle = 270;
-                                    break;
-                                case 'to left top':
-                                    angle = 315;
-                                    break;
-                                default:
-                                    if (direction) {
-                                        angle = getAngle(direction, 180) || 360;
-                                    }
-                                    break;
+            }
+            return fallback;
+        };
+        let i = 0,
+            match: Null<RegExpExecArray>;
+        while (match = REGEXP_BACKGROUNDIMAGE.exec(backgroundImage)) {
+            const value = match[0];
+            if (value.startsWith('url(') || value === 'initial') {
+                images.push(value);
+            }
+            else {
+                const repeating = !!match[1];
+                const type = match[2];
+                const direction = match[3];
+                const imageDimension = backgroundSize.length ? ResourceUI.getBackgroundSize(node, backgroundSize[i % backgroundSize.length], screenDimension) : null;
+                const dimension = node.fitToScreen(imageDimension || node.actualDimension);
+                let gradient: Undef<Gradient>;
+                switch (type) {
+                    case 'linear': {
+                        const { width, height } = dimension;
+                        let angle = 180;
+                        switch (direction) {
+                            case 'to top':
+                                angle = 360;
+                                break;
+                            case 'to right top':
+                                angle = 45;
+                                break;
+                            case 'to right':
+                                angle = 90;
+                                break;
+                            case 'to right bottom':
+                                angle = 135;
+                                break;
+                            case 'to bottom':
+                                break;
+                            case 'to left bottom':
+                                angle = 225;
+                                break;
+                            case 'to left':
+                                angle = 270;
+                                break;
+                            case 'to left top':
+                                angle = 315;
+                                break;
+                            default:
+                                if (direction) {
+                                    angle = getAngle(direction, 180) || 360;
+                                }
+                                break;
+                        }
+                        let x = truncateFraction(offsetAngleX(angle, width)),
+                            y = truncateFraction(offsetAngleY(angle, height));
+                        if (x !== width && y !== height && !equal(Math.abs(x), Math.abs(y))) {
+                            let opposite: number;
+                            if (angle <= 90) {
+                                opposite = relativeAngle({ x: 0, y: height }, { x: width, y: 0 });
                             }
-                            let x = truncateFraction(offsetAngleX(angle, width)),
-                                y = truncateFraction(offsetAngleY(angle, height));
-                            if (x !== width && y !== height && !equal(Math.abs(x), Math.abs(y))) {
-                                let opposite: number;
-                                if (angle <= 90) {
-                                    opposite = relativeAngle({ x: 0, y: height }, { x: width, y: 0 });
-                                }
-                                else if (angle <= 180) {
-                                    opposite = relativeAngle({ x: 0, y: 0 }, { x: width, y: height });
-                                }
-                                else if (angle <= 270) {
-                                    opposite = relativeAngle({ x: 0, y: 0 }, { x: width * -1, y: height });
+                            else if (angle <= 180) {
+                                opposite = relativeAngle({ x: 0, y: 0 }, { x: width, y: height });
+                            }
+                            else if (angle <= 270) {
+                                opposite = relativeAngle({ x: 0, y: 0 }, { x: width * -1, y: height });
+                            }
+                            else {
+                                opposite = relativeAngle({ x: 0, y: height }, { x: width * -1, y: 0 });
+                            }
+                            const a = Math.abs(opposite - angle);
+                            x = truncateFraction(offsetAngleX(angle, triangulate(a, 90 - a, hypotenuse(width, height))[1]));
+                            y = truncateFraction(offsetAngleY(angle, triangulate(90, 90 - angle, x)[0]));
+                        }
+                        gradient = {
+                            type,
+                            repeating,
+                            dimension,
+                            angle,
+                            angleExtent: { x, y }
+                        } as LinearGradient;
+                        gradient.colorStops = parseColorStops(node, gradient, match[4]);
+                        break;
+                    }
+                    case 'radial': {
+                        const position = getGradientPosition(direction);
+                        const center = ResourceUI.getBackgroundPosition(position?.[2] || 'center', dimension, { fontSize: node.fontSize, imageDimension, screenDimension });
+                        const { left, top } = center;
+                        const { width, height } = dimension;
+                        let shape = 'ellipse',
+                            closestSide = top,
+                            farthestSide = top,
+                            closestCorner = Infinity,
+                            farthestCorner = -Infinity,
+                            radius = 0,
+                            radiusExtent = 0;
+                        if (position) {
+                            const name = position[1]?.trim();
+                            if (name) {
+                                if (name.startsWith('circle')) {
+                                    shape = 'circle';
                                 }
                                 else {
-                                    opposite = relativeAngle({ x: 0, y: height }, { x: width * -1, y: 0 });
-                                }
-                                const a = Math.abs(opposite - angle);
-                                x = truncateFraction(offsetAngleX(angle, triangulate(a, 90 - a, hypotenuse(width, height))[1]));
-                                y = truncateFraction(offsetAngleY(angle, triangulate(90, 90 - angle, x)[0]));
-                            }
-                            gradient = {
-                                type,
-                                repeating,
-                                dimension,
-                                angle,
-                                angleExtent: { x, y }
-                            } as LinearGradient;
-                            gradient.colorStops = parseColorStops(node, gradient, match[4]);
-                            break;
-                        }
-                        case 'radial': {
-                            const position = getGradientPosition(direction);
-                            const center = ResourceUI.getBackgroundPosition(position?.[2] || 'center', dimension, { fontSize: node.fontSize, imageDimension, screenDimension });
-                            const { left, top } = center;
-                            const { width, height } = dimension;
-                            let shape = 'ellipse',
-                                closestSide = top,
-                                farthestSide = top,
-                                closestCorner = Infinity,
-                                farthestCorner = -Infinity,
-                                radius = 0,
-                                radiusExtent = 0;
-                            if (position) {
-                                const name = position[1]?.trim();
-                                if (name) {
-                                    if (name.startsWith('circle')) {
+                                    const [radiusX, radiusY] = splitPair(name, ' ', true);
+                                    let minRadius = Infinity;
+                                    if (radiusX) {
+                                        minRadius = node.parseWidth(radiusX, false);
+                                    }
+                                    if (radiusY) {
+                                        minRadius = Math.min(node.parseHeight(radiusY, false), minRadius);
+                                    }
+                                    radius = minRadius;
+                                    radiusExtent = minRadius;
+                                    if (length === 1 || radiusX === radiusY) {
                                         shape = 'circle';
                                     }
+                                }
+                            }
+                        }
+                        for (const corner of [[0, 0], [width, 0], [width, height], [0, height]]) {
+                            const length = Math.round(hypotenuse(Math.abs(corner[0] - left), Math.abs(corner[1] - top)));
+                            closestCorner = Math.min(length, closestCorner);
+                            farthestCorner = Math.max(length, farthestCorner);
+                        }
+                        for (const side of [width - left, height - top, left]) {
+                            closestSide = Math.min(side, closestSide);
+                            farthestSide = Math.max(side, farthestSide);
+                        }
+                        const radial = {
+                            type,
+                            repeating,
+                            dimension,
+                            shape,
+                            center,
+                            closestSide,
+                            farthestSide,
+                            closestCorner,
+                            farthestCorner
+                        } as RadialGradient;
+                        if (radius === 0 && radiusExtent === 0) {
+                            radius = farthestCorner;
+                            const extent = position && position[1]?.split(' ').pop() || '';
+                            switch (extent) {
+                                case 'closest-corner':
+                                case 'closest-side':
+                                case 'farthest-side': {
+                                    const length = radial[convertCamelCase(extent)];
+                                    if (repeating) {
+                                        radiusExtent = length;
+                                    }
                                     else {
-                                        const [radiusX, radiusY] = splitPair(name, ' ', true);
-                                        let minRadius = Infinity;
-                                        if (radiusX) {
-                                            minRadius = node.parseWidth(radiusX, false);
-                                        }
-                                        if (radiusY) {
-                                            minRadius = Math.min(node.parseHeight(radiusY, false), minRadius);
-                                        }
-                                        radius = minRadius;
-                                        radiusExtent = minRadius;
-                                        if (length === 1 || radiusX === radiusY) {
-                                            shape = 'circle';
-                                        }
+                                        radius = length;
                                     }
+                                    break;
                                 }
+                                default:
+                                    radiusExtent = farthestCorner;
+                                    break;
                             }
-                            for (const corner of [[0, 0], [width, 0], [width, height], [0, height]]) {
-                                const length = Math.round(hypotenuse(Math.abs(corner[0] - left), Math.abs(corner[1] - top)));
-                                closestCorner = Math.min(length, closestCorner);
-                                farthestCorner = Math.max(length, farthestCorner);
-                            }
-                            for (const side of [width - left, height - top, left]) {
-                                closestSide = Math.min(side, closestSide);
-                                farthestSide = Math.max(side, farthestSide);
-                            }
-                            const radial = {
-                                type,
-                                repeating,
-                                dimension,
-                                shape,
-                                center,
-                                closestSide,
-                                farthestSide,
-                                closestCorner,
-                                farthestCorner
-                            } as RadialGradient;
-                            if (radius === 0 && radiusExtent === 0) {
-                                radius = farthestCorner;
-                                const extent = position && position[1]?.split(' ').pop() || '';
-                                switch (extent) {
-                                    case 'closest-corner':
-                                    case 'closest-side':
-                                    case 'farthest-side': {
-                                        const length = radial[convertCamelCase(extent)];
-                                        if (repeating) {
-                                            radiusExtent = length;
-                                        }
-                                        else {
-                                            radius = length;
-                                        }
-                                        break;
-                                    }
-                                    default:
-                                        radiusExtent = farthestCorner;
-                                        break;
-                                }
-                            }
-                            radial.radius = radius;
-                            radial.radiusExtent = radiusExtent;
-                            radial.colorStops = parseColorStops(node, radial, match[4]);
-                            gradient = radial;
-                            break;
                         }
-                        case 'conic': {
-                            const position = getGradientPosition(direction);
-                            gradient = {
-                                type,
-                                dimension,
-                                angle: getAngle(direction),
-                                center: ResourceUI.getBackgroundPosition(position?.[2] || 'center', dimension, { fontSize: node.fontSize, imageDimension, screenDimension })
-                            } as ConicGradient;
-                            gradient.colorStops = parseColorStops(node, gradient, match[4]);
-                            break;
-                        }
+                        radial.radius = radius;
+                        radial.radiusExtent = radiusExtent;
+                        radial.colorStops = parseColorStops(node, radial, match[4]);
+                        gradient = radial;
+                        break;
                     }
-                    images.push(gradient || 'initial');
+                    case 'conic': {
+                        const position = getGradientPosition(direction);
+                        gradient = {
+                            type,
+                            dimension,
+                            angle: getAngle(direction),
+                            center: ResourceUI.getBackgroundPosition(position?.[2] || 'center', dimension, { fontSize: node.fontSize, imageDimension, screenDimension })
+                        } as ConicGradient;
+                        gradient.colorStops = parseColorStops(node, gradient, match[4]);
+                        break;
+                    }
                 }
-                ++i;
+                images.push(gradient || 'initial');
             }
-            REGEXP_BACKGROUNDIMAGE.lastIndex = 0;
-            if (images.length) {
-                return images;
-            }
+            ++i;
+        }
+        REGEXP_BACKGROUNDIMAGE.lastIndex = 0;
+        if (images.length) {
+            return images;
         }
     }
 
@@ -1001,9 +999,10 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
     }
 
     public setBoxStyle(node: T) {
-        if (node.styleElement || node.visibleStyle.background) {
+        const visibleStyle = node.visibleStyle;
+        if (visibleStyle.background) {
             const boxStyle = {} as BoxStyle;
-            let borderWidth = node.visibleStyle.borderWidth,
+            let borderWidth = visibleStyle.borderWidth,
                 backgroundColor = node.backgroundColor,
                 backgroundImage: Undef<(string | Gradient)[]>;
             if (borderWidth) {
@@ -1020,16 +1019,19 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                     setBorderStyle(node, boxStyle, 'borderLeft', BORDER_LEFT);
                 }
             }
-            if (setBorderStyle(node, boxStyle, 'outline', BORDER_OUTLINE)) {
+            if (visibleStyle.outline && setBorderStyle(node, boxStyle, 'outline', BORDER_OUTLINE)) {
                 borderWidth = true;
             }
             if (backgroundColor === '' && node.has('backgroundColor') && !node.documentParent.visible) {
                 backgroundColor = node.css('backgroundColor');
             }
             if (node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
-                backgroundImage = ResourceUI.parseBackgroundImage(node, node.backgroundImage, node.localSettings.screenDimension);
+                const value = node.backgroundImage;
+                if (value !== '') {
+                    backgroundImage = ResourceUI.parseBackgroundImage(node, value, node.localSettings.screenDimension);
+                }
             }
-            if (backgroundColor || backgroundImage || borderWidth || node.data(Resource.KEY_NAME, 'embedded')) {
+            if (backgroundColor || backgroundImage || borderWidth) {
                 boxStyle.backgroundColor = parseColor(backgroundColor, 1, node.inputElement)?.valueAsRGBA || '';
                 boxStyle.backgroundImage = backgroundImage;
                 Object.assign(boxStyle, node.cssAsObject('backgroundSize', 'backgroundRepeat', 'backgroundPositionX', 'backgroundPositionY'));
@@ -1057,6 +1059,12 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                         boxStyle.borderRadius = borderRadius;
                     }
                 }
+                node.data(ResourceUI.KEY_NAME, 'boxStyle', boxStyle);
+            }
+        }
+        else if (visibleStyle.outline) {
+            const boxStyle = {} as BoxStyle;
+            if (setBorderStyle(node, boxStyle, 'outline', BORDER_OUTLINE)) {
                 node.data(ResourceUI.KEY_NAME, 'boxStyle', boxStyle);
             }
         }

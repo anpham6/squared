@@ -177,7 +177,8 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 if (td.cssInitial('verticalAlign') === '') {
                     td.css('verticalAlign', 'middle');
                 }
-                if (!td.visibleStyle.backgroundImage && !td.visibleStyle.backgroundColor) {
+                const visibleStyle = td.visibleStyle;
+                if (!visibleStyle.backgroundImage && !visibleStyle.backgroundColor) {
                     const exclude = /rgba\(0, 0, 0, 0\)|transparent/;
                     if (colgroup) {
                         const group = colgroup.children[index + 1];
@@ -185,10 +186,12 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             const { backgroundImage, backgroundColor } = getStyle(group);
                             if (backgroundImage !== 'none') {
                                 td.css('backgroundImage', backgroundImage, true);
+                                visibleStyle.backgroundImage = true;
                             }
                             if (!exclude.test(backgroundColor)) {
                                 td.css('backgroundColor', backgroundColor);
                                 td.setCacheValue('backgroundColor', backgroundColor);
+                                visibleStyle.backgroundColor = true;
                             }
                         }
                     }
@@ -196,12 +199,17 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         let value = getInheritedStyle(element, 'backgroundImage', /none/);
                         if (value !== '') {
                             td.css('backgroundImage', value, true);
+                            visibleStyle.backgroundImage = true;
                         }
                         value = getInheritedStyle(element, 'backgroundColor', exclude);
                         if (value !== '') {
                             td.css('backgroundColor', value);
                             td.setCacheValue('backgroundColor', value);
+                            visibleStyle.backgroundColor = true;
                         }
+                    }
+                    if (visibleStyle.backgroundImage || visibleStyle.backgroundColor) {
+                        visibleStyle.background = true;
                     }
                 }
                 switch (td.tagName) {

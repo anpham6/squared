@@ -30,7 +30,7 @@
   "tinypng_api_key": "",
   "chrome": {
     "eval_function": true,
-    "eval_text_template": true,
+    "eval_text_template": false,
     "html": {
       "prettier": {
         "beautify": {

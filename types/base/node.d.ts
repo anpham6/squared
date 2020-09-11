@@ -106,6 +106,7 @@ interface VisibleStyle {
     backgroundRepeat: boolean;
     backgroundRepeatX: boolean;
     backgroundRepeatY: boolean;
+    outline: boolean;
 }
 
 interface AutoMargin extends Partial<BoxRect<boolean>> {

@@ -517,8 +517,12 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             }
         };
         this.application.getProcessingCache(sessionId).each(node => {
-            const stored = node.data<BoxStyle>(Resource.KEY_NAME, 'boxStyle');
-            if (stored) {
+            let stored = node.data<BoxStyle>(Resource.KEY_NAME, 'boxStyle');
+            const boxImage = node.data<T[]>(Resource.KEY_NAME, 'boxImage');
+            if (stored || boxImage) {
+                if (!stored) {
+                    stored = {} as BoxStyle;
+                }
                 if (node.inputElement) {
                     const companion = node.companion;
                     if (companion && companion.tagName === 'LABEL' && !companion.visible) {
@@ -528,7 +532,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                     }
                 }
-                const images = this.getDrawableImages(node, stored);
+                const images = this.getDrawableImages(node, stored, boxImage);
                 if (node.controlName === CONTAINER_TAGNAME.BUTTON && stored.borderRadius?.length === 1 && images && images.some(item => item.vectorGradient) && node.api >= BUILD_VERSION.PIE) {
                     node.android('buttonCornerRadius', stored.borderRadius[0]);
                     delete stored.borderRadius;
@@ -721,10 +725,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         return [shapeData, layerList];
     }
 
-    public getDrawableImages(node: T, data: BoxStyle) {
+    public getDrawableImages(node: T, data: BoxStyle, boxImage?: T[]) {
         const backgroundImage = data.backgroundImage;
-        const embedded = node.data<T[]>(Resource.KEY_NAME, 'embedded');
-        if (backgroundImage || embedded) {
+        if (backgroundImage || boxImage) {
             const resource = this.resource as android.base.Resource<T>;
             const screenDimension = node.localSettings.screenDimension;
             const { bounds, fontSize } = node;
@@ -864,13 +867,13 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     spliceArray(backgroundSize, value => value === '');
                 }
             }
-            if (embedded) {
+            if (boxImage) {
                 const getPixelUnit = (width: number, height: number) => `${width}px ${height}px`;
                 if (length === 0) {
                     backgroundRepeat.length = 0;
                     backgroundSize.length = 0;
                 }
-                for (const image of embedded.filter(item => item.visible && (item.imageElement || item.containerName === 'INPUT_IMAGE'))) {
+                for (const image of boxImage.filter(item => item.visible && (item.imageElement || item.containerName === 'INPUT_IMAGE'))) {
                     const element = image.element as HTMLImageElement;
                     const src = resource.addImageSrc(element);
                     if (src !== '') {

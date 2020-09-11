@@ -85,8 +85,8 @@ interface IFileManager {
     getRelativeUrl(file: ExpressAsset, url: string): Undef<string>;
     replacePath(source: string, segment: string, value: string, base64?: boolean): Undef<string>;
     replaceExtension(value: string, ext: string): string;
-    getTrailingContent(file: ExpressAsset): Promise<Void<string>>;
-    appendContent(file: ExpressAsset, content: string, outputOnly?: boolean): Promise<Void<string>>;
+    getTrailingContent(file: ExpressAsset): Promise<string>;
+    appendContent(file: ExpressAsset, content: string, outputOnly?: boolean): Promise<string>;
     transformBuffer(assets: ExpressAsset[], file: ExpressAsset, filepath: string): Promise<void>;
     transformCss(file: ExpressAsset, content: string): Undef<string>;
     compressFile(assets: ExpressAsset[], file: ExpressAsset, filepath: string): void;

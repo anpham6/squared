@@ -1255,7 +1255,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 return value;
             }
         }
-        return this._styleMap[attr] as string || this.naturalChild && this.style[attr] as string || '';
+        return this._styleMap[attr] as string || this.style[attr] as string || '';
     }
 
     public cssApply(values: StringMap, overwrite = true, cache = true) {
@@ -2793,7 +2793,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 const backgroundColor = this.backgroundColor !== '';
                 const backgroundImage = this.backgroundImage !== '';
                 let backgroundRepeatX = false,
-                    backgroundRepeatY = false;
+                    backgroundRepeatY = false,
+                    outline = false;
                 if (backgroundImage) {
                     for (const repeat of this.css('backgroundRepeat').split(',')) {
                         const [repeatX, repeatY] = splitPair(repeat.trim(), ' ');
@@ -2805,6 +2806,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         }
                     }
                 }
+                const outlineStyle = this.css('outlineStyle');
+                if (outlineStyle !== '' && outlineStyle !== 'none') {
+                    const outlineWidth = this.css('outlineWidth');
+                    outline = outlineWidth !== '' && parseFloat(outlineWidth) !== 0;
+                }
                 return this._cache.visibleStyle = {
                     background: borderWidth || backgroundImage || backgroundColor,
                     borderWidth,
@@ -2812,7 +2818,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     backgroundColor,
                     backgroundRepeat: backgroundRepeatX || backgroundRepeatY,
                     backgroundRepeatX,
-                    backgroundRepeatY
+                    backgroundRepeatY,
+                    outline
                 };
             }
             return this._cache.visibleStyle = {} as VisibleStyle;

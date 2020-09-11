@@ -1118,10 +1118,11 @@ class FileManager implements serve.IFileManager {
             items.splice(file.bundleIndex - 1, 0, content);
             this.contentToAppend.set(filepath, items);
         }
-        return Promise.resolve();
+        return Promise.resolve('');
     }
     async getTrailingContent(file: ExpressAsset) {
         const trailingContent = file.trailingContent;
+        let output = '';
         if (trailingContent) {
             let unusedStyles: Undef<string[]>,
                 transpileMap: Undef<TranspileMap>;
@@ -1129,7 +1130,6 @@ class FileManager implements serve.IFileManager {
                 ({ unusedStyles, transpileMap } = this.dataMap);
             }
             const mimeType = file.mimeType;
-            let output = '';
             for (const item of trailingContent) {
                 let value = item.value;
                 if (mimeType) {
@@ -1157,9 +1157,8 @@ class FileManager implements serve.IFileManager {
                 }
                 output += '\n' + value;
             }
-            return Promise.resolve(output);
         }
-        return Promise.resolve();
+        return Promise.resolve(output);
     }
     async transformBuffer(assets: ExpressAsset[], file: ExpressAsset, filepath: string) {
         const mimeType = file.mimeType;

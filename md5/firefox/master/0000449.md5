@@ -3,7 +3,6 @@ f53fdb5bef1b9fac2b79f6019a3725b2  ./app/src/main/res/drawable/chua75.jpg
 ba6842da0c78711a0dc22e2acf4d2269  ./app/src/main/res/drawable/fieldset_linearlayout_5.xml
 3401f73dd03e97a64350453f65d31e65  ./app/src/main/res/drawable/header_linearlayout_4.xml
 025dcbe9ba4feb827e6f819fbba3f924  ./app/src/main/res/drawable/input_email_email.xml
-bf9d1c6d96d25e24f130c0247c6a79fc  ./app/src/main/res/drawable/input_radio_bill.xml
 6a61f75b913d38c2fecb55b47a3d467b  ./app/src/main/res/drawable/input_reset_reset.xml
 030fe2e0b3b541acbcedde1ce36c89a8  ./app/src/main/res/drawable/input_submit_submit.xml
 d368dcf5e5f6a15df7490c425752dbed  ./app/src/main/res/drawable/input_text_address.xml
@@ -19,5 +18,5 @@ b3513a401c5018ab4f569063ab306cce  ./app/src/main/res/values/colors.xml
 05782434e2cac1d7cfa0987e75167973  ./app/src/main/res/values/dimens.xml
 10a3451561d209f4dae2934eacfb0622  ./app/src/main/res/values/string_arrays.xml
 f310c2ceab1aab297c5c16544e9260af  ./app/src/main/res/values/strings.xml
-00a35bc16e0ff86ab7f3075260d6a1ae  ./app/src/main/res/values/styles.xml
+1e6c2ee10676aa4e16de0825764c39fe  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml
