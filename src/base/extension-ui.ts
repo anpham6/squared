@@ -47,7 +47,7 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
         return node.use ? this.included(node.element as HTMLElement) : !this._isAll;
     }
 
-    public included(element: HTMLElement) {
+    public included(element: DocumentElement) {
         return includes(this.application.getDatasetName('use', element), this.name);
     }
 

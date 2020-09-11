@@ -4,12 +4,16 @@ interface ContainerRangeOptions {
 }
 
 interface ContainerCascadeOptions<T> {
+    count?: number;
     also?: BindGeneric<T, void>;
     error?: IteratorPredicate<T, boolean>;
 }
 
 interface ContainerFindOptions<T> extends ContainerCascadeOptions<T>, ContainerRangeOptions {
-    count?: number;
+    cascade?: boolean;
+}
+
+interface ContainerRemoveIfOptions<T> extends ContainerCascadeOptions<T> {
     cascade?: boolean;
 }
 

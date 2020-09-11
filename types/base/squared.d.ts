@@ -116,8 +116,8 @@ declare module "base" {
         afterCreateCache(node: T): void;
         getProcessing(sessionId: string): Undef<AppProcessing<T>>;
         getProcessingCache(sessionId: string): NodeList<T>;
-        getDatasetName(attr: string, element: HTMLElement): Undef<string>;
-        setDatasetName(attr: string, element: HTMLElement, value: string): void;
+        getDatasetName(attr: string, element: DocumentElement): Undef<string>;
+        setDatasetName(attr: string, element: DocumentElement, value: string): void;
         copyTo(directory: string, options?: FileCopyingOptions): FileActionResult;
         appendTo(pathname: string, options?: FileArchivingOptions): FileActionResult;
         saveAs(filename?: string, options?: FileArchivingOptions): FileActionResult;
@@ -291,7 +291,7 @@ declare module "base" {
         readonly eventOnly?: boolean;
         readonly cascadeAll?: boolean;
         readonly documentBase?: boolean;
-        included(element: HTMLElement): boolean;
+        included(element: DocumentElement): boolean;
         is(node: T): boolean;
         condition(node: T, parent: T): boolean;
         processNode(node: T, parent: T): Void<ExtensionResult<T>>;
@@ -388,7 +388,7 @@ declare module "base" {
 
     class Node extends squared.lib.base.Container<Node> implements BoxModel, Dimension {
         static readonly TEXT_STYLE: string[];
-        static sanitizeCss(element: StyleElement, styleMap: StringMap, writingMode?: string): StringMap;
+        static sanitizeCss(element: DocumentElement, styleMap: StringMap, writingMode?: string): StringMap;
         depth: number;
         documentRoot: boolean;
         sessionId: string;

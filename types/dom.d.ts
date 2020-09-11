@@ -1,4 +1,5 @@
 type StyleElement = HTMLElement | SVGElement;
+type DocumentElement = HTMLElement | SVGSVGElement;
 type PositionAttr = "top" | "right" | "bottom" | "left";
 type DimensionAttr = "width" | "height";
 type PseudoElt = "::before" | "::after" | "::first-letter" | "::first-line";

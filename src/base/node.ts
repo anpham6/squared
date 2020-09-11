@@ -743,7 +743,7 @@ const isInlineVertical = (value: string) => value.startsWith('inline') || value 
 const canTextAlign = (node: T) => node.naturalChild && (node.isEmpty() || isInlineVertical(node.display)) && !node.floating && node.autoMargin.horizontal !== true;
 
 export default class Node extends squared.lib.base.Container<T> implements squared.base.Node {
-    public static sanitizeCss(element: StyleElement, styleMap: StringMap, writingMode?: string) {
+    public static sanitizeCss(element: DocumentElement, styleMap: StringMap, writingMode?: string) {
         const result: StringMap = {};
         for (let attr in styleMap) {
             let value = styleMap[attr]!;
@@ -786,13 +786,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     protected _cache: CacheValue = {};
     protected _cacheState: CacheState<T> = {};
     protected _preferInitial = false;
-    protected _styleMap!: StringMap;
     protected _bounds: Null<BoxRectDimension> = null;
     protected _box: Null<BoxRectDimension> = null;
     protected _linear: Null<BoxRectDimension> = null;
-    protected _textBounds?: Null<BoxRectDimension>;
+    protected _styleMap!: StringMap;
     protected _initial?: InitialData<T>;
     protected _cssStyle?: StringMap;
+    protected _textBounds?: Null<BoxRectDimension>;
     protected _naturalChildren?: T[];
     protected _naturalElements?: T[];
     protected _childIndex = Infinity;

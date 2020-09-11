@@ -13,7 +13,7 @@ declare module "lib" {
             retainAs(list: T[]): this;
             each(predicate: IteratorPredicate<T, void>, options?: ContainerRangeOptions): this;
             every(predicate: IteratorPredicate<T, boolean>, options?: ContainerRangeOptions): boolean;
-            removeIf(predicate: IteratorPredicate<T, boolean>, options?: ContainerCascadeOptions<T>): T[];
+            removeIf(predicate: IteratorPredicate<T, boolean>, options?: ContainerRemoveIfOptions<T>): T[];
             find(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>): Undef<T>;
             cascade(predicate?: IteratorPredicate<T, void | boolean>, options?: ContainerCascadeOptions<T>): T[];
             map<U = unknown>(predicate: IteratorPredicate<T, U>): U[];

@@ -388,11 +388,11 @@ export default abstract class Application<T extends Node> implements squared.bas
         return this.session.active.get(sessionId)?.cache || new NodeList();
     }
 
-    public getDatasetName(attr: string, element: HTMLElement) {
+    public getDatasetName(attr: string, element: DocumentElement) {
         return element.dataset[attr + capitalize(this.systemName)] || element.dataset[attr];
     }
 
-    public setDatasetName(attr: string, element: HTMLElement, value: string) {
+    public setDatasetName(attr: string, element: DocumentElement, value: string) {
         element.dataset[attr + capitalize(this.systemName)] = value;
     }
 

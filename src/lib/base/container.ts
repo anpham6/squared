@@ -143,28 +143,48 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
         return false;
     }
 
-    public removeIf(predicate: IteratorPredicate<T, boolean>, options?: ContainerCascadeOptions<T>): T[] {
-        let also: Undef<BindGeneric<T, void>>,
+    public removeIf(predicate: IteratorPredicate<T, boolean>, options?: ContainerRemoveIfOptions<T>): T[] {
+        let count: Undef<number>,
+            cascade: Undef<boolean>,
+            also: Undef<BindGeneric<T, void>>,
             error: Undef<IteratorPredicate<T, boolean>>;
         if (options) {
-            ({ also, error } = options);
+            ({ count, cascade, also, error } = options);
         }
-        const result: T[] = [];
-        const children = this.children;
-        for (let i = 0; i < children.length; ++i) {
-            const item = children[i];
-            if (error && error(item, i, children)) {
-                break;
-            }
-            if (predicate(item, i, children)) {
-                if (also) {
-                    also.call(item, item);
+        if (!count || count < 0) {
+            count = Infinity;
+        }
+        let complete: Undef<boolean>;
+        const recurse = (container: Container<T>) => {
+            let result: T[] = [];
+            const children = container.children;
+            for (let i = 0; i < children.length; ++i) {
+                const item = children[i];
+                if (error && error(item, i, children)) {
+                    complete = true;
+                    break;
                 }
-                result.push(item);
-                children.splice(i--, 1);
+                if (predicate(item, i, children)) {
+                    if (also) {
+                        also.call(this, item);
+                    }
+                    result.push(item);
+                    children.splice(i--, 1);
+                    if (--count! === 0) {
+                        complete = true;
+                        break;
+                    }
+                }
+                if (cascade && item instanceof Container && !item.isEmpty()) {
+                    result = result.concat(recurse(item));
+                    if (complete) {
+                        break;
+                    }
+                }
             }
-        }
-        return result;
+            return result;
+        };
+        return recurse(this);
     }
 
     public find(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>) {
@@ -177,7 +197,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
             if (end) {
                 end = Math.min(this.size(), end);
             }
-            if (count === undefined || count < 0) {
+            if (!count || count < 0) {
                 count = 0;
             }
             let complete: Undef<boolean>;
@@ -202,7 +222,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
                     if (predicate(item, i++, children)) {
                         if (count!-- === 0) {
                             if (also) {
-                                also.call(item, item);
+                                also.call(this, item);
                             }
                             return item;
                         }
@@ -224,10 +244,14 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
     }
 
     public cascade(predicate?: IteratorPredicate<T, void | boolean>, options?: ContainerCascadeOptions<T>) {
-        let also: Undef<BindGeneric<T, void>>,
+        let count: Undef<number>,
+            also: Undef<BindGeneric<T, void>>,
             error: Undef<IteratorPredicate<T, boolean>>;
         if (options) {
-            ({ also, error } = options);
+            ({ count, also, error } = options);
+        }
+        if (!count || count < 0) {
+            count = Infinity;
         }
         let complete: Undef<boolean>;
         const recurse = (container: Container<T>) => {
@@ -241,9 +265,13 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
                 }
                 if (!predicate || predicate(item, i, children) === true) {
                     if (also) {
-                        also.call(item, item);
+                        also.call(this, item);
                     }
                     result.push(item);
+                    if (--count! === 0) {
+                        complete = true;
+                        break;
+                    }
                 }
                 if (item instanceof Container && !item.isEmpty()) {
                     result = result.concat(recurse(item));
