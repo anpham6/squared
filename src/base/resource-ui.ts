@@ -296,7 +296,7 @@ const convertPercent = (value: string, dimension: number, options?: ParseUnitOpt
 const checkPreviousSibling = (node: Undef<NodeUI>) => !node || node.lineBreak || node.floating || node.plainText && CHAR_TRAILINGSPACE.test(node.textContent);
 
 export default class ResourceUI<T extends NodeUI> extends Resource<T> implements squared.base.ResourceUI<T> {
-    public static STRING_SPACE = '&#160;';
+    public static readonly STRING_SPACE = '&#160;';
     public static readonly STORED: ResourceStoredMap = {
         ids: new Map(),
         strings: new Map(),

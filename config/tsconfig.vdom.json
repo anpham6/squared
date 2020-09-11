@@ -1,10 +1,11 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
-    "outDir": "../build/src"
+    "outDir": "../build/framework/vdom/src"
   },
   "include": [
     "../types/index.d.ts",
-    "../src/**/*.ts"
+    "../types/vdom/index.d.ts",
+    "../framework/vdom/**/*.ts"
   ]
 }

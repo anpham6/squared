@@ -65,7 +65,7 @@ export default class BottomNavigation<T extends android.base.View> extends squar
 
     public setStyleTheme() {
         const options = createThemeAttribute(this.options.resource);
-        assignEmptyValue(options, 'name', (this.application.userSettings as IUserResourceSettingsUI).manifestThemeName);
+        assignEmptyValue(options, 'name', this.application.userSettings.manifestThemeName);
         assignEmptyValue(options, 'parent', 'Theme.AppCompat.Light.DarkActionBar');
         Resource.addTheme(options);
     }

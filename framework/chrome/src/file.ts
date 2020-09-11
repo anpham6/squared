@@ -705,6 +705,6 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     get userSettings() {
-        return this.resource.userSettings as IUserResourceSettings;
+        return this.resource.userSettings;
     }
 }

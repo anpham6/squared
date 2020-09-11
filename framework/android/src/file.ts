@@ -31,7 +31,7 @@ interface ItemValue {
 
 const { fromLastIndexOf, parseMimeType, plainMap, splitPairStart } = squared.lib.util;
 
-const STORED = Resource.STORED as IResourceStoredMap<View>;
+const STORED = Resource.STORED;
 
 function getFileAssets(pathname: string, items: string[]) {
     const length = items.length;

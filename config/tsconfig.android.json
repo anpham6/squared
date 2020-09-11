@@ -1,11 +1,11 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
-    "outDir": "../build/extension/android"
+    "outDir": "../build/framework/android/src"
   },
   "include": [
     "../types/index.d.ts",
     "../types/android/index.d.ts",
-    "../extension/android/**/*.ts"
+    "../framework/android/**/*.ts"
   ]
 }

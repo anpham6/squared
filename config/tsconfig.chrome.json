@@ -1,5 +1,5 @@
 {
-  "extends": "./tsconfig.options.dev.json",
+  "extends": "../tsconfig.json",
   "compilerOptions": {
     "outDir": "../build/framework/chrome/src"
   },

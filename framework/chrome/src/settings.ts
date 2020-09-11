@@ -1,4 +1,4 @@
-const settings: IUserResourceSettings = {
+const settings: UserResourceSettings = {
     builtInExtensions: [],
     preloadImages: false,
     preloadFonts: false,

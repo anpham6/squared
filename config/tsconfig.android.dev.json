@@ -1,9 +1,11 @@
 {
-  "extends": "./tsconfig.dev.options.json",
+  "extends": "./tsconfig.options.dev.json",
+  "compilerOptions": {
+    "outDir": "../build/framework/android/src"
+  },
   "include": [
     "../types/index.d.ts",
     "../types/android/index.d.ts",
-    "../src/**/*.ts",
     "../framework/android/**/*.ts"
   ]
 }

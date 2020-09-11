@@ -8,12 +8,12 @@ interface GuidelineOptions<T> {
     opposing?: boolean;
 }
 
-interface ICloneOptions {
+interface CloneOptions {
     position?: boolean;
     attributes?: boolean;
 }
 
-interface ICreateNodeWrapperUIOptions<T> extends CreateNodeWrapperUIOptions<T> {
+interface CreateNodeWrapperUIOptions<T> {
     resetMargin?: boolean;
     resetContentBox?: boolean;
     inheritDataset?: boolean;

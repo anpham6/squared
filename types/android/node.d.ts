@@ -1,14 +1,14 @@
-interface ILocalSettingsUI extends LocalSettingsUI {
+interface LocalSettingsUI {
     supportRTL: boolean;
     lineHeightAdjust: number;
     floatPrecision: number;
 }
 
-interface ICacheValueUI extends CacheValueUI {
-    support?: ISupportUI;
+interface CacheValueUI {
+    support?: SupportUI;
 }
 
-interface ISupportUI extends SupportUI {
+interface SupportUI {
     maxDimension: boolean;
 }
 

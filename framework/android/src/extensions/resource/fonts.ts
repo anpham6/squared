@@ -9,6 +9,10 @@ import { concatString } from '../../lib/util';
 type StyleList<T> = ObjectMap<T[]>;
 type AttributeMap<T> = ObjectMap<T[]>;
 
+interface IStyleAttribute<T> extends StyleAttribute {
+    nodes: T[];
+}
+
 const { NODE_RESOURCE } = squared.base.lib.constant;
 
 const { truncate } = squared.lib.math;
@@ -116,7 +120,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         const { defaultFontFamily, floatPrecision, disableFontAlias } = this.options;
         const api = userSettings.targetAPI;
         const convertPixels = userSettings.convertPixels === 'dp';
-        const { fonts, styles } = resource.mapOfStored as IResourceStoredMap<T>;
+        const { fonts, styles } = resource.mapOfStored;
         const nameMap: ObjectMap<T[]> = {};
         const groupMap: ObjectMap<StyleList<T>[]> = {};
         let cache: T[] = [];
@@ -369,12 +373,12 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             }
             while (sorted.length);
         }
-        const resourceMap: ObjectMap<StyleAttribute<T>[]> = {};
+        const resourceMap: ObjectMap<IStyleAttribute<T>[]> = {};
         const nodeMap = new WeakMap<T, string[]>();
         const parentStyle = new Set<string>();
         for (const tag in style) {
             const styleTag = style[tag];
-            const styleData: StyleAttribute<T>[] = [];
+            const styleData: IStyleAttribute<T>[] = [];
             for (const attrs in styleTag) {
                 const items: StringValue[] = [];
                 for (const value of attrs.split(';')) {

@@ -74,7 +74,7 @@ declare namespace base {
     }
 
     class Application<T extends View> extends squared.base.ApplicationUI<T> {
-        readonly userSettings: IUserResourceSettingsUI;
+        readonly userSettings: UserResourceSettingsUI;
         setViewModel(data: AppViewModel, sessionId?: string): void;
         getViewModel(sessionId: string): Undef<AppViewModel>;
         resolveTarget(sessionId: string, target: Null<HTMLElement | string>): Null<T>;
@@ -92,13 +92,13 @@ declare namespace base {
         addGuideline(options: GuidelineOptions<T>): void;
         addBarrier(nodes: T[], barrierDirection: string): string;
         evaluateAnchors(nodes: T[]): void;
-        createNodeWrapper(node: T, parent: T, options?: ICreateNodeWrapperUIOptions<T>): T;
-        get userSettings(): IUserResourceSettingsUI;
+        createNodeWrapper(node: T, parent: T, options?: CreateNodeWrapperUIOptions<T>): T;
+        get userSettings(): UserResourceSettingsUI;
         get screenDimension(): Dimension;
     }
 
     class Resource<T extends View> extends squared.base.ResourceUI<T> {
-        static STORED: IResourceStoredMap<View>;
+        static STORED: ResourceStoredMap;
         static formatOptions(options: ViewAttribute, numberAlias?: boolean): ViewAttribute;
         static formatName(value: string): string;
         static addTheme(theme: ThemeAttribute): boolean;
@@ -108,7 +108,7 @@ declare namespace base {
         readonly application: Application<T>;
         addImageSrc(element: HTMLImageElement | string, prefix?: string, imageSet?: ImageSrcSet[]): string;
         addImageSet(images: StringMap, prefix?: string): string;
-        get userSettings(): IUserResourceSettingsUI;
+        get userSettings(): UserResourceSettingsUI;
     }
 
     class File<T extends View> extends squared.base.File<T> {
@@ -126,7 +126,7 @@ declare namespace base {
         resourceRawVideoToString(options?: FileUniversalOptions): string[];
         resourceRawAudioToString(options?: FileUniversalOptions): string[];
         layoutAllToXml(layouts: FileAsset[], options?: FileUniversalOptions): PlainObject;
-        get userSettings(): IUserResourceSettingsUI;
+        get userSettings(): UserResourceSettingsUI;
         get directory(): { string: string; image: string; video: string; audio: string; font: string };
     }
 
@@ -136,7 +136,7 @@ declare namespace base {
         api: number;
         android(attr: string, value?: string, overwrite?: boolean): string;
         app(attr: string, value?: string, overwrite?: boolean): string;
-        clone(id: number, options?: ICloneOptions): View;
+        clone(id: number, options?: CloneOptions): View;
         applyOptimizations(): void;
         applyCustomizations(overwrite?: boolean): void;
         formatted(value: string, overwrite?: boolean): void;
@@ -164,7 +164,7 @@ declare namespace base {
         set anchored(value);
         get anchored(): boolean;
         set localSettings(value);
-        get localSettings(): ILocalSettingsUI;
+        get localSettings(): LocalSettingsUI;
         get documentId(): string;
         get anchorTarget(): View;
         get constraint(): Constraint;
@@ -182,7 +182,7 @@ declare namespace base {
         get flexibleWidth(): boolean;
         get flexibleHeight(): boolean;
         get target(): Null<HTMLElement>;
-        get support(): ISupportUI;
+        get support(): SupportUI;
     }
 
     class ViewGroup extends View {

@@ -1,8 +1,6 @@
-interface IUserResourceSettingsUI extends UserResourceSettingsUI {
+interface UserResourceSettingsUI {
     targetAPI: number;
     resolutionDPI: number;
-    resolutionScreenWidth: number;
-    resolutionScreenHeight: number;
     supportRTL: boolean;
     compressImages: boolean;
     convertImages: string;
@@ -17,16 +15,12 @@ interface IUserResourceSettingsUI extends UserResourceSettingsUI {
     outputMainFileName: string;
 }
 
-interface IControllerSettingsUI extends ControllerSettingsUI {
-    deviations: IControllerSettingsDeviationsUI;
-}
-
-interface IControllerSettingsDeviationsUI extends ControllerSettingsDeviationsUI {
+interface ControllerSettingsDeviationsUI {
     legendBottomOffset: number;
 }
 
-interface IResourceStoredMap<T> extends ResourceStoredMap {
-    styles: Map<string, StyleAttribute<T>>;
+interface ResourceStoredMap {
+    styles: Map<string, StyleAttribute>;
     themes: Map<string, Map<string, ThemeAttribute>>;
     dimens: Map<string, string>;
     drawables: Map<string, string>;
@@ -51,9 +45,8 @@ interface GroupAttribute {
     parent: string;
  }
 
-interface StyleAttribute<T> extends GroupAttribute {
+interface StyleAttribute extends GroupAttribute {
     items: StringValue[];
-    nodes?: T[];
 }
 
 interface ThemeAttribute extends GroupAttribute {

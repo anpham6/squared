@@ -1,9 +1,10 @@
 {
-  "extends": "./tsconfig.dev.options.json",
+  "extends": "./tsconfig.options.dev.json",
+  "compilerOptions": {
+    "outDir": "../build/src"
+  },
   "include": [
-    "../types/**/index.d.ts",
-    "../src/**/*.ts",
-    "../framework/**/*.ts",
-    "../extension/**/*.ts"
+    "../types/index.d.ts",
+    "../src/**/*.ts"
   ]
 }

@@ -746,7 +746,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
             const wrapped = mainData.unsetContentBox;
             const insertNode = children[children.length - 1];
             if (CssGrid.isJustified(node)) {
-                setContentSpacing(mainData, column, node, true, controller.userSettings.resolutionScreenWidth - node.bounds.left, 0);
+                setContentSpacing(mainData, column, node, true, controller.userSettings.resolutionScreenWidth! - node.bounds.left, 0);
                 switch (mainData.justifyContent) {
                     case 'center':
                     case 'space-around':
@@ -811,7 +811,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 }
             }
             if (CssGrid.isAligned(node)) {
-                setContentSpacing(mainData, row, node, false, 0, controller.userSettings.resolutionScreenHeight);
+                setContentSpacing(mainData, row, node, false, 0, controller.userSettings.resolutionScreenHeight!);
                 if (wrapped) {
                     switch (mainData.alignContent) {
                         case 'center':
