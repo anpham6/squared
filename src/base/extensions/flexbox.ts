@@ -1,4 +1,4 @@
-import NODE_ALIGNMENT = squared.base.NODE_ALIGNMENT;
+import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
 
 import type NodeUI from '../node-ui';
 
@@ -142,7 +142,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                     return orderA > orderB ? c : d;
                 });
             }
-            else if (mainData.reverse) {
+            else if (mainData.reverse && children.length > 1) {
                 children.reverse();
             }
             if (mainData.row) {

@@ -1,4 +1,4 @@
-import NODE_TEMPLATE = squared.base.NODE_TEMPLATE;
+import NODE_TEMPLATE = squared.base.lib.constant.NODE_TEMPLATE;
 import USER_AGENT = squared.lib.constant.USER_AGENT;
 
 import type ApplicationUI from './application-ui';
@@ -68,7 +68,7 @@ function pushIndentArray(values: string[], depth: number, char = '\t', separator
         const indent = char.repeat(depth);
         let result = '';
         for (let i = 0, length = values.length; i < length; ++i) {
-            result += (i ? separator : '') + pushIndent(values[i], depth, char, indent);
+            result += (i > 0 ? separator : '') + pushIndent(values[i], depth, char, indent);
         }
         return result;
     }

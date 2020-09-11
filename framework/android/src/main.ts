@@ -1,3 +1,4 @@
+import APP_FRAMEWORK = squared.base.lib.constant.APP_FRAMEWORK;
 import EXT_NAME = squared.base.EXT_NAME;
 import EXT_ANDROID = android.base.EXT_ANDROID;
 
@@ -47,7 +48,6 @@ import SETTINGS from './settings';
 type FileCopyingOptions = squared.base.FileCopyingOptions;
 type FileArchivingOptions = squared.base.FileArchivingOptions;
 
-const framework = squared.base.lib.constant.APP_FRAMEWORK.ANDROID;
 let application: Null<Application<View>> = null;
 let file: Null<File<View>> = null;
 
@@ -273,7 +273,7 @@ const appBase: android.AndroidFramework<View> = {
     },
     create() {
         application = new Application<View>(
-            framework,
+            APP_FRAMEWORK.ANDROID,
             View,
             Controller,
             squared.base.ExtensionManager,
@@ -282,38 +282,38 @@ const appBase: android.AndroidFramework<View> = {
         file = new File();
         application.resourceHandler.fileHandler = file;
         application.builtInExtensions = new Map<string, squared.base.ExtensionUI<View>>([
-            [EXT_NAME.ACCESSIBILITY, new Accessibility(EXT_NAME.ACCESSIBILITY, framework)],
-            [EXT_ANDROID.DELEGATE_BACKGROUND, new DelegateBackground(EXT_ANDROID.DELEGATE_BACKGROUND, framework)],
-            [EXT_ANDROID.DELEGATE_NEGATIVEX, new DelegateNegativeX(EXT_ANDROID.DELEGATE_NEGATIVEX, framework)],
-            [EXT_ANDROID.DELEGATE_POSITIVEX, new DelegatePositiveX(EXT_ANDROID.DELEGATE_POSITIVEX, framework)],
-            [EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, new DelegateMaxWidthHeight(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, framework)],
-            [EXT_ANDROID.DELEGATE_PERCENT, new DelegatePercent(EXT_ANDROID.DELEGATE_PERCENT, framework)],
-            [EXT_ANDROID.DELEGATE_SCROLLBAR, new DelegateScrollBar(EXT_ANDROID.DELEGATE_SCROLLBAR, framework)],
-            [EXT_ANDROID.DELEGATE_RADIOGROUP, new DelegateRadioGroup(EXT_ANDROID.DELEGATE_RADIOGROUP, framework)],
-            [EXT_ANDROID.DELEGATE_MULTILINE, new DelegateMultiline(EXT_ANDROID.DELEGATE_MULTILINE, framework)],
-            [EXT_NAME.RELATIVE, new Relative(EXT_NAME.RELATIVE, framework)],
-            [EXT_NAME.CSS_GRID, new CssGrid(EXT_NAME.CSS_GRID, framework)],
-            [EXT_NAME.FLEXBOX, new Flexbox(EXT_NAME.FLEXBOX, framework)],
-            [EXT_NAME.TABLE, new Table(EXT_NAME.TABLE, framework, { tagNames: ['TABLE'] })],
-            [EXT_NAME.COLUMN, new Column(EXT_NAME.COLUMN, framework)],
-            [EXT_NAME.LIST, new List(EXT_NAME.LIST, framework)],
-            [EXT_NAME.GRID, new Grid(EXT_NAME.GRID, framework, { tagNames: ['DIV', 'FORM', 'UL', 'OL', 'DL', 'NAV', 'SECTION', 'ASIDE', 'MAIN', 'HEADER', 'FOOTER', 'P', 'ARTICLE', 'FIELDSET'] })],
-            [EXT_NAME.SPRITE, new Sprite(EXT_NAME.SPRITE, framework)],
-            [EXT_NAME.WHITESPACE, new WhiteSpace(EXT_NAME.WHITESPACE, framework)],
-            [EXT_ANDROID.RESOURCE_SVG, new ResourceSvg(EXT_ANDROID.RESOURCE_SVG, framework)],
-            [EXT_ANDROID.RESOURCE_BACKGROUND, new ResourceBackground(EXT_ANDROID.RESOURCE_BACKGROUND, framework)],
-            [EXT_ANDROID.RESOURCE_STRINGS, new ResourceStrings(EXT_ANDROID.RESOURCE_STRINGS, framework)],
-            [EXT_ANDROID.RESOURCE_FONTS, new ResourceFonts(EXT_ANDROID.RESOURCE_FONTS, framework)],
-            [EXT_ANDROID.RESOURCE_DIMENS, new ResourceDimens(EXT_ANDROID.RESOURCE_DIMENS, framework)],
-            [EXT_ANDROID.RESOURCE_STYLES, new ResourceStyles(EXT_ANDROID.RESOURCE_STYLES, framework)],
-            [EXT_ANDROID.RESOURCE_INCLUDES, new ResourceIncludes(EXT_ANDROID.RESOURCE_INCLUDES, framework)],
-            [EXT_ANDROID.RESOURCE_DATA, new ResourceData(EXT_ANDROID.RESOURCE_DATA, framework)],
-            [EXT_ANDROID.EXTERNAL, new External(EXT_ANDROID.EXTERNAL, framework)],
-            [EXT_ANDROID.SUBSTITUTE, new Substitute(EXT_ANDROID.SUBSTITUTE, framework)]
+            [EXT_NAME.ACCESSIBILITY, new Accessibility(EXT_NAME.ACCESSIBILITY, APP_FRAMEWORK.ANDROID)],
+            [EXT_ANDROID.DELEGATE_BACKGROUND, new DelegateBackground(EXT_ANDROID.DELEGATE_BACKGROUND, APP_FRAMEWORK.ANDROID)],
+            [EXT_ANDROID.DELEGATE_NEGATIVEX, new DelegateNegativeX(EXT_ANDROID.DELEGATE_NEGATIVEX, APP_FRAMEWORK.ANDROID)],
+            [EXT_ANDROID.DELEGATE_POSITIVEX, new DelegatePositiveX(EXT_ANDROID.DELEGATE_POSITIVEX, APP_FRAMEWORK.ANDROID)],
+            [EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, new DelegateMaxWidthHeight(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, APP_FRAMEWORK.ANDROID)],
+            [EXT_ANDROID.DELEGATE_PERCENT, new DelegatePercent(EXT_ANDROID.DELEGATE_PERCENT, APP_FRAMEWORK.ANDROID)],
+            [EXT_ANDROID.DELEGATE_SCROLLBAR, new DelegateScrollBar(EXT_ANDROID.DELEGATE_SCROLLBAR, APP_FRAMEWORK.ANDROID)],
+            [EXT_ANDROID.DELEGATE_RADIOGROUP, new DelegateRadioGroup(EXT_ANDROID.DELEGATE_RADIOGROUP, APP_FRAMEWORK.ANDROID)],
+            [EXT_ANDROID.DELEGATE_MULTILINE, new DelegateMultiline(EXT_ANDROID.DELEGATE_MULTILINE, APP_FRAMEWORK.ANDROID)],
+            [EXT_NAME.RELATIVE, new Relative(EXT_NAME.RELATIVE, APP_FRAMEWORK.ANDROID)],
+            [EXT_NAME.CSS_GRID, new CssGrid(EXT_NAME.CSS_GRID, APP_FRAMEWORK.ANDROID)],
+            [EXT_NAME.FLEXBOX, new Flexbox(EXT_NAME.FLEXBOX, APP_FRAMEWORK.ANDROID)],
+            [EXT_NAME.TABLE, new Table(EXT_NAME.TABLE, APP_FRAMEWORK.ANDROID, { tagNames: ['TABLE'] })],
+            [EXT_NAME.COLUMN, new Column(EXT_NAME.COLUMN, APP_FRAMEWORK.ANDROID)],
+            [EXT_NAME.LIST, new List(EXT_NAME.LIST, APP_FRAMEWORK.ANDROID)],
+            [EXT_NAME.GRID, new Grid(EXT_NAME.GRID, APP_FRAMEWORK.ANDROID, { tagNames: ['DIV', 'FORM', 'UL', 'OL', 'DL', 'NAV', 'SECTION', 'ASIDE', 'MAIN', 'HEADER', 'FOOTER', 'P', 'ARTICLE', 'FIELDSET'] })],
+            [EXT_NAME.SPRITE, new Sprite(EXT_NAME.SPRITE, APP_FRAMEWORK.ANDROID)],
+            [EXT_NAME.WHITESPACE, new WhiteSpace(EXT_NAME.WHITESPACE, APP_FRAMEWORK.ANDROID)],
+            [EXT_ANDROID.RESOURCE_SVG, new ResourceSvg(EXT_ANDROID.RESOURCE_SVG, APP_FRAMEWORK.ANDROID)],
+            [EXT_ANDROID.RESOURCE_BACKGROUND, new ResourceBackground(EXT_ANDROID.RESOURCE_BACKGROUND, APP_FRAMEWORK.ANDROID)],
+            [EXT_ANDROID.RESOURCE_STRINGS, new ResourceStrings(EXT_ANDROID.RESOURCE_STRINGS, APP_FRAMEWORK.ANDROID)],
+            [EXT_ANDROID.RESOURCE_FONTS, new ResourceFonts(EXT_ANDROID.RESOURCE_FONTS, APP_FRAMEWORK.ANDROID)],
+            [EXT_ANDROID.RESOURCE_DIMENS, new ResourceDimens(EXT_ANDROID.RESOURCE_DIMENS, APP_FRAMEWORK.ANDROID)],
+            [EXT_ANDROID.RESOURCE_STYLES, new ResourceStyles(EXT_ANDROID.RESOURCE_STYLES, APP_FRAMEWORK.ANDROID)],
+            [EXT_ANDROID.RESOURCE_INCLUDES, new ResourceIncludes(EXT_ANDROID.RESOURCE_INCLUDES, APP_FRAMEWORK.ANDROID)],
+            [EXT_ANDROID.RESOURCE_DATA, new ResourceData(EXT_ANDROID.RESOURCE_DATA, APP_FRAMEWORK.ANDROID)],
+            [EXT_ANDROID.EXTERNAL, new External(EXT_ANDROID.EXTERNAL, APP_FRAMEWORK.ANDROID)],
+            [EXT_ANDROID.SUBSTITUTE, new Substitute(EXT_ANDROID.SUBSTITUTE, APP_FRAMEWORK.ANDROID)]
         ]);
         return {
             application,
-            framework,
+            framework: APP_FRAMEWORK.ANDROID,
             userSettings: { ...SETTINGS }
         };
     },
@@ -321,7 +321,7 @@ const appBase: android.AndroidFramework<View> = {
         if (application) {
             return {
                 application,
-                framework,
+                framework: APP_FRAMEWORK.ANDROID,
                 userSettings: application.userSettings
             };
         }

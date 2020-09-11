@@ -1,6 +1,6 @@
-import BOX_STANDARD = squared.base.BOX_STANDARD;
-import NODE_ALIGNMENT = squared.base.NODE_ALIGNMENT;
-import BUILD_VERSION = android.base.BUILD_VERSION;
+import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
+import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
+import BUILD_VERSION = android.lib.constant.BUILD_VERSION;
 import LAYOUT_STRING = android.base.LAYOUT_STRING;
 import CSS_UNIT = squared.lib.constant.CSS_UNIT;
 

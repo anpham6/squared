@@ -1,6 +1,6 @@
-import BOX_STANDARD = squared.base.BOX_STANDARD;
-import NODE_TEMPLATE = squared.base.NODE_TEMPLATE;
-import BUILD_VERSION = android.base.BUILD_VERSION;
+import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
+import NODE_TEMPLATE = squared.base.lib.constant.NODE_TEMPLATE;
+import BUILD_VERSION = android.lib.constant.BUILD_VERSION;
 
 import { CONTAINER_NODE, CONTAINER_TAGNAME, CONTAINER_TAGNAME_X } from '../../lib/constant';
 

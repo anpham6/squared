@@ -1,4 +1,4 @@
-import BUILD_VERSION = android.base.BUILD_VERSION;
+import BUILD_VERSION = android.lib.constant.BUILD_VERSION;
 
 import { XML_NAMESPACE } from './lib/constant';
 

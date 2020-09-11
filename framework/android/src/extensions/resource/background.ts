@@ -1,5 +1,5 @@
-import BOX_STANDARD = squared.base.BOX_STANDARD;
-import BUILD_VERSION = android.base.BUILD_VERSION;
+import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
+import BUILD_VERSION = android.lib.constant.BUILD_VERSION;
 
 import { CONTAINER_NODE, CONTAINER_TAGNAME, SUPPORT_TAGNAME, SUPPORT_TAGNAME_X, XML_NAMESPACE } from '../../lib/constant';
 

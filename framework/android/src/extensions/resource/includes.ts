@@ -1,4 +1,4 @@
-import NODE_TEMPLATE = squared.base.NODE_TEMPLATE;
+import NODE_TEMPLATE = squared.base.lib.constant.NODE_TEMPLATE;
 
 import type View from '../../view';
 

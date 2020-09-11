@@ -46,27 +46,6 @@ declare namespace base {
         PADDING_BOTTOM = 'paddingBottom',
         PADDING_LEFT = 'paddingLeft'
     }
-    const enum BUILD_VERSION {
-        R = 30,
-        Q = 29,
-        PIE = 28,
-        OREO_1 = 27,
-        OREO = 26,
-        NOUGAT_1 = 25,
-        NOUGAT = 24,
-        MARSHMALLOW = 23,
-        LOLLIPOP_1 = 22,
-        LOLLIPOP = 21,
-        KITKAT_1 = 20,
-        KITKAT = 19,
-        JELLYBEAN_2 = 18,
-        JELLYBEAN_1 = 17,
-        JELLYBEAN = 16,
-        ICE_CREAM_SANDWICH_1 = 15,
-        ICE_CREAM_SANDWICH = 14,
-        ALL = 0,
-        LATEST = 30
-    }
 
     interface AppViewModel extends PlainObject {
         import?: string[];
@@ -230,6 +209,27 @@ declare namespace extensions {
 
 declare namespace lib {
     namespace constant {
+        const enum BUILD_VERSION {
+            R = 30,
+            Q = 29,
+            PIE = 28,
+            OREO_1 = 27,
+            OREO = 26,
+            NOUGAT_1 = 25,
+            NOUGAT = 24,
+            MARSHMALLOW = 23,
+            LOLLIPOP_1 = 22,
+            LOLLIPOP = 21,
+            KITKAT_1 = 20,
+            KITKAT = 19,
+            JELLYBEAN_2 = 18,
+            JELLYBEAN_1 = 17,
+            JELLYBEAN = 16,
+            ICE_CREAM_SANDWICH_1 = 15,
+            ICE_CREAM_SANDWICH = 14,
+            ALL = 0,
+            LATEST = 30
+        }
         enum CONTAINER_NODE {
             EDIT = 1,
             RANGE,

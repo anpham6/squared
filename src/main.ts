@@ -109,6 +109,13 @@ function loadExtensions() {
     }
 }
 
+function findNode(element: (Element | string), sessionId: string) {
+    if (typeof element === 'string') {
+        element = document.getElementById(element) as HTMLElement;
+    }
+    return session.getElementAsNode<Node>(element, sessionId);
+}
+
 function findElement(element: HTMLElement, sync?: boolean, cache?: boolean) {
     if (cache) {
         const result = main!.elementMap.get(element);
@@ -411,9 +418,8 @@ export function latest(value = 1) {
     if (main && value) {
         const active = main.session.active;
         if (active.size) {
-            let items = Array.from(active.keys());
-            items = value < 0 ? items.slice(0, Math.abs(value)) : items.slice(Math.max(0, active.size - value)).reverse();
-            return Math.abs(value) === 1 ? items[0] : items;
+            const items = Array.from(active.keys());
+            return Math.abs(value) === 1 ? items[0] : items.length === 1 ? items : value < 0 ? items.slice(0, Math.abs(value)) : items.slice(Math.max(0, active.size - value)).reverse();
         }
     }
     return '';
@@ -532,19 +538,29 @@ export function fromElement(element: HTMLElement, sync?: boolean, cache?: boolea
 
 export function fromCache(...elements: (Element | string)[]) {
     if (main) {
+        const sessions = Array.from(main.session.active.keys());
+        const length = sessions.length;
+        if (length === 0) {
+            return;
+        }
+        const elementCount = elements.length;
+        if (length > 1) {
+            sessions.reverse();
+        }
+        else if (elementCount === 1) {
+            return findNode(elements[0], sessions[0]);
+        }
         const result = new Map<Element, Node | Node[]>();
-        const multiple = main.session.active.size > 1;
-        const length = elements.length;
-        for (const sessionId of main.session.active.keys()) {
-            for (let i = 0; i < length; ++i) {
-                let element = elements[i];
+        for (let i = 0; i < length; ++i) {
+            for (let j = 0; j < elementCount; ++j) {
+                let element = elements[j];
                 if (typeof element === 'string') {
                     element = document.getElementById(element) as HTMLElement;
                 }
                 if (element instanceof Element) {
-                    const node = session.getElementAsNode<Node>(element, sessionId);
+                    const node = session.getElementAsNode<Node>(element, sessions[i]);
                     if (node) {
-                        if (multiple) {
+                        if (length > 1) {
                             if (result.has(element)) {
                                 (result.get(element) as Node[]).push(node);
                             }
@@ -553,16 +569,13 @@ export function fromCache(...elements: (Element | string)[]) {
                             }
                         }
                         else {
-                            if (length === 1) {
-                                return node;
-                            }
                             result.set(element, node);
                         }
                     }
                 }
             }
         }
-        if (length <= 1) {
+        if (elementCount <= 1) {
             if (result.size) {
                 return result.values().next().value as Node[];
             }

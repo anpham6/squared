@@ -1,4 +1,4 @@
-import BUILD_VERSION = android.base.BUILD_VERSION;
+import BUILD_VERSION = android.lib.constant.BUILD_VERSION;
 
 import type View from '../../view';
 
@@ -395,20 +395,16 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 });
             }
             styleData.sort((a, b) => {
-                let c: NumString = a.nodes!.length,
-                    d: NumString = b.nodes!.length;
+                let c: NumString = a.nodes.length,
+                    d: NumString = b.nodes.length;
                 if (c === d) {
                     c = a.items.length;
                     d = b.items.length;
-                    if (c === d) {
-                        c = a.name;
-                        d = b.name;
-                    }
                 }
                 return c <= d ? 1 : -1;
             });
             for (let i = 0, length = styleData.length; i < length; ++i) {
-                styleData[i].name = capitalize(tag) + (i ? '_' + i : '');
+                styleData[i].name = capitalize(tag) + (i > 0 ? '_' + i : '');
             }
             resourceMap[tag] = styleData;
         }

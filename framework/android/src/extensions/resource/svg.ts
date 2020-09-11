@@ -1,5 +1,5 @@
 import SYNCHRONIZE_MODE = squared.svg.constant.SYNCHRONIZE_MODE;
-import BUILD_VERSION = android.base.BUILD_VERSION;
+import BUILD_VERSION = android.lib.constant.BUILD_VERSION;
 
 import { XML_NAMESPACE } from '../../lib/constant';
 import { VECTOR_GROUP, VECTOR_PATH } from '../../template/vector';
@@ -1295,7 +1295,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                                         translateData.objectAnimator.push(valueData);
                                                                     }
                                                                 }
-                                                                if (l) {
+                                                                if (l > 0) {
                                                                     propertyOptions.interpolator = getPathInterpolator(item.keySplines, l - 1);
                                                                 }
                                                                 propertyOptions.duration = duration.toString();

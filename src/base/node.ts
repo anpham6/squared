@@ -1875,9 +1875,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     offset = 0;
                 }
                 const q = queryMap.length;
-                if (selectors.length && offset !== -1 && offset < q) {
+                let r = selectors.length;
+                if (r && offset !== -1 && offset < q) {
                     const dataEnd = selectors.pop() as QueryData;
-                    const lastEnd = selectors.length === 0;
+                    --r;
+                    const lastEnd = r === 0;
                     const currentCount = result.length;
                     let pending: T[];
                     if (dataEnd.all && q - offset === 1) {
@@ -1891,7 +1893,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                 pending = pending.concat(children);
                             }
                             else {
-                                for (let k = 0, r = children.length; k < r; ++k) {
+                                for (let k = 0, s = children.length; k < s; ++k) {
                                     const node = children[k];
                                     if ((currentCount === 0 || !result.includes(node)) && validateQuerySelector(this, node, dataEnd, lastEnd)) {
                                         pending.push(node);
@@ -1900,10 +1902,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             }
                         }
                     }
-                    if (selectors.length && (dataEnd.adjacent || resultCount !== -Infinity)) {
-                        selectors.reverse();
+                    const s = pending.length;
+                    if (r && (dataEnd.adjacent || resultCount !== -Infinity)) {
+                        if (r > 1) {
+                            selectors.reverse();
+                        }
                         let count = currentCount;
-                        for (let j = 0, r = pending.length; j < r; ++j) {
+                        for (let j = 0; j < s; ++j) {
                             const node = pending[j];
                             if ((currentCount === 0 || !result.includes(node)) && ascendQuerySelector(this, selectors, i, 0, [node], dataEnd.adjacent)) {
                                 result.push(node);
@@ -1914,8 +1919,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         }
                     }
                     else if (currentCount === 0) {
-                        if (i === queries.length - 1 || resultCount > 0 && resultCount <= pending.length) {
-                            if (resultCount > 0 && pending.length > resultCount) {
+                        if (i === queries.length - 1 || resultCount > 0 && resultCount <= s) {
+                            if (resultCount > 0 && s > resultCount) {
                                 pending.length = resultCount;
                             }
                             return pending.sort(sortById);
@@ -1926,7 +1931,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     }
                     else {
                         let count = currentCount;
-                        for (let j = 0, r = pending.length; j < r; ++j) {
+                        for (let j = 0; j < s; ++j) {
                             const node = pending[j];
                             if (currentCount === 0 || !result.includes(node)) {
                                 result.push(node);
@@ -2034,7 +2039,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 customMap.push(result);
                 result = this.querySelectorAll(value, customMap).filter(item => !ancestors.includes(item));
             }
-            return reverse ? result.reverse() : result;
+            return reverse && result.length > 1 ? result.reverse() : result;
         }
         return [];
     }

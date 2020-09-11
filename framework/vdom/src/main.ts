@@ -1,10 +1,11 @@
+import APP_FRAMEWORK = squared.base.lib.constant.APP_FRAMEWORK;
+
 import Application from './application';
 
 import SETTINGS from './settings';
 
 type Node = squared.base.Node;
 
-const framework = squared.base.lib.constant.APP_FRAMEWORK.VDOM;
 let application: Null<Application<Node>> = null;
 
 const appBase: squared.base.AppFramework<Node> = {
@@ -16,14 +17,14 @@ const appBase: squared.base.AppFramework<Node> = {
     system: {},
     create() {
         application = new Application<Node>(
-            framework,
+            APP_FRAMEWORK.VDOM,
             squared.base.Node,
             squared.base.Controller,
             squared.base.ExtensionManager
         );
         return {
             application,
-            framework,
+            framework: APP_FRAMEWORK.VDOM,
             userSettings: { ...SETTINGS }
         };
     },
@@ -31,7 +32,7 @@ const appBase: squared.base.AppFramework<Node> = {
         if (application) {
             return {
                 application,
-                framework,
+                framework: APP_FRAMEWORK.VDOM,
                 userSettings: application.userSettings
             };
         }

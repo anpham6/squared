@@ -1,3 +1,4 @@
+import APP_FRAMEWORK = squared.base.lib.constant.APP_FRAMEWORK;
 import EXT_CHROME = chrome.base.EXT_CHROME;
 
 import Application from './application';
@@ -25,7 +26,6 @@ const { util, session } = squared.lib;
 const { isString, isPlainObject } = util;
 const { frameworkNotInstalled } = session;
 
-const framework = squared.base.lib.constant.APP_FRAMEWORK.CHROME;
 let application: Null<Application<Node>> = null;
 let file: Null<File<Node>> = null;
 
@@ -133,7 +133,7 @@ const appBase: chrome.ChromeFramework<Node> = {
     },
     create() {
         application = new Application<Node>(
-            framework,
+            APP_FRAMEWORK.CHROME,
             squared.base.Node,
             squared.base.Controller,
             squared.base.ExtensionManager,
@@ -142,19 +142,19 @@ const appBase: chrome.ChromeFramework<Node> = {
         file = new File();
         application.resourceHandler!.fileHandler = file;
         application.builtInExtensions = new Map<string, Extension<Node>>([
-            [EXT_CHROME.COMPRESS_BROTLI, new CompressBrotli(EXT_CHROME.COMPRESS_BROTLI, framework)],
-            [EXT_CHROME.COMPRESS_GZIP, new CompressGzip(EXT_CHROME.COMPRESS_GZIP, framework)],
-            [EXT_CHROME.COMPRESS_JPEG, new CompressJpeg(EXT_CHROME.COMPRESS_JPEG, framework)],
-            [EXT_CHROME.COMPRESS_PNG, new CompressPng(EXT_CHROME.COMPRESS_PNG, framework)],
-            [EXT_CHROME.CONVERT_BMP, new ConvertBmp(EXT_CHROME.CONVERT_BMP, framework)],
-            [EXT_CHROME.CONVERT_GIF, new ConvertGif(EXT_CHROME.CONVERT_GIF, framework)],
-            [EXT_CHROME.CONVERT_JPEG, new ConvertJpeg(EXT_CHROME.CONVERT_JPEG, framework)],
-            [EXT_CHROME.CONVERT_PNG, new ConvertPng(EXT_CHROME.CONVERT_PNG, framework)],
-            [EXT_CHROME.CONVERT_TIFF, new ConvertTiff(EXT_CHROME.CONVERT_TIFF, framework)]
+            [EXT_CHROME.COMPRESS_BROTLI, new CompressBrotli(EXT_CHROME.COMPRESS_BROTLI, APP_FRAMEWORK.CHROME)],
+            [EXT_CHROME.COMPRESS_GZIP, new CompressGzip(EXT_CHROME.COMPRESS_GZIP, APP_FRAMEWORK.CHROME)],
+            [EXT_CHROME.COMPRESS_JPEG, new CompressJpeg(EXT_CHROME.COMPRESS_JPEG, APP_FRAMEWORK.CHROME)],
+            [EXT_CHROME.COMPRESS_PNG, new CompressPng(EXT_CHROME.COMPRESS_PNG, APP_FRAMEWORK.CHROME)],
+            [EXT_CHROME.CONVERT_BMP, new ConvertBmp(EXT_CHROME.CONVERT_BMP, APP_FRAMEWORK.CHROME)],
+            [EXT_CHROME.CONVERT_GIF, new ConvertGif(EXT_CHROME.CONVERT_GIF, APP_FRAMEWORK.CHROME)],
+            [EXT_CHROME.CONVERT_JPEG, new ConvertJpeg(EXT_CHROME.CONVERT_JPEG, APP_FRAMEWORK.CHROME)],
+            [EXT_CHROME.CONVERT_PNG, new ConvertPng(EXT_CHROME.CONVERT_PNG, APP_FRAMEWORK.CHROME)],
+            [EXT_CHROME.CONVERT_TIFF, new ConvertTiff(EXT_CHROME.CONVERT_TIFF, APP_FRAMEWORK.CHROME)]
         ]);
         return {
             application,
-            framework,
+            framework: APP_FRAMEWORK.CHROME,
             userSettings: { ...SETTINGS }
         };
     },
@@ -162,7 +162,7 @@ const appBase: chrome.ChromeFramework<Node> = {
         if (application) {
             return {
                 application,
-                framework,
+                framework: APP_FRAMEWORK.CHROME,
                 userSettings: application.userSettings
             };
         }
