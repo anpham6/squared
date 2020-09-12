@@ -437,7 +437,7 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             }
         }
         if (horizontal) {
-            node.sort((a, b) => {
+            node.children.sort((a, b) => {
                 const linearA = a.linear;
                 const linearB = b.linear;
                 if (!withinRange(linearA.top, linearB.top)) {
@@ -450,7 +450,7 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             });
         }
         else {
-            node.sort((a, b) => {
+            node.children.sort((a, b) => {
                 const linearA = a.linear;
                 const linearB = b.linear;
                 if (!withinRange(linearA.left, linearB.left)) {

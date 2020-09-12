@@ -914,16 +914,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return null;
     }
 
-    public sort(predicate?: (a: T, b: T) => number) {
-        if (predicate) {
-            super.sort(predicate);
-        }
-        else {
-            this.children.sort((a: T, b: T) => a.containerIndex - b.containerIndex);
-        }
-        return this;
-    }
-
     public alignedVertically(siblings?: T[], cleared?: Null<Map<T, string>>, horizontal?: boolean) {
         if (this.lineBreak) {
             return NODE_TRAVERSE.LINEBREAK;

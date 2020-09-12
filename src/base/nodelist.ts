@@ -16,4 +16,9 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
         }
         return this;
     }
+
+    public sort(predicate: (a: T, b: T) => number) {
+        this.children.sort(predicate);
+        return this;
+    }
 }

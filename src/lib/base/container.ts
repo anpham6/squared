@@ -1,6 +1,6 @@
 import ListIterator from './listiterator';
 
-import { plainMap } from '../util';
+import { plainMap, sortByArray } from '../util';
 
 class Iter<T> implements Iterator<T> {
     private index = -1;
@@ -17,7 +17,7 @@ class Iter<T> implements Iterator<T> {
     }
 }
 
-export default class Container<T = any> implements squared.lib.base.Container<T>, Iterable<T> {
+export default class Container<T extends {}> implements squared.lib.base.Container<T>, Iterable<T> {
     constructor(public children: T[] = []) {}
 
     public [Symbol.iterator]() {
@@ -285,13 +285,13 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
         return recurse(this);
     }
 
-    public map<U = unknown>(predicate: IteratorPredicate<T, U>): U[] {
-        return plainMap(this.children, predicate);
+    public sortBy(...attrs: (string | boolean)[]) {
+        sortByArray(this.children, ...attrs);
+        return this;
     }
 
-    public sort(predicate: (a: T, b: T) => number) {
-        this.children.sort(predicate);
-        return this;
+    public map<U = unknown>(predicate: IteratorPredicate<T, U>): U[] {
+        return plainMap(this.children, predicate);
     }
 
     public contains(item: T) {

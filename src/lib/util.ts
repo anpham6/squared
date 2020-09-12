@@ -952,35 +952,49 @@ export function findSet<T>(list: Set<T>, predicate: IteratorPredicate<T, boolean
     }
 }
 
-export function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]) {
+export function sortByArray<T extends {}>(list: T[], ...attrs: (string | boolean)[]) {
+    let length = attrs.length,
+        ascending = attrs[length - 1];
+    if (typeof ascending === 'boolean') {
+        length = --attrs.length;
+    }
+    else {
+        ascending = true;
+    }
     return list.sort((a, b) => {
-        for (let i = 0, length = attrs.length; i < length; ++i) {
-            let valueA = a,
-                valueB = b;
-            for (const name of attrs[i].split('.')) {
+        let valueA = a,
+            valueB = b;
+        for (let i = 0; i < length; ++i) {
+            const attr = attrs[i];
+            if (typeof attr !== 'string') {
+                continue;
+            }
+            for (const name of attr.split('.')) {
                 const vA = valueA[name];
                 const vB = valueB[name];
-                if (vA !== undefined && vB !== undefined) {
+                const oA = vA !== undefined && vA !== null;
+                const oB = vB !== undefined && vB !== null;
+                if (oA && oB) {
                     valueA = vA;
                     valueB = vB;
                 }
-                else if (vA === undefined && vB === undefined) {
+                else if (!oA && !oB) {
                     return 0;
                 }
-                else if (vA !== undefined) {
-                    return -1;
+                else if (oA) {
+                    return ascending ? -1 : 1;
                 }
                 else {
-                    return 1;
+                    return ascending ? 1 : -1;
                 }
             }
-            if (valueA !== valueB) {
-                if (ascending) {
-                    return valueA > valueB ? 1 : -1;
-                }
-                else {
-                    return valueA < valueB ? -1 : 1;
-                }
+        }
+        if (valueA !== valueB && typeof valueA !== 'object' && typeof valueB !== 'object') {
+            if (ascending) {
+                return valueA < valueB ? -1 : 1;
+            }
+            else {
+                return valueA > valueB ? -1 : 1;
             }
         }
         return 0;

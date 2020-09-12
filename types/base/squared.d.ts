@@ -618,7 +618,6 @@ declare module "base" {
         hide(options?: HideOptions<NodeUI>): void;
         replaceTry(options: ReplaceTryOptions<NodeUI>): boolean;
         removeTry(options?: RemoveTryOptions<NodeUI>): Null<NodeTemplate<NodeUI>>;
-        sort(predicate?: (a: NodeUI, b: NodeUI) => number): this;
         render(parent: NodeUI): void;
         renderEach(predicate: IteratorPredicate<NodeUI, void>): this;
         parseWidth(value: string, parent?: boolean): number;
@@ -736,6 +735,7 @@ declare module "base" {
         sessionId: string;
         afterAdd?: (node: T, cascade?: boolean, remove?: boolean) => void;
         add(node: T, delegate?: boolean, cascade?: boolean, remove?: boolean): this;
+        sort(predicate: (a: T, b: T) => number): this;
         constructor(children?: T[], sessionId?: string);
     }
 
