@@ -1,8 +1,10 @@
 import Extension from '../../extension';
 
+const { findSet } = squared.lib.util;
+
 export default class Jpeg<T extends squared.base.Node> extends Extension<T> {
     public readonly options: CompressOptions = {
-        mimeTypes: ['image/jpeg'],
+        mimeTypes: new Set(['image/jpeg']),
         largerThan: 0,
         smallerThan: Infinity,
         whenSmaller: true,
@@ -14,7 +16,7 @@ export default class Jpeg<T extends squared.base.Node> extends Extension<T> {
             const mimeType = data.mimeType;
             if (mimeType) {
                 const mimeTypes = this.options.mimeTypes;
-                override = mimeType.includes('jpeg:') || mimeTypes === '*' && mimeType.includes('image/') || Array.isArray(mimeTypes) && !!mimeTypes.find(value => mimeType.endsWith(value));
+                override = mimeType.includes('jpeg:') || (mimeTypes === '*' ? mimeType.includes('image/') : !!findSet(mimeTypes, value => mimeType.endsWith(value)));
             }
         }
         if (override) {

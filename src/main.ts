@@ -38,9 +38,8 @@ let extensionCheck = false;
 
 function extendPrototype(id: number) {
     const proto = main!.Node.prototype;
-    for (const data of prototypeMap) {
-        if (data[0] === 0 || util.hasBit(data[0], id)) {
-            const functionMap = data[1];
+    for (const [frameworkId, functionMap] of prototypeMap) {
+        if (frameworkId === 0 || util.hasBit(frameworkId, id)) {
             for (const method in functionMap) {
                 const item = functionMap[method];
                 if (util.isPlainObject(item)) {
@@ -338,7 +337,7 @@ export function remove(...values: ExtensionRequest[]) {
         }
         if (squared.base && value instanceof squared.base.Extension) {
             addQueue.delete(value);
-            if (!extensionManager || !extensionManager.remove(value)) {
+            if (!(extensionManager && extensionManager.remove(value))) {
                 removeQueue.add(value);
             }
             extensionCheck = true;

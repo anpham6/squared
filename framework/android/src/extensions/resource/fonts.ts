@@ -86,7 +86,7 @@ const FONT_STYLE = {
     'backgroundColor': 'android:background="@color/'
 };
 
-function deleteStyleAttribute(sorted: AttributeMap<View>[], attrs: string[], ids: View[]) {
+function deleteStyleAttribute(sorted: AttributeMap<View>[], attrs: string[], nodes: View[]) {
     for (let i = 0, length = attrs.length, q = sorted.length; i < length; ++i) {
         const value = attrs[i];
         found: {
@@ -94,7 +94,7 @@ function deleteStyleAttribute(sorted: AttributeMap<View>[], attrs: string[], ids
                 const data = sorted[j];
                 for (const attr in data) {
                     if (attr === value) {
-                        data[attr] = data[attr].filter(id => !ids.includes(id));
+                        data[attr] = data[attr].filter(node => !nodes.includes(node));
                         if (data[attr].length === 0) {
                             delete data[attr];
                         }

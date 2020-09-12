@@ -509,10 +509,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             progressBackgroundColor: 'rgb(237, 237, 237)'
         },
         mimeType: {
-            font: ['font/ttf', 'font/otf'],
-            image: ['image/png', 'image/jpeg', 'image/gif', 'image/svg+xml', 'image/bmp', 'image/webp', 'image/heic', 'image/heif', 'image/x-icon'],
-            audio: ['video/3gpp', 'video/mp4', 'video/mp2t', 'video/x-matroska', 'audio/aac', 'audio/flac', 'audio/gsm', 'audio/midi', 'audio/mpeg', 'audio/wav', 'audio/ogg'],
-            video: ['video/3gpp', 'video/mp4', 'video/mp2t', 'video/x-matroska', 'video/webm']
+            font: new Set(['font/ttf', 'font/otf']),
+            image: new Set(['image/png', 'image/jpeg', 'image/gif', 'image/svg+xml', 'image/bmp', 'image/webp', 'image/heic', 'image/heif', 'image/x-icon']),
+            audio: new Set(['video/3gpp', 'video/mp4', 'video/mp2t', 'video/x-matroska', 'audio/aac', 'audio/flac', 'audio/gsm', 'audio/midi', 'audio/mpeg', 'audio/wav', 'audio/ogg']),
+            video: new Set(['video/3gpp', 'video/mp4', 'video/mp2t', 'video/x-matroska', 'video/webm'])
         },
         unsupported: {
             cascade: new Set([
@@ -1606,7 +1606,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                             else {
                                 mimeType = source.type.trim().toLowerCase();
-                                if (videoMimeType.includes(mimeType)) {
+                                if (videoMimeType === '*' || videoMimeType.has(mimeType)) {
                                     src = source.src;
                                     return true;
                                 }
@@ -2308,7 +2308,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 const betweenStart = getRangeClientRect(siblings[0]);
                                 if (betweenStart && !betweenStart.numberOfLines) {
                                     const betweenEnd = siblings.length > 1 && getRangeClientRect(siblings.pop()!);
-                                    if (!betweenEnd || !betweenEnd.numberOfLines) {
+                                    if (!(betweenEnd && betweenEnd.numberOfLines)) {
                                         rowWidth += betweenEnd ? betweenStart.left - betweenEnd.right : betweenStart.width;
                                     }
                                 }

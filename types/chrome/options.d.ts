@@ -13,7 +13,7 @@ interface CompressOptions {
 }
 
 interface ConvertOptions extends CompressOptions {
-    mimeTypes: string[];
+    mimeTypes: Set<string>;
     replaceWith: boolean;
     opacity?: number;
 }

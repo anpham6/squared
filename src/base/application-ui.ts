@@ -1010,7 +1010,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             for (let j = 0, r = combined.length; j < r; ++j) {
                                 const ext = combined[j];
                                 if (ext.is(nodeY)) {
-                                    if (ext.condition(nodeY, parentY) && (!descendant || !descendant.includes(ext))) {
+                                    if (ext.condition(nodeY, parentY) && !(descendant && descendant.includes(ext))) {
                                         const result = ext.processNode(nodeY, parentY);
                                         if (result) {
                                             if (result.output) {

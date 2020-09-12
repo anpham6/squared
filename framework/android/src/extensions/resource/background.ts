@@ -355,7 +355,7 @@ function createLayerList(boxStyle: BoxStyle, images: UndefNull<BackgroundImageDa
     const item: LayerData[] = [];
     const result: LayerList[] = [{ 'xmlns:android': XML_NAMESPACE.android, item }];
     const solid = !borderOnly && getBackgroundColor(boxStyle.backgroundColor);
-    if (solid && (!images || !images.find(image => image.gradient))) {
+    if (solid && !(images && images.find(image => image.gradient))) {
         item.push({ shape: { 'android:shape': 'rectangle', solid, corners } });
     }
     if (images) {

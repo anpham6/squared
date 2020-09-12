@@ -1350,7 +1350,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         const current = this._styleMap[attr];
         if (current && isLength(current)) {
             value += parseUnit(current, { fontSize: this.fontSize });
-            if (value < 0 && (!options || !options.negative)) {
+            if (value < 0 && !(options && options.negative)) {
                 value = 0;
             }
             const unit = formatPX(value);

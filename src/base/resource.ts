@@ -22,7 +22,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
     };
 
     public static hasMimeType(formats: MIMEOrAll, value: string) {
-        return formats === '*' || formats.includes(parseMimeType(value));
+        return formats === '*' || formats.has(parseMimeType(value));
     }
 
     public static canCompressImage(filename: string, mimeType?: string) {
@@ -122,7 +122,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
             return '';
         }
         const imageMimeType = this.mimeTypeMap.image;
-        if (imageMimeType === '*' || imageMimeType.includes(mimeType)) {
+        if (imageMimeType === '*' || imageMimeType.has(mimeType)) {
             if (!filename) {
                 const ext = '.' + (fromMimeType(mimeType) || 'unknown');
                 filename = uri.endsWith(ext) ? fromLastIndexOf(uri, '/', '\\') : this.randomUUID + ext;

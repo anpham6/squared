@@ -45,19 +45,14 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
 
     constructor(animations: SvgAnimation[], ...attrs: string[]) {
         animations = (attrs.length ? animations.filter(item => attrs.includes(item.attributeName)) : animations.slice(0)).sort((a, b) => a.delay === b.delay ? b.group.id - a.group.id : a.delay - b.delay) as SvgAnimate[];
-        attrs.length = 0;
-        const length = animations.length;
-        for (let i = 0; i < length; ++i) {
-            const item = animations[i];
-            const value = SvgAnimationIntervalMap.getKeyName(item);
-            if (!attrs.includes(value)) {
-                attrs.push(value);
-            }
-        }
         const map: SvgAnimationIntervalAttributeMap<SvgAnimation> = {};
         const intervalMap: IntervalMap = {};
-        for (let i = 0, q = attrs.length; i < q; ++i) {
-            const keyName = attrs[i];
+        const keyNames = new Set<string>();
+        const length = animations.length;
+        for (let i = 0; i < length; ++i) {
+            keyNames.add(SvgAnimationIntervalMap.getKeyName(animations[i]));
+        }
+        for (const keyName of keyNames) {
             map[keyName] = new Map<number, SvgAnimationIntervalValue<SvgAnimation>[]>();
             intervalMap[keyName] = new Map<number, SvgAnimationIntervalValue<SvgAnimation>[]>();
             const attributeName = splitPairStart(keyName, ':');

@@ -230,8 +230,8 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         STORED.animators = new Map();
         const mimeType = this.controllerSettings.mimeType.image;
         if (mimeType !== '*') {
-            const imageFormat = mimeType.slice(0);
-            imageFormat.splice(imageFormat.findIndex(value => value === 'image/svg+xml'), 1);
+            const imageFormat = new Set(mimeType);
+            imageFormat.delete('image/svg+xml');
             this._imageFormat = imageFormat;
         }
     }
