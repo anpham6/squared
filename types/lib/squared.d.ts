@@ -28,10 +28,10 @@ declare module "lib" {
         }
 
         class ArrayIterator<T = any> {
-            public next(): Undef<T>;
-            public hasNext(): boolean;
-            public remove(): void;
-            public forEachRemaining(predicate: BindGeneric<T, void>): void;
+            next(): Undef<T>;
+            hasNext(): boolean;
+            remove(): void;
+            forEachRemaining(predicate: BindGeneric<T, void>): void;
             constructor(children: T[]);
         }
 
@@ -188,6 +188,7 @@ declare module "lib" {
         const DOCUMENT_ROOT_NOT_FOUND: string;
         const DOCUMENT_IS_CLOSED: string;
         const CSS_CANNOT_BE_PARSED: string;
+        function reject<T = void>(value: string): Promise<T>;
     }
 
     namespace math {
@@ -255,7 +256,6 @@ declare module "lib" {
     namespace session {
         function newSessionInit(value: string): Map<Element, ElementData>;
         function resetSessionAll(): void;
-        function frameworkNotInstalled<T = void>(): Promise<T>;
         function setElementCache(element: Element, attr: string, data: any, sessionId?: string): void;
         function getElementCache<T = unknown>(element: Element, attr: string, sessionId?: string): Undef<T>;
         function getElementData(element: Element, sessionId?: string): Undef<ElementData>;

@@ -1,5 +1,3 @@
-import { FRAMEWORK_NOT_INSTALLED } from './error';
-
 let SESSION_MAP: ObjectMap<WeakMap<Element, ElementData>> = {};
 
 newSessionInit('0');
@@ -12,10 +10,6 @@ export function newSessionInit(value: string) {
 
 export function resetSessionAll() {
     SESSION_MAP = { '0': SESSION_MAP['0'] };
-}
-
-export function frameworkNotInstalled<T = void>(): Promise<T> {
-    return Promise.reject(new Error(FRAMEWORK_NOT_INSTALLED));
 }
 
 export function setElementCache(element: Element, attr: string, data: any, sessionId = '0') {

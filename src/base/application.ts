@@ -11,7 +11,7 @@ import NodeList from './nodelist';
 type FileActionOptions = squared.FileActionOptions;
 type PreloadItem = HTMLImageElement | string;
 
-const { DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, CSS_CANNOT_BE_PARSED } = squared.lib.error;
+const { DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, CSS_CANNOT_BE_PARSED, reject } = squared.lib.error;
 const { FILE, STRING } = squared.lib.regex;
 
 const { CSS_PROPERTIES, checkMediaRule, getSpecificity, hasComputedStyle, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText } = squared.lib.css;
@@ -27,8 +27,6 @@ const REGEXP_FONTWEIGHT = /\s*font-weight:\s*(\d+)\s*;/;
 const REGEXP_FONTURL = /\s*(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*format\("?([\w-]+)"?\))?\s*/;
 const REGEXP_DATAURI = new RegExp(`url\\("?(${STRING.DATAURI})"?\\),?\\s*`, 'g');
 const CSS_SHORTHANDNONE = getPropertiesAsTraits(CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE);
-
-const operationNotSupported = (): Promise<void> => Promise.reject(new Error(OPERATION_NOT_SUPPORTED));
 
 export default abstract class Application<T extends Node> implements squared.base.Application<T> {
     public static readonly KEY_NAME = 'squared.base.application';
@@ -110,27 +108,27 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     public copyTo(directory: string, options?: FileActionOptions) {
-        return this.fileHandler?.copyTo(directory, options) || operationNotSupported();
+        return this.fileHandler?.copyTo(directory, options) || reject(OPERATION_NOT_SUPPORTED);
     }
 
     public appendTo(pathname: string, options?: FileActionOptions) {
-        return this.fileHandler?.appendTo(pathname, options) || operationNotSupported();
+        return this.fileHandler?.appendTo(pathname, options) || reject(OPERATION_NOT_SUPPORTED);
     }
 
     public saveAs(filename?: string, options?: FileActionOptions) {
-        return this.fileHandler?.saveAs(filename || this._resourceHandler!.userSettings.outputArchiveName, options) || operationNotSupported();
+        return this.fileHandler?.saveAs(filename || this._resourceHandler!.userSettings.outputArchiveName, options) || reject(OPERATION_NOT_SUPPORTED);
     }
 
     public saveFiles(format: string, options: FileActionOptions) {
-        return this.fileHandler?.saveFiles(format, options) || operationNotSupported();
+        return this.fileHandler?.saveFiles(format, options) || reject(OPERATION_NOT_SUPPORTED);
     }
 
     public appendFiles(filename: string, options: FileActionOptions) {
-        return this.fileHandler?.appendFiles(filename, options) || operationNotSupported();
+        return this.fileHandler?.appendFiles(filename, options) || reject(OPERATION_NOT_SUPPORTED);
     }
 
     public copyFiles(directory: string, options: FileActionOptions) {
-        return this.fileHandler?.copyFiles(directory, options) || operationNotSupported();
+        return this.fileHandler?.copyFiles(directory, options) || reject(OPERATION_NOT_SUPPORTED);
     }
 
     public reset() {
@@ -152,7 +150,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         const [processing, rootElements] = this.createSessionThread(elements);
         let documentRoot: HTMLElement;
         if (rootElements.size === 0) {
-            return Promise.reject(new Error(DOCUMENT_ROOT_NOT_FOUND));
+            return reject(DOCUMENT_ROOT_NOT_FOUND);
         }
         else {
             documentRoot = rootElements.values().next().value;
@@ -276,18 +274,18 @@ export default abstract class Application<T extends Node> implements squared.bas
         if (preloadItems.length) {
             processing.initializing = true;
             return Promise.all(preloadItems.map(item => {
-                return new Promise((resolve, reject) => {
+                return new Promise((success, error) => {
                     if (typeof item === 'string') {
                         if (FILE.SVG.test(item)) {
-                            fetch(item).then(async result => resolve(await result.text()));
+                            fetch(item).then(async result => success(await result.text()));
                         }
                         else {
-                            fetch(item).then(async result => resolve(await result.arrayBuffer()));
+                            fetch(item).then(async result => success(await result.arrayBuffer()));
                         }
                     }
                     else {
-                        item.addEventListener('load', () => resolve(item));
-                        item.addEventListener('error', () => reject(item));
+                        item.addEventListener('load', () => success(item));
+                        item.addEventListener('error', () => error(item));
                     }
                 });
             }))

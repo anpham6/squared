@@ -733,7 +733,7 @@ declare module "base" {
         sessionId: string;
         afterAdd?: (node: T, cascade?: boolean, remove?: boolean) => void;
         add(node: T, delegate?: boolean, cascade?: boolean, remove?: boolean): this;
-        sort(predicate: (a: T, b: T) => number): this;
+        sort(predicate: FunctionSort<T>): this;
         constructor(children?: T[], sessionId?: string);
     }
 

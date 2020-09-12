@@ -13,6 +13,7 @@ type FunctionType<T> = (...args: any[]) => T;
 type FunctionMap<T> = ObjectMap<FunctionType<T>>;
 type FunctionSelf<T, U = void> = (this: T, ...args: any[]) => U;
 type FunctionVoid = () => void;
+type FunctionSort<T = any> = (a: T, b: T) => number;
 
 type StringMap = Record<string, Undef<string>>;
 type StringMapChecked = Record<string, string>;

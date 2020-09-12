@@ -22,7 +22,7 @@ export default class Controller<T extends Node> implements squared.base.Controll
     public preventNodeCascade(node: T) { return false; }
 
     get generateSessionId() {
-        return Date.now() + '-' + this.application.session.active.size;
+        return Date.now() + '#' + this.application.session.active.size;
     }
 
     get afterInsertNode(): BindGeneric<T, void> {

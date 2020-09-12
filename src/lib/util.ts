@@ -505,22 +505,20 @@ export function convertFloat(value: string, fallback = 0) {
 }
 
 export function delimitString(options: DelimitStringOptions, ...appending: string[]) {
+    const { value, not, remove, sort } = options;
     const length = appending.length;
-    const value = options.value;
     if (length === 1 && !value) {
         return appending[0];
     }
     const delimiter = options.delimiter || ', ';
-    const not = options.not || [];
-    const remove = options.remove || false;
     const values = value !== '' ? value.split(delimiter) : [];
     for (let i = 0; i < length; ++i) {
         const append = appending[i];
         if (append !== '') {
-            if (values.includes(not[i])) {
+            if (not && values.includes(not[i])) {
                 continue;
             }
-            const index = values.findIndex(a => a === append);
+            const index = values.findIndex(item => item === append);
             if (index === -1) {
                 values.push(append);
             }
@@ -529,8 +527,8 @@ export function delimitString(options: DelimitStringOptions, ...appending: strin
             }
         }
     }
-    if (options.sort) {
-        values.sort();
+    if (sort) {
+        values.sort(typeof sort === 'function' ? sort : undefined);
     }
     return values.join(delimiter);
 }
@@ -673,7 +671,7 @@ export function isNumber(value: string) {
 }
 
 export function isString(value: any): value is string {
-    return typeof value === 'string' && value.trim() !== '';
+    return typeof value === 'string' && !isEmptyString(value);
 }
 
 export function isArray<T>(value: any): value is Array<T> {

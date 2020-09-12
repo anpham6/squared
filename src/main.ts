@@ -172,6 +172,7 @@ async function findElementAllAsync(query: NodeListOf<Element>, length: number) {
 const checkWritable = (app: Null<Main>): app is Main => app ? !app.initializing && app.length > 0 : false;
 const checkFrom = (value: string, options: FileActionOptions) => util.isPlainObject<FileActionOptions>(options) && options.assets ? checkWritable(main) && util.isString(value) && options.assets.length > 0 : false;
 const findExtension = (value: string) => extensionManager!.get(value, true) || util.findSet(extensionManager!.cache, item => item.name === value) || util.findSet(extensionCache, item => item.name === value);
+const frameworkNotInstalled = () => error.reject(error.FRAMEWORK_NOT_INSTALLED);
 
 export function setHostname(value: string) {
     if (main) {
@@ -254,7 +255,7 @@ export function parseDocument(...elements: (HTMLElement | string)[]) {
             return main.parseDocument(...elements);
         }
     }
-    return session.frameworkNotInstalled();
+    return frameworkNotInstalled();
 }
 
 export function parseDocumentSync(...elements: (HTMLElement | string)[]) {
@@ -392,7 +393,7 @@ export function apply(value: ExtensionRequest, options: FrameworkOptions) {
             return result;
         };
         if (typeof value === 'string') {
-            const ext = extensionManager && extensionManager.get(value, true) || util.findSet(addQueue, item => typeof item !== 'string' && item.name === value);
+            const ext = extensionManager && extensionManager.get(value, true) || util.findSet(addQueue, item => typeof item !== 'string' && item.name === value) as Undef<Extension>;
             if (!ext) {
                 optionsQueue.set(value, mergeSettings(value));
                 return true;
@@ -440,44 +441,44 @@ export function reset() {
 
 export function saveAs(value: string, options?: FileActionOptions) {
     if (main) {
-        return close() ? main.saveAs(value, options) : Promise.reject(new Error(error.UNABLE_TO_FINALIZE_DOCUMENT));
+        return close() ? main.saveAs(value, options) : error.reject(error.UNABLE_TO_FINALIZE_DOCUMENT);
     }
-    return session.frameworkNotInstalled();
+    return frameworkNotInstalled();
 }
 
 export function appendTo(value: string, options?: FileActionOptions) {
     if (main) {
-        return util.isString(value) && close() ? main.appendTo(value, options) : Promise.reject(new Error(error.UNABLE_TO_FINALIZE_DOCUMENT));
+        return util.isString(value) && close() ? main.appendTo(value, options) : error.reject(error.UNABLE_TO_FINALIZE_DOCUMENT);
     }
-    return session.frameworkNotInstalled();
+    return frameworkNotInstalled();
 }
 
 export function copyTo(value: string, options?: FileActionOptions) {
     if (main) {
-        return util.isString(value) && close() ? main.copyTo(value, options) : Promise.reject(new Error(error.UNABLE_TO_FINALIZE_DOCUMENT));
+        return util.isString(value) && close() ? main.copyTo(value, options) : error.reject(error.UNABLE_TO_FINALIZE_DOCUMENT);
     }
-    return session.frameworkNotInstalled();
+    return frameworkNotInstalled();
 }
 
 export function saveFiles(value: string, options: FileActionOptions) {
     if (main) {
-        return checkFrom(value, options) ? main.saveFiles(value, options) : Promise.reject(new Error(error.INVALID_ASSET_REQUEST));
+        return checkFrom(value, options) ? main.saveFiles(value, options) : error.reject(error.INVALID_ASSET_REQUEST);
     }
-    return session.frameworkNotInstalled();
+    return frameworkNotInstalled();
 }
 
 export function appendFiles(value: string, options: FileActionOptions) {
     if (main) {
-        return checkFrom(value, options) ? main.appendFiles(value, options) : Promise.reject(new Error(error.INVALID_ASSET_REQUEST));
+        return checkFrom(value, options) ? main.appendFiles(value, options) : error.reject(error.INVALID_ASSET_REQUEST);
     }
-    return session.frameworkNotInstalled();
+    return frameworkNotInstalled();
 }
 
 export function copyFiles(value: string, options: FileActionOptions) {
     if (main) {
-        return checkFrom(value, options) ? main.copyFiles(value, options) : Promise.reject(new Error(error.INVALID_ASSET_REQUEST));
+        return checkFrom(value, options) ? main.copyFiles(value, options) : error.reject(error.INVALID_ASSET_REQUEST);
     }
-    return session.frameworkNotInstalled();
+    return frameworkNotInstalled();
 }
 
 export function getElementById(value: string, sync?: boolean, cache = true) {

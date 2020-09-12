@@ -65,7 +65,7 @@ interface DelimitStringOptions {
     value: string;
     delimiter?: string;
     remove?: boolean;
-    sort?: boolean;
+    sort?: FunctionSort<string> | boolean;
     not?: string[];
 }
 
