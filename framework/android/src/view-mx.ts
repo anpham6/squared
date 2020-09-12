@@ -531,7 +531,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public api = BUILD_VERSION.LATEST;
         public renderChildren!: T[];
         public renderParent!: Null<T>;
-        public horizontalRows?: T[][];
+        public companion!: T;
+        public horizontalRows!: T[][];
 
         protected _namespaces: ObjectMap<StringMapChecked> = { android: {} };
         protected _containerType = 0;

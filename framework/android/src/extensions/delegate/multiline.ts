@@ -21,11 +21,8 @@ function getFontMeasureAdjust(node: View) {
     return value === 'false' ? Infinity : value ? parseFloat(value) : NaN;
 }
 
-function setContentAltered(node: View, indexing: boolean) {
-    if (indexing) {
-        node.each((item: View, index: number) => item.containerIndex = index);
-    }
-    else {
+function setContentAltered(node: View, visible: boolean) {
+    if (!visible) {
         node.hide();
     }
     node.exclude({ resource: NODE_RESOURCE.VALUE_STRING });

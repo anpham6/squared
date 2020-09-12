@@ -664,8 +664,6 @@ declare module "base" {
         get siblingsLeading(): NodeUI[];
         set siblingsTrailing(value);
         get siblingsTrailing(): NodeUI[];
-        set containerIndex(value);
-        get containerIndex(): number;
         set containerType(value: number);
         get containerType(): number;
         set positioned(value);

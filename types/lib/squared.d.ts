@@ -1,6 +1,6 @@
 declare module "lib" {
     namespace base {
-        class Container<T extends {}> implements Iterable<T> {
+        class Container<T = any> implements Iterable<T> {
             children: T[];
             [Symbol.iterator](): Iterator<T>;
             item(index: number, value?: T): Undef<T>;
@@ -307,7 +307,7 @@ declare module "lib" {
         function assignEmptyValue(dest: PlainObject, ...attrs: string[]): void;
         function sortNumber(values: number[], ascending?: boolean): number[];
         function findSet<T>(list: Set<T>, predicate: IteratorPredicate<T, boolean, Set<T>>): Undef<T>;
-        function sortByArray<T extends {}>(list: T[], ...attrs: (string | boolean)[]): T[];
+        function sortByArray<T = unknown>(list: T[], ...attrs: (string | boolean)[]): T[];
         function flatArray<T>(list: any[], depth?: number): T[];
         function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>, deleteCount?: number): T[];
         function partitionArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>): [T[], T[]];

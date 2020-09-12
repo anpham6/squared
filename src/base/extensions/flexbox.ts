@@ -81,8 +81,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
             let rowStart = children[0],
                 row: T[] = [rowStart],
                 length = children.length,
-                maxCount = 0,
-                offset: number;
+                maxCount = 0;
             const rows: T[][] = [row];
             for (let i = 1; i < length; ++i) {
                 const item = children[i];
@@ -104,21 +103,12 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                     maxCount = Math.max(seg.length, maxCount);
                     const group = controller.createNodeGroup(seg[0], seg, node, { alignmentType: NODE_ALIGNMENT.SEGMENTED, delegate: true, cascade: true });
                     group.box[size] = boxSize;
-                    group.containerIndex = i;
                 }
-                offset = length;
             }
             else {
                 const items = rows[0];
                 node.retainAs(items);
                 maxCount = items.length;
-                for (let i = 0; i < maxCount; ++i) {
-                    items[i].containerIndex = i;
-                }
-                offset = maxCount;
-            }
-            for (let i = 0; i < absolute.length; ++i) {
-                absolute[i].containerIndex = offset + i;
             }
             node.addAll(absolute);
             if (mainData.row) {

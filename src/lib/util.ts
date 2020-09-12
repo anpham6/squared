@@ -952,7 +952,7 @@ export function findSet<T>(list: Set<T>, predicate: IteratorPredicate<T, boolean
     }
 }
 
-export function sortByArray<T extends {}>(list: T[], ...attrs: (string | boolean)[]) {
+export function sortByArray<T = unknown>(list: T[], ...attrs: (string | boolean)[]) {
     let length = attrs.length,
         ascending = attrs[length - 1];
     if (typeof ascending === 'boolean') {

@@ -438,7 +438,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public renderParent: Null<T> = null;
     public renderExtension: Null<ExtensionUI<T>[]> = null;
     public renderTemplates: Null<NodeTemplate<T>[]> = null;
-    public documentChildren?: T[];
     public horizontalRowStart?: boolean;
     public horizontalRowEnd?: boolean;
     public outerWrapper?: T;
@@ -446,20 +445,19 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public innerAfter?: T;
     public companion?: T;
     public renderedAs?: NodeTemplate<T>;
+    public documentChildren?: T[];
     public horizontalRows?: T[][];
 
     protected _preferInitial = true;
+    protected _boxRegister: Null<T[]> = null;
     protected _cache!: CacheValueUI;
     protected _cacheState!: CacheStateUI<T>;
-    protected _boxRegister: Null<T[]> = null;
     protected _boxReset?: number[];
     protected _boxAdjustment?: number[];
     protected _documentParent?: T;
     protected _controlName?: string;
-
     protected abstract _namespaces: ObjectMap<StringMapChecked>;
 
-    private _containerIndex = Infinity;
     private _locked: Null<ObjectMapNested<boolean>> = null;
     private _renderAs?: T;
     private _siblingsLeading?: T[];
@@ -848,7 +846,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 }
                 replaceWith.init(this, child.depth, childIndex);
                 children[i] = replaceWith;
-                replaceWith.containerIndex = child.containerIndex;
                 return true;
             }
         }
@@ -1039,7 +1036,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             }
             const blockStatic = this.blockStatic || this.display === 'table';
             const length = this.siblingsLeading.length;
-            if (blockStatic && (length === 0 || this.containerIndex === 0)) {
+            if (blockStatic && length === 0) {
                 return NODE_TRAVERSE.VERTICAL;
             }
             for (let i = length - 1; i >= 0; --i) {
@@ -1311,7 +1308,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         node.visible = this.visible;
         node.excluded = this.excluded;
         node.rendered = this.rendered;
-        node.containerIndex = this.containerIndex;
         node.lineBreakLeading = this.lineBreakLeading;
         node.lineBreakTrailing = this.lineBreakTrailing;
         node.documentParent = this.documentParent;
@@ -1946,30 +1942,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         });
                     }
                 }
-            }
-        }
-        return result;
-    }
-
-    set containerIndex(value) {
-        this._containerIndex = value;
-    }
-    get containerIndex(): number {
-        const result = this._containerIndex;
-        if (result === Infinity) {
-            let wrapped = this.innerWrapped;
-            if (wrapped) {
-                do {
-                    const index = wrapped.containerIndex;
-                    if (index !== Infinity) {
-                        return this._containerIndex = index;
-                    }
-                    wrapped = wrapped.innerWrapped;
-                }
-                while (wrapped);
-            }
-            else if (!this.isEmpty() && !this.naturalChild) {
-                return this._containerIndex = (this.min('containerIndex', { self: true }) as NodeUI).containerIndex;
             }
         }
         return result;

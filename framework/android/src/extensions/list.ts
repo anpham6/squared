@@ -288,7 +288,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
     }
 
     public postOptimize(node: T) {
-        if ((node.companion as Undef<T>)?.android('baselineAlignedChildIndex') !== '' && (node.renderParent as T).layoutGrid) {
+        if (node.companion?.android('baselineAlignedChildIndex') !== '' && (node.renderParent as T).layoutGrid) {
             node.setBox(BOX_STANDARD.PADDING_TOP, { reset: 1 });
         }
     }

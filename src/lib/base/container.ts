@@ -17,7 +17,7 @@ class Iter<T> implements Iterator<T> {
     }
 }
 
-export default class Container<T extends {}> implements squared.lib.base.Container<T>, Iterable<T> {
+export default class Container<T = any> implements squared.lib.base.Container<T>, Iterable<T> {
     constructor(public children: T[] = []) {}
 
     public [Symbol.iterator]() {

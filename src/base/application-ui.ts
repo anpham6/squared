@@ -686,7 +686,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 trailing = children[0],
                 floating = false,
                 hasExcluded: Undef<boolean>;
-            for (let i = 0, j = 0; i < length; ++i) {
+            for (let i = 0; i < length; ++i) {
                 const child = children[i];
                 if (child.pageFlow) {
                     if (child.floating) {
@@ -717,7 +717,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     excluded.add(child);
                 }
                 else {
-                    child.containerIndex = j++;
                     cache.add(child);
                 }
             }
@@ -731,7 +730,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 excluded.add(child);
             }
             else {
-                child.containerIndex = 0;
                 node.add(child);
                 cache.add(child);
                 node.floatContainer = child.floating;

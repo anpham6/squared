@@ -443,7 +443,6 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
 
     public evaluateNonStatic(documentRoot: T, cache: NodeList<T>) {
         const altered = new Set<T>();
-        const removed = new Set<T>();
         const escaped = new Map<T, { parent: T; appending: T[] }>();
         cache.each(node => {
             if (node.floating) {
@@ -565,33 +564,29 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     while (current && current !== parent);
                     node.css('opacity', opacity.toString());
                     node.parent = parent;
-                    node.containerIndex = Infinity;
                     altered.add(parent);
-                    removed.add(actualParent);
                 }
                 node.documentParent = parent;
             }
         });
-        for (const node of removed) {
-            node.each((item: T, index) => item.containerIndex = index);
-        }
-        for (const data of escaped) {
-            const { parent, appending } = data[1];
-            if (parent.contains(data[0])) {
-                const { childIndex, containerIndex } = data[0];
-                const children = parent.children;
+        for (const [floated, data] of escaped) {
+            const { parent, appending } = data;
+            const children = parent.children;
+            const containerIndex = children.findIndex(item => item === floated);
+            if (containerIndex !== -1) {
+                const childIndex = floated.childIndex;
                 const documentChildren = parent.naturalChildren.slice(0);
                 const target = children[containerIndex] as T;
                 const depth = parent.depth + 1;
                 const actualParent = new Set<T>();
                 for (let i = 0, j = 0, k = 0, prepend = false; i < appending.length; ++i) {
                     const item = appending[i];
-                    if (item.containerIndex === 0) {
+                    if (item.actualParent!.firstStaticChild === item) {
                         prepend = true;
                     }
                     else if (prepend) {
                         const previous = appending[i - 1];
-                        prepend = (item.containerIndex - previous.containerIndex === 1) && item.actualParent === previous.actualParent;
+                        prepend = previous.nextSibling === item && previous.float === item.float;
                     }
                     const increment = j + (prepend ? 0 : k + 1);
                     const l = childIndex + increment;
@@ -656,9 +651,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     }
                     actualParent.add(item.actualParent as T);
                 }
-                parent.each((item: T, index) => item.containerIndex = index);
                 parent.floatContainer = true;
-                for (let i = 0, length = appending.length; i < length; ++i) {
+                for (let i = 0, length = appending.length, q = documentChildren.length; i < length; ++i) {
                     const item = appending[i];
                     const index = documentChildren.findIndex(child => child === item);
                     if (index !== -1) {
@@ -671,7 +665,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                 break;
                             }
                         }
-                        for (let j = index + 1, q = documentChildren.length; j < q; ++j) {
+                        for (let j = index + 1; j < q; ++j) {
                             const sibling = documentChildren[j] as T;
                             siblingsTrailing.push(sibling);
                             if (!sibling.excluded) {
@@ -683,14 +677,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     }
                 }
                 for (const item of actualParent) {
-                    let floating: Undef<boolean>;
-                    item.each((child: T, index) => {
-                        if (child.floating) {
-                            floating = true;
-                        }
-                        child.containerIndex = index;
-                    });
-                    if (!floating) {
+                    if (!item.find(child => child.floating)) {
                         item.floatContainer = false;
                     }
                 }
@@ -698,29 +685,25 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         }
         for (const node of altered) {
             const layers: T[][] = [];
-            let maxIndex = -1;
             node.each((item: T) => {
-                if (item.containerIndex === Infinity) {
+                if (item.parent !== item.actualParent) {
                     const sibling = node.find((adjacent: T) => {
                         if (adjacent.naturalElements.includes(item)) {
                             return true;
                         }
                         const nested = adjacent.cascade();
                         return item.ascend({ condition: child => nested.includes(child) }).length > 0;
-                    }) as Undef<T>;
+                    });
                     if (sibling) {
-                        const index = sibling.containerIndex + (item.zIndex >= 0 || sibling !== item.actualParent ? 1 : 0);
+                        const index = sibling.childIndex + (item.zIndex >= 0 || sibling !== item.actualParent ? 1 : 0);
                         (layers[index] || (layers[index] = [])).push(item);
                     }
-                }
-                else if (item.containerIndex > maxIndex) {
-                    maxIndex = item.containerIndex;
                 }
             });
             const length = layers.length;
             if (length) {
                 let children: T[] = [];
-                for (let i = 0, j = 1; i < length; ++i) {
+                for (let i = 0; i < length; ++i) {
                     const order = layers[i];
                     if (order) {
                         order.sort((a, b) => {
@@ -731,9 +714,6 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             }
                             return 0;
                         });
-                        for (const item of order) {
-                            item.containerIndex = maxIndex + j++;
-                        }
                         children = children.concat(order);
                     }
                 }

@@ -696,7 +696,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                 }
                 createColumn();
-                node.retainAs(children).each((item: T, index) => item.containerIndex = index);
+                node.retainAs(children);
                 node.android('baselineAlignedChildIndex', '0');
                 layout.setContainerType(CONTAINER_NODE.LINEAR, NODE_ALIGNMENT.HORIZONTAL);
                 return;
@@ -1971,11 +1971,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             if (!parent.contains(container)) {
                 parent.add(container);
                 container.init(parent, node.depth);
-                container.containerIndex = parent.size() - 1;
             }
-        }
-        else {
-            container.containerIndex = node.containerIndex;
         }
         this.application.getProcessingCache(node.sessionId).add(container, !!delegate, !!cascade);
         return container;

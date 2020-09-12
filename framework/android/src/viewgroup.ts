@@ -24,7 +24,6 @@ export default class ViewGroup<T extends View> extends View$MX(squared.base.Node
                 }
             }
             item.unsafe('parent', this);
-            item.containerIndex = i;
         }
         super.retainAs(children);
         this.setBounds();
