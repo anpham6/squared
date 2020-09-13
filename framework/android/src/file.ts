@@ -73,7 +73,7 @@ function getImageAssets(pathname: string, items: string[], convertExt: string, c
             else if (mimeTypeTo) {
                 const mimeTypeFrom = parseMimeType(filename);
                 if (mimeTypeFrom !== mimeTypeTo && mimeTypeFrom.startsWith('image/')) {
-                    mimeType = convertExt + `${!/[@%]/.test(convertExt) ? '@' : ''}:${mimeTypeFrom}`;
+                    mimeType = convertExt + (!/[@%]/.test(convertExt) ? '@' : '') + ':' + mimeTypeFrom;
                 }
             }
             result[j++] = {

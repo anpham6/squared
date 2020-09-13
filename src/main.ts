@@ -44,17 +44,14 @@ function extendPrototype(id: number) {
             for (const method in functionMap) {
                 const item = functionMap[method];
                 if (util.isPlainObject(item)) {
-                    const property: ObjectMap<FunctionType<any>> = {};
-                    let valid: Undef<boolean>;
-                    if (typeof item.get === 'function') {
-                        property.get = item.get;
-                        valid = true;
-                    }
+                    let property: Undef<ObjectMap<FunctionType<any>>>;
                     if (typeof item.set === 'function') {
-                        property.set = item.set;
-                        valid = true;
+                        (property || (property = {})).set = item.set;
                     }
-                    if (valid) {
+                    if (typeof item.get === 'function') {
+                        (property || (property = {})).get = item.get;
+                    }
+                    if (property) {
                         Object.defineProperty(proto, method, property);
                         continue;
                     }

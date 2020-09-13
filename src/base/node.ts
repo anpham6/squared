@@ -43,11 +43,19 @@ const REGEXP_BACKGROUND = /\s*(url|[a-z-]+gradient)/;
 const REGEXP_QUERYNTH = /^:nth(-last)?-(child|of-type)\((.+)\)$/;
 const REGEXP_QUERYNTHPOSITION = /^(-)?(\d+)?n\s*([+-]\d+)?$/;
 
-function setStyleCache(element: HTMLElement, attr: string, sessionId: string, value: string, current: string) {
+function setStyleCache(element: HTMLElement, attr: string, value: string, style: CSSStyleDeclaration, styleMap: StringMap, sessionId: string) {
+    let current = style.getPropertyValue(attr);
     if (value !== current) {
         element.style.setProperty(attr, value);
         const newValue = element.style.getPropertyValue(attr);
         if (current !== newValue) {
+            if (current.endsWith('px')) {
+                const styleValue = styleMap[convertCamelCase(attr)];
+                if (styleValue) {
+                    current = styleValue;
+                    value = '';
+                }
+            }
             setElementCache(element, attr, value !== 'auto' ? current : '', sessionId);
             return STYLE_CACHE.CHANGED;
         }
@@ -1381,7 +1389,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     public cssTry(attr: string, value: string, callback?: FunctionSelf<this>) {
         if (this.styleElement) {
             const element = this._element as HTMLElement;
-            if (setStyleCache(element, attr, this.sessionId, value, (!this.pseudoElement ? this.style : getStyle(element)).getPropertyValue(attr))) {
+            if (setStyleCache(element, attr, value, !this.pseudoElement ? this.style : getStyle(element), this._styleMap, this.sessionId)) {
                 if (callback) {
                     callback.call(this, attr);
                     this.cssFinally(attr);
@@ -1400,7 +1408,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             const style = !this.pseudoElement ? this.style : getStyle(element);
             for (const attr in values) {
                 const value = values[attr]!;
-                switch (setStyleCache(element, attr, sessionId, value, style.getPropertyValue(attr))) {
+                switch (setStyleCache(element, attr, value, style, this._styleMap, sessionId)) {
                     case STYLE_CACHE.FAIL:
                         this.cssFinally(result);
                         return false;

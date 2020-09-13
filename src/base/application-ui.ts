@@ -208,7 +208,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (node.hasResource(NODE_RESOURCE.BOX_SPACING)) {
                 node.setBoxSpacing();
             }
-            if (node.documentRoot && !(!node.rendering && !node.inlineText && node.naturalElements.length && node.naturalElements.every(item => item.documentRoot))) {
+            if (node.documentRoot && !(!node.rendering && !node.inlineText && node.naturalElements.length)) {
                 const layoutName = node.innerMostWrapped.data<string>(Application.KEY_NAME, 'layoutName');
                 const renderTemplates = node.renderParent?.renderTemplates as Undef<NodeTemplate<T>[]>;
                 if (layoutName && renderTemplates) {
@@ -667,8 +667,20 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (plainText !== -1) {
                     node.inlineText = true;
                 }
-                if (lineBreak !== -1 && lineBreak < plainText) {
-                    node.multiline = true;
+                if (lineBreak !== -1) {
+                    if (lineBreak < plainText) {
+                        node.multiline = true;
+                    }
+                    for (let i = 0; i < j; ++i) {
+                        if (children[i].lineBreak) {
+                            if (i > 0) {
+                                children[i - 1].lineBreakTrailing = true;
+                            }
+                            if (i < j - 1) {
+                                children[i + 1].lineBreakLeading = true;
+                            }
+                        }
+                    }
                 }
             }
             if (k > 0 && this.userSettings.createQuerySelectorMap) {
@@ -688,7 +700,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 hasExcluded: Undef<boolean>;
             for (let i = 0; i < length; ++i) {
                 const child = children[i];
-                if (child.pageFlow) {
+                if (child.flowElement) {
                     if (child.floating) {
                         floating = true;
                     }
@@ -698,13 +710,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             children[i - 1].lineBreakTrailing = true;
                         }
                     }
-                    if (!child.excluded) {
-                        child.siblingsLeading = siblingsLeading;
-                        trailing.siblingsTrailing = siblingsTrailing;
-                        siblingsLeading = [];
-                        siblingsTrailing = [];
-                        trailing = child;
-                    }
+                    child.siblingsLeading = siblingsLeading;
+                    trailing.siblingsTrailing = siblingsTrailing;
+                    siblingsLeading = [];
+                    siblingsTrailing = [];
+                    trailing = child;
                     if (i < length - 1) {
                         siblingsLeading.push(child);
                         if (child.lineBreak) {

@@ -6,9 +6,9 @@ import Pattern = squared.lib.base.Pattern;
 type Node = squared.base.Node;
 type BundleIndex = ObjectMap<ChromeAsset[]>;
 
-const ASSETS = squared.base.Resource.ASSETS;
-
 const { FILE } = squared.lib.regex;
+
+const ASSETS = squared.base.Resource.ASSETS;
 
 const { convertWord, fromLastIndexOf, isString, iterateReverseArray, parseMimeType, resolvePath, splitPairStart, trimEnd } = squared.lib.util;
 
@@ -443,8 +443,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 }
                 if (!isString(file) && saveAs && saveAs.filename && (mimeType === 'text/css' || element instanceof HTMLStyleElement)) {
                     file = appendSeparator(saveAs.pathname, saveAs.filename);
-                    format = saveAs.format;
-                    preserve = saveAs.preserve;
+                    ({ format, preserve } = saveAs);
                     outerHTML = element.outerHTML;
                 }
                 if (href) {
@@ -510,7 +509,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 const data = File.parseUri(uri, { preserveCrossOrigin, saveAs: file, saveTo });
                 if (this.validFile(data) && !result.find(item => item.uri === uri)) {
                     if (mimeType) {
-                        data.mimeType = file && data.mimeType ? `${mimeType}:${data.mimeType}` : mimeType;
+                        data.mimeType = file && data.mimeType ? mimeType + ':' + data.mimeType : mimeType;
                     }
                     processExtensions.call(this, data, getExtensions(element));
                     result.push(data);
@@ -563,7 +562,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                                 case 'bmp':
                                 case 'gif':
                                 case 'tiff':
-                                    mimeType = `@${format}:${mimeType}`;
+                                    mimeType = '@' + format + ':' + mimeType;
                                     break;
                             }
                         }

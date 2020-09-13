@@ -2953,7 +2953,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 return item.renderExclude;
                             });
                         }
-                        else if (this.isEmpty() && !this.imageContainer) {
+                        else if (this.isEmpty() && !this.imageContainer && (!this.textElement || this.textEmpty)) {
                             if (parent.layoutFrame) {
                                 result = excludeHorizontal(this) || excludeVertical(this);
                             }

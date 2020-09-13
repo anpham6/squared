@@ -733,7 +733,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             layout.containerType = CONTAINER_NODE.FRAME;
                         }
                     }
-                    else if (child.baselineElement && (parent.layoutGrid || parent.flexElement && node.flexbox.alignSelf === 'baseline')) {
+                    else if (child.baselineElement && (parent.layoutGrid && !parent.tableElement || parent.flexElement && node.flexbox.alignSelf === 'baseline')) {
                         layout.setContainerType(CONTAINER_NODE.LINEAR, NODE_ALIGNMENT.HORIZONTAL);
                     }
                     else {
@@ -3130,6 +3130,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if (baseline) {
             baseline.constraint.horizontal = true;
             baseline.baselineActive = baselineCount > 0;
+            if (baseline.documentParent.display === 'table-cell') {
+                setVerticalAlignment(baseline, false);
+                baseline.anchorParent('vertical');
+                return;
+            }
             if (tallest && !tallest.textElement && baseline.textElement && getMaxHeight(tallest) > getMaxHeight(baseline)) {
                 switch (tallest.css('verticalAlign')) {
                     case 'top':
