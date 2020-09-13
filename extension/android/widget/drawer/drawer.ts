@@ -9,7 +9,7 @@ type View = android.base.View;
 const { NODE_RESOURCE } = squared.base.lib.constant;
 const { CONTAINER_NODE, SUPPORT_TAGNAME, SUPPORT_TAGNAME_X } = android.lib.constant;
 
-const { assignEmptyValue, cloneObject, includes, iterateArray } = squared.lib.util;
+const { assignEmptyValue, cloneObject, iterateArray } = squared.lib.util;
 const { createThemeAttribute, createViewAttribute } = android.lib.util;
 
 const Resource = android.base.Resource;
@@ -30,7 +30,7 @@ export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> 
             iterateArray(element.children, (item: HTMLElement) => {
                 if (item.tagName === 'NAV') {
                     const use = application.getDatasetName('use', item);
-                    if (!includes(use, EXT_ANDROID.EXTERNAL)) {
+                    if (!Drawer.includes(use, EXT_ANDROID.EXTERNAL)) {
                         application.setDatasetName('use', item, (use ? use + ', ' : '') + EXT_ANDROID.EXTERNAL);
                     }
                 }

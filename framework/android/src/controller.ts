@@ -361,9 +361,8 @@ function causesLineBreak(element: Element) {
 function sortTemplateInvalid(a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>) {
     const above = a.node.innerMostWrapped as View;
     const below = b.node.innerMostWrapped as View;
-    const depthA = above.depth;
-    const depthB = below.depth;
-    if (depthA === depthB) {
+    const depth = above.depth - below.depth;
+    if (depth === 0) {
         const parentA = above.actualParent as View;
         const parentB = below.actualParent as View;
         if (parentA && parentB) {
@@ -382,7 +381,7 @@ function sortTemplateInvalid(a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>)
         }
         return above.id - below.id;
     }
-    return depthA - depthB;
+    return depth;
 }
 
 const getVerticalLayout = (layout: LayoutUI<View>) => isConstraintLayout(layout, true) ? CONTAINER_NODE.CONSTRAINT : layout.find(item => item.positionRelative || !item.pageFlow && item.autoPosition) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR;
@@ -1784,7 +1783,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         const android = attrs.android;
         let { width, height } = attrs;
         if (width) {
-            if (width.endsWith('%')) {
+            if (lastItemOf(width) === '%') {
                 android.layout_columnWeight = truncate(parseFloat(width) / 100, this.localSettings.floatPrecision);
                 width = '0px';
             }
@@ -1793,7 +1792,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             width = 'wrap_content';
         }
         if (height) {
-            if (height.endsWith('%')) {
+            if (lastItemOf(height) === '%') {
                 android.layout_rowWeight = truncate(parseFloat(height) / 100, this.localSettings.floatPrecision);
                 height = '0px';
             }

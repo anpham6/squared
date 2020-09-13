@@ -355,6 +355,10 @@ export const CSS_PROPERTIES: CssProperties = {
         trait: 0,
         value: 'ease'
     },
+    backdropFilter: {
+        trait: CSS_TRAITS.CALC,
+        value: 'none'
+    },
     backfaceVisibility: {
         trait: 0,
         value: 'visible'
@@ -620,6 +624,18 @@ export const CSS_PROPERTIES: CssProperties = {
         trait: CSS_TRAITS.LAYOUT,
         value: 'content-box'
     },
+    breakAfter: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'auto'
+    },
+    breakBefore: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'auto'
+    },
+    breakInside: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'auto'
+    },
     captionSide: {
         trait: 0,
         value: 'top'
@@ -720,7 +736,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'show'
     },
     filter: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.NONE,
+        trait: CSS_TRAITS.CALC,
         value: 'none'
     },
     flex: {
@@ -793,6 +809,10 @@ export const CSS_PROPERTIES: CssProperties = {
     fontSizeAdjust: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
         value: 'none'
+    },
+    fontOpticalSizing: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'auto'
     },
     fontStretch: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
@@ -949,6 +969,22 @@ export const CSS_PROPERTIES: CssProperties = {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
         value: 'auto'
     },
+    hyphens: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'manual'
+    },
+    imageRendering: {
+        trait: 0,
+        value: 'auto'
+    },
+    isolation: {
+        trait: 0,
+        value: 'auto'
+    },
+    lineBreak: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'auto'
+    },
     justifyContent: {
         trait: CSS_TRAITS.CONTAIN,
         value: 'normal'
@@ -1034,6 +1070,18 @@ export const CSS_PROPERTIES: CssProperties = {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
         value: 'auto'
     },
+    mixBlendMode: {
+        trait: 0,
+        value: 'normal'
+    },
+    objectFit: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'fill'
+    },
+    objectPosition: {
+        trait: CSS_TRAITS.CALC,
+        value: '50% 50%'
+    },
     offset: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE | CSS_TRAITS.AUTO,
         value: [
@@ -1098,6 +1146,10 @@ export const CSS_PROPERTIES: CssProperties = {
             'overflowY'
         ]
     },
+    overflowAnchor: {
+        trait: 0,
+        value: 'auto'
+    },
     overflowWrap: {
         trait: CSS_TRAITS.LAYOUT,
         value: 'normal'
@@ -1109,6 +1161,21 @@ export const CSS_PROPERTIES: CssProperties = {
     overflowY: {
         trait: CSS_TRAITS.LAYOUT,
         value: 'visible'
+    },
+    overscrollBehavior: {
+        trait: CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE | CSS_TRAITS.AUTO,
+        value: [
+            'overscrollBehaviorX',
+            'overscrollBehaviorY'
+        ]
+    },
+    overscrollBehaviorX: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'auto'
+    },
+    overscrollBehaviorY: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'auto'
     },
     padding: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
@@ -1196,6 +1263,10 @@ export const CSS_PROPERTIES: CssProperties = {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
         value: 'normal'
     },
+    scrollBehavior: {
+        trait: 0,
+        value: 'auto'
+    },
     scrollMargin: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
         value: [
@@ -1257,6 +1328,10 @@ export const CSS_PROPERTIES: CssProperties = {
     scrollSnapType: {
         trait: CSS_TRAITS.NONE,
         value: 'none'
+    },
+    shapeImageThreshold: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: '0.0'
     },
     shapeMargin: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.UNIT,
@@ -1341,16 +1416,24 @@ export const CSS_PROPERTIES: CssProperties = {
         trait: CSS_TRAITS.CALC,
         value: 'none'
     },
-    textUnderlinePosition: {
-        trait: 0,
+    textSizeAdjust: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
         value: 'auto'
     },
     textTransform: {
         trait: CSS_TRAITS.LAYOUT,
         value: 'none'
     },
+    textUnderlinePosition: {
+        trait: 0,
+        value: 'auto'
+    },
     top: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'auto'
+    },
+    touchAction: {
+        trait: 0,
         value: 'auto'
     },
     transform: {
@@ -1415,6 +1498,10 @@ export const CSS_PROPERTIES: CssProperties = {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
         value: 'auto'
     },
+    willChange: {
+        trait: 0,
+        value: 'auto'
+    },
     wordBreak: {
         trait: CSS_TRAITS.LAYOUT,
         value: 'normal'
@@ -1428,104 +1515,13 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'normal',
         alias: 'overflowWrap'
     },
+    writingMode: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'horizontal-tb'
+    },
     zIndex: {
         trait: CSS_TRAITS.CALC,
         value: 'auto'
-    }
-};
-
-export const SVG_PROPERTIES: CssProperties = {
-    clipRule: {
-        trait: 0,
-        value: 'nonzero'
-    },
-    cx: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
-        value: '0'
-    },
-    cy: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
-        value: '0'
-    },
-    fill: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
-        value: 'black'
-    },
-    fillOpacity: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
-        value: '1'
-    },
-    fillRule: {
-        trait: 0,
-        value: 'nonzero'
-    },
-    stroke: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
-        value: 'none'
-    },
-    strokeDasharray: {
-        trait: CSS_TRAITS.CALC,
-        value: 'none'
-    },
-    strokeDashoffset: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
-        value: '0'
-    },
-    strokeLinecap: {
-        trait: 0,
-        value: 'butt'
-    },
-    strokeLinejoin: {
-        trait: 0,
-        value: 'miter'
-    },
-    strokeMiterlimit: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
-        value: '4'
-    },
-    strokeOpacity: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
-        value: '1'
-    },
-    strokeWidth: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
-        value: '1'
-    },
-    r: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
-        value: '0'
-    },
-    rx: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
-        value: '0'
-    },
-    ry: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
-        value: '0'
-    },
-    x: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
-        value: '0'
-    },
-    x1: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
-        value: '0'
-    },
-    x2: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
-        value: '0'
-    },
-    y: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
-        value: '0'
-    },
-    y1: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
-        value: '0'
-    },
-    y2: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
-        value: '0'
     }
 };
 
@@ -1588,11 +1584,10 @@ export const ELEMENT_BLOCK = new Set([
     'UL'
 ]);
 
-export function getPropertiesAsTraits(value: number, map?: string) {
+export function getPropertiesAsTraits(value: number) {
     const result: ObjectMap<CssPropertyData> = {};
-    const data = map === 'svg' ? SVG_PROPERTIES : CSS_PROPERTIES;
-    for (const attr in data) {
-        const item = data[attr];
+    for (const attr in CSS_PROPERTIES) {
+        const item = CSS_PROPERTIES[attr];
         if (hasBit(item.trait, value)) {
             item.name = convertHyphenated(attr);
             result[attr] = item;
@@ -1801,6 +1796,10 @@ export function checkWritingMode(attr: string, value?: string) {
             return getWritingMode(value) === 0 ? 'minWidth': 'minHeight';
         case 'minBlockSize':
             return getWritingMode(value) === 0 ? 'minHeight' : 'minWidth';
+        case 'overscrollBehaviorInline':
+            return getWritingMode(value) === 0 ? 'overscrollBehaviorX' : 'overscrollBehaviorY';
+        case 'overscrollBehaviorBlock':
+            return getWritingMode(value) === 0 ? 'overscrollBehaviorY' : 'overscrollBehaviorX';
         case 'marginInlineStart':
             return getWritingMode(value) === 0 ? 'marginLeft' : 'marginTop';
         case 'marginInlineEnd':
@@ -2128,6 +2127,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
             return !isNaN(result) ? clamp(result / (percent ? 100 : 1)).toString() : '';
         }
         case 'fontStretch':
+        case 'textSizeAdjust':
             return calculateVarAsString(element, value, { unitType: CSS_UNIT.PERCENT, min: 0, supportPercent: true });
         case 'fontStyle':
         case 'offsetRotate':
@@ -2598,8 +2598,9 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
         }
         case 'background':
         case 'filter':
+        case 'backdropFilter':
         case 'gridTemplate':
-            return getStyle(element)[attr];
+            return getStyle(element)[attr] as string;
         default:
             if (attr.endsWith('Color')) {
                 return calculateColor(element, value.trim());

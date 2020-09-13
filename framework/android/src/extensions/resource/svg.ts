@@ -140,7 +140,7 @@ const { FILE } = squared.lib.regex;
 
 const { extractURL, formatPX, isPercent } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { convertCamelCase, convertInt, convertWord, hasKeys, isArray, isNumber, lastItemOf, lastItemEquals, partitionArray, plainMap, replaceMap } = squared.lib.util;
+const { convertCamelCase, convertInt, convertWord, hasKeys, isArray, isNumber, lastItemOf, partitionArray, plainMap, replaceMap } = squared.lib.util;
 
 const { CACHE_VIEWNAME, MATRIX, SVG, TRANSFORM, getAttribute, getRootOffset } = squared.svg.lib.util;
 
@@ -694,10 +694,10 @@ function insertFillAfter(propertyName: string, valueType: string, item: SvgAnima
             }
         }
         if (transformOrigin) {
-            if (lastItemEquals(propertyName, 'X')) {
+            if (lastItemOf(propertyName) === 'X') {
                 afterAnimator.push(createPropertyValue('translateX', valueType, '0', '1', precision));
             }
-            else if (lastItemEquals(propertyName, 'Y')) {
+            else if (lastItemOf(propertyName) === 'Y') {
                 afterAnimator.push(createPropertyValue('translateY', valueType, '0', '1', precision));
             }
         }
@@ -1280,11 +1280,11 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                                 if (origin) {
                                                                     let translateTo = 0,
                                                                         direction: Undef<string>;
-                                                                    if (lastItemEquals(propertyName, 'X')) {
+                                                                    if (lastItemOf(propertyName) === 'X') {
                                                                         translateTo = origin.x;
                                                                         direction = 'translateX';
                                                                     }
-                                                                    else if (lastItemEquals(propertyName, 'Y')) {
+                                                                    else if (lastItemOf(propertyName) === 'Y') {
                                                                         translateTo = origin.y;
                                                                         direction = 'translateY';
                                                                     }

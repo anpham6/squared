@@ -1083,7 +1083,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
         }
         cache.sort((a, b) => {
-            if (a.depth === b.depth) {
+            const depth = a.depth - b.depth;
+            if (depth === 0) {
                 if (!a.naturalChild || !b.naturalChild) {
                     if (a.nodeGroup && b.nodeGroup) {
                         return a.id - b.id;
@@ -1111,7 +1112,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
                 return 0;
             }
-            return a.depth - b.depth;
+            return depth;
         });
         for (let i = 0; i < length; ++i) {
             const ext = extensions[i] as ExtensionUI<T>;

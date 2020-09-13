@@ -425,18 +425,21 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         else {
             const parentElement = element.parentElement;
             style = parentElement ? getStyle(parentElement, pseudoElt) : getStyle(element);
+            if (style.getPropertyValue('display') === 'none') {
+                return false;
+            }
             width = 1;
             height = 1;
         }
         if (width && height) {
             return style.getPropertyValue('visibility') === 'visible' || !hasCoords(style.getPropertyValue('position'));
         }
-        else if (!pseudoElt && (element.tagName === 'IMG' && style.getPropertyValue('display') !== 'none' || iterateArray(element.children, (item: HTMLElement) => this.visibleElement(item, sessionId)) === Infinity)) {
+        else if (element.tagName === 'IMG' && style.getPropertyValue('display') !== 'none' || iterateArray(element.children, (item: HTMLElement) => this.visibleElement(item, sessionId)) === Infinity) {
             return true;
         }
         return !hasCoords(style.getPropertyValue('position')) && (
             width > 0 && style.getPropertyValue('float') !== 'none' ||
-            pseudoElt && style.getPropertyValue('clear') !== 'none' ||
+            style.getPropertyValue('clear') !== 'none' ||
             style.getPropertyValue('display') === 'block' && (parseInt(style.getPropertyValue('margin-top')) !== 0 || parseInt(style.getPropertyValue('margin-bottom')) !== 0)
         );
     }
@@ -729,17 +732,17 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
 
     public sortInitialCache(cache: NodeList<T>) {
         cache.sort((a, b) => {
-            if (a.depth !== b.depth) {
-                return a.depth - b.depth;
+            let depth = a.depth - b.depth;
+            if (depth !== 0) {
+                return depth;
             }
             else {
                 const parentA = a.documentParent;
                 const parentB = b.documentParent;
                 if (parentA !== parentB) {
-                    const depthA = parentA.depth;
-                    const depthB = parentB.depth;
-                    if (depthA !== depthB) {
-                        return depthA - depthB;
+                    depth = parentA.depth - parentB.depth;
+                    if (depth !== 0) {
+                        return depth;
                     }
                     else if (parentA.actualParent === parentB.actualParent) {
                         return parentA.childIndex - parentB.childIndex;

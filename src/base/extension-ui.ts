@@ -5,50 +5,49 @@ import type NodeUI from './node-ui';
 
 import Extension from './extension';
 
-const { includes } = squared.lib.util;
-
 export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T> implements squared.base.ExtensionUI<T> {
+    public static includes(source: Undef<string>, value: string) {
+        return source ? source.trim().split(/\s*,\s*/).includes(value) : false;
+    }
+
     public static findNestedElement(node: NodeUI, name: string) {
         if (node.styleElement) {
             const systemName = node.localSettings.systemName;
             const children = (node.element as HTMLElement).children;
             for (let i = 0, length = children.length; i < length; ++i) {
                 const item = children[i] as HTMLElement;
-                if (includes(item.dataset['use' + systemName] || item.dataset.use, name)) {
+                if (ExtensionUI.includes(item.dataset['use' + systemName] || item.dataset.use, name)) {
                     return item;
                 }
             }
         }
     }
 
-    public readonly tagNames: string[];
+    public readonly tagNames?: string[];
     public readonly eventOnly?: boolean;
     public readonly cascadeAll?: boolean;
     public readonly documentBase?: boolean;
     public abstract controller: ControllerUI<T>;
     public abstract resource: Null<ResourceUI<T>>;
 
-    private readonly _isAll: boolean;
-
     constructor(name: string, framework: number, options?: ExtensionUIOptions) {
         super(name, framework, options);
-        this.tagNames = options && options.tagNames || [];
-        this._isAll = this.tagNames.length === 0;
+        this.tagNames = options && options.tagNames;
     }
 
     public abstract set application(value);
     public abstract get application(): ApplicationUI<T>;
 
     public is(node: T) {
-        return this._isAll || this.tagNames.includes(node.tagName);
+        return this.tagNames ? this.tagNames.includes(node.tagName) : true;
     }
 
     public condition(node: T, parent: T) {
-        return node.use ? this.included(node.element as HTMLElement) : !this._isAll;
+        return node.use ? this.included(node.element as HTMLElement) : !!this.tagNames;
     }
 
     public included(element: DocumentElement) {
-        return includes(this.application.getDatasetName('use', element), this.name);
+        return ExtensionUI.includes(this.application.getDatasetName('use', element), this.name);
     }
 
     public processNode(node: T, parent: T): Void<ExtensionResult<T>> {}

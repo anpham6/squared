@@ -16,7 +16,7 @@ const { CONTAINER_TAGNAME, CONTAINER_NODE, SUPPORT_TAGNAME, SUPPORT_TAGNAME_X } 
 
 const { formatPX } = squared.lib.css;
 const { getElementAsNode } = squared.lib.session;
-const { assignEmptyValue, capitalize, includes, iterateArray } = squared.lib.util;
+const { assignEmptyValue, capitalize, iterateArray } = squared.lib.util;
 const { createThemeAttribute, createViewAttribute, getDocumentId } = android.lib.util;
 
 const Resource = android.base.Resource;
@@ -35,7 +35,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
             iterateArray(element.children, (item: HTMLElement) => {
                 if (item.tagName === 'NAV') {
                     const use = application.getDatasetName('use', item);
-                    if (!includes(use, EXT_ANDROID.EXTERNAL)) {
+                    if (!Toolbar.includes(use, EXT_ANDROID.EXTERNAL)) {
                         application.setDatasetName('use', item, (use ? use + ', ' : '') + EXT_ANDROID.EXTERNAL);
                         return true;
                     }
@@ -44,7 +44,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
             const target = element.dataset.androidTarget;
             if (target) {
                 const targetElement = document.getElementById(target);
-                if (targetElement && !includes(application.getDatasetName('use', targetElement), WIDGET_NAME.COORDINATOR)) {
+                if (targetElement && !Toolbar.includes(application.getDatasetName('use', targetElement), WIDGET_NAME.COORDINATOR)) {
                     application.getProcessing(sessionId)!.rootElements.add(element);
                 }
             }

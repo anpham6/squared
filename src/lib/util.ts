@@ -658,10 +658,6 @@ export function lastItemOf<T>(value: ArrayLike<T>): Undef<T> {
     return value[value.length - 1];
 }
 
-export function lastItemEquals<T>(value: ArrayLike<T>, compareTo: T) {
-    return value[value.length - 1] === compareTo;
-}
-
 export function hasBit(value: number, offset: number) {
     return (value & offset) === offset;
 }
@@ -730,17 +726,6 @@ export function isEqual(source: any, other: any) {
                 }
             }
             return true;
-        }
-    }
-    return false;
-}
-
-export function includes(source: Undef<string>, value: string, delimiter = ',') {
-    if (source) {
-        for (const name of source.split(delimiter)) {
-            if (name.trim() === value) {
-                return true;
-            }
         }
     }
     return false;
@@ -857,20 +842,9 @@ export function fromLastIndexOf(value: string, ...char: string[]) {
     return value;
 }
 
-export function partitionLastIndexOf(value: string, ...char: string[]): [string, string] {
-    let i = 0;
-    while (i < char.length) {
-        const index = value.lastIndexOf(char[i++]);
-        if (index !== -1) {
-            return [value.substring(0, index), value.substring(index + 1)];
-        }
-    }
-    return ['', value];
-}
-
 export function* searchObject(obj: StringMap, value: string) {
     const start = value[0] === '*';
-    const end = lastItemEquals(value, '*');
+    const end = lastItemOf(value) === '*';
     const search =
         start && end
             ? (a: string) => a.includes(value.replace(/^\*/, '').replace(/\*$/, ''))

@@ -284,10 +284,11 @@ declare module "base" {
     }
 
     class ExtensionUI<T extends NodeUI> extends Extension<T> {
+        static includes(source: Undef<string>, value: string): boolean;
         static findNestedElement<U extends NodeUI>(node: U, name: string): Undef<HTMLElement>;
         controller: ControllerUI<T>;
         resource: Null<ResourceUI<T>>;
-        readonly tagNames: string[];
+        readonly tagNames?: string[];
         readonly eventOnly?: boolean;
         readonly cascadeAll?: boolean;
         readonly documentBase?: boolean;

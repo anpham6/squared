@@ -8,7 +8,7 @@ const { CSS, FILE } = squared.lib.regex;
 const { SELECTOR_ATTR, SELECTOR_G, SELECTOR_LABEL, SELECTOR_PSEUDO_CLASS } = CSS;
 
 const { isUserAgent } = squared.lib.client;
-const { CSS_PROPERTIES, PROXY_INLINESTYLE, SVG_PROPERTIES, checkFontSizeValue, checkStyleValue, checkWritingMode, formatPX, getRemSize, getStyle, isAngle, isLength, isPercent, isTime, parseSelectorText, parseUnit } = squared.lib.css;
+const { CSS_PROPERTIES, PROXY_INLINESTYLE, checkFontSizeValue, checkStyleValue, checkWritingMode, formatPX, getRemSize, getStyle, isAngle, isLength, isPercent, isTime, parseSelectorText, parseUnit } = squared.lib.css;
 const { assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { getElementData, getElementAsNode, getElementCache, setElementCache } = squared.lib.session;
 const { convertCamelCase, convertFloat, convertInt, hasBit, hasValue, isNumber, isObject, iterateArray, iterateReverseArray, spliceString, splitEnclosing, splitPair } = squared.lib.util;
@@ -1245,15 +1245,19 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     public css(attr: string, value?: string, cache = true): string {
         if (value && this.styleElement) {
-            const previousValue = this.style[attr];
-            this.style[attr] = value;
-            if (previousValue !== this.style[attr]) {
-                this._styleMap[attr] = value;
-                if (cache) {
-                    this.unsetCache(attr);
+            const previousValue = this.style[attr] as Undef<string>;
+            if (previousValue !== undefined) {
+                this.style[attr] = value;
+                if (previousValue !== this.style[attr]) {
+                    this._styleMap[attr] = value;
+                    if (cache) {
+                        this.unsetCache(attr);
+                    }
+                    return value;
                 }
-                return value;
+                return previousValue;
             }
+            return '';
         }
         return this._styleMap[attr] as string || this.style[attr] as string || '';
     }
@@ -1570,7 +1574,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 ({ not, type, ignoreDefault } = options);
             }
             if (ignoreDefault !== true) {
-                const data = options && options.map === 'svg' ? SVG_PROPERTIES[attr] : CSS_PROPERTIES[attr];
+                const data = CSS_PROPERTIES[attr];
                 if (data && (value === data.value || hasBit(data.trait, CSS_TRAITS.UNIT) && parseFloat(value) === parseFloat(data.value as string))) {
                     return false;
                 }

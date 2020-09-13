@@ -11,7 +11,7 @@ import NodeList from './nodelist';
 type FileActionOptions = squared.FileActionOptions;
 type PreloadItem = HTMLImageElement | string;
 
-const { DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, CSS_CANNOT_BE_PARSED, reject } = squared.lib.error;
+const { CSS_CANNOT_BE_PARSED, DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, reject } = squared.lib.error;
 const { FILE, STRING } = squared.lib.regex;
 
 const { CSS_PROPERTIES, checkMediaRule, getSpecificity, hasComputedStyle, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText } = squared.lib.css;

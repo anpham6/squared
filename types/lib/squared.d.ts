@@ -124,9 +124,8 @@ declare module "lib" {
     namespace css {
         const PROXY_INLINESTYLE: Readonly<CSSStyleDeclaration>;
         const CSS_PROPERTIES: CssProperties;
-        const SVG_PROPERTIES: CssProperties;
         const ELEMENT_BLOCK: Set<string>;
-        function getPropertiesAsTraits(value: number, map?: string): ObjectMap<CssPropertyData>;
+        function getPropertiesAsTraits(value: number): ObjectMap<CssPropertyData>;
         function getStyle(element: Element, pseudoElt?: PseudoElt): CSSStyleDeclaration;
         function getRemSize(fixedWidth?: boolean): number;
         function getFontSize(element: Element): number;
@@ -281,7 +280,6 @@ declare module "lib" {
         function splitPairEnd(value: string, char: string, trim?: boolean): string;
         function splitEnclosing(value: string, prefix?: string, separator?: string, opening?: string, closing?: string): string[];
         function lastItemOf<T>(value: ArrayLike<T>): Undef<T>;
-        function lastItemEquals<T>(value: ArrayLike<T>, compareTo: T): boolean;
         function hasBit(value: number, offset: number): boolean;
         function isNumber(value: string): boolean;
         function isString(value: any): value is string;
@@ -290,7 +288,6 @@ declare module "lib" {
         function isPlainObject<T = PlainObject>(value: any): value is T;
         function isEmptyString(value: string): boolean;
         function isEqual(source: any, other: any): boolean;
-        function includes(source: Undef<string>, value: string, delimiter?: RegExp): boolean;
         function cloneInstance<T>(value: T): T;
         function cloneObject<T>(data: T, options?: CloneObjectOptions<T>): T;
         function resolvePath(value: string, href?: string): string;
@@ -299,7 +296,6 @@ declare module "lib" {
         function trimStart(value: string, pattern: string): string;
         function trimEnd(value: string, pattern: string): string;
         function fromLastIndexOf(value: string, ...char: string[]): string;
-        function partitionLastIndexOf(value: string, ...char: string[]): [string, string];
         function searchObject(obj: StringMap, value: string): Generator<string, void>;
         function hasValue<T>(value: any): value is T;
         function withinRange(a: number, b: number, offset?: number): boolean;
