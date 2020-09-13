@@ -67,7 +67,7 @@ declare module "base" {
     }
 
     interface AppSession<T extends Node> {
-        active: Map<string, AppProcessing<T>>,
+        active: Map<string, AppProcessing<T>>;
         unusedStyles?: Set<string>;
     }
 
@@ -80,7 +80,7 @@ declare module "base" {
         extensions: Extension<T>[];
         elementMap: Map<Element, ElementData>;
         keyframesMap?: KeyframesMap;
-        afterInsertNode?: Extension<T>[],
+        afterInsertNode?: Extension<T>[];
         node?: T;
         documentElement?: T;
     }

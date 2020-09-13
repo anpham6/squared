@@ -1,5 +1,6 @@
+import type Node from '../../../src/base/node';
+
 import Application from '../../../src/base/application';
-import Node from '../../../src/base/node';
 
 export default class <T extends Node> extends Application<T> implements vdom.base.Application<T> {
     public userSettings!: UserSettings;

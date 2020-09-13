@@ -5,12 +5,12 @@ import { CONTAINER_NODE, CONTAINER_TAGNAME, SUPPORT_TAGNAME, SUPPORT_TAGNAME_X, 
 
 import LAYERLIST_TMPL from '../../template/layer-list';
 import SHAPE_TMPL from '../../template/shape';
-import VECTOR_TMPL from '../../template/vector';
+import { VECTOR_TMPL } from '../../template/vector';
 
 import type View from '../../view';
+import type ResourceSvg from './svg';
 
 import Resource from '../../resource';
-import ResourceSvg from './svg';
 
 import { applyTemplate } from '../../lib/util';
 

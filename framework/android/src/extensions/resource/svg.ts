@@ -2,12 +2,11 @@ import SYNCHRONIZE_MODE = squared.svg.constant.SYNCHRONIZE_MODE;
 import BUILD_VERSION = android.lib.constant.BUILD_VERSION;
 
 import { XML_NAMESPACE } from '../../lib/constant';
-import { VECTOR_GROUP, VECTOR_PATH } from '../../template/vector';
+import { VECTOR_GROUP, VECTOR_PATH, VECTOR_TMPL } from '../../template/vector';
 
 import ANIMATEDVECTOR_TMPL from '../../template/animated-vector';
 import LAYERLIST_TMPL from '../../template/layer-list';
 import SET_TMPL from '../../template/set';
-import VECTOR_TMPL from '../../template/vector';
 
 import type View from '../../view';
 

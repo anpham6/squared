@@ -4,8 +4,8 @@ import type Controller from './controller';
 import type Resource from './resource';
 import type Extension from './extension';
 import type ExtensionManager from './extensionmanager';
+import type Node from './node';
 
-import Node from './node';
 import NodeList from './nodelist';
 
 type FileActionOptions = squared.FileActionOptions;

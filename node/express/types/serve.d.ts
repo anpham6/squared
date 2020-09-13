@@ -1,7 +1,7 @@
-import * as express from 'express';
-import * as cors from 'cors';
-import * as fs from 'fs';
-import * as jimp from 'jimp';
+import type * as express from 'express';
+import type * as cors from 'cors';
+import type * as fs from 'fs';
+import type * as jimp from 'jimp';
 
 type BoolString = boolean | string;
 type ExternalCategory = "html" | "css" | "js";

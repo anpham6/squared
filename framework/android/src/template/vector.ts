@@ -38,7 +38,7 @@ export const VECTOR_GROUP = {
     }
 };
 
-export default {
+export const VECTOR_TMPL = {
     'vector': {
         '@': ['xmlns:android', 'xmlns:aapt', 'android:name', 'android:width', 'android:height', 'android:viewportWidth', 'android:viewportHeight', 'android:alpha'],
         '>': {

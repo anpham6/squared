@@ -13,7 +13,7 @@ interface DataMap {
 interface TranspileMap {
     html: ObjectMap<StringMap>;
     js: ObjectMap<StringMap>;
-    css: ObjectMap<StringMap>
+    css: ObjectMap<StringMap>;
 }
 
 interface ChromeModules {

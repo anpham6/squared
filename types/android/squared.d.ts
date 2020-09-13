@@ -255,11 +255,11 @@ declare namespace lib {
             UNKNOWN
         }
         const SCREEN_DENSITY: {
-            LDPI: number,
-            MDPI: number,
-            HDPI: number,
-            XHDPI: number,
-            XXHDPI: number,
+            LDPI: number;
+            MDPI: number;
+            HDPI: number;
+            XHDPI: number;
+            XXHDPI: number;
             XXXHDPI: number;
         };
         const CONTAINER_ELEMENT: {

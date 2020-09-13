@@ -22,7 +22,7 @@ type Main = squared.base.Application<Node>;
 type Framework = squared.base.AppFramework<Node>;
 type Extension = squared.base.Extension<Node>;
 type ExtensionManager = squared.base.ExtensionManager<Node>;
-type ExtendPrototypeMap = ObjectMap<FunctionType<any> | { set?: (value: any) => void, get?: () => any }>;
+type ExtendPrototypeMap = ObjectMap<FunctionType<any> | { set?: (value: any) => void; get?: () => any }>;
 
 const addQueue = new Set<ExtensionRequest>();
 const removeQueue = new Set<ExtensionRequest>();
@@ -34,6 +34,7 @@ const settings = {} as UserSettings;
 let main: Null<Main> = null;
 let framework: Null<Framework> = null;
 let extensionManager: Null<ExtensionManager> = null;
+let extensionQueue = false;
 let extensionCheck = false;
 
 function extendPrototype(id: number) {
@@ -66,37 +67,39 @@ function extendPrototype(id: number) {
 
 function loadExtensions() {
     if (extensionManager) {
-        if (extensionCache.size) {
-            for (const item of extensionCache) {
-                extensionManager.cache.add(item);
-            }
-            extensionCache.clear();
-        }
-        if (addQueue.size) {
-            for (const item of addQueue) {
-                if (!extensionManager.add(item)) {
-                    console.log('FAIL: ' + (typeof item === 'string' ? item : item.name));
-                    extensionCheck = true;
+        if (extensionQueue) {
+            if (extensionCache.size) {
+                for (const item of extensionCache) {
+                    extensionManager.cache.add(item);
                 }
+                extensionCache.clear();
             }
-            addQueue.clear();
-        }
-        if (optionsQueue.size) {
-            for (const data of optionsQueue) {
-                const ext = extensionManager.get(data[0], true);
-                if (ext) {
-                    Object.assign(ext.options, data[1]);
+            if (addQueue.size) {
+                for (const item of addQueue) {
+                    if (!extensionManager.add(item)) {
+                        console.log('FAIL: ' + (typeof item === 'string' ? item : item.name));
+                        extensionCheck = true;
+                    }
                 }
+                addQueue.clear();
             }
-            optionsQueue.clear();
-        }
-        if (removeQueue.size) {
-            for (const item of removeQueue) {
-                if (extensionManager.remove(item)) {
-                    extensionCheck = true;
+            if (optionsQueue.size) {
+                for (const data of optionsQueue) {
+                    const ext = extensionManager.get(data[0], true);
+                    if (ext) {
+                        Object.assign(ext.options, data[1]);
+                    }
                 }
+                optionsQueue.clear();
             }
-            removeQueue.clear();
+            if (removeQueue.size) {
+                for (const item of removeQueue) {
+                    if (extensionManager.remove(item)) {
+                        extensionCheck = true;
+                    }
+                }
+                removeQueue.clear();
+            }
         }
         if (extensionCheck) {
             const errors = extensionManager.checkDependencies();
@@ -289,6 +292,7 @@ export function add(...values: ExtensionRequestObject[]) {
                 if (options) {
                     apply(value, options);
                 }
+                extensionQueue = true;
                 continue;
             }
         }
@@ -296,10 +300,12 @@ export function add(...values: ExtensionRequestObject[]) {
             if (!extensionManager) {
                 addQueue.add(value);
                 extensionCache.add(value);
+                extensionQueue = true;
             }
             else {
                 if (!extensionManager.add(value)) {
                     addQueue.add(value);
+                    extensionQueue = true;
                 }
                 extensionManager.cache.add(value);
             }
@@ -332,6 +338,7 @@ export function remove(...values: ExtensionRequest[]) {
                 addQueue.delete(value);
                 removeQueue.add(value);
                 extensionCheck = true;
+                extensionQueue = true;
                 ++success;
                 continue;
             }
@@ -340,6 +347,7 @@ export function remove(...values: ExtensionRequest[]) {
             addQueue.delete(value);
             if (!(extensionManager && extensionManager.remove(value))) {
                 removeQueue.add(value);
+                extensionQueue = true;
             }
             extensionCheck = true;
             ++success;
@@ -396,6 +404,7 @@ export function apply(value: ExtensionRequest, options: FrameworkOptions) {
             const ext = extensionManager && extensionManager.get(value, true) || util.findSet(addQueue, item => typeof item !== 'string' && item.name === value) as Undef<Extension>;
             if (!ext) {
                 optionsQueue.set(value, mergeSettings(value));
+                extensionQueue = true;
                 return true;
             }
             else {

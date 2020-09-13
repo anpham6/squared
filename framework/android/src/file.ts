@@ -215,7 +215,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         const length = STORED.arrays.size;
         if (length) {
             const items = Array.from(STORED.arrays.entries()).sort();
-            const itemArray: { name: string, item: { innerText: string }[] }[] = new Array(length);
+            const itemArray: { name: string; item: { innerText: string }[] }[] = new Array(length);
             for (let i = 0; i < length; ++i) {
                 const item = items[i];
                 itemArray[i] = { name: item[0], item: plainMap(item[1], innerText => ({ innerText })) };
@@ -241,7 +241,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             const result: string[] = new Array(length * 3);
             for (let i = 0, j = 0; i < length; ++i) {
                 const [name, font] = items[i];
-                const itemArray: { font: string, fontStyle: string, fontWeight: string }[] = [];
+                const itemArray: { font: string; fontStyle: string; fontWeight: string }[] = [];
                 for (const attr in font) {
                     const [fontFamily, fontStyle, fontWeight] = attr.split('|');
                     const fontName = name + (fontStyle === 'normal' ? fontWeight === '400' ? '_normal' : '_' + font[attr] : '_' + fontStyle + (fontWeight !== '400' ? font[attr] : ''));

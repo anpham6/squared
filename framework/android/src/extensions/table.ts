@@ -2,7 +2,7 @@ import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
 
 import { CONTAINER_NODE } from '../lib/constant';
 
-import View from '../view';
+import type View from '../view';
 
 import LayoutUI = squared.base.LayoutUI;
 

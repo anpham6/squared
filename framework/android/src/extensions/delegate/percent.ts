@@ -3,9 +3,9 @@ import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
 import LAYOUT_STRING = android.base.LAYOUT_STRING;
 import CSS_UNIT = squared.lib.constant.CSS_UNIT;
 
-import { CONTAINER_NODE, LAYOUT_MAP } from '../../lib/constant';
+import type View from '../../view';
 
-import View from '../../view';
+import { CONTAINER_NODE, LAYOUT_MAP } from '../../lib/constant';
 
 import LayoutUI = squared.base.LayoutUI;
 
