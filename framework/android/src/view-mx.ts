@@ -529,6 +529,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public renderParent!: Null<T>;
         public companion!: T;
         public horizontalRows!: T[][];
+        public alignedWithX?: T;
+        public alignedWithY?: T;
 
         protected _namespaces: ObjectMap<StringMapChecked> = { android: {} };
         protected _containerType = 0;
@@ -1622,77 +1624,81 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public translateX(value: number, options?: TranslateOptions) {
-            const node = this.anchorTarget;
-            const renderParent = node.renderParent as Undef<T>;
-            if (renderParent && renderParent.layoutConstraint) {
-                let oppose: Undef<boolean>,
-                    accumulate: Undef<boolean>,
-                    contain: Undef<boolean>;
-                if (options) {
-                    ({ oppose, accumulate, contain } = options);
-                }
-                let x = convertInt(node.android('translationX'));
-                if (oppose === false && (x > 0 && value < 0 || x < 0 && value > 0)) {
-                    return false;
-                }
-                else if (accumulate !== false) {
-                    x += value;
-                }
-                if (contain) {
-                    const box = renderParent.box;
-                    const linear = this.linear;
-                    if (linear.left + x < box.left) {
-                        x = Math.max(linear.left - box.left, 0);
+            if (!isNaN(value)) {
+                const node = this.anchorTarget;
+                const renderParent = node.renderParent as Undef<T>;
+                if (renderParent && renderParent.layoutConstraint) {
+                    let oppose: Undef<boolean>,
+                        accumulate: Undef<boolean>,
+                        contain: Undef<boolean>;
+                    if (options) {
+                        ({ oppose, accumulate, contain } = options);
                     }
-                    else if (linear.right + x > box.right) {
-                        x = Math.max(box.right - linear.right, 0);
+                    let x = convertInt(node.android('translationX'));
+                    if (oppose === false && (x > 0 && value < 0 || x < 0 && value > 0)) {
+                        return false;
                     }
+                    else if (accumulate !== false) {
+                        x += value;
+                    }
+                    if (contain) {
+                        const box = renderParent.box;
+                        const linear = this.linear;
+                        if (linear.left + x < box.left) {
+                            x = Math.max(linear.left - box.left, 0);
+                        }
+                        else if (linear.right + x > box.right) {
+                            x = Math.max(box.right - linear.right, 0);
+                        }
+                    }
+                    if (x !== 0) {
+                        node.android('translationX', formatPX(x));
+                    }
+                    else {
+                        node.delete('android', 'translationX');
+                    }
+                    return true;
                 }
-                if (x !== 0) {
-                    node.android('translationX', formatPX(x));
-                }
-                else {
-                    node.delete('android', 'translationX');
-                }
-                return true;
             }
             return false;
         }
 
         public translateY(value: number, options?: TranslateOptions) {
-            const node = this.anchorTarget;
-            const renderParent = node.renderParent as Undef<T>;
-            if (renderParent && renderParent.layoutConstraint) {
-                let oppose: Undef<boolean>,
-                    accumulate: Undef<boolean>,
-                    contain: Undef<boolean>;
-                if (options) {
-                    ({ oppose, accumulate, contain } = options);
-                }
-                let y = convertInt(node.android('translationY'));
-                if (oppose === false && (y > 0 && value < 0 || y < 0 && value > 0)) {
-                    return false;
-                }
-                else if (accumulate !== false) {
-                    y += value;
-                }
-                if (contain) {
-                    const box = renderParent.box;
-                    const linear = this.linear;
-                    if (linear.top + y < box.top) {
-                        y = Math.max(linear.top - box.top, 0);
+            if (!isNaN(value)) {
+                const node = this.anchorTarget;
+                const renderParent = node.renderParent as Undef<T>;
+                if (renderParent && renderParent.layoutConstraint) {
+                    let oppose: Undef<boolean>,
+                        accumulate: Undef<boolean>,
+                        contain: Undef<boolean>;
+                    if (options) {
+                        ({ oppose, accumulate, contain } = options);
                     }
-                    else if (linear.bottom + y > box.bottom) {
-                        y = Math.max(box.bottom - linear.bottom, 0);
+                    let y = convertInt(node.android('translationY'));
+                    if (oppose === false && (y > 0 && value < 0 || y < 0 && value > 0)) {
+                        return false;
                     }
+                    else if (accumulate !== false) {
+                        y += value;
+                    }
+                    if (contain) {
+                        const box = renderParent.box;
+                        const linear = this.linear;
+                        if (linear.top + y < box.top) {
+                            y = Math.max(linear.top - box.top, 0);
+                        }
+                        else if (linear.bottom + y > box.bottom) {
+                            y = Math.max(box.bottom - linear.bottom, 0);
+                        }
+                    }
+                    if (y !== 0) {
+                        node.android('translationY', formatPX(y));
+                    }
+                    else {
+                        node.delete('android', 'translationY');
+                    }
+                    return true;
                 }
-                if (y !== 0) {
-                    node.android('translationY', formatPX(y));
-                }
-                else {
-                    node.delete('android', 'translationY');
-                }
-                return true;
             }
             return false;
         }
@@ -2459,6 +2465,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         renderAdjustment[7] += (boxReset[3] === 0 ? this.marginLeft : 0) + (boxReset[7] === 0 ? this.paddingLeft : 0) + boxAdjustment[3] + boxAdjustment[7];
                     }
                 }
+            }
+            if (this.alignedWithX) {
+                this.translateX(parseFloat(this.alignedWithX.android('translationX')));
+            }
+            if (this.alignedWithY) {
+                this.translateY(parseFloat(this.alignedWithY.android('translationY')));
             }
         }
 

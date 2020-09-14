@@ -436,11 +436,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         else if (element.tagName === 'IMG' && style.getPropertyValue('display') !== 'none' || iterateArray(element.children, (item: HTMLElement) => this.visibleElement(item, sessionId)) === Infinity) {
             return true;
         }
-        return !hasCoords(style.getPropertyValue('position')) && (
-            width > 0 && style.getPropertyValue('float') !== 'none' ||
-            style.getPropertyValue('clear') !== 'none' ||
-            style.getPropertyValue('display') === 'block' && (parseInt(style.getPropertyValue('margin-top')) !== 0 || parseInt(style.getPropertyValue('margin-bottom')) !== 0)
-        );
+        return !hasCoords(style.getPropertyValue('position')) && (width > 0 && style.getPropertyValue('float') !== 'none' || style.getPropertyValue('display') === 'block' && element.parentElement?.tagName !== 'DETAILS' || style.getPropertyValue('clear') !== 'none');
     }
 
     public evaluateNonStatic(documentRoot: T, cache: NodeList<T>) {

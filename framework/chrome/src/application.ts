@@ -51,7 +51,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         if (options.removeUnusedStyles) {
             const unusedStyles = Array.from(this.session.unusedStyles!);
             if (unusedStyles.length) {
-                options!.unusedStyles = options!.unusedStyles ? Array.from(new Set((options!.unusedStyles ||= []).concat(unusedStyles))) : unusedStyles;
+                options.unusedStyles = options.unusedStyles ? Array.from(new Set(options.unusedStyles.concat(unusedStyles))) : unusedStyles;
             }
         }
         return this.fileHandler![module](pathname, options);

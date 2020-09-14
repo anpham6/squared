@@ -20,5 +20,5 @@ interface FileActionAttribute extends PlainObject {
 interface TranspileMap {
     html: ObjectMap<StringMap>;
     js: ObjectMap<StringMap>;
-    css: ObjectMap<StringMap>
+    css: ObjectMap<StringMap>;
 }

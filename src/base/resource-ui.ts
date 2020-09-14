@@ -1120,7 +1120,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                         }
                         case 'submit':
                             if (value === '' && !node.visibleStyle.backgroundImage) {
-                                value = 'Submit';
+                                value = isUserAgent(USER_AGENT.FIREFOX) ? 'Submit Query' : 'Submit';
                             }
                             break;
                         case 'reset':
@@ -1375,7 +1375,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                 if (child) {
                     if (styled && child.htmlElement) {
                         if (child.lineBreak) {
-                            value = value.replace(!preserveWhiteSpace ? new RegExp(`\\s*${item.outerHTML}\\s*`) : item.outerHTML, element.tagName === 'CODE' && child.lineBreakTrailing && child.previousSibling?.plainText ? '' : '\\n');
+                            value = value.replace(!preserveWhiteSpace ? new RegExp(`\\s*${item.outerHTML}\\s*`) : item.outerHTML, child.lineBreakTrailing && child.previousSibling?.inlineStatic ? '' : '\\n');
                         }
                         else if (child.positioned) {
                             value = value.replace(item.outerHTML, '');

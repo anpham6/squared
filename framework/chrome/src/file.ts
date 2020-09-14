@@ -273,25 +273,24 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     private _outputFileExclusions?: RegExp[];
 
     public reset() {
-        super.reset();
         delete this._outputFileExclusions;
+        super.reset();
     }
 
-    public copyTo(directory: string, options?: IFileCopyingOptions) {
-        return this.copying({ ...options, assets: this.appendAssetsFromOptions(options), directory });
+    public copyTo(directory: string, options: IFileCopyingOptions = {}) {
+        options.directory = directory;
+        return this.copying(this.processAssets(options));
     }
 
-    public appendTo(pathname: string, options?: IFileArchivingOptions) {
-        return this.archiving({
-            filename: this.userSettings.outputArchiveName,
-            ...options,
-            assets: this.appendAssetsFromOptions(options),
-            appendTo: pathname
-        });
+    public appendTo(pathname: string, options: IFileArchivingOptions = {}) {
+        options.filename ||= this.userSettings.outputArchiveName;
+        options.appendTo = pathname;
+        return this.archiving(this.processAssets(options));
     }
 
-    public saveAs(filename: string, options?: IFileArchivingOptions) {
-        return this.archiving({ ...options, assets: this.appendAssetsFromOptions(options), filename });
+    public saveAs(filename: string, options: IFileArchivingOptions = {}) {
+        options.filename = filename;
+        return this.archiving(this.processAssets(options));
     }
 
     public getHtmlPage(options?: FileActionAttribute) {
@@ -677,36 +676,33 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         return result;
     }
 
-    protected combineAssets(options?: IFileArchivingOptions) {
-        options ||= {};
-        const result = this.getHtmlPage(options).concat(this.getLinkAssets(options));
+    private processAssets(options: IFileActionOptions) {
+        let assets = this.getHtmlPage(options).concat(this.getLinkAssets(options));
         if (options.saveAsWebPage) {
-            for (let i = 0, length = result.length; i < length; ++i) {
-                const item = result[i];
+            for (let i = 0, length = assets.length; i < length; ++i) {
+                const item = assets[i];
                 const mimeType = item.mimeType;
                 switch (mimeType) {
                     case 'text/html':
                     case 'application/xhtml+xml':
                     case 'text/css':
-                        item.mimeType = `@${mimeType}`;
+                        item.mimeType = '@' + mimeType;
                         break;
                 }
             }
         }
         const [scriptAssets, transpileMap] = this.getScriptAssets(options);
-        options.transpileMap = transpileMap;
-        return result.concat(scriptAssets)
+        options.assets = assets
+            .concat(scriptAssets)
             .concat(this.getImageAssets(options))
             .concat(this.getVideoAssets(options))
             .concat(this.getAudioAssets(options))
             .concat(this.getRawAssets('object', options))
             .concat(this.getRawAssets('embed', options))
-            .concat(this.getFontAssets(options));
-    }
-
-    private appendAssetsFromOptions(options?: squared.FileActionOptions) {
-        const assets = this.combineAssets(options);
-        return options && options.assets ? assets.concat(options.assets) : assets;
+            .concat(this.getFontAssets(options))
+            .concat(options.assets || []);
+        options.transpileMap = transpileMap;
+        return options;
     }
 
     get outputFileExclusions() {

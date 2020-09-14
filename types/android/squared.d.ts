@@ -113,6 +113,8 @@ declare namespace base {
         static availablePercent<T extends View>(nodes: T[], dimension: DimensionAttr, boxSize: number): number;
         static getControlName(containerType: number, api?: number): string;
         api: number;
+        alignedWithX?: View;
+        alignedWithY?: View;
         android(attr: string, value?: string, overwrite?: boolean): string;
         app(attr: string, value?: string, overwrite?: boolean): string;
         clone(id: number, options?: CloneOptions): View;

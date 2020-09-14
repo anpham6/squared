@@ -3488,6 +3488,24 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                     return true;
                 };
+                const setAlignedWidth = (sibling: T, position: AnchorPositionAttr) => {
+                    if (node.actualParent !== sibling.actualParent) {
+                        switch (position) {
+                            case 'top':
+                            case 'bottom':
+                            case 'topBottom':
+                            case 'bottomTop':
+                                node.alignedWithY = sibling;
+                                break;
+                            case 'left':
+                            case 'right':
+                            case 'leftRight':
+                            case 'rightLeft':
+                                node.alignedWithX = sibling;
+                                break;
+                        }
+                    }
+                };
                 const bounds = node.innerMostWrapped.bounds;
                 const renderChildren = parent.renderChildren;
                 const length = renderChildren.length;
@@ -3537,6 +3555,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     node.translateY(offset);
                                 }
                             }
+                            setAlignedWidth(item, position);
                             node.anchor(position, item.documentId, true);
                             node.constraint[axis] = true;
                             return;
@@ -3544,8 +3563,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                 }
                 const TL = horizontal ? 'top' : 'left';
-                const setAnchorOffset = (documentId: string, position: AnchorPositionAttr, adjustment: number) => {
-                    node.anchor(position, documentId, true);
+                const setAnchorOffset = (sibling: T, position: AnchorPositionAttr, adjustment: number) => {
+                    setAlignedWidth(sibling, position);
+                    node.anchor(position, sibling.documentId, true);
                     node.setBox(horizontal ? BOX_STANDARD.MARGIN_LEFT : BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment });
                     node.constraint[axis] = true;
                 };
@@ -3561,7 +3581,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     if (withinRange(bounds[TL], boundsA[TL])) {
                         const offset = bounds[LT] - boundsA[RB];
                         if (offset >= 0) {
-                            setAnchorOffset(item.documentId, horizontal ? 'leftRight' : 'topBottom', offset);
+                            setAnchorOffset(item, horizontal ? 'leftRight' : 'topBottom', offset);
                             return;
                         }
                     }
@@ -3577,7 +3597,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (nearest ||= adjacent) {
                     const offset = bounds[LT] - nearest.bounds[LT] + adjustBodyMargin(node, LT);
                     if (offset >= 0) {
-                        setAnchorOffset(nearest.documentId, LT, offset);
+                        setAnchorOffset(nearest, LT, offset);
                         return;
                     }
                 }

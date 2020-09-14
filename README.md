@@ -79,7 +79,7 @@ The primary function "parseDocument" can be called on multiple elements and mult
         // OR
         squared.parseDocument(/* HTMLElement */, /* 'subview-id' */, /* ...etc */);
 
-        squared.save(); // using defaults from settings
+        squared.save(); // uses defaults from settings
         // OR
         squared.saveAs(/* archive name */, /* options */);
         // OR
