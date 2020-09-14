@@ -1,6 +1,4 @@
-import BUILD_VERSION = android.lib.constant.BUILD_VERSION;
-
-import { LOCALIZE_MAP, XML_NAMESPACE } from './constant';
+import { BUILD_VERSION, LOCALIZE_MAP, XML_NAMESPACE } from './constant';
 
 const { capitalize, joinArray, isPlainObject } = squared.lib.util;
 

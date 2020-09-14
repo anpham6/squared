@@ -1,8 +1,4 @@
-import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
-import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
-import NODE_TRAVERSE = squared.base.lib.constant.NODE_TRAVERSE;
-
-import { APP_SECTION, NODE_PROCEDURE, NODE_RESOURCE } from './lib/constant';
+import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TRAVERSE } from './lib/constant';
 
 import type ExtensionUI from './extension-ui';
 

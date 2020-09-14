@@ -1,4 +1,4 @@
-import BUILD_VERSION = android.lib.constant.BUILD_VERSION;
+import { BUILD_VERSION } from '../../lib/constant';
 
 import type View from '../../view';
 

@@ -1,4 +1,4 @@
-import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
+import { BOX_STANDARD } from '../lib/constant';
 
 import type NodeUI from '../node-ui';
 

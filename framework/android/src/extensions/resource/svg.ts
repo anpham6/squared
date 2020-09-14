@@ -1,7 +1,6 @@
 import SYNCHRONIZE_MODE = squared.svg.constant.SYNCHRONIZE_MODE;
-import BUILD_VERSION = android.lib.constant.BUILD_VERSION;
 
-import { XML_NAMESPACE } from '../../lib/constant';
+import { BUILD_VERSION, XML_NAMESPACE } from '../../lib/constant';
 import { VECTOR_GROUP, VECTOR_PATH, VECTOR_TMPL } from '../../template/vector';
 
 import ANIMATEDVECTOR_TMPL from '../../template/animated-vector';

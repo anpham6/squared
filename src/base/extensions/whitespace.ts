@@ -1,5 +1,4 @@
-import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
-import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
+import { BOX_STANDARD, NODE_ALIGNMENT } from '../lib/constant';
 
 import type NodeUI from '../node-ui';
 
@@ -8,7 +7,7 @@ import ExtensionUI from '../extension-ui';
 const { formatPX } = squared.lib.css;
 const { iterateReverseArray } = squared.lib.util;
 
-const DOCTYPE_HTML = document.doctype?.name === 'html';
+const DOCTYPE_HTML = document.doctype ? document.doctype.name === 'html' : false;
 
 function setSpacingOffset(node: NodeUI, region: number, value: number, adjustment = 0) {
     let offset: number;

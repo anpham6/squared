@@ -1,6 +1,4 @@
-import BUILD_VERSION = android.lib.constant.BUILD_VERSION;
-
-import { XML_NAMESPACE } from './lib/constant';
+import { BUILD_VERSION, XML_NAMESPACE } from './lib/constant';
 
 import COLOR_TMPL from './template/resources/color';
 import DIMEN_TMPL from './template/resources/dimen';

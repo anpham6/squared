@@ -1,7 +1,6 @@
-import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
 import USER_AGENT = squared.lib.constant.USER_AGENT;
 
-import { NODE_RESOURCE } from './lib/constant';
+import { NODE_ALIGNMENT, NODE_RESOURCE } from './lib/constant';
 
 import type ControllerUI from './controller-ui';
 import type NodeUI from './node-ui';

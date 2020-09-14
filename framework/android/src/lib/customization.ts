@@ -1,5 +1,6 @@
-import BUILD_VERSION = android.lib.constant.BUILD_VERSION;
 import LAYOUT_STRING = android.base.LAYOUT_STRING;
+
+import { BUILD_VERSION } from './constant';
 
 import type View from '../view';
 

@@ -1,7 +1,6 @@
 import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
-import BUILD_VERSION = android.lib.constant.BUILD_VERSION;
 
-import { CONTAINER_NODE, CONTAINER_TAGNAME, SUPPORT_TAGNAME, SUPPORT_TAGNAME_X, XML_NAMESPACE } from '../../lib/constant';
+import { BUILD_VERSION, CONTAINER_NODE, CONTAINER_TAGNAME, SUPPORT_TAGNAME, SUPPORT_TAGNAME_X, XML_NAMESPACE } from '../../lib/constant';
 
 import LAYERLIST_TMPL from '../../template/layer-list';
 import SHAPE_TMPL from '../../template/shape';

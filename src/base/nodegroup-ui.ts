@@ -1,4 +1,4 @@
-import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
+import { NODE_ALIGNMENT } from './lib/constant';
 
 import NodeUI from './node-ui';
 

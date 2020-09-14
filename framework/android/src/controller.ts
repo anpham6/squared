@@ -1,10 +1,9 @@
 import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
 import NODE_TEMPLATE = squared.base.lib.constant.NODE_TEMPLATE;
-import BUILD_VERSION = android.lib.constant.BUILD_VERSION;
 import PLATFORM = squared.lib.constant.PLATFORM;
 
-import { CONTAINER_NODE, CONTAINER_TAGNAME, CONTAINER_TAGNAME_X } from './lib/constant';
+import { BUILD_VERSION, CONTAINER_NODE, CONTAINER_TAGNAME, CONTAINER_TAGNAME_X } from './lib/constant';
 
 import type Application from './application';
 
