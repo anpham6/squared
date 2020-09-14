@@ -507,12 +507,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             continue;
                         }
                         else if (isLength(value)) {
-                            if (horizontal) {
-                                percent -= Math.max(sibling.actualWidth + sibling.marginLeft + sibling.marginRight, 0) / boxSize;
-                            }
-                            else {
-                                percent -= Math.max(sibling.actualHeight + sibling.marginTop + sibling.marginBottom, 0) / boxSize;
-                            }
+                            percent -= horizontal
+                                ? Math.max(sibling.actualWidth + sibling.marginLeft + sibling.marginRight, 0) / boxSize
+                                : Math.max(sibling.actualHeight + sibling.marginTop + sibling.marginBottom, 0) / boxSize;
                             continue;
                         }
                     }

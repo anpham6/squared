@@ -41,7 +41,7 @@ function createAssetsOptions(assets: ChromeAsset[], options?: FileOptions, direc
 
 const checkFileName = (value: Undef<string>) => value || application!.userSettings.outputArchiveName;
 
-const appBase: chrome.ChromeFramework<Node> = {
+const appBase: squared.base.AppFramework<Node> = {
     base: {
         Application,
         Extension,
@@ -72,7 +72,7 @@ const appBase: chrome.ChromeFramework<Node> = {
         },
         copyScriptAssets(directory: string, options?: IFileCopyingOptions) {
             if (isString(directory)) {
-                return file?.copying(createAssetsOptions(file.getScriptAssets(options), options, directory)) || reject(FRAMEWORK_NOT_INSTALLED);
+                return file?.copying(createAssetsOptions(file.getScriptAssets(options)[0], options, directory)) || reject(FRAMEWORK_NOT_INSTALLED);
             }
             return reject(DIRECTORY_NOT_PROVIDED);
         },
@@ -110,7 +110,7 @@ const appBase: chrome.ChromeFramework<Node> = {
             return file?.archiving(createAssetsOptions(file.getHtmlPage(options), options, undefined, checkFileName(filename) + '-html')) || reject(FRAMEWORK_NOT_INSTALLED);
         },
         saveScriptAssets(filename?: string, options?: IFileArchivingOptions) {
-            return file?.archiving(createAssetsOptions(file.getScriptAssets(options), options, undefined, checkFileName(filename) + '-script')) || reject(FRAMEWORK_NOT_INSTALLED);
+            return file?.archiving(createAssetsOptions(file.getScriptAssets(options)[0], options, undefined, checkFileName(filename) + '-script')) || reject(FRAMEWORK_NOT_INSTALLED);
         },
         saveLinkAssets(filename?: string, options?: IFileArchivingOptions) {
             return file?.archiving(createAssetsOptions(file.getLinkAssets(options), options, undefined, checkFileName(filename) + '-link')) || reject(FRAMEWORK_NOT_INSTALLED);
@@ -164,24 +164,6 @@ const appBase: chrome.ChromeFramework<Node> = {
             };
         }
         return this.create();
-    },
-    saveAsWebPage: (filename?: string, options?: IFileArchivingOptions) => {
-        if (application) {
-            options = !isPlainObject(options) ? {} : { ...options };
-            options.saveAsWebPage = true;
-            const settings = application.userSettings;
-            const { preloadImages, preloadFonts } = settings;
-            settings.preloadImages = false;
-            settings.preloadFonts = false;
-            application.reset();
-            return application.parseDocument(document.body).then((response: Node) => {
-                file!.saveAs(filename || settings.outputArchiveName, options);
-                settings.preloadImages = preloadImages;
-                settings.preloadFonts = preloadFonts;
-                return response;
-            });
-        }
-        return reject(FRAMEWORK_NOT_INSTALLED);
     }
 };
 

@@ -101,7 +101,6 @@ declare module "base" {
         readonly framework: number;
         readonly session: AppSession<T>;
         readonly extensions: Extension<T>[];
-        readonly initializing: boolean;
         readonly Node: Constructor<T>;
         init(): void;
         finalize(): boolean;
@@ -133,6 +132,7 @@ declare module "base" {
         get extensionsAll(): Extension<T>[];
         get sessionAll(): [Extension<T>[], T[]];
         get nextId(): number;
+        get initializing(): boolean;
         get length(): number;
         constructor(
             framework: number,

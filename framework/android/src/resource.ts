@@ -15,8 +15,8 @@ const STORED = squared.base.ResourceUI.STORED;
 
 const REGEXP_STRINGNAME = /(\\[nt]|<\/?[A-Za-z]+>|&#?[A-Za-z\d]{2,};)/g;
 const REGEXP_STRINGWORD = /[^A-Za-z\d]+/g;
-const CACHE_IMAGE = new Map<string, string>();
 
+let CACHE_IMAGE: StringMap = {};
 let COUNTER_UUID = 0;
 let COUNTER_SYMBOL = 0;
 
@@ -74,7 +74,6 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
     }
 
     public static addTheme(theme: ThemeAttribute) {
-        const themes = STORED.themes;
         const { items, output } = theme;
         let path = 'res/values',
             file = 'themes.xml',
@@ -88,6 +87,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                 file = trimString(output.file.trim().replace(/\\/g, '/'), '/');
             }
         }
+        const themes = STORED.themes;
         const filename = `${path}/${file}`;
         const storedFile = themes.get(filename) || new Map<string, ThemeAttribute>();
         if (name === '' || name[0] === '.') {
@@ -173,7 +173,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         const mdpi = images.mdpi;
         if (mdpi) {
             if (Object.keys(images).length === 1) {
-                const asset = CACHE_IMAGE.get(mdpi);
+                const asset = CACHE_IMAGE[mdpi];
                 if (asset) {
                     return asset;
                 }
@@ -183,7 +183,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
             const length = ext.length;
             if (!imageFormat || Resource.hasMimeType(imageFormat, ext) || length === 0) {
                 const asset = Resource.insertStoredAsset('images', Resource.formatName(prefix + src.substring(0, src.length - (length ? length + 1 : 0))).toLowerCase(), images);
-                CACHE_IMAGE.set(mdpi, asset);
+                CACHE_IMAGE[mdpi] = asset;
                 return asset;
             }
         }
@@ -237,7 +237,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
     }
 
     public reset() {
-        CACHE_IMAGE.clear();
+        CACHE_IMAGE = {};
         COUNTER_UUID = 0;
         COUNTER_SYMBOL = 0;
         super.reset();

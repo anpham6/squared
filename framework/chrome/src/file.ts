@@ -336,7 +336,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         return result;
     }
 
-    public getScriptAssets(options?: FileActionAttribute) {
+    public getScriptAssets(options?: FileActionAttribute): [ChromeAsset[], TranspileMap] {
         let preserveCrossOrigin: Undef<boolean>,
             saveAs: Undef<SaveAsOptions>;
         if (options) {
@@ -345,6 +345,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         }
         const result: ChromeAsset[] = [];
         const bundleIndex: BundleIndex = {};
+        const transpileMap: TranspileMap = { html: {}, js: {}, css: {} };
         document.querySelectorAll('script').forEach(element => {
             const template = element.dataset.chromeTemplate;
             if (template) {
@@ -355,8 +356,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                             case 'html':
                             case 'js':
                             case 'css': {
-                                const data = this.application.session.transpileMap[category];
-                                (data[module] ||= {})[name] = element.textContent!.trim();
+                                (transpileMap[category][module] ||= {})[name] = element.textContent!.trim();
                                 break;
                             }
                         }
@@ -403,7 +403,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             }
         });
         setBundleIndex(bundleIndex);
-        return result.sort(sortBundle);
+        return [result.sort(sortBundle), transpileMap];
     }
 
     public getLinkAssets(options?: FileActionAttribute) {
@@ -632,8 +632,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
 
     public getDataMap(options: IFileActionOptions) {
         return {
-            unusedStyles: options.removeUnusedStyles ? Array.from(this.application.session.unusedStyles!) : undefined,
-            transpileMap: this.application.session.transpileMap
+            unusedStyles: options.unusedStyles,
+            transpileMap: options.transpileMap
         };
     }
 
@@ -678,8 +678,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     protected combineAssets(options?: IFileArchivingOptions) {
+        options ||= {};
         const result = this.getHtmlPage(options).concat(this.getLinkAssets(options));
-        if (options && options.saveAsWebPage) {
+        if (options.saveAsWebPage) {
             for (let i = 0, length = result.length; i < length; ++i) {
                 const item = result[i];
                 const mimeType = item.mimeType;
@@ -692,7 +693,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 }
             }
         }
-        return result.concat(this.getScriptAssets(options))
+        const [scriptAssets, transpileMap] = this.getScriptAssets(options);
+        options.transpileMap = transpileMap;
+        return result.concat(scriptAssets)
             .concat(this.getImageAssets(options))
             .concat(this.getVideoAssets(options))
             .concat(this.getAudioAssets(options))

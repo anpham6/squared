@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Language" content="en">
+    <title>https://github.com/anpham6/squared-apache</title>
+    <link rel="stylesheet" type="text/css" href="/common/css/dev.css">
+    <style data-chrome-file="exportAs:common/dev.css::beautify">
+        .data-uri {
+            width: 100px;
+            height: 100px;
+        }
+        body, section, .data-uri {
+            position: static;
+        }
+        section {
+            display: block;
+        }
+        .data-uri, section {
+            background-color: darkgrey;
+        }
+        section, .data-uri {
+            background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAAmVBMVEUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAjHWqVAAAAMnRSTlMADe6qwJnHFORZVBEJloOAUQX2ZsSfaQLMmhzp0ib689zOu3lyQjEs8KKJ5tWxkF46B8fHT9kAAAHVSURBVEjH3ZbZkqowEIZ/ICwCsi8Coo6jjnpmO/3+D3cOFhMgYZmquZvvwlR16quk204Cfjmm7Wlss2GaF5j4BkpmUI8kVpYE70oCqj8r2X9oBMvGFG5KExTuRNYGTWI4o8aWZtiakHANmsWQ95bSAgUEVrSIUDdlUF2LafqD10FUQR+PONF7ffbjEAjiNxrgDxZReXx3xgcRsRCXSOyD/jIZcdZwq2Y8Ac8kEKOjV+BPXB7jATBFJQGnP6egpgcvgCo6TteN1GEi3FNDgDx6LLep+GQg1ItHdWpY4dKOaz7pcUXrN0aIOmoq95IfJUXjCqMemoKzRdUqT0lSGFeehuUvTlkJ3EhWniSls4CyrVpLJihMVPYhQjaiMCn9jgwI10RXVVVt3P//RkL6HvXYvZ3OJRpOUi7+6F+plWF2rGj3DEAXlWCsYW5wk9b9i1JUHHASnrfS9a8OWES0PVojbYmYb6tXiyhEJTW/fMRSdKvs88vMEYPfRg85lNcvPT/OHGQoVhd23q/NtgrzRjRyXch1Tksgrz9r5+NAQwIIFHxqk97vBYtIQP/5Bbt8jTsYwVl8LGRcfcrQXUxhW0sPn4ziq4vPqyzFifSIL+ME/FPBwe/mH3xs3y1ExMGAAAAAAElFTkSuQmCC");
+        }
+    </style>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/chrome.framework.js"></script>
+    <script data-chrome-file="exclude">
+        document.addEventListener('DOMContentLoaded', function() {
+            squared.setFramework(chrome);
+            squared.saveAs('index', { removeUnusedStyles: true });
+            /*  squared.settings.preloadImages = false;
+                squared.settings.compressImages = false;
+                squared.parseDocument('squared_ui').then(function() {
+                    chrome.system.saveHtmlPage();
+                    chrome.system.saveImageAssets();
+                    chrome.system.saveScriptAssets();
+                    chrome.system.saveLinkAssets();
+                    chrome.system.saveAudioAssets();
+                    chrome.system.saveVideoAssets();
+                }); */
+        });
+    </script>
+</head>
+<body>
+<!-- START: DEMO -->
+<div id="squared_ui" style="text-align: center;">
+    <img alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAAmVBMVEUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAjHWqVAAAAMnRSTlMADe6qwJnHFORZVBEJloOAUQX2ZsSfaQLMmhzp0ib689zOu3lyQjEs8KKJ5tWxkF46B8fHT9kAAAHVSURBVEjH3ZbZkqowEIZ/ICwCsi8Coo6jjnpmO/3+D3cOFhMgYZmquZvvwlR16quk204Cfjmm7Wlss2GaF5j4BkpmUI8kVpYE70oCqj8r2X9oBMvGFG5KExTuRNYGTWI4o8aWZtiakHANmsWQ95bSAgUEVrSIUDdlUF2LafqD10FUQR+PONF7ffbjEAjiNxrgDxZReXx3xgcRsRCXSOyD/jIZcdZwq2Y8Ac8kEKOjV+BPXB7jATBFJQGnP6egpgcvgCo6TteN1GEi3FNDgDx6LLep+GQg1ItHdWpY4dKOaz7pcUXrN0aIOmoq95IfJUXjCqMemoKzRdUqT0lSGFeehuUvTlkJ3EhWniSls4CyrVpLJihMVPYhQjaiMCn9jgwI10RXVVVt3P//RkL6HvXYvZ3OJRpOUi7+6F+plWF2rGj3DEAXlWCsYW5wk9b9i1JUHHASnrfS9a8OWES0PVojbYmYb6tXiyhEJTW/fMRSdKvs88vMEYPfRg85lNcvPT/OHGQoVhd23q/NtgrzRjRyXch1Tksgrz9r5+NAQwIIFHxqk97vBYtIQP/5Bbt8jTsYwVl8LGRcfcrQXUxhW0sPn4ziq4vPqyzFifSIL+ME/FPBwe/mH3xs3y1ExMGAAAAAAElFTkSuQmCC" />
+    <br /><br />
+    <img alt="" src="data:image/jpeg;base64,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" />
+    <br /><br />
+    <div class="data-uri"></div>
+    <br />
+    <img alt="" id="android" src="/common/images/android.png" srcset="/common/images/android-ldpi.png 100w,
+                                                                   /common/images/android.png 200w,
+                                                                   /common/images/android-hdpi.png 133w,
+                                                                   /common/images/android-xhdpi.png 266w,
+                                                                   /common/images/android-xxhdpi.png 400w,
+                                                                   /common/images/android-xxxhdpi.png 533w"
+                                                            sizes="(min-width: 900px) 400px,
+                                                                   (max-width: 900px) and (min-width: 400px) 266px,
+                                                                   ( not (orientation: portrait) ) 133px,
+                                                                   ( (orientation: landscape) or (min-width: 1000px) ) 533px,
+                                                                   200px" />
+    <br /><br />
+    <img alt="" id="pencil" src="/common/images/pencil.png" srcset="/common/images/pencil-ldpi.png 0.75x,
+                                                                 /common/images/pencil.png,
+                                                                 /common/images/pencil-hdpi.png 1.5x,
+                                                                 /common/images/pencil-xhdpi.png 2x,
+                                                                 /common/images/pencil-xxhdpi.png 3x,
+                                                                 /common/images/pencil-xxxhdpi.png 4x" />
+    <br /><br />
+    <!--<audio controls>
+        <source
+            src="https://archive.org/download/ElephantsDream/ED-CM-5.1-DVD-C.mp3"
+            type="audio/mpeg">
+        Your browser doesn't support HTML5 video tag.
+    </audio>
+    <br /><br />
+    <video width="400" controls poster="https://upload.wikimedia.org/wikipedia/commons/e/e8/Elephants_Dream_s5_both.jpg">
+        <source
+            src="https://archive.org/download/ElephantsDream/ed_hd.ogv"
+            type="video/ogg">
+        Your browser doesn't support HTML5 video tag.
+    </video>-->
+</div>
+<!-- END: DEMO -->
+</body>
+</html>

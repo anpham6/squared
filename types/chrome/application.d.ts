@@ -6,6 +6,7 @@ interface UserResourceSettings {
 interface FileUniversalAttribute extends PlainObject {
     saveAsWebPage?: boolean;
     productionRelease?: boolean;
+    unusedStyles?: string[];
     removeUnusedStyles?: boolean;
 }
 
@@ -14,4 +15,10 @@ interface FileActionAttribute extends PlainObject {
     rel?: string;
     saveAs?: { html?: SaveAsOptions; script?: SaveAsOptions; link?: SaveAsOptions; base64?: SaveAsOptions };
     preserveCrossOrigin?: boolean;
+}
+
+interface TranspileMap {
+    html: ObjectMap<StringMap>;
+    js: ObjectMap<StringMap>;
+    css: ObjectMap<StringMap>
 }

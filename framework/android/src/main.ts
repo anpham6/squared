@@ -54,7 +54,7 @@ let file: Null<File<View>> = null;
 const checkApplication = () => application ? application.closed || !application.initializing && application.finalize() : false;
 const checkFileName = (value: Undef<string>) => value || application!.userSettings.outputArchiveName;
 
-const appBase: android.AndroidFramework<View> = {
+const appBase: android.AppFramework<View> = {
     base: {
         Controller,
         File,

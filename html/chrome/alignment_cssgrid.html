@@ -186,8 +186,8 @@
                             largerThan: 35000
                         }
                     });
-                    chrome.saveAsWebPage();
-                    /*chrome.saveAsWebPage('bundle', {
+                    squared.copyTo('C:/Users/An/Downloads/chrome');
+                    squared.saveAs('bundle', {
                         exclusions: {
                             pathname: ['/common'],
                             filename: ['harbour1.jpg'],
@@ -195,16 +195,16 @@
                             pattern: ['amazonaws.*']
                         }
                     });
-                    chrome.saveAsWebPage('bundle1', {
+                    squared.saveAs('bundle1', {
                         callback: result => console.log(result),
                         saveAs: {
                             base64: { pathname: 'images/', format: 'png' },
                             script: { pathname: 'js/', filename: 'modules2.js', format: 'beautify' }
                         }
                     });
-                    chrome.saveAsWebPage('bundle2', { preserveCrossOrigin: true });
-                    chrome.saveAsWebPage('bundle3', { productionRelease: true });
-                    chrome.saveAsWebPage('bundle4', { productionRelease: true, preserveCrossOrigin: true });*/
+                    squared.saveAs('bundle2', { preserveCrossOrigin: true });
+                    squared.saveAs('bundle3', { productionRelease: true });
+                    squared.saveAs('bundle4', { productionRelease: true, preserveCrossOrigin: true });
                 });
             });
         });

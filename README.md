@@ -278,7 +278,7 @@ parseDocumentSync(...elements: (Element | string)[]) // skips preloadImages and 
 latest(count?: number) // most recent parseDocument session ids (1 newest / -1 oldest: string, other: string[])
 
 close() // close current session preceding document write (android)
-save() // save current session to a new archive using default settings (android)
+save() // save current session to a new archive using default settings
 reset() // clear cache and reopen new session
 
 toString() // current framework loaded
@@ -305,17 +305,17 @@ resetCache() // clear element data map
 Packaging methods will return a Promise and require either node-express or squared-apache installed. These features are not supported when the framework is VDOM.
 
 ```javascript
-saveAs(filename: string, options?: {}) // save current sessionas a new archive (android)
+saveAs(filename: string, options?: {}) // save current sessionas a new archive
 saveFiles(format: string, options: {}) // create new archive from RequestAsset[]
 
 // Required (local archives): --disk-read | --unc-read | --access-all (command-line)
 
-appendTo(pathname: string, options?: {}) // create new archive from a preexisting archive and current session (android)
+appendTo(pathname: string, options?: {}) // create new archive from a preexisting archive and current session
 appendFiles(pathname: string, options: {}) // create new archive from a preexisting archive and RequestAsset[]
 
 // Required (all): --disk-write | --unc-write | --access-all (command-line)
 
-copyTo(directory: string, options?: {}) // copy current session to local directory (android)
+copyTo(directory: string, options?: {}) // copy current session to local directory
 copyFiles(directory: string, options: {}) // copy RequestAsset[] to local directory
 ```
 
@@ -392,8 +392,6 @@ android.addXmlNs('tools', 'http://schemas.android.com/tools');
 ### CHROME: Public Methods
 
 ```javascript
-chrome.saveAsWebPage(filename?: string, options?: {}) // create archive with html and web page assets (Promise)
-
 chrome.system.copyHtmlPage(directory: string, options?: {}) // option "name": e.g. "index.html"
 chrome.system.copyScriptAssets(directory: string, options?: {})
 chrome.system.copyLinkAssets(directory: string, options?: {}) // option "rel": e.g. "stylesheet"
@@ -561,7 +559,7 @@ document.querySelectorAll('img').forEach(element => {
     element.dataset.chromeFile = 'saveTo:images/resized::png%(100000,*)(800x600){90,180,270}|0.5|:jpeg(600x400){45,135,225}';
 });
 
-chrome.saveAsWebPage();
+squared.save();
 ```
 
 ### UI: Excluding Procedures / Applied Attributes (framework: android)
@@ -884,7 +882,7 @@ const options = {
 There are a few ways to save the entire page or portions using the system methods.
 
 ```javascript
-chrome.saveAsWebPage('index', { // default is false
+squared.saveAs('index', { // default is false
     format: 'zip', // optional
     removeUnusedStyles: true, // Use only when you are not switching classnames with JavaScript
     productionRelease: true, // Ignore local url rewriting and load assets using absolute paths
@@ -900,9 +898,11 @@ You can exclude unnecessary processing files using the dataset attribute in &lt;
 <script data-chrome-file="exclude" src="/dist/chrome.framework.js"></script>
 <script data-chrome-file="exclude">
     squared.setFramework(chrome);
-    chrome.saveAsWebPage();
+    squared.save();
 </script>
 ```
+
+The file action commands (save | saveAs | copyTo | appendTo) can only be used one at a time in the Chrome framework. Calling multiple consecutively may fail if you do not use async/await.
 
 ### CHROME: Extension configuration
 

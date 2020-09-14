@@ -2,7 +2,7 @@ import * as squared from '../squared';
 
 import LayoutUI = squared.base.LayoutUI;
 
-declare interface AndroidFramework<T extends base.View> extends squared.base.AppFramework<T> {
+declare interface AppFramework<T extends base.View> extends squared.base.AppFramework<T> {
     setViewModel(data?: PlainObject, sessionId?: string): void;
     addXmlNs(name: string, uri: string): void;
     customize(build: number, widget: string, options: ObjectMap<StringMap>): Undef<ObjectMap<StringMap>>;

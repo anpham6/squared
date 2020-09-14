@@ -1,4 +1,6 @@
-interface IFileActionOptions extends squared.FileActionOptions, FileActionAttribute, FileUniversalAttribute {}
+interface IFileActionOptions extends squared.FileActionOptions, FileActionAttribute, FileUniversalAttribute {
+    transpileMap?: TranspileMap;
+}
 
 interface IFileCopyingOptions extends squared.base.FileCopyingOptions, IFileActionOptions {}
 

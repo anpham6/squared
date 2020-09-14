@@ -2,10 +2,6 @@ import * as squared from '../squared';
 
 type Node = squared.base.Node;
 
-declare interface ChromeFramework<T extends Node> extends squared.base.AppFramework<T> {
-    saveAsWebPage: (filename?: string, options?: squared.base.FileArchivingOptions) => Promise<Node>;
-}
-
 declare namespace base {
     const enum EXT_CHROME {
         COMPRESS_BROTLI = 'chrome.compress.brotli',
@@ -19,14 +15,9 @@ declare namespace base {
         CONVERT_TIFF = 'chrome.convert.tiff'
     }
 
-    interface AppSession<T extends Node> extends squared.base.AppSession<T> {
-        transpileMap: { html: ObjectMap<StringMap>; js: ObjectMap<StringMap>; css: ObjectMap<StringMap> };
-    }
-
     class Application<T extends Node> extends squared.base.Application<T> {
         userSettings: UserResourceSettings;
         builtInExtensions: Map<string, Extension<T>>;
-        readonly session: AppSession<T>;
         readonly extensions: Extension<T>[];
         createNode(sessionId: string, options: CreateNodeOptions): T;
     }
@@ -38,7 +29,7 @@ declare namespace base {
     class File<T extends Node> extends squared.base.File<T> {
         static parseUri(uri: string, options?: UriOptions): Null<ChromeAsset>;
         getHtmlPage(options?: FileActionAttribute): ChromeAsset[];
-        getScriptAssets(options?: FileActionAttribute): ChromeAsset[];
+        getScriptAssets(options?: FileActionAttribute): [ChromeAsset[], TranspileMap];
         getLinkAssets(options?: FileActionAttribute): ChromeAsset[];
         getImageAssets(options?: FileActionAttribute): ChromeAsset[];
         getVideoAssets(options?: FileActionAttribute): ChromeAsset[];
