@@ -42,10 +42,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
             const item = children[i] as T;
             if (floating || blockAlternate) {
                 if (item.floating) {
-                    if (!floated) {
-                        floated = new Set<string>();
-                    }
-                    floated.add(item.float);
+                    (floated ||= new Set<string>()).add(item.float);
                     blockAlternate = false;
                 }
                 else {

@@ -19,7 +19,7 @@ export default class Png<T extends squared.base.Node> extends Extension<T> {
             }
         }
         if (override) {
-            (data.compress || (data.compress = [])).push({ format: 'png', condition: Extension.getCompressOptions(this.options) });
+            (data.compress ||= []).push({ format: 'png', condition: Extension.getCompressOptions(this.options) });
             return true;
         }
         return false;

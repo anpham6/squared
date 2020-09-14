@@ -39,10 +39,7 @@ export function upperCaseString(value: string) {
     const pattern = /\b([a-z])/g;
     let match: Null<RegExpMatchArray>;
     while (match = pattern.exec(value)) {
-        if (!result) {
-            result = value.split('');
-        }
-        result[match.index!] = match[1][0].toUpperCase();
+        (result ||= value.split(''))[match.index!] = match[1][0].toUpperCase();
     }
     return result ? result.join('') : value;
 }

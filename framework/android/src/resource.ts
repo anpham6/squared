@@ -285,9 +285,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                     }
                 }
             }
-            if (!mdpi) {
-                mdpi = element.src;
-            }
+            mdpi ||= element.src;
         }
         if (mdpi) {
             const rawData = this.getRawData(mdpi);
@@ -316,7 +314,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
     public writeRawImage(options: RawDataOptions) {
         const asset = super.writeRawImage(options);
         if (asset && this.userSettings.compressImages && Resource.canCompressImage(options.filename || '', options.mimeType)) {
-            (asset.compress || (asset.compress = [])).unshift({ format: 'png' });
+            (asset.compress ||= []).unshift({ format: 'png' });
         }
         return asset;
     }

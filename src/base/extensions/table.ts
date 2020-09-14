@@ -93,9 +93,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         node.each((item: T) => {
             switch (item.tagName) {
                 case 'THEAD':
-                    if (!thead) {
-                        thead = item;
-                    }
+                    thead ||= item;
                     hideCell(item);
                     break;
                 case 'TBODY':
@@ -103,9 +101,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     hideCell(item);
                     break;
                 case 'TFOOT':
-                    if (!tfoot) {
-                        tfoot = item;
-                    }
+                    tfoot ||= item;
                     hideCell(item);
                     break;
             }
@@ -142,7 +138,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     ++j;
                 }
                 for (let k = i, q = i + rowSpan; k < q; ++k) {
-                    const item = tableFilled[k] || (tableFilled[k] = []);
+                    const item = tableFilled[k] ||= [];
                     for (let l = j, m = 0, r = j + colSpan; l < r; ++l) {
                         if (!item[l]) {
                             item[l] = td;

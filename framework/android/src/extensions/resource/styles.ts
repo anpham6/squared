@@ -54,9 +54,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                     }
                     const r = keys.length;
                     if (r > 1) {
-                        if (style !== '') {
-                            style = style.substring(style.indexOf('/') + 1, style.length - 1);
-                        }
+                        style &&= style.substring(style.indexOf('/') + 1, style.length - 1);
                         const items: StringValue[] = [];
                         const attrs: string[] = [];
                         for (let j = 0; j < r; ++j) {

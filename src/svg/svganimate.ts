@@ -244,10 +244,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public setCalcMode(attributeName?: string, mode?: string) {
         const animationElement = this.animationElement;
         if (animationElement) {
-            if (!mode) {
-                mode = getNamedItem(animationElement, 'calcMode') || 'linear';
-            }
-            switch (mode) {
+            switch (mode ||= getNamedItem(animationElement, 'calcMode') || 'linear') {
                 case 'discrete': {
                     const keyTimesBase = this.keyTimes;
                     if (keyTimesBase[0] === 0 && keyTimesBase.length === 2) {
@@ -401,20 +398,15 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 if (this.to === '') {
                     const by = getNamedItem(animationElement, 'by');
                     const byCoords = SvgBuild.parseCoordinates(by);
-                    if (byCoords.length) {
-                        if (value === '') {
-                            value = this.baseValue || '';
-                        }
-                        if (value !== '') {
-                            const fromCoords = SvgBuild.parseCoordinates(value);
-                            const length = fromCoords.length;
-                            if (byCoords.length === length) {
-                                let to = '';
-                                for (let i = 0; i < length; ++i) {
-                                    to += (i > 0 ? ',' : '') + (fromCoords[i] + byCoords[i]);
-                                }
-                                this.to = to;
+                    if (byCoords.length && (value ||= this.baseValue || '')) {
+                        const fromCoords = SvgBuild.parseCoordinates(value);
+                        const length = fromCoords.length;
+                        if (byCoords.length === length) {
+                            let to = '';
+                            for (let i = 0; i < length; ++i) {
+                                to += (i > 0 ? ',' : '') + (fromCoords[i] + byCoords[i]);
                             }
+                            this.to = to;
                         }
                     }
                 }
@@ -461,7 +453,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         }
     }
     get values() {
-        return this._values || (this._values = []);
+        return this._values ||= [];
     }
 
     set keyTimes(value) {
@@ -471,7 +463,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         }
     }
     get keyTimes() {
-        return this._keyTimes || (this._keyTimes = []);
+        return this._keyTimes ||= [];
     }
 
     set keySplines(value) {

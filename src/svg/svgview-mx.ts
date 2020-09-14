@@ -197,7 +197,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                             }
                             if (value) {
                                 const map = ANIMATION_DEFAULT[attr] ? keyframeData : attrData;
-                                (map[attr] || (map[attr] = [])).push({ key, value });
+                                (map[attr] ||= []).push({ key, value });
                             }
                         }
                     }
@@ -254,7 +254,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                     default:
                                         return;
                                 }
-                                const itemData = attrData[name] || (attrData[name] = []);
+                                const itemData = attrData[name] ||= [];
                                 const index = itemData.findIndex(previous => previous.key === key);
                                 if (index !== -1) {
                                     const indexData = itemData[index];
@@ -393,7 +393,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                 }
                                 const transformOrigin = item.transformOrigin;
                                 if (transformOrigin && SvgBuild.asAnimateTransform(animate)) {
-                                    (animate.transformOrigin || (animate.transformOrigin = []))[j] = transformOrigin;
+                                    (animate.transformOrigin ||= [])[j] = transformOrigin;
                                 }
                             }
                             if (includeKeySplines && !keySplines.every(value => value === 'linear')) {
@@ -503,11 +503,11 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
         }
 
         get transforms() {
-            return this._transforms || (this._transforms = this.getTransforms());
+            return this._transforms ||= this.getTransforms();
         }
 
         get animations() {
-            return this._animations || (this._animations = this.getAnimations());
+            return this._animations ||= this.getAnimations();
         }
 
         get visible() {

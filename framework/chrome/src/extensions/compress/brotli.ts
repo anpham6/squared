@@ -18,7 +18,7 @@ export default class Brotli<T extends squared.base.Node> extends Extension<T> {
             }
         }
         if (override) {
-            (data.compress || (data.compress = [])).push({ format: 'br', level: this.options.level, condition: Extension.getCompressOptions(this.options) });
+            (data.compress ||= []).push({ format: 'br', level: this.options.level, condition: Extension.getCompressOptions(this.options) });
             return true;
         }
         return false;

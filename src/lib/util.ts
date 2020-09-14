@@ -566,9 +566,7 @@ export function splitEnclosing(value: string, prefix?: string, separator = '', o
     if (separator.length > 1) {
         return [];
     }
-    if (!prefix) {
-        prefix = opening;
-    }
+    prefix ||= opening;
     const prefixed = prefix !== opening;
     const combined = prefixed ? prefix + opening : opening;
     const result: string[] = [];
@@ -814,12 +812,12 @@ export function resolvePath(value: string, href?: string) {
 }
 
 export function trimBoth(value: string, pattern: string) {
-    const match = (CACHE_TRIMBOTH[pattern] || (CACHE_TRIMBOTH[pattern] = new RegExp(`^(${pattern})+([\\s\\S]*?)\\1$`))).exec(value);
+    const match = (CACHE_TRIMBOTH[pattern] ||= new RegExp(`^(${pattern})+([\\s\\S]*?)\\1$`)).exec(value);
     return match ? match[2] : value;
 }
 
 export function trimString(value: string, pattern: string) {
-    const match = (CACHE_TRIMSTRING[pattern] || (CACHE_TRIMSTRING[pattern] = new RegExp(`^(?:${pattern})*([\\s\\S]*?)(?:${pattern})*$`))).exec(value);
+    const match = (CACHE_TRIMSTRING[pattern] ||= new RegExp(`^(?:${pattern})*([\\s\\S]*?)(?:${pattern})*$`)).exec(value);
     return match ? match[1] : value;
 }
 

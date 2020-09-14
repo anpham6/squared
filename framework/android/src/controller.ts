@@ -598,7 +598,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     const template = node.removeTry({ alignSiblings: true }) as NodeTemplate<T>;
                     if (template) {
                         const renderChildren = parent.renderChildren;
-                        const renderTemplates = parent.renderTemplates || (parent.renderTemplates = []);
+                        const renderTemplates = parent.renderTemplates ||= [];
                         const index = parseInt(node.dataset.androidTargetIndex!);
                         if (!isNaN(index) && index >= 0 && index < renderChildren.length) {
                             renderChildren.splice(index, 0, node);
@@ -1881,7 +1881,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             if (node.constraint.vertical) {
                 verticalAligned.push(node);
             }
-            if (node.alignParent('top') || node.alignSibling('top') !== '') {
+            if (node.alignParent('top') || node.alignSibling('top')) {
                 let current = node;
                 do {
                     const bottomTop = current.alignSibling('bottomTop');
@@ -2613,9 +2613,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                             break;
                                         }
                                         case 'text-bottom':
-                                            if (!textBaseline) {
-                                                textBaseline = NodeUI.baseline(items, true);
-                                            }
+                                            textBaseline ||= NodeUI.baseline(items, true);
                                             if (textBaseline && textBaseline !== item) {
                                                 item.anchor('bottom', textBaseline.documentId);
                                                 continue;
@@ -2670,7 +2668,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                         }
                                     }
                                 }
-                                if (baseline.alignSibling('bottom') === '') {
+                                if (!baseline.alignSibling('bottom')) {
                                     if (maxCenter && maxCenterHeight > baseline.actualHeight) {
                                         baseline.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: baseline.bounds.top - maxCenter.bounds.top });
                                         baseline = maxCenter;
@@ -2764,7 +2762,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 }
                                 for (let k = 0; k < r; ++k) {
                                     const item = items[k];
-                                    if (previousBaseline && item.alignSibling('baseline') === '' && item.alignSibling('top') === '' && item.alignSibling('bottom') === '') {
+                                    if (previousBaseline && !item.alignSibling('baseline') && !item.alignSibling('top') && !item.alignSibling('bottom')) {
                                         item.anchor('topBottom', previousBaseline.documentId);
                                     }
                                     if (!isNaN(leftIndent)) {
@@ -3333,9 +3331,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                         rowStart.delete('app', 'layout_constraintHorizontal*');
                                         rowStart.anchorDelete(chainEnd);
                                         rowEnd.anchorDelete(anchorEnd);
-                                        if (!currentRowTop) {
-                                            currentRowTop = chain;
-                                        }
+                                        currentRowTop ||= chain;
                                         break;
                                     }
                                 }
@@ -3578,10 +3574,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                     }
                 }
-                if (!nearest) {
-                    nearest = adjacent;
-                }
-                if (nearest) {
+                if (nearest ||= adjacent) {
                     const offset = bounds[LT] - nearest.bounds[LT] + adjustBodyMargin(node, LT);
                     if (offset >= 0) {
                         setAnchorOffset(nearest.documentId, LT, offset);

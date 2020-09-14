@@ -161,7 +161,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                     }
                 }
             }
-            if (j > 0 && (k > 0 || l > 1 || valid || floatHeight && textHeight > floatHeight) || checkWidth && j + k > 1 && Math.floor(textWidth) > Math.ceil(node.actualBoxWidth()) || (k > 1 || m && n > 1) && (valid || (node.textBounds?.numberOfLines || 0) > 1)) {
+            if (j > 0 && (k > 0 || l > 1 || valid || floatHeight && textHeight > floatHeight) || checkWidth && j + k > 1 && Math.floor(textWidth) > Math.ceil(node.actualBoxWidth()) || (k > 1 || m && n > 1) && (valid || node.textBounds?.numberOfLines as number > 1)) {
                 if (leading) {
                     nodes.unshift([1, leading]);
                 }
@@ -218,7 +218,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
             }
             REGEXP_WORD.lastIndex = 0;
             if (partition && words.length <= 1) {
-                (wrapperContainer || (wrapperContainer = [])).push(seg);
+                (wrapperContainer ||= []).push(seg);
             }
             else {
                 const q = words.length;
@@ -295,7 +295,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                             }
                             container.setCacheValue('marginLeft', marginLeft);
                             container.setCacheValue('marginRight', marginRight);
-                            (wrapperContainer || (wrapperContainer = [])).push(container);
+                            (wrapperContainer ||= []).push(container);
                             previous = container;
                         }
                     }

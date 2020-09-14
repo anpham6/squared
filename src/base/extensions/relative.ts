@@ -114,7 +114,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                                     }
                                 }
                             }
-                            if (hasHorizontal && renderParent.layoutHorizontal && node.alignSibling('leftRight') === '') {
+                            if (hasHorizontal && renderParent.layoutHorizontal && !node.alignSibling('leftRight')) {
                                 const rect = node.boundingClientRect;
                                 if (rect) {
                                     if (left !== 0) {

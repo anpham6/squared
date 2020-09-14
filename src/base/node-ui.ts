@@ -285,7 +285,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 const item = list[i];
                 if (item.pageFlow) {
                     if (item.floating) {
-                        (floated || (floated = new Set<string>())).add(item.float);
+                        (floated ||= new Set<string>()).add(item.float);
                     }
                     nodes[n++] = item;
                 }
@@ -540,7 +540,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public namespace(name: string) {
-        return this._namespaces[name] || (this._namespaces[name] = {});
+        return this._namespaces[name] ||= {};
     }
 
     public namespaces() {
@@ -555,7 +555,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (!this._locked) {
             this._locked = {};
         }
-        (this._locked[name] || (this._locked[name] = {}))[attr] = true;
+        (this._locked[name] ||= {})[attr] = true;
     }
 
     public unlockAttr(name: string, attr: string) {
@@ -582,9 +582,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             return 0;
         }
         if (REGEXP_PARSEUNIT.test(value)) {
-            if (!options) {
-                options = {};
-            }
+            options ||= {};
             if (!options.screenDimension) {
                 options.screenDimension = this.localSettings.screenDimension;
             }
@@ -793,7 +791,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public exclude(options: ExcludeOptions) {
         const { resource, procedure, section } = options;
-        const exclusions = this._exclusions || (this._exclusions = [0, 0, 0]);
+        const exclusions = this._exclusions ||= [0, 0, 0];
         if (resource) {
             exclusions[0] |= resource;
         }
@@ -810,7 +808,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             const dataset = (this._element as HTMLElement).dataset;
             if (hasKeys(dataset)) {
                 const systemName = this.localSettings.systemName;
-                const exclusions = this._exclusions || (this._exclusions = [0, 0, 0]);
+                const exclusions = this._exclusions ||= [0, 0, 0];
                 exclusions[0] |= applyExclusionValue(NODE_RESOURCE, dataset['excludeResource' + systemName] || dataset.excludeResource);
                 exclusions[1] |= applyExclusionValue(NODE_PROCEDURE, dataset['excludeProcedure' + systemName] || dataset.excludeProcedure);
                 exclusions[2] |= applyExclusionValue(APP_SECTION, dataset['excludeSection' + systemName] || dataset.excludeSection);
@@ -913,9 +911,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         }
         else if (!this.pageFlow) {
             if (this.autoPosition) {
-                if (!siblings) {
-                    siblings = this.siblingsLeading;
-                }
+                siblings ||= this.siblingsLeading;
                 for (let i = siblings.length - 1; i >= 0; --i) {
                     const previous = siblings[i];
                     if (previous.pageFlow) {
@@ -1214,9 +1210,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public actualBoxWidth(value?: number) {
-        if (!value) {
-            value = this.box.width;
-        }
+        value ||= this.box.width;
         if (this.pageFlow) {
             let offsetLeft = 0,
                 offsetRight = 0,
@@ -1247,9 +1241,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (options) {
             ({ tagName, width, textContent, textWrap } = options);
         }
-        if (!tagName) {
-            tagName = this.tagName;
-        }
+        tagName ||= this.tagName;
         const style: StringMap = tagName[0] === '#'
             ? {}
             : this.cssAsObject(
@@ -1518,7 +1510,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get float() {
-        return this._cache.float || (this._cache.float = super.float);
+        return this._cache.float ||= super.float;
     }
 
     set textContent(value) {
@@ -1733,14 +1725,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         this._siblingsLeading = value;
     }
     get siblingsLeading() {
-        return this._siblingsLeading || (this._siblingsLeading = this.previousSiblings({ floating: true }));
+        return this._siblingsLeading ||= this.previousSiblings({ floating: true });
     }
 
     set siblingsTrailing(value) {
         this._siblingsTrailing = value;
     }
     get siblingsTrailing() {
-        return this._siblingsTrailing || (this._siblingsTrailing = this.nextSiblings({ floating: true }));
+        return this._siblingsTrailing ||= this.nextSiblings({ floating: true });
     }
 
     get flowElement() {
@@ -1845,11 +1837,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get boxReset() {
-        return this._boxReset || (this._boxReset = [0, 0, 0, 0, 0, 0, 0, 0]);
+        return this._boxReset ||= [0, 0, 0, 0, 0, 0, 0, 0];
     }
 
     get boxAdjustment() {
-        return this._boxAdjustment || (this._boxAdjustment = [0, 0, 0, 0, 0, 0, 0, 0]);
+        return this._boxAdjustment ||= [0, 0, 0, 0, 0, 0, 0, 0];
     }
 
     get textEmpty() {
@@ -1896,7 +1888,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (result === undefined) {
             if (this.styleText && !this.hasPX('width')) {
                 const textBounds = this.textBounds;
-                if (textBounds && (textBounds.numberOfLines as number > 1 || Math.ceil(textBounds.width) < this.box.width)) {
+                if (textBounds && (textBounds.numberOfLines! > 1 || Math.ceil(textBounds.width) < this.box.width)) {
                     return this._cache.textWidth = textBounds.width;
                 }
             }

@@ -519,9 +519,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             let stored = node.data<BoxStyle>(Resource.KEY_NAME, 'boxStyle');
             const boxImage = node.data<T[]>(Resource.KEY_NAME, 'boxImage');
             if (stored || boxImage) {
-                if (!stored) {
-                    stored = {} as BoxStyle;
-                }
+                stored ||= {} as BoxStyle;
                 if (node.inputElement) {
                     const companion = node.companion;
                     if (companion && companion.tagName === 'LABEL' && !companion.visible) {
@@ -547,9 +545,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 if (outline && (drawOutline || emptyBackground)) {
                     const [outlineShapeData, outlineLayerList] = this.getDrawableBorder(stored, emptyBackground ? images : null, 0, !emptyBackground, outline);
                     if (outlineShapeData) {
-                        if (!shapeData) {
-                            shapeData = outlineShapeData;
-                        }
+                        shapeData ||= outlineShapeData;
                     }
                     else if (outlineLayerList) {
                         if (layerList) {

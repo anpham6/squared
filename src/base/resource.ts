@@ -93,9 +93,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
             height: Undef<number>;
         if (options) {
             ({ filename, encoding, data, width, height } = options);
-            if (encoding) {
-                encoding = encoding.toLowerCase();
-            }
+            encoding &&= encoding.toLowerCase();
         }
         mimeType = mimeType.toLowerCase();
         let base64: Undef<string>;

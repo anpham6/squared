@@ -133,7 +133,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         const nextX = nextAxisX[j];
                         const { left, right } = nextX.linear;
                         if (i === 0 || Math.ceil(left) >= Math.floor(columnRight[i - 1])) {
-                            const row = columns[i] || (columns[i] = []);
+                            const row = columns[i] ||= [];
                             if (i === 0 || columns[0].length === q) {
                                 row[j] = nextX;
                             }
@@ -221,7 +221,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                 const rowCount = column.length;
                 for (let j = 0, start = 0, spacer = 0; j < rowCount; ++j) {
                     const item = column[j];
-                    const rowData = rows[j] || (rows[j] = []);
+                    const rowData = rows[j] ||= [];
                     if (!item.spacer) {
                         const cellData: GridCellData<T> = Object.assign(Grid.createDataCellAttribute<T>(), this.data.get(item as T));
                         let rowSpan = 1,
@@ -254,7 +254,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                             for (let k = 0, q = children.length; k < q; ++k) {
                                 const sibling = children[k];
                                 if (!assigned.has(sibling) && !sibling.excluded && sibling.withinX({ left: item.linear.right, right: columnEnd[index] } as BoxRectDimension, { dimension: 'linear' })) {
-                                    (cellData.siblings || (cellData.siblings = [])).push(sibling);
+                                    (cellData.siblings ||= []).push(sibling);
                                 }
                             }
                         }

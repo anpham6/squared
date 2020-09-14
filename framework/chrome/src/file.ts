@@ -115,7 +115,7 @@ function createBundleAsset(bundles: ChromeAsset[], element: HTMLElement, saveTo:
         const [moveTo, pathname, filename] = getFilePath(saveTo);
         const index = iterateReverseArray(bundles, item => {
             if ((item.moveTo === moveTo || !item.moveTo && !moveTo) && item.pathname === pathname && item.filename === filename) {
-                (item.trailingContent || (item.trailingContent = [])).push({ value: content, format, preserve });
+                (item.trailingContent ||= []).push({ value: content, format, preserve });
                 return true;
             }
         });
@@ -136,7 +136,7 @@ function createBundleAsset(bundles: ChromeAsset[], element: HTMLElement, saveTo:
 
 function setBundleData(bundleIndex: BundleIndex, data: ChromeAsset) {
     const name = (data.moveTo || '') + data.pathname + data.filename;
-    (bundleIndex[name] || (bundleIndex[name] = [])).push(data);
+    (bundleIndex[name] ||= []).push(data);
 }
 
 function sortBundle(a: ChromeAsset, b: ChromeAsset) {
@@ -356,7 +356,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                             case 'js':
                             case 'css': {
                                 const data = this.application.session.transpileMap[category];
-                                (data[module] || (data[module] = {}))[name] = element.textContent!.trim();
+                                (data[module] ||= {})[name] = element.textContent!.trim();
                                 break;
                             }
                         }
@@ -707,7 +707,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     get outputFileExclusions() {
-        return this._outputFileExclusions || (this._outputFileExclusions = this.userSettings.outputFileExclusions.map(value => convertFileMatch(value)));
+        return this._outputFileExclusions ||= this.userSettings.outputFileExclusions.map(value => convertFileMatch(value));
     }
 
     get application() {

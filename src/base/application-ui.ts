@@ -341,7 +341,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public addLayoutTemplate(parent: T, node: T, template: NodeTemplate<T>, index?: number) {
         if (!node.renderExclude) {
             if (node.renderParent) {
-                const renderTemplates = parent.renderTemplates || (parent.renderTemplates = []);
+                const renderTemplates = parent.renderTemplates ||= [];
                 if (index === undefined || !(index >= 0 && index < parent.renderChildren.length)) {
                     parent.renderChildren.push(node);
                     renderTemplates.push(template);
@@ -465,7 +465,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             });
             const length = pseudoElements.length;
             if (length) {
-                const pseudoMap: { item: T; id: string; parentElement: Element; styleElement?: HTMLStyleElement }[] = [];
+                const pseudoMap: { item: T; id: string; parentElement: Element; styleElement?: HTMLStyleElement }[] = new Array(length);
+                let q = 0;
                 for (let i = 0; i < length; ++i) {
                     const item = pseudoElements[i];
                     const parentElement = item.parentElement as HTMLElement;
@@ -479,10 +480,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         styleElement = insertStyleSheetRule(`#${id + item.pseudoElt!} { display: none !important; }`);
                     }
                     if (item.cssTry('display', item.display)) {
-                        pseudoMap.push({ item, id, parentElement, styleElement });
+                        pseudoMap[q++] = { item, id, parentElement, styleElement };
                     }
                 }
-                const q = pseudoMap.length;
+                pseudoMap.length = q;
                 for (let i = 0; i < q; ++i) {
                     pseudoMap[i].item.setBounds(false);
                 }
@@ -1029,7 +1030,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                 parentY = result.parent;
                                             }
                                             if (result.include) {
-                                                (nodeY.renderExtension || (nodeY.renderExtension = [])).push(ext);
+                                                (nodeY.renderExtension ||= []).push(ext);
                                                 ext.subscribers.add(nodeY);
                                             }
                                             else if (result.subscribe) {
@@ -1729,9 +1730,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
                 if (content !== '' || value === '""') {
-                    if (!tagName) {
-                        tagName = /^(inline|table)/.test(styleMap.display) ? 'span' : 'div';
-                    }
+                    tagName ||= /^(inline|table)/.test(styleMap.display) ? 'span' : 'div';
                     const pseudoElement = document.createElement(tagName);
                     pseudoElement.className = '__squared.pseudo';
                     pseudoElement.style.setProperty('display', 'none');

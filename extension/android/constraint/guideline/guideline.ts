@@ -72,9 +72,7 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
             item.positioned = true;
         });
         if (circlePosition) {
-            if (!anchor) {
-                anchor = node.item(0) as T;
-            }
+            anchor ||= node.item(0) as T;
             if (!anchor.anchored) {
                 controller.addGuideline({ target: anchor, parent: node });
             }

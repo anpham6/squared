@@ -344,9 +344,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                     if (current.pageFlow) {
                         if (collapseMargin) {
                             if (!current.floating) {
-                                if (!firstChild) {
-                                    firstChild = current;
-                                }
+                                firstChild ||= current;
                                 lastChild = current;
                             }
                             else if (lastChild) {

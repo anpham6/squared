@@ -56,9 +56,7 @@ function setButtonStyle(styleMap: StringMap, applied: boolean, defaultColor: str
 
 function pushIndent(value: string, depth: number, char = '\t', indent?: string) {
     if (depth > 0) {
-        if (!indent) {
-            indent = char.repeat(depth);
-        }
+        indent ||= char.repeat(depth);
         return joinArray(value.split('\n'), line => line !== '' ? indent + line : '', '\n') + '\n';
     }
     return value;
@@ -534,9 +532,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         break;
                     }
                 }
-                if (!parent) {
-                    parent = documentRoot;
-                }
+                parent ||= documentRoot;
                 if (parent !== actualParent) {
                     if (absoluteParent.positionRelative && parent !== absoluteParent) {
                         const { left, right, top, bottom } = absoluteParent;
@@ -700,7 +696,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     });
                     if (sibling) {
                         const index = sibling.childIndex + (item.zIndex >= 0 || sibling !== item.actualParent ? 1 : 0);
-                        (layers[index] || (layers[index] = [])).push(item);
+                        (layers[index] ||= []).push(item);
                     }
                 }
             });

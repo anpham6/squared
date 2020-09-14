@@ -314,7 +314,7 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
         const setDataRows = (item: T, placement: number[]) => {
             if (placement.every(value => value > 0)) {
                 for (let i = placement[rowA] - 1; i < placement[rowB] - 1; ++i) {
-                    const itemData = rowData[i] || (rowData[i] = []);
+                    const itemData = rowData[i] ||= [];
                     let cell = openCells[i],
                         j = placement[colA] - 1;
                     if (!cell) {
@@ -327,7 +327,7 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         openCells[i] = cell;
                     }
                     while (j < placement[colB] - 1) {
-                        (itemData[j] || (itemData[j] = [])).push(item);
+                        (itemData[j] ||= []).push(item);
                         cell[j++] = 1;
                     }
                 }
@@ -349,7 +349,7 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         case 1:
                             if (command[0] === '[') {
                                 for (const attr of match[4].split(/\s+/)) {
-                                    (name[attr] || (name[attr] = [])).push(i);
+                                    (name[attr] ||= []).push(i);
                                 }
                             }
                             else if (command.startsWith('repeat')) {
@@ -995,7 +995,7 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 for (let i = 0; i < columnCount; ++i) {
                     const itemData = rowData[i];
                     for (let j = 0, length = itemData.length; j < length; ++j) {
-                        (rowMain[j] || (rowMain[j] = []))[i] = itemData[j];
+                        (rowMain[j] ||= [])[i] = itemData[j];
                     }
                 }
             }

@@ -187,10 +187,7 @@ export const TRANSFORM = {
         };
     },
     parse(element: SVGElement, value?: string): Null<SvgTransform[]> {
-        if (!value) {
-            value = element.style.getPropertyValue('transform');
-        }
-        if (value) {
+        if (value ||= element.style.getPropertyValue('transform')) {
             const result: SvgTransform[] = [];
             RE_PARSE.matcher(value);
             while (RE_PARSE.find()) {
@@ -300,11 +297,8 @@ export const TRANSFORM = {
         return null;
     },
     origin(element: SVGElement, value?: string) {
-        if (!value) {
-            value = getAttribute(element, 'transform-origin');
-        }
         const result: Point = { x: 0, y: 0 };
-        if (value) {
+        if (value ||= getAttribute(element, 'transform-origin')) {
             const viewBox = getNearestViewBox(element);
             let width: Undef<number>,
                 height: Undef<number>;

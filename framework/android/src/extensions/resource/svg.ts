@@ -665,9 +665,7 @@ function insertFillAfter(propertyName: string, valueType: string, item: SvgAnima
                     }
                 }
             }
-            if (!valueTo) {
-                valueTo = item.baseValue;
-            }
+            valueTo ||= item.baseValue;
         }
         let previousValue: Undef<string>;
         if (propertyValues && propertyValues.length) {
@@ -1082,16 +1080,10 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                         const companion = item.companion;
                                                         if (companion) {
                                                             if (companion.key <= 0) {
-                                                                if (!companionBefore) {
-                                                                    companionBefore = [];
-                                                                }
-                                                                companionBefore.push(propertyValue);
+                                                                (companionBefore ||= []).push(propertyValue);
                                                             }
                                                             else if (companion.key > 0) {
-                                                                if (!companionAfter) {
-                                                                    companionAfter = [];
-                                                                }
-                                                                companionAfter.push(propertyValue);
+                                                                (companionAfter ||= []).push(propertyValue);
                                                             }
                                                         }
                                                         else {
@@ -1426,7 +1418,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                 if (path) {
                                     const { value, baseValue } = path;
                                     if (value !== baseValue) {
-                                        (objectAnimator || (objectAnimator = [])).push(createPropertyValue('pathData', 'pathType', baseValue, '0', precision, value));
+                                        (objectAnimator ||= []).push(createPropertyValue('pathData', 'pathType', baseValue, '0', precision, value));
                                         if (item.iterationCount !== -1 && !item.setterType) {
                                             objectAnimator.push(createPropertyValue('pathData', 'pathType', value, '0', precision, baseValue, item.getTotalDuration().toString()));
                                         }

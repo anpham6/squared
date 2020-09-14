@@ -121,10 +121,7 @@ export function getDataSet(dataset: StringMap | DOMStringMap, prefix: string) {
     let result: Undef<StringMap>;
     for (const attr in dataset) {
         if (attr.startsWith(prefix)) {
-            if (!result) {
-                result = {};
-            }
-            result[capitalize(attr.substring(prefix.length), false)] = dataset[attr]!;
+            (result ||= {})[capitalize(attr.substring(prefix.length), false)] = dataset[attr]!;
         }
     }
     return result;
@@ -137,7 +134,7 @@ export function createViewAttribute(data?: PlainObject) {
             Object.assign(options.android, data.android);
         }
         if (data.app) {
-            Object.assign(options.app || (options.app = {}), data.app);
+            Object.assign(options.app ||= {}, data.app);
         }
     }
     return options;

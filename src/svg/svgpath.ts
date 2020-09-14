@@ -134,9 +134,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 }
             }
             else if (pathData) {
-                if (!commands) {
-                    commands = SvgBuild.toPathCommands(pathData);
-                }
+                commands ||= SvgBuild.toPathCommands(pathData);
                 const value = parseFloat(values[i]);
                 if (!isNaN(value)) {
                     const path = i < length - 1 ? cloneObject(commands, { deep: true }) : commands;
@@ -531,9 +529,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
     }
 
     public flattenStrokeDash(valueArray: number[], valueOffset: number, totalLength: number, pathLength?: number, data?: SvgPathExtendData) {
-        if (!pathLength) {
-            pathLength = totalLength;
-        }
+        pathLength ||= totalLength;
         let dashTotal = 0,
             dashArray: number[],
             arrayLength: number,
@@ -1022,7 +1018,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
     }
 
     get transforms() {
-        return this._transforms || (this._transforms = SvgBuild.filterTransforms(TRANSFORM.parse(this.element) || SvgBuild.convertTransforms(this.element.transform.baseVal)));
+        return this._transforms ||= SvgBuild.filterTransforms(TRANSFORM.parse(this.element) || SvgBuild.convertTransforms(this.element.transform.baseVal));
     }
 
     get pathLength() {

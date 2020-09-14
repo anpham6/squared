@@ -191,12 +191,8 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
         if (options) {
             const { also, error, cascade } = options;
             let { start, end, count } = options;
-            if (start) {
-                start = Math.max(start, 0);
-            }
-            if (end) {
-                end = Math.min(this.size(), end);
-            }
+            start &&= Math.max(start, 0);
+            end &&= Math.min(this.size(), end);
             if (!count || count < 0) {
                 count = 0;
             }

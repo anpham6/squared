@@ -757,7 +757,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         case CSSRule.KEYFRAMES_RULE: {
                             const value = parseKeyframes((rule as CSSKeyframesRule).cssRules);
                             if (value) {
-                                const keyframesMap = processing.keyframesMap || (processing.keyframesMap = new Map<string, KeyframeData>());
+                                const keyframesMap = processing.keyframesMap ||= new Map<string, KeyframeData>();
                                 const name = (rule as CSSKeyframesRule).name;
                                 const keyframe = keyframesMap.get(name);
                                 if (keyframe) {

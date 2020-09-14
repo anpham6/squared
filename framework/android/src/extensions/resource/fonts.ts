@@ -127,16 +127,16 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         this.application.getProcessingCache(sessionId).each(node => {
             if (node.data(Resource.KEY_NAME, 'fontStyle') && node.hasResource(NODE_RESOURCE.FONT_STYLE)) {
                 const containerName = node.containerName;
-                (nameMap[containerName] || (nameMap[containerName] = [])).push(node);
+                (nameMap[containerName] ||= []).push(node);
             }
         });
         for (const tag in nameMap) {
             const data = nameMap[tag];
             const sorted: StyleList<T>[] = [{}, {}, {}];
             const addFontItem = (node: T, index: number, attr: string, value: string) => {
-                const items = sorted[index] || (sorted[index] = {});
+                const items = sorted[index] ||= {};
                 const name = FONT_STYLE[attr] + value + '"';
-                (items[name] || (items[name] = [])).push(node);
+                (items[name] ||= []).push(node);
             };
             cache = cache.concat(data);
             for (let i = 0, length = data.length; i < length; ++i) {
@@ -148,9 +148,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     const fontData = companion.data<FontAttribute>(Resource.KEY_NAME, 'fontStyle');
                     if (fontData) {
                         ({ fontFamily, fontStyle, fontWeight } = fontData);
-                        if (!backgroundColor) {
-                            backgroundColor = fontData.backgroundColor;
-                        }
+                        backgroundColor ||= fontData.backgroundColor;
                     }
                 }
                 fontFamily.replace(/"/g, '').split(',').some((value, index, array) => {
@@ -292,7 +290,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                         if (compare.length) {
                                             for (let k = 0, q = ids.length; k < q; ++k) {
                                                 if (compare.includes(ids[k])) {
-                                                    (found[attr] || (found[attr] = [])).push(ids[k]);
+                                                    (found[attr] ||= []).push(ids[k]);
                                                 }
                                             }
                                         }

@@ -726,8 +726,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 return;
                             }
                             else if (this.styleText) {
-                                const multiline = (this.textBounds?.numberOfLines as number) > 1;
-                                if (multiline) {
+                                if (this.textBounds?.numberOfLines as number > 1) {
                                     if (block) {
                                         layoutWidth = 'match_parent';
                                     }
@@ -766,7 +765,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         else if (this.floating && this.block && !this.rightAligned && this.alignParent('left') && this.alignParent('right')) {
                             layoutWidth = 'match_parent';
                         }
-                        else if (this.naturalElement && this.inlineStatic && !this.blockDimension && this.find(item => item.naturalElement && item.blockStatic) && !actualParent.layoutElement && (renderParent.layoutVertical || this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '')) {
+                        else if (this.naturalElement && this.inlineStatic && !this.blockDimension && this.find(item => item.naturalElement && item.blockStatic) && !actualParent.layoutElement && (renderParent.layoutVertical || !this.alignSibling('leftRight') && !this.alignSibling('rightLeft'))) {
                             checkParentWidth(false);
                         }
                     }
@@ -923,8 +922,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                 }
                 else if (!this.pageFlow && this.multiline && this.inlineWidth && !this.preserveWhiteSpace && (this.ascend({ condition: item => item.hasPX('width') }).length || !this.textContent.includes('\n'))) {
-                    const maxLines = this.textBounds?.numberOfLines || 1;
-                    if (maxLines > 1) {
+                    const maxLines = this.textBounds?.numberOfLines;
+                    if (maxLines && maxLines > 1) {
                         this.android('maxLines', maxLines.toString());
                     }
                     this.android('ellipsize', 'end');
@@ -2118,9 +2117,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     break;
                                 case 'right':
                                 case 'end':
-                                    if (this.alignSibling('rightLeft') === '') {
+                                    if (!this.alignSibling('rightLeft')) {
                                         this.anchor('right', 'parent', false);
-                                        if (this.alignParent('left') || this.alignSibling('left') !== '') {
+                                        if (this.alignParent('left') || this.alignSibling('left')) {
                                             this.anchorStyle('horizontal', 1);
                                         }
                                     }
@@ -2130,15 +2129,15 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     break;
                                 case 'left':
                                 case 'start':
-                                    if (this.alignSibling('leftRight') === '') {
+                                    if (!this.alignSibling('leftRight')) {
                                         this.anchor('left', 'parent', false);
-                                        if (this.alignParent('right') || this.alignSibling('right') !== '') {
+                                        if (this.alignParent('right') || this.alignSibling('right')) {
                                             this.anchorStyle('horizontal', 0);
                                         }
                                     }
                                     break;
                                 case 'center_horizontal':
-                                    if (this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '') {
+                                    if (!this.alignSibling('leftRight') && !this.alignSibling('rightLeft')) {
                                         this.anchorParent('horizontal', 0.5);
                                     }
                                     break;
@@ -2208,7 +2207,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         public applyOptimizations() {
             if (this.renderExclude) {
-                this.hide(this.alignSibling('topBottom') === '' && this.alignSibling('bottomTop') === '' && this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '' ? { remove: true } : { collapse: true });
+                this.hide(!this.alignSibling('topBottom') && !this.alignSibling('bottomTop') && !this.alignSibling('leftRight') && !this.alignSibling('rightLeft') ? { remove: true } : { collapse: true });
                 return;
             }
             const renderParent = this.renderParent!;
@@ -2218,7 +2217,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 if (this.multiline) {
                     setMultiline(this, lineHeight, hasOwnStyle);
                 }
-                else if (this.rendering && !(!hasOwnStyle && this.layoutHorizontal && this.alignSibling('baseline') !== '')) {
+                else if (this.rendering && !(!hasOwnStyle && this.layoutHorizontal && this.alignSibling('baseline'))) {
                     if (this.layoutVertical || this.layoutFrame) {
                         this.renderEach((item: T) => {
                             const value = getLineHeight(item, lineHeight);
@@ -2256,7 +2255,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     let invalid: Undef<boolean>;
                                     for (let j = 0; j < r; ++j) {
                                         const item = row[j];
-                                        if (item.alignSibling('baseline') === '' && item !== baseline || getLineHeight(item, lineHeight, true) !== lineHeight) {
+                                        if (!item.alignSibling('baseline') && item !== baseline || getLineHeight(item, lineHeight, true) !== lineHeight) {
                                             invalid = true;
                                             break;
                                         }
@@ -2395,7 +2394,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             else if (this.rendering) {
                 if (this.layoutLinear) {
                     if (this.layoutVertical) {
-                        if ((renderParent.layoutHorizontal || renderParent.layoutGrid || this.alignSibling('baseline') !== '' || this.baselineActive) && (this.baselineElement || this.renderChildren[0].baselineElement) && !this.documentRoot) {
+                        if ((renderParent.layoutHorizontal || renderParent.layoutGrid || this.alignSibling('baseline') || this.baselineActive) && (this.baselineElement || this.renderChildren[0].baselineElement) && !this.documentRoot) {
                             this.android('baselineAlignedChildIndex', '0', false);
                         }
                     }
@@ -2570,7 +2569,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public getMatchConstraint(parent: Null<T> = this.renderParent) {
-            return parent ? parent.layoutConstraint && !parent.flexibleWidth && (!parent.inlineWidth || this.rendering) && !this.onlyChild && !(parent.documentRoot && this.blockStatic) && (this.alignParent('left') && this.alignParent('right') && !this.textElement && !this.inputElement && !this.controlElement || this.hasPX('minWidth') && (parent.inlineWidth || parent.layoutWidth === '' && !parent.blockStatic && !parent.hasPX('width')) || this.alignSibling('leftRight') !== '' || this.alignSibling('rightLeft') !== '') ? '0px' : 'match_parent' : '';
+            return parent ? parent.layoutConstraint && !parent.flexibleWidth && (!parent.inlineWidth || this.rendering) && !this.onlyChild && !(parent.documentRoot && this.blockStatic) && (this.alignParent('left') && this.alignParent('right') && !this.textElement && !this.inputElement && !this.controlElement || this.hasPX('minWidth') && (parent.inlineWidth || parent.layoutWidth === '' && !parent.blockStatic && !parent.hasPX('width')) || this.alignSibling('leftRight') || this.alignSibling('rightLeft')) ? '0px' : 'match_parent' : '';
         }
 
         public getAnchorPosition(parent: T, horizontal: boolean, modifyAnchor = true) {
@@ -3049,11 +3048,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             this._anchored = value;
         }
         get anchored() {
-            return this._anchored || (this._anchored = this.constraint.horizontal && this.constraint.vertical);
+            return this._anchored ||= this.constraint.horizontal && this.constraint.vertical;
         }
 
         get constraint() {
-            return this._constraint || (this._constraint = { horizontal: false, vertical: false, current: {} });
+            return this._constraint ||= { horizontal: false, vertical: false, current: {} };
         }
 
         get layoutFrame() {

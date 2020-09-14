@@ -225,9 +225,7 @@ let Node: serve.INode,
         console.log(`\n${chalk.bold(mounted)} directories were mounted.\n`);
     }
     else {
-        if (!ENV) {
-            ENV = 'development';
-        }
+        ENV ||= 'development';
         app.use(body_parser.json({ limit: '250mb' }));
         app.use('/', express.static(path.join(__dirname, 'html')));
         app.use('/dist', express.static(path.join(__dirname, 'dist')));

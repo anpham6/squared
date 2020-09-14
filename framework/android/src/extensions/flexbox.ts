@@ -548,10 +548,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     break;
                                 case 'baseline':
                                     if (horizontal) {
-                                        if (!baseline) {
-                                            baseline = getBaseline(seg) as Null<T>;
-                                        }
-                                        if (baseline) {
+                                        if (baseline ||= getBaseline(seg) as Null<T>) {
                                             if (baseline !== chain) {
                                                 chain.anchor('baseline', baseline.documentId);
                                             }

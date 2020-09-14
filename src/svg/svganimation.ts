@@ -1,12 +1,12 @@
 import FILL_MODE = squared.svg.constant.FILL_MODE;
 
+import type SvgContainer from './svgcontainer';
 import type SvgPath from './svgpath';
 
 import SvgBuild from './svgbuild';
 
 import { getAttribute } from './lib/util';
 
-type SvgContainer = squared.svg.SvgContainer;
 type SvgView = squared.svg.SvgView;
 
 const { getFontSize, hasEm, isLength, parseUnit } = squared.lib.css;
@@ -91,7 +91,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
                 const value = dataset[name];
                 if (isString(value)) {
                     try {
-                        (this._dataset || (this._dataset = {}))[name] = JSON.parse(value);
+                        (this._dataset ||= {})[name] = JSON.parse(value);
                     }
                     catch {
                     }
@@ -242,7 +242,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
         this._group = value;
     }
     get group() {
-        return this._group || (this._group = { id: -Infinity, name: '' });
+        return this._group ||= { id: -Infinity, name: '' };
     }
 
     set setterType(value) {}

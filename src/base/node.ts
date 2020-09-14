@@ -911,7 +911,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public data<U = unknown>(name: string, attr: string, value?: any, overwrite = true): Undef<U> {
-        const data = this._data || (this._data = {});
+        const data = this._data ||= {};
         if (value === null) {
             if (data[name]) {
                 delete data[name][attr];
@@ -1795,9 +1795,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                     notList: Undef<string[]>,
                                     subMatch: Null<RegExpExecArray>;
                                 while (subMatch = SELECTOR_ATTR.exec(segment)) {
-                                    if (!attrList) {
-                                        attrList = [];
-                                    }
+                                    attrList ||= [];
                                     let key = subMatch[1].replace('\\:', ':'),
                                         endsWith: Undef<boolean>;
                                     switch (key.indexOf('|')) {
@@ -1835,17 +1833,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                     const pseudoClass = subMatch[0];
                                     if (pseudoClass.startsWith(':not(')) {
                                         if (subMatch[1]) {
-                                            if (!notList) {
-                                                notList = [];
-                                            }
-                                            notList.push(subMatch[1]);
+                                            (notList ||= []).push(subMatch[1]);
                                         }
                                     }
                                     else {
-                                        if (!pseudoList) {
-                                            pseudoList = [];
-                                        }
-                                        pseudoList.push(pseudoClass);
+                                        (pseudoList ||= []).push(pseudoClass);
                                     }
                                     segment = spliceString(segment, subMatch.index, pseudoClass.length);
                                 }
@@ -1856,10 +1848,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                             id = label.substring(1);
                                             break;
                                         case '.':
-                                            if (!classList) {
-                                                classList = [];
-                                            }
-                                            classList.push(label.substring(1));
+                                            (classList ||= []).push(label.substring(1));
                                             break;
                                         default:
                                             tagName = label.toUpperCase();
@@ -1990,7 +1979,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     for (let i = 0; i < length; ++i) {
                         const item = children[i];
                         index = item.depth - depth;
-                        (result[index] || (result[index] = [])).push(item);
+                        (result[index] ||= []).push(item);
                     }
                     length = result.length;
                     for (let i = 0; i < length; ++i) {
@@ -2195,7 +2184,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get dataset(): DOMStringMap {
-        return this._dataset || (this._dataset = this.styleElement ? (this._element as HTMLElement).dataset : {});
+        return this._dataset ||= this.styleElement ? (this._element as HTMLElement).dataset : {};
     }
 
     get documentBody() {
@@ -2815,12 +2804,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 if (backgroundImage) {
                     for (const repeat of this.css('backgroundRepeat').split(',')) {
                         const [repeatX, repeatY] = splitPair(repeat.trim(), ' ');
-                        if (!backgroundRepeatX) {
-                            backgroundRepeatX = repeatX === 'repeat' || repeatX === 'repeat-x';
-                        }
-                        if (!backgroundRepeatY) {
-                            backgroundRepeatY = repeatX === 'repeat' || repeatX === 'repeat-y' || repeatY === 'repeat';
-                        }
+                        backgroundRepeatX ||= repeatX === 'repeat' || repeatX === 'repeat-x';
+                        backgroundRepeatY ||= repeatX === 'repeat' || repeatX === 'repeat-y' || repeatY === 'repeat';
                     }
                 }
                 const outlineStyle = this.css('outlineStyle');
@@ -2959,14 +2944,14 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         this._naturalChildren = value;
     }
     get naturalChildren() {
-        return this._naturalChildren || (this._naturalChildren = this.toArray());
+        return this._naturalChildren ||= this.toArray();
     }
 
     set naturalElements(value) {
         this._naturalElements = value;
     }
     get naturalElements() {
-        return this._naturalElements || (this._naturalElements = this.naturalChildren.filter((item: T) => item.naturalElement));
+        return this._naturalElements ||= this.naturalChildren.filter((item: T) => item.naturalElement);
     }
 
     get firstChild(): Null<T> {
@@ -3124,7 +3109,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get style() {
-        return this._style || (this._style = this.styleElement ? !this.pseudoElt ? getStyle(this._element!) : getStyle(this._element!.parentElement!, this.pseudoElt) : PROXY_INLINESTYLE);
+        return this._style ||= this.styleElement ? !this.pseudoElt ? getStyle(this._element!) : getStyle(this._element!.parentElement!, this.pseudoElt) : PROXY_INLINESTYLE;
     }
 
     get cssStyle() {

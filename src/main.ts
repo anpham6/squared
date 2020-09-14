@@ -46,10 +46,10 @@ function extendPrototype(id: number) {
                 if (util.isPlainObject(item)) {
                     let property: Undef<ObjectMap<FunctionType<any>>>;
                     if (typeof item.set === 'function') {
-                        (property || (property = {})).set = item.set;
+                        (property ||= {}).set = item.set;
                     }
                     if (typeof item.get === 'function') {
-                        (property || (property = {})).get = item.get;
+                        (property ||= {}).get = item.get;
                     }
                     if (property) {
                         Object.defineProperty(proto, method, property);

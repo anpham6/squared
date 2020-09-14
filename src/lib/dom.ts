@@ -47,7 +47,7 @@ export function getRangeClientRect(element: Element) {
                 const display = style.getPropertyValue('display');
                 if (display !== 'none') {
                     item.style.display = 'none';
-                    (hidden || (hidden = [])).push([item, display]);
+                    (hidden ||= []).push([item, display]);
                 }
             }
         });

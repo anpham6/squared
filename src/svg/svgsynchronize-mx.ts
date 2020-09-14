@@ -397,9 +397,7 @@ function getIntermediateSplitValue(subTime: number, splitTime: number, item: Svg
 
 function appendPartialKeyTimes(map: SvgAnimationIntervalMap, forwardMap: ForwardMap, baseValueMap: ObjectMap<AnimateValue>, interval: number, item: SvgAnimate, keyTimes: number[], values: string[], keySplines: Null<string[]>, baseValue: AnimateValue, queued: SvgAnimate[], evaluateStart: boolean): [number[], string[], string[]] {
     let length = values.length;
-    if (!keySplines) {
-        keySplines = new Array(length - 1).fill('');
-    }
+    keySplines ||= new Array(length - 1).fill('');
     const { delay, duration } = item;
     const startTime = delay + duration * interval;
     const itemEndTime = item.getTotalDuration();
@@ -792,9 +790,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
         }
 
         public getAnimateViewRect(animations?: SvgAnimation[]) {
-            if (!animations) {
-                animations = this.animations as SvgAnimation[];
-            }
+            animations ||= this.animations as SvgAnimation[];
             const result: SvgAnimate[] = [];
             for (let i = 0, length = animations.length; i < length; ++i) {
                 const item = animations[i] as SvgAnimate;
@@ -830,7 +826,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                 const groupActive = new Set<string>();
                 let setterTotal = 0;
                 const insertSetter = (item: SvgAnimation) => {
-                    (setterAttributeMap[item.attributeName] || (setterAttributeMap[item.attributeName] = [])).push(item);
+                    (setterAttributeMap[item.attributeName] ||= []).push(item);
                     ++setterTotal;
                 };
                 {
@@ -1068,7 +1064,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                             }
                             const forwardItem = getForwardItem(forwardMap, attr);
                             if (value !== '' && (!forwardItem || time >= forwardItem.time)) {
-                                (forwardMap[attr] || (forwardMap[attr] = [])).push({ key: type, value, time });
+                                (forwardMap[attr] ||= []).push({ key: type, value, time });
                             }
                             if (item && SvgBuild.isAnimate(item) && !item.fillReplace) {
                                 if (item.fillForwards) {
@@ -1963,7 +1959,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                 if (animate.type !== SVGTransform.SVG_TRANSFORM_ROTATE) {
                                                     const transformOrigin = transformOriginMap.get(entry[0]);
                                                     if (transformOrigin) {
-                                                        (animate.transformOrigin || (animate.transformOrigin = []))[j] = transformOrigin;
+                                                        (animate.transformOrigin ||= [])[j] = transformOrigin;
                                                     }
                                                 }
                                                 entry[0] -= delay;

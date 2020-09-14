@@ -89,7 +89,7 @@ export default class ExtensionManager<T extends Node> implements squared.base.Ex
                     }
                 }
                 else {
-                    (result || (result = [])).push(extensions[i].name + `[${name}]`);
+                    (result ||= []).push(extensions[i].name + `[${name}]`);
                     extensions.splice(i--, 1);
                     break;
                 }
