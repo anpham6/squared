@@ -799,7 +799,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     styleMap[attr] = value + 'px';
                 }
             }
-            else if (element.clientWidth === 300 && element.clientHeight === 150) {
+            else if (element.clientWidth === 300 && element.clientHeight === 150 && !((element instanceof HTMLObjectElement || element instanceof HTMLEmbedElement) && element.type.startsWith('image/'))) {
                 if (attr === 'width') {
                     styleMap.width = '300px';
                 }

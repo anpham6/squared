@@ -2722,7 +2722,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     default:
                         if (result !== '' && this.styleElement && this.pageFlow && !this.inputElement && this.css('opacity') === '1') {
                             let parent = this.actualParent;
-                            while (parent && !REGEXP_BACKGROUND.test(parent.css('background'))) {
+                            while (parent && !REGEXP_BACKGROUND.test(parent.style.background)) {
                                 const backgroundImage = parent.valueOf('backgroundImage');
                                 if (backgroundImage === '' || backgroundImage === 'none') {
                                     const color = parent.backgroundColor;

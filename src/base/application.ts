@@ -1,4 +1,5 @@
 import CSS_TRAITS = squared.lib.constant.CSS_TRAITS;
+import USER_AGENT = squared.lib.constant.USER_AGENT;
 
 import type Controller from './controller';
 import type Resource from './resource';
@@ -15,6 +16,7 @@ const { CSS_CANNOT_BE_PARSED, DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, 
 const { FILE, STRING } = squared.lib.regex;
 
 const { CSS_PROPERTIES, checkMediaRule, getSpecificity, hasComputedStyle, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText } = squared.lib.css;
+const { isUserAgent } = squared.lib.client;
 const { getElementCache, newSessionInit, resetSessionAll, setElementCache } = squared.lib.session;
 const { capitalize, convertCamelCase, isEmptyString, parseMimeType, resolvePath, splitPair, splitPairStart, trimBoth } = squared.lib.util;
 
@@ -599,11 +601,16 @@ export default abstract class Application<T extends Node> implements squared.bas
                     const baseAttr = convertCamelCase(attr);
                     let value: string = cssStyle[attr];
                     switch (value) {
-                        case 'initial':
-                            if (CSS_PROPERTIES[baseAttr]?.value === 'auto') {
+                        case 'initial': {
+                            if (isUserAgent(USER_AGENT.SAFARI) && baseAttr.startsWith('background')) {
+                                break;
+                            }
+                            const property = CSS_PROPERTIES[baseAttr];
+                            if (property && property.value === 'auto') {
                                 value = 'auto';
                                 break;
                             }
+                        }
                         case 'normal':
                             valid: {
                                 if (!hasExactValue(attr, value)) {
