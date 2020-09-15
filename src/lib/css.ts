@@ -3011,8 +3011,9 @@ export function calculateVarAsString(element: StyleElement, value: string, optio
 export function calculateVar(element: StyleElement, value: string, options: CalculateVarOptions = {}) {
     const output = parseVar(element, value);
     if (output) {
+        const { precision, supportPercent, unitType } = options;
         if (value.includes('%')) {
-            if (options.supportPercent === false || options.unitType === CSS_UNIT.INTEGER) {
+            if (supportPercent === false || unitType === CSS_UNIT.INTEGER) {
                 return NaN;
             }
             else if (options.boundingSize === undefined) {
@@ -3067,14 +3068,13 @@ export function calculateVar(element: StyleElement, value: string, options: Calc
                 }
             }
         }
-        else if (options.supportPercent) {
+        else if (supportPercent) {
             return NaN;
         }
-        if ((!options.unitType || options.unitType === CSS_UNIT.LENGTH) && hasEm(value) && options.fontSize === undefined) {
+        if (options.fontSize === undefined && (!unitType || unitType === CSS_UNIT.LENGTH) && hasEm(value)) {
             options.fontSize = getFontSize(element);
         }
         const result = calculate(output, options);
-        const precision = options.precision;
         if (precision !== undefined) {
             return precision === 0 ? Math.floor(result) : parseFloat(truncate(result, precision));
         }

@@ -1,4 +1,4 @@
-/* chrome-framework 1.13.0
+/* chrome-framework 2.0.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -6,75 +6,114 @@
         ? (module.exports = factory())
         : typeof define === 'function' && define.amd
         ? define(factory)
-        : ((global = global || self), (global.chrome = factory()));
+        : ((global = typeof globalThis !== 'undefined' ? globalThis : global || self), (global.chrome = factory()));
 })(this, function () {
     'use strict';
 
+    const { UNABLE_TO_FINALIZE_DOCUMENT, reject } = squared.lib.error;
+    const { isPlainObject } = squared.lib.util;
     class Application extends squared.base.Application {
         constructor() {
             super(...arguments);
-            this.builtInExtensions = {};
             this.extensions = [];
             this.systemName = 'chrome';
         }
+        init() {
+            this.session.unusedStyles = new Set();
+        }
+        reset() {
+            this.session.unusedStyles.clear();
+            super.reset();
+        }
         insertNode(element, sessionId) {
-            if (element.nodeName === '#text') {
+            if (element.nodeName[0] === '#') {
                 if (this.userSettings.excludePlainText) {
-                    return undefined;
+                    return;
                 }
                 this.controllerHandler.applyDefaultStyles(element, sessionId);
             }
             return this.createNode(sessionId, { element });
         }
+        saveAs(filename, options) {
+            return this.processAssets('saveAs', filename || this.userSettings.outputArchiveName, options);
+        }
+        copyTo(directory, options) {
+            return this.processAssets('copyTo', directory, options);
+        }
+        appendTo(pathname, options) {
+            return this.processAssets('appendTo', pathname, options);
+        }
+        processAssets(module, pathname, options) {
+            options = !isPlainObject(options) ? {} : Object.assign({}, options);
+            options.saveAsWebPage = true;
+            this.reset();
+            const result = this.parseDocumentSync();
+            if (!result) {
+                return reject(UNABLE_TO_FINALIZE_DOCUMENT);
+            }
+            if (options.removeUnusedStyles) {
+                const unusedStyles = Array.from(this.session.unusedStyles);
+                if (unusedStyles.length) {
+                    options.unusedStyles = options.unusedStyles
+                        ? Array.from(new Set(options.unusedStyles.concat(unusedStyles)))
+                        : unusedStyles;
+                }
+            }
+            return this.fileHandler[module](pathname, options);
+        }
+        get initializing() {
+            return false;
+        }
+        get length() {
+            return 1;
+        }
     }
 
-    const { setElementCache } = squared.lib.session;
-    class Controller extends squared.base.Controller {
-        constructor(application) {
-            super();
-            this.application = application;
-        }
-        applyDefaultStyles(element, sessionId) {
-            if (element.nodeName === '#text') {
-                setElementCache(element, 'styleMap', sessionId, {
-                    position: 'static',
-                    display: 'inline',
-                    verticalAlign: 'baseline',
-                    float: 'none',
-                    clear: 'none',
-                });
+    const getSizeRange = options =>
+        '(' +
+        Math.max(options.largerThan, 0) +
+        ',' +
+        (options.smallerThan < Infinity ? options.smallerThan : '*') +
+        ')';
+    class Extension extends squared.base.Extension {
+        static getCompressOptions(options) {
+            const result = (options.whenSmaller ? '%' : '') + getSizeRange(options);
+            if (result !== '(0,*)') {
+                return result;
             }
         }
-        get userSettings() {
-            return this.application.userSettings;
+        static getConvertOptions(name, options) {
+            const opacity = options.opacity || 1;
+            let result = '';
+            if (options.replaceWith) {
+                result += '@';
+            } else if (options.whenSmaller) {
+                result += '%';
+            }
+            result += getSizeRange(options);
+            return name + (result !== '(0,*)' ? result : '') + (opacity > 0 && opacity < 1 ? `|${opacity}|` : '') + ':';
+        }
+        processFile(data, override) {
+            return false;
         }
     }
 
-    class Resource extends squared.base.Resource {
-        constructor(application) {
-            super();
-            this.application = application;
-        }
-        get userSettings() {
-            return this.application.userSettings;
-        }
-    }
-
+    var Pattern = squared.lib.base.Pattern;
     const { FILE } = squared.lib.regex;
+    const ASSETS = squared.base.Resource.ASSETS;
     const {
-        appendSeparator,
         convertWord,
         fromLastIndexOf,
         isString,
         iterateReverseArray,
         parseMimeType,
-        partitionLastIndexOf,
-        randomUUID,
         resolvePath,
-        safeNestedArray,
+        splitPairStart,
         trimEnd,
     } = squared.lib.util;
+    const { appendSeparator, randomUUID } = squared.base.lib.util;
     const STRING_SERVERROOT = '__serverroot__';
+    const RE_SRCSET = new Pattern(/[\s\n]*(.+?\.[^\s,]+)(\s+[\d.]+[wx]\s*)?,?/g);
     function parseFileAs(attr, value) {
         if (value) {
             const match = new RegExp(`${attr}:\\s*((?:[^"]|\\\\")+)`).exec(value.replace(/\\/g, '/'));
@@ -83,29 +122,27 @@
                 return [segments[0], segments[1] || undefined, segments[2] === 'preserve'];
             }
         }
-        return undefined;
     }
     function getFilePath(value, saveTo) {
-        value = value.replace(/\\/g, '/');
         let moveTo;
-        if (value.charAt(0) === '/') {
+        value = value.replace(/\\/g, '/');
+        if (value[0] === '/') {
             moveTo = STRING_SERVERROOT;
         } else if (value.startsWith('../')) {
             moveTo = STRING_SERVERROOT;
             const pathname = location.pathname.split('/');
-            pathname.pop();
-            for (let i = 0; i < value.length && pathname.length > 0; i += 3) {
-                if (value.substring(i, i + 3) === '../') {
-                    pathname.pop();
-                } else {
-                    break;
+            if (--pathname.length) {
+                for (let i = 0, length = value.length; i < length; i += 3) {
+                    if (value.substring(i, i + 3) !== '../' || --pathname.length === 0) {
+                        break;
+                    }
                 }
             }
-            value = pathname.join('/') + '/' + value.split('../').pop();
+            value = `${pathname.join('/')}/${value.split('../').pop()}`;
         } else if (value.startsWith('./')) {
             value = value.substring(2);
         }
-        const result = partitionLastIndexOf(value, '/');
+        const result = splitLastIndexOf(value, '/');
         if (saveTo) {
             const extension = getFileExt(result[1]);
             result[1] = randomUUID() + (extension ? '.' + extension : '');
@@ -119,21 +156,15 @@
         }
     }
     function convertFileMatch(value) {
-        value = value
-            .trim()
-            .replace(/([.|/\\{}()?])/g, (match, ...capture) => '\\' + capture[0])
-            .replace(/\*/g, '.*?');
+        value = value.replace(/([.|/\\{}()?])/g, (match, ...capture) => '\\' + capture[0]).replace(/\*/g, '.*?');
         return new RegExp(`${value}$`);
     }
     function getExtensions(element) {
-        var _a, _b;
         if (element) {
             const dataset = element.dataset;
-            const use =
-                ((_a = dataset.useChrome) === null || _a === void 0 ? void 0 : _a.trim()) ||
-                ((_b = dataset.use) === null || _b === void 0 ? void 0 : _b.trim());
+            const use = dataset.useChrome || dataset.use;
             if (use) {
-                return use.split(/\s*,\s*/);
+                return use.trim().split(/\s*,\s*/);
             }
         }
         return [];
@@ -146,7 +177,7 @@
             }
         }
         for (const name of extensions) {
-            const ext = this.application.extensionManager.retrieve(name, true);
+            const ext = this.application.extensionManager.get(name, true);
             if (ext && !processed.includes(ext)) {
                 ext.processFile(data, true);
             }
@@ -157,9 +188,8 @@
             const items = bundleIndex[saveTo];
             const length = items.length;
             if (length > 1) {
-                let i = 0;
-                while (i < length) {
-                    items[i].bundleIndex = i++;
+                for (let i = 0; i < length; ++i) {
+                    items[i].bundleIndex = i;
                 }
             }
         }
@@ -174,10 +204,9 @@
                     item.pathname === pathname &&
                     item.filename === filename
                 ) {
-                    safeNestedArray(item, 'trailingContent').push({ value: content, format, preserve });
+                    (item.trailingContent || (item.trailingContent = [])).push({ value: content, format, preserve });
                     return true;
                 }
-                return;
             });
             if (index !== Infinity) {
                 return {
@@ -191,7 +220,11 @@
                 };
             }
         }
-        return undefined;
+        return null;
+    }
+    function setBundleData(bundleIndex, data) {
+        const name = (data.moveTo || '') + data.pathname + data.filename;
+        (bundleIndex[name] || (bundleIndex[name] = [])).push(data);
     }
     function sortBundle(a, b) {
         if (a.bundleIndex === 0) {
@@ -200,6 +233,16 @@
             return -1;
         }
         return 0;
+    }
+    function splitLastIndexOf(value, ...char) {
+        let i = 0;
+        while (i < char.length) {
+            const index = value.lastIndexOf(char[i++]);
+            if (index !== -1) {
+                return [value.substring(0, index), value.substring(index + 1)];
+            }
+        }
+        return ['', value];
     }
     const getFileExt = value => (value.includes('.') ? fromLastIndexOf(value, '.').toLowerCase() : '');
     const getDirectory = (path, start) => path.substring(start, path.lastIndexOf('/'));
@@ -228,12 +271,8 @@
                     value = resolvePath(relocate, location.href);
                 }
             }
-            if (
-                !local &&
-                !relocate &&
-                (options === null || options === void 0 ? void 0 : options.preserveCrossOrigin)
-            ) {
-                return undefined;
+            if (!local && !relocate && options && options.preserveCrossOrigin) {
+                return null;
             }
             const match = FILE.PROTOCOL.exec(value);
             if (match) {
@@ -249,7 +288,7 @@
                 if (!local) {
                     if (saveTo && relocate) {
                         [moveTo, pathname, filename] = getFilePath(
-                            relocate + '/' + randomUUID() + (extension ? '.' + extension : '')
+                            `${relocate}/${randomUUID() + (extension ? '.' + extension : '')}`
                         );
                     } else {
                         pathname = convertWord(host) + (port ? '/' + port.substring(1) : '') + '/';
@@ -257,11 +296,11 @@
                 } else {
                     prefix = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
                     let length = path.length;
-                    if (length > 0) {
+                    if (length) {
                         let index = 0;
                         length = Math.min(length, prefix.length);
                         for (let i = 0; i < length; ++i) {
-                            if (path.charAt(i) === prefix.charAt(i)) {
+                            if (path[i] === prefix[i]) {
                                 index = i;
                             } else {
                                 break;
@@ -301,45 +340,28 @@
                     preserve,
                 };
             }
-            return undefined;
+            return null;
         }
         reset() {
+            delete this._outputFileExclusions;
             super.reset();
-            this._outputFileExclusions = undefined;
         }
-        copyToDisk(directory, options) {
-            return this.copying(
-                Object.assign(Object.assign({}, options), {
-                    assets: this.combineAssets().concat(
-                        (options === null || options === void 0 ? void 0 : options.assets) || []
-                    ),
-                    directory,
-                })
-            );
+        copyTo(directory, options = {}) {
+            options.directory = directory;
+            return this.copying(this.processAssets(options));
         }
-        appendToArchive(pathname, options) {
-            return this.archiving(
-                Object.assign(Object.assign({ filename: this.userSettings.outputArchiveName }, options), {
-                    assets: this.combineAssets(options).concat(
-                        (options === null || options === void 0 ? void 0 : options.assets) || []
-                    ),
-                    appendTo: pathname,
-                })
-            );
+        appendTo(pathname, options = {}) {
+            options.filename || (options.filename = this.userSettings.outputArchiveName);
+            options.appendTo = pathname;
+            return this.archiving(this.processAssets(options));
         }
-        saveToArchive(filename, options) {
-            return this.archiving(
-                Object.assign(Object.assign({}, options), {
-                    assets: this.combineAssets(options).concat(
-                        (options === null || options === void 0 ? void 0 : options.assets) || []
-                    ),
-                    filename,
-                })
-            );
+        saveAs(filename, options = {}) {
+            options.filename = filename;
+            return this.archiving(this.processAssets(options));
         }
         getHtmlPage(options) {
             var _a;
-            let name, saveAs, preserveCrossOrigin;
+            let name, preserveCrossOrigin, saveAs;
             if (options) {
                 ({ name, preserveCrossOrigin } = options);
                 saveAs = (_a = options.saveAs) === null || _a === void 0 ? void 0 : _a.html;
@@ -351,7 +373,7 @@
             if (element) {
                 file = element.dataset.chromeFile;
             }
-            if (!isString(file) && (saveAs === null || saveAs === void 0 ? void 0 : saveAs.filename)) {
+            if (!isString(file) && saveAs && saveAs.filename) {
                 file = fromLastIndexOf(saveAs.filename, '/', '\\');
                 format = saveAs.format;
             }
@@ -377,50 +399,76 @@
         }
         getScriptAssets(options) {
             var _a;
-            let saveAs, preserveCrossOrigin;
+            let preserveCrossOrigin, saveAs;
             if (options) {
                 preserveCrossOrigin = options.preserveCrossOrigin;
                 saveAs = (_a = options.saveAs) === null || _a === void 0 ? void 0 : _a.script;
             }
             const result = [];
             const bundleIndex = {};
+            const transpileMap = { html: {}, js: {}, css: {} };
             document.querySelectorAll('script').forEach(element => {
-                const src = element.src.trim();
-                let file = element.dataset.chromeFile;
-                if (file !== 'exclude') {
-                    let format, outerHTML, preserve, data;
-                    if (!isString(file) && (saveAs === null || saveAs === void 0 ? void 0 : saveAs.filename)) {
-                        file = appendSeparator(saveAs.pathname || '', saveAs.filename);
-                        format = saveAs.format;
-                        outerHTML = element.outerHTML;
-                    }
-                    if (src !== '') {
-                        data = File.parseUri(resolvePath(src), { preserveCrossOrigin, saveAs: file, format });
-                    } else if (isString(file)) {
-                        if (!outerHTML) {
-                            const command = parseFileAs('exportAs', file);
-                            if (command) {
-                                [file, format, preserve] = command;
+                var _a;
+                const template = element.dataset.chromeTemplate;
+                if (template) {
+                    if (element.type === 'text/template') {
+                        const [category, module, name] = template
+                            .split('::')
+                            .map((value, index) => (index === 0 ? value.toLowerCase() : value).trim());
+                        if (category && module && name) {
+                            switch (category) {
+                                case 'html':
+                                case 'js':
+                                case 'css': {
+                                    ((_a = transpileMap[category])[module] || (_a[module] = {}))[
+                                        name
+                                    ] = element.textContent.trim();
+                                    break;
+                                }
                             }
                         }
-                        if (file) {
-                            data = createBundleAsset(result, element, file, format, preserve);
-                        }
                     }
-                    if (this.validFile(data)) {
-                        safeNestedArray(bundleIndex, (data.moveTo || '') + data.pathname + data.filename).push(data);
-                        data.mimeType =
-                            element.type.trim() || (data.uri && parseMimeType(data.uri)) || 'text/javascript';
-                        if (outerHTML) {
-                            data.outerHTML = outerHTML;
+                } else {
+                    let file = element.dataset.chromeFile;
+                    if (file !== 'exclude') {
+                        const src = element.src.trim();
+                        let data = null,
+                            format,
+                            outerHTML,
+                            preserve;
+                        if (!isString(file) && saveAs && saveAs.filename) {
+                            file = appendSeparator(saveAs.pathname, saveAs.filename);
+                            format = saveAs.format;
+                            outerHTML = element.outerHTML;
                         }
-                        processExtensions.call(this, data, getExtensions(element));
-                        result.push(data);
+                        if (src !== '') {
+                            data = File.parseUri(resolvePath(src), { preserveCrossOrigin, saveAs: file, format });
+                        } else if (isString(file)) {
+                            if (!outerHTML) {
+                                const command = parseFileAs('exportAs', file);
+                                if (command) {
+                                    [file, format, preserve] = command;
+                                }
+                            }
+                            if (file) {
+                                data = createBundleAsset(result, element, file, format, preserve);
+                            }
+                        }
+                        if (this.validFile(data)) {
+                            setBundleData(bundleIndex, data);
+                            data.mimeType =
+                                element.type.trim() || (data.uri && parseMimeType(data.uri)) || 'text/javascript';
+                            if (outerHTML) {
+                                data.outerHTML = outerHTML;
+                            }
+                            processExtensions.call(this, data, getExtensions(element));
+                            result.push(data);
+                        }
                     }
                 }
             });
             setBundleIndex(bundleIndex);
-            return result.sort(sortBundle);
+            return [result.sort(sortBundle), transpileMap];
         }
         getLinkAssets(options) {
             var _a;
@@ -431,10 +479,15 @@
             }
             const result = [];
             const bundleIndex = {};
-            document.querySelectorAll((rel ? `link[rel="${rel}"]` : 'link') + ', style').forEach(element => {
+            document.querySelectorAll(`${rel ? `link[rel="${rel}"]` : 'link'}, style`).forEach(element => {
                 let file = element.dataset.chromeFile;
                 if (file !== 'exclude') {
-                    let data, href, mimeType, format, preserve, outerHTML;
+                    let data = null,
+                        href,
+                        mimeType,
+                        format,
+                        preserve,
+                        outerHTML;
                     if (element instanceof HTMLLinkElement) {
                         href = element.href.trim();
                         if (href !== '') {
@@ -453,12 +506,12 @@
                     }
                     if (
                         !isString(file) &&
-                        (saveAs === null || saveAs === void 0 ? void 0 : saveAs.filename) &&
+                        saveAs &&
+                        saveAs.filename &&
                         (mimeType === 'text/css' || element instanceof HTMLStyleElement)
                     ) {
-                        file = appendSeparator(saveAs.pathname || '', saveAs.filename);
-                        format = saveAs.format;
-                        preserve = saveAs.preserve;
+                        file = appendSeparator(saveAs.pathname, saveAs.filename);
+                        ({ format, preserve } = saveAs);
                         outerHTML = element.outerHTML;
                     }
                     if (href) {
@@ -480,7 +533,7 @@
                         }
                     }
                     if (this.validFile(data)) {
-                        safeNestedArray(bundleIndex, (data.moveTo || '') + data.pathname + data.filename).push(data);
+                        setBundleData(bundleIndex, data);
                         data.mimeType = mimeType || 'text/css';
                         if (outerHTML) {
                             data.outerHTML = outerHTML;
@@ -490,17 +543,17 @@
                     }
                 }
             });
-            for (const [uri, rawData] of Resource.ASSETS.rawData.entries()) {
-                const mimeType = rawData.mimeType;
-                if (mimeType === 'text/css') {
-                    const data = File.parseUri(resolvePath(uri), {
+            for (const data of ASSETS.rawData) {
+                const item = data[1];
+                if (item.mimeType === 'text/css') {
+                    const asset = File.parseUri(resolvePath(data[0]), {
                         preserveCrossOrigin,
-                        format: saveAs === null || saveAs === void 0 ? void 0 : saveAs.format,
+                        format: saveAs && saveAs.format,
                     });
-                    if (this.validFile(data)) {
-                        data.mimeType = mimeType;
-                        processExtensions.call(this, data, []);
-                        result.push(data);
+                    if (this.validFile(asset)) {
+                        asset.mimeType = item.mimeType;
+                        processExtensions.call(this, asset, []);
+                        result.push(asset);
                     }
                 }
             }
@@ -509,7 +562,7 @@
         }
         getImageAssets(options) {
             var _a;
-            let saveAs, preserveCrossOrigin;
+            let preserveCrossOrigin, saveAs;
             if (options) {
                 preserveCrossOrigin = options.preserveCrossOrigin;
                 saveAs = (_a = options.saveAs) === null || _a === void 0 ? void 0 : _a.base64;
@@ -518,8 +571,7 @@
             const processUri = (element, uri, mimeType) => {
                 uri = uri.trim();
                 if (uri !== '') {
-                    let file,
-                        saveTo = false;
+                    let file, saveTo;
                     if (element) {
                         const fileAs = parseFileAs('saveTo', element.dataset.chromeFile);
                         if (fileAs) {
@@ -530,19 +582,18 @@
                     const data = File.parseUri(uri, { preserveCrossOrigin, saveAs: file, saveTo });
                     if (this.validFile(data) && !result.find(item => item.uri === uri)) {
                         if (mimeType) {
-                            data.mimeType = file ? mimeType + ':' + data.mimeType : mimeType;
+                            data.mimeType = file && data.mimeType ? mimeType + ':' + data.mimeType : mimeType;
                         }
                         processExtensions.call(this, data, getExtensions(element));
                         result.push(data);
                         return data;
                     }
                 }
-                return undefined;
             };
             document.querySelectorAll('video').forEach(element => processUri(null, resolvePath(element.poster)));
             document.querySelectorAll('picture > source').forEach(element => {
                 for (const uri of element.srcset.trim().split(',')) {
-                    processUri(element, resolvePath(uri.split(' ')[0]));
+                    processUri(element, resolvePath(splitPairStart(uri, ' ')));
                 }
             });
             document.querySelectorAll('img, input[type=image]').forEach(element => {
@@ -552,22 +603,21 @@
                 }
             });
             document.querySelectorAll('img[srcset], picture > source[srcset]').forEach(element => {
-                const pattern = /[\s\n]*(.+?\.[^\s,]+)(\s+[\d.]+[wx]\s*)?,?/g;
-                let match;
-                while ((match = pattern.exec(element.srcset.trim()))) {
-                    processUri(element, resolvePath(match[1]));
+                RE_SRCSET.matcher(element.srcset.trim());
+                while (RE_SRCSET.find()) {
+                    processUri(element, resolvePath(RE_SRCSET.group(1)));
                 }
             });
             document.querySelectorAll('object, embed').forEach(element => {
                 const src = element.data || element.src;
                 if (src && (element.type.startsWith('image/') || parseMimeType(src).startsWith('image/'))) {
-                    processUri(element, src.trim());
+                    processUri(element, src);
                 }
             });
-            for (const uri of Resource.ASSETS.image.keys()) {
+            for (const uri of ASSETS.image.keys()) {
                 processUri(null, uri);
             }
-            for (const rawData of Resource.ASSETS.rawData.values()) {
+            for (const rawData of ASSETS.rawData.values()) {
                 if (rawData.pathname) {
                     continue;
                 } else {
@@ -577,17 +627,14 @@
                     if (base64) {
                         if (saveAs) {
                             const format = saveAs.format;
-                            if (
-                                format &&
-                                (mimeType === null || mimeType === void 0 ? void 0 : mimeType.startsWith('image/'))
-                            ) {
+                            if (format && mimeType && mimeType.startsWith('image/')) {
                                 switch (format) {
                                     case 'png':
                                     case 'jpeg':
                                     case 'bmp':
                                     case 'gif':
                                     case 'tiff':
-                                        mimeType = `@${format}:${mimeType}`;
+                                        mimeType = '@' + format + ':' + mimeType;
                                         break;
                                 }
                             }
@@ -605,7 +652,12 @@
                                 continue;
                             }
                         }
-                        data = { pathname: '__generated__/base64', filename, mimeType, base64 };
+                        data = {
+                            pathname: '__generated__/base64',
+                            filename,
+                            mimeType,
+                            base64,
+                        };
                     } else if (mimeType && rawData.content) {
                         data = {
                             pathname: `__generated__/${mimeType.split('/').pop()}`,
@@ -631,12 +683,11 @@
             return this.getRawAssets('audio', options);
         }
         getFontAssets(options) {
-            const preserveCrossOrigin = options === null || options === void 0 ? void 0 : options.preserveCrossOrigin;
+            const preserveCrossOrigin = options && options.preserveCrossOrigin;
             const result = [];
-            for (const fonts of Resource.ASSETS.fonts.values()) {
-                let i = 0;
-                while (i < fonts.length) {
-                    const url = fonts[i++].srcUrl;
+            for (const fonts of ASSETS.fonts.values()) {
+                for (let i = 0, length = fonts.length; i < length; ++i) {
+                    const url = fonts[i].srcUrl;
                     if (url) {
                         const data = File.parseUri(url, { preserveCrossOrigin });
                         if (this.validFile(data)) {
@@ -649,10 +700,10 @@
             return result;
         }
         getDataMap(options) {
-            if (options.removeUnusedStyles) {
-                return { unusedStyles: Array.from(this.application.session.unusedStyles) };
-            }
-            return undefined;
+            return {
+                unusedStyles: options.unusedStyles,
+                transpileMap: options.transpileMap,
+            };
         }
         getCopyQueryParameters(options) {
             return options.productionRelease ? '&release=1' : '';
@@ -668,7 +719,7 @@
             return false;
         }
         getRawAssets(tagName, options) {
-            const preserveCrossOrigin = options === null || options === void 0 ? void 0 : options.preserveCrossOrigin;
+            const preserveCrossOrigin = options && options.preserveCrossOrigin;
             const result = [];
             document.querySelectorAll(tagName).forEach(element => {
                 var _a;
@@ -680,26 +731,25 @@
                         element.querySelectorAll('source, track').forEach(source => resolveAssetSource(source, items));
                         break;
                 }
-                for (const [item, uri] of items.entries()) {
+                for (const data of items) {
                     const saveAs =
-                        (_a = parseFileAs('saveTo', item.dataset.chromeFile)) === null || _a === void 0
+                        (_a = parseFileAs('saveTo', data[0].dataset.chromeFile)) === null || _a === void 0
                             ? void 0
                             : _a[0];
-                    const data = File.parseUri(uri, { preserveCrossOrigin, saveAs, saveTo: !!saveAs });
-                    if (this.validFile(data)) {
-                        processExtensions.call(this, data, getExtensions(item));
-                        result.push(data);
+                    const asset = File.parseUri(data[1], { preserveCrossOrigin, saveAs, saveTo: !!saveAs });
+                    if (this.validFile(asset)) {
+                        processExtensions.call(this, asset, getExtensions(data[0]));
+                        result.push(asset);
                     }
                 }
             });
             return result;
         }
-        combineAssets(options) {
-            const result = this.getHtmlPage(options).concat(this.getLinkAssets(options));
-            if (options === null || options === void 0 ? void 0 : options.saveAsWebPage) {
-                let i = 0;
-                while (i < result.length) {
-                    const item = result[i++];
+        processAssets(options) {
+            const assets = this.getHtmlPage(options).concat(this.getLinkAssets(options));
+            if (options.saveAsWebPage) {
+                for (let i = 0, length = assets.length; i < length; ++i) {
+                    const item = assets[i];
                     const mimeType = item.mimeType;
                     switch (mimeType) {
                         case 'text/html':
@@ -710,64 +760,40 @@
                     }
                 }
             }
-            return result
-                .concat(this.getScriptAssets(options))
+            const [scriptAssets, transpileMap] = this.getScriptAssets(options);
+            options.assets = assets
+                .concat(scriptAssets)
                 .concat(this.getImageAssets(options))
                 .concat(this.getVideoAssets(options))
                 .concat(this.getAudioAssets(options))
                 .concat(this.getRawAssets('object', options))
                 .concat(this.getRawAssets('embed', options))
-                .concat(this.getFontAssets(options));
+                .concat(this.getFontAssets(options))
+                .concat(options.assets || []);
+            options.transpileMap = transpileMap;
+            return options;
         }
         get outputFileExclusions() {
-            const result = this._outputFileExclusions;
-            return result === undefined
-                ? (this._outputFileExclusions = this.userSettings.outputFileExclusions.map(value =>
-                      convertFileMatch(value)
-                  ))
-                : result;
-        }
-        get userSettings() {
-            return this.resource.userSettings;
+            return (
+                this._outputFileExclusions ||
+                (this._outputFileExclusions = this.userSettings.outputFileExclusions.map(value =>
+                    convertFileMatch(value)
+                ))
+            );
         }
         get application() {
             return this.resource.application;
         }
-    }
-
-    const getSizeRange = options =>
-        '(' +
-        Math.max(options.largerThan, 0) +
-        ',' +
-        (options.smallerThan < Infinity ? options.smallerThan : '*') +
-        ')';
-    class Extension extends squared.base.Extension {
-        static getCompressOptions(options) {
-            const result = (options.whenSmaller ? '%' : '') + getSizeRange(options);
-            return result !== '(0,*)' ? result : undefined;
-        }
-        static getConvertOptions(name, options) {
-            const opacity = options.opacity || 1;
-            let result = '';
-            if (options.replaceWith) {
-                result += '@';
-            } else if (options.whenSmaller) {
-                result += '%';
-            }
-            result += getSizeRange(options);
-            return name + (result !== '(0,*)' ? result : '') + (opacity > 0 && opacity < 1 ? `|${opacity}|` : '') + ':';
-        }
-        processFile(data, override) {
-            return false;
+        get userSettings() {
+            return this.resource.userSettings;
         }
     }
 
-    const { safeNestedArray: safeNestedArray$1 } = squared.lib.util;
     class Brotli extends Extension {
         constructor() {
             super(...arguments);
             this.options = {
-                mimeTypes: [
+                mimeTypes: new Set([
                     'text/css',
                     'text/javascript',
                     'text/plain',
@@ -777,7 +803,7 @@
                     'application/javascript',
                     'application/ld+json',
                     'application/xml',
-                ],
+                ]),
                 largerThan: 0,
                 smallerThan: Infinity,
                 whenSmaller: true,
@@ -789,11 +815,11 @@
                 const mimeType = data.mimeType;
                 if (mimeType) {
                     const mimeTypes = this.options.mimeTypes;
-                    override = mimeTypes === '*' || (Array.isArray(mimeTypes) && mimeTypes.includes(mimeType));
+                    override = mimeTypes === '*' || mimeTypes.has(mimeType);
                 }
             }
             if (override) {
-                safeNestedArray$1(data, 'compress').push({
+                (data.compress || (data.compress = [])).push({
                     format: 'br',
                     level: this.options.level,
                     condition: Extension.getCompressOptions(this.options),
@@ -804,12 +830,11 @@
         }
     }
 
-    const { safeNestedArray: safeNestedArray$2 } = squared.lib.util;
     class Gzip extends Extension {
         constructor() {
             super(...arguments);
             this.options = {
-                mimeTypes: [
+                mimeTypes: new Set([
                     'text/css',
                     'text/javascript',
                     'text/plain',
@@ -819,7 +844,7 @@
                     'application/javascript',
                     'application/ld+json',
                     'application/xml',
-                ],
+                ]),
                 largerThan: 0,
                 smallerThan: Infinity,
                 whenSmaller: true,
@@ -831,11 +856,11 @@
                 const mimeType = data.mimeType;
                 if (mimeType) {
                     const mimeTypes = this.options.mimeTypes;
-                    override = mimeTypes === '*' || (Array.isArray(mimeTypes) && mimeTypes.includes(mimeType));
+                    override = mimeTypes === '*' || mimeTypes.has(mimeType);
                 }
             }
             if (override) {
-                safeNestedArray$2(data, 'compress').push({
+                (data.compress || (data.compress = [])).push({
                     format: 'gz',
                     level: this.options.level,
                     condition: Extension.getCompressOptions(this.options),
@@ -846,12 +871,12 @@
         }
     }
 
-    const { safeNestedArray: safeNestedArray$3 } = squared.lib.util;
+    const { findSet } = squared.lib.util;
     class Jpeg extends Extension {
         constructor() {
             super(...arguments);
             this.options = {
-                mimeTypes: ['image/jpeg'],
+                mimeTypes: new Set(['image/jpeg']),
                 largerThan: 0,
                 smallerThan: Infinity,
                 whenSmaller: true,
@@ -865,12 +890,13 @@
                     const mimeTypes = this.options.mimeTypes;
                     override =
                         mimeType.includes('jpeg:') ||
-                        (mimeTypes === '*' && mimeType.includes('image/')) ||
-                        (Array.isArray(mimeTypes) && !!mimeTypes.find(value => mimeType.endsWith(value)));
+                        (mimeTypes === '*'
+                            ? mimeType.includes('image/')
+                            : !!findSet(mimeTypes, value => mimeType.endsWith(value)));
                 }
             }
             if (override) {
-                safeNestedArray$3(data, 'compress').push(
+                (data.compress || (data.compress = [])).push(
                     { format: 'png', condition: Extension.getCompressOptions(this.options) },
                     { format: 'jpeg', level: this.options.level }
                 );
@@ -880,12 +906,12 @@
         }
     }
 
-    const { safeNestedArray: safeNestedArray$4 } = squared.lib.util;
+    const { findSet: findSet$1 } = squared.lib.util;
     class Png extends Extension {
         constructor() {
             super(...arguments);
             this.options = {
-                mimeTypes: ['image/png'],
+                mimeTypes: new Set(['image/png']),
                 largerThan: 0,
                 smallerThan: Infinity,
                 whenSmaller: true,
@@ -897,13 +923,13 @@
                 if (mimeType) {
                     const mimeTypes = this.options.mimeTypes;
                     override =
-                        mimeType.includes('png:') ||
-                        (mimeTypes === '*' && mimeType.includes('image/')) ||
-                        (Array.isArray(mimeTypes) && !!mimeTypes.find(value => mimeType.endsWith(value)));
+                        mimeType.includes('png:') || mimeTypes === '*'
+                            ? mimeType.includes('image/')
+                            : !!findSet$1(mimeTypes, value => mimeType.endsWith(value));
                 }
             }
             if (override) {
-                safeNestedArray$4(data, 'compress').push({
+                (data.compress || (data.compress = [])).push({
                     format: 'png',
                     condition: Extension.getCompressOptions(this.options),
                 });
@@ -913,11 +939,12 @@
         }
     }
 
+    const { findSet: findSet$2 } = squared.lib.util;
     class Bmp extends Extension {
         constructor() {
             super(...arguments);
             this.options = {
-                mimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/tiff'],
+                mimeTypes: new Set(['image/png', 'image/jpeg', 'image/gif', 'image/tiff']),
                 largerThan: 0,
                 smallerThan: Infinity,
                 whenSmaller: false,
@@ -926,22 +953,24 @@
         }
         processFile(data, override) {
             const mimeType = data.mimeType;
-            if (mimeType && !/bmp[(%@:]/.test(mimeType)) {
-                const mimeTypes = this.options.mimeTypes;
-                if (override || (Array.isArray(mimeTypes) && mimeTypes.find(value => mimeType.endsWith(value)))) {
-                    data.mimeType = Extension.getConvertOptions('bmp', this.options) + mimeType;
-                    return true;
-                }
+            if (
+                mimeType &&
+                !/bmp[(%@:]/.test(mimeType) &&
+                (override || findSet$2(this.options.mimeTypes, value => mimeType.endsWith(value)))
+            ) {
+                data.mimeType = Extension.getConvertOptions('bmp', this.options) + mimeType;
+                return true;
             }
             return false;
         }
     }
 
+    const { findSet: findSet$3 } = squared.lib.util;
     class Jpeg$1 extends Extension {
         constructor() {
             super(...arguments);
             this.options = {
-                mimeTypes: ['image/png', 'image/bmp', 'image/gif', 'image/tiff'],
+                mimeTypes: new Set(['image/png', 'image/bmp', 'image/gif', 'image/tiff']),
                 largerThan: 0,
                 smallerThan: Infinity,
                 whenSmaller: false,
@@ -950,22 +979,24 @@
         }
         processFile(data, override) {
             const mimeType = data.mimeType;
-            if (mimeType && !/jpeg[(%@:]/.test(mimeType)) {
-                const mimeTypes = this.options.mimeTypes;
-                if (override || (Array.isArray(mimeTypes) && mimeTypes.find(value => mimeType.endsWith(value)))) {
-                    data.mimeType = Extension.getConvertOptions('jpeg', this.options) + mimeType;
-                    return true;
-                }
+            if (
+                mimeType &&
+                !/jpeg[(%@:]/.test(mimeType) &&
+                (override || findSet$3(this.options.mimeTypes, value => mimeType.endsWith(value)))
+            ) {
+                data.mimeType = Extension.getConvertOptions('jpeg', this.options) + mimeType;
+                return true;
             }
             return false;
         }
     }
 
+    const { findSet: findSet$4 } = squared.lib.util;
     class Png$1 extends Extension {
         constructor() {
             super(...arguments);
             this.options = {
-                mimeTypes: ['image/jpeg', 'image/bmp', 'image/gif', 'image/tiff'],
+                mimeTypes: new Set(['image/jpeg', 'image/bmp', 'image/gif', 'image/tiff']),
                 largerThan: 0,
                 smallerThan: Infinity,
                 whenSmaller: false,
@@ -975,22 +1006,24 @@
         }
         processFile(data, override) {
             const mimeType = data.mimeType;
-            if (mimeType && !/png[(%@:]/.test(mimeType)) {
-                const mimeTypes = this.options.mimeTypes;
-                if (override || (Array.isArray(mimeTypes) && mimeTypes.find(value => mimeType.endsWith(value)))) {
-                    data.mimeType = Extension.getConvertOptions('png', this.options) + mimeType;
-                    return true;
-                }
+            if (
+                mimeType &&
+                !/png[(%@:]/.test(mimeType) &&
+                (override || findSet$4(this.options.mimeTypes, value => mimeType.endsWith(value)))
+            ) {
+                data.mimeType = Extension.getConvertOptions('png', this.options) + mimeType;
+                return true;
             }
             return false;
         }
     }
 
+    const { findSet: findSet$5 } = squared.lib.util;
     class Gif extends Extension {
         constructor() {
             super(...arguments);
             this.options = {
-                mimeTypes: ['image/png', 'image/jpeg', 'image/bmp', 'image/tiff'],
+                mimeTypes: new Set(['image/png', 'image/jpeg', 'image/bmp', 'image/tiff']),
                 largerThan: 0,
                 smallerThan: Infinity,
                 whenSmaller: false,
@@ -1000,22 +1033,24 @@
         }
         processFile(data, override) {
             const mimeType = data.mimeType;
-            if (mimeType && !/gif[(%@:]/.test(mimeType)) {
-                const mimeTypes = this.options.mimeTypes;
-                if (override || (Array.isArray(mimeTypes) && mimeTypes.find(value => mimeType.endsWith(value)))) {
-                    data.mimeType = Extension.getConvertOptions('gif', this.options) + mimeType;
-                    return true;
-                }
+            if (
+                mimeType &&
+                !/gif[(%@:]/.test(mimeType) &&
+                (override || findSet$5(this.options.mimeTypes, value => mimeType.endsWith(value)))
+            ) {
+                data.mimeType = Extension.getConvertOptions('gif', this.options) + mimeType;
+                return true;
             }
             return false;
         }
     }
 
+    const { findSet: findSet$6 } = squared.lib.util;
     class Tiff extends Extension {
         constructor() {
             super(...arguments);
             this.options = {
-                mimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/bmp'],
+                mimeTypes: new Set(['image/png', 'image/jpeg', 'image/gif', 'image/bmp']),
                 largerThan: 0,
                 smallerThan: Infinity,
                 whenSmaller: false,
@@ -1024,12 +1059,13 @@
         }
         processFile(data, override) {
             const mimeType = data.mimeType;
-            if (mimeType && !/tiff[(%@:]/.test(mimeType)) {
-                const mimeTypes = this.options.mimeTypes;
-                if (override || (Array.isArray(mimeTypes) && mimeTypes.find(value => mimeType.endsWith(value)))) {
-                    data.mimeType = Extension.getConvertOptions('tiff', this.options) + mimeType;
-                    return true;
-                }
+            if (
+                mimeType &&
+                !/tiff[(%@:]/.test(mimeType) &&
+                (override || findSet$6(this.options.mimeTypes, value => mimeType.endsWith(value)))
+            ) {
+                data.mimeType = Extension.getConvertOptions('tiff', this.options) + mimeType;
+                return true;
             }
             return false;
         }
@@ -1038,6 +1074,7 @@
     const settings = {
         builtInExtensions: [],
         preloadImages: false,
+        preloadFonts: false,
         excludePlainText: true,
         createElementMap: true,
         createQuerySelectorMap: true,
@@ -1048,52 +1085,28 @@
         outputArchiveFormat: 'zip',
     };
 
-    const EXT_CHROME = {
-        COMPRESS_BROTLI: 'chrome.compress.brotli',
-        COMPRESS_GZIP: 'chrome.compress.gzip',
-        COMPRESS_PNG: 'chrome.compress.png',
-        COMPRESS_JPEG: 'chrome.compress.jpeg',
-        CONVERT_PNG: 'chrome.convert.png',
-        CONVERT_JPEG: 'chrome.convert.jpeg',
-        CONVERT_BMP: 'chrome.convert.bmp',
-        CONVERT_GIF: 'chrome.convert.gif',
-        CONVERT_TIFF: 'chrome.convert.tiff',
-    };
-
-    var constant = /*#__PURE__*/ Object.freeze({
-        __proto__: null,
-        EXT_CHROME: EXT_CHROME,
-    });
-
-    const { util, session } = squared.lib;
-    const { isString: isString$1, isObject } = util;
-    const { frameworkNotInstalled } = session;
-    const framework = 4; /* CHROME */
-    let initialized = false;
-    let application;
-    let file;
+    const { DIRECTORY_NOT_PROVIDED, FRAMEWORK_NOT_INSTALLED, reject: reject$1 } = squared.lib.error;
+    const { isString: isString$1, isPlainObject: isPlainObject$1 } = squared.lib.util;
+    let application = null;
+    let file = null;
     function createAssetsOptions(assets, options, directory, filename) {
-        if (isObject(options)) {
-            const items = options.assets;
-            if (items) {
-                assets = assets.concat(items);
+        if (isPlainObject$1(options)) {
+            if (options.assets) {
+                assets = assets.concat(options.assets);
             }
         } else {
-            options = undefined;
+            options = {};
         }
-        return Object.assign(Object.assign({}, options), { assets, directory, filename });
+        return Object.assign(options, { assets, directory, filename });
     }
-    const directoryNotProvided = () => Promise.reject('Directory not provided.');
+    const checkFileName = value => value || application.userSettings.outputArchiveName;
     const appBase = {
         base: {
             Application,
-            Controller,
+            Extension,
             File,
-            Resource,
         },
-        lib: {
-            constant,
-        },
+        lib: {},
         extensions: {
             compress: {
                 Brotli: Brotli,
@@ -1116,21 +1129,22 @@
                         (file === null || file === void 0
                             ? void 0
                             : file.copying(createAssetsOptions(file.getHtmlPage(options), options, directory))) ||
-                        frameworkNotInstalled()
+                        reject$1(FRAMEWORK_NOT_INSTALLED)
                     );
                 }
-                return directoryNotProvided();
+                return reject$1(DIRECTORY_NOT_PROVIDED);
             },
             copyScriptAssets(directory, options) {
                 if (isString$1(directory)) {
                     return (
                         (file === null || file === void 0
                             ? void 0
-                            : file.copying(createAssetsOptions(file.getScriptAssets(options), options, directory))) ||
-                        frameworkNotInstalled()
+                            : file.copying(
+                                  createAssetsOptions(file.getScriptAssets(options)[0], options, directory)
+                              )) || reject$1(FRAMEWORK_NOT_INSTALLED)
                     );
                 }
-                return directoryNotProvided();
+                return reject$1(DIRECTORY_NOT_PROVIDED);
             },
             copyLinkAssets(directory, options) {
                 if (isString$1(directory)) {
@@ -1138,10 +1152,10 @@
                         (file === null || file === void 0
                             ? void 0
                             : file.copying(createAssetsOptions(file.getLinkAssets(options), options, directory))) ||
-                        frameworkNotInstalled()
+                        reject$1(FRAMEWORK_NOT_INSTALLED)
                     );
                 }
-                return directoryNotProvided();
+                return reject$1(DIRECTORY_NOT_PROVIDED);
             },
             copyImageAssets(directory, options) {
                 if (isString$1(directory)) {
@@ -1149,10 +1163,10 @@
                         (file === null || file === void 0
                             ? void 0
                             : file.copying(createAssetsOptions(file.getImageAssets(options), options, directory))) ||
-                        frameworkNotInstalled()
+                        reject$1(FRAMEWORK_NOT_INSTALLED)
                     );
                 }
-                return directoryNotProvided();
+                return reject$1(DIRECTORY_NOT_PROVIDED);
             },
             copyVideoAssets(directory, options) {
                 if (isString$1(directory)) {
@@ -1160,10 +1174,10 @@
                         (file === null || file === void 0
                             ? void 0
                             : file.copying(createAssetsOptions(file.getVideoAssets(options), options, directory))) ||
-                        frameworkNotInstalled()
+                        reject$1(FRAMEWORK_NOT_INSTALLED)
                     );
                 }
-                return directoryNotProvided();
+                return reject$1(DIRECTORY_NOT_PROVIDED);
             },
             copyAudioAssets(directory, options) {
                 if (isString$1(directory)) {
@@ -1171,10 +1185,10 @@
                         (file === null || file === void 0
                             ? void 0
                             : file.copying(createAssetsOptions(file.getAudioAssets(options), options, directory))) ||
-                        frameworkNotInstalled()
+                        reject$1(FRAMEWORK_NOT_INSTALLED)
                     );
                 }
-                return directoryNotProvided();
+                return reject$1(DIRECTORY_NOT_PROVIDED);
             },
             copyFontAssets(directory, options) {
                 if (isString$1(directory)) {
@@ -1182,10 +1196,10 @@
                         (file === null || file === void 0
                             ? void 0
                             : file.copying(createAssetsOptions(file.getFontAssets(options), options, directory))) ||
-                        frameworkNotInstalled()
+                        reject$1(FRAMEWORK_NOT_INSTALLED)
                     );
                 }
-                return directoryNotProvided();
+                return reject$1(DIRECTORY_NOT_PROVIDED);
             },
             saveHtmlPage(filename, options) {
                 return (
@@ -1196,9 +1210,9 @@
                                   file.getHtmlPage(options),
                                   options,
                                   undefined,
-                                  (filename || application.userSettings.outputArchiveName) + '-html'
+                                  checkFileName(filename) + '-html'
                               )
-                          )) || frameworkNotInstalled()
+                          )) || reject$1(FRAMEWORK_NOT_INSTALLED)
                 );
             },
             saveScriptAssets(filename, options) {
@@ -1207,12 +1221,12 @@
                         ? void 0
                         : file.archiving(
                               createAssetsOptions(
-                                  file.getScriptAssets(options),
+                                  file.getScriptAssets(options)[0],
                                   options,
                                   undefined,
-                                  (filename || application.userSettings.outputArchiveName) + '-script'
+                                  checkFileName(filename) + '-script'
                               )
-                          )) || frameworkNotInstalled()
+                          )) || reject$1(FRAMEWORK_NOT_INSTALLED)
                 );
             },
             saveLinkAssets(filename, options) {
@@ -1224,9 +1238,9 @@
                                   file.getLinkAssets(options),
                                   options,
                                   undefined,
-                                  (filename || application.userSettings.outputArchiveName) + '-link'
+                                  checkFileName(filename) + '-link'
                               )
-                          )) || frameworkNotInstalled()
+                          )) || reject$1(FRAMEWORK_NOT_INSTALLED)
                 );
             },
             saveImageAssets(filename, options) {
@@ -1238,9 +1252,9 @@
                                   file.getImageAssets(options),
                                   options,
                                   undefined,
-                                  (filename || application.userSettings.outputArchiveName) + '-image'
+                                  checkFileName(filename) + '-image'
                               )
-                          )) || frameworkNotInstalled()
+                          )) || reject$1(FRAMEWORK_NOT_INSTALLED)
                 );
             },
             saveVideoAssets(filename, options) {
@@ -1252,9 +1266,9 @@
                                   file.getVideoAssets(options),
                                   options,
                                   undefined,
-                                  (filename || application.userSettings.outputArchiveName) + '-video'
+                                  checkFileName(filename) + '-video'
                               )
-                          )) || frameworkNotInstalled()
+                          )) || reject$1(FRAMEWORK_NOT_INSTALLED)
                 );
             },
             saveAudioAssets(filename, options) {
@@ -1266,9 +1280,9 @@
                                   file.getAudioAssets(options),
                                   options,
                                   undefined,
-                                  (filename || application.userSettings.outputArchiveName) + '-audio'
+                                  checkFileName(filename) + '-audio'
                               )
-                          )) || frameworkNotInstalled()
+                          )) || reject$1(FRAMEWORK_NOT_INSTALLED)
                 );
             },
             saveFontAssets(filename, options) {
@@ -1280,66 +1294,75 @@
                                   file.getFontAssets(options),
                                   options,
                                   undefined,
-                                  (filename || application.userSettings.outputArchiveName) + '-font'
+                                  checkFileName(filename) + '-font'
                               )
-                          )) || frameworkNotInstalled()
+                          )) || reject$1(FRAMEWORK_NOT_INSTALLED)
                 );
             },
         },
         create() {
-            const EC = EXT_CHROME;
             application = new Application(
-                framework,
+                4 /* CHROME */,
                 squared.base.Node,
-                Controller,
-                Resource,
-                squared.base.ExtensionManager
+                squared.base.Controller,
+                squared.base.ExtensionManager,
+                squared.base.Resource
             );
             file = new File();
             application.resourceHandler.fileHandler = file;
-            Object.assign(application.builtInExtensions, {
-                [EC.COMPRESS_BROTLI]: new Brotli(EC.COMPRESS_BROTLI, framework),
-                [EC.COMPRESS_GZIP]: new Gzip(EC.COMPRESS_GZIP, framework),
-                [EC.COMPRESS_JPEG]: new Jpeg(EC.COMPRESS_JPEG, framework),
-                [EC.COMPRESS_PNG]: new Png(EC.COMPRESS_PNG, framework),
-                [EC.CONVERT_BMP]: new Bmp(EC.CONVERT_BMP, framework),
-                [EC.CONVERT_GIF]: new Gif(EC.CONVERT_GIF, framework),
-                [EC.CONVERT_JPEG]: new Jpeg$1(EC.CONVERT_JPEG, framework),
-                [EC.CONVERT_PNG]: new Png$1(EC.CONVERT_PNG, framework),
-                [EC.CONVERT_TIFF]: new Tiff(EC.CONVERT_TIFF, framework),
-            });
-            initialized = true;
+            application.builtInExtensions = new Map([
+                [
+                    'chrome.compress.brotli' /* COMPRESS_BROTLI */,
+                    new Brotli('chrome.compress.brotli' /* COMPRESS_BROTLI */, 4 /* CHROME */),
+                ],
+                [
+                    'chrome.compress.gzip' /* COMPRESS_GZIP */,
+                    new Gzip('chrome.compress.gzip' /* COMPRESS_GZIP */, 4 /* CHROME */),
+                ],
+                [
+                    'chrome.compress.jpeg' /* COMPRESS_JPEG */,
+                    new Jpeg('chrome.compress.jpeg' /* COMPRESS_JPEG */, 4 /* CHROME */),
+                ],
+                [
+                    'chrome.compress.png' /* COMPRESS_PNG */,
+                    new Png('chrome.compress.png' /* COMPRESS_PNG */, 4 /* CHROME */),
+                ],
+                [
+                    'chrome.convert.bmp' /* CONVERT_BMP */,
+                    new Bmp('chrome.convert.bmp' /* CONVERT_BMP */, 4 /* CHROME */),
+                ],
+                [
+                    'chrome.convert.gif' /* CONVERT_GIF */,
+                    new Gif('chrome.convert.gif' /* CONVERT_GIF */, 4 /* CHROME */),
+                ],
+                [
+                    'chrome.convert.jpeg' /* CONVERT_JPEG */,
+                    new Jpeg$1('chrome.convert.jpeg' /* CONVERT_JPEG */, 4 /* CHROME */),
+                ],
+                [
+                    'chrome.convert.png' /* CONVERT_PNG */,
+                    new Png$1('chrome.convert.png' /* CONVERT_PNG */, 4 /* CHROME */),
+                ],
+                [
+                    'chrome.convert.tiff' /* CONVERT_TIFF */,
+                    new Tiff('chrome.convert.tiff' /* CONVERT_TIFF */, 4 /* CHROME */),
+                ],
+            ]);
             return {
                 application,
-                framework,
+                framework: 4 /* CHROME */,
                 userSettings: Object.assign({}, settings),
             };
         },
         cached() {
-            if (initialized) {
+            if (application) {
                 return {
                     application,
-                    framework,
+                    framework: 4 /* CHROME */,
                     userSettings: application.userSettings,
                 };
             }
-            return appBase.create();
-        },
-        saveAsWebPage: (filename, options) => {
-            if (application) {
-                options = !isObject(options) ? {} : Object.assign({}, options);
-                options.saveAsWebPage = true;
-                const settings = application.userSettings;
-                const preloadImages = settings.preloadImages;
-                settings.preloadImages = false;
-                application.reset();
-                return application.parseDocument(document.body).then(response => {
-                    file.saveToArchive(filename || application.userSettings.outputArchiveName, options);
-                    settings.preloadImages = preloadImages;
-                    return response;
-                });
-            }
-            return frameworkNotInstalled();
+            return this.create();
         },
     };
 

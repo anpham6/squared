@@ -71,14 +71,18 @@ interface IChrome {
 interface IFileManager {
     delayed: number;
     readonly files: Set<string>;
+    readonly filesQueued: Set<string>;
     readonly filesToRemove: Set<string>;
     readonly filesToCompare: Map<ExpressAsset, string[]>;
     readonly contentToAppend: Map<string, string[]>;
-    readonly assets: ExpressAsset[];
     readonly dirname: string;
+    readonly assets: ExpressAsset[];
+    readonly completeAsyncTask: (filepath?: string) => void;
     readonly requestMain?: ExpressAsset;
     add(value: string): void;
     delete(value: string): void;
+    performAsyncTask(): void;
+    removeAsyncTask(): boolean;
     replace(file: ExpressAsset, replaceWith: string): void;
     validate(file: ExpressAsset, exclusions: Exclusions): boolean;
     getFileOutput(file: ExpressAsset): { pathname: string; filepath: string };
@@ -89,10 +93,10 @@ interface IFileManager {
     appendContent(file: ExpressAsset, content: string, outputOnly?: boolean): Promise<string>;
     transformBuffer(assets: ExpressAsset[], file: ExpressAsset, filepath: string): Promise<void>;
     transformCss(file: ExpressAsset, content: string): Undef<string>;
-    compressFile(assets: ExpressAsset[], file: ExpressAsset, filepath: string): void;
-    writeBuffer(assets: ExpressAsset[], file: ExpressAsset, filepath: string): void;
+    compressFile(assets: ExpressAsset[], file: ExpressAsset, filepath: string, cached?: boolean): void;
+    writeBuffer(assets: ExpressAsset[], file: ExpressAsset, filepath: string, cached?: boolean): void;
     processAssets(empty: boolean): void;
-    finalizeAssetsAsync(release: boolean): Promise<void>;
+    finalizeAssets(release: boolean): Promise<void>;
 }
 
 interface Settings {

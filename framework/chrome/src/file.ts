@@ -677,7 +677,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     private processAssets(options: IFileActionOptions) {
-        let assets = this.getHtmlPage(options).concat(this.getLinkAssets(options));
+        const assets = this.getHtmlPage(options).concat(this.getLinkAssets(options));
         if (options.saveAsWebPage) {
             for (let i = 0, length = assets.length; i < length; ++i) {
                 const item = assets[i];

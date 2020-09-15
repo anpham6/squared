@@ -36,7 +36,7 @@ let Node: serve.INode,
     Chrome: serve.IChrome,
     Image: serve.IImage;
 
-    {
+{
     let DISK_READ = false,
         DISK_WRITE = false,
         UNC_READ = false,
@@ -615,7 +615,7 @@ let Node: serve.INode,
                             }
                         }
                         catch (err) {
-                            Node.writeFail(`External: ${module} [npm run install-chrome]`, err);
+                            Node.writeFail(`${chalk.yellow('Install required')} -> ${chalk.bold(`[npm i ${module}]`)}`, err);
                         }
                     }
                 }
@@ -674,7 +674,7 @@ let Node: serve.INode,
                             }
                         }
                         catch (err) {
-                            Node.writeFail(`External: ${module} [npm run install-chrome]`, err);
+                            Node.writeFail(`${chalk.yellow('Install required')} -> ${chalk.bold(`[npm i ${module}]`)}`, err);
                         }
                     }
                 }
@@ -745,7 +745,7 @@ let Node: serve.INode,
                             }
                         }
                         catch (err) {
-                            Node.writeFail(`External: ${module} [npm run install-chrome]`, err);
+                            Node.writeFail(`${chalk.yellow('Install required')} -> ${chalk.bold(`[npm i ${module}]`)}`, err);
                         }
                     }
                 }
@@ -882,7 +882,7 @@ let Node: serve.INode,
                     length = 0;
                 }
                 for (let i = 0; i < length; ++i) {
-                    manager.delayed++;
+                    manager.performAsyncTask();
                     jimp.read(master)
                         .then(img => {
                             const value = rotations[i];
@@ -891,16 +891,16 @@ let Node: serve.INode,
                             const output = filepath.substring(0, index) + '.' + value + filepath.substring(index);
                             img.write(output, err => {
                                 if (err) {
-                                    manager.finalize('');
+                                    manager.completeAsyncTask('');
                                     Node.writeFail(output, err);
                                 }
                                 else {
-                                    manager.finalize(output);
+                                    manager.completeAsyncTask(output);
                                 }
                             });
                         })
                         .catch(err => {
-                            manager.finalize('');
+                            manager.completeAsyncTask('');
                             Node.writeFail(master, err);
                         });
                 }
@@ -921,6 +921,7 @@ let Node: serve.INode,
 class FileManager implements serve.IFileManager {
     public delayed = 0;
     public readonly files = new Set<string>();
+    public readonly filesQueued = new Set<string>();
     public readonly filesToRemove = new Set<string>();
     public readonly filesToCompare = new Map<ExpressAsset, string[]>();
     public readonly contentToAppend = new Map<string, string[]>();
@@ -930,7 +931,7 @@ class FileManager implements serve.IFileManager {
     constructor(
         public readonly dirname: string,
         public readonly assets: ExpressAsset[],
-        public readonly finalize: (filepath?: string) => void)
+        public readonly completeAsyncTask: (filepath?: string) => void)
     {
         this.requestMain = assets.find(item => item.requestMain);
         this.dataMap = assets[0].dataMap;
@@ -941,6 +942,12 @@ class FileManager implements serve.IFileManager {
     }
     delete(value: string) {
         this.files.delete(value.substring(this.dirname.length + 1));
+    }
+    performAsyncTask() {
+        ++this.delayed;
+    }
+    removeAsyncTask() {
+        return --this.delayed === 0;
     }
     replace(file: ExpressAsset, replaceWith: string) {
         const filepath = file.filepath;
@@ -1408,19 +1415,17 @@ class FileManager implements serve.IFileManager {
                                 if (!err && resultData) {
                                     fs.writeFileSync(location, resultData);
                                 }
-                                if (filepath !== location) {
-                                    this.finalize(location);
-                                }
+                                this.completeAsyncTask(filepath !== location ? location : '');
                             });
                         }
                         catch (err) {
-                            this.finalize('');
+                            this.completeAsyncTask(filepath !== location ? location : '');
                             Node.writeFail(location, err);
                             tinify.validate();
                         }
                     };
                     if (mimeType === 'image/unknown') {
-                        ++this.delayed;
+                        this.performAsyncTask();
                         jimp.read(filepath)
                             .then(img => {
                                 const mime = img.getMIME();
@@ -1434,10 +1439,15 @@ class FileManager implements serve.IFileManager {
                                             const renameTo = this.replaceExtension(filepath, mime.split('/')[1]);
                                             fs.renameSync(filepath, renameTo);
                                             afterConvert(renameTo, '@');
-                                            this.finalize(renameTo);
+                                            if ((mime === jimp.MIME_PNG || mime === jimp.MIME_JPEG) && Image.findCompress(file.compress)) {
+                                                compressImage(renameTo);
+                                            }
+                                            else {
+                                                this.completeAsyncTask(renameTo);
+                                            }
                                         }
                                         catch (err) {
-                                            this.finalize('');
+                                            this.completeAsyncTask('');
                                             Node.writeFail(filepath, err);
                                         }
                                         break;
@@ -1445,19 +1455,24 @@ class FileManager implements serve.IFileManager {
                                         const png = this.replaceExtension(filepath, 'png');
                                         img.write(png, err => {
                                             if (err) {
-                                                this.finalize('');
+                                                this.completeAsyncTask('');
                                                 Node.writeFail(png, err);
                                             }
                                             else {
                                                 afterConvert(png, '@');
-                                                this.finalize(png);
+                                                if (Image.findCompress(file.compress)) {
+                                                    compressImage(png);
+                                                }
+                                                else {
+                                                    this.completeAsyncTask(png);
+                                                }
                                             }
                                         });
                                     }
                                 }
                             })
                             .catch(err => {
-                                this.finalize('');
+                                this.completeAsyncTask('');
                                 Node.writeFail(filepath, err);
                             });
                     }
@@ -1475,16 +1490,25 @@ class FileManager implements serve.IFileManager {
                             const setImagePath = (extension: string, saveAs?: string) => {
                                 if (mimeType.endsWith('/' + extension)) {
                                     if (!value.includes('@')) {
-                                        image = this.replaceExtension(filepath, '__copy__.' + (saveAs || extension));
+                                        let i = 1;
+                                        do {
+                                            image = this.replaceExtension(filepath, '__copy__.' + (i > 1 ? `(${i}).` : '') + (saveAs || extension));
+                                        }
+                                        while (this.filesQueued.has(image) && ++i);
                                         fs.copyFileSync(filepath, image);
                                     }
                                 }
                                 else {
-                                    image = this.replaceExtension(filepath, saveAs || extension);
+                                    let i = 1;
+                                    do {
+                                        image = this.replaceExtension(filepath, (i > 1 ? `(${i}).` : '') + (saveAs || extension));
+                                    }
+                                    while (this.filesQueued.has(image) && ++i);
                                 }
+                                this.filesQueued.add(image);
                             };
                             if (value.startsWith('png')) {
-                                ++this.delayed;
+                                this.performAsyncTask();
                                 jimp.read(filepath)
                                     .then(img => {
                                         setImagePath('png');
@@ -1499,26 +1523,27 @@ class FileManager implements serve.IFileManager {
                                         }
                                         img.write(image, err => {
                                             if (err) {
-                                                this.finalize('');
+                                                this.completeAsyncTask('');
                                                 Node.writeFail(image, err);
                                             }
                                             else {
                                                 afterConvert(image, value);
                                                 if (Image.findCompress(file.compress)) {
                                                     compressImage(image);
-                                                    return;
                                                 }
-                                                this.finalize(filepath !== image ? image : '');
+                                                else {
+                                                    this.completeAsyncTask(filepath !== image ? image : '');
+                                                }
                                             }
                                         });
                                     })
                                     .catch(err => {
-                                        this.finalize('');
+                                        this.completeAsyncTask('');
                                         Node.writeFail(filepath, err);
                                     });
                             }
                             else if (value.startsWith('jpeg')) {
-                                ++this.delayed;
+                                this.performAsyncTask();
                                 jimp.read(filepath)
                                     .then(img => {
                                         setImagePath('jpeg', 'jpg');
@@ -1531,26 +1556,27 @@ class FileManager implements serve.IFileManager {
                                         }
                                         img.write(image, err => {
                                             if (err) {
-                                                this.finalize('');
+                                                this.completeAsyncTask('');
                                                 Node.writeFail(image, err);
                                             }
                                             else {
                                                 afterConvert(image, value);
                                                 if (Image.findCompress(file.compress)) {
                                                     compressImage(image);
-                                                    return;
                                                 }
-                                                this.finalize(filepath !== image ? image : '');
+                                                else {
+                                                    this.completeAsyncTask(filepath !== image ? image : '');
+                                                }
                                             }
                                         });
                                     })
                                     .catch(err => {
-                                        this.finalize('');
+                                        this.completeAsyncTask('');
                                         Node.writeFail(filepath, err);
                                     });
                             }
                             else if (value.startsWith('bmp')) {
-                                ++this.delayed;
+                                this.performAsyncTask();
                                 jimp.read(filepath)
                                     .then(img => {
                                         setImagePath('bmp');
@@ -1565,17 +1591,17 @@ class FileManager implements serve.IFileManager {
                                         }
                                         img.write(image, err => {
                                             if (err) {
-                                                this.finalize('');
+                                                this.completeAsyncTask('');
                                                 Node.writeFail(image, err);
                                             }
                                             else {
                                                 afterConvert(image, value);
-                                                this.finalize(filepath !== image ? image : '');
+                                                this.completeAsyncTask(filepath !== image ? image : '');
                                             }
                                         });
                                     })
                                     .catch(err => {
-                                        this.finalize('');
+                                        this.completeAsyncTask('');
                                         Node.writeFail(filepath, err);
                                     });
                             }
@@ -1586,7 +1612,7 @@ class FileManager implements serve.IFileManager {
         }
         return Promise.resolve();
     }
-    compressFile(assets: ExpressAsset[], file: ExpressAsset, filepath: string) {
+    compressFile(assets: ExpressAsset[], file: ExpressAsset, filepath: string, cached?: boolean) {
         const compress = file.compress;
         const jpeg = Image.isJpeg(file, filepath) && Compress.findFormat(compress, 'jpeg');
         const resumeThread = () => {
@@ -1594,7 +1620,7 @@ class FileManager implements serve.IFileManager {
                 const gzip = Compress.findFormat(compress, 'gz');
                 const brotli = Compress.findFormat(compress, 'br');
                 if (gzip && Compress.withinSizeRange(filepath, gzip.condition)) {
-                    ++this.delayed;
+                    this.performAsyncTask();
                     let gz = `${filepath}.gz`;
                     Compress.createGzipWriteStream(filepath, gz, gzip.level)
                         .on('finish', () => {
@@ -1606,15 +1632,15 @@ class FileManager implements serve.IFileManager {
                                 }
                                 gz = '';
                             }
-                            this.finalize(gz);
+                            this.completeAsyncTask(gz);
                         })
                         .on('error', err => {
                             Node.writeFail(gz, err);
-                            this.finalize('');
+                            this.completeAsyncTask('');
                         });
                 }
                 if (brotli && Node.checkVersion(11, 7) && Compress.withinSizeRange(filepath, brotli.condition)) {
-                    ++this.delayed;
+                    this.performAsyncTask();
                     let br = `${filepath}.br`;
                     Compress.createBrotliWriteStream(filepath, br, brotli.level, file.mimeType)
                         .on('finish', () => {
@@ -1626,17 +1652,18 @@ class FileManager implements serve.IFileManager {
                                 }
                                 br = '';
                             }
-                            this.finalize(br);
+                            this.completeAsyncTask(br);
                         })
                         .on('error', err => {
                             Node.writeFail(br, err);
-                            this.finalize('');
+                            this.completeAsyncTask('');
                         });
                 }
+                this.completeAsyncTask(!cached ? filepath : '');
             });
         };
         if (jpeg && Compress.withinSizeRange(filepath, jpeg.condition)) {
-            ++this.delayed;
+            this.performAsyncTask();
             const jpg = filepath + (jpeg.condition?.includes('%') ? '.jpg' : '');
             jimp.read(filepath)
                 .then(image => {
@@ -1656,13 +1683,13 @@ class FileManager implements serve.IFileManager {
                             catch {
                             }
                         }
-                        this.finalize('');
+                        this.completeAsyncTask('');
                         resumeThread();
                     });
                 })
                 .catch(err => {
                     Node.writeFail(filepath, err);
-                    this.finalize('');
+                    this.completeAsyncTask('');
                     resumeThread();
                 });
         }
@@ -1719,7 +1746,7 @@ class FileManager implements serve.IFileManager {
             return output;
         }
     }
-    writeBuffer(assets: ExpressAsset[], file: ExpressAsset, filepath: string) {
+    writeBuffer(assets: ExpressAsset[], file: ExpressAsset, filepath: string, cached?: boolean) {
         const png = Image.findCompress(file.compress);
         if (png && Compress.withinSizeRange(filepath, png.condition)) {
             try {
@@ -1730,17 +1757,17 @@ class FileManager implements serve.IFileManager {
                     if (Image.isJpeg(file)) {
                         Compress.removeFormat(file.compress, 'jpeg');
                     }
-                    this.compressFile(assets, file, filepath);
+                    this.compressFile(assets, file, filepath, cached);
                 });
             }
             catch (err) {
-                this.compressFile(assets, file, filepath);
+                this.compressFile(assets, file, filepath, cached);
                 Node.writeFail(filepath, err);
                 tinify.validate();
             }
         }
         else {
-            this.compressFile(assets, file, filepath);
+            this.compressFile(assets, file, filepath, cached);
         }
     }
     processAssets(empty: boolean) {
@@ -1766,14 +1793,13 @@ class FileManager implements serve.IFileManager {
             }
             else if (!content) {
                 if (completed.includes(filepath)) {
-                    this.writeBuffer(assets, file, filepath);
-                    this.finalize('');
+                    this.writeBuffer(assets, file, filepath, true);
                     return true;
                 }
                 else {
                     const queue = processing[filepath];
                     if (queue) {
-                        ++this.delayed;
+                        this.performAsyncTask();
                         queue.push(file);
                         return true;
                     }
@@ -1868,30 +1894,28 @@ class FileManager implements serve.IFileManager {
                 }
                 else if (Compress.getFileSize(filepath)) {
                     this.compressFile(assets, bundleMain || file, filepath);
-                    this.finalize(filepath);
+                    this.completeAsyncTask(filepath);
                 }
                 else {
                     filepath = '';
                     (bundleMain || file).excluded = true;
-                    this.finalize(filepath);
+                    this.completeAsyncTask(filepath);
                 }
             }
             else if (Array.isArray(processing[filepath])) {
                 completed.push(filepath);
                 for (const item of processing[filepath]) {
                     if (item.excluded) {
-                        filepath = '';
+                        this.completeAsyncTask('');
                     }
                     else {
                         this.writeBuffer(assets, item, filepath);
                     }
-                    this.finalize(filepath);
                 }
                 delete processing[filepath];
             }
             else {
                 this.writeBuffer(assets, file, filepath);
-                this.finalize(filepath);
             }
         };
         const errorRequest = (file: ExpressAsset, filepath: string, message: Error | string, stream?: fs.WriteStream) => {
@@ -1901,7 +1925,7 @@ class FileManager implements serve.IFileManager {
                     processQueue(file, filepath);
                 }
                 else {
-                    this.finalize('');
+                    this.completeAsyncTask('');
                 }
                 notFound[uri] = true;
             }
@@ -1931,7 +1955,7 @@ class FileManager implements serve.IFileManager {
                     processQueue(file, filepath);
                 }
                 else {
-                    this.finalize('');
+                    this.completeAsyncTask('');
                 }
             };
             if (!emptyDir.has(pathname)) {
@@ -1958,7 +1982,7 @@ class FileManager implements serve.IFileManager {
                 if (checkQueue(file, filepath, true)) {
                     continue;
                 }
-                ++this.delayed;
+                this.performAsyncTask();
                 fs.writeFile(
                     filepath,
                     file.content,
@@ -1967,7 +1991,7 @@ class FileManager implements serve.IFileManager {
                 );
             }
             else if (file.base64) {
-                ++this.delayed;
+                this.performAsyncTask();
                 fs.writeFile(
                     filepath,
                     file.base64,
@@ -1975,11 +1999,10 @@ class FileManager implements serve.IFileManager {
                     err => {
                         if (!err) {
                             this.writeBuffer(assets, file, filepath);
-                            this.finalize(filepath);
                         }
                         else {
                             file.excluded = true;
-                            this.finalize('');
+                            this.completeAsyncTask('');
                         }
                     }
                 );
@@ -1987,23 +2010,22 @@ class FileManager implements serve.IFileManager {
             else if (file.bytes) {
                 const { width, height } = file;
                 if (width && height) {
-                    ++this.delayed;
+                    this.performAsyncTask();
                     new jimp({ width, height, data: Uint8Array.from(file.bytes) }, (err: unknown, img: jimp) => {
                         if (!err) {
                             img.write(filepath, error => {
                                 if (error) {
-                                    this.finalize('');
+                                    this.completeAsyncTask('');
                                     Node.writeFail(filepath, error);
                                 }
                                 else {
                                     this.writeBuffer(assets, file, filepath);
-                                    this.finalize(filepath);
                                 }
                             });
                         }
                         else {
                             file.excluded = true;
-                            this.finalize('');
+                            this.completeAsyncTask('');
                         }
                     });
                 }
@@ -2025,7 +2047,7 @@ class FileManager implements serve.IFileManager {
                                 processQueue(file, filepath);
                             }
                         });
-                        ++this.delayed;
+                        this.performAsyncTask();
                         request(uri)
                             .on('response', response => {
                                 const statusCode = response.statusCode;
@@ -2040,7 +2062,7 @@ class FileManager implements serve.IFileManager {
                         if (checkQueue(file, filepath)) {
                             continue;
                         }
-                        ++this.delayed;
+                        this.performAsyncTask();
                         fs.copyFile(
                             uri,
                             filepath,
@@ -2051,7 +2073,7 @@ class FileManager implements serve.IFileManager {
                         if (checkQueue(file, filepath)) {
                             continue;
                         }
-                        ++this.delayed;
+                        this.performAsyncTask();
                         fs.copyFile(
                             uri,
                             filepath,
@@ -2068,7 +2090,7 @@ class FileManager implements serve.IFileManager {
             }
         }
     }
-    finalizeAssetsAsync(release: boolean) {
+    finalizeAssets(release: boolean) {
         const filesToRemove = this.filesToRemove;
         for (const [file, output] of this.filesToCompare) {
             const originalPath = file.filepath!;
@@ -2162,8 +2184,8 @@ app.post('/api/assets/copy', (req, res) => {
                 if (filepath) {
                     this.add(filepath);
                 }
-                if (filepath === undefined || --this.delayed === 0 && cleared) {
-                    this.finalizeAssetsAsync(req.query.release === '1').then(() => {
+                if (filepath === undefined || this.removeAsyncTask() && cleared) {
+                    this.finalizeAssets(req.query.release === '1').then(() => {
                         res.json({ success: this.files.size > 0, files: Array.from(this.files) } as ResultOfFileAction);
                         this.delayed = Infinity;
                     });
@@ -2173,7 +2195,7 @@ app.post('/api/assets/copy', (req, res) => {
         try {
             manager.processAssets(req.query.empty === '1');
             if (manager.delayed === 0) {
-                manager.finalize();
+                manager.completeAsyncTask();
             }
             else {
                 cleared = true;
@@ -2233,8 +2255,8 @@ app.post('/api/assets/archive', (req, res) => {
         if (filepath) {
             this.add(filepath);
         }
-        if (filepath === undefined || --this.delayed === 0 && cleared) {
-            this.finalizeAssetsAsync(req.query.release === '1').then(() => {
+        if (filepath === undefined || this.removeAsyncTask() && cleared) {
+            this.finalizeAssets(req.query.release === '1').then(() => {
                 archive.directory(dirname, false);
                 archive.finalize();
             });
@@ -2285,7 +2307,7 @@ app.post('/api/assets/archive', (req, res) => {
             }
             manager.processAssets(false);
             if (manager.delayed === 0) {
-                manager.finalize();
+                manager.completeAsyncTask();
             }
             else {
                 cleared = true;

@@ -1,4 +1,4 @@
-/* android.widget.bottomnavigation 1.13.0
+/* android.widget.bottomnavigation 2.0.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -6,16 +6,15 @@ this.android.widget = this.android.widget || {};
 this.android.widget.bottomnavigation = (function () {
     'use strict';
 
-    const { assignEmptyValue, capitalize, iterateArray, safeNestedMap } = squared.lib.util;
-    const { createStyleAttribute, createViewAttribute } = android.lib.util;
-    const { NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
-    const { EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = android.lib.constant;
-    const { BUILD_ANDROID, CONTAINER_NODE } = android.lib.enumeration;
+    const { NODE_RESOURCE } = squared.base.lib.constant;
+    const { CONTAINER_NODE, SUPPORT_TAGNAME, SUPPORT_TAGNAME_X } = android.lib.constant;
+    const { assignEmptyValue, capitalize, iterateArray } = squared.lib.util;
+    const { createThemeAttribute, createViewAttribute } = android.lib.util;
     const Resource = android.base.Resource;
     class BottomNavigation extends squared.base.ExtensionUI {
-        constructor(name, framework, options, tagNames) {
-            super(name, framework, options, tagNames);
-            this.require('android.widget.menu' /* MENU */);
+        constructor(name, framework, options) {
+            super(name, framework, options);
+            this.require({ name: 'android.widget.menu' /* MENU */ });
         }
         processNode(node, parent) {
             const options = createViewAttribute(this.options[node.elementId]);
@@ -29,16 +28,16 @@ this.android.widget.bottomnavigation = (function () {
                 5
             );
             const controlName =
-                node.api < 29 /* Q */ ? SUPPORT_ANDROID.BOTTOM_NAVIGATION : SUPPORT_ANDROID_X.BOTTOM_NAVIGATION;
+                node.api < 29 /* Q */ ? SUPPORT_TAGNAME.BOTTOM_NAVIGATION : SUPPORT_TAGNAME_X.BOTTOM_NAVIGATION;
             node.setControlType(controlName, CONTAINER_NODE.BLOCK);
             node.exclude({ resource: NODE_RESOURCE.ASSET });
             node.render(parent);
             node.apply(
                 Resource.formatOptions(
                     options,
-                    this.application.extensionManager.optionValueAsBoolean(
-                        EXT_ANDROID.RESOURCE_STRINGS,
-                        'numberResourceValue'
+                    this.application.extensionManager.valueAsBoolean(
+                        'android.resource.strings' /* RESOURCE_STRINGS */,
+                        'numberAsResource'
                     )
                 )
             );
@@ -74,13 +73,13 @@ this.android.widget.bottomnavigation = (function () {
                     : _a.dataset['layoutName' + capitalize(this.application.systemName)];
             if (menu) {
                 const options = createViewAttribute(this.options[node.elementId]);
-                const app = safeNestedMap(options, 'app');
+                const app = options.app || (options.app = {});
                 assignEmptyValue(app, 'menu', `@menu/${menu}`);
                 node.app('menu', app.menu);
             }
         }
         setStyleTheme() {
-            const options = createStyleAttribute(this.options.resource);
+            const options = createThemeAttribute(this.options.resource);
             assignEmptyValue(options, 'name', this.application.userSettings.manifestThemeName);
             assignEmptyValue(options, 'parent', 'Theme.AppCompat.Light.DarkActionBar');
             Resource.addTheme(options);
@@ -92,7 +91,7 @@ this.android.widget.bottomnavigation = (function () {
         2 /* ANDROID */
     );
     if (squared) {
-        squared.include(bottomNavigation);
+        squared.add(bottomNavigation);
     }
 
     return bottomNavigation;

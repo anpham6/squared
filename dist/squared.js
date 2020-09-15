@@ -1,4 +1,4 @@
-/* squared 1.13.0
+/* squared 2.0.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -6,7 +6,7 @@
         ? factory(exports)
         : typeof define === 'function' && define.amd
         ? define(['exports'], factory)
-        : ((global = global || self), factory((global.squared = {})));
+        : ((global = typeof globalThis !== 'undefined' ? globalThis : global || self), factory((global.squared = {})));
 })(this, function (exports) {
     'use strict';
 
@@ -49,11 +49,11 @@
     };
     const TRANSFORM = {
         MATRIX: new RegExp(
-            `(matrix(?:3d)?)\\((${STRING.DECIMAL}),\\s+(${STRING.DECIMAL}),\\s+(${STRING.DECIMAL}),\\s+(${STRING.DECIMAL}),\\s+(${STRING.DECIMAL}),\\s+(${STRING.DECIMAL})(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?\\)`
+            `(matrix(?:3d)?)\\((${DECIMAL}),\\s+(${DECIMAL}),\\s+(${DECIMAL}),\\s+(${DECIMAL}),\\s+(${DECIMAL}),\\s+(${DECIMAL})(?:,\\s+(${DECIMAL}))?(?:,\\s+(${DECIMAL}))?(?:,\\s+(${DECIMAL}))?(?:,\\s+(${DECIMAL}))?(?:,\\s+(${DECIMAL}))?(?:,\\s+(${DECIMAL}))?(?:,\\s+(${DECIMAL}))?(?:,\\s+(${DECIMAL}))?(?:,\\s+(${DECIMAL}))?(?:,\\s+(${DECIMAL}))?\\)`
         ),
         ROTATE: new RegExp(`(rotate[XYZ]?)\\(${STRING.CSS_ANGLE}\\)`),
         SKEW: new RegExp(`(skew[XY]?)\\(${STRING.CSS_ANGLE}(?:,\\s+${STRING.CSS_ANGLE})?\\)`),
-        SCALE: new RegExp(`(scale[XYZ]?)\\((${STRING.DECIMAL})(?:,\\s+(${STRING.DECIMAL}))?\\)`),
+        SCALE: new RegExp(`(scale[XYZ]?)\\((${DECIMAL})(?:,\\s+(${DECIMAL}))?\\)`),
         TRANSLATE: new RegExp(
             `(translate[XYZ]?)\\(${STRING.LENGTH_PERCENTAGE}(?:,\\s+${STRING.LENGTH_PERCENTAGE})?\\)`
         ),
@@ -68,55 +68,22 @@
         TRANSFORM: TRANSFORM,
     });
 
-    const NUMERALS = [
-        '',
-        'C',
-        'CC',
-        'CCC',
-        'CD',
-        'D',
-        'DC',
-        'DCC',
-        'DCCC',
-        'CM',
-        '',
-        'X',
-        'XX',
-        'XXX',
-        'XL',
-        'L',
-        'LX',
-        'LXX',
-        'LXXX',
-        'XC',
-        '',
-        'I',
-        'II',
-        'III',
-        'IV',
-        'V',
-        'VI',
-        'VII',
-        'VIII',
-        'IX',
-    ];
     const CACHE_CAMELCASE = {};
+    const CACHE_HYPHENATED = {};
     const CACHE_UNDERSCORE = {};
+    const CACHE_TRIMBOTH = {};
+    const CACHE_TRIMSTRING = {};
     const REGEXP_DECIMAL = new RegExp(`^${STRING.DECIMAL}$`);
     function promisify(fn) {
         return (...args) => {
             return new Promise((resolve, reject) => {
                 try {
-                    const result = fn.call(null, ...args);
-                    resolve(result);
+                    resolve(fn.call(null, ...args));
                 } catch (err) {
                     reject(err);
                 }
             });
         };
-    }
-    function hasMimeType(formats, value) {
-        return formats === '*' || formats.includes(parseMimeType(value));
     }
     function parseMimeType(value) {
         switch (fromLastIndexOf(value.trim(), '.').toLowerCase()) {
@@ -445,7 +412,7 @@
         const pattern = /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g;
         let output = '',
             indent = startIndent,
-            ignoreIndent = false,
+            ignoreIndent,
             match;
         while ((match = pattern.exec(value))) {
             lines.push({
@@ -455,12 +422,11 @@
                 value: match[4],
             });
         }
-        const length = lines.length;
-        for (let i = 0; i < length; ++i) {
+        for (let i = 0, length = lines.length; i < length; ++i) {
             const line = lines[i];
             let previous = indent;
             if (i > 0) {
-                let single = false;
+                let single;
                 if (line.closing) {
                     --indent;
                 } else {
@@ -468,10 +434,7 @@
                     single = next.closing && line.tagName === next.tagName;
                     if (!/\/>\n*$/.exec(line.tag)) {
                         if (closeEmpty && !isString(line.value)) {
-                            if (
-                                (next === null || next === void 0 ? void 0 : next.closing) &&
-                                next.tagName === line.tagName
-                            ) {
+                            if (next && next.closing && next.tagName === line.tagName) {
                                 line.tag = line.tag.replace(/\s*>$/, ' />');
                                 ++i;
                             } else {
@@ -484,8 +447,7 @@
                     ++previous;
                 }
                 const tags = line.tag.trim().split('\n');
-                const q = tags.length;
-                for (let j = 0; j < q; ++j) {
+                for (let j = 0, q = tags.length; j < q; ++j) {
                     const partial = tags[j];
                     if (ignoreIndent) {
                         output += partial;
@@ -515,62 +477,42 @@
     }
     function capitalize(value, upper) {
         return upper === false
-            ? value.charAt(0).toLowerCase() + value.substring(1)
-            : value.charAt(0).toUpperCase() + value.substring(1).toLowerCase();
+            ? value[0].toLowerCase() + value.substring(1)
+            : value[0].toUpperCase() + value.substring(1).toLowerCase();
     }
-    function capitalizeString(value) {
-        let result;
-        const pattern = /\b([a-z].*?)\b/g;
-        let match;
-        while ((match = pattern.exec(value))) {
-            if (result === undefined) {
-                result = value.split('');
+    function convertHyphenated(value, char = '-') {
+        switch (char) {
+            case '-': {
+                const cacheData = CACHE_HYPHENATED[value];
+                if (cacheData) {
+                    return cacheData;
+                }
+                break;
             }
-            result[match.index] = match[1].charAt(0).toUpperCase();
-        }
-        return (result === null || result === void 0 ? void 0 : result.join('')) || value;
-    }
-    function lowerCaseString(value) {
-        const entities = [];
-        const pattern = /&#?[A-Za-z\d]+?;/g;
-        let match;
-        while ((match = pattern.exec(value))) {
-            entities.push(match[0]);
-        }
-        if (entities.length > 0) {
-            let result = '';
-            const segments = value.split(pattern);
-            const length = segments.length;
-            for (let i = 0; i < length; ++i) {
-                result += segments[i].toLowerCase() + (entities[i] || '');
+            case '_': {
+                const cacheData = CACHE_UNDERSCORE[value];
+                if (cacheData) {
+                    return cacheData;
+                }
+                break;
             }
-            return result;
-        }
-        return value.toLowerCase();
-    }
-    function spliceString(value, index, length) {
-        return index === 0 ? value.substring(length) : value.substring(0, index) + value.substring(index + length);
-    }
-    function convertUnderscore(value) {
-        const cacheData = CACHE_UNDERSCORE[value];
-        if (cacheData) {
-            return cacheData;
         }
         let result = value[0].toLowerCase(),
             lower = true;
-        const length = value.length;
-        let i = 1;
-        while (i < length) {
-            const ch = value.charAt(i++);
+        for (let i = 1, length = value.length; i < length; ++i) {
+            const ch = value[i];
             const upper = ch === ch.toUpperCase();
-            if (lower && upper && ch !== '_') {
-                result += '_' + ch.toLowerCase();
-            } else {
-                result += ch;
-            }
+            result += lower && upper && ch !== char ? char + ch.toLowerCase() : ch;
             lower = !upper;
         }
-        CACHE_UNDERSCORE[value] = result;
+        switch (char) {
+            case '-':
+                CACHE_HYPHENATED[value] = result;
+                break;
+            case '_':
+                CACHE_UNDERSCORE[value] = result;
+                break;
+        }
         return result;
     }
     function convertCamelCase(value, char = '-') {
@@ -586,13 +528,9 @@
             previous = '';
         const length = value.length;
         while (i < length) {
-            const ch = value.charAt(i++);
+            const ch = value[i++];
             if (ch !== char) {
-                if (previous === char) {
-                    result += ch.toUpperCase();
-                } else {
-                    result += ch;
-                }
+                result += previous === char ? ch.toUpperCase() : ch;
             }
             previous = ch;
         }
@@ -600,93 +538,31 @@
         return result;
     }
     function convertWord(value, dash) {
-        let result = '';
-        const pattern = dash ? /[a-zA-Z\d]/ : /\w/;
-        const length = value.length;
-        let i = 0;
-        while (i < length) {
-            const ch = value.charAt(i++);
-            result += pattern.test(ch) ? ch : '_';
-        }
-        return result;
+        return value.replace(dash ? /[^A-Za-z\d]+/g : /[^\w]+/g, '_');
     }
-    function convertInt(value) {
-        return parseInt(value) || 0;
+    function convertInt(value, fallback = 0) {
+        const result = parseInt(value);
+        return !isNaN(result) ? result : fallback;
     }
-    function convertFloat(value) {
-        return parseFloat(value) || 0;
-    }
-    function convertAlpha(value) {
-        if (value >= 0) {
-            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-            let result = '';
-            const length = alphabet.length;
-            while (value >= length) {
-                const base = Math.floor(value / length);
-                if (base > 1 && base <= length) {
-                    result += alphabet.charAt(base - 1);
-                    value -= base * length;
-                } else if (base > 0) {
-                    result += 'Z';
-                    value -= Math.pow(length, 2);
-                    result += convertAlpha(value);
-                    return result;
-                }
-                const index = value % length;
-                result += alphabet.charAt(index);
-                value -= index + length;
-            }
-            return alphabet.charAt(value) + result;
-        }
-        return value.toString();
-    }
-    function convertRoman(value) {
-        const digits = value.toString().split('');
-        let result = '';
-        let i = 3;
-        while (i--) {
-            result = (NUMERALS[parseInt(digits.pop()) + i * 10] || '') + result;
-        }
-        return 'M'.repeat(parseInt(digits.join(''))) + result;
-    }
-    function randomUUID(separator = '-') {
-        const alpha = '0123456789abcdef';
-        let result = '';
-        for (const length of [8, 4, 4, 4, 12]) {
-            if (result !== '') {
-                result += separator;
-            }
-            for (let i = 0; i < length; ++i) {
-                result += alpha.charAt(Math.floor(Math.random() * 16));
-            }
-        }
-        return result;
-    }
-    function formatString(value, ...params) {
-        const length = params.length;
-        let i = 0;
-        while (i < length) {
-            value = value.replace(`{${i}}`, params[i++]);
-        }
-        return value;
+    function convertFloat(value, fallback = 0) {
+        const result = parseFloat(value);
+        return !isNaN(result) ? result : fallback;
     }
     function delimitString(options, ...appending) {
+        const { value, not, remove, sort } = options;
         const length = appending.length;
-        const value = options.value;
         if (length === 1 && !value) {
             return appending[0];
         }
         const delimiter = options.delimiter || ', ';
-        const not = options.not || [];
-        const remove = options.remove || false;
         const values = value !== '' ? value.split(delimiter) : [];
         for (let i = 0; i < length; ++i) {
             const append = appending[i];
             if (append !== '') {
-                if (values.includes(not[i])) {
+                if (not && values.includes(not[i])) {
                     continue;
                 }
-                const index = values.findIndex(a => a === append);
+                const index = values.findIndex(item => item === append);
                 if (index === -1) {
                     values.push(append);
                 } else if (remove) {
@@ -694,18 +570,41 @@
                 }
             }
         }
-        if (options.sort) {
-            values.sort();
+        if (sort) {
+            values.sort(typeof sort === 'function' ? sort : undefined);
         }
         return values.join(delimiter);
+    }
+    function spliceString(value, index, length) {
+        return index === 0 ? value.substring(length) : value.substring(0, index) + value.substring(index + length);
+    }
+    function splitPair(value, char, trim) {
+        const index = value.indexOf(char);
+        if (index !== -1) {
+            const start = value.substring(0, index);
+            const end = value.substring(index + char.length);
+            return !trim ? [start, end] : [start.trim(), end.trim()];
+        }
+        return !trim ? [value, ''] : [value.trim(), ''];
+    }
+    function splitPairStart(value, char, trim) {
+        const index = value.indexOf(char);
+        const result = index !== -1 ? value.substring(0, index) : value;
+        return !trim ? result : result.trim();
+    }
+    function splitPairEnd(value, char, trim) {
+        const index = value.indexOf(char);
+        if (index !== -1) {
+            const result = value.substring(index + char.length);
+            return !trim ? result : result.trim();
+        }
+        return '';
     }
     function splitEnclosing(value, prefix, separator = '', opening = '(', closing = ')') {
         if (separator.length > 1) {
             return [];
         }
-        if (!prefix) {
-            prefix = opening;
-        }
+        prefix || (prefix = opening);
         const prefixed = prefix !== opening;
         const combined = prefixed ? prefix + opening : opening;
         const result = [];
@@ -729,8 +628,8 @@
                     if (segment !== '') {
                         appendValues(segment);
                         if (!prefixed) {
-                            const joined = result[result.length - 1];
-                            if (value.substring(index - joined.length, index + 1) === joined + prefix) {
+                            const joined = lastItemOf(result);
+                            if (joined && value.substring(index - joined.length, index + 1) === joined + prefix) {
                                 preceding = joined;
                                 --result.length;
                             }
@@ -740,9 +639,9 @@
                     result.push(segment);
                 }
             }
-            let found = false;
+            let found;
             for (let i = index + (prefixed ? prefix.length : 0) + 1, open = 1, close = 0; i < length; ++i) {
-                switch (value.charAt(i)) {
+                switch (value[i]) {
                     case opening:
                         ++open;
                         break;
@@ -753,7 +652,7 @@
                 if (open === close) {
                     if (separator) {
                         for (; i < length; ++i) {
-                            if (value.charAt(i) === separator) {
+                            if (value[i] === separator) {
                                 break;
                             }
                         }
@@ -787,6 +686,9 @@
         }
         return result;
     }
+    function lastItemOf(value) {
+        return value[value.length - 1];
+    }
     function hasBit(value, offset) {
         return (value & offset) === offset;
     }
@@ -794,7 +696,7 @@
         return REGEXP_DECIMAL.test(value);
     }
     function isString(value) {
-        return typeof value === 'string' && value.trim() !== '';
+        return typeof value === 'string' && !isEmptyString(value);
     }
     function isArray(value) {
         return Array.isArray(value) && value.length > 0;
@@ -805,15 +707,29 @@
     function isPlainObject(value) {
         return isObject(value) && (value.constructor === Object || Object.getPrototypeOf(Object(value)) === null);
     }
+    function isEmptyString(value) {
+        for (let i = 0, length = value.length; i < length; ++i) {
+            switch (value.charCodeAt(i)) {
+                case 32:
+                case 9:
+                case 10:
+                case 11:
+                case 13:
+                    continue;
+                default:
+                    return false;
+            }
+        }
+        return true;
+    }
     function isEqual(source, other) {
         if (source === other) {
             return true;
         } else if (Array.isArray(source) && Array.isArray(other)) {
             const length = source.length;
             if (length === other.length) {
-                let i = 0;
-                while (i < length) {
-                    if (source[i] !== other[i++]) {
+                for (let i = 0; i < length; ++i) {
+                    if (source[i] !== other[i]) {
                         return false;
                     }
                 }
@@ -836,56 +752,55 @@
         }
         return false;
     }
-    function includes(source, value, delimiter = ',') {
-        if (source) {
-            for (const name of source.split(delimiter)) {
-                if (name.trim() === value) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
     function cloneInstance(value) {
         return Object.assign(Object.create(Object.getPrototypeOf(value)), value);
     }
-    function cloneArray(data, result = [], object) {
-        for (let i = 0; i < data.length; ++i) {
-            const value = data[i];
-            if (Array.isArray(value)) {
-                result.push(cloneArray(value, [], object));
-            } else if (object && isPlainObject(value)) {
-                result.push(cloneObject(value, {}, true));
-            } else {
-                result.push(value);
+    function cloneObject(data, options) {
+        let target, deep;
+        if (options) {
+            ({ target, deep } = options);
+        }
+        const nested = deep ? { deep } : undefined;
+        if (Array.isArray(data)) {
+            if (!target || !Array.isArray(target)) {
+                target = [];
+            }
+            for (let i = 0, length = data.length; i < length; ++i) {
+                const value = data[i];
+                if (Array.isArray(value)) {
+                    target.push(cloneObject(value, nested));
+                } else if (deep && isPlainObject(value)) {
+                    target.push(cloneObject(value, nested));
+                } else {
+                    target.push(value);
+                }
+            }
+        } else if (isObject(data)) {
+            if (!target || !isObject(target)) {
+                target = {};
+            }
+            for (const attr in data) {
+                const value = data[attr];
+                if (Array.isArray(value)) {
+                    target[attr] = deep ? cloneObject(value, nested) : value;
+                } else if (isPlainObject(value)) {
+                    target[attr] = cloneObject(value, nested);
+                } else {
+                    target[attr] = value;
+                }
             }
         }
-        return result;
-    }
-    function cloneObject(data, result = {}, array) {
-        for (const attr in data) {
-            const value = data[attr];
-            if (Array.isArray(value)) {
-                result[attr] = array ? cloneArray(value, [], true) : value;
-            } else if (isPlainObject(value)) {
-                result[attr] = cloneObject(value, {}, array);
-            } else {
-                result[attr] = value;
-            }
-        }
-        return result;
+        return target;
     }
     function resolvePath(value, href) {
         value = value.trim();
         if (value !== '' && !FILE.PROTOCOL.test(value)) {
-            const pathname = (
-                (href === null || href === void 0 ? void 0 : href.replace(location.origin, '')) || location.pathname
-            )
+            const pathname = (href ? href.replace(location.origin, '') : location.pathname)
                 .replace(/\\/g, '/')
                 .split('/');
-            pathname.pop();
+            --pathname.length;
             value = value.replace(/\\/g, '/');
-            if (value.charAt(0) === '/') {
+            if (value[0] === '/') {
                 return location.origin + value;
             } else if (value.startsWith('../')) {
                 const trailing = [];
@@ -894,7 +809,7 @@
                         if (trailing.length === 0) {
                             pathname.pop();
                         } else {
-                            trailing.pop();
+                            --trailing.length;
                         }
                     } else {
                         trailing.push(dir);
@@ -904,16 +819,22 @@
             } else if (value.startsWith('./')) {
                 value = value.substring(2);
             }
-            return location.origin + pathname.join('/') + '/' + value;
+            return `${location.origin + pathname.join('/')}/${value}`;
         }
         return value;
     }
     function trimBoth(value, pattern) {
-        const match = new RegExp(`^(${pattern})+(.*?)\\1$`).exec(value);
+        const match = (
+            CACHE_TRIMBOTH[pattern] || (CACHE_TRIMBOTH[pattern] = new RegExp(`^(${pattern})+([\\s\\S]*?)\\1$`))
+        ).exec(value);
         return match ? match[2] : value;
     }
     function trimString(value, pattern) {
-        return trimStart(trimEnd(value, pattern), pattern);
+        const match = (
+            CACHE_TRIMSTRING[pattern] ||
+            (CACHE_TRIMSTRING[pattern] = new RegExp(`^(?:${pattern})*([\\s\\S]*?)(?:${pattern})*$`))
+        ).exec(value);
+        return match ? match[1] : value;
     }
     function trimStart(value, pattern) {
         return value.replace(new RegExp(`^(${pattern})+`), '');
@@ -921,81 +842,38 @@
     function trimEnd(value, pattern) {
         return value.replace(new RegExp(`(${pattern})+$`), '');
     }
-    function appendSeparator(preceding, value, separator = '/') {
-        preceding = preceding.trim();
-        value = value.trim();
-        switch (separator) {
-            case '\\':
-                preceding = preceding.replace(/\//g, '\\');
-                value = value.replace(/\//g, '\\');
-                break;
-            case '/':
-                preceding = preceding.replace(/\\/g, '/');
-                value = value.replace(/\\/g, '/');
-                break;
-        }
-        return (
-            preceding +
-            (preceding !== '' && value !== '' && !preceding.endsWith(separator) && !value.startsWith(separator)
-                ? separator
-                : '') +
-            value
-        );
-    }
     function fromLastIndexOf(value, ...char) {
-        for (let i = 0; i < char.length; ++i) {
-            const index = value.lastIndexOf(char[i]);
+        let i = 0;
+        while (i < char.length) {
+            const index = value.lastIndexOf(char[i++]);
             if (index !== -1) {
                 return value.substring(index + 1);
             }
         }
         return value;
     }
-    function partitionLastIndexOf(value, ...char) {
-        for (let i = 0; i < char.length; ++i) {
-            const index = value.lastIndexOf(char[i]);
-            if (index !== -1) {
-                return [value.substring(0, index), value.substring(index + 1)];
-            }
-        }
-        return ['', value];
-    }
-    function searchObject(obj, value) {
-        const result = [];
-        if (typeof value === 'object') {
-            for (const term in value) {
-                const attr = value[term];
-                if (hasValue(obj[attr])) {
-                    result.push([attr, obj[attr]]);
-                }
-            }
-        } else {
-            const search = /^\*.+\*$/.test(value)
+    function* searchObject(obj, value) {
+        const start = value[0] === '*';
+        const end = lastItemOf(value) === '*';
+        const search =
+            start && end
                 ? a => a.includes(value.replace(/^\*/, '').replace(/\*$/, ''))
-                : value.startsWith('*')
+                : start
                 ? a => a.endsWith(value.replace(/^\*/, ''))
-                : value.endsWith('*')
+                : end
                 ? a => a.startsWith(value.replace(/\*$/, ''))
                 : a => a === value;
-            for (const i in obj) {
-                if (search(i)) {
-                    result.push([i, obj[i]]);
-                }
+        for (const attr in obj) {
+            if (search(attr)) {
+                yield attr;
             }
         }
-        return result;
     }
     function hasValue(value) {
         return value !== undefined && value !== null && value !== '';
     }
     function withinRange(a, b, offset = 1) {
         return b >= a - offset && b <= a + offset;
-    }
-    function aboveRange(a, b, offset = 1) {
-        return a + offset > b;
-    }
-    function belowRange(a, b, offset = 1) {
-        return a - offset < b;
     }
     function assignEmptyProperty(dest, source) {
         for (const attr in source) {
@@ -1008,8 +886,8 @@
     function assignEmptyValue(dest, ...attrs) {
         const length = attrs.length;
         if (length > 1) {
-            let current = dest;
-            let i = 0;
+            let current = dest,
+                i = 0;
             do {
                 const name = attrs[i];
                 const value = current[name];
@@ -1034,7 +912,7 @@
         }
     }
     function sortNumber(values, ascending = true) {
-        return ascending ? values.sort((a, b) => (a < b ? -1 : 1)) : values.sort((a, b) => (a > b ? -1 : 1));
+        return ascending ? values.sort((a, b) => a - b) : values.sort((a, b) => b - a);
     }
     function findSet(list, predicate) {
         let i = 0;
@@ -1043,62 +921,56 @@
                 return item;
             }
         }
-        return undefined;
     }
-    function safeNestedArray(list, index) {
-        let result = list[index];
-        if (result === undefined || result === null) {
-            result = [];
-            list[index] = result;
+    function sortByArray(list, ...attrs) {
+        let length = attrs.length,
+            ascending = attrs[length - 1];
+        if (typeof ascending === 'boolean') {
+            length = --attrs.length;
+        } else {
+            ascending = true;
         }
-        return result;
-    }
-    function safeNestedMap(map, index) {
-        let result = map[index];
-        if (result === undefined || result === null) {
-            result = {};
-            map[index] = result;
-        }
-        return result;
-    }
-    function sortArray(list, ascending, ...attrs) {
         return list.sort((a, b) => {
-            for (let i = 0; i < attrs.length; ++i) {
-                let valueA = a,
-                    valueB = b;
-                for (const name of attrs[i].split('.')) {
+            let valueA = a,
+                valueB = b;
+            for (let i = 0; i < length; ++i) {
+                const attr = attrs[i];
+                if (typeof attr !== 'string') {
+                    continue;
+                }
+                for (const name of attr.split('.')) {
                     const vA = valueA[name];
                     const vB = valueB[name];
-                    if (vA !== undefined && vB !== undefined) {
+                    const oA = vA !== undefined && vA !== null;
+                    const oB = vB !== undefined && vB !== null;
+                    if (oA && oB) {
                         valueA = vA;
                         valueB = vB;
-                    } else if (vA === undefined && vB === undefined) {
+                    } else if (!oA && !oB) {
                         return 0;
-                    } else if (vA !== undefined) {
-                        return -1;
+                    } else if (oA) {
+                        return ascending ? -1 : 1;
                     } else {
-                        return 1;
+                        return ascending ? 1 : -1;
                     }
                 }
-                if (valueA !== valueB) {
-                    if (ascending) {
-                        return valueA > valueB ? 1 : -1;
-                    } else {
-                        return valueA < valueB ? -1 : 1;
-                    }
+            }
+            if (valueA !== valueB && typeof valueA !== 'object' && typeof valueB !== 'object') {
+                if (ascending) {
+                    return valueA < valueB ? -1 : 1;
+                } else {
+                    return valueA > valueB ? -1 : 1;
                 }
             }
             return 0;
         });
     }
-    function flatArray(list, depth = 0, current = 0) {
+    function flatArray(list, depth = 1, current = 0) {
         let result = [];
-        const length = list.length;
-        let i = 0;
-        while (i < length) {
-            const item = list[i++];
+        for (let i = 0, length = list.length; i < length; ++i) {
+            const item = list[i];
             if (current < depth && Array.isArray(item)) {
-                if (item.length > 0) {
+                if (item.length) {
                     result = result.concat(flatArray(item, depth, current + 1));
                 }
             } else if (item !== undefined && item !== null) {
@@ -1127,12 +999,11 @@
         const length = list.length;
         const valid = new Array(length);
         const invalid = new Array(length);
-        let i = 0,
-            j = 0,
+        let j = 0,
             k = 0;
-        while (i < length) {
+        for (let i = 0; i < length; ++i) {
             const item = list[i];
-            if (predicate(item, i++, list)) {
+            if (predicate(item, i, list)) {
                 valid[j++] = item;
             } else {
                 invalid[k++] = item;
@@ -1144,7 +1015,7 @@
     }
     function sameArray(list, predicate) {
         const length = list.length;
-        if (length > 0) {
+        if (length) {
             let baseValue;
             for (let i = 0; i < length; ++i) {
                 const value = predicate(list[i], i, list);
@@ -1158,25 +1029,19 @@
         }
         return false;
     }
-    function joinArray(list, predicate, char = '\n', trailing = true) {
+    function joinArray(list, predicate, char = '') {
         let result = '';
-        const length = list.length;
-        let i = 0;
-        while (i < length) {
-            const value = predicate(list[i], i++, list);
+        for (let i = 0, length = list.length; i < length; ++i) {
+            const value = predicate(list[i], i, list);
             if (value !== '') {
-                result += value + char;
+                result += (result !== '' ? char : '') + value;
             }
         }
-        return trailing ? result : result.substring(0, result.length - char.length);
+        return result;
     }
     function iterateArray(list, predicate, start = 0, end = Infinity) {
-        start = Math.max(start, 0);
-        const length = Math.min(list.length, end);
-        let i = start;
-        while (i < length) {
-            const item = list[i];
-            const result = predicate(item, i++, list);
+        for (let i = Math.max(start, 0), length = Math.min(list.length, end); i < length; ++i) {
+            const result = predicate(list[i], i, list);
             if (result === true) {
                 return Infinity;
             }
@@ -1185,43 +1050,25 @@
     }
     function iterateReverseArray(list, predicate, start = 0, end = Infinity) {
         start = Math.max(start, 0);
-        const length = Math.min(list.length, end);
-        let i = length - 1;
-        while (i >= start) {
-            const item = list[i];
-            const result = predicate(item, i--, list);
+        for (let i = Math.min(list.length, end) - 1; i >= start; --i) {
+            const result = predicate(list[i], i, list);
             if (result === true) {
                 return Infinity;
             }
         }
         return length;
     }
-    function conditionArray(list, predicate, callback) {
-        const length = list.length;
-        for (let i = 0; i < length; ++i) {
-            const item = list[i];
-            if (predicate(item, i, list)) {
-                const value = callback(item, i, list);
-                if (value === false) {
-                    break;
-                }
-            }
-        }
-    }
     function replaceMap(list, predicate) {
-        const length = list.length;
-        let i = 0;
-        while (i < length) {
-            list[i] = predicate(list[i], i++, list);
+        for (let i = 0, length = list.length; i < length; ++i) {
+            list[i] = predicate(list[i], i, list);
         }
         return list;
     }
     function plainMap(list, predicate) {
         const length = list.length;
         const result = new Array(length);
-        let i = 0;
-        while (i < length) {
-            result[i] = predicate(list[i], i++, list);
+        for (let i = 0; i < length; ++i) {
+            result[i] = predicate(list[i], i, list);
         }
         return result;
     }
@@ -1229,57 +1076,47 @@
     var util = /*#__PURE__*/ Object.freeze({
         __proto__: null,
         promisify: promisify,
-        hasMimeType: hasMimeType,
         parseMimeType: parseMimeType,
         fromMimeType: fromMimeType,
         formatXml: formatXml,
         hasKeys: hasKeys,
         capitalize: capitalize,
-        capitalizeString: capitalizeString,
-        lowerCaseString: lowerCaseString,
-        spliceString: spliceString,
-        convertUnderscore: convertUnderscore,
+        convertHyphenated: convertHyphenated,
         convertCamelCase: convertCamelCase,
         convertWord: convertWord,
         convertInt: convertInt,
         convertFloat: convertFloat,
-        convertAlpha: convertAlpha,
-        convertRoman: convertRoman,
-        randomUUID: randomUUID,
-        formatString: formatString,
         delimitString: delimitString,
+        spliceString: spliceString,
+        splitPair: splitPair,
+        splitPairStart: splitPairStart,
+        splitPairEnd: splitPairEnd,
         splitEnclosing: splitEnclosing,
+        lastItemOf: lastItemOf,
         hasBit: hasBit,
         isNumber: isNumber,
         isString: isString,
         isArray: isArray,
         isObject: isObject,
         isPlainObject: isPlainObject,
+        isEmptyString: isEmptyString,
         isEqual: isEqual,
-        includes: includes,
         cloneInstance: cloneInstance,
-        cloneArray: cloneArray,
         cloneObject: cloneObject,
         resolvePath: resolvePath,
         trimBoth: trimBoth,
         trimString: trimString,
         trimStart: trimStart,
         trimEnd: trimEnd,
-        appendSeparator: appendSeparator,
         fromLastIndexOf: fromLastIndexOf,
-        partitionLastIndexOf: partitionLastIndexOf,
         searchObject: searchObject,
         hasValue: hasValue,
         withinRange: withinRange,
-        aboveRange: aboveRange,
-        belowRange: belowRange,
         assignEmptyProperty: assignEmptyProperty,
         assignEmptyValue: assignEmptyValue,
         sortNumber: sortNumber,
         findSet: findSet,
-        safeNestedArray: safeNestedArray,
-        safeNestedMap: safeNestedMap,
-        sortArray: sortArray,
+        sortByArray: sortByArray,
         flatArray: flatArray,
         spliceArray: spliceArray,
         partitionArray: partitionArray,
@@ -1287,20 +1124,17 @@
         joinArray: joinArray,
         iterateArray: iterateArray,
         iterateReverseArray: iterateReverseArray,
-        conditionArray: conditionArray,
         replaceMap: replaceMap,
         plainMap: plainMap,
     });
 
     function isPlatform(value) {
         const platform = navigator.platform.toLowerCase();
-        if (typeof value === 'string') {
-            return platform.includes(value.toLowerCase());
-        }
-        return (
-            (hasBit(value, 1 /* WINDOWS */) && platform.includes('win')) ||
-            (hasBit(value, 2 /* MAC */) && /(mac|iphone|ipad|ipod)/.test(platform))
-        );
+        return typeof value === 'string'
+            ? platform.includes(value.toLowerCase())
+            : (hasBit(value, 1 /* WINDOWS */) && platform.includes('win')) ||
+                  (hasBit(value, 2 /* MAC */) && /(mac|iphone|ipad|ipod)/.test(platform)) ||
+                  (hasBit(value, 4 /* LINUX */) && platform.includes('linux'));
     }
     function isUserAgent(value) {
         const userAgent = navigator.userAgent;
@@ -1313,18 +1147,18 @@
             client = 8 /* EDGE */;
         }
         if (typeof value === 'string') {
-            const name = value.toUpperCase();
+            const name = value.toLowerCase();
             value = 0;
-            if (name.includes('CHROME')) {
+            if (name.includes('chrome')) {
                 value |= 1 /* CHROME */;
             }
-            if (name.includes('SAFARI')) {
+            if (name.includes('safari')) {
                 value |= 2 /* SAFARI */;
             }
-            if (name.includes('FIREFOX')) {
+            if (name.includes('firefox')) {
                 value |= 4 /* FIREFOX */;
             }
-            if (name.includes('EDGE')) {
+            if (name.includes('edge')) {
                 value |= 8 /* EDGE */;
             }
         }
@@ -1341,16 +1175,12 @@
         getDeviceDPI: getDeviceDPI,
     });
 
-    const REGEXP_TRUNCATECACHE = {};
+    const REGEXP_DECIMALNOTAION = /^(-?\d+\.\d+)e(-?\d+)$/;
+    const REGEXP_FRACTION = /^(-?\d+)\.(\d*?)(0{5,}|9{5,})\d*$/;
+    const REGEXP_TRAILINGZERO = /\.(\d*?)(0+)$/;
     function convertDecimalNotation(value) {
-        const match = /^(-?\d+\.\d+)e(-?\d+)$/.exec(value.toString());
+        const match = REGEXP_DECIMALNOTAION.exec(value.toString());
         return match ? (parseInt(match[2]) > 0 ? Number.MAX_SAFE_INTEGER.toString() : '0') : value.toString();
-    }
-    function minArray(list) {
-        return Math.min.apply(null, list);
-    }
-    function maxArray(list) {
-        return Math.max.apply(null, list);
     }
     function equal(a, b, precision = 5) {
         precision += Math.floor(a).toString().length;
@@ -1374,16 +1204,15 @@
             (value < 0 && value >= -1 / Math.pow(10, precision))
         ) {
             return '0';
-        } else {
-            if (base !== 0) {
-                precision += base.toString().length;
-            }
-            return truncateTrailingZero(value.toPrecision(precision));
         }
+        if (base !== 0) {
+            precision += base.toString().length;
+        }
+        return truncateTrailingZero(value.toPrecision(precision));
     }
     function truncateFraction(value) {
         if (value !== Math.floor(value)) {
-            const match = /^(-?\d+)\.(\d*?)(0{5,}|9{5,})\d*$/.exec(convertDecimalNotation(value));
+            const match = REGEXP_FRACTION.exec(convertDecimalNotation(value));
             if (match) {
                 const trailing = match[2];
                 if (trailing === '') {
@@ -1396,26 +1225,8 @@
         return value;
     }
     function truncateTrailingZero(value) {
-        const match = /\.(\d*?)(0+)$/.exec(value);
+        const match = REGEXP_TRAILINGZERO.exec(value);
         return match ? value.substring(0, value.length - match[match[1] ? 2 : 0].length) : value;
-    }
-    function truncateString(value, precision = 3) {
-        let pattern = REGEXP_TRUNCATECACHE[precision];
-        if (!pattern) {
-            pattern = new RegExp(`(-?\\d+\\.\\d{${precision}})(\\d)\\d*`, 'g');
-            REGEXP_TRUNCATECACHE[precision] = pattern;
-        }
-        let output = value,
-            match;
-        while ((match = pattern.exec(value))) {
-            let trailing = match[1];
-            if (parseInt(match[2]) >= 5) {
-                trailing = truncateFraction(parseFloat(trailing) + 1 / Math.pow(10, precision)).toString();
-            }
-            output = output.replace(match[0], truncateTrailingZero(trailing));
-        }
-        pattern.lastIndex = 0;
-        return output;
     }
     function convertRadian(value) {
         return (value * Math.PI) / 180;
@@ -1456,27 +1267,25 @@
     function multipleOf(values, min = 0, offset) {
         const length = values.length;
         if (length > 1) {
-            const increment = minArray(values);
-            if ((offset === null || offset === void 0 ? void 0 : offset.length) === length) {
-                let i = 0;
-                while (i < length) {
-                    min = Math.max(min, offset[i] + values[i++]);
+            const increment = Math.min(...values);
+            if (offset && offset.length === length) {
+                for (let i = 0; i < length; ++i) {
+                    min = Math.max(min, offset[i] + values[i]);
                 }
             } else {
-                offset = undefined;
+                offset = null;
                 min = Math.max(min, increment);
             }
             let value = 0;
             while (value < min) {
                 value += increment;
             }
-            const start = (offset === null || offset === void 0 ? void 0 : offset[0]) || 0;
-            let valid = false;
+            const start = (offset && offset[0]) || 0;
+            let valid;
             while (!valid) {
                 const total = start + value;
-                let i = 1;
-                while (i < length) {
-                    const multiple = (offset ? offset[i] : 0) + values[i++];
+                for (let i = 1; i < length; ++i) {
+                    const multiple = (offset ? offset[i] : 0) + values[i];
                     if (total % multiple === 0) {
                         valid = true;
                     } else {
@@ -1511,9 +1320,8 @@
     }
     function factorial(value) {
         let result = 2;
-        let i = 3;
-        while (i <= value) {
-            result *= i++;
+        for (let i = 3; i <= value; ++i) {
+            result *= i;
         }
         return result;
     }
@@ -1523,15 +1331,12 @@
 
     var math = /*#__PURE__*/ Object.freeze({
         __proto__: null,
-        minArray: minArray,
-        maxArray: maxArray,
         equal: equal,
         moreEqual: moreEqual,
         lessEqual: lessEqual,
         truncate: truncate,
         truncateFraction: truncateFraction,
         truncateTrailingZero: truncateTrailingZero,
-        truncateString: truncateString,
         convertRadian: convertRadian,
         triangulate: triangulate,
         absoluteAngle: absoluteAngle,
@@ -2433,6 +2238,7 @@
         },
     ];
     const CACHE_COLORDATA = {};
+    const CACHE_COLORRESULT = new Map();
     function hue2rgb(t, p, q) {
         if (t < 0) {
             t += 1;
@@ -2451,16 +2257,13 @@
     const convertOpacity = value => parseFloat(value) / (value.includes('%') ? 100 : 1);
     const clampOpacity = value => clamp(value) * 255;
     function findColorName(value) {
-        value = value.toLowerCase();
-        const length = COLOR_CSS3.length;
-        let i = 0;
-        while (i < length) {
-            const color = COLOR_CSS3[i++];
-            if (color.key === value) {
-                return color;
+        if (CACHE_COLORRESULT.size === 0) {
+            for (let i = 0, length = COLOR_CSS3.length; i < length; ++i) {
+                const color = COLOR_CSS3[i];
+                CACHE_COLORRESULT.set(color.key, color);
             }
         }
-        return undefined;
+        return CACHE_COLORRESULT.get(value.toLowerCase());
     }
     function findColorShade(value) {
         const rgba = parseRGBA(value);
@@ -2468,10 +2271,8 @@
             const hsl = convertHSLA(rgba);
             const result = [];
             let baseline = -1;
-            const length = COLOR_CSS3.length;
-            let i = 0;
-            while (i < length) {
-                const color = COLOR_CSS3[i++];
+            for (let i = 0, length = COLOR_CSS3.length; i < length; ++i) {
+                const color = COLOR_CSS3[i];
                 if (color.value === value) {
                     return color;
                 } else if (baseline !== -1) {
@@ -2483,14 +2284,14 @@
                     baseline = color.hsl.h;
                 }
             }
-            const q = result.length;
-            if (q === 1) {
+            const length = result.length;
+            if (length === 1) {
                 return result[0];
-            } else if (q > 1) {
+            } else if (length > 1) {
                 const total = hsl.l + hsl.s;
                 let nearest = Infinity,
                     index = -1;
-                for (i = 0; i < q; ++i) {
+                for (let i = 0; i < length; ++i) {
                     const { l, s } = result[i].hsl;
                     const offset = Math.abs(total - (l + s));
                     if (offset < nearest) {
@@ -2499,11 +2300,9 @@
                     }
                 }
                 return result[index];
-            } else {
-                return COLOR_CSS3[COLOR_CSS3.length - 1];
             }
+            return COLOR_CSS3[COLOR_CSS3.length - 1];
         }
-        return undefined;
     }
     function parseColor(value, opacity = 1, transparency) {
         if (value && (value !== 'transparent' || transparency)) {
@@ -2513,7 +2312,7 @@
             }
             let key = '',
                 rgba;
-            if (value.charAt(0) === '#') {
+            if (value[0] === '#') {
                 rgba = parseRGBA(value);
             } else {
                 let match = CSS.RGBA.exec(value);
@@ -2548,6 +2347,8 @@
                                 if (color) {
                                     rgba = Object.assign(Object.assign({}, color.rgb), { a: clampOpacity(opacity) });
                                     key = value;
+                                } else {
+                                    rgba = null;
                                 }
                                 break;
                             }
@@ -2584,7 +2385,7 @@
                 }
             }
         }
-        return undefined;
+        return null;
     }
     function reduceRGBA(value, percent, cacheName) {
         if (cacheName) {
@@ -2620,15 +2421,14 @@
     }
     function getHexCode(...values) {
         let output = '';
-        let i = 0;
-        while (i < values.length) {
-            const rgb = Math.max(0, Math.min(values[i++], 255));
+        for (let i = 0, length = values.length; i < length; ++i) {
+            const rgb = Math.max(0, Math.min(values[i], 255));
             output += isNaN(rgb) ? '00' : STRING_HEX.charAt((rgb - (rgb % 16)) / 16) + STRING_HEX.charAt(rgb % 16);
         }
         return output;
     }
     function convertHex(value) {
-        return '#' + getHexCode(value.r, value.g, value.b) + (value.a < 255 ? getHexCode(value.a) : '');
+        return `#${getHexCode(value.r, value.g, value.b) + (value.a < 255 ? getHexCode(value.a) : '')}`;
     }
     function parseRGBA(value) {
         if (CSS.HEX.test(value)) {
@@ -2636,12 +2436,12 @@
             let a = 255;
             switch (value.length) {
                 case 4:
-                    a = parseInt(value.charAt(3).repeat(2), 16);
+                    a = parseInt(value[3].repeat(2), 16);
                 case 3:
-                    value = value.charAt(0).repeat(2) + value.charAt(1).repeat(2) + value.charAt(2).repeat(2);
+                    value = value[0].repeat(2) + value[1].repeat(2) + value[2].repeat(2);
                     break;
                 case 5:
-                    value += value.charAt(4);
+                    value += value[4];
                     break;
                 default:
                     if (value.length >= 8) {
@@ -2659,7 +2459,7 @@
                 };
             }
         }
-        return undefined;
+        return null;
     }
     function convertHSLA(value) {
         const r = value.r / 255;
@@ -2720,18 +2520,14 @@
         return { r, g, b, a };
     }
     function formatRGBA(value) {
-        return (
-            `rgb${value.a < 255 ? 'a' : ''}(${value.r}, ${value.g}, ${value.b}` +
-            (value.a < 255 ? ', ' + (value.a / 255).toPrecision(2) : '') +
-            ')'
-        );
+        return `rgb${
+            value.a < 255 ? 'a' : ''
+        }(${value.r}, ${value.g}, ${value.b + (value.a < 255 ? ', ' + (value.a / 255).toPrecision(2) : '')})`;
     }
     function formatHSLA(value) {
-        return (
-            `hsl${value.a < 255 ? 'a' : ''}(${value.h}, ${value.s}%, ${value.l}%` +
-            (value.a < 255 ? ', ' + (value.a / 255).toPrecision(2) : '') +
-            ')'
-        );
+        return `hsl${
+            value.a < 255 ? 'a' : ''
+        }(${value.h}, ${value.s}%, ${value.l}%${value.a < 255 ? ', ' + (value.a / 255).toPrecision(2) : ''})`;
     }
 
     var color = /*#__PURE__*/ Object.freeze({
@@ -2749,20 +2545,137 @@
         formatHSLA: formatHSLA,
     });
 
+    var PLATFORM;
+    (function (PLATFORM) {
+        PLATFORM[(PLATFORM['WINDOWS'] = 1)] = 'WINDOWS';
+        PLATFORM[(PLATFORM['MAC'] = 2)] = 'MAC';
+        PLATFORM[(PLATFORM['LINUX'] = 4)] = 'LINUX';
+    })(PLATFORM || (PLATFORM = {}));
+    var USER_AGENT;
+    (function (USER_AGENT) {
+        USER_AGENT[(USER_AGENT['CHROME'] = 1)] = 'CHROME';
+        USER_AGENT[(USER_AGENT['SAFARI'] = 2)] = 'SAFARI';
+        USER_AGENT[(USER_AGENT['FIREFOX'] = 4)] = 'FIREFOX';
+        USER_AGENT[(USER_AGENT['EDGE'] = 8)] = 'EDGE';
+    })(USER_AGENT || (USER_AGENT = {}));
+    var CSS_UNIT;
+    (function (CSS_UNIT) {
+        CSS_UNIT[(CSS_UNIT['NONE'] = 0)] = 'NONE';
+        CSS_UNIT[(CSS_UNIT['LENGTH'] = 1)] = 'LENGTH';
+        CSS_UNIT[(CSS_UNIT['PERCENT'] = 2)] = 'PERCENT';
+        CSS_UNIT[(CSS_UNIT['TIME'] = 4)] = 'TIME';
+        CSS_UNIT[(CSS_UNIT['ANGLE'] = 8)] = 'ANGLE';
+        CSS_UNIT[(CSS_UNIT['INTEGER'] = 16)] = 'INTEGER';
+        CSS_UNIT[(CSS_UNIT['DECIMAL'] = 32)] = 'DECIMAL';
+    })(CSS_UNIT || (CSS_UNIT = {}));
+    var CSS_TRAITS;
+    (function (CSS_TRAITS) {
+        CSS_TRAITS[(CSS_TRAITS['CALC'] = 1)] = 'CALC';
+        CSS_TRAITS[(CSS_TRAITS['SHORTHAND'] = 2)] = 'SHORTHAND';
+        CSS_TRAITS[(CSS_TRAITS['LAYOUT'] = 4)] = 'LAYOUT';
+        CSS_TRAITS[(CSS_TRAITS['CONTAIN'] = 8)] = 'CONTAIN';
+        CSS_TRAITS[(CSS_TRAITS['COLOR'] = 16)] = 'COLOR';
+        CSS_TRAITS[(CSS_TRAITS['DEPRECATED'] = 32)] = 'DEPRECATED';
+        CSS_TRAITS[(CSS_TRAITS['NONE'] = 64)] = 'NONE';
+        CSS_TRAITS[(CSS_TRAITS['AUTO'] = 128)] = 'AUTO';
+        CSS_TRAITS[(CSS_TRAITS['UNIT'] = 256)] = 'UNIT';
+    })(CSS_TRAITS || (CSS_TRAITS = {}));
+
+    var constant = /*#__PURE__*/ Object.freeze({
+        __proto__: null,
+        get PLATFORM() {
+            return PLATFORM;
+        },
+        get USER_AGENT() {
+            return USER_AGENT;
+        },
+        get CSS_UNIT() {
+            return CSS_UNIT;
+        },
+        get CSS_TRAITS() {
+            return CSS_TRAITS;
+        },
+    });
+
+    let SESSION_MAP = {};
+    newSessionInit('0');
+    function newSessionInit(value) {
+        const elementMap = new WeakMap();
+        SESSION_MAP[value] = elementMap;
+        return elementMap;
+    }
+    function resetSessionAll() {
+        SESSION_MAP = { '0': SESSION_MAP['0'] };
+    }
+    function setElementCache(element, attr, data, sessionId = '0') {
+        let elementMap = SESSION_MAP[sessionId].get(element);
+        if (!elementMap) {
+            elementMap = {};
+            SESSION_MAP[sessionId].set(element, elementMap);
+        }
+        elementMap[attr] = data;
+    }
+    function getElementCache(element, attr, sessionId) {
+        const elementMap = getElementData(element, sessionId);
+        if (elementMap) {
+            return elementMap[attr];
+        }
+    }
+    function getElementData(element, sessionId) {
+        var _a;
+        if (!sessionId) {
+            sessionId = (_a = SESSION_MAP['0'].get(element)) === null || _a === void 0 ? void 0 : _a.sessionId;
+            if (!sessionId) {
+                return;
+            }
+        }
+        return SESSION_MAP[sessionId].get(element);
+    }
+    function getElementAsNode(element, sessionId) {
+        return getElementCache(element, 'node', sessionId) || null;
+    }
+
+    var session = /*#__PURE__*/ Object.freeze({
+        __proto__: null,
+        newSessionInit: newSessionInit,
+        resetSessionAll: resetSessionAll,
+        setElementCache: setElementCache,
+        getElementCache: getElementCache,
+        getElementData: getElementData,
+        getElementAsNode: getElementAsNode,
+    });
+
+    const DOCUMENT_ELEMENT = document.documentElement;
+    const DOCUMENT_FIXEDMAP = [9 / 13, 10 / 13, 12 / 13, 16 / 13, 20 / 13, 2, 3];
+    const DOCUMENT_FIXEDSIZE = 13;
+    let DOCUMENT_FONTMAP;
+    let DOCUMENT_FONTBASE;
+    let DOCUMENT_FONTSIZE;
     const PATTERN_SIZES = `(\\(\\s*(?:orientation:\\s*(?:portrait|landscape)|(?:max|min)-width:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\))`;
     const REGEXP_LENGTH = new RegExp(`^${STRING.LENGTH}$`);
-    const REGEXP_PERCENT = new RegExp(`^${STRING.PERCENT}$`);
     const REGEXP_LENGTHPERCENTAGE = new RegExp(`^${STRING.LENGTH_PERCENTAGE}$`);
+    const REGEXP_PERCENT = new RegExp(`^${STRING.PERCENT}$`);
     const REGEXP_ANGLE = new RegExp(`^${STRING.CSS_ANGLE}$`);
     const REGEXP_TIME = new RegExp(`^${STRING.CSS_TIME}$`);
     const REGEXP_CALC = new RegExp(`^${STRING.CSS_CALC}$`);
     const REGEXP_CALCWITHIN = new RegExp(STRING.CSS_CALC);
     const REGEXP_SOURCESIZES = new RegExp(
-        `\\s*(?:(\\(\\s*)?${PATTERN_SIZES}|(\\(\\s*))?\\s*(and|or|not)?\\s*(?:${PATTERN_SIZES}(\\s*\\))?)?\\s*(.+)`
+        `\\s*(?:(?:\\(\\s*)?${PATTERN_SIZES}|(?:\\(\\s*))?\\s*(and|or|not)?\\s*(?:${PATTERN_SIZES}(?:\\s*\\))?)?\\s*(.+)`
     );
+    const REGEXP_KEYFRAMES = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
+    const REGEXP_MEDIARULE = /(?:(not|only)?\s*(?:all|screen)\s+and\s+)?((?:\([^)]+\)(?:\s+and\s+)?)+),?\s*/g;
+    const REGEXP_MEDIARULECONDITION = /\(([a-z-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?:\s+and\s+)?/g;
+    const REGEXP_VAR = /var\((--[A-Za-z\d-]+)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)/;
+    const REGEXP_CUSTOMPROPERTY = /^\s*var\(--.+\)$/;
+    const REGEXP_IMGSRCSET = /^(.*?)(?:\s+([\d.]+)([xw]))?$/;
+    const REGEXP_CALCOPERATION = /\s+([+-]\s+|\s*[*/])\s*/;
+    const REGEXP_CALCUNIT = /\s*{(\d+)}\s*/;
+    const REGEXP_TRANSFORM = /(\w+)\([^)]+\)/g;
+    const REGEXP_EMBASED = /\b-?[\d.]+(?:em|ch|ex)\b/;
     const CHAR_SPACE = /\s+/;
     const CHAR_SEPARATOR = /\s*,\s*/;
     const CHAR_DIVIDER = /\s*\/\s*/;
+    updateDocumentFont();
     function compareRange(operation, unit, range) {
         switch (operation) {
             case '<=':
@@ -2917,8 +2830,7 @@
     }
     function calculateGeneric(element, value, unitType, min, boundingBox, dimension = 'width') {
         const segments = splitEnclosing(value, 'calc');
-        const length = segments.length;
-        for (let i = 0; i < length; ++i) {
+        for (let i = 0, length = segments.length; i < length; ++i) {
             const seg = segments[i];
             if (isCalc(seg)) {
                 const px = REGEXP_LENGTH.test(seg);
@@ -2937,14 +2849,15 @@
         return segments.join('').trim();
     }
     function getWritingMode(value) {
-        switch (value) {
-            case 'vertical-lr':
-                return 1;
-            case 'vertical-rl':
-                return 2;
-            default:
-                return 0;
+        if (value) {
+            switch (value) {
+                case 'vertical-lr':
+                    return 1;
+                case 'vertical-rl':
+                    return 2;
+            }
         }
+        return 0;
     }
     function hasBorderStyle(value) {
         switch (value) {
@@ -2980,22 +2893,6 @@
                 : 0)
         );
     }
-    function newBoxRectPosition(orientation = ['left', 'top']) {
-        return {
-            static: true,
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            topAsPercent: 0,
-            leftAsPercent: 0,
-            rightAsPercent: 0,
-            bottomAsPercent: 0,
-            horizontal: 'left',
-            vertical: 'top',
-            orientation,
-        };
-    }
     function checkCalculateNumber(operand, operator) {
         if (operand) {
             switch (operator) {
@@ -3025,16 +2922,21 @@
         }
         return true;
     }
-    const getInnerWidth = dimension =>
-        (dimension === null || dimension === void 0 ? void 0 : dimension.width) || window.innerWidth;
-    const getInnerHeight = dimension =>
-        (dimension === null || dimension === void 0 ? void 0 : dimension.height) || window.innerHeight;
-    const convertLength = (value, dimension, fontSize, screenDimension) =>
-        isPercent(value)
-            ? Math.round((convertFloat(value) / 100) * dimension)
-            : parseUnit(value, fontSize, screenDimension);
-    const convertPercent = (value, dimension, fontSize, screenDimension) =>
-        isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, fontSize, screenDimension) / dimension;
+    function getContentBoxDimension(element) {
+        if (element) {
+            const { width, height } = element.getBoundingClientRect();
+            const style = getStyle(element);
+            return {
+                width: Math.max(0, width - getContentBoxWidth(style)),
+                height: Math.max(0, height - getContentBoxHeight(style)),
+            };
+        }
+        return { width: 0, height: 0 };
+    }
+    const fromFontNamedValue = (index, fixedWidth) =>
+        (!fixedWidth ? DOCUMENT_FONTMAP[index] : DOCUMENT_FIXEDMAP[index]).toPrecision(8) + 'rem';
+    const getInnerWidth = dimension => (dimension && dimension.width) || window.innerWidth;
+    const getInnerHeight = dimension => (dimension && dimension.height) || window.innerHeight;
     const isColor = value => /(rgb|hsl)a?/.test(value);
     const formatVar = value => (!isNaN(value) ? value + 'px' : '');
     const formatDecimal = value => (!isNaN(value) ? value.toString() : '');
@@ -3098,12 +3000,16 @@
             trait: 0,
             value: 'ease',
         },
+        backdropFilter: {
+            trait: 1 /* CALC */,
+            value: 'none',
+        },
         backfaceVisibility: {
             trait: 0,
             value: 'visible',
         },
         background: {
-            trait: 1 /* CALC */ | 2 /* SHORTHAND */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 64 /* NONE */ | 128 /* AUTO */,
             value: [
                 'backgroundImage',
                 'backgroundPositionX',
@@ -3120,13 +3026,17 @@
             trait: 0,
             value: 'scroll',
         },
+        backgroundBlendMode: {
+            trait: 0,
+            value: 'normal',
+        },
         backgroundClip: {
             trait: 0,
             value: 'border-box',
         },
         backgroundColor: {
             trait: 1 /* CALC */,
-            value: 'rgba(0, 0, 0, 0)',
+            value: 'transparent',
         },
         backgroundImage: {
             trait: 1 /* CALC */,
@@ -3142,11 +3052,11 @@
         },
         backgroundPositionX: {
             trait: 1 /* CALC */,
-            value: '0%',
+            value: 'left',
         },
         backgroundPositionY: {
             trait: 1 /* CALC */,
-            value: '0%',
+            value: 'top',
         },
         backgroundRepeat: {
             trait: 0,
@@ -3157,7 +3067,7 @@
             value: 'auto',
         },
         border: {
-            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */ | 64 /* NONE */,
             value: [
                 'borderTopWidth',
                 'borderTopStyle',
@@ -3174,19 +3084,19 @@
             ],
         },
         borderBottom: {
-            trait: 1 /* CALC */ | 2 /* SHORTHAND */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 64 /* NONE */,
             value: ['borderBottomWidth', 'borderBottomStyle', 'borderBottomColor'],
         },
         borderBottomColor: {
             trait: 1 /* CALC */ | 16 /* COLOR */,
-            value: '',
+            value: 'currentcolor',
         },
         borderBottomLeftRadius: {
-            trait: 1 /* CALC */,
+            trait: 1 /* CALC */ | 256 /* UNIT */,
             value: '0',
         },
         borderBottomRightRadius: {
-            trait: 1 /* CALC */,
+            trait: 1 /* CALC */ | 256 /* UNIT */,
             value: '0',
         },
         borderBottomStyle: {
@@ -3195,7 +3105,7 @@
         },
         borderBottomWidth: {
             trait: 1 /* CALC */ | 4 /* LAYOUT */,
-            value: '0',
+            value: 'medium',
         },
         borderCollapse: {
             trait: 4 /* LAYOUT */,
@@ -3206,7 +3116,7 @@
             value: ['borderTopColor', 'borderRightColor', 'borderBottomColor', 'borderLeftColor'],
         },
         borderImage: {
-            trait: 1 /* CALC */ | 2 /* SHORTHAND */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 64 /* NONE */,
             value: [
                 'borderImageSource',
                 'borderImageSlice',
@@ -3214,9 +3124,10 @@
                 'borderImageOutset',
                 'borderImageRepeat',
             ],
+            valueOfNone: 'none 100% / 1 / 0 stretch',
         },
         borderImageOutset: {
-            trait: 1 /* CALC */,
+            trait: 1 /* CALC */ | 256 /* UNIT */,
             value: '0',
         },
         borderImageRepeat: {
@@ -3232,16 +3143,16 @@
             value: 'none',
         },
         borderImageWidth: {
-            trait: 1 /* CALC */,
+            trait: 1 /* CALC */ | 256 /* UNIT */,
             value: '1',
         },
         borderLeft: {
-            trait: 1 /* CALC */ | 2 /* SHORTHAND */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 64 /* NONE */,
             value: ['borderLeftWidth', 'borderLeftStyle', 'borderLeftColor'],
         },
         borderLeftColor: {
             trait: 1 /* CALC */ | 16 /* COLOR */,
-            value: '',
+            value: 'currentcolor',
         },
         borderLeftStyle: {
             trait: 0,
@@ -3249,19 +3160,19 @@
         },
         borderLeftWidth: {
             trait: 1 /* CALC */ | 4 /* LAYOUT */,
-            value: '0',
+            value: 'medium',
         },
         borderRadius: {
             trait: 1 /* CALC */ | 2 /* SHORTHAND */,
             value: ['borderTopLeftRadius', 'borderTopRightRadius', 'borderBottomRightRadius', 'borderBottomLeftRadius'],
         },
         borderRight: {
-            trait: 1 /* CALC */ | 2 /* SHORTHAND */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 64 /* NONE */,
             value: ['borderRightWidth', 'borderRightStyle', 'borderRightColor'],
         },
         borderRightColor: {
             trait: 1 /* CALC */ | 16 /* COLOR */,
-            value: '',
+            value: 'currentcolor',
         },
         borderRightStyle: {
             trait: 0,
@@ -3269,30 +3180,30 @@
         },
         borderRightWidth: {
             trait: 1 /* CALC */ | 4 /* LAYOUT */,
-            value: '0',
+            value: 'medium',
         },
         borderSpacing: {
-            trait: 1 /* CALC */,
+            trait: 1 /* CALC */ | 256 /* UNIT */,
             value: '0',
         },
         borderStyle: {
-            trait: 2 /* SHORTHAND */,
+            trait: 2 /* SHORTHAND */ | 64 /* NONE */,
             value: ['borderTopStyle', 'borderRightStyle', 'borderBottomStyle', 'borderLeftStyle'],
         },
         borderTop: {
-            trait: 1 /* CALC */ | 2 /* SHORTHAND */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 64 /* NONE */,
             value: ['borderTopWidth', 'borderTopStyle', 'borderTopColor'],
         },
         borderTopColor: {
             trait: 1 /* CALC */ | 16 /* COLOR */,
-            value: '',
+            value: 'currentcolor',
         },
         borderTopLeftRadius: {
-            trait: 1 /* CALC */,
+            trait: 1 /* CALC */ | 256 /* UNIT */,
             value: '0',
         },
         borderTopRightRadius: {
-            trait: 1 /* CALC */,
+            trait: 1 /* CALC */ | 256 /* UNIT */,
             value: '0',
         },
         borderTopStyle: {
@@ -3301,7 +3212,7 @@
         },
         borderTopWidth: {
             trait: 1 /* CALC */ | 4 /* LAYOUT */,
-            value: '0',
+            value: 'medium',
         },
         borderWidth: {
             trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */,
@@ -3319,9 +3230,25 @@
             trait: 4 /* LAYOUT */,
             value: 'content-box',
         },
+        breakAfter: {
+            trait: 4 /* LAYOUT */,
+            value: 'auto',
+        },
+        breakBefore: {
+            trait: 4 /* LAYOUT */,
+            value: 'auto',
+        },
+        breakInside: {
+            trait: 4 /* LAYOUT */,
+            value: 'auto',
+        },
         captionSide: {
             trait: 0,
             value: 'top',
+        },
+        caretColor: {
+            trait: 1 /* CALC */ | 16 /* COLOR */ | 128 /* AUTO */,
+            value: 'auto',
         },
         clear: {
             trait: 4 /* LAYOUT */,
@@ -3337,7 +3264,7 @@
         },
         color: {
             trait: 1 /* CALC */ | 16 /* COLOR */,
-            value: '',
+            value: 'black',
         },
         columnCount: {
             trait: 1 /* CALC */,
@@ -3352,12 +3279,12 @@
             value: 'normal',
         },
         columnRule: {
-            trait: 1 /* CALC */ | 2 /* SHORTHAND */,
-            value: ['columRuleWidth', 'columnRuleStyle', 'columnRuleColor'],
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 64 /* NONE */,
+            value: ['columnRuleWidth', 'columnRuleStyle', 'columnRuleColor'],
         },
         columnRuleColor: {
             trait: 1 /* CALC */ | 16 /* COLOR */,
-            value: '',
+            value: 'currentcolor',
         },
         columnRuleStyle: {
             trait: 0,
@@ -3365,7 +3292,7 @@
         },
         columnRuleWidth: {
             trait: 1 /* CALC */,
-            value: '0',
+            value: 'medium',
         },
         columnSpan: {
             trait: 0,
@@ -3376,7 +3303,7 @@
             value: 'auto',
         },
         columns: {
-            trait: 1 /* CALC */ | 2 /* SHORTHAND */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 128 /* AUTO */,
             value: ['columnCount', 'columnWidth'],
         },
         content: {
@@ -3407,8 +3334,12 @@
             trait: 0,
             value: 'show',
         },
+        filter: {
+            trait: 1 /* CALC */,
+            value: 'none',
+        },
         flex: {
-            trait: 1 /* CALC */ | 2 /* SHORTHAND */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 128 /* AUTO */,
             value: ['flexGrow', 'flexShrink', 'flexBasis'],
         },
         flexBasis: {
@@ -3424,11 +3355,11 @@
             value: ['flexDirection', 'flexWrap'],
         },
         flexGrow: {
-            trait: 1 /* CALC */ | 4 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */ | 256 /* UNIT */,
             value: '0',
         },
         flexShrink: {
-            trait: 1 /* CALC */ | 4 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */ | 256 /* UNIT */,
             value: '1',
         },
         flexWrap: {
@@ -3463,6 +3394,10 @@
             trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'none',
         },
+        fontOpticalSizing: {
+            trait: 4 /* LAYOUT */,
+            value: 'auto',
+        },
         fontStretch: {
             trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'normal',
@@ -3472,8 +3407,9 @@
             value: 'normal',
         },
         fontVariant: {
-            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */ | 64 /* NONE */,
             value: ['fontVariantCaps', 'fontVariantLigatures', 'fontVariantNumeric', 'fontVariantEastAsian'],
+            valueOfNone: 'no-common-ligatures no-discretionary-ligatures no-historical-ligatures no-contextual',
         },
         fontVariantCaps: {
             trait: 1 /* CALC */ | 4 /* LAYOUT */,
@@ -3517,8 +3453,9 @@
             ],
         },
         gridArea: {
-            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */ | 64 /* NONE */ | 128 /* AUTO */,
             value: ['gridRowStart', 'gridColumnStart', 'gridRowEnd', 'gridColumnEnd'],
+            valueOfNone: 'none / none / none / none',
         },
         gridAutoColumns: {
             trait: 1 /* CALC */ | 4 /* LAYOUT */,
@@ -3533,8 +3470,9 @@
             value: 'auto',
         },
         gridColumn: {
-            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */ | 64 /* NONE */,
             value: ['gridColumnStart', 'gridColumnEnd'],
+            valueOfNone: 'none / none',
         },
         gridColumnEnd: {
             trait: 1 /* CALC */ | 4 /* LAYOUT */,
@@ -3553,8 +3491,9 @@
             value: ['gridRowGap', 'gridColumnGap'],
         },
         gridRow: {
-            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */ | 64 /* NONE */,
             value: ['gridRowStart', 'gridRowEnd'],
+            valueOfNone: 'none / none',
         },
         gridRowEnd: {
             trait: 1 /* CALC */ | 4 /* LAYOUT */,
@@ -3588,11 +3527,27 @@
             trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'auto',
         },
+        hyphens: {
+            trait: 4 /* LAYOUT */,
+            value: 'manual',
+        },
+        imageRendering: {
+            trait: 0,
+            value: 'auto',
+        },
+        isolation: {
+            trait: 0,
+            value: 'auto',
+        },
+        lineBreak: {
+            trait: 4 /* LAYOUT */,
+            value: 'auto',
+        },
         justifyContent: {
             trait: 8 /* CONTAIN */,
             value: 'normal',
         },
-        justifyIems: {
+        justifyItems: {
             trait: 8 /* CONTAIN */,
             value: 'normal',
         },
@@ -3629,23 +3584,23 @@
             value: 'disc',
         },
         margin: {
-            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */ | 128 /* AUTO */,
             value: ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'],
         },
         marginBottom: {
-            trait: 1 /* CALC */ | 4 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */ | 256 /* UNIT */,
             value: '0',
         },
         marginLeft: {
-            trait: 1 /* CALC */ | 4 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */ | 256 /* UNIT */,
             value: '0',
         },
         marginRight: {
-            trait: 1 /* CALC */ | 4 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */ | 256 /* UNIT */,
             value: '0',
         },
         marginTop: {
-            trait: 1 /* CALC */ | 4 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */ | 256 /* UNIT */,
             value: '0',
         },
         maxHeight: {
@@ -3658,14 +3613,26 @@
         },
         minHeight: {
             trait: 1 /* CALC */ | 4 /* LAYOUT */,
-            value: '0',
+            value: 'auto',
         },
         minWidth: {
             trait: 1 /* CALC */ | 4 /* LAYOUT */,
-            value: '0',
+            value: 'auto',
+        },
+        mixBlendMode: {
+            trait: 0,
+            value: 'normal',
+        },
+        objectFit: {
+            trait: 4 /* LAYOUT */,
+            value: 'fill',
+        },
+        objectPosition: {
+            trait: 1 /* CALC */,
+            value: '50% 50%',
         },
         offset: {
-            trait: 1 /* CALC */ | 2 /* SHORTHAND */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 64 /* NONE */ | 128 /* AUTO */,
             value: ['offsetPath', 'offsetDistance', 'offsetRotate', 'offsetAnchor'],
         },
         offsetPath: {
@@ -3685,23 +3652,23 @@
             value: 'auto',
         },
         opacity: {
-            trait: 1 /* CALC */,
+            trait: 1 /* CALC */ | 256 /* UNIT */,
             value: '1',
         },
         order: {
-            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */ | 256 /* UNIT */,
             value: '0',
         },
         outline: {
-            trait: 1 /* CALC */ | 2 /* SHORTHAND */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 64 /* NONE */,
             value: ['outlineWidth', 'outlineStyle', 'outlineColor'],
         },
         outlineColor: {
             trait: 1 /* CALC */ | 16 /* COLOR */,
-            value: '',
+            value: 'currentcolor',
         },
         outlineOffset: {
-            trait: 1 /* CALC */,
+            trait: 1 /* CALC */ | 256 /* UNIT */,
             value: '0',
         },
         outlineStyle: {
@@ -3710,11 +3677,19 @@
         },
         outlineWidth: {
             trait: 1 /* CALC */,
-            value: '0',
+            value: 'medium',
         },
         overflow: {
             trait: 2 /* SHORTHAND */ | 4 /* LAYOUT */,
             value: ['overflowX', 'overflowY'],
+        },
+        overflowAnchor: {
+            trait: 0,
+            value: 'auto',
+        },
+        overflowWrap: {
+            trait: 4 /* LAYOUT */,
+            value: 'normal',
         },
         overflowX: {
             trait: 4 /* LAYOUT */,
@@ -3724,24 +3699,36 @@
             trait: 4 /* LAYOUT */,
             value: 'visible',
         },
+        overscrollBehavior: {
+            trait: 2 /* SHORTHAND */ | 64 /* NONE */ | 128 /* AUTO */,
+            value: ['overscrollBehaviorX', 'overscrollBehaviorY'],
+        },
+        overscrollBehaviorX: {
+            trait: 4 /* LAYOUT */,
+            value: 'auto',
+        },
+        overscrollBehaviorY: {
+            trait: 4 /* LAYOUT */,
+            value: 'auto',
+        },
         padding: {
             trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */,
             value: ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'],
         },
         paddingBottom: {
-            trait: 1 /* CALC */ | 4 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */ | 256 /* UNIT */,
             value: '0',
         },
         paddingLeft: {
-            trait: 1 /* CALC */ | 4 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */ | 256 /* UNIT */,
             value: '0',
         },
         paddingRight: {
-            trait: 1 /* CALC */ | 4 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */ | 256 /* UNIT */,
             value: '0',
         },
         paddingTop: {
-            trait: 1 /* CALC */ | 4 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */ | 256 /* UNIT */,
             value: '0',
         },
         pageBreakAfter: {
@@ -3790,54 +3777,78 @@
         },
         right: {
             trait: 1 /* CALC */ | 4 /* LAYOUT */,
-            value: '0',
+            value: 'auto',
         },
         rowGap: {
             trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'normal',
+        },
+        scrollBehavior: {
+            trait: 0,
+            value: 'auto',
         },
         scrollMargin: {
             trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */,
             value: ['scrollMarginTop', 'scrollMarginRight', 'scrollMarginBottom', 'scrollMarginLeft'],
         },
         scrollMarginBottom: {
-            trait: 1 /* CALC */ | 4 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */ | 256 /* UNIT */,
             value: '0',
         },
         scrollMarginLeft: {
-            trait: 1 /* CALC */ | 4 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */ | 256 /* UNIT */,
             value: '0',
         },
         scrollMarginRight: {
-            trait: 1 /* CALC */ | 4 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */ | 256 /* UNIT */,
             value: '0',
         },
         scrollMarginTop: {
-            trait: 1 /* CALC */ | 4 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */ | 256 /* UNIT */,
             value: '0',
         },
         scrollPadding: {
-            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */ | 128 /* AUTO */,
             value: ['scrollPaddingTop', 'scrollPaddingRight', 'scrollPaddingBottom', 'scrollPaddingLeft'],
         },
         scrollPaddingBottom: {
             trait: 4 /* LAYOUT */,
-            value: '0',
+            value: 'auto',
         },
         scrollPaddingLeft: {
             trait: 4 /* LAYOUT */,
-            value: '0',
+            value: 'auto',
         },
         scrollPaddingRight: {
             trait: 4 /* LAYOUT */,
-            value: '0',
+            value: 'auto',
         },
         scrollPaddingTop: {
             trait: 4 /* LAYOUT */,
+            value: 'auto',
+        },
+        scrollSnapAlign: {
+            trait: 64 /* NONE */,
+            value: 'none',
+        },
+        scrollSnapStop: {
+            trait: 64 /* NONE */,
+            value: 'none',
+        },
+        scrollSnapType: {
+            trait: 64 /* NONE */,
+            value: 'none',
+        },
+        shapeImageThreshold: {
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
+            value: '0.0',
+        },
+        shapeMargin: {
+            trait: 1 /* CALC */ | 4 /* LAYOUT */ | 256 /* UNIT */,
             value: '0',
         },
         shapeOutside: {
-            trait: 1 /* CALC */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'none',
         },
         tabSize: {
@@ -3857,23 +3868,43 @@
             value: 'auto',
         },
         textDecoration: {
-            trait: 2 /* SHORTHAND */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 64 /* NONE */,
             value: ['textDecorationLine', 'textDecorationStyle', 'textDecorationColor'],
         },
         textDecorationColor: {
             trait: 1 /* CALC */ | 16 /* COLOR */,
-            value: '',
+            value: 'currentcolor',
         },
         textDecorationLine: {
             trait: 0,
             value: 'none',
         },
+        textDecorationSkipInk: {
+            trait: 0,
+            value: 'auto',
+        },
         textDecorationStyle: {
             trait: 0,
             value: 'solid',
         },
+        textEmphasis: {
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 64 /* NONE */,
+            value: ['textEmphasisStyle', 'textEmphasisColor'],
+        },
+        textEmphasisColor: {
+            trait: 1 /* CALC */ | 16 /* COLOR */,
+            value: 'currentcolor',
+        },
+        textEmphasisPosition: {
+            trait: 0,
+            value: 'over right',
+        },
+        textEmphasisStyle: {
+            trait: 64 /* NONE */,
+            value: 'none',
+        },
         textIndent: {
-            trait: 1 /* CALC */ | 4 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */ | 256 /* UNIT */,
             value: '0',
         },
         textJustify: {
@@ -3888,13 +3919,25 @@
             trait: 1 /* CALC */,
             value: 'none',
         },
+        textSizeAdjust: {
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
+            value: 'auto',
+        },
         textTransform: {
             trait: 4 /* LAYOUT */,
             value: 'none',
         },
+        textUnderlinePosition: {
+            trait: 0,
+            value: 'auto',
+        },
         top: {
             trait: 1 /* CALC */ | 4 /* LAYOUT */,
-            value: '0',
+            value: 'auto',
+        },
+        touchAction: {
+            trait: 0,
+            value: 'auto',
         },
         transform: {
             trait: 1 /* CALC */,
@@ -3909,8 +3952,9 @@
             value: 'flat',
         },
         transition: {
-            trait: 1 /* CALC */ | 2 /* SHORTHAND */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 64 /* NONE */,
             value: ['transitionProperty', 'transitionDuration', 'transitionTimingFunction', 'transitionDelay'],
+            valueOfNone: 'one 0s ease 0s',
         },
         transitionDelay: {
             trait: 1 /* CALC */,
@@ -3932,6 +3976,10 @@
             trait: 4 /* LAYOUT */,
             value: 'normal',
         },
+        userSelect: {
+            trait: 64 /* NONE */,
+            value: 'none',
+        },
         verticalAlign: {
             trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'baseline',
@@ -3948,6 +3996,10 @@
             trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'auto',
         },
+        willChange: {
+            trait: 0,
+            value: 'auto',
+        },
         wordBreak: {
             trait: 4 /* LAYOUT */,
             value: 'normal',
@@ -3957,155 +4009,166 @@
             value: 'normal',
         },
         wordWrap: {
-            trait: 4 /* LAYOUT */,
+            trait: 4 /* LAYOUT */ | 32 /* DEPRECATED */,
             value: 'normal',
+            alias: 'overflowWrap',
+        },
+        writingMode: {
+            trait: 4 /* LAYOUT */,
+            value: 'horizontal-tb',
         },
         zIndex: {
             trait: 1 /* CALC */,
             value: 'auto',
         },
     };
-    const SVG_PROPERTIES = {
-        clipRule: {
-            trait: 0,
-            value: 'nonzero',
-        },
-        cx: {
-            trait: 1 /* CALC */,
-            value: '0',
-        },
-        cy: {
-            trait: 1 /* CALC */,
-            value: '0',
-        },
-        fill: {
-            trait: 1 /* CALC */ | 16 /* COLOR */,
-            value: 'black',
-        },
-        fillOpacity: {
-            trait: 1 /* CALC */,
-            value: '1',
-        },
-        fillRule: {
-            trait: 0,
-            value: 'nonzero',
-        },
-        stroke: {
-            trait: 1 /* CALC */ | 16 /* COLOR */,
-            value: 'none',
-        },
-        strokeDasharray: {
-            trait: 1 /* CALC */,
-            value: 'none',
-        },
-        strokeDashoffset: {
-            trait: 1 /* CALC */,
-            value: '0',
-        },
-        strokeLinecap: {
-            trait: 0,
-            value: 'butt',
-        },
-        strokeLinejoin: {
-            trait: 0,
-            value: 'miter',
-        },
-        strokeMiterlimit: {
-            trait: 1 /* CALC */,
-            value: '4',
-        },
-        strokeOpacity: {
-            trait: 1 /* CALC */,
-            value: '1',
-        },
-        strokeWidth: {
-            trait: 1 /* CALC */,
-            value: '1',
-        },
-        r: {
-            trait: 1 /* CALC */,
-            value: '0',
-        },
-        rx: {
-            trait: 1 /* CALC */,
-            value: '0',
-        },
-        ry: {
-            trait: 1 /* CALC */,
-            value: '0',
-        },
-        x: {
-            trait: 1 /* CALC */,
-            value: '0',
-        },
-        x1: {
-            trait: 1 /* CALC */,
-            value: '0',
-        },
-        x2: {
-            trait: 1 /* CALC */,
-            value: '0',
-        },
-        y: {
-            trait: 1 /* CALC */,
-            value: '0',
-        },
-        y1: {
-            trait: 1 /* CALC */,
-            value: '0',
-        },
-        y2: {
-            trait: 1 /* CALC */,
-            value: '0',
-        },
-    };
-    function newBoxModel() {
-        return {
-            marginTop: 0,
-            marginRight: 0,
-            marginBottom: 0,
-            marginLeft: 0,
-            paddingTop: 0,
-            paddingRight: 0,
-            paddingBottom: 0,
-            paddingLeft: 0,
-        };
+    const PROXY_INLINESTYLE = Object.freeze(
+        new Proxy(
+            Object.create({
+                fontSize: 'inherit',
+                lineHeight: 'inherit',
+                'setProperty': function () {},
+                'getPropertyValue': function (property) {
+                    return this[convertCamelCase(property)];
+                },
+            }),
+            {
+                get: (target, attr) => {
+                    var _a;
+                    let value = target[attr];
+                    if (value) {
+                        return value;
+                    }
+                    value = (_a = CSS_PROPERTIES[attr.toString()]) === null || _a === void 0 ? void 0 : _a.value;
+                    if (value) {
+                        return typeof value === 'string' ? value : '';
+                    }
+                },
+            }
+        )
+    );
+    const ELEMENT_BLOCK = new Set([
+        'ADDRESS',
+        'ARTICLE',
+        'ASIDE',
+        'BLOCKQUOTE',
+        'DD',
+        'DETAILS',
+        'DIALOG',
+        'DIV',
+        'DL',
+        'DT',
+        'FIELDSET',
+        'FIGCAPTION',
+        'FIGURE',
+        'FOOTER',
+        'FORM',
+        'H1',
+        'H2',
+        'H3',
+        'H4',
+        'H5',
+        'H6',
+        'HEADER',
+        'HGROUP',
+        'HR',
+        'LI',
+        'MAIN',
+        'NAV',
+        'OL',
+        'P',
+        'PRE',
+        'SECTION',
+        'TABLE',
+        'UL',
+    ]);
+    function getPropertiesAsTraits(value) {
+        const result = {};
+        for (const attr in CSS_PROPERTIES) {
+            const item = CSS_PROPERTIES[attr];
+            if (hasBit(item.trait, value)) {
+                item.name = convertHyphenated(attr);
+                result[attr] = item;
+            }
+        }
+        return result;
     }
     function getStyle(element, pseudoElt = '') {
-        if (element) {
-            const cached = element['__style' + pseudoElt];
-            if (cached) {
-                return cached;
-            }
-            if (hasComputedStyle(element)) {
-                const style = getComputedStyle(element, pseudoElt);
-                element['__style' + pseudoElt] = style;
-                return style;
-            }
-            return { position: 'static', display: 'inline' };
+        let style = getElementCache(element, 'style' + pseudoElt, '0');
+        if (style) {
+            return style;
         }
-        return { position: 'static', display: 'none' };
+        if (hasComputedStyle(element)) {
+            style = getComputedStyle(element, pseudoElt);
+            setElementCache(element, 'style' + pseudoElt, style);
+            return style;
+        }
+        return PROXY_INLINESTYLE;
+    }
+    function updateDocumentFont() {
+        const documentStyle = getStyle(DOCUMENT_ELEMENT);
+        DOCUMENT_FONTSIZE = parseFloat(documentStyle.fontSize);
+        if (isNaN(DOCUMENT_FONTSIZE)) {
+            DOCUMENT_FONTSIZE = 16;
+        }
+        const style = DOCUMENT_ELEMENT.style;
+        const fontSize = style.fontSize;
+        style.fontSize = 'initial';
+        DOCUMENT_FONTBASE = parseFloat(documentStyle.fontSize);
+        if (isNaN(DOCUMENT_FONTBASE)) {
+            DOCUMENT_FONTBASE = 16;
+        }
+        style.fontSize = fontSize;
+        const index = 16 - Math.floor(DOCUMENT_FONTBASE);
+        switch (index) {
+            case 0:
+                DOCUMENT_FONTMAP = [9 / 16, 10 / 16, 13 / 16, 18 / 16, 24 / 16, 2, 3];
+                break;
+            case 1:
+                DOCUMENT_FONTMAP = [9 / 15, 10 / 15, 13 / 15, 18 / 15, 23 / 15, 2, 3];
+                break;
+            case 2:
+                DOCUMENT_FONTMAP = [9 / 14, 10 / 14, 12 / 14, 17 / 14, 21 / 14, 2, 3];
+                break;
+            case 3:
+                DOCUMENT_FONTMAP = DOCUMENT_FIXEDMAP;
+                break;
+            case 4:
+                DOCUMENT_FONTMAP = [9 / 12, 9 / 12, 10 / 12, 14 / 12, 18 / 12, 2, 3];
+                break;
+            case 5:
+                DOCUMENT_FONTMAP = [9 / 11, 9 / 11, 10 / 11, 13 / 11, 17 / 11, 2, 3];
+                break;
+            case 6:
+                DOCUMENT_FONTMAP = [9 / 10, 9 / 10, 9 / 10, 12 / 10, 15 / 10, 2, 3];
+                break;
+            default:
+                DOCUMENT_FONTMAP = index < 0 ? [0.6, 0.75, 0.89, 1.2, 1.5, 2, 3] : [1, 1, 1, 11 / 9, 14 / 9, 2, 3];
+                break;
+        }
+    }
+    function getRemSize(fixedWidth) {
+        return !fixedWidth ? DOCUMENT_FONTSIZE : DOCUMENT_FIXEDSIZE;
     }
     function getFontSize(element) {
-        if (element.nodeName.charAt(0) === '#') {
-            element = element.parentElement || document.documentElement;
-        }
-        return parseFloat(getStyle(element).getPropertyValue('font-size'));
+        return parseFloat(
+            getStyle(element.nodeName[0] === '#' ? element.parentElement : element).getPropertyValue('font-size')
+        );
     }
     function hasComputedStyle(element) {
-        return element.nodeName.charAt(0) !== '#' && (element instanceof HTMLElement || element instanceof SVGElement);
+        return element.nodeName[0] !== '#' && (element instanceof HTMLElement || element instanceof SVGElement);
     }
     function parseSelectorText(value, document) {
         value = document ? value.trim() : trimSelector(value.trim());
         if (value.includes(',')) {
             let normalized = value,
-                found = false,
+                found,
                 match;
             while ((match = CSS.SELECTOR_ATTR.exec(normalized))) {
                 const index = match.index;
                 const length = match[0].length;
                 normalized =
-                    (index > 0 ? normalized.substring(0, index) : '') +
+                    (index ? normalized.substring(0, index) : '') +
                     '_'.repeat(length) +
                     normalized.substring(index + length);
                 found = true;
@@ -4138,7 +4201,7 @@
         while ((match = CSS.SELECTOR_G.exec(value))) {
             let segment = match[1];
             if (segment.length === 1) {
-                switch (segment.charAt(0)) {
+                switch (segment[0]) {
                     case '+':
                     case '~':
                     case '>':
@@ -4192,7 +4255,7 @@
             }
             while ((subMatch = CSS.SELECTOR_LABEL.exec(segment))) {
                 const command = subMatch[0];
-                switch (command.charAt(0)) {
+                switch (command[0]) {
                     case '#':
                         result += 100;
                         break;
@@ -4223,22 +4286,30 @@
                 return getWritingMode(value) === 0 ? 'minWidth' : 'minHeight';
             case 'minBlockSize':
                 return getWritingMode(value) === 0 ? 'minHeight' : 'minWidth';
-            case 'borderInlineStart':
-                return getWritingMode(value) === 0 ? 'borderLeft' : 'borderTop';
-            case 'borderInlineEnd':
-                return getWritingMode(value) === 0 ? 'borderRight' : 'borderBottom';
-            case 'borderInlineStartWidth':
-                return getWritingMode(value) === 0 ? 'borderLeftWidth' : 'borderTopWidth';
-            case 'borderInlineEndWidth':
-                return getWritingMode(value) === 0 ? 'borderRightWidth' : 'borderBottomWidth';
-            case 'insetInlineStart':
-                return getWritingMode(value) === 0 ? 'left' : 'top';
-            case 'insetInlineEnd':
-                return getWritingMode(value) === 0 ? 'right' : 'bottom';
+            case 'overscrollBehaviorInline':
+                return getWritingMode(value) === 0 ? 'overscrollBehaviorX' : 'overscrollBehaviorY';
+            case 'overscrollBehaviorBlock':
+                return getWritingMode(value) === 0 ? 'overscrollBehaviorY' : 'overscrollBehaviorX';
             case 'marginInlineStart':
                 return getWritingMode(value) === 0 ? 'marginLeft' : 'marginTop';
             case 'marginInlineEnd':
                 return getWritingMode(value) === 0 ? 'marginRight' : 'marginBottom';
+            case 'borderInlineStart':
+                return getWritingMode(value) === 0 ? 'borderLeft' : 'borderTop';
+            case 'borderInlineStartWidth':
+                return getWritingMode(value) === 0 ? 'borderLeftWidth' : 'borderTopWidth';
+            case 'borderInlineStartStyle':
+                return getWritingMode(value) === 0 ? 'borderLeftStyle' : 'borderTopStyle';
+            case 'borderInlineStartColor':
+                return getWritingMode(value) === 0 ? 'borderLeftColor' : 'borderTopColor';
+            case 'borderInlineEnd':
+                return getWritingMode(value) === 0 ? 'borderRight' : 'borderBottom';
+            case 'borderInlineEndWidth':
+                return getWritingMode(value) === 0 ? 'borderRightWidth' : 'borderBottomWidth';
+            case 'borderInlineEndStyle':
+                return getWritingMode(value) === 0 ? 'borderRightStyle' : 'borderBottomStyle';
+            case 'borderInlineEndColor':
+                return getWritingMode(value) === 0 ? 'borderRightColor' : 'borderBottomColor';
             case 'paddingInlineStart':
                 return getWritingMode(value) === 0 ? 'paddingLeft' : 'paddingTop';
             case 'paddingInlineEnd':
@@ -4251,67 +4322,13 @@
                 return getWritingMode(value) === 0 ? 'scrollPaddingLeft' : 'scrollPaddingTop';
             case 'scrollPaddingInlineEnd':
                 return getWritingMode(value) === 0 ? 'scrollPaddingRight' : 'scrollPaddingBottom';
-            case 'borderBlockStart':
-                switch (getWritingMode(value)) {
-                    case 0:
-                        return 'borderTop';
-                    case 1:
-                        return 'borderLeft';
-                    case 2:
-                        return 'borderRight';
-                }
-            case 'borderBlockEnd':
-                switch (getWritingMode(value)) {
-                    case 0:
-                        return 'borderBottom';
-                    case 1:
-                        return 'borderRight';
-                    case 2:
-                        return 'borderLeft';
-                }
-            case 'borderBlockStartWidth':
-                switch (getWritingMode(value)) {
-                    case 0:
-                        return 'borderTopWidth';
-                    case 1:
-                        return 'borderLeftWidth';
-                    case 2:
-                        return 'borderRightWidth';
-                }
-            case 'borderBlockEndWidth':
-                switch (getWritingMode(value)) {
-                    case 0:
-                        return 'borderBottomWidth';
-                    case 1:
-                        return 'borderRightWidth';
-                    case 2:
-                        return 'borderLeftWidth';
-                }
-            case 'insetBlockStart':
-                switch (getWritingMode(value)) {
-                    case 0:
-                        return 'top';
-                    case 1:
-                        return 'left';
-                    case 2:
-                        return 'right';
-                }
-            case 'insetBlockEnd':
-                switch (getWritingMode(value)) {
-                    case 0:
-                        return 'bottom';
-                    case 1:
-                        return 'right';
-                    case 2:
-                        return 'left';
-                }
             case 'marginBlockStart':
                 switch (getWritingMode(value)) {
                     case 0:
                         return 'marginTop';
                     case 1:
                         return 'marginLeft';
-                    case 2:
+                    default:
                         return 'marginRight';
                 }
             case 'marginBlockEnd':
@@ -4320,8 +4337,80 @@
                         return 'marginBottom';
                     case 1:
                         return 'marginRight';
-                    case 2:
+                    default:
                         return 'marginLeft';
+                }
+            case 'borderBlockStart':
+                switch (getWritingMode(value)) {
+                    case 0:
+                        return 'borderTop';
+                    case 1:
+                        return 'borderLeft';
+                    default:
+                        return 'borderRight';
+                }
+            case 'borderBlockStartWidth':
+                switch (getWritingMode(value)) {
+                    case 0:
+                        return 'borderTopWidth';
+                    case 1:
+                        return 'borderLeftWidth';
+                    default:
+                        return 'borderRightWidth';
+                }
+            case 'borderBlockStartStyle':
+                switch (getWritingMode(value)) {
+                    case 0:
+                        return 'borderTopStyle';
+                    case 1:
+                        return 'borderLeftStyle';
+                    default:
+                        return 'borderRightStyle';
+                }
+            case 'borderBlockStartColor':
+                switch (getWritingMode(value)) {
+                    case 0:
+                        return 'borderTopColor';
+                    case 1:
+                        return 'borderLeftColor';
+                    default:
+                        return 'borderRightColor';
+                }
+            case 'borderBlockEnd':
+                switch (getWritingMode(value)) {
+                    case 0:
+                        return 'borderBottom';
+                    case 1:
+                        return 'borderRight';
+                    default:
+                        return 'borderLeft';
+                }
+            case 'borderBlockEndWidth':
+                switch (getWritingMode(value)) {
+                    case 0:
+                        return 'borderBottomWidth';
+                    case 1:
+                        return 'borderRightWidth';
+                    default:
+                        return 'borderLeftWidth';
+                }
+            case 'borderBlockEndStyle':
+                switch (getWritingMode(value)) {
+                    case 0:
+                        return 'borderBottomStyle';
+                    case 1:
+                        return 'borderRightStyle';
+                    default:
+                        return 'borderLeftStyle';
+                }
+            case 'borderBlockEndColor':
+                switch (getWritingMode(value)) {
+                    case 0:
+                        return 'borderBottomColor';
+                    case 1:
+                        return 'borderRightColor';
+                    default:
+                        return 'borderLeftColor';
                 }
             case 'paddingBlockStart':
                 switch (getWritingMode(value)) {
@@ -4329,7 +4418,7 @@
                         return 'paddingTop';
                     case 1:
                         return 'paddingLeft';
-                    case 2:
+                    default:
                         return 'paddingRight';
                 }
             case 'paddingBlockEnd':
@@ -4338,7 +4427,7 @@
                         return 'paddingBottom';
                     case 1:
                         return 'paddingRight';
-                    case 2:
+                    default:
                         return 'paddingLeft';
                 }
             case 'scrollMarginBlockStart':
@@ -4347,7 +4436,7 @@
                         return 'scrollMarginTop';
                     case 1:
                         return 'scrollMarginLeft';
-                    case 2:
+                    default:
                         return 'scrollMarginRight';
                 }
             case 'scrollMarginBlockEnd':
@@ -4356,7 +4445,7 @@
                         return 'scrollMarginBottom';
                     case 1:
                         return 'scrollMarginRight';
-                    case 2:
+                    default:
                         return 'scrollMarginLeft';
                 }
             case 'scrollPaddingBlockStart':
@@ -4365,7 +4454,7 @@
                         return 'scrollPaddingTop';
                     case 1:
                         return 'scrollPaddingLeft';
-                    case 2:
+                    default:
                         return 'scrollPaddingRight';
                 }
             case 'scrollPaddingBlockEnd':
@@ -4374,11 +4463,28 @@
                         return 'scrollPaddingBottom';
                     case 1:
                         return 'scrollPaddingRight';
-                    case 2:
+                    default:
                         return 'scrollPaddingLeft';
                 }
+            case 'scrollMarginInline':
+                return getWritingMode(value) === 0
+                    ? ['scrollMarginLeft', 'scrollMarginRight']
+                    : ['scrollMarginTop', 'scrollMarginBottom'];
+            case 'scrollMarginBlock':
+                return getWritingMode(value) === 0
+                    ? ['scrollMarginTop', 'scrollMarginBottom']
+                    : ['scrollMarginLeft', 'scrollMarginRight'];
+            case 'scrollPaddingInline':
+                return getWritingMode(value) === 0
+                    ? ['scrollPaddingLeft', 'scrollPaddingRight']
+                    : ['scrollPaddingTop', 'scrollPaddingBottom'];
+            case 'scrollPaddingBlock':
+                return getWritingMode(value) === 0
+                    ? ['scrollPaddingTop', 'scrollPaddingBottom']
+                    : ['scrollPaddingLeft', 'scrollPaddingRight'];
+            default:
+                return attr;
         }
-        return '';
     }
     function calculateStyle(element, attr, value, boundingBox) {
         switch (attr) {
@@ -4431,7 +4537,7 @@
                 return formatVar(
                     calculateVar(element, value, {
                         dimension:
-                            !!parentElement && getStyle(parentElement).flexDirection.includes('column')
+                            parentElement && getStyle(parentElement).flexDirection.includes('column')
                                 ? 'height'
                                 : 'width',
                         boundingBox,
@@ -4463,11 +4569,16 @@
                 return formatVar(calculateVar(element, value, { boundingSize }));
             }
             case 'lineHeight':
-                return formatVar(calculateVar(element, value, { boundingSize: getFontSize(element), min: 0 }));
+                return formatVar(
+                    calculateVar(element, value, {
+                        boundingSize: hasEm(value) ? getFontSize(element) : undefined,
+                        min: 0,
+                    })
+                );
             case 'fontSize':
                 return formatVar(
                     calculateVar(element, value, {
-                        boundingSize: getFontSize(element.parentElement || document.documentElement),
+                        boundingSize: hasEm(value) ? getFontSize(element.parentElement || DOCUMENT_ELEMENT) : undefined,
                         min: 0,
                     })
                 );
@@ -4494,7 +4605,7 @@
                 return calculateVarAsString(element, value, {
                     dimension: ['width', 'height'],
                     boundingBox,
-                    min: attr === 'perspectiveOrigin' ? undefined : 0,
+                    min: attr === 'perspectiveOrigin' ? -Infinity : 0,
                     parent: false,
                 });
             case 'borderImageOutset':
@@ -4548,6 +4659,7 @@
                 return !isNaN(result) ? clamp(result / (percent ? 100 : 1)).toString() : '';
             }
             case 'fontStretch':
+            case 'textSizeAdjust':
                 return calculateVarAsString(element, value, {
                     unitType: 2 /* PERCENT */,
                     min: 0,
@@ -4560,7 +4672,6 @@
             case 'transformOrigin':
                 return calculatePosition(element, value, boundingBox);
             case 'transform': {
-                value = value.trim();
                 const transform = splitEnclosing(value);
                 const length = transform.length;
                 if (length > 1) {
@@ -4678,7 +4789,6 @@
             }
             case 'backgroundImage':
             case 'borderImageSource': {
-                value = value.trim();
                 const image = splitEnclosing(value);
                 const length = image.length;
                 if (length > 1) {
@@ -4686,8 +4796,7 @@
                         const color = image[i];
                         if (isColor(color) && hasCalc(color)) {
                             const component = splitEnclosing(trimEnclosing(color));
-                            const q = component.length;
-                            for (let j = 1; j < q; ++j) {
+                            for (let j = 1, q = component.length; j < q; ++j) {
                                 if (hasCalc(component[j])) {
                                     const previous = component[j - 1];
                                     if (isColor(previous)) {
@@ -4710,7 +4819,6 @@
             }
             case 'borderColor':
             case 'scrollbarColor': {
-                value = value.trim();
                 const color = splitEnclosing(value);
                 const length = color.length;
                 if (length > 1) {
@@ -4781,8 +4889,9 @@
             case 'borderRight':
             case 'borderTop':
             case 'columnRule':
-            case 'outline': {
-                value = value.trim();
+            case 'outline':
+            case 'textEmphasis':
+            case 'textDecoration': {
                 const border = splitEnclosing(value);
                 const length = border.length;
                 if (length > 1) {
@@ -4812,7 +4921,6 @@
             }
             case 'animationTimingFunction':
             case 'transitionTimingFunction': {
-                value = value.trim();
                 const timingFunction = splitEnclosing(value);
                 const length = timingFunction.length;
                 if (length > 1) {
@@ -4827,18 +4935,21 @@
                                 const q = cubic.length;
                                 if (q === 4) {
                                     calc = '';
-                                    const options = { unitType: 32 /* DECIMAL */, supportPercent: false };
                                     for (let j = 0; j < q; ++j) {
                                         let bezier = cubic[j];
                                         if (isCalc(bezier)) {
-                                            if (j % 2 === 0) {
-                                                options.min = 0;
-                                                options.max = 1;
-                                            } else {
-                                                options.min = undefined;
-                                                options.max = undefined;
-                                            }
-                                            const p = calculateVar(element, bezier, options);
+                                            const p = calculateVar(
+                                                element,
+                                                bezier,
+                                                j % 2 === 0
+                                                    ? {
+                                                          unitType: 32 /* DECIMAL */,
+                                                          supportPercent: false,
+                                                          min: 0,
+                                                          max: 1,
+                                                      }
+                                                    : undefined
+                                            );
                                             if (!isNaN(p)) {
                                                 bezier = p.toString();
                                             } else {
@@ -4869,7 +4980,6 @@
             case 'clipPath':
             case 'offsetPath':
             case 'shapeOutside': {
-                value = value.trim();
                 const path = splitEnclosing(value);
                 const length = path.length;
                 if (length === 2) {
@@ -4890,12 +5000,16 @@
                             const result = [];
                             let [radius, position] = shape.split(/\s+at\s+/);
                             if (hasCalc(radius)) {
-                                const options = { boundingBox, min: 0, parent: true };
+                                const options = {
+                                    boundingBox,
+                                    min: 0,
+                                    parent: true,
+                                };
                                 if (prefix === 'circle') {
                                     if (radius.includes('%')) {
                                         const { width, height } =
                                             boundingBox || getContentBoxDimension(element.parentElement);
-                                        if (width > 0 && height > 0) {
+                                        if (width && height) {
                                             options.boundingSize = Math.min(width, height);
                                         } else {
                                             return '';
@@ -5063,6 +5177,8 @@
                 return '';
             }
             case 'background':
+            case 'filter':
+            case 'backdropFilter':
             case 'gridTemplate':
                 return getStyle(element)[attr];
             default:
@@ -5070,69 +5186,121 @@
                     return calculateColor(element, value.trim());
                 } else {
                     const alias = checkWritingMode(attr, getStyle(element).writingMode);
-                    if (alias !== '') {
+                    if (alias !== attr) {
                         return calculateStyle(element, alias, value, boundingBox);
                     }
                 }
         }
         return '';
     }
-    function checkStyleValue(element, attr, value, style) {
-        if (value === 'initial') {
-            switch (attr) {
-                case 'position':
-                case 'display':
-                case 'baseline':
-                case 'lineHeight':
-                case 'backgroundColor':
-                case 'backgroundImage':
-                case 'borderTopStyle':
-                case 'borderRightStyle':
-                case 'borderBottomStyle':
-                case 'borderLeftStyle':
-                    return value;
-                default:
-                    return '';
-            }
-        } else if (value === 'inherit') {
-            switch (attr) {
-                case 'fontSize':
-                case 'lineHeight':
-                    if (style) {
-                        return style[attr];
-                    }
-                default:
-                    return getInheritedStyle(element, attr);
-            }
-        } else if (hasCalc(value)) {
-            value = calculateStyle(element, attr, value);
-        } else if (isCustomProperty(value)) {
-            value = parseVar(element, value);
+    function checkStyleValue(element, attr, value) {
+        switch (value) {
+            case 'unset':
+                switch (attr) {
+                    case 'lineHeight':
+                    case 'fontSize':
+                        return 'inherit';
+                }
+            case 'initial':
+                switch (attr) {
+                    case 'position':
+                        return 'static';
+                    case 'display':
+                        return ELEMENT_BLOCK.has(element.tagName) ? 'block' : 'inline';
+                    case 'fontSize':
+                        return 'inherit';
+                    case 'verticalAlign':
+                        switch (element.tagName) {
+                            case 'SUP':
+                                return 'super';
+                            case 'SUB':
+                                return 'sub';
+                            default:
+                                return 'baseline';
+                        }
+                    case 'backgroundColor':
+                        return 'transparent';
+                    case 'backgroundRepeat':
+                        return 'repeat-x repeat-y';
+                    case 'backgroundImage':
+                    case 'borderTopStyle':
+                    case 'borderRightStyle':
+                    case 'borderBottomStyle':
+                    case 'borderLeftStyle':
+                    case 'float':
+                        return 'none';
+                    case 'lineHeight':
+                        return 'normal';
+                    case 'boxSizing':
+                        return 'content-box';
+                    case 'borderCollapse':
+                        return 'separate';
+                    default:
+                        return '';
+                }
+            case 'inherit':
+                switch (attr) {
+                    case 'fontSize':
+                    case 'lineHeight':
+                        return 'inherit';
+                    default:
+                        return getStyle(element)[attr];
+                }
         }
-        return (value === '' && (style === null || style === void 0 ? void 0 : style[attr])) || value;
+        if (hasCalc(value)) {
+            return calculateStyle(element, attr, value) || getStyle(element)[attr];
+        } else if (isCustomProperty(value)) {
+            return parseVar(element, value) || getStyle(element)[attr];
+        }
+        return value;
+    }
+    function checkFontSizeValue(value, fixedWidth) {
+        switch (value) {
+            case '':
+                return 'inherit';
+            case 'medium':
+                return '1rem';
+            case 'smaller':
+                return '0.833333em';
+            case 'larger':
+                return '1.2em';
+            case 'xxx-large':
+                return fromFontNamedValue(6, fixedWidth);
+            case 'xx-large':
+                return fromFontNamedValue(5, fixedWidth);
+            case 'x-large':
+                return fromFontNamedValue(4, fixedWidth);
+            case 'large':
+                return fromFontNamedValue(3, fixedWidth);
+            case 'small':
+                return fromFontNamedValue(2, fixedWidth);
+            case 'x-small':
+                return fromFontNamedValue(1, fixedWidth);
+            case 'xx-small':
+                return fromFontNamedValue(0, fixedWidth);
+            default:
+                return value;
+        }
     }
     function getKeyframesRules() {
-        const result = {};
+        const result = new Map();
         violation: {
             const styleSheets = document.styleSheets;
-            const length = styleSheets.length;
-            let i = 0;
-            while (i < length) {
+            for (let i = 0, length = styleSheets.length; i < length; ++i) {
                 try {
-                    const cssRules = styleSheets[i++].cssRules;
+                    const cssRules = styleSheets[i].cssRules;
                     if (cssRules) {
-                        const q = cssRules.length;
-                        for (let j = 0; j < q; ++j) {
+                        for (let j = 0, q = cssRules.length; j < q; ++j) {
                             try {
                                 const item = cssRules[j];
                                 if (item.type === CSSRule.KEYFRAMES_RULE) {
                                     const value = parseKeyframes(item.cssRules);
-                                    if (hasKeys(value)) {
-                                        const name = item.name;
-                                        if (result[name]) {
-                                            Object.assign(result[name], value);
+                                    if (value) {
+                                        const data = result.get(item.name);
+                                        if (data) {
+                                            Object.assign(data, value);
                                         } else {
-                                            result[name] = value;
+                                            result.set(item.name, value);
                                         }
                                     }
                                 }
@@ -5148,17 +5316,14 @@
     }
     function parseKeyframes(rules) {
         const result = {};
-        const length = rules.length;
-        let i = 0;
-        while (i < length) {
-            const item = rules[i++];
-            const match = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/.exec(item.cssText);
+        let valid;
+        for (let i = 0, length = rules.length; i < length; ++i) {
+            const item = rules[i];
+            const match = REGEXP_KEYFRAMES.exec(item.cssText);
             if (match) {
                 const keyframes = (item['keyText'] || match[1]).trim().split(CHAR_SEPARATOR);
-                const q = keyframes.length;
-                let j = 0;
-                while (j < q) {
-                    let percent = keyframes[j++];
+                for (let j = 0, q = keyframes.length; j < q; ++j) {
+                    let percent = keyframes[j];
                     switch (percent) {
                         case 'from':
                             percent = '0%';
@@ -5169,20 +5334,17 @@
                     }
                     const keyframe = {};
                     for (const property of match[2].split(/\s*;\s*/)) {
-                        const index = property.indexOf(':');
-                        if (index !== -1) {
-                            const value = property.substring(index + 1).trim();
-                            if (value !== '') {
-                                const attr = property.substring(0, index).trim();
-                                keyframe[attr] = value;
-                            }
+                        const [attr, value] = splitPair(property, ':');
+                        if (value !== '') {
+                            keyframe[attr.trim()] = value.trim();
                         }
                     }
                     result[percent] = keyframe;
+                    valid = true;
                 }
             }
         }
-        return result;
+        return valid ? result : null;
     }
     function checkMediaRule(value, fontSize) {
         switch (value.trim()) {
@@ -5192,14 +5354,12 @@
             case 'only screen':
                 return true;
             default: {
-                const pattern = /(?:(not|only)?\s*(?:all|screen)\s+and\s+)?((?:\([^)]+\)(?:\s+and\s+)?)+),?\s*/g;
+                REGEXP_MEDIARULE.lastIndex = 0;
                 let match;
-                while ((match = pattern.exec(value))) {
-                    const patternCondition = /\(([a-z-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?:\s+and\s+)?/g;
+                while ((match = REGEXP_MEDIARULE.exec(value))) {
                     const negate = match[1] === 'not';
-                    let valid = false,
-                        condition;
-                    while ((condition = patternCondition.exec(match[2]))) {
+                    let valid, condition;
+                    while ((condition = REGEXP_MEDIARULECONDITION.exec(match[2]))) {
                         const attr = condition[1];
                         let operation = condition[2];
                         const rule = condition[3];
@@ -5213,11 +5373,11 @@
                             case 'min-aspect-ratio':
                             case 'max-aspect-ratio':
                                 if (rule) {
-                                    const [width, height] = replaceMap(rule.split('/'), ratio => parseInt(ratio));
+                                    const [width, height] = splitPair(rule, '/');
                                     valid = compareRange(
                                         operation,
                                         window.innerWidth / window.innerHeight,
-                                        width / height
+                                        parseInt(width) / parseInt(height)
                                     );
                                 } else {
                                     valid = false;
@@ -5232,7 +5392,7 @@
                                 valid = compareRange(
                                     operation,
                                     attr.endsWith('width') ? window.innerWidth : window.innerHeight,
-                                    parseUnit(rule, fontSize)
+                                    parseUnit(rule, { fontSize })
                                 );
                                 break;
                             case 'orientation':
@@ -5259,7 +5419,7 @@
                                 valid = rule === '0';
                                 break;
                             case 'color':
-                                valid = rule === undefined || parseInt(rule) > 0;
+                                valid = parseInt(rule) > 0;
                                 break;
                             case 'min-color':
                                 valid = parseInt(rule) <= screen.colorDepth / 3;
@@ -5285,6 +5445,7 @@
                             break;
                         }
                     }
+                    REGEXP_MEDIARULECONDITION.lastIndex = 0;
                     if ((!negate && valid) || (negate && !valid)) {
                         return true;
                     }
@@ -5293,32 +5454,10 @@
         }
         return false;
     }
-    function isParentStyle(element, attr, ...styles) {
-        if (element.nodeName.charAt(0) !== '#' && styles.includes(getStyle(element)[attr])) {
-            return true;
-        }
-        const parentElement = element.parentElement;
-        return !!parentElement && styles.includes(getStyle(parentElement)[attr]);
-    }
-    function getInheritedStyle(element, attr, exclude, ...tagNames) {
-        let value = '',
-            current = element.parentElement;
-        while (current && !tagNames.includes(current.tagName)) {
-            value = getStyle(current)[attr];
-            if (value === 'inherit' || (exclude === null || exclude === void 0 ? void 0 : exclude.test(value))) {
-                value = '';
-            } else if (value) {
-                break;
-            }
-            current = current.parentElement;
-        }
-        return value;
-    }
     function parseVar(element, value) {
         const style = getStyle(element);
-        const pattern = /var\((--[A-Za-z\d-]+)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)/;
         let match;
-        while ((match = pattern.exec(value))) {
+        while ((match = REGEXP_VAR.exec(value))) {
             let customValue = style.getPropertyValue(match[1]).trim();
             const fallback = match[2];
             if (
@@ -5340,9 +5479,7 @@
     }
     function calculateVarAsString(element, value, options) {
         let orderedSize, dimension, separator, unitType, checkUnit, errorString;
-        const optionsVar = {};
         if (options) {
-            Object.assign(optionsVar, options);
             if (Array.isArray(options.orderedSize)) {
                 orderedSize = options.orderedSize;
             }
@@ -5351,7 +5488,9 @@
             }
             ({ separator, unitType, checkUnit, errorString } = options);
         }
-        value = value.trim();
+        if (separator === ' ') {
+            value = value.trim();
+        }
         let unit;
         switch (unitType) {
             case 16 /* INTEGER */:
@@ -5378,24 +5517,22 @@
             if (seg !== '') {
                 const calc = splitEnclosing(seg, 'calc');
                 const length = calc.length;
-                if (length > 0) {
+                if (length) {
                     let partial = '';
-                    let i = 0,
-                        j = 0;
-                    while (i < length) {
-                        let output = calc[i++];
+                    for (let i = 0, j = 0; i < length; ++i) {
+                        let output = calc[i];
                         if (isCalc(output)) {
-                            if (
-                                (orderedSize === null || orderedSize === void 0 ? void 0 : orderedSize[j]) !== undefined
-                            ) {
-                                optionsVar.boundingSize = orderedSize[j++];
-                            } else if (dimension) {
-                                optionsVar.dimension = dimension[j++];
-                                optionsVar.boundingSize = undefined;
-                            } else if (orderedSize) {
-                                optionsVar.boundingSize = undefined;
+                            if (options) {
+                                if (orderedSize && orderedSize[j] !== undefined) {
+                                    options.boundingSize = orderedSize[j++];
+                                } else if (dimension) {
+                                    options.dimension = dimension[j++];
+                                    delete options.boundingSize;
+                                } else if (orderedSize) {
+                                    delete options.boundingSize;
+                                }
                             }
-                            const k = calculateVar(element, output, optionsVar);
+                            const k = calculateVar(element, output, options);
                             if (!isNaN(k)) {
                                 partial += k + unit;
                             } else {
@@ -5431,10 +5568,8 @@
                 }
                 const segment = match[0];
                 let optional = segment;
-                const length = match.length;
-                let i = length - 1;
-                while (i >= 1) {
-                    optional = optional.replace(new RegExp(match[i--] + '$'), '');
+                for (let i = match.length - 1; i >= 1; --i) {
+                    optional = optional.replace(new RegExp(match[i] + '$'), '');
                 }
                 if (optional === segment) {
                     return '';
@@ -5448,8 +5583,9 @@
     function calculateVar(element, value, options = {}) {
         const output = parseVar(element, value);
         if (output) {
+            const { precision, supportPercent, unitType } = options;
             if (value.includes('%')) {
-                if (options.supportPercent === false || options.unitType === 16 /* INTEGER */) {
+                if (supportPercent === false || unitType === 16 /* INTEGER */) {
                     return NaN;
                 } else if (options.boundingSize === undefined) {
                     const { dimension, boundingBox } = options;
@@ -5471,24 +5607,17 @@
                                             if (boundingElement === document.body) {
                                                 break;
                                             }
-                                            switch (style.position) {
-                                                case 'static':
-                                                case 'initial':
-                                                case 'unset':
-                                                    boundingElement = boundingElement.parentElement;
-                                                    continue;
+                                            if (style.position === 'static') {
+                                                boundingElement = boundingElement.parentElement;
+                                            } else {
+                                                break;
                                             }
-                                            break;
-                                        } while (boundingElement !== null);
+                                        } while (boundingElement);
                                     } else {
                                         style = getStyle(boundingElement);
                                     }
-                                    if (style) {
-                                        offsetPadding =
-                                            dimension === 'width'
-                                                ? getContentBoxWidth(style)
-                                                : getContentBoxHeight(style);
-                                    }
+                                    offsetPadding =
+                                        dimension === 'width' ? getContentBoxWidth(style) : getContentBoxHeight(style);
                                 } else if (element instanceof SVGElement) {
                                     if (options.parent !== true) {
                                         boundingElement = element;
@@ -5506,337 +5635,45 @@
                         }
                     }
                 }
-            } else if (options.supportPercent) {
+            } else if (supportPercent) {
                 return NaN;
             }
-            if (
-                (!options.unitType || options.unitType === 1) /* LENGTH */ &&
-                /\d(em|ch)/.test(value) &&
-                options.fontSize === undefined
-            ) {
+            if (options.fontSize === undefined && (!unitType || unitType === 1) /* LENGTH */ && hasEm(value)) {
                 options.fontSize = getFontSize(element);
             }
-            let result = calculate(output, options);
-            if (options.precision !== undefined) {
-                result = options.precision === 0 ? Math.floor(result) : parseFloat(truncate(result, options.precision));
+            const result = calculate(output, options);
+            if (precision !== undefined) {
+                return precision === 0 ? Math.floor(result) : parseFloat(truncate(result, precision));
             } else if (options.roundValue) {
-                result = Math.round(result);
+                return Math.round(result);
             }
             return result;
         }
         return NaN;
     }
-    function getContentBoxDimension(element) {
-        let width = 0,
-            height = 0;
-        if (element) {
-            const style = getStyle(element);
-            ({ width, height } = element.getBoundingClientRect());
-            width = Math.max(0, width - getContentBoxWidth(style));
-            height = Math.max(0, height - getContentBoxHeight(style));
-        }
-        return { width, height };
-    }
-    function getBackgroundPosition(value, dimension, options) {
-        value = value.trim();
-        if (value !== '') {
-            let fontSize, imageDimension, imageSize, screenDimension;
-            if (options) {
-                ({ fontSize, imageDimension, imageSize, screenDimension } = options);
-            }
-            const { width, height } = dimension;
-            const setImageOffset = (position, horizontal, direction, directionAsPercent) => {
-                if (imageDimension && !isLength(position)) {
-                    let offset = result[directionAsPercent];
-                    if (imageSize && imageSize !== 'auto' && imageSize !== 'initial') {
-                        const [sizeW, sizeH] = imageSize.split(CHAR_SPACE);
-                        if (horizontal) {
-                            let imageWidth = width;
-                            if (isLength(sizeW, true)) {
-                                if (isPercent(sizeW)) {
-                                    imageWidth *= parseFloat(sizeW) / 100;
-                                } else {
-                                    const unit = parseUnit(sizeW, fontSize, screenDimension);
-                                    if (unit) {
-                                        imageWidth = unit;
-                                    }
-                                }
-                            } else if (sizeH) {
-                                let percent = 1;
-                                if (isPercent(sizeH)) {
-                                    percent = ((parseFloat(sizeH) / 100) * height) / imageDimension.height;
-                                } else if (isLength(sizeH)) {
-                                    const unit = parseUnit(sizeH, fontSize, screenDimension);
-                                    if (unit) {
-                                        percent = unit / imageDimension.height;
-                                    }
-                                }
-                                imageWidth = percent * imageDimension.width;
-                            }
-                            offset *= imageWidth;
-                        } else {
-                            let imageHeight = height;
-                            if (isLength(sizeH, true)) {
-                                if (isPercent(sizeH)) {
-                                    imageHeight *= parseFloat(sizeH) / 100;
-                                } else {
-                                    const unit = parseUnit(sizeH, fontSize, screenDimension);
-                                    if (unit) {
-                                        imageHeight = unit;
-                                    }
-                                }
-                            } else if (sizeW) {
-                                let percent = 1;
-                                if (isPercent(sizeW)) {
-                                    percent = ((parseFloat(sizeW) / 100) * width) / imageDimension.width;
-                                } else if (isLength(sizeW)) {
-                                    const unit = parseUnit(sizeW, fontSize, screenDimension);
-                                    if (unit) {
-                                        percent = unit / imageDimension.width;
-                                    }
-                                }
-                                imageHeight = percent * imageDimension.height;
-                            }
-                            offset *= imageHeight;
-                        }
-                    } else {
-                        offset *= horizontal ? imageDimension.width : imageDimension.height;
-                    }
-                    result[direction] -= offset;
-                }
-            };
-            const orientation = value.split(CHAR_SPACE);
-            if (orientation.length === 1) {
-                orientation.push('center');
-            }
-            const result = newBoxRectPosition(orientation);
-            const length = Math.min(orientation.length, 4);
-            if (length === 2) {
-                orientation.sort((a, b) => {
-                    switch (a) {
-                        case 'left':
-                        case 'right':
-                            return -1;
-                        case 'top':
-                        case 'bottom':
-                            return 1;
-                    }
-                    switch (b) {
-                        case 'left':
-                        case 'right':
-                            return 1;
-                        case 'top':
-                        case 'bottom':
-                            return -1;
-                    }
-                    return 0;
-                });
-                for (let i = 0; i < 2; ++i) {
-                    let position = orientation[i];
-                    const horizontal = i === 0;
-                    const [direction, offsetParent] = horizontal ? ['left', width] : ['top', height];
-                    const directionAsPercent = direction + 'AsPercent';
-                    switch (position) {
-                        case '0%':
-                            if (horizontal) {
-                                position = 'left';
-                            }
-                        case 'left':
-                        case 'top':
-                            break;
-                        case '100%':
-                            if (horizontal) {
-                                position = 'right';
-                            }
-                        case 'right':
-                        case 'bottom':
-                            result[direction] = offsetParent;
-                            result[directionAsPercent] = 1;
-                            break;
-                        case '50%':
-                        case 'center':
-                            position = 'center';
-                            result[direction] = offsetParent / 2;
-                            result[directionAsPercent] = 0.5;
-                            break;
-                        default: {
-                            const percent = convertPercent(position, offsetParent, fontSize, screenDimension);
-                            if (percent > 1) {
-                                orientation[i] = '100%';
-                                position = horizontal ? 'right' : 'bottom';
-                                result[position] =
-                                    convertLength(formatPercent(percent - 1), offsetParent, fontSize, screenDimension) *
-                                    -1;
-                            } else {
-                                result[direction] = convertLength(position, offsetParent, fontSize, screenDimension);
-                            }
-                            result[directionAsPercent] = percent;
-                            break;
-                        }
-                    }
-                    if (horizontal) {
-                        result.horizontal = position;
-                    } else {
-                        result.vertical = position;
-                    }
-                    setImageOffset(position, horizontal, direction, directionAsPercent);
-                }
-            } else {
-                let horizontal = 0,
-                    vertical = 0;
-                const checkPosition = (position, nextPosition) => {
-                    switch (position) {
-                        case 'left':
-                        case 'right':
-                            result.horizontal = position;
-                            ++horizontal;
-                            break;
-                        case 'center':
-                            if (length === 4) {
-                                return false;
-                            } else {
-                                let centerHorizontal = true;
-                                if (nextPosition === undefined) {
-                                    if (horizontal > 0) {
-                                        result.vertical = position;
-                                        centerHorizontal = false;
-                                    } else {
-                                        result.horizontal = position;
-                                    }
-                                } else {
-                                    switch (nextPosition) {
-                                        case 'left':
-                                        case 'right':
-                                            result.vertical = position;
-                                            centerHorizontal = false;
-                                            break;
-                                        case 'top':
-                                        case 'bottom':
-                                            result.horizontal = position;
-                                            break;
-                                        default:
-                                            return false;
-                                    }
-                                }
-                                if (centerHorizontal) {
-                                    result.left = width / 2;
-                                    result.leftAsPercent = 0.5;
-                                    setImageOffset(position, true, 'left', 'leftAsPercent');
-                                } else {
-                                    result.top = height / 2;
-                                    result.topAsPercent = 0.5;
-                                    setImageOffset(position, false, 'top', 'topAsPercent');
-                                }
-                            }
-                            break;
-                        case 'top':
-                        case 'bottom':
-                            result.vertical = position;
-                            ++vertical;
-                            break;
-                        default:
-                            return false;
-                    }
-                    return horizontal < 2 && vertical < 2;
-                };
-                for (let i = 0; i < length; ++i) {
-                    const position = orientation[i];
-                    if (isLength(position, true)) {
-                        const alignment = orientation[i - 1];
-                        switch (alignment) {
-                            case 'left':
-                            case 'right': {
-                                const location = convertLength(position, width, fontSize, screenDimension);
-                                const locationAsPercent = convertPercent(position, width, fontSize, screenDimension);
-                                if (alignment === 'right') {
-                                    result.right = location;
-                                    result.rightAsPercent = locationAsPercent;
-                                    setImageOffset(position, true, 'right', 'rightAsPercent');
-                                    result.left = width - location;
-                                    result.leftAsPercent = 1 - locationAsPercent;
-                                } else {
-                                    if (locationAsPercent > 1) {
-                                        const percent = 1 - locationAsPercent;
-                                        result.horizontal = 'right';
-                                        result.right = convertLength(
-                                            formatPercent(percent),
-                                            width,
-                                            fontSize,
-                                            screenDimension
-                                        );
-                                        result.rightAsPercent = percent;
-                                        setImageOffset(position, true, 'right', 'rightAsPercent');
-                                    }
-                                    result.left = location;
-                                    result.leftAsPercent = locationAsPercent;
-                                }
-                                setImageOffset(position, true, 'left', 'leftAsPercent');
-                                break;
-                            }
-                            case 'top':
-                            case 'bottom': {
-                                const location = convertLength(position, height, fontSize, screenDimension);
-                                const locationAsPercent = convertPercent(position, height, fontSize, screenDimension);
-                                if (alignment === 'bottom') {
-                                    result.bottom = location;
-                                    result.bottomAsPercent = locationAsPercent;
-                                    setImageOffset(position, false, 'bottom', 'bottomAsPercent');
-                                    result.top = height - location;
-                                    result.topAsPercent = 1 - locationAsPercent;
-                                } else {
-                                    if (locationAsPercent > 1) {
-                                        const percent = 1 - locationAsPercent;
-                                        result.horizontal = 'bottom';
-                                        result.bottom = convertLength(
-                                            formatPercent(percent),
-                                            height,
-                                            fontSize,
-                                            screenDimension
-                                        );
-                                        result.bottomAsPercent = percent;
-                                        setImageOffset(position, false, 'bottom', 'bottomAsPercent');
-                                    }
-                                    result.top = location;
-                                    result.topAsPercent = locationAsPercent;
-                                }
-                                setImageOffset(position, false, 'top', 'topAsPercent');
-                                break;
-                            }
-                            default:
-                                return newBoxRectPosition();
-                        }
-                    } else if (!checkPosition(position, orientation[i + 1])) {
-                        return newBoxRectPosition();
-                    }
-                }
-            }
-            result.static = result.top === 0 && result.right === 0 && result.bottom === 0 && result.left === 0;
-            return result;
-        }
-        return newBoxRectPosition();
-    }
     function getSrcSet(element, mimeType) {
         const result = [];
         const parentElement = element.parentElement;
         let { srcset, sizes } = element;
-        if ((parentElement === null || parentElement === void 0 ? void 0 : parentElement.tagName) === 'PICTURE') {
+        if (parentElement && parentElement.tagName === 'PICTURE') {
             iterateArray(parentElement.children, item => {
-                if (item.tagName === 'SOURCE') {
-                    if (
-                        isString(item.srcset) &&
-                        !(isString(item.media) && !checkMediaRule(item.media)) &&
-                        (!isString(item.type) || !mimeType || mimeType.includes(item.type.trim().toLowerCase()))
-                    ) {
-                        ({ srcset, sizes } = item);
-                        return true;
-                    }
+                if (
+                    item.tagName === 'SOURCE' &&
+                    isString(item.srcset) &&
+                    !(isString(item.media) && !checkMediaRule(item.media)) &&
+                    (!mimeType ||
+                        mimeType === '*' ||
+                        !isString(item.type) ||
+                        mimeType.has(item.type.trim().toLowerCase()))
+                ) {
+                    ({ srcset, sizes } = item);
+                    return true;
                 }
-                return;
             });
         }
         if (srcset !== '') {
             for (const value of srcset.trim().split(CHAR_SEPARATOR)) {
-                const match = /^(.*?)(?:\s+([\d.]+)([xw]))?$/.exec(value);
+                const match = REGEXP_IMGSRCSET.exec(value);
                 if (match) {
                     let width = 0,
                         pixelRatio = 0;
@@ -5857,20 +5694,20 @@
         }
         const length = result.length;
         if (length === 0) {
-            return undefined;
+            return;
         } else if (length > 1) {
             result.sort((a, b) => {
                 const pxA = a.pixelRatio;
                 const pxB = b.pixelRatio;
-                if (pxA > 0 && pxB > 0) {
+                if (pxA && pxB) {
                     if (pxA !== pxB) {
-                        return pxA < pxB ? -1 : 1;
+                        return pxA - pxB;
                     }
                 } else {
                     const widthA = a.width;
                     const widthB = b.width;
-                    if (widthA !== widthB && widthA > 0 && widthB > 0) {
-                        return widthA < widthB ? -1 : 1;
+                    if (widthA !== widthB && widthA && widthB) {
+                        return widthA - widthB;
                     }
                 }
                 return 0;
@@ -5880,9 +5717,9 @@
                 for (const value of sizes.trim().split(CHAR_SEPARATOR)) {
                     let match = REGEXP_SOURCESIZES.exec(value);
                     if (match) {
-                        const ruleA = match[2] ? checkMediaRule(match[2]) : undefined;
-                        const ruleB = match[6] ? checkMediaRule(match[6]) : undefined;
-                        switch (match[5]) {
+                        const ruleA = match[1] ? checkMediaRule(match[1]) : null;
+                        const ruleB = match[4] ? checkMediaRule(match[4]) : null;
+                        switch (match[3]) {
                             case 'and':
                                 if (!ruleA || !ruleB) {
                                     continue;
@@ -5894,17 +5731,17 @@
                                 }
                                 break;
                             case 'not':
-                                if (ruleA !== undefined || ruleB) {
+                                if (ruleA !== null || ruleB) {
                                     continue;
                                 }
                                 break;
                             default:
-                                if (ruleA === false || ruleB !== undefined) {
+                                if (ruleA === false || ruleB !== null) {
                                     continue;
                                 }
                                 break;
                         }
-                        const unit = match[9];
+                        const unit = match[6];
                         if (unit) {
                             match = REGEXP_CALC.exec(unit);
                             if (match) {
@@ -5948,9 +5785,8 @@
                         selected.actualWidth = width;
                         result.unshift(selected);
                     }
-                    let i = 1;
-                    while (i < length) {
-                        const item = result[i++];
+                    for (let i = 1; i < length; ++i) {
+                        const item = result[i];
                         if (item.pixelRatio === 0) {
                             item.pixelRatio = item.width / width;
                         }
@@ -5960,38 +5796,17 @@
         }
         return result;
     }
-    function convertListStyle(name, value, valueAsDefault) {
-        switch (name) {
-            case 'decimal':
-                return value.toString();
-            case 'decimal-leading-zero':
-                return (value < 9 ? '0' : '') + value.toString();
-            case 'upper-alpha':
-            case 'upper-latin':
-                if (value >= 1) {
-                    return convertAlpha(value - 1);
-                }
-                break;
-            case 'lower-alpha':
-            case 'lower-latin':
-                if (value >= 1) {
-                    return convertAlpha(value - 1).toLowerCase();
-                }
-                break;
-            case 'upper-roman':
-                return convertRoman(value);
-            case 'lower-roman':
-                return convertRoman(value).toLowerCase();
-        }
-        return valueAsDefault ? value.toString() : '';
-    }
     function extractURL(value) {
         const match = CSS.URL.exec(value);
-        return match ? trimBoth(match[1].trim(), '"').trim() : undefined;
+        if (match) {
+            return trimBoth(match[1], '"');
+        }
     }
     function resolveURL(value) {
         const url = extractURL(value);
-        return url ? resolvePath(url) : undefined;
+        if (url) {
+            return resolvePath(url);
+        }
     }
     function insertStyleSheetRule(value, index = 0) {
         const style = document.createElement('style');
@@ -6000,7 +5815,7 @@
         }
         document.head.appendChild(style);
         const sheet = style.sheet;
-        if (typeof (sheet === null || sheet === void 0 ? void 0 : sheet.insertRule) === 'function') {
+        if (sheet && typeof sheet.insertRule === 'function') {
             try {
                 sheet.insertRule(value, index);
             } catch (_a) {
@@ -6015,7 +5830,7 @@
             return NaN;
         }
         let length = value.length;
-        if (value.charAt(0) !== '(' || value.charAt(length - 1) !== ')') {
+        if (value[0] !== '(' || value[length - 1] !== ')') {
             value = `(${value})`;
             length += 2;
         }
@@ -6023,7 +5838,7 @@
         const opening = [];
         const closing = [];
         for (let i = 0; i < length; ++i) {
-            switch (value.charAt(i)) {
+            switch (value[i]) {
                 case '(':
                     ++opened;
                     opening[i] = true;
@@ -6038,7 +5853,7 @@
             let index = 0;
             while (true) {
                 for (let i = 0; i < closing.length; ++i) {
-                    let valid = false,
+                    let valid,
                         j = closing[i] - 1;
                     for (; j >= 0; j--) {
                         if (opening[j]) {
@@ -6054,16 +5869,12 @@
                         if (options) {
                             ({ boundingSize, min, max, unitType, fontSize } = options);
                         }
-                        let found = false,
-                            operand,
-                            operator;
+                        let found, operand, operator;
                         const seg = [];
                         const evaluate = [];
-                        const operation = value.substring(j + 1, closing[i]).split(/\s+([+-]\s+|\s*[*/])\s*/);
-                        const q = operation.length;
-                        let k = 0;
-                        while (k < q) {
-                            const partial = operation[k++].trim();
+                        const operation = value.substring(j + 1, closing[i]).split(REGEXP_CALCOPERATION);
+                        for (let k = 0, q = operation.length; k < q; ++k) {
+                            const partial = operation[k].trim();
                             switch (partial) {
                                 case '+':
                                 case '-':
@@ -6073,7 +5884,7 @@
                                     operator = partial;
                                     break;
                                 default: {
-                                    const match = /\s*{(\d+)}\s*/.exec(partial);
+                                    const match = REGEXP_CALCUNIT.exec(partial);
                                     if (match) {
                                         switch (unitType) {
                                             case 16 /* INTEGER */:
@@ -6176,7 +5987,7 @@
                                                     if (!checkCalculateNumber(operand, operator)) {
                                                         return NaN;
                                                     }
-                                                    seg.push(parseUnit(partial, fontSize));
+                                                    seg.push(parseUnit(partial, { fontSize }));
                                                     found = true;
                                                 } else if (
                                                     isPercent(partial) &&
@@ -6202,7 +6013,7 @@
                         if (!found || seg.length !== evaluate.length + 1) {
                             return NaN;
                         }
-                        for (k = 0; k < evaluate.length; ++k) {
+                        for (let k = 0; k < evaluate.length; ++k) {
                             if (evaluate[k] === '/') {
                                 if (Math.abs(seg[k + 1]) !== 0) {
                                     seg.splice(k, 2, seg[k] / seg[k + 1]);
@@ -6212,13 +6023,13 @@
                                 }
                             }
                         }
-                        for (k = 0; k < evaluate.length; ++k) {
+                        for (let k = 0; k < evaluate.length; ++k) {
                             if (evaluate[k] === '*') {
                                 seg.splice(k, 2, seg[k] * seg[k + 1]);
                                 evaluate.splice(k--, 1);
                             }
                         }
-                        for (k = 0; k < evaluate.length; ++k) {
+                        for (let k = 0; k < evaluate.length; ++k) {
                             seg.splice(k, 2, seg[k] + seg[k + 1] * (evaluate[k] === '-' ? -1 : 1));
                             evaluate.splice(k--, 1);
                         }
@@ -6249,7 +6060,7 @@
         }
         return NaN;
     }
-    function parseUnit(value, fontSize, screenDimension) {
+    function parseUnit(value, options) {
         const match = REGEXP_LENGTH.exec(value);
         if (match) {
             let result = parseFloat(match[1]);
@@ -6259,13 +6070,14 @@
                 case 'ex':
                     result /= 2;
                 case 'em':
-                case 'ch':
-                    return (
-                        result *
-                        (fontSize !== null && fontSize !== void 0 ? fontSize : getFontSize(document.documentElement))
-                    );
+                case 'ch': {
+                    const fontSize = options && options.fontSize;
+                    if (fontSize !== undefined) {
+                        return result * fontSize;
+                    }
+                }
                 case 'rem':
-                    return result * getFontSize(document.documentElement);
+                    return result * (options && options.fixedWidth ? DOCUMENT_FIXEDSIZE : DOCUMENT_FONTSIZE);
                 case 'pc':
                     result *= 12;
                 case 'pt':
@@ -6279,13 +6091,25 @@
                 case 'in':
                     return result * getDeviceDPI();
                 case 'vw':
-                    return (result * getInnerWidth(screenDimension)) / 100;
+                    return (
+                        (result *
+                            getInnerWidth(options === null || options === void 0 ? void 0 : options.screenDimension)) /
+                        100
+                    );
                 case 'vh':
-                    return (result * getInnerHeight(screenDimension)) / 100;
-                case 'vmin':
+                    return (
+                        (result *
+                            getInnerHeight(options === null || options === void 0 ? void 0 : options.screenDimension)) /
+                        100
+                    );
+                case 'vmin': {
+                    const screenDimension = options && options.screenDimension;
                     return (result * Math.min(getInnerWidth(screenDimension), getInnerHeight(screenDimension))) / 100;
-                case 'vmax':
+                }
+                case 'vmax': {
+                    const screenDimension = options && options.screenDimension;
                     return (result * Math.max(getInnerWidth(screenDimension), getInnerHeight(screenDimension))) / 100;
+                }
             }
         }
         return 0;
@@ -6297,9 +6121,8 @@
             ({ accumulate, fontSize, boundingBox } = options);
         }
         const result = [];
-        const pattern = /(\w+)\([^)]+\)/g;
         let match;
-        while ((match = pattern.exec(value))) {
+        while ((match = REGEXP_TRANSFORM.exec(value))) {
             const method = match[1];
             if (method.startsWith('translate')) {
                 const translate = TRANSFORM.TRANSLATE.exec(match[0]);
@@ -6317,7 +6140,7 @@
                                         x = (parseFloat(tX) / 100) * boundingBox.width;
                                     }
                                 } else {
-                                    x = parseUnit(tX, fontSize);
+                                    x = parseUnit(tX, { fontSize });
                                 }
                                 if (tY) {
                                     if (isPercent(tY)) {
@@ -6325,7 +6148,7 @@
                                             y = (parseFloat(tY) / 100) * boundingBox.height;
                                         }
                                     } else {
-                                        y = parseUnit(tY, fontSize);
+                                        y = parseUnit(tY, { fontSize });
                                     }
                                 }
                                 break;
@@ -6335,7 +6158,7 @@
                                         x = (parseFloat(tX) / 100) * boundingBox.width;
                                     }
                                 } else {
-                                    x = parseUnit(tX, fontSize);
+                                    x = parseUnit(tX, { fontSize });
                                 }
                                 break;
                             case 'translateY':
@@ -6344,11 +6167,11 @@
                                         y = (parseFloat(tY) / 100) * boundingBox.height;
                                     }
                                 } else {
-                                    y = parseUnit(tY, fontSize);
+                                    y = parseUnit(tY, { fontSize });
                                 }
                                 break;
                             case 'translateZ':
-                                z = parseUnit(tX, fontSize);
+                                z = parseUnit(tX, { fontSize });
                                 break;
                         }
                         const values =
@@ -6363,9 +6186,9 @@
                             result.push({ method: 'translate', values: [x, y, z] });
                         }
                     } else {
-                        const values = [parseUnit(tX, fontSize)];
+                        const values = [parseUnit(tX, { fontSize })];
                         if (method === 'translate' && tY) {
-                            values.push(parseUnit(tY, fontSize));
+                            values.push(parseUnit(tY, { fontSize }));
                         }
                         result.push({ method, values });
                     }
@@ -6420,7 +6243,7 @@
                         switch (method) {
                             case 'scale':
                                 x = parseFloat(scale[2]);
-                                y = parseFloat(scale[3]) || x;
+                                y = scale[3] ? parseFloat(scale[3]) : x;
                                 break;
                             case 'scaleX':
                                 x = parseFloat(scale[2]);
@@ -6498,20 +6321,11 @@
             } else if (method.startsWith('matrix') && !accumulate) {
                 const matrix = TRANSFORM.MATRIX.exec(match[0]);
                 if (matrix) {
-                    result.push({
-                        method,
-                        values: [
-                            parseFloat(matrix[2]),
-                            parseFloat(matrix[3]),
-                            parseFloat(matrix[4]),
-                            parseFloat(matrix[5]),
-                            parseFloat(matrix[6]),
-                            parseFloat(matrix[7]),
-                        ],
-                    });
+                    result.push({ method, values: replaceMap(matrix.slice(2, 8), item => parseFloat(item)) });
                 }
             }
         }
+        REGEXP_TRANSFORM.lastIndex = 0;
         return result;
     }
     function parseAngle(value, fallback = NaN) {
@@ -6563,14 +6377,11 @@
     function isLength(value, percent) {
         return !percent ? REGEXP_LENGTH.test(value) : REGEXP_LENGTHPERCENTAGE.test(value);
     }
-    function isPx(value) {
-        return /\dpx$/.test(value);
-    }
     function isCalc(value) {
         return REGEXP_CALC.test(value);
     }
     function isCustomProperty(value) {
-        return /^\s*var\(.+\)\s*$/.test(value);
+        return REGEXP_CUSTOMPROPERTY.test(value);
     }
     function isAngle(value) {
         return REGEXP_ANGLE.test(value);
@@ -6578,8 +6389,11 @@
     function isTime(value) {
         return REGEXP_TIME.test(value);
     }
-    function isPercent(value) {
-        return REGEXP_PERCENT.test(value);
+    function isPercent(value, digits) {
+        return !digits ? value[value.length - 1] === '%' : REGEXP_PERCENT.test(value);
+    }
+    function hasEm(value) {
+        return REGEXP_EMBASED.test(value);
     }
     function hasCalc(value) {
         return REGEXP_CALCWITHIN.test(value);
@@ -6591,9 +6405,12 @@
     var css = /*#__PURE__*/ Object.freeze({
         __proto__: null,
         CSS_PROPERTIES: CSS_PROPERTIES,
-        SVG_PROPERTIES: SVG_PROPERTIES,
-        newBoxModel: newBoxModel,
+        PROXY_INLINESTYLE: PROXY_INLINESTYLE,
+        ELEMENT_BLOCK: ELEMENT_BLOCK,
+        getPropertiesAsTraits: getPropertiesAsTraits,
         getStyle: getStyle,
+        updateDocumentFont: updateDocumentFont,
+        getRemSize: getRemSize,
         getFontSize: getFontSize,
         hasComputedStyle: hasComputedStyle,
         parseSelectorText: parseSelectorText,
@@ -6601,18 +6418,14 @@
         checkWritingMode: checkWritingMode,
         calculateStyle: calculateStyle,
         checkStyleValue: checkStyleValue,
+        checkFontSizeValue: checkFontSizeValue,
         getKeyframesRules: getKeyframesRules,
         parseKeyframes: parseKeyframes,
         checkMediaRule: checkMediaRule,
-        isParentStyle: isParentStyle,
-        getInheritedStyle: getInheritedStyle,
         parseVar: parseVar,
         calculateVarAsString: calculateVarAsString,
         calculateVar: calculateVar,
-        getContentBoxDimension: getContentBoxDimension,
-        getBackgroundPosition: getBackgroundPosition,
         getSrcSet: getSrcSet,
-        convertListStyle: convertListStyle,
         extractURL: extractURL,
         resolveURL: resolveURL,
         insertStyleSheetRule: insertStyleSheetRule,
@@ -6625,59 +6438,16 @@
         formatPX: formatPX,
         formatPercent: formatPercent,
         isLength: isLength,
-        isPx: isPx,
         isCalc: isCalc,
         isCustomProperty: isCustomProperty,
         isAngle: isAngle,
         isTime: isTime,
         isPercent: isPercent,
+        hasEm: hasEm,
         hasCalc: hasCalc,
         hasCoords: hasCoords,
     });
 
-    const ELEMENT_BLOCK = [
-        'ADDRESS',
-        'ARTICLE',
-        'ASIDE',
-        'BLOCKQUOTE',
-        'DD',
-        'DETAILS',
-        'DIALOG',
-        'DIV',
-        'DL',
-        'DT',
-        'FIELDSET',
-        'FIGCAPTION',
-        'FIGURE',
-        'FOOTER',
-        'FORM',
-        'H1',
-        'H2',
-        'H3',
-        'H4',
-        'H5',
-        'H6',
-        'HEADER',
-        'HGROUP',
-        'HR',
-        'LI',
-        'MAIN',
-        'NAV',
-        'OL',
-        'P',
-        'PRE',
-        'SECTION',
-        'TABLE',
-        'UL',
-    ];
-    function newBoxRect() {
-        return {
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-        };
-    }
     function newBoxRectDimension() {
         return {
             top: 0,
@@ -6713,26 +6483,39 @@
         return result;
     }
     function getRangeClientRect(element) {
+        let hidden;
+        if (element.childElementCount) {
+            iterateArray(element.children, item => {
+                const style = getStyle(item);
+                if (
+                    style.getPropertyValue('visibility') !== 'visible' &&
+                    hasCoords(style.getPropertyValue('position'))
+                ) {
+                    const display = style.getPropertyValue('display');
+                    if (display !== 'none') {
+                        item.style.display = 'none';
+                        (hidden || (hidden = [])).push([item, display]);
+                    }
+                }
+            });
+        }
         const domRect = [];
         const range = document.createRange();
         range.selectNodeContents(element);
         const clientRects = range.getClientRects();
-        let length = clientRects.length;
-        let i = 0;
-        while (i < length) {
-            const item = clientRects.item(i++);
-            if (Math.round(item.width) > 0 && !withinRange(item.left, item.right, 0.5)) {
+        for (let i = 0, length = clientRects.length; i < length; ++i) {
+            const item = clientRects.item(i);
+            if (Math.round(item.width) && !withinRange(item.left, item.right, 0.5)) {
                 domRect.push(item);
             }
         }
-        let bounds;
-        length = domRect.length;
-        if (length > 0) {
+        let bounds = null,
+            length = domRect.length;
+        if (length) {
             let numberOfLines = 1,
                 overflow = false;
             bounds = assignRect(domRect[0]);
-            i = 0;
-            while (++i < length) {
+            for (let i = 1; i < length; ++i) {
                 const { left, right, top, bottom, width } = domRect[i];
                 if (left < bounds.left) {
                     bounds.left = left;
@@ -6744,7 +6527,7 @@
                 }
                 if (top < bounds.top) {
                     bounds.top = top;
-                } else if (top >= domRect[i - 1].bottom) {
+                } else if (Math.ceil(top) >= domRect[i - 1].bottom || Math.floor(right - left) > width) {
                     ++numberOfLines;
                 }
                 if (bottom > bounds.bottom) {
@@ -6757,89 +6540,92 @@
                 bounds.numberOfLines = numberOfLines;
                 bounds.overflow = overflow;
             }
-        } else {
-            bounds = newBoxRectDimension();
+        }
+        if (hidden) {
+            length = hidden.length;
+            for (let i = 0; i < length; ++i) {
+                const [item, display] = hidden[i];
+                item.style.display = display;
+            }
         }
         return bounds;
     }
     function removeElementsByClassName(className) {
-        Array.from(document.getElementsByClassName(className)).forEach(element => {
-            var _a;
-            return (_a = element.parentElement) === null || _a === void 0 ? void 0 : _a.removeChild(element);
-        });
+        const elements = Array.from(document.getElementsByClassName(className));
+        for (let i = 0, length = elements.length; i < length; ++i) {
+            const element = elements[i];
+            const parentElement = element.parentElement;
+            if (parentElement) {
+                parentElement.removeChild(element);
+            }
+        }
     }
     function getElementsBetweenSiblings(elementStart, elementEnd) {
+        const parentElement = elementEnd.parentElement;
         const result = [];
-        if (!elementStart || elementStart.parentElement === elementEnd.parentElement) {
-            const parent = elementEnd.parentElement;
-            if (parent) {
-                let startIndex = elementStart ? -1 : 0,
-                    endIndex = -1;
-                iterateArray(parent.childNodes, (element, index) => {
-                    if (element === elementEnd) {
-                        endIndex = index;
-                        if (startIndex !== -1) {
-                            return true;
-                        }
-                    } else if (element === elementStart) {
-                        startIndex = index;
-                        if (endIndex !== -1) {
-                            return true;
-                        }
+        if (parentElement && (!elementStart || elementStart.parentElement === parentElement)) {
+            let startIndex = elementStart ? -1 : 0,
+                endIndex = -1;
+            iterateArray(parentElement.childNodes, (element, index) => {
+                if (element === elementEnd) {
+                    endIndex = index;
+                    if (startIndex !== -1) {
+                        return true;
                     }
-                    return;
-                });
-                if (startIndex !== -1 && endIndex !== -1) {
-                    iterateArray(
-                        parent.childNodes,
-                        element => {
-                            const nodeName = element.nodeName;
-                            if (nodeName[0] !== '#' || nodeName === '#text') {
-                                result.push(element);
-                            }
-                        },
-                        Math.min(startIndex, endIndex),
-                        Math.max(startIndex, endIndex) + 1
-                    );
+                } else if (element === elementStart) {
+                    startIndex = index;
+                    if (endIndex !== -1) {
+                        return true;
+                    }
                 }
+            });
+            if (startIndex !== -1 && endIndex !== -1) {
+                iterateArray(
+                    parentElement.childNodes,
+                    element => {
+                        const nodeName = element.nodeName;
+                        if (nodeName[0] !== '#' || nodeName === '#text') {
+                            result.push(element);
+                        }
+                    },
+                    Math.min(startIndex, endIndex),
+                    Math.max(startIndex, endIndex) + 1
+                );
             }
         }
         return result;
     }
     function createElement(tagName, options) {
+        const { parent, attrs, style } = options;
         const element = document.createElement(tagName);
-        if (options) {
-            const { parent, attrs, style } = options;
-            if (style) {
-                for (const attr in style) {
-                    if (attr.includes('-')) {
-                        element.style.setProperty(attr, style[attr]);
-                    } else {
-                        element.style[attr] = style[attr];
-                    }
+        if (style) {
+            for (const attr in style) {
+                if (attr.includes('-')) {
+                    element.style.setProperty(attr, style[attr]);
+                } else {
+                    element.style[attr] = style[attr];
                 }
             }
-            if (attrs) {
-                for (const attr in attrs) {
-                    if (attr in element) {
-                        element[attr] = attrs[attr];
-                    }
+        }
+        if (attrs) {
+            for (const attr in attrs) {
+                if (attr in element) {
+                    element[attr] = attrs[attr];
                 }
             }
-            parent === null || parent === void 0 ? void 0 : parent.appendChild(element);
+        }
+        if (parent) {
+            parent.appendChild(element);
         }
         return element;
     }
-    function measureTextWidth(value, fontFamily, fontSize) {
-        if (fontFamily && fontSize) {
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-            if (context) {
-                context.font = `${fontSize}px ${fontFamily}`;
-                return context.measureText(value).width;
-            }
+    function getTextMetrics(value, fontSize, fontFamily) {
+        const context = document.createElement('canvas').getContext('2d');
+        if (context) {
+            context.font = fontSize + 'px' + (fontFamily ? ' ' + fontFamily : '');
+            return context.measureText(value);
         }
-        return 0;
+        return { width: 0 };
     }
     function getNamedItem(element, attr) {
         var _a;
@@ -6850,8 +6636,6 @@
 
     var dom = /*#__PURE__*/ Object.freeze({
         __proto__: null,
-        ELEMENT_BLOCK: ELEMENT_BLOCK,
-        newBoxRect: newBoxRect,
         newBoxRectDimension: newBoxRectDimension,
         withinViewport: withinViewport,
         assignRect: assignRect,
@@ -6859,161 +6643,92 @@
         removeElementsByClassName: removeElementsByClassName,
         getElementsBetweenSiblings: getElementsBetweenSiblings,
         createElement: createElement,
-        measureTextWidth: measureTextWidth,
+        getTextMetrics: getTextMetrics,
         getNamedItem: getNamedItem,
     });
 
-    function frameworkNotInstalled() {
-        return Promise.reject(new Error('Framework not installed.'));
-    }
-    function actualClientRect(element, sessionId) {
-        if (sessionId) {
-            const rect = getElementCache(element, 'clientRect', sessionId);
-            if (rect) {
-                return rect;
-            }
-        }
-        const bounds = element.getBoundingClientRect();
-        if (sessionId) {
-            setElementCache(element, 'clientRect', sessionId, bounds);
-        }
-        return bounds;
-    }
-    function actualTextRangeRect(element, sessionId) {
-        if (sessionId) {
-            const rect = getElementCache(element, 'textRangeRect', sessionId);
-            if (rect) {
-                return rect;
-            }
-        }
-        let hidden;
-        if (element.childElementCount > 0) {
-            iterateArray(element.children, item => {
-                const style = getStyle(item);
-                if (style.getPropertyValue('visibility') !== 'visible') {
-                    if (hasCoords(style.getPropertyValue('position'))) {
-                        const display = style.getPropertyValue('display');
-                        if (display !== 'none') {
-                            item.style.display = 'none';
-                            if (!hidden) {
-                                hidden = [];
-                            }
-                            hidden.push([item, display]);
-                        }
-                    }
-                }
-            });
-        }
-        const bounds = getRangeClientRect(element);
-        if (hidden) {
-            for (let i = 0; i < hidden.length; ++i) {
-                const [item, display] = hidden[i];
-                item.style.display = display;
-            }
-        }
-        if (sessionId) {
-            setElementCache(element, 'textRangeRect', sessionId, bounds);
-        }
-        return bounds;
-    }
-    function getStyleValue(element, attr, sessionId) {
-        var _a;
-        return (
-            ((_a = getElementCache(element, 'styleMap', sessionId)) === null || _a === void 0
-                ? void 0
-                : _a[convertCamelCase(attr)]) || ''
-        );
-    }
-    function getPseudoElt(element, sessionId) {
-        return getElementCache(element, 'pseudoElement', sessionId) || '';
-    }
-    function getElementAsNode(element, sessionId) {
-        return getElementCache(element, 'node', sessionId) || null;
-    }
-    function setElementCache(element, attr, sessionId, data) {
-        element[`__${attr}::${sessionId}`] = data;
-    }
-    function getElementCache(element, attr, sessionId) {
-        if (!sessionId) {
-            sessionId = element['__sessionId::0'] || '0';
-        }
-        return element[`__${attr}::${sessionId}`];
-    }
-    function deleteElementCache(element, attr, sessionId) {
-        element[`__${attr}::${sessionId}`] = undefined;
+    const FRAMEWORK_NOT_INSTALLED = 'Framework not installed.';
+    const SERVER_REQUIRED = 'Server required. See README for instructions.';
+    const DIRECTORY_NOT_PROVIDED = 'Directory not provided.';
+    const UNABLE_TO_FINALIZE_DOCUMENT = 'Unable to finalize document.';
+    const INVALID_ASSET_REQUEST = 'Invalid asset request.';
+    const OPERATION_NOT_SUPPORTED = 'Operation not supported.';
+    const DOCUMENT_ROOT_NOT_FOUND = 'Document root not found.';
+    const DOCUMENT_IS_CLOSED = 'Document is closed. Reset and rerun?';
+    const CSS_CANNOT_BE_PARSED =
+        'CSS cannot be parsed inside <link> tags when loading files directly from your hard drive or from external websites. Either use a local web server, embed your CSS into a <style> tag, or you can try using a different browser. See README for instructions.';
+    function reject(value) {
+        return Promise.reject(new Error(value));
     }
 
-    var session = /*#__PURE__*/ Object.freeze({
+    var error = /*#__PURE__*/ Object.freeze({
         __proto__: null,
-        frameworkNotInstalled: frameworkNotInstalled,
-        actualClientRect: actualClientRect,
-        actualTextRangeRect: actualTextRangeRect,
-        getStyleValue: getStyleValue,
-        getPseudoElt: getPseudoElt,
-        getElementAsNode: getElementAsNode,
-        setElementCache: setElementCache,
-        getElementCache: getElementCache,
-        deleteElementCache: deleteElementCache,
+        FRAMEWORK_NOT_INSTALLED: FRAMEWORK_NOT_INSTALLED,
+        SERVER_REQUIRED: SERVER_REQUIRED,
+        DIRECTORY_NOT_PROVIDED: DIRECTORY_NOT_PROVIDED,
+        UNABLE_TO_FINALIZE_DOCUMENT: UNABLE_TO_FINALIZE_DOCUMENT,
+        INVALID_ASSET_REQUEST: INVALID_ASSET_REQUEST,
+        OPERATION_NOT_SUPPORTED: OPERATION_NOT_SUPPORTED,
+        DOCUMENT_ROOT_NOT_FOUND: DOCUMENT_ROOT_NOT_FOUND,
+        DOCUMENT_IS_CLOSED: DOCUMENT_IS_CLOSED,
+        CSS_CANNOT_BE_PARSED: CSS_CANNOT_BE_PARSED,
+        reject: reject,
     });
 
     class Iterator {
         constructor(children) {
             this.children = children;
-            this.index = -1;
+            this._index = -1;
             this._iterating = 0;
-            this.length = children.length;
+            this._length = children.length;
         }
         next() {
             if (this.hasNext()) {
                 this._iterating = 1;
-                return this.children[++this.index];
+                return this.children[++this._index];
             }
-            return undefined;
         }
         hasNext() {
-            return this.index < this.length - 1;
+            return this._index < this._length - 1;
         }
         remove() {
             const iterating = this._iterating;
             if (iterating !== 0) {
-                this.children.splice(this.index, 1);
-                this.index -= iterating;
-                --this.length;
+                this.children.splice(this._index, 1);
+                this._index -= iterating;
+                --this._length;
                 this._iterating = 0;
             }
         }
         forEachRemaining(predicate) {
             const children = this.children;
             while (this.hasNext()) {
-                predicate(children[++this.index]);
+                predicate(children[++this._index]);
             }
         }
     }
 
     class ListIterator extends Iterator {
-        constructor(children) {
-            super(children);
-        }
         add(item) {
             const iterating = this._iterating;
             if (iterating !== 0) {
                 this.children.splice(
-                    iterating === 1 ? Math.min(++this.index, this.length) : Math.max(--this.index, 0),
+                    iterating === 1 ? Math.min(++this._index, this._length) : Math.max(--this._index, 0),
                     0,
                     item
                 );
-                ++this.length;
+                ++this._length;
                 this._iterating = 0;
             }
         }
         set(item) {
             if (this._iterating !== 0) {
-                this.children[this.index] = item;
+                this.children[this._index] = item;
                 this._iterating = 0;
             }
         }
         nextIndex() {
-            return Math.min(this.index + 1, this.length);
+            return Math.min(this._index + 1, this._length);
         }
         hasPrevious() {
             return this.previousIndex() > 0;
@@ -7021,20 +6736,19 @@
         previous() {
             if (this.hasPrevious()) {
                 this._iterating = -1;
-                return this.children[--this.index];
+                return this.children[--this._index];
             }
-            return undefined;
         }
         previousIndex() {
-            return Math.max(this.index - 1, -1);
+            return Math.max(this._index - 1, -1);
         }
     }
 
     class Iter {
-        constructor(children) {
+        constructor(children, length = children.length) {
             this.children = children;
+            this.length = length;
             this.index = -1;
-            this.length = children.length;
         }
         next() {
             const i = ++this.index;
@@ -7042,40 +6756,68 @@
         }
     }
     class Container {
-        constructor(children) {
-            this._children = children || [];
+        constructor(children = []) {
+            this.children = children;
         }
         [Symbol.iterator]() {
-            return new Iter(this._children);
+            return new Iter(this.children);
         }
         item(index, value) {
-            const children = this._children;
-            if (index !== undefined) {
-                if (value) {
-                    if (index >= 0 && index < children.length) {
-                        children[index] = value;
-                        return value;
-                    }
-                    return undefined;
+            const children = this.children;
+            if (arguments.length === 2) {
+                if (index < 0) {
+                    index += children.length;
+                } else {
+                    index = Math.min(index, children.length);
                 }
-                return children[index];
+                children[index] = value;
+                return value;
             }
-            return children[children.length - 1];
+            return index >= 0 ? children[index] : children[children.length + index];
         }
         add(item) {
-            this._children.push(item);
+            this.children.push(item);
+            return this;
+        }
+        addAt(index, ...items) {
+            this.children.splice(
+                index >= 0 ? Math.max(index, this.children.length) : Math.min(0, this.children.length + index),
+                0,
+                ...items
+            );
             return this;
         }
         addAll(list) {
-            this._children = this._children.concat(list);
+            this.children = this.children.concat(Array.isArray(list) ? list : list.children);
             return this;
         }
-        remove(...items) {
+        remove(item) {
+            const index = this.children.indexOf(item);
+            if (index !== -1) {
+                return this.children.splice(index, 1)[0];
+            }
+        }
+        removeAt(index) {
+            if (index >= 0) {
+                if (index >= this.children.length) {
+                    return;
+                }
+            } else {
+                index += this.children.length;
+                if (index < 0) {
+                    return;
+                }
+            }
+            return this.children.splice(index, 1)[0];
+        }
+        removeAll(list) {
+            if (!Array.isArray(list)) {
+                list = list.children;
+            }
             const result = [];
-            const children = this._children;
-            let i = 0;
-            while (i < items.length) {
-                const item = items[i++];
+            const children = this.children;
+            for (let i = 0, length = list.length; i < length; ++i) {
+                const item = list[i];
                 for (let j = 0; j < children.length; ++j) {
                     if (children[j] === item) {
                         children.splice(j, 1);
@@ -7086,50 +6828,40 @@
             }
             return result;
         }
-        removeAt(index) {
-            return this._children.splice(index, 1)[0];
-        }
         retainAs(list) {
-            this._children = list;
+            this.children = list;
             return this;
         }
-        contains(item) {
-            return this._children.includes(item);
-        }
-        duplicate() {
-            return this._children.slice(0);
-        }
-        clear() {
-            this._children.length = 0;
-            return this;
-        }
-        each(predicate) {
-            const children = this._children;
-            const length = children.length;
-            let i = 0;
+        each(predicate, options) {
+            const children = this.children;
+            let i = 0,
+                length = children.length;
+            if (options) {
+                const { start, end } = options;
+                if (start) {
+                    i = Math.max(start, 0);
+                }
+                if (end) {
+                    length = Math.min(end, length);
+                }
+            }
             while (i < length) {
                 predicate(children[i], i++, children);
             }
             return this;
         }
-        iterate(predicate, options) {
-            let start, end;
-            if (options) {
-                ({ start, end } = options);
-            }
-            return iterateArray(this._children, predicate, start, end);
-        }
         every(predicate, options) {
-            const children = this._children;
+            const children = this.children;
             let length = children.length;
-            if (length > 0) {
+            if (length) {
                 let i = 0;
                 if (options) {
-                    if (options.start) {
-                        i = Math.max(options.start, 0);
+                    const { start, end } = options;
+                    if (start) {
+                        i = Math.max(start, 0);
                     }
-                    if (options.end) {
-                        length = Math.min(length, options.end);
+                    if (end) {
+                        length = Math.min(end, length);
                     }
                 }
                 while (i < length) {
@@ -7141,113 +6873,38 @@
             }
             return false;
         }
-        extract(predicate, options) {
-            let also, error;
+        removeIf(predicate, options) {
+            let count, cascade, also, error;
             if (options) {
-                ({ also, error } = options);
+                ({ count, cascade, also, error } = options);
             }
-            const result = [];
-            const children = this._children;
-            for (let i = 0; i < children.length; ++i) {
-                const item = children[i];
-                if (error && error(item, i, children)) {
-                    break;
-                }
-                if (predicate(item, i, children)) {
-                    also === null || also === void 0 ? void 0 : also.call(item, item);
-                    result.push(item);
-                    children.splice(i--, 1);
-                }
+            if (!count || count < 0) {
+                count = Infinity;
             }
-            return result;
-        }
-        findIndex(predicate, options) {
-            let also, error;
-            if (options) {
-                ({ also, error } = options);
-            }
-            const children = this._children;
-            const length = children.length;
-            for (let i = 0; i < length; ++i) {
-                const item = children[i];
-                if (error && error(item, i, children)) {
-                    return -1;
-                }
-                if (predicate(item, i, children)) {
-                    also === null || also === void 0 ? void 0 : also.call(item, item);
-                    return i;
-                }
-            }
-            return -1;
-        }
-        find(predicate, options) {
-            let also, error, cascade, start, end;
-            if (options) {
-                ({ also, error, cascade } = options);
-                if (!cascade) {
-                    ({ start, end } = options);
-                    if (start) {
-                        start = Math.max(start, 0);
-                    }
-                    if (end) {
-                        end = Math.min(this.length, end);
-                    }
-                }
-            }
-            let invalid = false;
-            const recurse = container => {
-                const children = container.children;
-                const length = end !== null && end !== void 0 ? end : children.length;
-                for (let i = start || 0; i < length; ++i) {
-                    const item = children[i];
-                    if (error && error(item, i, children)) {
-                        invalid = true;
-                        break;
-                    }
-                    if (predicate(item, i, children)) {
-                        also === null || also === void 0 ? void 0 : also.call(item, item);
-                        return item;
-                    }
-                    if (cascade && item instanceof Container && !item.isEmpty) {
-                        const result = recurse(item);
-                        if (result) {
-                            also === null || also === void 0 ? void 0 : also.call(item, item);
-                            return result;
-                        } else if (invalid) {
-                            break;
-                        }
-                    }
-                }
-                return undefined;
-            };
-            return recurse(this);
-        }
-        some(predicate, options) {
-            return this.find(predicate, options) !== undefined;
-        }
-        cascade(predicate, options) {
-            let also, error;
-            if (options) {
-                ({ also, error } = options);
-            }
-            let invalid = false;
+            let complete;
             const recurse = container => {
                 let result = [];
                 const children = container.children;
-                const length = children.length;
-                for (let i = 0; i < length; ++i) {
+                for (let i = 0; i < children.length; ++i) {
                     const item = children[i];
                     if (error && error(item, i, children)) {
-                        invalid = true;
+                        complete = true;
                         break;
                     }
-                    if (!predicate || predicate(item) === true) {
-                        also === null || also === void 0 ? void 0 : also.call(item, item);
+                    if (predicate(item, i, children)) {
+                        if (also) {
+                            also.call(this, item);
+                        }
                         result.push(item);
+                        children.splice(i--, 1);
+                        if (--count === 0) {
+                            complete = true;
+                            break;
+                        }
                     }
-                    if (item instanceof Container && !item.isEmpty) {
+                    if (cascade && item instanceof Container && !item.isEmpty()) {
                         result = result.concat(recurse(item));
-                        if (invalid) {
+                        if (complete) {
                             break;
                         }
                     }
@@ -7256,429 +6913,790 @@
             };
             return recurse(this);
         }
+        find(predicate, options) {
+            if (options) {
+                const { also, error, cascade } = options;
+                let { start, end, count } = options;
+                start && (start = Math.max(start, 0));
+                end && (end = Math.min(this.size(), end));
+                if (!count || count < 0) {
+                    count = 0;
+                }
+                let complete;
+                const recurse = (container, level) => {
+                    const children = container.children;
+                    let i = 0,
+                        length = children.length;
+                    if (level === 0) {
+                        if (start) {
+                            i = start;
+                        }
+                        if (end) {
+                            length = end;
+                        }
+                    }
+                    while (i < length) {
+                        const item = children[i];
+                        if (error && error(item, i, children)) {
+                            complete = true;
+                            break;
+                        }
+                        if (predicate(item, i++, children)) {
+                            if (count-- === 0) {
+                                if (also) {
+                                    also.call(this, item);
+                                }
+                                return item;
+                            }
+                        }
+                        if (cascade && item instanceof Container && !item.isEmpty()) {
+                            const result = recurse(item, level + 1);
+                            if (result) {
+                                return result;
+                            } else if (complete) {
+                                break;
+                            }
+                        }
+                    }
+                };
+                return recurse(this, 0);
+            }
+            return this.children.find(predicate);
+        }
+        cascade(predicate, options) {
+            let count, also, error;
+            if (options) {
+                ({ count, also, error } = options);
+            }
+            if (!count || count < 0) {
+                count = Infinity;
+            }
+            let complete;
+            const recurse = container => {
+                let result = [];
+                const children = container.children;
+                for (let i = 0, length = children.length; i < length; ++i) {
+                    const item = children[i];
+                    if (error && error(item, i, children)) {
+                        complete = true;
+                        break;
+                    }
+                    if (!predicate || predicate(item, i, children) === true) {
+                        if (also) {
+                            also.call(this, item);
+                        }
+                        result.push(item);
+                        if (--count === 0) {
+                            complete = true;
+                            break;
+                        }
+                    }
+                    if (item instanceof Container && !item.isEmpty()) {
+                        result = result.concat(recurse(item));
+                        if (complete) {
+                            break;
+                        }
+                    }
+                }
+                return result;
+            };
+            return recurse(this);
+        }
+        sortBy(...attrs) {
+            sortByArray(this.children, ...attrs);
+            return this;
+        }
         map(predicate) {
-            return plainMap(this._children, predicate);
+            return plainMap(this.children, predicate);
         }
-        same(predicate) {
-            return sameArray(this._children, predicate);
+        contains(item) {
+            return this.children.includes(item);
         }
-        partition(predicate) {
-            return partitionArray(this._children, predicate);
-        }
-        sort(predicate) {
-            this._children.sort(predicate);
+        clear() {
+            this.children.length = 0;
             return this;
         }
         iterator() {
-            return new ListIterator(this._children);
+            return new ListIterator(this.children);
         }
-        get children() {
-            return this._children;
+        isEmpty() {
+            return this.children.length === 0;
         }
-        get isEmpty() {
-            return this._children.length === 0;
+        size() {
+            return this.children.length;
         }
-        get length() {
-            return this._children.length;
+        toArray() {
+            return this.children.slice(0);
         }
     }
 
-    const extensionsQueue = new Set();
-    const extensionsExternal = new Set();
+    class Pattern {
+        constructor(expression, flags) {
+            this.found = 0;
+            this._input = '';
+            this._matchResult = null;
+            this.usePattern(expression, flags);
+        }
+        matcher(input) {
+            if (this.found === 0) {
+                this._input = input;
+            } else {
+                this.reset(input);
+            }
+        }
+        find(start) {
+            if (this._input) {
+                if (start !== undefined) {
+                    if (start < 0) {
+                        return false;
+                    }
+                    this.reset();
+                    while ((this._matchResult = this._matcher.exec(this._input))) {
+                        ++this.found;
+                        if (start-- === 0) {
+                            return true;
+                        }
+                    }
+                } else {
+                    this._matchResult = this._matcher.exec(this._input);
+                    if (this._matchResult) {
+                        ++this.found;
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        lookingAt() {
+            return this.find(0) && this._matchResult.index === 0;
+        }
+        matches() {
+            return this.find(0) && this._matchResult[0].length === this._input.length;
+        }
+        start(index = 0) {
+            const matchResult = this._matchResult;
+            if (matchResult && index >= 0) {
+                let pos = matchResult.index,
+                    i = 0;
+                while (index) {
+                    if (matchResult[i]) {
+                        pos += matchResult[i++].length;
+                        --index;
+                    } else {
+                        return -1;
+                    }
+                }
+                return pos;
+            }
+            return -Infinity;
+        }
+        end(index = 0) {
+            const matchResult = this._matchResult;
+            if (matchResult && index >= 0) {
+                let pos = matchResult.index + matchResult[0].length,
+                    i = 1;
+                while (index) {
+                    if (matchResult[i]) {
+                        pos += matchResult[i++].length;
+                        --index;
+                    } else {
+                        return this._input.length;
+                    }
+                }
+                return pos;
+            }
+            return Infinity;
+        }
+        group(index = 0) {
+            var _a;
+            if (this._matchResult) {
+                return typeof index === 'number'
+                    ? this._matchResult[index]
+                    : (_a = this._matchResult.groups) === null || _a === void 0
+                    ? void 0
+                    : _a[index];
+            }
+        }
+        groups(start = 0, end) {
+            if (this._matchResult) {
+                if (end !== undefined) {
+                    ++end;
+                } else if (start === 0) {
+                    return this._matchResult;
+                }
+                return this._matchResult.slice(start, end);
+            }
+            return [];
+        }
+        groupCount() {
+            return this._matchResult ? this._matchResult.length : 0;
+        }
+        map(predicate, start = 0, end) {
+            const matchResult = this._matchResult;
+            if (matchResult) {
+                if (end === undefined) {
+                    end = matchResult.length;
+                }
+                const result = new Array(end - start);
+                for (let i = 0; start < end; ++start) {
+                    result[i++] = predicate(matchResult[start], start, matchResult);
+                }
+                return result;
+            }
+            return [];
+        }
+        replaceAll(replacement, replaceCount = Infinity) {
+            const stringAs = typeof replacement === 'string';
+            const input = this._input;
+            let index = this._matcher.lastIndex,
+                output = index ? input.substring(0, index) : '';
+            while (replaceCount && this.find()) {
+                const matchResult = this._matchResult;
+                output +=
+                    input.substring(index, matchResult.index) +
+                    (stringAs ? replacement : replacement(matchResult, matchResult[0]));
+                index = matchResult.index + matchResult[0].length;
+                --replaceCount;
+            }
+            return output + input.substring(index);
+        }
+        replaceFirst(replacement) {
+            return this.replaceAll(replacement, 1);
+        }
+        usePattern(expression, flags) {
+            this._matcher =
+                typeof expression === 'string'
+                    ? new RegExp(expression, flags !== null && flags !== void 0 ? flags : 'g')
+                    : expression;
+        }
+        pattern() {
+            return this._matcher.source;
+        }
+        toMatchResult() {
+            return this._matchResult;
+        }
+        reset(input) {
+            this.found = 0;
+            this._matchResult = null;
+            this._matcher.lastIndex = 0;
+            if (input) {
+                this._input = input;
+            }
+        }
+    }
+
+    const addQueue = new Set();
+    const removeQueue = new Set();
     const optionsQueue = new Map();
+    const extensionCache = new Set();
+    const prototypeMap = new Map();
     const settings = {};
-    const system = {};
-    let main;
-    let framework;
-    function includeExtension(extensions, ext) {
-        if (!extensions.includes(ext)) {
-            ext.application = main;
-            extensions.push(ext);
+    let main = null;
+    let framework = null;
+    let extensionManager = null;
+    let extensionCheck = false;
+    function extendPrototype(id) {
+        const proto = main.Node.prototype;
+        for (const [frameworkId, functionMap] of prototypeMap) {
+            if (frameworkId === 0 || hasBit(frameworkId, id)) {
+                for (const method in functionMap) {
+                    const item = functionMap[method];
+                    if (isPlainObject(item)) {
+                        let property;
+                        if (typeof item.set === 'function') {
+                            (property || (property = {})).set = item.set;
+                        }
+                        if (typeof item.get === 'function') {
+                            (property || (property = {})).get = item.get;
+                        }
+                        if (property) {
+                            Object.defineProperty(proto, method, property);
+                            continue;
+                        }
+                    }
+                    proto[method] = item;
+                }
+            }
         }
     }
-    function deleteProperties(data) {
-        for (const attr in data) {
-            delete data[attr];
+    function loadExtensions() {
+        if (extensionManager) {
+            if (extensionCache.size) {
+                for (const item of extensionCache) {
+                    extensionManager.cache.add(item);
+                }
+                extensionCache.clear();
+            }
+            if (addQueue.size) {
+                for (const item of addQueue) {
+                    if (!extensionManager.add(item)) {
+                        console.log('FAIL: ' + (typeof item === 'string' ? item : item.name));
+                        extensionCheck = true;
+                    }
+                }
+                addQueue.clear();
+            }
+            if (optionsQueue.size) {
+                for (const data of optionsQueue) {
+                    const ext = extensionManager.get(data[0], true);
+                    if (ext) {
+                        Object.assign(ext.options, data[1]);
+                    }
+                }
+                optionsQueue.clear();
+            }
+            if (removeQueue.size) {
+                for (const item of removeQueue) {
+                    if (extensionManager.remove(item)) {
+                        extensionCheck = true;
+                    }
+                }
+                removeQueue.clear();
+            }
+            if (extensionCheck) {
+                const errors = extensionManager.checkDependencies();
+                if (errors) {
+                    console.log('FAIL: ' + errors.join(', '));
+                }
+                extensionCheck = false;
+            }
         }
     }
-    function findElement(element, cache) {
+    function findElement(element, sync, cache) {
         if (cache) {
             const result = main.elementMap.get(element);
             if (result) {
-                return Promise.resolve(result);
+                return sync ? result : Promise.resolve(result);
             }
         }
-        return main.parseDocument(element);
+        return sync ? main.parseDocumentSync(element) : main.parseDocument(element);
     }
-    async function findElementAll(query, length) {
-        let incomplete = false;
+    function findElementAll(query, length) {
+        let incomplete;
         const elementMap = main.elementMap;
         const result = new Array(length);
         for (let i = 0; i < length; ++i) {
             const element = query[i];
-            let item = elementMap.get(element);
+            const item = elementMap.get(element) || main.parseDocumentSync(element);
             if (item) {
                 result[i] = item;
             } else {
-                item = await main.parseDocument(element);
-                if (item) {
-                    result[i] = item;
-                } else {
-                    incomplete = true;
-                }
+                incomplete = true;
             }
         }
-        if (incomplete) {
-            flatArray(result);
-        }
-        return result;
+        return !incomplete ? result : result.filter(item => item);
     }
-    async function findElementAsync(element) {
+    async function findElementAsync(element, cache) {
+        if (cache) {
+            const result = main.elementMap.get(element);
+            if (result) {
+                return Promise.resolve([result]);
+            }
+        }
         return [await main.parseDocument(element)];
     }
-    const checkWritable = app =>
-        (app === null || app === void 0 ? void 0 : app.initializing) === false && app.length > 0;
-    function setHostname(value) {
-        var _a;
-        const fileHandler =
-            (_a = main === null || main === void 0 ? void 0 : main.resourceHandler) === null || _a === void 0
-                ? void 0
-                : _a.fileHandler;
-        if (fileHandler) {
-            const match = FILE.PROTOCOL.exec(value);
-            if (match === null || match === void 0 ? void 0 : match[1].startsWith('http')) {
-                fileHandler.hostname = match[1] + match[2] + (match[3] || '');
+    async function findElementAllAsync(query, length) {
+        let incomplete;
+        const elementMap = main.elementMap;
+        const result = new Array(length);
+        for (let i = 0; i < length; ++i) {
+            const element = query[i];
+            const item = elementMap.get(element) || (await main.parseDocument(element));
+            if (item) {
+                result[i] = item;
+            } else {
+                incomplete = true;
             }
         }
+        return !incomplete ? result : result.filter(item => item);
     }
-    function setFramework(value, options, cached) {
-        const reloading = framework !== undefined;
-        if (framework !== value) {
-            const appBase = cached ? value.cached() : value.create();
-            if (!framework) {
-                Object.assign(appBase.userSettings, settings);
-            }
-            if (isPlainObject(options)) {
-                Object.assign(appBase.userSettings, options);
-            }
-            deleteProperties(settings);
-            Object.assign(settings, appBase.userSettings);
-            main = appBase.application;
-            main.userSettings = settings;
-            const { builtInExtensions, extensions } = main;
-            extensions.length = 0;
-            for (const namespace of settings.builtInExtensions) {
-                const ext = builtInExtensions[namespace];
-                if (ext) {
-                    includeExtension(extensions, ext);
-                } else {
-                    const packaage = namespace + '.';
-                    for (const name in builtInExtensions) {
-                        if (name.startsWith(packaage)) {
-                            includeExtension(extensions, builtInExtensions[name]);
-                        }
-                    }
+    const checkWritable = app => (app ? !app.initializing && app.length > 0 : false);
+    const checkFrom = (value, options) =>
+        isPlainObject(options) && options.assets
+            ? checkWritable(main) && isString(value) && options.assets.length > 0
+            : false;
+    const findExtension = value =>
+        extensionManager.get(value, true) ||
+        findSet(extensionManager.cache, item => item.name === value) ||
+        findSet(extensionCache, item => item.name === value);
+    const frameworkNotInstalled = () => reject(FRAMEWORK_NOT_INSTALLED);
+    function setHostname(value) {
+        if (main) {
+            const fileHandler = main.fileHandler;
+            if (fileHandler) {
+                const match = FILE.PROTOCOL.exec(value);
+                if (match && match[1].startsWith('http')) {
+                    fileHandler.hostname = match[1] + match[2] + (match[3] || '');
                 }
             }
-            if (reloading) {
-                deleteProperties(system);
-            }
-            Object.assign(system, value.system);
-            framework = value;
-        }
-        if (reloading) {
-            reset();
         }
     }
-    function setViewModel(data) {
-        if (main) {
-            main.viewModel = data;
+    function setFramework(value, options) {
+        const reloading = framework !== null;
+        let userSettings, saveAsLocal, loadAs, cache;
+        if (options) {
+            ({ settings: userSettings, saveAs: saveAsLocal, loadAs, cache } = options);
+        }
+        const mergeSettings = (baseSettings, name) => {
+            if (loadAs) {
+                try {
+                    const storedSettings = localStorage.getItem(loadAs + '-' + name);
+                    if (storedSettings) {
+                        Object.assign(baseSettings, JSON.parse(storedSettings));
+                    }
+                } catch (_a) {}
+            }
+            if (!framework) {
+                Object.assign(baseSettings, settings);
+            }
+            if (isPlainObject(userSettings)) {
+                Object.assign(baseSettings, userSettings);
+            }
+            if (saveAsLocal) {
+                try {
+                    localStorage.setItem(saveAsLocal + '-' + name, JSON.stringify(baseSettings));
+                } catch (_b) {}
+            }
+        };
+        if (!main || framework !== value || cache === false) {
+            if (reloading && framework !== value) {
+                for (const attr in settings) {
+                    delete settings[attr];
+                }
+            }
+            const appBase = cache ? value.cached() : value.create();
+            main = appBase.application;
+            extensionManager = main.extensionManager;
+            mergeSettings(appBase.userSettings, main.systemName);
+            Object.assign(settings, appBase.userSettings);
+            main.userSettings = settings;
+            main.setExtensions();
+            extendPrototype(main.framework);
+            framework = value;
+        } else if (options) {
+            mergeSettings(main.userSettings, main.systemName);
+        }
+        if (reloading) {
+            main.reset();
         }
     }
     function parseDocument(...elements) {
         if (main) {
-            const extensionManager = main.extensionManager;
-            if (extensionManager) {
-                if (extensionsQueue.size > 0) {
-                    for (const item of extensionsQueue) {
-                        extensionManager.include(item);
-                    }
-                    extensionsQueue.clear();
-                }
-            }
-            if (optionsQueue.size > 0) {
-                for (const [name, options] of optionsQueue.entries()) {
-                    configure(name, options);
-                }
-                optionsQueue.clear();
-            }
+            loadExtensions();
             if (!main.closed) {
                 return main.parseDocument(...elements);
-            } else if (!settings.showErrorMessages || confirm('ERROR: Document is closed. Reset and rerun?')) {
+            } else if (!settings.showErrorMessages || confirm(DOCUMENT_IS_CLOSED)) {
                 main.reset();
                 return main.parseDocument(...elements);
             }
         }
         return frameworkNotInstalled();
     }
-    function include(value, options) {
-        var _a;
-        if (typeof value === 'string') {
-            value = value.trim();
-            value = (main === null || main === void 0 ? void 0 : main.builtInExtensions[value]) || retrieve(value);
-        }
-        if (value instanceof squared.base.Extension) {
-            extensionsExternal.add(value);
-            if (
-                !(
-                    ((_a = main === null || main === void 0 ? void 0 : main.extensionManager) === null || _a === void 0
-                        ? void 0
-                        : _a.include(value)) === true
-                )
-            ) {
-                extensionsQueue.add(value);
+    function parseDocumentSync(...elements) {
+        if (main) {
+            loadExtensions();
+            if (!main.closed) {
+                return main.parseDocumentSync(...elements);
+            } else if (!settings.showErrorMessages || confirm(DOCUMENT_IS_CLOSED)) {
+                main.reset();
+                return main.parseDocumentSync(...elements);
             }
-            if (options) {
-                configure(value, options);
-            }
-            return true;
         }
-        return false;
     }
-    function exclude(value) {
-        const extensionManager = main === null || main === void 0 ? void 0 : main.extensionManager;
-        if (extensionManager) {
-            if (typeof value === 'string') {
-                value = extensionManager.retrieve(value.trim());
+    function add(...values) {
+        let success = 0;
+        for (let i = 0, length = values.length; i < length; ++i) {
+            let value = values[i],
+                options;
+            if (Array.isArray(value)) {
+                [value, options] = value;
             }
-            if (value instanceof squared.base.Extension) {
-                extensionsQueue.delete(value);
-                extensionsExternal.delete(value);
-                return extensionManager.exclude(value);
-            }
-        }
-        return false;
-    }
-    function configure(value, options) {
-        var _a;
-        if (isPlainObject(options)) {
             if (typeof value === 'string') {
-                value = value.trim();
-                const extension =
-                    ((_a = main === null || main === void 0 ? void 0 : main.extensionManager) === null || _a === void 0
-                        ? void 0
-                        : _a.retrieve(value)) || findSet(extensionsQueue, item => item.name === value);
-                if (extension) {
-                    Object.assign(extension.options, options);
+                const ext = get(value);
+                if (ext) {
+                    value = ext;
                 } else {
-                    optionsQueue.set(value, options);
+                    addQueue.add(value);
+                    if (options) {
+                        apply(value, options);
+                    }
+                    continue;
                 }
-                return true;
-            } else if (value instanceof squared.base.Extension) {
-                Object.assign(value.options, options);
+            }
+            if (squared.base && value instanceof squared.base.Extension) {
+                if (!extensionManager) {
+                    addQueue.add(value);
+                    extensionCache.add(value);
+                } else {
+                    if (!extensionManager.add(value)) {
+                        addQueue.add(value);
+                    }
+                    extensionManager.cache.add(value);
+                }
+                if (options) {
+                    apply(value, options);
+                }
+                extensionCheck = true;
+                ++success;
+            }
+        }
+        return success;
+    }
+    function remove(...values) {
+        let success = 0;
+        for (let i = 0, length = values.length; i < length; ++i) {
+            let value = values[i];
+            if (typeof value === 'string') {
+                if (extensionManager) {
+                    const ext = extensionManager.get(value);
+                    if (ext) {
+                        value = ext;
+                    } else {
+                        ++success;
+                        continue;
+                    }
+                } else {
+                    addQueue.delete(value);
+                    removeQueue.add(value);
+                    extensionCheck = true;
+                    ++success;
+                    continue;
+                }
+            }
+            if (squared.base && value instanceof squared.base.Extension) {
+                addQueue.delete(value);
+                if (!(extensionManager && extensionManager.remove(value))) {
+                    removeQueue.add(value);
+                }
+                extensionCheck = true;
+                ++success;
+            }
+        }
+        return success;
+    }
+    function get(...values) {
+        if (extensionManager) {
+            const length = values.length;
+            if (length === 1) {
+                return findExtension(values[0]);
+            } else {
+                const result = [];
+                for (let i = 0; i < length; ++i) {
+                    const item = findExtension(values[i]);
+                    if (item) {
+                        result.push(item);
+                    }
+                }
+                return result;
+            }
+        }
+    }
+    function apply(value, options) {
+        if (isPlainObject(options)) {
+            const mergeSettings = name => {
+                const { loadAs, saveAs: saveAsLocal } = options;
+                const result = {};
+                if (loadAs) {
+                    try {
+                        const storedSettings = localStorage.getItem(loadAs + '-' + name);
+                        if (storedSettings) {
+                            Object.assign(result, JSON.parse(storedSettings));
+                        }
+                    } catch (_a) {}
+                }
+                Object.assign(result, options.settings);
+                if (saveAsLocal) {
+                    try {
+                        localStorage.setItem(saveAsLocal + '-' + name, JSON.stringify(result));
+                    } catch (_b) {}
+                }
+                return result;
+            };
+            if (typeof value === 'string') {
+                const ext =
+                    (extensionManager && extensionManager.get(value, true)) ||
+                    findSet(addQueue, item => typeof item !== 'string' && item.name === value);
+                if (!ext) {
+                    optionsQueue.set(value, mergeSettings(value));
+                    return true;
+                } else {
+                    value = ext;
+                }
+            }
+            if (squared.base && value instanceof squared.base.Extension) {
+                Object.assign(value.options, mergeSettings(value.name));
                 return true;
             }
         }
         return false;
     }
-    function retrieve(value) {
-        const extensionManager = main === null || main === void 0 ? void 0 : main.extensionManager;
-        if (extensionManager) {
-            const result = extensionManager.retrieve(value) || null;
-            if (!result) {
-                for (const ext of extensionsExternal) {
-                    if (ext.name === value) {
-                        return ext;
-                    }
-                }
-            }
-            return result;
-        }
-        return null;
+    function extend(functionMap, value = 0) {
+        prototypeMap.set(value, Object.assign(prototypeMap.get(value) || {}, functionMap));
     }
-    function get(...elements) {
-        const result = new Map();
-        const length = elements.length;
-        if (main) {
-            for (const sessionId of main.session.active.keys()) {
-                let i = 0;
-                while (i < length) {
-                    let element = elements[i++];
-                    if (typeof element === 'string') {
-                        element = document.getElementById(element);
-                    }
-                    if (element instanceof Element) {
-                        const node = getElementAsNode(element, sessionId);
-                        if (node) {
-                            if (result.has(element)) {
-                                result.get(element).push(node);
-                            } else {
-                                result.set(element, [node]);
-                            }
-                        }
-                    }
-                }
+    function latest(value = 1) {
+        if (main && value) {
+            const active = main.session.active;
+            if (active.size) {
+                const items = Array.from(active.keys());
+                return Math.abs(value) === 1
+                    ? items[0]
+                    : items.length === 1
+                    ? items
+                    : value < 0
+                    ? items.slice(0, Math.abs(value))
+                    : items.slice(Math.max(0, active.size - value)).reverse();
             }
         }
-        return length <= 1 ? (result.size === 1 ? result.values().next().value : []) : result;
-    }
-    function latest() {
-        let result = '';
-        if (main) {
-            for (const sessionId of main.session.active.keys()) {
-                result = sessionId;
-            }
-        }
-        return result;
-    }
-    function reset() {
-        main === null || main === void 0 ? void 0 : main.reset();
-    }
-    function ready() {
-        return (main === null || main === void 0 ? void 0 : main.initializing) === false && !main.closed;
+        return '';
     }
     function close() {
-        if (checkWritable(main)) {
-            main.finalize();
+        return checkWritable(main) && main.finalize();
+    }
+    function save() {
+        return saveAs('');
+    }
+    function reset() {
+        if (main) {
+            main.reset();
         }
     }
-    function copyToDisk(value, options) {
-        if (checkWritable(main) && isString(value)) {
-            main.finalize();
-            return main.copyToDisk(value, options);
-        }
-        return frameworkNotInstalled();
-    }
-    function appendToArchive(value, options) {
-        if (checkWritable(main) && isString(value)) {
-            main.finalize();
-            return main.appendToArchive(value, options);
+    function saveAs(value, options) {
+        if (main) {
+            return close() ? main.saveAs(value, options) : reject(UNABLE_TO_FINALIZE_DOCUMENT);
         }
         return frameworkNotInstalled();
     }
-    function saveToArchive(value, options) {
-        if (checkWritable(main)) {
-            main.finalize();
-            return main.saveToArchive(value, options);
+    function appendTo(value, options) {
+        if (main) {
+            return isString(value) && close() ? main.appendTo(value, options) : reject(UNABLE_TO_FINALIZE_DOCUMENT);
         }
         return frameworkNotInstalled();
     }
-    function createFrom(value, options) {
-        var _a;
-        if (
-            checkWritable(main) &&
-            isString(value) &&
-            isPlainObject(options) &&
-            ((_a = options.assets) === null || _a === void 0 ? void 0 : _a.length)
-        ) {
-            return main.createFrom(value, options);
+    function copyTo(value, options) {
+        if (main) {
+            return isString(value) && close() ? main.copyTo(value, options) : reject(UNABLE_TO_FINALIZE_DOCUMENT);
         }
         return frameworkNotInstalled();
     }
-    function appendFromArchive(value, options) {
-        var _a;
-        if (
-            checkWritable(main) &&
-            isString(value) &&
-            isPlainObject(options) &&
-            ((_a = options.assets) === null || _a === void 0 ? void 0 : _a.length)
-        ) {
-            return main.appendFromArchive(value, options);
+    function saveFiles(value, options) {
+        if (main) {
+            return checkFrom(value, options) ? main.saveFiles(value, options) : reject(INVALID_ASSET_REQUEST);
         }
         return frameworkNotInstalled();
     }
-    function getElementById(value, cache = true) {
+    function appendFiles(value, options) {
+        if (main) {
+            return checkFrom(value, options) ? main.appendFiles(value, options) : reject(INVALID_ASSET_REQUEST);
+        }
+        return frameworkNotInstalled();
+    }
+    function copyFiles(value, options) {
+        if (main) {
+            return checkFrom(value, options) ? main.copyFiles(value, options) : reject(INVALID_ASSET_REQUEST);
+        }
+        return frameworkNotInstalled();
+    }
+    function getElementById(value, sync, cache = true) {
         if (main) {
             const element = document.getElementById(value);
             if (element) {
-                return findElement(element, cache);
+                return findElement(element, sync, cache);
             }
         }
-        return Promise.resolve(null);
+        return sync ? null : Promise.resolve(null);
     }
-    function querySelector(value, cache = true) {
+    function querySelector(value, sync, cache = true) {
         if (main) {
             const element = document.querySelector(value);
             if (element) {
-                return findElement(element, cache);
+                return findElement(element, sync, cache);
             }
         }
-        return Promise.resolve(null);
+        return sync ? null : Promise.resolve(null);
     }
-    function querySelectorAll(value, cache = true) {
+    function querySelectorAll(value, sync, cache = true) {
         if (main) {
             const query = document.querySelectorAll(value);
             const length = query.length;
-            if (length > 0) {
-                if (cache) {
-                    return promisify(findElementAll)(query, length);
-                } else if (length === 1) {
-                    return promisify(findElementAsync)(query[0]);
+            if (length) {
+                if (sync) {
+                    if (length === 1) {
+                        return [findElement(query[0], true, cache)];
+                    } else if (cache) {
+                        return findElementAll(query, length);
+                    }
+                    return main.parseDocumentSync(...Array.from(query));
                 } else {
+                    if (length === 1) {
+                        return promisify(findElementAsync)(query[0], cache);
+                    } else if (cache) {
+                        return promisify(findElementAllAsync)(query, length);
+                    }
                     return main.parseDocument(...Array.from(query));
                 }
             }
         }
-        return Promise.resolve([]);
+        return sync ? [] : Promise.resolve([]);
     }
-    function fromElement(element, cache = false) {
+    function fromElement(element, sync, cache) {
         if (main) {
-            return findElement(element, cache);
+            return findElement(element, sync, cache);
         }
-        return Promise.resolve(null);
+        return sync ? null : Promise.resolve(null);
     }
-    function getElementMap() {
-        return (main === null || main === void 0 ? void 0 : main.elementMap) || new Map();
-    }
-    function clearElementMap() {
-        main === null || main === void 0 ? void 0 : main.elementMap.clear();
+    function clearCache() {
+        if (main) {
+            main.elementMap = new WeakMap();
+        }
     }
     function toString() {
-        return (main === null || main === void 0 ? void 0 : main.toString()) || '';
+        return main ? main.toString() : '';
     }
     const lib = {
         base: {
             Container,
             ArrayIterator: Iterator,
             ListIterator,
+            Pattern,
         },
         client,
         color,
+        constant,
         css,
         dom,
+        error,
         math,
         regex,
         session,
         util,
     };
 
-    exports.appendFromArchive = appendFromArchive;
-    exports.appendToArchive = appendToArchive;
-    exports.clearElementMap = clearElementMap;
+    exports.add = add;
+    exports.appendFiles = appendFiles;
+    exports.appendTo = appendTo;
+    exports.apply = apply;
+    exports.clearCache = clearCache;
     exports.close = close;
-    exports.configure = configure;
-    exports.copyToDisk = copyToDisk;
-    exports.createFrom = createFrom;
-    exports.exclude = exclude;
+    exports.copyFiles = copyFiles;
+    exports.copyTo = copyTo;
+    exports.extend = extend;
     exports.fromElement = fromElement;
     exports.get = get;
     exports.getElementById = getElementById;
-    exports.getElementMap = getElementMap;
-    exports.include = include;
     exports.latest = latest;
     exports.lib = lib;
     exports.parseDocument = parseDocument;
+    exports.parseDocumentSync = parseDocumentSync;
     exports.querySelector = querySelector;
     exports.querySelectorAll = querySelectorAll;
-    exports.ready = ready;
+    exports.remove = remove;
     exports.reset = reset;
-    exports.retrieve = retrieve;
-    exports.saveToArchive = saveToArchive;
+    exports.save = save;
+    exports.saveAs = saveAs;
+    exports.saveFiles = saveFiles;
     exports.setFramework = setFramework;
     exports.setHostname = setHostname;
-    exports.setViewModel = setViewModel;
     exports.settings = settings;
-    exports.system = system;
     exports.toString = toString;
 
     Object.defineProperty(exports, '__esModule', { value: true });

@@ -47,38 +47,48 @@ function getFileAssets(pathname: string, items: string[]) {
     return items as [];
 }
 
-function getImageAssets(pathname: string, items: string[], convertExt: string, compress: boolean) {
+function getImageAssets(pathname: string, items: string[], convertExt: string, compressing: boolean) {
     const length = items.length;
     if (length) {
-        let mimeTypeTo: Undef<string>;
-        if (convertExt) {
-            convertExt = convertExt.toLowerCase();
-            const match = /^[a-z]+/.exec(convertExt);
-            if (match) {
-                mimeTypeTo = parseMimeType(match[0]);
-                if (!mimeTypeTo.startsWith('image/')) {
-                    mimeTypeTo = '';
-                }
-            }
-        }
         const result: FileAsset[] = new Array(length / 3);
         for (let i = 0, j = 0; i < length; i += 3) {
             const filename = items[i + 2];
-            let mimeType: Undef<string>;
+            let mimeType: Undef<string>,
+                compress: Undef<CompressFormat[]>;
             if (filename.endsWith('.unknown')) {
-                mimeType = (compress ? 'png@:' : '') + 'image/unknown';
+                mimeType = 'image/unknown';
+                if (compressing) {
+                    compress = [{ format: 'png' }];
+                }
             }
-            else if (mimeTypeTo) {
+            else if (convertExt) {
                 const mimeTypeFrom = parseMimeType(filename);
-                if (mimeTypeFrom !== mimeTypeTo && mimeTypeFrom.startsWith('image/')) {
-                    mimeType = convertExt + (!/[@%]/.test(convertExt) ? '@' : '') + ':' + mimeTypeFrom;
+                if (mimeTypeFrom.startsWith('image/')) {
+                    mimeType = '';
+                    for (const value of convertExt.trim().toLowerCase().split(/\s*:\s*/)) {
+                        if (!mimeTypeFrom.endsWith(value)) {
+                            const match = /^[a-z]+/.exec(value);
+                            if (match) {
+                                const mimeTypeTo = parseMimeType(match[0]);
+                                if (mimeTypeTo.startsWith('image/')) {
+                                    mimeType += value + ':';
+                                    if (compressing && !compress && Resource.canCompressImage(filename, mimeTypeTo)) {
+                                        compress = [{ format: 'png' }];
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (mimeType !== '') {
+                        mimeType += mimeTypeFrom;
+                    }
                 }
             }
             result[j++] = {
                 pathname: pathname + items[i + 1],
                 filename,
                 mimeType,
-                compress: compress && Resource.canCompressImage(filename, mimeTypeTo) ? [{ format: 'png' }] : undefined,
+                compress,
                 uri: items[i]
             };
         }

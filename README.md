@@ -1,4 +1,4 @@
-# squared
+# squared 2.0
 
 ## Installation (global js variable: squared)
 
@@ -94,7 +94,7 @@ The primary function "parseDocument" can be called on multiple elements and mult
 
 #### Example: vdom / chrome
 
-VDOM is a minimal framework for those who require a universal HTMLElement and performing cached selector queries. The "lite" version is about half the bundle size and recommended for most browser applications. Chrome framework offers the same features as VDOM but can also bundle assets using HTML and Express. It is adequate for most applications and gives you the ability to see your application first and to build it last.
+VDOM is a minimal framework for those who prefer a universal HTMLElement that can perform internally cached selector queries. The "lite" version is about half the bundle size and is recommended for most browser applications. Chrome framework offers the same features as VDOM but can also bundle assets using HTML syntax and Express server. It is adequate for most applications and gives you the ability to see your application first and to build it last.
 
 ```javascript
 <script src="/dist/squared.min.js"></script>
@@ -105,7 +105,7 @@ VDOM is a minimal framework for those who require a universal HTMLElement and pe
         squared.setFramework(vdom /* chrome */, /* optional: FrameworkOptions */);
 
         const element = await squared.parseDocument(/* HTMLElement */); // default: document.documentElement 'HTML'
-        const elementArray = squared.parseDocumentSync(/* HTMLElement */, /* 'elementId' */, /* ...etc */); // more than 1 element
+        const elementArray = squared.parseDocumentSync(/* HTMLElement */, /* 'elementId' */, /* ...etc */); // multiple elements
 
         // start new "parseDocument" session (optional)
         squared.reset();
@@ -116,7 +116,7 @@ VDOM is a minimal framework for those who require a universal HTMLElement and pe
 There are ES2017 minified versions (*.min.js) and also ES2017 non-minified versions. Past versions until 1.6.5 were using ES2015 (ES6).
 
 ES2015 - ES6 classes + Fetch (94%)  
-ES2017 - Async/Await (91%)  
+ES2017 - Async/Await (92%)  
 
 Browsers without ES2017 are not being supported to fully take advantage of async/await.
 
@@ -130,8 +130,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 ```
-
-*** External CSS files cannot be parsed when loading HTML pages using the file:/// protocol (hard drive) with Chrome 64 or higher. Loading the HTML page from a web server (http://localhost) or embedding the CSS files into a &lt;style&gt; tag can get you past this security restriction. You can also use your preferred browser Safari/Edge/Firefox. The latest version of Chrome is ideally what you should use to generate the production version of your program. ***
 
 ### ALL: User Settings
 
@@ -264,7 +262,7 @@ squared.setFramework(android, { loadAs: 'android-example' });
 
 ### ALL: Public Properties and Methods
 
-There is no official documentation as this project is still in early development. The entire source code including TypeScript definitions are available on GitHub if you need further clarification.
+There is no official documentation for this project. The entire source code including TypeScript definitions are available on GitHub if you need further clarification.
 
 ```javascript
 .settings // see user preferences section
@@ -298,8 +296,7 @@ querySelectorAll(value: string, sync?: boolean, cache?: boolean)
 
 fromElement(element: HTMLElement, sync?: boolean, cache?: boolean) // default: sync - false | cache - false
 
-fromCache(...elements: (Element | string)[]) // Element map of any Node objects created during the active "parseDocument" sessions
-resetCache() // clear element data map
+clearCache() // clear element data map
 ```
 
 Packaging methods will return a Promise and require either node-express or squared-apache installed. These features are not supported when the framework is VDOM.
@@ -473,7 +470,7 @@ squared.extend({
 
 const body = await squared.fromElement(document.body);
 body.altId = 5; // body.altId: 6
-body.addEvent('click', (event) => body.element.classList.toggle('example'));
+body.addEvent('click', event => body.element.classList.toggle('example'));
 ```
 
 ### ALL: node-express / squared-apache
@@ -521,7 +518,7 @@ format[@%]?(minSize(0),maxSize(*))?(width(n)xheight(n)#?cover|contain|scale)?{..
 @ - replace  
 % - smaller
 
-Placing an @ symbol (@png:image/jpeg) before the mime type will remove the original file from the package. The % symbol (%png:image/jpeg) will choose the smaller of the two files. You can also use these commands with the setting "convertImages" in the Android framework.
+Placing an @ symbol (png@:image/jpeg) before the mime type will remove the original file from the package. The % symbol (png%:image/jpeg) will choose the smaller of the two files. You can also use these commands with the setting "convertImages" in the Android framework.
 
 ```javascript
 // NOTE: squared-apache uses TinyPNG <https://tinypng.com/developers> for resizing and refitting (contain|cover|scale) and supports only PNG and JPEG.
@@ -680,7 +677,7 @@ Some applications can benefit from using includes or merge tags to share common 
 <!-- res/layout/filename2.xml -->
 ```
 
-The attributes "android-include" and "android-include-end" can only be applied to elements which share the same parent container. See /demos-dev/gradient.html for usage instructions.
+The attributes "android-include" and "android-include-end" can only be applied to elements which share the same parent container. See /demos/gradient.html for usage instructions.
 
 ### ANDROID: Redirecting Output Location
 
@@ -902,7 +899,7 @@ You can exclude unnecessary processing files using the dataset attribute in &lt;
 </script>
 ```
 
-The file action commands (save | saveAs | copyTo | appendTo) can only be used one at a time in the Chrome framework. Calling multiple consecutively may fail if you do not use async/await.
+The file action commands (save | saveAs | copyTo | appendTo) should only be used one at a time in the Chrome framework. Calling multiple consecutively may conflict if you do not use async/await.
 
 ### CHROME: Extension configuration
 

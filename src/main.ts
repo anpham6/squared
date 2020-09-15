@@ -106,13 +106,6 @@ function loadExtensions() {
     }
 }
 
-function findNode(element: (Element | string), sessionId: string) {
-    if (typeof element === 'string') {
-        element = document.getElementById(element) as HTMLElement;
-    }
-    return session.getElementAsNode<Node>(element, sessionId);
-}
-
 function findElement(element: HTMLElement, sync?: boolean, cache?: boolean) {
     if (cache) {
         const result = main!.elementMap.get(element);
@@ -534,57 +527,7 @@ export function fromElement(element: HTMLElement, sync?: boolean, cache?: boolea
     return sync ? null : Promise.resolve(null);
 }
 
-export function fromCache(...elements: (Element | string)[]) {
-    if (main) {
-        const sessions = Array.from(main.session.active.keys());
-        const length = sessions.length;
-        if (length === 0) {
-            return;
-        }
-        const elementCount = elements.length;
-        if (length > 1) {
-            sessions.reverse();
-        }
-        else if (elementCount === 1) {
-            return findNode(elements[0], sessions[0]);
-        }
-        const result = new Map<Element, Node | Node[]>();
-        for (let i = 0; i < length; ++i) {
-            for (let j = 0; j < elementCount; ++j) {
-                let element = elements[j];
-                if (typeof element === 'string') {
-                    element = document.getElementById(element) as HTMLElement;
-                }
-                if (element instanceof Element) {
-                    const node = session.getElementAsNode<Node>(element, sessions[i]);
-                    if (node) {
-                        if (length > 1) {
-                            if (result.has(element)) {
-                                (result.get(element) as Node[]).push(node);
-                            }
-                            else {
-                                result.set(element, [node]);
-                            }
-                        }
-                        else {
-                            result.set(element, node);
-                        }
-                    }
-                }
-            }
-        }
-        if (elementCount <= 1) {
-            if (result.size) {
-                return result.values().next().value as Node[];
-            }
-        }
-        else {
-            return result;
-        }
-    }
-}
-
-export function resetCache() {
+export function clearCache() {
     if (main) {
         main.elementMap = new WeakMap();
     }

@@ -1,4 +1,4 @@
-/* android.widget.coordinator 1.13.0
+/* android.widget.coordinator 2.0.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -6,11 +6,10 @@ this.android.widget = this.android.widget || {};
 this.android.widget.coordinator = (function () {
     'use strict';
 
+    const { NODE_RESOURCE } = squared.base.lib.constant;
+    const { CONTAINER_NODE, SUPPORT_TAGNAME, SUPPORT_TAGNAME_X } = android.lib.constant;
     const { getElementAsNode } = squared.lib.session;
     const { createViewAttribute } = android.lib.util;
-    const { NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
-    const { EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = android.lib.constant;
-    const { BUILD_ANDROID, CONTAINER_NODE } = android.lib.enumeration;
     const Resource = android.base.Resource;
     class Coordinator extends squared.base.ExtensionUI {
         processNode(node, parent) {
@@ -18,9 +17,9 @@ this.android.widget.coordinator = (function () {
             const options = createViewAttribute(this.options[node.elementId]);
             Resource.formatOptions(
                 options,
-                this.application.extensionManager.optionValueAsBoolean(
-                    EXT_ANDROID.RESOURCE_STRINGS,
-                    'numberResourceValue'
+                this.application.extensionManager.valueAsBoolean(
+                    'android.resource.strings' /* RESOURCE_STRINGS */,
+                    'numberAsResource'
                 )
             );
             const element = Coordinator.findNestedElement(node, 'android.widget.toolbar' /* TOOLBAR */);
@@ -28,8 +27,8 @@ this.android.widget.coordinator = (function () {
                 const toolbar = getElementAsNode(element, node.sessionId);
                 if (toolbar) {
                     const data =
-                        (_a = this.application.extensionManager.retrieve('android.widget.toolbar' /* TOOLBAR */)) ===
-                            null || _a === void 0
+                        (_a = this.application.extensionManager.get('android.widget.toolbar' /* TOOLBAR */)) === null ||
+                        _a === void 0
                             ? void 0
                             : _a.options[toolbar.elementId];
                     if (data && 'collapsingToolbar' in data) {
@@ -37,7 +36,7 @@ this.android.widget.coordinator = (function () {
                     }
                 }
             }
-            const controlName = node.api < 29 /* Q */ ? SUPPORT_ANDROID.COORDINATOR : SUPPORT_ANDROID_X.COORDINATOR;
+            const controlName = node.api < 29 /* Q */ ? SUPPORT_TAGNAME.COORDINATOR : SUPPORT_TAGNAME_X.COORDINATOR;
             node.setControlType(controlName, CONTAINER_NODE.BLOCK);
             node.exclude({ resource: NODE_RESOURCE.ASSET });
             node.render(parent);
@@ -52,23 +51,11 @@ this.android.widget.coordinator = (function () {
         }
         postOptimize(node) {
             if (node.documentRoot) {
-                if (node.inlineWidth) {
-                    node.some(item => {
-                        if (item.rightAligned) {
-                            node.setLayoutWidth('match_parent', true);
-                            return true;
-                        }
-                        return false;
-                    });
+                if (node.inlineWidth && node.find(item => item.rightAligned)) {
+                    node.setLayoutWidth('match_parent', true);
                 }
-                if (node.inlineHeight) {
-                    node.some(item => {
-                        if (item.bottomAligned) {
-                            node.setLayoutHeight('match_parent', true);
-                            return true;
-                        }
-                        return false;
-                    });
+                if (node.inlineHeight && node.find(item => item.bottomAligned)) {
+                    node.setLayoutHeight('match_parent', true);
                 }
             }
         }
@@ -76,7 +63,7 @@ this.android.widget.coordinator = (function () {
 
     const coordinator = new Coordinator('android.widget.coordinator' /* COORDINATOR */, 2 /* ANDROID */);
     if (squared) {
-        squared.include(coordinator);
+        squared.add(coordinator);
     }
 
     return coordinator;

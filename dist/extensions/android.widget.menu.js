@@ -1,4 +1,4 @@
-/* android.widget.menu 1.13.0
+/* android.widget.menu 2.0.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -6,11 +6,11 @@ this.android.widget = this.android.widget || {};
 this.android.widget.menu = (function () {
     'use strict';
 
-    const { appendSeparator, capitalize, sameArray, safeNestedMap } = squared.lib.util;
+    const { NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.constant;
+    const { CONTAINER_NODE } = android.lib.constant;
+    const { capitalize, sameArray } = squared.lib.util;
     const { createViewAttribute } = android.lib.util;
-    const { NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
-    const { EXT_ANDROID } = android.lib.constant;
-    const { CONTAINER_NODE } = android.lib.enumeration;
+    const { appendSeparator } = squared.base.lib.util;
     const Resource = android.base.Resource;
     const REGEXP_ITEM = {
         id: /^@\+id\/\w+$/,
@@ -56,59 +56,49 @@ this.android.widget.menu = (function () {
                 if (value) {
                     const match = pattern.exec(value);
                     if (match) {
-                        safeNestedMap(options, NAMESPACE_APP.includes(attr) ? 'app' : 'android')[attr] = Array.from(
-                            new Set(match)
-                        ).join('|');
+                        const name = NAMESPACE_APP.includes(attr) ? 'app' : 'android';
+                        (options[name] || (options[name] = {}))[attr] = Array.from(new Set(match)).join('|');
                     }
                 }
             }
         }
     }
     function getTitle(node, element) {
-        const title = element.title;
-        if (title) {
+        const title = element.title.trim();
+        if (title !== '') {
             return title;
         } else {
-            const children = node.naturalChildren;
-            const length = children.length;
-            let i = 0;
-            while (i < length) {
-                const child = children[i++];
-                if (child.textElement) {
+            for (const child of node.naturalChildren) {
+                if (child.textElement && !child.textEmpty) {
                     return child.textContent.trim();
                 }
             }
         }
         return '';
     }
-    const hasInputType = (node, value) => node.some(item => item.toElementString('type') === value);
+    const hasInputType = (node, value) => !!node.find(item => item.toElementString('type') === value);
     class Menu extends squared.base.ExtensionUI {
-        constructor(name, framework, options, tagNames) {
-            super(name, framework, options, tagNames);
+        constructor(name, framework, options) {
+            super(name, framework, options);
             this.cascadeAll = true;
-            this.require(EXT_ANDROID.EXTERNAL, true);
+            this.require({ name: 'android.external' /* EXTERNAL */, leading: true });
         }
-        init(element, sessionId) {
-            var _a;
+        beforeInsertNode(element, sessionId) {
             if (this.included(element)) {
-                if (element.childElementCount > 0) {
+                if (element.childElementCount) {
                     if (!sameArray(element.children, item => item.tagName)) {
                         return false;
                     }
-                    const rootElements =
-                        (_a = this.application.getProcessing(sessionId)) === null || _a === void 0
-                            ? void 0
-                            : _a.rootElements;
-                    if (rootElements) {
-                        let current = element.parentElement;
-                        while (current !== null) {
-                            if (current.tagName === 'NAV' && rootElements.has(current)) {
-                                return false;
-                            }
-                            current = current.parentElement;
+                    const rootElements = this.application.getProcessing(sessionId).rootElements;
+                    let current = element.parentElement;
+                    while (current) {
+                        if (current.tagName === 'NAV' && rootElements.has(current)) {
+                            return false;
                         }
-                        rootElements.add(element);
+                        current = current.parentElement;
                     }
+                    rootElements.add(element);
+                    return true;
                 }
             }
             return false;
@@ -125,10 +115,7 @@ this.android.widget.menu = (function () {
             node.addAlign(2 /* AUTO_LAYOUT */);
             node.exclude({ resource: NODE_RESOURCE.ALL, procedure: NODE_PROCEDURE.ALL });
             node.render(outerParent);
-            node.cascade(item => {
-                this.addDescendant(item);
-                return false;
-            });
+            node.cascade(item => this.addDescendant(item));
             node.dataset['pathname' + capitalize(this.application.systemName)] = appendSeparator(
                 this.controller.userSettings.outputDirectory,
                 'res/menu'
@@ -155,8 +142,8 @@ this.android.widget.menu = (function () {
             if (node.tagName === 'NAV') {
                 controlName = NAVIGATION.MENU;
                 title = getTitle(node, element);
-            } else if (node.some(item => item.length > 0)) {
-                if (node.some(item => item.tagName === 'NAV')) {
+            } else if (node.find(item => !item.isEmpty())) {
+                if (node.find(item => item.tagName === 'NAV')) {
                     controlName = NAVIGATION.ITEM;
                 } else {
                     controlName = NAVIGATION.GROUP;
@@ -206,9 +193,9 @@ this.android.widget.menu = (function () {
                 android.title = Resource.addString(
                     title,
                     '',
-                    this.application.extensionManager.optionValueAsBoolean(
-                        EXT_ANDROID.RESOURCE_STRINGS,
-                        'numberResourceValue'
+                    this.application.extensionManager.valueAsBoolean(
+                        'android.resource.strings' /* RESOURCE_STRINGS */,
+                        'numberAsResource'
                     )
                 );
             }
@@ -228,9 +215,9 @@ this.android.widget.menu = (function () {
         }
     }
 
-    const menu = new Menu('android.widget.menu' /* MENU */, 2 /* ANDROID */, ['NAV']);
+    const menu = new Menu('android.widget.menu' /* MENU */, 2 /* ANDROID */, { tagNames: ['NAV'] });
     if (squared) {
-        squared.include(menu);
+        squared.add(menu);
     }
 
     return menu;

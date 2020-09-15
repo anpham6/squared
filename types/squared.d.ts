@@ -41,8 +41,7 @@ export function getElementById(value: string, cache?: boolean): Promise<Null<Nod
 export function querySelector(value: string, cache?: boolean): Promise<Null<Node>> | Null<Node>;
 export function querySelectorAll(value: string, cache?: boolean): Promise<Node[]> | Node[];
 export function fromElement(element: HTMLElement, cache?: boolean): Promise<Null<Node>> | Null<Node>;
-export function fromCache(...elements: (string | Element)[]): Undef<Node | Node[] | Map<Element, Node | Node[]>>;
-export function resetCache(): void;
+export function clearCache(): void;
 export function toString(): string;
 
 export * as lib from './lib/index';

@@ -1,4 +1,4 @@
-/* vdom-framework 1.13.0
+/* vdom-framework 2.0.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -6,7 +6,7 @@
         ? (module.exports = factory())
         : typeof define === 'function' && define.amd
         ? define(factory)
-        : ((global = global || self), (global.vdom = factory()));
+        : ((global = typeof globalThis !== 'undefined' ? globalThis : global || self), (global.vdom = factory()));
 })(this, function () {
     'use strict';
 
@@ -15,8 +15,11 @@
             super(...arguments);
             this.systemName = 'vdom';
         }
+        init() {}
         insertNode(element, sessionId) {
-            return element.nodeName !== '#text' ? new this.Node(this.nextId, sessionId, element) : undefined;
+            if (element.nodeName[0] !== '#') {
+                return new this.Node(this.nextId, sessionId, element);
+            }
         }
     }
 
@@ -27,9 +30,7 @@
         showErrorMessages: false,
     };
 
-    const framework = 1; /* VDOM */
-    let initialized = false;
-    let application;
+    let application = null;
     const appBase = {
         base: {
             Application,
@@ -38,23 +39,27 @@
         extensions: {},
         system: {},
         create() {
-            application = new Application(framework, squared.base.Node, squared.base.Controller);
-            initialized = true;
+            application = new Application(
+                1 /* VDOM */,
+                squared.base.Node,
+                squared.base.Controller,
+                squared.base.ExtensionManager
+            );
             return {
                 application,
-                framework,
+                framework: 1 /* VDOM */,
                 userSettings: Object.assign({}, settings),
             };
         },
         cached() {
-            if (initialized) {
+            if (application) {
                 return {
                     application,
-                    framework,
+                    framework: 1 /* VDOM */,
                     userSettings: application.userSettings,
                 };
             }
-            return appBase.create();
+            return this.create();
         },
     };
 
