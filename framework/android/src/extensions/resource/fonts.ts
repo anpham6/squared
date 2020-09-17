@@ -88,19 +88,19 @@ const FONT_STYLE = {
 
 function deleteStyleAttribute(sorted: AttributeMap<View>[], attrs: string[], nodes: View[]) {
     for (let i = 0, length = attrs.length, q = sorted.length; i < length; ++i) {
-        const value = attrs[i];
-        found: {
-            for (let j = 0; j < q; ++j) {
-                const data = sorted[j];
-                for (const attr in data) {
-                    if (attr === value) {
-                        data[attr] = data[attr].filter(node => !nodes.includes(node));
-                        if (data[attr].length === 0) {
-                            delete data[attr];
-                        }
-                        break found;
-                    }
+        const attr = attrs[i];
+        for (let j = 0; j < q; ++j) {
+            const data = sorted[j];
+            let item = data[attr];
+            if (item) {
+                item = item.filter(node => !nodes.includes(node));
+                if (item.length === 0) {
+                    delete data[attr];
                 }
+                else {
+                    data[attr] = item;
+                }
+                break;
             }
         }
     }
@@ -342,16 +342,9 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                 styleTag[attr] = filtered[attr];
                             }
                             for (const attr in combined) {
-                                const items = combined[attr];
-                                const attrs = new Array(items.size);
-                                let index = '',
-                                    j = 0;
-                                for (const name of items) {
-                                    index += (index !== '' ? ';' : '') + name;
-                                    attrs[j++] = name;
-                                }
-                                deleteStyleAttribute(sorted, attrs, joinedMap[attr]);
-                                styleTag[index] = joinedMap[attr];
+                                const items = Array.from(combined[attr]);
+                                deleteStyleAttribute(sorted, items, joinedMap[attr]);
+                                styleTag[items.join(';')] = joinedMap[attr];
                             }
                         }
                     }

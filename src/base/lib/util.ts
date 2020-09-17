@@ -1,3 +1,5 @@
+const HEX = '0123456789abcdef';
+const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const NUMERALS = [
     '', 'C', 'CC', 'CCC', 'CD', 'D', 'DC', 'DCC', 'DCCC', 'CM',
     '', 'X', 'XX', 'XXX', 'XL', 'L', 'LX', 'LXX', 'LXXX', 'XC',
@@ -21,23 +23,22 @@ export function appendSeparator(preceding = '', value = '', separator = '/') {
 }
 
 export function randomUUID(separator = '-') {
-    const alpha = '0123456789abcdef';
     let result = '';
     for (const length of [8, 4, 4, 4, 12]) {
         if (result !== '') {
             result += separator;
         }
         for (let i = 0; i < length; ++i) {
-            result += alpha[Math.floor(Math.random() * 16)];
+            result += HEX[Math.floor(Math.random() * 16)];
         }
     }
     return result;
 }
 
 export function upperCaseString(value: string) {
-    let result: Undef<string[]>;
     const pattern = /\b([a-z])/g;
-    let match: Null<RegExpMatchArray>;
+    let result: Undef<string[]>,
+        match: Null<RegExpMatchArray>;
     while (match = pattern.exec(value)) {
         (result ||= value.split(''))[match.index!] = match[1][0].toUpperCase();
     }
@@ -90,13 +91,12 @@ export function convertListStyle(name: string, value: number, valueAsDefault?: b
 
 export function convertAlpha(value: number) {
     if (value >= 0) {
-        const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         let result = '';
-        const length = alphabet.length;
+        const length = ALPHA.length;
         while (value >= length) {
             const base = Math.floor(value / length);
             if (base > 1 && base <= length) {
-                result += alphabet[base - 1];
+                result += ALPHA[base - 1];
                 value -= base * length;
             }
             else if (base) {
@@ -106,10 +106,10 @@ export function convertAlpha(value: number) {
                 return result;
             }
             const index = value % length;
-            result += alphabet[index];
+            result += ALPHA[index];
             value -= index + length;
         }
-        return alphabet[value] + result;
+        return ALPHA[value] + result;
     }
     return value.toString();
 }

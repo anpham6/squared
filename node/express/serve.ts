@@ -1897,9 +1897,8 @@ class FileManager implements serve.IFileManager {
                     this.completeAsyncTask(filepath);
                 }
                 else {
-                    filepath = '';
                     (bundleMain || file).excluded = true;
-                    this.completeAsyncTask(filepath);
+                    this.completeAsyncTask('');
                 }
             }
             else if (Array.isArray(processing[filepath])) {

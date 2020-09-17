@@ -6,10 +6,10 @@ declare module "lib" {
             item(index: number, value?: T): Undef<T>;
             add(item: T): this;
             addAt(index: number, ...items: T[]): this;
-            addAll(list: T[] | Container<T>): this;
+            addAll(list: T[] | Container): this;
             remove(item: T): Undef<T>;
             removeAt(index: number): Undef<T>;
-            removeAll(list: T[] | Container<T>): T[];
+            removeAll(list: T[] | Container): T[];
             retainAs(list: T[]): this;
             each(predicate: IteratorPredicate<T, void>, options?: ContainerRangeOptions): this;
             every(predicate: IteratorPredicate<T, boolean>, options?: ContainerRangeOptions): boolean;

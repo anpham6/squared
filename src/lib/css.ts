@@ -1599,7 +1599,7 @@ export function getStyle(element: Element, pseudoElt = '') {
     if (style) {
         return style;
     }
-    if (hasComputedStyle(element)) {
+    if (element.nodeName[0] !== '#') {
         style = getComputedStyle(element, pseudoElt);
         setElementCache(element, 'style' + pseudoElt, style);
         return style;
@@ -1659,7 +1659,7 @@ export function getFontSize(element: Element) {
 }
 
 export function hasComputedStyle(element: Element): element is HTMLElement {
-    return element.nodeName[0] !== '#' && (element instanceof HTMLElement || element instanceof SVGElement);
+    return element.nodeName[0] !== '#';
 }
 
 export function parseSelectorText(value: string, document?: boolean) {

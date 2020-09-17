@@ -15,7 +15,7 @@ type PreloadItem = HTMLImageElement | string;
 const { CSS_CANNOT_BE_PARSED, DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, reject } = squared.lib.error;
 const { FILE, STRING } = squared.lib.regex;
 
-const { CSS_PROPERTIES, checkMediaRule, getSpecificity, hasComputedStyle, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText } = squared.lib.css;
+const { CSS_PROPERTIES, checkMediaRule, getSpecificity, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText } = squared.lib.css;
 const { isUserAgent } = squared.lib.client;
 const { getElementCache, newSessionInit, resetSessionAll, setElementCache } = squared.lib.session;
 const { capitalize, convertCamelCase, isEmptyString, parseMimeType, resolvePath, splitPair, splitPairStart, trimBoth } = squared.lib.util;
@@ -510,24 +510,28 @@ export default abstract class Application<T extends Node> implements squared.bas
                     child = this.insertNode(element, sessionId);
                     if (child) {
                         excluded.add(child);
-                        inlineText = false;
                     }
                 }
                 if (child) {
                     child.init(node, childDepth, j);
                     child.actualParent = node;
                     children[j++] = child;
-                    cache.add(child);
                 }
             }
             children.length = j;
             elements.length = k;
             node.naturalChildren = children;
             node.naturalElements = elements;
-            if (inlineText && plainText) {
-                node.inlineText = inlineText;
+            if (j > 0) {
+                node.inlineText = inlineText && plainText;
+                node.retainAs(children);
+                if (j > 1) {
+                    cache.addAll(children);
+                }
+                else {
+                    cache.add(children[0]);
+                }
             }
-            node.retainAs(children);
             if (k > 0 && this.userSettings.createQuerySelectorMap) {
                 node.queryMap = this.createQueryMap(elements, k);
             }
@@ -820,7 +824,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 if (typeof element === 'string') {
                     element = document.getElementById(element);
                 }
-                if (!element || !hasComputedStyle(element)) {
+                if (!element || element.nodeName[0] === '#') {
                     continue;
                 }
                 rootElements.add(element);

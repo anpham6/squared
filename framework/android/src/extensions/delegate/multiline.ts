@@ -248,7 +248,6 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                     const createContainer = (tagName: string, value: string) => {
                         const container = application.createNode(sessionId, { parent: parentContainer });
                         container.init(parentContainer, depth);
-                        container.naturalChild = false;
                         container.inlineText = true;
                         container.renderExclude = false;
                         container.contentAltered = true;
@@ -257,7 +256,10 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                         container.unsafe('element', element);
                         container.unsafe('initial', initialData);
                         container.unsafe('elementData', elementData);
+                        container.setCacheState('naturalChild', false);
                         container.setCacheState('naturalElement', naturalElement && !isNaN(columns));
+                        container.setCacheState('htmlElement', naturalElement);
+                        container.setCacheState('styleElement', naturalElement);
                         container.setCacheValue('tagName', tagName);
                         container.setCacheValue('fontSize', fontSize);
                         container.setCacheValue('lineHeight', lineHeight);

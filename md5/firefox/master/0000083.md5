@@ -1,8 +1,7 @@
 c9131049bd5844ec6b26ef1505d7e192  ./app/src/main/res/drawable/cat.jpg
-a6bf0617bbfe3316601259a710a0865d  ./app/src/main/res/drawable/header_textview_1.xml
-5fdfe3c44fc79bbf20bb0de69e12abcd  ./app/src/main/res/layout/activity_main.xml
-a7d7271ec8c84056a3313e2c16873607  ./app/src/main/res/values/colors.xml
+a6bf0617bbfe3316601259a710a0865d  ./app/src/main/res/drawable/header_framelayout_1.xml
+0f6f0aa5237a80bcb600ea63fe485fc6  ./app/src/main/res/layout/activity_main.xml
+1d28825274ffd819a0a83b052d432400  ./app/src/main/res/values/colors.xml
 e04a2803d627a3c322775eb60c832d8c  ./app/src/main/res/values/dimens.xml
-b0f7f71e621b67db86ce6ef1209c5bcb  ./app/src/main/res/values/strings.xml
-b7702ff3bae2117c28f71b7ad352c7af  ./app/src/main/res/values/styles.xml
+96bb312f9ecc291325557a1443e56a1a  ./app/src/main/res/values/strings.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml

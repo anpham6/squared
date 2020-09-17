@@ -643,8 +643,6 @@ declare module "base" {
         translateX(value: number, options?: TranslateOptions): boolean;
         translateY(value: number, options?: TranslateOptions): boolean;
         fitToScreen(value: Dimension): Dimension;
-        set naturalChild(value);
-        get naturalChild(): boolean;
         set documentParent(value);
         get documentParent(): NodeUI;
         set containerName(value);

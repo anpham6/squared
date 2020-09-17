@@ -70,6 +70,7 @@ interface CacheValueUI extends CacheValue {
 interface CacheState<T> {
     htmlElement?: boolean;
     svgElement?: boolean;
+    styleElement?: boolean;
     naturalElement?: boolean;
     naturalChild?: boolean;
     actualParent?: Null<T>;
@@ -86,6 +87,7 @@ interface CacheState<T> {
 
 interface CacheStateUI<T> extends CacheState<T> {
     containerName?: string;
+    pseudoElement?: boolean;
 }
 
 interface LocalSettingsUI {

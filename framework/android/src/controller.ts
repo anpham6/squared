@@ -21,7 +21,7 @@ const { APP_SECTION, NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.constant
 
 const { isPlatform } = squared.lib.client;
 const { parseColor } = squared.lib.color;
-const { formatPX, getSrcSet, hasCoords, hasComputedStyle } = squared.lib.css;
+const { formatPX, getSrcSet, hasCoords } = squared.lib.css;
 const { getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
@@ -339,7 +339,7 @@ function causesLineBreak(element: Element) {
     if (element.tagName === 'BR') {
         return true;
     }
-    else if (hasComputedStyle(element)) {
+    else if (element.nodeName[0] !== '#') {
         const style = getComputedStyle(element);
         const hasWidth = () => (style.getPropertyValue('width') === '100%' || style.getPropertyValue('min-width') === '100%') && (style.getPropertyValue('max-width') === 'none' || style.getPropertyValue('max-width') === '100%');
         if (!hasCoords(style.getPropertyValue('position'))) {

@@ -15,7 +15,9 @@ import { appendSeparator, convertListStyle } from './lib/util';
 
 type FileActionOptions = squared.FileActionOptions;
 
-const { formatPX, getStyle, hasComputedStyle, hasCoords, insertStyleSheetRule, resolveURL } = squared.lib.css;
+const { FILE } = squared.lib.regex;
+
+const { formatPX, getStyle, hasCoords, insertStyleSheetRule, resolveURL } = squared.lib.css;
 const { getNamedItem, removeElementsByClassName } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;
 const { capitalize, convertWord, flatArray, hasBit, isString, iterateArray, partitionArray, trimBoth, trimString } = squared.lib.util;
@@ -25,28 +27,28 @@ const REGEXP_PSEUDOCOUNTERVALUE = /\b([^\-\d][^\-\d]?[^\s]*)\s+(-?\d+)\b/g;
 const REGEXP_PSEUDOQUOTE = /("(?:[^"]|\\")+"|[^\s]+)\s+("(?:[^"]|\\")+"|[^\s]+)(?:\s+("(?:[^"]|\\")+"|[^\s]+)\s+("(?:[^"]|\\")+"|[^\s]+))?/;
 
 function getFloatAlignmentType(nodes: NodeUI[]) {
-    let result = 0,
-        right = true,
-        floating = true;
+    let right: Undef<boolean>,
+        floating: Undef<boolean>;
     for (let i = 0, length = nodes.length; i < length; ++i) {
         const item = nodes[i];
         if (!item.floating) {
-            if (!right) {
+            if (right) {
                 return 0;
             }
-            floating = false;
+            floating = true;
         }
         if (!item.rightAligned) {
-            if (!floating) {
+            if (floating) {
                 return 0;
             }
-            right = false;
+            right = true;
         }
     }
-    if (floating) {
+    let result = 0;
+    if (!floating) {
         result |= NODE_ALIGNMENT.FLOAT;
     }
-    if (right) {
+    if (!right) {
         result |= NODE_ALIGNMENT.RIGHT;
     }
     return result;
@@ -562,7 +564,19 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected cascadeParentNode(cache: NodeList<T>, excluded: NodeList<T>, parentElement: HTMLElement, sessionId: string, depth: number, rootElements: Set<HTMLElement>, extensions: Null<ExtensionUI<T>[]>, cascadeAll?: boolean) {
+        const setElementState = (child: T, styleElement: boolean, naturalElement: boolean, htmlElement: boolean, svgElement: boolean) => {
+            child.setCacheState('styleElement', styleElement);
+            child.setCacheState('naturalElement', naturalElement);
+            child.setCacheState('htmlElement', htmlElement);
+            child.setCacheState('svgElement', svgElement);
+        };
         const node = this.insertNode(parentElement, sessionId, cascadeAll);
+        if (parentElement.tagName === 'svg') {
+            setElementState(node, true, true, false, true);
+        }
+        else {
+            setElementState(node, true, true, true, false);
+        }
         if (depth === 0) {
             cache.add(node);
             for (const name of node.extensions) {
@@ -593,25 +607,28 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 let child: T;
                 if (element === beforeElement) {
                     child = this.insertNode(beforeElement, sessionId, cascadeAll, '::before');
-                    node.innerBefore = child;
+                    setElementState(child, true, false, true, false);
                     if (!child.textEmpty) {
                         child.cssApply(node.textStyle, false);
                         child.inlineText = true;
                     }
                     inlineText = false;
+                    node.innerBefore = child;
                 }
                 else if (element === afterElement) {
                     child = this.insertNode(afterElement, sessionId, cascadeAll, '::after');
-                    node.innerAfter = child;
+                    setElementState(child, true, false, true, false);
                     if (!child.textEmpty) {
                         child.cssApply(node.textStyle, false);
                         child.inlineText = true;
                     }
                     inlineText = false;
+                    node.innerAfter = child;
                 }
                 else if (element.nodeName[0] === '#') {
                     if (this.visibleText(node, element)) {
                         child = this.insertNode(element, sessionId);
+                        setElementState(child, false, false, false, false);
                         child.cssApply(node.textStyle);
                         plainText = j;
                     }
@@ -625,7 +642,18 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         (use ? ApplicationUI.prioritizeExtensions(use, extensions) : extensions).some(item => item.beforeInsertNode!(element, sessionId));
                     }
                     if (!rootElements.has(element)) {
-                        child = element.childNodes.length === 0 ? this.insertNode(element, sessionId, cascadeAll) : this.cascadeParentNode(cache, excluded, element, sessionId, childDepth, rootElements, extensions, cascadeAll);
+                        if (element.childNodes.length === 0) {
+                            child = this.insertNode(element, sessionId, cascadeAll);
+                            if (element.tagName === 'svg') {
+                                setElementState(child, true, true, false, true);
+                            }
+                            else {
+                                setElementState(child, true, true, true, child.imageElement && FILE.SVG.test(child.toElementString('src')));
+                            }
+                        }
+                        else {
+                            child = this.cascadeParentNode(cache, excluded, element, sessionId, childDepth, rootElements, extensions, cascadeAll);
+                        }
                         if (!child.excluded) {
                             inlineText = false;
                         }
@@ -646,7 +674,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     continue;
                 }
                 child.init(node, childDepth, j);
-                child.naturalChild = true;
                 child.actualParent = node;
                 children[j++] = child;
             }
@@ -654,16 +681,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             elements.length = k;
             node.naturalChildren = children;
             node.naturalElements = elements;
-            node.inlineText = inlineText;
             if (!inlineText) {
+                node.inlineText = false;
                 if (j > 0) {
                     this.cacheNodeChildren(cache, excluded, node, children);
                 }
             }
             else {
-                if (plainText !== -1) {
-                    node.inlineText = true;
-                }
+                node.inlineText = plainText !== -1;
                 if (lineBreak !== -1) {
                     if (lineBreak < plainText) {
                         node.multiline = true;
@@ -723,13 +748,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     hasExcluded = true;
                     excluded.add(child);
                 }
-                else {
-                    cache.add(child);
-                }
             }
             trailing.siblingsTrailing = siblingsTrailing;
             node.floatContainer = floating;
             node.retainAs(hasExcluded ? children.filter(item => !item.excluded) : children.slice(0));
+            cache.addAll(node);
         }
         else {
             const child = children[0];
@@ -739,7 +762,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             else {
                 node.add(child);
                 cache.add(child);
-                node.floatContainer = child.floating;
             }
             child.actualParent = node;
         }
@@ -1544,7 +1566,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     break;
                                 }
                             }
-                            else if (hasComputedStyle(child)) {
+                            else {
                                 const style = getStyle(child);
                                 if (hasCoords(styleMap.position)) {
                                     continue;
@@ -1787,7 +1809,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             return;
         }
         const bottom = target.bounds.bottom;
-        const boxWidth = parent.actualBoxWidth();
         let q = leftAbove.length;
         if (q) {
             let floatPosition = -Infinity,
@@ -1823,7 +1844,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
                 if (marginLeft !== -Infinity) {
                     const offset = floatPosition + marginOffset - (parent.box.left + marginLeft + Math.max(...target.map((child: T) => !paddingNodes.includes(child) ? child.marginLeft : 0)));
-                    if (offset > 0 && offset < boxWidth) {
+                    if (offset > 0 && offset < parent.actualBoxWidth()) {
                         target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (!spacing && target.find(child => child.multiline, { cascade: true }) ? Math.max(marginLeft, this._controllerSettings.deviations.textMarginBoundarySize) : 0));
                         setColumnMaxWidth(leftAbove, offset);
                     }
@@ -1862,7 +1883,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
                 if (marginRight !== -Infinity) {
                     const offset = parent.box.right - (floatPosition - marginOffset + marginRight + Math.max(...target.map((child: T) => !paddingNodes.includes(child) ? child.marginRight : 0)));
-                    if (offset > 0 && offset < boxWidth) {
+                    if (offset > 0 && offset < parent.actualBoxWidth()) {
                         target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (!spacing && target.find(child => child.multiline, { cascade: true }) ? Math.max(marginRight, this._controllerSettings.deviations.textMarginBoundarySize) : 0));
                         setColumnMaxWidth(rightAbove, offset);
                     }

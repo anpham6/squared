@@ -716,10 +716,7 @@ export function isEqual(source: any, other: any) {
             for (const attr in source) {
                 const a = source[attr];
                 const b = other[attr];
-                if (a !== b) {
-                    if (isPlainObject(a) && isPlainObject(b) && isEqual(a, b)) {
-                        continue;
-                    }
+                if (a !== b && !(isPlainObject(a) && isPlainObject(b) && isEqual(a, b))) {
                     return false;
                 }
             }
@@ -806,7 +803,7 @@ export function resolvePath(value: string, href?: string) {
         else if (value.startsWith('./')) {
             value = value.substring(2);
         }
-        return `${location.origin + pathname.join('/')}/${value}`;
+        return location.origin + pathname.join('/') + '/' + value;
     }
     return value;
 }

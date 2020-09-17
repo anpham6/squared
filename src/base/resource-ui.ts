@@ -13,7 +13,7 @@ const { STRING } = squared.lib.regex;
 
 const { isUserAgent } = squared.lib.client;
 const { parseColor } = squared.lib.color;
-const { CSS_PROPERTIES, calculate, convertAngle, formatPercent, formatPX, hasComputedStyle, hasCoords, isCalc, isLength, isPercent, parseAngle, parseUnit } = squared.lib.css;
+const { CSS_PROPERTIES, calculate, convertAngle, formatPercent, formatPX, hasCoords, isCalc, isLength, isPercent, parseAngle, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
@@ -1395,7 +1395,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                         }
                     }
                 }
-                else if (hasComputedStyle(item)) {
+                else if (item.nodeName[0] !== '#') {
                     value = value.replace(item.outerHTML, !hasCoords(getComputedStyle(item).getPropertyValue('position')) && isString(item.textContent!) ? ResourceUI.STRING_SPACE : '');
                 }
                 if (!preserveWhiteSpace) {

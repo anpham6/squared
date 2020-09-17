@@ -25,10 +25,10 @@ type Extension = squared.base.Extension<Node>;
 type ExtensionManager = squared.base.ExtensionManager<Node>;
 type ExtendPrototypeMap = ObjectMap<FunctionType<any> | { set?: (value: any) => void; get?: () => any }>;
 
-const addQueue = new Set<ExtensionRequest>();
-const removeQueue = new Set<ExtensionRequest>();
+const extensionCache: Extension[] = [];
+const addQueue: ExtensionRequest[] = [];
+const removeQueue: ExtensionRequest[] = [];
 const optionsQueue = new Map<string, PlainObject>();
-const extensionCache = new Set<Extension>();
 const prototypeMap = new Map<number, ExtendPrototypeMap>();
 const settings = {} as UserSettings;
 
@@ -64,20 +64,20 @@ function extendPrototype(id: number) {
 
 function loadExtensions() {
     if (extensionManager) {
-        if (extensionCache.size) {
+        if (extensionCache.length) {
             for (const item of extensionCache) {
                 extensionManager.cache.add(item);
             }
-            extensionCache.clear();
+            extensionCache.length = 0;
         }
-        if (addQueue.size) {
+        if (addQueue.length) {
             for (const item of addQueue) {
                 if (!extensionManager.add(item)) {
                     console.log('FAIL: ' + (typeof item === 'string' ? item : item.name));
                     extensionCheck = true;
                 }
             }
-            addQueue.clear();
+            addQueue.length = 0;
         }
         if (optionsQueue.size) {
             for (const data of optionsQueue) {
@@ -88,13 +88,13 @@ function loadExtensions() {
             }
             optionsQueue.clear();
         }
-        if (removeQueue.size) {
+        if (removeQueue.length) {
             for (const item of removeQueue) {
                 if (extensionManager.remove(item)) {
                     extensionCheck = true;
                 }
             }
-            removeQueue.clear();
+            removeQueue.length = 0;
         }
         if (extensionCheck) {
             const errors = extensionManager.checkDependencies();
@@ -162,7 +162,7 @@ async function findElementAllAsync(query: NodeListOf<Element>, length: number) {
 
 const checkWritable = (app: Null<Main>): app is Main => app ? !app.initializing && app.length > 0 : false;
 const checkFrom = (value: string, options: FileActionOptions) => util.isPlainObject<FileActionOptions>(options) && options.assets ? checkWritable(main) && util.isString(value) && options.assets.length > 0 : false;
-const findExtension = (value: string) => extensionManager!.get(value, true) || util.findSet(extensionManager!.cache, item => item.name === value) || util.findSet(extensionCache, item => item.name === value);
+const findExtension = (value: string) => extensionManager!.get(value, true) || util.findSet(extensionManager!.cache, item => item.name === value) || extensionCache.find(item => item.name === value);
 const frameworkNotInstalled = () => error.reject(error.FRAMEWORK_NOT_INSTALLED);
 
 export function setHostname(value: string) {
@@ -276,7 +276,7 @@ export function add(...values: ExtensionRequestObject[]) {
                 value = ext as Extension;
             }
             else {
-                addQueue.add(value);
+                addQueue.push(value);
                 if (options) {
                     apply(value, options);
                 }
@@ -285,12 +285,12 @@ export function add(...values: ExtensionRequestObject[]) {
         }
         if (squared.base && value instanceof squared.base.Extension) {
             if (!extensionManager) {
-                addQueue.add(value);
-                extensionCache.add(value);
+                addQueue.push(value);
+                extensionCache.push(value);
             }
             else {
                 if (!extensionManager.add(value)) {
-                    addQueue.add(value);
+                    addQueue.push(value);
                 }
                 extensionManager.cache.add(value);
             }
@@ -320,17 +320,17 @@ export function remove(...values: ExtensionRequest[]) {
                 }
             }
             else {
-                addQueue.delete(value);
-                removeQueue.add(value);
+                util.spliceArray(addQueue, item => item === value);
+                removeQueue.push(value);
                 extensionCheck = true;
                 ++success;
                 continue;
             }
         }
         if (squared.base && value instanceof squared.base.Extension) {
-            addQueue.delete(value);
+            util.spliceArray(addQueue, item => item === value);
             if (!(extensionManager && extensionManager.remove(value))) {
-                removeQueue.add(value);
+                removeQueue.push(value);
             }
             extensionCheck = true;
             ++success;
@@ -384,7 +384,7 @@ export function apply(value: ExtensionRequest, options: FrameworkOptions) {
             return result;
         };
         if (typeof value === 'string') {
-            const ext = extensionManager && extensionManager.get(value, true) || util.findSet(addQueue, item => typeof item !== 'string' && item.name === value) as Undef<Extension>;
+            const ext = extensionManager && extensionManager.get(value, true) || addQueue.find(item => typeof item !== 'string' && item.name === value) as Undef<Extension>;
             if (!ext) {
                 optionsQueue.set(value, mergeSettings(value));
                 return true;

@@ -872,7 +872,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             if (elementData) {
                 const styleMap: Undef<StringMap> = elementData.styleMap;
                 if (styleMap) {
-                    if (this.styleElement) {
+                    if (!this.plainText && this.naturalChild) {
                         if (!this.pseudoElement) {
                             const items = Array.from(element.style);
                             const length = items.length;
@@ -2095,11 +2095,12 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get svgElement() {
         const result = this._cacheState.svgElement;
-        return result === undefined ? this._cacheState.svgElement = !this.plainText && (!this.htmlElement && this._element instanceof SVGElement || this.imageElement && FILE.SVG.test(this.toElementString('src'))) : result;
+        return result === undefined ? this._cacheState.svgElement = !this.htmlElement && this._element instanceof SVGElement || this.imageElement && FILE.SVG.test(this.toElementString('src')) : result;
     }
 
     get styleElement() {
-        return this.htmlElement || this.svgElement;
+        const result = this._cacheState.styleElement;
+        return result === undefined ? this._cacheState.styleElement = this.htmlElement || this.svgElement : result;
     }
 
     get naturalChild() { return true; }
@@ -2757,7 +2758,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     result = value;
                 }
                 else {
-                    value = this.css('background');
+                    value = this.style.background;
                     if (REGEXP_BACKGROUND.test(value)) {
                         const background = splitEnclosing(value);
                         for (let i = 1, length = background.length; i < length; ++i) {

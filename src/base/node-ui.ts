@@ -665,29 +665,28 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     this.cssApply(result);
                     break;
                 case 'boxStyle': {
-                    if (this.naturalChild) {
-                        const values = ['none', '0px', 'transparent', 'rgba(0, 0, 0, 0)'];
+                    if (this.naturalElement) {
                         let properties: string[] = [];
                         if (this.css('backgroundImage') === 'none') {
                             properties = properties.concat(CSS_PROPERTIES.background.value as string[]);
                             --properties.length;
                         }
-                        if (this.cssAny('backgroundColor', values)) {
+                        if (this.cssAny('backgroundColor', ['none', 'transparent', 'rgba(0, 0, 0, 0)'])) {
                             properties.push('backgroundColor');
                         }
-                        if (this.cssAny('borderTopStyle', values)) {
+                        if (this.css('borderTopStyle') === 'none') {
                             properties = properties.concat(CSS_PROPERTIES.borderLeft.value as string[]);
                         }
-                        if (this.cssAny('borderRightStyle', values)) {
+                        if (this.css('borderRightStyle') === 'none') {
                             properties = properties.concat(CSS_PROPERTIES.borderRight.value as string[]);
                         }
-                        if (this.cssAny('borderBottomStyle', values)) {
+                        if (this.css('borderBottomStyle') === 'none') {
                             properties = properties.concat(CSS_PROPERTIES.borderBottom.value as string[]);
                         }
-                        if (this.cssAny('borderLeftStyle', values)) {
+                        if (this.css('borderLeftStyle') === 'none') {
                             properties = properties.concat(CSS_PROPERTIES.borderLeft.value as string[]);
                         }
-                        if (this.cssAny('borderRadius', values)) {
+                        if (this.style.borderRadius !== '0px') {
                             properties = properties.concat(CSS_PROPERTIES.borderRadius.value as string[]);
                         }
                         this.cssCopy(node, ...properties);
@@ -717,12 +716,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             'borderBottomRightRadius',
                             'borderBottomLeftRadius'
                         );
-                        Object.assign(result, {
-                            backgroundColor: node.backgroundColor,
-                            backgroundImage: node.backgroundImage,
-                            border: 'inherit',
-                            borderRadius: 'inherit'
-                        });
+                        result.backgroundColor = node.backgroundColor;
+                        result.backgroundImage = node.backgroundImage;
                         this.inheritApply('boxStyle', result);
                     }
                     this.setCacheValue('visibleStyle', undefined);
@@ -731,8 +726,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     node.cssApply({
                         backgroundColor: 'transparent',
                         backgroundImage: 'none',
-                        border: 'initial',
-                        borderRadius: 'initial'
+                        borderRadius: '0px'
                     });
                     const visibleStyle = node.visibleStyle;
                     visibleStyle.background = false;
@@ -1411,9 +1405,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return this._element || this.innerWrapped && this.innerMostWrapped.unsafe<Null<Element>>('element') || null;
     }
 
-    set naturalChild(value) {
-        this._cacheState.naturalChild = value;
-    }
     get naturalChild() {
         const result = this._cacheState.naturalChild;
         if (result === undefined) {
@@ -1424,7 +1415,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get pseudoElement() {
-        return this._element ? this._element.className === '__squared.pseudo' : false;
+        const result = this._cacheState.pseudoElement;
+        return result === undefined ? this._cacheState.pseudoElement = this._element ? this._element.className === '__squared.pseudo' : false : result;
     }
 
     get scrollElement() {
@@ -1545,12 +1537,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         const result = this._cacheState.containerName;
         if (result === undefined) {
             const element = this.element;
-            if (element) {
-                return this._cacheState.containerName = element.nodeName[0] === '#'
-                    ? 'PLAINTEXT'
-                    : (element.tagName === 'INPUT' ? 'INPUT_' + convertWord((element as HTMLInputElement).type, true) : element.tagName).toUpperCase();
-            }
-            return '';
+            return element ? this._cacheState.containerName = element.nodeName[0] === '#' ? 'PLAINTEXT' : (element.tagName === 'INPUT' ? 'INPUT_' + convertWord((element as HTMLInputElement).type, true) : element.tagName).toUpperCase() : '';
         }
         return result;
     }

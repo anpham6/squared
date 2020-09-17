@@ -49,7 +49,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
         return this;
     }
 
-    public addAll(list: T[] | Container<T>) {
+    public addAll(list: T[] | Container) {
         this.children = this.children.concat(Array.isArray(list) ? list : list.children);
         return this;
     }
@@ -76,22 +76,25 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
         return this.children.splice(index, 1)[0];
     }
 
-    public removeAll(list: T[] | Container<T>) {
+    public removeAll(list: T[] | Container) {
         if (!Array.isArray(list)) {
             list = list.children;
         }
-        const result: T[] = [];
+        const length = list.length;
+        const result: T[] = new Array(length);
         const children = this.children;
-        for (let i = 0, length = list.length; i < length; ++i) {
+        let k = 0;
+        for (let i = 0; i < length; ++i) {
             const item = list[i];
-            for (let j = 0; j < children.length; ++j) {
+            for (let j = 0, q = children.length; j < q; ++j) {
                 if (children[j] === item) {
                     children.splice(j, 1);
-                    result.push(item);
+                    result[k++] = item;
                     break;
                 }
             }
         }
+        result.length = k;
         return result;
     }
 
