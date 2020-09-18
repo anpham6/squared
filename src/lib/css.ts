@@ -1052,6 +1052,10 @@ export const CSS_PROPERTIES: CssProperties = {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.UNIT,
         value: '0'
     },
+    maskType: {
+        trait: 0,
+        value: 'luminance'
+    },
     maxHeight: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
         value: 'none'
@@ -2595,12 +2599,12 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
             return '';
         }
         case 'background':
+        case 'gridTemplate':
         case 'filter':
         case 'backdropFilter':
-        case 'gridTemplate':
             return getStyle(element)[attr] as string;
         default:
-            if (attr.endsWith('Color')) {
+            if (attr.endsWith('Color') || hasBit(CSS_PROPERTIES[attr]?.trait, CSS_TRAITS.COLOR)) {
                 return calculateColor(element, value.trim());
             }
             else {

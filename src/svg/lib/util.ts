@@ -1,10 +1,11 @@
+import CSS_TRAITS = squared.lib.constant.CSS_TRAITS;
 import CSS_UNIT = squared.lib.constant.CSS_UNIT;
 
 import Pattern = squared.lib.base.Pattern;
 
 const { TRANSFORM: REGEXP_TRANSFORM } = squared.lib.regex;
 
-const { calculateStyle: calculateCssStyle, calculateVar, calculateVarAsString, convertAngle, getFontSize, hasEm, isLength, isPercent, parseUnit } = squared.lib.css;
+const { CSS_PROPERTIES, calculateStyle: calculateCssStyle, calculateVar, calculateVarAsString, convertAngle, getFontSize, hasEm, isLength, isPercent, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { clamp, convertRadian, hypotenuse, truncateFraction, truncateTrailingZero } = squared.lib.math;
 const { getElementCache } = squared.lib.session;
@@ -46,6 +47,206 @@ function getStyleValue(element: Element, attr: string) {
 
 const getViewportArea = (viewBox: DOMRect, min?: boolean) => min ? Math.min(viewBox.width, viewBox.height) : hypotenuse(viewBox.width, viewBox.height);
 const createParseUnitOptions = (element: Element, value: string): Undef<ParseUnitOptions> => hasEm(value) ? { fontSize: getFontSize(element) } : undefined;
+
+Object.assign(CSS_PROPERTIES, {
+    alignmentBaseline: {
+        trait: 0,
+        value: 'auto'
+    },
+    baselineShift: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
+        value: '0'
+    },
+    clipRule: {
+        trait: 0,
+        value: 'nonzero'
+    },
+    colorInterpolation: {
+        trait: 0,
+        value: 'sRGB'
+    },
+    colorIinterpolationFilters: {
+        trait: 0,
+        value: 'linearRGB'
+    },
+    cx: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
+        value: '0'
+    },
+    cy: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
+        value: '0'
+    },
+    d: {
+        trait: CSS_TRAITS.CALC,
+        value: 'none'
+    },
+    dominantBaseline: {
+        trait: 0,
+        value: 'auto'
+    },
+    fill: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
+        value: 'black'
+    },
+    fillOpacity: {
+        trait: CSS_TRAITS.CALC,
+        value: '1'
+    },
+    fillRule: {
+        trait: 0,
+        value: 'nonzero'
+    },
+    floodColor: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
+        value: 'black'
+    },
+    floodOpacity: {
+        trait: CSS_TRAITS.CALC,
+        value: '1'
+    },
+    lightingColor: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
+        value: 'white'
+    },
+    markerEnd: {
+        trait: 0,
+        value: 'none'
+    },
+    markerMid: {
+        trait: 0,
+        value: 'none'
+    },
+    markerStart: {
+        trait: 0,
+        value: 'none'
+    },
+    mask: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE,
+        value: [
+            'maskImage',
+            'maskMode',
+            'maskRepeat',
+            'maskPosition',
+            'maskClip',
+            'maskOrigin',
+            'maskSize',
+            'maskComposite'
+        ]
+    },
+    maskComposite: {
+        trait: 0,
+        value: 'add'
+    },
+    maskClip: {
+        trait: 0,
+        value: 'border-box'
+    },
+    maskImage: {
+        trait: CSS_TRAITS.CALC,
+        value: 'none'
+    },
+    maskMode: {
+        trait: 0,
+        value: 'match-source'
+    },
+    maskRepeat: {
+        trait: 0,
+        value: 'no-repeat'
+    },
+    maskOrigin: {
+        trait: 0,
+        value: 'border-box'
+    },
+    maskPosition: {
+        trait: CSS_TRAITS.CALC,
+        value: 'center'
+    },
+    maskSize: {
+        trait: CSS_TRAITS.CALC,
+        value: 'auto'
+    },
+    pointerEvents: {
+        trait: 0,
+        value: 'visiblePainted'
+    },
+    r: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
+        value: '0'
+    },
+    rx: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
+        value: 'auto'
+    },
+    ry: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
+        value: 'auto'
+    },
+    shapeRendering: {
+        trait: 0,
+        value: 'auto'
+    },
+    stopColor: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
+        value: 'black'
+    },
+    stopOpacity: {
+        trait: CSS_TRAITS.CALC,
+        value: '1'
+    },
+    stroke: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
+        value: 'none'
+    },
+    strokeDasharray: {
+        trait: 0,
+        value: 'none'
+    },
+    strokeDashoffset: {
+        trait: CSS_TRAITS.CALC,
+        value: '0'
+    },
+    strokeLinecap: {
+        trait: 0,
+        value: 'butt'
+    },
+    strokeLinejoin: {
+        trait: 0,
+        value: 'miter'
+    },
+    strokeMiterlimit: {
+        trait: CSS_TRAITS.CALC,
+        value: '4'
+    },
+    strokeOpacity: {
+        trait: CSS_TRAITS.CALC,
+        value: '1'
+    },
+    strokeWidth: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
+        value: '1px'
+    },
+    textAnchor: {
+        trait: 0,
+        value: 'start'
+    },
+    textRendering: {
+        trait: 0,
+        value: 'auto'
+    },
+    vectorEffect: {
+        trait: 0,
+        value: 'none'
+    },
+    x: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
+        value: '0'
+    },
+    y: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
+        value: '0'
+    }
+});
 
 export const CACHE_VIEWNAME = new Map<string, number>();
 export const PATTERN_CUBICBEZIER = '([01](?:\\.\\d+)?),?\\s+(-?\\d+(?:\\.\\d+)?),?\\s+([01](?:\\.\\d+)?),?\\s+(-?\\d+(?:\\.\\d+)?)';

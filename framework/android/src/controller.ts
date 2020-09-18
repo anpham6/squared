@@ -174,10 +174,20 @@ function setBaselineItems(parent: View, baseline: View, items: View[], index: nu
 
 function getTextBottom<T extends View>(nodes: T[]): T[] {
     return nodes.filter(node => (node.tagName === 'TEXTAREA' || node.tagName === 'SELECT' && node.toElementInt('size') > 1) && (node.baseline || node.verticalAligned) || node.css('verticalAlign') === 'text-bottom' && node.containerName !== 'INPUT_IMAGE').sort((a, b) => {
-        if (a.baselineHeight === b.baselineHeight) {
-            return a.tagName === 'SELECT' ? 1 : 0;
+        switch (a.tagName) {
+            case 'SELECT':
+                if (b.tagName === 'TEXTAREA' && b.toElementInt('rows') > 1) {
+                    return 1;
+                }
+                break;
+            case 'TEXTAREA':
+                if (b.tagName === 'SELECT' && a.toElementInt('rows') > 1) {
+                    return -1;
+                }
+                break;
         }
-        return b.baselineHeight - a.baselineHeight;
+        const height = b.baselineHeight - a.baselineHeight;
+        return height === 0 && a.tagName === 'SELECT' ? 1 : height;
     });
 }
 
