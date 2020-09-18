@@ -963,9 +963,7 @@ class FileManager implements serve.IFileManager {
             else {
                 this.filesToRemove.add(filepath);
                 this.delete(filepath);
-                if (!file.originalName) {
-                    file.originalName = file.filename;
-                }
+                file.originalName ||= file.filename;
                 file.filename = path.basename(replaceWith);
                 this.add(replaceWith);
             }

@@ -43,9 +43,7 @@ function setButtonStyle(styleMap: StringMap, applied: boolean, defaultColor: str
             styleMap.backgroundColor = defaultColor;
         }
     }
-    if (!styleMap.textAlign) {
-        styleMap.textAlign = 'center';
-    }
+    styleMap.textAlign ||= 'center';
     if (!styleMap.padding && !(CSS_PROPERTIES.padding.value as string[]).some(attr => styleMap[attr])) {
         styleMap.paddingTop = '2px';
         styleMap.paddingRight = '6px';
@@ -153,27 +151,19 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     case 'SELECT':
                     case 'BUTTON':
                     case 'TEXTAREA':
-                        if (!styleMap.display) {
-                            styleMap.display = 'inline-block';
-                        }
+                        styleMap.display ||= 'inline-block';
                         break;
                     case 'FIELDSET':
-                        if (!styleMap.display) {
-                            styleMap.display = 'block';
-                        }
+                        styleMap.display ||= 'block';
                         break;
                 }
             }
             switch (element.tagName) {
                 case 'A':
-                    if (!styleMap.color) {
-                        styleMap.color = this._settingsStyle.anchorFontColor;
-                    }
+                    styleMap.color ||= this._settingsStyle.anchorFontColor;
                     break;
                 case 'INPUT': {
-                    if (!styleMap.fontSize) {
-                        styleMap.fontSize = this._settingsStyle.formFontSize;
-                    }
+                    styleMap.fontSize ||= this._settingsStyle.formFontSize;
                     const type = (element as HTMLInputElement).type;
                     switch (type) {
                         case 'radio':
@@ -206,16 +196,12 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     break;
                 }
                 case 'BUTTON':
-                    if (!styleMap.fontSize) {
-                        styleMap.fontSize = this._settingsStyle.formFontSize;
-                    }
+                    styleMap.fontSize ||= this._settingsStyle.formFontSize;
                     setButtonStyle(styleMap, setBorderStyle(styleMap, this._settingsStyle.inputBorderColor), this._settingsStyle.inputBackgroundColor);
                     break;
                 case 'TEXTAREA':
                 case 'SELECT':
-                    if (!styleMap.fontSize) {
-                        styleMap.fontSize = this._settingsStyle.formFontSize;
-                    }
+                    styleMap.fontSize ||= this._settingsStyle.formFontSize;
                     setBorderStyle(styleMap, this._settingsStyle.inputBorderColor);
                     break;
                 case 'BODY': {
@@ -247,46 +233,30 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     }
                     break;
                 case 'H2':
-                    if (!styleMap.fontSize) {
-                        styleMap.fontSize = '1.5em';
-                    }
+                    styleMap.fontSize ||= '1.5em';
                     break;
                 case 'H3':
-                    if (!styleMap.fontSize) {
-                        styleMap.fontSize = '1.17em';
-                    }
+                    styleMap.fontSize ||= '1.17em';
                     break;
                 case 'H4':
-                    if (!styleMap.fontSize) {
-                        styleMap.fontSize = '1em';
-                    }
+                    styleMap.fontSize ||= '1em';
                     break;
                 case 'H5':
-                    if (!styleMap.fontSize) {
-                        styleMap.fontSize = '0.83em';
-                    }
+                    styleMap.fontSize ||= '0.83em';
                     break;
                 case 'H6':
-                    if (!styleMap.fontSize) {
-                        styleMap.fontSize = '0.67em';
-                    }
+                    styleMap.fontSize ||= '0.67em';
                     break;
                 case 'FORM':
-                    if (!styleMap.marginTop) {
-                        styleMap.marginTop = '0px';
-                    }
+                    styleMap.marginTop ||= '0px';
                     break;
                 case 'LI':
-                    if (!styleMap.listStyleImage) {
-                        styleMap.listStyleImage = 'inherit';
-                    }
+                    styleMap.listStyleImage ||= 'inherit';
                     break;
                 case 'SUP':
                 case 'SUB':
                 case 'SMALL':
-                    if (!styleMap.fontSize) {
-                        styleMap.fontSize = 'smaller';
-                    }
+                    styleMap.fontSize ||= 'smaller';
                     break;
                 case 'RT':
                     if (!styleMap.fontSize && element.parentElement!.tagName === 'RUBY') {

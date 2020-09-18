@@ -1543,9 +1543,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
         }
         if (styleMap) {
-            if (!styleMap.display) {
-                styleMap.display = 'inline';
-            }
+            styleMap.display ||= 'inline';
             let value = styleMap.content;
             if (value) {
                 const textContent = trimBoth(value, '"');

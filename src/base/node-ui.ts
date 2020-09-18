@@ -552,10 +552,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public lockAttr(name: string, attr: string) {
-        if (!this._locked) {
-            this._locked = {};
-        }
-        (this._locked[name] ||= {})[attr] = true;
+        ((this._locked ||= {})[name] ||= {})[attr] = true;
     }
 
     public unlockAttr(name: string, attr: string) {
@@ -582,10 +579,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             return 0;
         }
         if (REGEXP_PARSEUNIT.test(value)) {
-            options ||= {};
-            if (!options.screenDimension) {
-                options.screenDimension = this.localSettings.screenDimension;
-            }
+            (options ||= {}).screenDimension ||= this.localSettings.screenDimension;
         }
         return super.parseUnit(value, options);
     }
@@ -1151,9 +1145,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public registerBox(region: number, node?: T): Null<T> {
-        if (!this._boxRegister) {
-            this._boxRegister = new Array(8);
-        }
+        this._boxRegister ||= new Array(8);
         const index = CSS_SPACING.get(region)!;
         if (node) {
             this._boxRegister[index] = node;
