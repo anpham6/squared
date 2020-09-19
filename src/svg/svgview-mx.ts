@@ -18,7 +18,7 @@ interface AttributeData extends NumberValue {
 
 const { isAngle, isCustomProperty, hasCalc, getKeyframesRules, parseAngle, parseVar } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
-const { convertWord, iterateArray, replaceMap, sortNumber, splitPairEnd } = squared.lib.util;
+const { convertCamelCase, convertWord, iterateArray, replaceMap, sortNumber, splitPairEnd } = squared.lib.util;
 
 const ANIMATION_DEFAULT = {
     'animation-delay': '0s',
@@ -190,7 +190,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                         for (const attr in data) {
                             let value = data[attr]!;
                             if (hasCalc(value)) {
-                                value = calculateStyle(element, attr, value);
+                                value = calculateStyle(element, convertCamelCase(attr), value);
                             }
                             else if (isCustomProperty(value)) {
                                 value = parseVar(element, value);

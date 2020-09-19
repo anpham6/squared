@@ -2087,6 +2087,8 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
             return calculateVarAsString(element, value, { dimension: 'width', boundingBox, min: 0 });
         case 'objectPosition':
             return calculateVarAsString(element, value, { dimension: ['width', 'height'], boundingBox });
+        case 'backgroundSize':
+        case 'maskSize':
         case 'gap':
         case 'gridGap':
         case 'perspectiveOrigin':
@@ -2230,6 +2232,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
             return value;
         }
         case 'backgroundImage':
+        case 'maskImage':
         case 'borderImageSource': {
             const image = splitEnclosing(value);
             const length = image.length;
@@ -2285,7 +2288,6 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
         case 'boxShadow':
         case 'textShadow':
             return calculateVarAsString(element, calculateStyle(element, 'borderColor', value), { supportPercent: false, errorString: /-?[\d.]+[a-z]*\s+-?[\d.]+[a-z]*(\s+-[\d.]+[a-z]*)/ });
-        case 'backgroundSize':
         case 'animation':
         case 'animationDelay':
         case 'animationDuration':
@@ -2306,7 +2308,8 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
         case 'flex':
         case 'font':
             return calculateGeneric(element, value, CSS_UNIT.DECIMAL, 0, boundingBox);
-        case 'backgroundPosition': {
+        case 'backgroundPosition':
+        case 'maskPosition': {
             const result: string[] = [];
             for (const position of value.split(CHAR_SEPARATOR)) {
                 const segment = calculatePosition(element, position, boundingBox);

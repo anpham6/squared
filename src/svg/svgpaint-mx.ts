@@ -171,8 +171,8 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
         public setAttribute(attr: string) {
             const element = this.element;
             let value = this.getAttribute(attr);
-            attr = convertCamelCase(attr);
             if (value !== '') {
+                attr = convertCamelCase(attr);
                 if (hasCalc(value)) {
                     value = calculateStyle(element, attr, value) || getComputedStyle(element)[attr];
                 }

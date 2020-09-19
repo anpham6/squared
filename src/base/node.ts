@@ -749,6 +749,7 @@ const belowRange = (a: number, b: number, offset = 1) => a - offset < b;
 const sortById = (a: T, b: T) => a.id - b.id;
 const isInlineVertical = (value: string) => value.startsWith('inline') || value === 'table-cell';
 const canTextAlign = (node: T) => node.naturalChild && (node.isEmpty() || isInlineVertical(node.display)) && !node.floating && node.autoMargin.horizontal !== true;
+const hasEmptyBackround = (value: string) => value.includes('none') || !REGEXP_BACKGROUND.test(value);
 
 export default class Node extends squared.lib.base.Container<T> implements squared.base.Node {
     public static sanitizeCss(element: DocumentElement, styleMap: StringMap, writingMode?: string) {
@@ -2723,7 +2724,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     default:
                         if (result !== '' && this.styleElement && this.pageFlow && !this.inputElement && this.css('opacity') === '1') {
                             let parent = this.actualParent;
-                            while (parent && !REGEXP_BACKGROUND.test(parent.style.background)) {
+                            while (parent && hasEmptyBackround(parent.style.background)) {
                                 const backgroundImage = parent.valueOf('backgroundImage');
                                 if (backgroundImage === '' || backgroundImage === 'none') {
                                     const color = parent.backgroundColor;
@@ -2759,7 +2760,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 }
                 else {
                     value = this.style.background;
-                    if (REGEXP_BACKGROUND.test(value)) {
+                    if (!hasEmptyBackround(value)) {
                         const background = splitEnclosing(value);
                         for (let i = 1, length = background.length; i < length; ++i) {
                             const name = background[i - 1].trim();

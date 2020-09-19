@@ -7,7 +7,7 @@ const { TRANSFORM: REGEXP_TRANSFORM } = squared.lib.regex;
 
 const { CSS_PROPERTIES, calculateStyle: calculateCssStyle, calculateVar, calculateVarAsString, convertAngle, getFontSize, hasEm, isLength, isPercent, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
-const { clamp, convertRadian, hypotenuse, truncateFraction, truncateTrailingZero } = squared.lib.math;
+const { convertRadian, hypotenuse, truncateFraction, truncateTrailingZero } = squared.lib.math;
 const { getElementCache } = squared.lib.session;
 const { convertCamelCase, resolvePath, splitPair } = squared.lib.util;
 
@@ -613,16 +613,7 @@ export function getDOMRect(element: SVGElement) {
 }
 
 export function calculateStyle(element: SVGGraphicsElement, attr: string, value: string) {
-    attr = convertCamelCase(attr);
     switch (attr) {
-        case 'clipPath':
-        case 'height':
-        case 'offsetAnchor':
-        case 'offsetPath':
-        case 'transform':
-        case 'transformOrigin':
-        case 'width':
-            return calculateCssStyle(element, attr, value, getNearestViewBox(element));
         case 'animationDelay':
         case 'animationDuration':
         case 'animationIterationCount':
@@ -631,12 +622,14 @@ export function calculateStyle(element: SVGGraphicsElement, attr: string, value:
             return calculateCssStyle(element, attr, value);
         case 'fill':
         case 'stroke':
+        case 'floodColor':
+        case 'lightingColor':
+        case 'stopColor':
             return calculateCssStyle(element, 'fontColor', value);
         case 'fillOpacity':
-        case 'strokeOpacity': {
-            const result = calculateVar(element, value, { boundingSize: 1, unitType: CSS_UNIT.DECIMAL });
-            return !isNaN(result) ? clamp(result).toString() : '';
-        }
+        case 'strokeOpacity':
+        case 'floodOpacity':
+            return calculateCssStyle(element, 'opacity', value);
         case 'strokeMiterlimit': {
             const result = calculateVar(element, value, { supportPercent: false, unitType: CSS_UNIT.DECIMAL, min: 1 });
             return !isNaN(result) ? result.toString() : '';
@@ -644,6 +637,19 @@ export function calculateStyle(element: SVGGraphicsElement, attr: string, value:
     }
     const viewBox = getNearestViewBox(element) || (element.viewportElement || element.parentElement || element).getBoundingClientRect();
     switch (attr) {
+        case 'transform':
+        case 'transformOrigin':
+        case 'offsetAnchor':
+        case 'offsetPath':
+        case 'clipPath':
+        case 'maskImage':
+        case 'maskPosition':
+        case 'maskSize':
+        case 'width':
+        case 'height':
+            return calculateCssStyle(element, attr, value, viewBox);
+        case 'baselineShift':
+            return calculateCssStyle(element, 'verticalAlign', value, viewBox);
         case 'cx':
         case 'x':
         case 'x1':
