@@ -365,7 +365,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const { element, parent, children } = options;
         const { cache, afterInsertNode } = this.getProcessing(sessionId)!;
         const node = new this.Node(this.nextId, sessionId, element);
-        this.controllerHandler.afterInsertNode(node);
+        this._afterInsertNode(node);
         if (afterInsertNode) {
             afterInsertNode.some(item => item.afterInsertNode!(node));
         }

@@ -101,7 +101,7 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     public createNode(sessionId: string, options: CreateNodeOptions) {
         const node = new this.Node(this.nextId, sessionId, options.element);
-        this.controllerHandler.afterInsertNode(node);
+        this._afterInsertNode(node);
         const afterInsertNode = this.getProcessing(sessionId)!.afterInsertNode;
         if (afterInsertNode) {
             afterInsertNode.some(item => item.afterInsertNode!(node));
@@ -849,14 +849,16 @@ export default abstract class Application<T extends Node> implements squared.bas
         for (let i = 0; i < length; ++i) {
             extensions[i].beforeParseDocument(sessionId);
         }
-        const success: T[] = [];
+        const success: T[] = new Array(rootElements.size);
+        let j = 0;
         for (const element of rootElements) {
             const node = this.createCache(element, sessionId);
             if (node) {
                 this.afterCreateCache(node);
-                success.push(node);
+                success[j++] = node;
             }
         }
+        success.length = j;
         for (let i = 0; i < length; ++i) {
             extensions[i].afterParseDocument(sessionId);
         }

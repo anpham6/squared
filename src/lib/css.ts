@@ -205,6 +205,13 @@ function calculateGeneric(element: StyleElement, value: string, unitType: number
     return segments.join('').trim();
 }
 
+function calculateAngle(element: StyleElement, value: string) {
+    const result = calculateVar(element, value, { unitType: CSS_UNIT.ANGLE, supportPercent: false });
+    if (!isNaN(result)) {
+        return result + 'deg';
+    }
+}
+
 function getWritingMode(value?: string) {
     if (value) {
         switch (value) {
@@ -286,6 +293,7 @@ function getContentBoxDimension(element: Null<StyleElement>) {
     return { width: 0, height: 0 };
 }
 
+const calculateLength = (element: StyleElement, value: string) => formatVar(calculateVar(element, value, { min: 0, supportPercent: false }));
 const fromFontNamedValue = (index: number, fixedWidth?: boolean) => (!fixedWidth ? DOCUMENT_FONTMAP[index] : DOCUMENT_FIXEDMAP[index]).toPrecision(8) + 'rem';
 const getInnerWidth = (dimension: UndefNull<Dimension>) => dimension && dimension.width || window.innerWidth;
 const getInnerHeight = (dimension: UndefNull<Dimension>) => dimension && dimension.height || window.innerHeight;
@@ -2033,10 +2041,8 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
         case 'gridRowGap':
         case 'rowGap':
             return formatVar(calculateVar(element, value, { dimension: 'height', boundingBox, min: 0, parent: false }));
-        case 'flexBasis': {
-            const parentElement = element.parentElement;
-            return formatVar(calculateVar(element, value, { dimension: parentElement && getStyle(parentElement).flexDirection.includes('column') ? 'height' : 'width', boundingBox, min: 0 }));
-        }
+        case 'flexBasis':
+            return formatVar(calculateVar(element, value, { dimension: element.parentElement && getStyle(element.parentElement).flexDirection.includes('column') ? 'height' : 'width', boundingBox, min: 0 }));
         case 'borderBottomWidth':
         case 'borderLeftWidth':
         case 'borderRightWidth':
@@ -2047,7 +2053,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
         case 'outlineWidth':
         case 'perspective':
         case 'wordSpacing':
-            return formatVar(calculateVar(element, value, { min: 0, supportPercent: false }));
+            return calculateLength(element, value);
         case 'offsetDistance': {
             let boundingSize = 0;
             if (value.includes('%')) {
@@ -2186,13 +2192,9 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                             case 'skewY':
                             case 'rotateX':
                             case 'rotateY':
-                            case 'rotateZ': {
-                                const result = calculateVar(element, seg, { unitType: CSS_UNIT.ANGLE, supportPercent: false });
-                                if (!isNaN(result)) {
-                                    calc = result + 'deg';
-                                }
+                            case 'rotateZ':
+                                calc = calculateAngle(element, seg);
                                 break;
-                            }
                             case 'rotate3d': {
                                 const component = seg.split(CHAR_SEPARATOR);
                                 const q = component.length;
@@ -2598,11 +2600,53 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
             }
             return '';
         }
+        case 'filter':
+        case 'backdropFilter': {
+            const filters = splitEnclosing(value);
+            const length = filters.length;
+            if (length > 1) {
+                for (let i = 1; i < length; ++i) {
+                    let seg = filters[i];
+                    if (hasCalc(seg)) {
+                        seg = trimEnclosing(seg);
+                        let result: Undef<string>;
+                        switch (filters[i - 1].trim()) {
+                            case 'blur':
+                                result = calculateLength(element, seg);
+                                break;
+                            case 'brightness':
+                            case 'contrast':
+                            case 'grayscale':
+                            case 'invert':
+                            case 'opacity':
+                            case 'saturate':
+                            case 'sepia':
+                                result = calculateStyle(element, 'opacity', seg);
+                                break;
+                            case 'drop-shadow':
+                                result = calculateStyle(element, 'boxShadow', seg, boundingBox);
+                                break;
+                            case 'hue-rotate':
+                                result = calculateAngle(element, seg);
+                                break;
+                            case 'url':
+                                continue;
+                        }
+                        if (result) {
+                            filters[i] = `(${result})`;
+                        }
+                        else {
+                            return '';
+                        }
+                    }
+                }
+                return filters.join('');
+            }
+            return value;
+        }
         case 'background':
         case 'gridTemplate':
-        case 'filter':
-        case 'backdropFilter':
-            return getStyle(element)[attr] as string;
+            return getStyle(element)[attr];
         default:
             if (attr.endsWith('Color') || hasBit(CSS_PROPERTIES[attr]?.trait, CSS_TRAITS.COLOR)) {
                 return calculateColor(element, value.trim());
@@ -3016,11 +3060,12 @@ export function calculateVar(element: StyleElement, value: string, options: Calc
     const output = parseVar(element, value);
     if (output) {
         const { precision, supportPercent, unitType } = options;
+        const boundingSize = !unitType || unitType === CSS_UNIT.LENGTH;
         if (value.includes('%')) {
             if (supportPercent === false || unitType === CSS_UNIT.INTEGER) {
                 return NaN;
             }
-            else if (options.boundingSize === undefined) {
+            else if (boundingSize && options.boundingSize === undefined) {
                 const { dimension, boundingBox } = options;
                 if (dimension) {
                     if (boundingBox) {
@@ -3075,7 +3120,7 @@ export function calculateVar(element: StyleElement, value: string, options: Calc
         else if (supportPercent) {
             return NaN;
         }
-        if (options.fontSize === undefined && (!unitType || unitType === CSS_UNIT.LENGTH) && hasEm(value)) {
+        if (boundingSize && options.fontSize === undefined && hasEm(value)) {
             options.fontSize = getFontSize(element);
         }
         const result = calculate(output, options);
