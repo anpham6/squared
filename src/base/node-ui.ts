@@ -451,14 +451,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     protected _boxReset?: number[];
     protected _boxAdjustment?: number[];
     protected _documentParent?: T;
-    protected _controlName?: string;
     protected abstract _namespaces: ObjectMap<StringMapChecked>;
 
     private _locked: Null<ObjectMapNested<boolean>> = null;
     private _renderAs?: T;
     private _siblingsLeading?: T[];
     private _siblingsTrailing?: T[];
-    private _innerMostWrapped?: T;
     private _exclusions?: number[];
 
     public abstract setControlType(viewName: string, containerType?: number): void;
@@ -1692,12 +1690,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     set controlName(value) {
-        if (!this.rendered || !this._controlName) {
-            this._controlName = value;
+        if (!this.rendered || !this._cacheState.controlName) {
+            this._cacheState.controlName = value;
         }
     }
     get controlName() {
-        return this._controlName || '';
+        return this._cacheState.controlName || '';
     }
 
     set siblingsLeading(value) {
@@ -1915,23 +1913,24 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get innerMostWrapped() {
-        if (!this._innerMostWrapped) {
-            let result: Undef<T>;
-            if (!this.naturalChild) {
-                result = this.innerWrapped;
-                while (result) {
-                    const innerWrapped = result.innerWrapped;
-                    if (innerWrapped) {
-                        result = innerWrapped;
-                    }
-                    else {
-                        break;
-                    }
+        if (this.naturalChild) {
+            return this;
+        }
+        let result = this._cacheState.innerMostWrapped;
+        if (result === undefined) {
+            result = this.innerWrapped;
+            while (result) {
+                const innerWrapped = result.innerWrapped;
+                if (innerWrapped) {
+                    result = innerWrapped;
+                }
+                else {
+                    break;
                 }
             }
-            return this._innerMostWrapped = result || this;
+            return this._cacheState.innerMostWrapped = result || this;
         }
-        return this._innerMostWrapped;
+        return result;
     }
 
     get outerMostWrapper() {
@@ -2073,7 +2072,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     set use(value) {
         const use = this.use;
-        this.dataset['use' + this.localSettings.systemName] = (use !== '' ? use + ', ' : '') + value;
+        this.dataset['use' + this.localSettings.systemName] = use !== '' ? use + ', ' + value : value;
     }
     get use() {
         const dataset = this.dataset;

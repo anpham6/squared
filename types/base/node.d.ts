@@ -86,8 +86,10 @@ interface CacheState<T> {
 }
 
 interface CacheStateUI<T> extends CacheState<T> {
+    controlName?: string;
     containerName?: string;
     pseudoElement?: boolean;
+    innerMostWrapped?: T;
 }
 
 interface LocalSettingsUI {

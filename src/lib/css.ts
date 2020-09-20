@@ -212,6 +212,18 @@ function calculateAngle(element: StyleElement, value: string) {
     }
 }
 
+function calculatePercent(element: StyleElement, value: string, clampRange: boolean) {
+    const percent = value.includes('%');
+    let result = calculateVar(element, value, { unitType: percent ? CSS_UNIT.PERCENT : CSS_UNIT.DECIMAL });
+    if (!isNaN(result)) {
+        if (percent) {
+            result /= 100;
+        }
+        return (clampRange ? clamp(result) : result).toString();
+    }
+    return '';
+}
+
 function getWritingMode(value?: string) {
     if (value) {
         switch (value) {
@@ -2131,11 +2143,8 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
         case 'fontSizeAdjust':
             return formatDecimal(calculateVar(element, value, { unitType: CSS_UNIT.DECIMAL, min: 0, supportPercent: false }));
         case 'opacity':
-        case 'shapeImageThreshold': {
-            const percent = value.includes('%');
-            const result = calculateVar(element, value, { unitType: percent ? CSS_UNIT.PERCENT : CSS_UNIT.DECIMAL });
-            return !isNaN(result) ? clamp(result / (percent ? 100 : 1)).toString() : '';
-        }
+        case 'shapeImageThreshold':
+            return calculatePercent(element, value, true);
         case 'fontStretch':
         case 'textSizeAdjust':
             return calculateVarAsString(element, value, { unitType: CSS_UNIT.PERCENT, min: 0, supportPercent: true });
@@ -2213,7 +2222,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                                                 return '';
                                             }
                                         }
-                                        calc += (calc !== '' ? ', ' : '') + rotate;
+                                        calc += calc !== '' ? ', ' + rotate : rotate;
                                     }
                                 }
                                 break;
@@ -2386,7 +2395,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                                             return '';
                                         }
                                     }
-                                    calc += (calc !== '' ? ', ' : '') + bezier;
+                                    calc += calc !== '' ? ', ' + bezier : bezier;
                                 }
                             }
                         }
@@ -2618,13 +2627,15 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                                 result = calculateLength(element, seg);
                                 break;
                             case 'brightness':
+                            case 'saturate':
+                                result = calculatePercent(element, seg, false);
+                                break;
                             case 'contrast':
                             case 'grayscale':
                             case 'invert':
                             case 'opacity':
-                            case 'saturate':
                             case 'sepia':
-                                result = calculateStyle(element, 'opacity', seg);
+                                result = calculatePercent(element, seg, true);
                                 break;
                             case 'drop-shadow':
                                 result = calculateStyle(element, 'boxShadow', seg, boundingBox);

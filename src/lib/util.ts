@@ -1043,7 +1043,7 @@ export function joinArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T,
     for (let i = 0, length = list.length; i < length; ++i) {
         const value = predicate(list[i], i, list);
         if (value !== '') {
-            result += (result !== '' ? char : '') + value;
+            result += result !== '' ? char + value : value;
         }
     }
     return result;

@@ -159,7 +159,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             return reject(DOCUMENT_ROOT_NOT_FOUND);
         }
         const resource = this._resourceHandler;
-        const documentRoot = rootElements.values().next().value;
+        const documentRoot: HTMLElement = rootElements.values().next().value;
         const preloadItems: PreloadItem[] = [];
         let preloaded: Undef<HTMLImageElement[]>,
             preloadImages: Undef<boolean>,

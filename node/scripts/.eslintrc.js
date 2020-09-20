@@ -1,6 +1,7 @@
 module.exports = {
     "env": {
         "commonjs": true,
+        "es2017": true,
         "node": true
     },
     "extends": [

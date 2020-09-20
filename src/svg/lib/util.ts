@@ -77,10 +77,6 @@ Object.assign(CSS_PROPERTIES, {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
         value: '0'
     },
-    d: {
-        trait: CSS_TRAITS.CALC,
-        value: 'none'
-    },
     dominantBaseline: {
         trait: 0,
         value: 'auto'

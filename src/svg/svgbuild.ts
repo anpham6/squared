@@ -183,7 +183,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         let result = '';
         for (let i = 0, length = values.length; i < length; ++i) {
             const value = values[i];
-            result += (result !== '' ? ' ' : '') + value.key;
+            result += i > 0 ? ' ' + value.key : value.key;
             switch (value.key.toUpperCase()) {
                 case 'M':
                 case 'L':

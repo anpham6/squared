@@ -100,7 +100,7 @@ function setMultiline(node: T, lineHeight: number, overwrite: boolean) {
                     if (index > 0 && offset > Math.max(node.marginTop, 0) + node.borderTopWidth) {
                         node.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: offset, max: true });
                     }
-                    if ((node.blockStatic || index === renderChildren.length - 1) && offset > Math.max(node.marginBottom, 0)+ node.borderBottomWidth) {
+                    if ((node.blockStatic || index === renderChildren.length - 1) && offset > Math.max(node.marginBottom, 0) + node.borderBottomWidth) {
                         node.setBox(BOX_STANDARD.MARGIN_BOTTOM, { reset: 1, adjustment: offset, max: true });
                     }
                 }
@@ -534,7 +534,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         protected _namespaces: ObjectMap<StringMapChecked> = { android: {} };
         protected _containerType = 0;
-        protected _controlName = '';
         protected _cache!: CacheValueUI;
         protected _localSettings!: LocalSettingsUI;
         protected _boxReset?: number[];
@@ -2180,31 +2179,30 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             const direction = getGravityValues(this, attr, this.localizeString(alignment));
             if (direction) {
-                let x = '',
-                    y = '',
-                    z = '',
-                    result = '';
+                let x: Undef<string>,
+                    y: Undef<string>,
+                    z: Undef<string>;
                 for (let i = 0, length = direction.length; i < length; ++i) {
                     const value = direction[i];
                     if (isHorizontalAlign(value)) {
-                        if (x === '' || overwrite) {
+                        if (!x || overwrite) {
                             x = value;
                         }
                     }
                     else if (isVerticalAlign(value)) {
-                        if (y === '' || overwrite) {
+                        if (!y || overwrite) {
                             y = value;
                         }
                     }
+                    else if (z) {
+                        z += '|' + value;
+                    }
                     else {
-                        z += (z !== '' ? '|' : '') + value;
+                        z = value;
                     }
                 }
-                result = x !== '' && y !== '' ? `${x}|${y}` : x || y;
-                if (z !== '') {
-                    result += (result !== '' ? '|' : '') + z;
-                }
-                this.android(attr, result);
+                const result = x && y ? x + '|' + y : x || y;
+                this.android(attr, result ? z ? result + '|' + z : result : z || '');
             }
         }
 

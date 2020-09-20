@@ -44,7 +44,7 @@ function setButtonStyle(styleMap: StringMap, applied: boolean, defaultColor: str
         }
     }
     styleMap.textAlign ||= 'center';
-    if (!styleMap.padding && !(CSS_PROPERTIES.padding.value as string[]).some(attr => styleMap[attr])) {
+    if (!(CSS_PROPERTIES.padding.value as string[]).some(attr => styleMap[attr])) {
         styleMap.paddingTop = '2px';
         styleMap.paddingRight = '6px';
         styleMap.paddingBottom = '3px';
