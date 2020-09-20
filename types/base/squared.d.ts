@@ -169,7 +169,7 @@ declare module "base" {
         init(): void;
         reset(): void;
         includeElement(element: HTMLElement): boolean;
-        applyDefaultStyles(element: Element, sessionId: string): void;
+        applyDefaultStyles(element: Element, sessionId: string, pseudoElt?: PseudoElt): void;
         preventNodeCascade(node: T): boolean;
         sortInitialCache(cache: NodeList<T>): void;
         get afterInsertNode(): BindGeneric<T, void>;

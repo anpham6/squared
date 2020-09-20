@@ -157,6 +157,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     private _controllerSettings!: ControllerSettingsUI;
     private _layoutFileExtension!: RegExp;
     private _excludedElements!: Set<string>;
+    private _visibleElement!: (element: HTMLElement, sessionId: string, pseudoElt?: PseudoElt) => boolean;
+    private _applyDefaultStyles!: (element: Element, sessionId: string, pseudoElt?: PseudoElt) => void;
+    private _renderNode!: (layout: ContentUI<T>) => Undef<NodeTemplate<T>>;
+    private _renderNodeGroup!: (layout: LayoutUI<T>) => Undef<NodeTemplate<T>>;
     private readonly _layouts: LayoutAsset[] = [];
 
     public abstract get controllerHandler(): ControllerUI<T>;
@@ -164,7 +168,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public abstract get extensionManager(): ExtensionManager<T>;
 
     public init() {
-        const localSettings = this.controllerHandler.localSettings;
+        const controller = this.controllerHandler;
+        this._visibleElement = controller.visibleElement.bind(controller);
+        this._applyDefaultStyles = controller.applyDefaultStyles.bind(controller);
+        this._renderNode = controller.renderNode.bind(controller);
+        this._renderNodeGroup = controller.renderNodeGroup.bind(controller);
+        const localSettings = controller.localSettings;
         this._controllerSettings = localSettings;
         this._layoutFileExtension = new RegExp(`\\.${localSettings.layout.fileExtension}$`);
         this._excludedElements = localSettings.unsupported.excluded;
@@ -174,7 +183,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (this.closed) {
             return true;
         }
-        const controllerHandler = this.controllerHandler;
+        const controller = this.controllerHandler;
         const [extensions, children] = this.sessionAll;
         let length = children.length,
             j = 0;
@@ -192,7 +201,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
         }
         rendered.length = j;
-        controllerHandler.optimize(rendered);
+        controller.optimize(rendered);
         length = extensions.length;
         for (let i = 0; i < length; ++i) {
             const ext = extensions[i];
@@ -222,13 +231,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             const { node, layoutName, renderTemplates } = documentRoot[i];
             this.saveDocument(
                 layoutName,
-                this._controllerSettings.layout.baseTemplate + controllerHandler.writeDocument(renderTemplates, Math.abs(node.depth), this.userSettings.showAttributes),
+                this._controllerSettings.layout.baseTemplate + controller.writeDocument(renderTemplates, Math.abs(node.depth), this.userSettings.showAttributes),
                 node.dataset['pathname' + capitalize(this.systemName)],
                 node.renderExtension?.some(item => item.documentBase) ? 0 : undefined
             );
         }
         this.resourceHandler.finalize(this._layouts);
-        controllerHandler.finalize(this._layouts);
+        controller.finalize(this._layouts);
         for (let i = 0; i < length; ++i) {
             (extensions[i] as ExtensionUI<T>).afterFinalize();
         }
@@ -264,7 +273,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public conditionElement(element: HTMLElement, sessionId: string, cascadeAll?: boolean, pseudoElt?: PseudoElt) {
         if (!this._excludedElements.has(element.tagName)) {
-            if (this.controllerHandler.visibleElement(element, sessionId, pseudoElt) || cascadeAll) {
+            if (this._visibleElement(element, sessionId, pseudoElt) || cascadeAll) {
                 return true;
             }
             else if (!pseudoElt) {
@@ -278,8 +287,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                     current = current.parentElement;
                 }
-                const controllerHandler = this.controllerHandler;
-                if (iterateArray(element.children, (item: HTMLElement) => controllerHandler.visibleElement(item, sessionId)) === Infinity) {
+                const controller = this.controllerHandler;
+                if (iterateArray(element.children, (item: HTMLElement) => controller.visibleElement(item, sessionId)) === Infinity) {
                     return true;
                 }
                 return this.useElement(element);
@@ -290,7 +299,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public insertNode(element: Element, sessionId: string, cascadeAll?: boolean, pseudoElt?: PseudoElt) {
         if (element.nodeName === '#text' || this.conditionElement(element as HTMLElement, sessionId, cascadeAll, pseudoElt)) {
-            this.controllerHandler.applyDefaultStyles(element, sessionId);
+            this._applyDefaultStyles(element, sessionId, pseudoElt);
             return this.createNode(sessionId, { element, append: false });
         }
         else {
@@ -317,7 +326,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     public renderNode(layout: ContentUI<T>) {
-        return layout.itemCount === 0 ? this.controllerHandler.renderNode(layout) : this.controllerHandler.renderNodeGroup(layout as LayoutUI<T>);
+        return layout.itemCount === 0 ? this._renderNode(layout) : this._renderNodeGroup(layout as LayoutUI<T>);
     }
 
     public addLayout(layout: ContentUI<T>) {
@@ -587,8 +596,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
         }
         if (node.display !== 'none' || depth === 0 || cascadeAll || node.extensions.some(name => (this.extensionManager.get(name) as ExtensionUI<T>)?.documentBase)) {
-            const controllerHandler = this.controllerHandler;
-            if (node.excluded || controllerHandler.preventNodeCascade(node)) {
+            if (node.excluded || this._preventNodeCascade(node)) {
                 return node;
             }
             const beforeElement = this.createPseduoElement(parentElement, '::before', sessionId);
@@ -636,7 +644,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         continue;
                     }
                 }
-                else if (controllerHandler.includeElement(element)) {
+                else if (this._includeElement(element)) {
                     if (extensions) {
                         const use = this.getDatasetName('use', element);
                         (use ? ApplicationUI.prioritizeExtensions(use, extensions) : extensions).some(item => item.beforeInsertNode!(element, sessionId));
@@ -768,7 +776,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected setBaseLayout(sessionId: string) {
-        const controllerHandler = this.controllerHandler;
+        const controller = this.controllerHandler;
         const { extensionMap, clearMap } = this.session;
         const { extensions, cache, node: rootNode } = this.getProcessing(sessionId)!;
         const mapData = new Map<number, Set<T>>();
@@ -966,7 +974,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         if (horizontal.length > 1) {
                             const items = horizontal.filter(item => !item.renderExclude || floatContainer && clearMap.has(item));
                             if (items.length > 1) {
-                                const layout = controllerHandler.processTraverseHorizontal(new LayoutUI(parentY, nodeY, 0, 0, items), axisY);
+                                const layout = controller.processTraverseHorizontal(new LayoutUI(parentY, nodeY, 0, 0, items), axisY);
                                 if (horizontal[horizontal.length - 1] === axisY[q - 1]) {
                                     parentY.removeAlign(NODE_ALIGNMENT.UNKNOWN);
                                 }
@@ -978,7 +986,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         else if (vertical.length > 1) {
                             const items = vertical.filter(item => !item.renderExclude || floatContainer && clearMap.has(item));
                             if (items.length > 1) {
-                                const layout = controllerHandler.processTraverseVertical(new LayoutUI(parentY, nodeY, 0, 0, items), axisY);
+                                const layout = controller.processTraverseVertical(new LayoutUI(parentY, nodeY, 0, 0, items), axisY);
                                 const segEnd = vertical[vertical.length - 1];
                                 if (segEnd === axisY[q - 1]) {
                                     parentY.removeAlign(NODE_ALIGNMENT.UNKNOWN);
@@ -1089,7 +1097,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 nodeY.alignmentType
                             );
                             if (containerType === 0) {
-                                controllerHandler.processUnknownParent(layout as LayoutUI<T>);
+                                controller.processUnknownParent(layout as LayoutUI<T>);
                             }
                         }
                         else {
@@ -1100,7 +1108,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 nodeY.alignmentType
                             );
                             if (containerType === 0) {
-                                controllerHandler.processUnknownChild(layout);
+                                controller.processUnknownChild(layout);
                             }
                         }
                         if (layout.next) {
@@ -1170,14 +1178,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     protected setResources(sessionId: string) {
         const { cache, extensions } = this.getProcessing(sessionId)!;
-        const resourceHandler = this.resourceHandler;
+        const resource = this.resourceHandler;
         cache.each(node => {
             if (node.hasResource(NODE_RESOURCE.BOX_STYLE)) {
-                resourceHandler.setBoxStyle(node);
+                resource.setBoxStyle(node);
             }
             if (node.hasResource(NODE_RESOURCE.VALUE_STRING) && !node.imageContainer && (node.visible || node.labelFor)) {
-                resourceHandler.setFontStyle(node);
-                resourceHandler.setValueString(node);
+                resource.setFontStyle(node);
+                resource.setValueString(node);
             }
         });
         for (let i = 0, length = extensions.length; i < length; ++i) {
@@ -1765,11 +1773,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             (pseudoElement as HTMLImageElement).src = content;
                             const image = this.resourceHandler.getImage(content);
                             if (image) {
-                                if (!styleMap.width && image.width) {
-                                    styleMap.width = formatPX(image.width);
+                                if (image.width) {
+                                    styleMap.width ||= formatPX(image.width);
                                 }
-                                if (!styleMap.height && image.height) {
-                                    styleMap.height = formatPX(image.height);
+                                if (image.height) {
+                                    styleMap.height ||= formatPX(image.height);
                                 }
                             }
                         }

@@ -16,7 +16,7 @@ export default class Controller<T extends Node> implements squared.base.Controll
 
     public init() {}
     public sortInitialCache(cache: NodeList<T>) {}
-    public applyDefaultStyles(element: Element, sessionId: string) {}
+    public applyDefaultStyles(element: Element, sessionId: string, pseudoElt?: PseudoElt) {}
     public reset() {}
     public includeElement(element: HTMLElement) { return true; }
     public preventNodeCascade(node: T) { return false; }
