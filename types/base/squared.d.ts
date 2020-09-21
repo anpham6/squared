@@ -266,12 +266,12 @@ declare module "base" {
         enabled: boolean;
         controller: Controller<T>;
         resource: Null<Resource<T>>;
+        data: WeakMap<T, unknown>;
         readonly framework: number;
         readonly name: string;
         readonly options: StandardMap;
         readonly dependencies: ExtensionDependency[];
         readonly subscribers: Set<T>;
-        readonly data: Map<T, unknown>;
         reset(): void;
         require(value: ExtensionDependency): void;
         beforeInsertNode?(element: HTMLElement, sessionId: string): boolean;

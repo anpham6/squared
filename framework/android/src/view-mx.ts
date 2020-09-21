@@ -41,7 +41,6 @@ function checkTextAlign(value: string, ignoreStart?: boolean) {
         case 'center':
             return 'center_horizontal';
         case 'justify':
-        case 'initial':
             return !ignoreStart ? 'start' : '';
         default:
             return value;
@@ -813,7 +812,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             }
                             if (layoutHeight === '') {
                                 if (!this.pageFlow) {
-                                    if (this.css('position') === 'fixed') {
+                                    if (this.cssInitial('position') === 'fixed') {
                                         layoutHeight = 'match_parent';
                                     }
                                     else if (renderParent.layoutConstraint && (this.hasPX('top') || this.hasPX('bottom'))) {
@@ -983,7 +982,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 let floatAlign = '';
                 if (this.inlineVertical && (outerRenderParent.layoutFrame || outerRenderParent.layoutGrid) || this.display === 'table-cell') {
                     const gravity = this.display === 'table-cell' ? 'gravity' : 'layout_gravity';
-                    switch (this.cssInitial('verticalAlign', { modified: true })) {
+                    switch (this.css('verticalAlign')) {
                         case 'top':
                             node.mergeGravity(gravity, 'top');
                             break;
@@ -1076,7 +1075,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             if (this.layoutElement) {
                 if (this.textElement) {
-                    switch (this.css('justifyContent')) {
+                    switch (this.cssInitial('justifyContent')) {
                         case 'center':
                         case 'space-around':
                         case 'space-evenly':
@@ -1086,7 +1085,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             this.mergeGravity('gravity', 'right');
                             break;
                     }
-                    switch (this.css('alignItems')) {
+                    switch (this.cssInitial('alignItems')) {
                         case 'center':
                             this.mergeGravity('gravity', 'center_vertical');
                             break;
@@ -2389,7 +2388,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     this.android('minWidth') !== '' || this.android('minHeight') !== '' ||
                     this.android('maxWidth') !== '' || this.android('maxHeight') !== '')
                 {
-                    this.android('adjustViewBounds', 'true');
+                    if (!isPercent(layoutWidth) || !isPercent(layoutHeight)) {
+                        this.android('adjustViewBounds', 'true');
+                    }
                 }
             }
             else if (this.rendering) {
@@ -2753,13 +2754,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public isUnstyled(checkMargin = true) {
-            switch (this.css('verticalAlign')) {
-                case 'baseline':
-                case 'initial':
-                    return this.contentBoxWidth === 0 && this.contentBoxHeight === 0 && (!checkMargin || !this.blockStatic && this.marginTop === 0 && this.marginBottom === 0) && !this.visibleStyle.background && !this.positionRelative && !this.hasWidth && !this.hasHeight && !this.has('maxWidth') && !this.has('maxHeight') && this.css('whiteSpace') !== 'nowrap';
-                default:
-                    return false;
-            }
+            return this.contentBoxWidth === 0 && this.contentBoxHeight === 0 && this.css('verticalAlign') === 'baseline' && (!checkMargin || !this.blockStatic && this.marginTop === 0 && this.marginBottom === 0) && !this.visibleStyle.background && !this.positionRelative && !this.hasWidth && !this.hasHeight && !this.has('maxWidth') && !this.has('maxHeight') && this.cssInitial('whiteSpace') !== 'nowrap';
         }
 
         public getHorizontalBias() {
@@ -2934,7 +2929,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             let result = this._cache.renderExclude;
             if (result === undefined) {
                 const excludeHorizontal = (node: T) => node.bounds.width === 0 && node.contentBoxWidth === 0 && node.marginLeft === 0 && node.marginRight === 0 && !node.visibleStyle.background;
-                const excludeVertical = (node: T) => node.bounds.height === 0 && node.contentBoxHeight === 0 && (node.marginTop === 0 && node.marginBottom === 0 || node.css('overflow') === 'hidden');
+                const excludeVertical = (node: T) => node.bounds.height === 0 && node.contentBoxHeight === 0 && (node.marginTop === 0 && node.marginBottom === 0 || node.cssInitial('overflowY') === 'hidden');
                 if (this.naturalChild) {
                     if (this.plainText) {
                         result = this.bounds.height === 0;
@@ -2943,7 +2938,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         result = false;
                     }
                     else if (!this.pageFlow) {
-                        result = this.isEmpty() && (excludeHorizontal(this) || excludeVertical(this)) || /^rect\(0[a-zQ]*,\s+0[a-zQ]*,\s+0[a-zQ]*,\s+0[a-zQ]*\)$/.test(this.css('clip'));
+                        result = this.isEmpty() && (excludeHorizontal(this) || excludeVertical(this)) || /^rect\(0[a-zQ]*,\s+0[a-zQ]*,\s+0[a-zQ]*,\s+0[a-zQ]*\)$/.test(this.cssInitial('clip'));
                     }
                     else {
                         const parent = this.renderParent || this.parent as T;

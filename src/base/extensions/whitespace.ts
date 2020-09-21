@@ -95,7 +95,7 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
                 if (offsetParent >= 0 && offsetChild >= 0) {
                     const height = target.bounds.height;
                     let resetChild: Undef<boolean>;
-                    if (!DOCTYPE_HTML && offsetParent === 0 && offsetChild > 0 && target.cssInitial(marginName) === '') {
+                    if (!DOCTYPE_HTML && offsetParent === 0 && offsetChild > 0 && target.valueOf(marginName) === '') {
                         resetChild = true;
                     }
                     else {
@@ -319,7 +319,7 @@ function resetBox(node: NodeUI, region: number, register?: NodeUI) {
 const canResetChild = (node: NodeUI, children = true) => (!children && node.blockStatic || children && !node.isEmpty() && !node.floating) && !node.layoutElement && !node.tableElement && node.tagName !== 'FIELDSET';
 const validAboveChild = (node: NodeUI, children: boolean) => !node.hasHeight && node.borderBottomWidth === 0 && node.paddingBottom === 0 && canResetChild(node, children);
 const validBelowChild = (node: NodeUI, children: boolean) => !node.hasHeight && node.borderTopWidth === 0 && node.paddingTop === 0 && canResetChild(node, children);
-const hasOverflow = (node: NodeUI) => checkOverflowValue(node.cssInitial('overflowY')) || checkOverflowValue(node.cssInitial('overflowX'));
+const hasOverflow = (node: NodeUI) => checkOverflowValue(node.valueOf('overflowY')) || checkOverflowValue(node.valueOf('overflowX'));
 
 export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
     public readonly eventOnly = true;

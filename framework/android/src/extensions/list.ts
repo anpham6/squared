@@ -23,7 +23,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
         const layout = new LayoutUI(parent, node);
         if (layout.linearY) {
             layout.rowCount = node.size();
-            layout.columnCount = node.find(item => item.css('listStylePosition') === 'inside') ? 3 : 2;
+            layout.columnCount = node.find(item => item.cssInitial('listStylePosition') === 'inside') ? 3 : 2;
             layout.setContainerType(CONTAINER_NODE.GRID, NODE_ALIGNMENT.VERTICAL);
         }
         else if (layout.linearX || layout.singleRowAligned) {
@@ -146,7 +146,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 }
                 if (node.isEmpty() && !node.outerWrapper) {
                     container = controller.createNodeWrapper(node, parent, { alignmentType: parent.layoutGrid ? NODE_ALIGNMENT.VERTICAL : 0 });
-                    containerType = node.baselineElement && node.percentWidth === 0 && !node.css('maxWidth').endsWith('%') ? CONTAINER_NODE.LINEAR : CONTAINER_NODE.CONSTRAINT;
+                    containerType = node.baselineElement && node.percentWidth === 0 && !node.cssInitial('maxWidth').endsWith('%') ? CONTAINER_NODE.LINEAR : CONTAINER_NODE.CONSTRAINT;
                 }
                 else {
                     container = node.outerMostWrapper as T;

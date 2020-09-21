@@ -35,7 +35,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
         if (!absoluteParent.hasPX('width', { percent: false })) {
             const percent = node.percentWidth;
             percentWidth = (percent > 0 && percent < 1 || node.has('maxWidth', { type: CSS_UNIT.PERCENT, not: '100%' })) && !parent.layoutConstraint && (node.cssInitial('width') !== '100%' || node.has('maxWidth', { type: CSS_UNIT.PERCENT, not: '100%' })) && (node.rootElement || (parent.layoutVertical || node.onlyChild) && (parent.blockStatic || parent.percentWidth > 0));
-            marginHorizontal = (validPercent(node.css('marginLeft')) || validPercent(node.css('marginRight'))) && (
+            marginHorizontal = (validPercent(node.cssInitial('marginLeft')) || validPercent(node.cssInitial('marginRight'))) && (
                 parent.layoutVertical && !parent.hasAlign(NODE_ALIGNMENT.UNKNOWN) ||
                 parent.layoutFrame ||
                 node.blockStatic && node.alignedVertically(undefined, this.application.clearMap) > 0 ||
@@ -46,7 +46,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
         if (!absoluteParent.hasPX('height', { percent: false })) {
             const percent = node.percentHeight;
             percentHeight = (percent > 0 && percent < 1 || node.has('maxHeight', { type: CSS_UNIT.PERCENT, not: '100%' }) && parent.hasHeight) && (node.cssInitial('height') !== '100%' || node.has('maxHeight', { type: CSS_UNIT.PERCENT, not: '100%' })) && (node.rootElement || parent.percentHeight > 0);
-            marginVertical = (validPercent(node.css('marginTop')) || validPercent(node.css('marginBottom'))) && node.documentParent.percentHeight > 0 && !node.inlineStatic && (node.documentParent.size() === 1 || !node.pageFlow);
+            marginVertical = (validPercent(node.cssInitial('marginTop')) || validPercent(node.cssInitial('marginBottom'))) && node.documentParent.percentHeight > 0 && !node.inlineStatic && (node.documentParent.size() === 1 || !node.pageFlow);
         }
         if (percentWidth || percentHeight || marginHorizontal || marginVertical) {
             this.data.set(node, { percentWidth, percentHeight, marginHorizontal, marginVertical } as PercentData);
@@ -311,7 +311,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                         controller.addAfterInsideTemplate(renderNode, output);
                     }
                 }
-                if (node.css('height') === '100%' || node.css('minHeight') === '100%') {
+                if (node.cssInitial('height') === '100%' || node.cssInitial('minHeight') === '100%') {
                     node.app('layout_constraintHeight_percent', (1 - (topPercent + bottomPercent)).toString());
                     node.setLayoutHeight('0px');
                     node.setCacheValue('contentBoxHeight', 0);

@@ -45,8 +45,8 @@ function createDataAttribute(node: NodeUI): TableData {
         layoutType: 0,
         rowCount: 0,
         columnCount: 0,
-        layoutFixed: node.css('tableLayout') === 'fixed',
-        borderCollapse: node.css('borderCollapse') === 'collapse',
+        layoutFixed: node.valueOf('tableLayout') === 'fixed',
+        borderCollapse: node.valueOf('borderCollapse') === 'collapse',
         expand: false
     };
 }
@@ -114,7 +114,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         const hasWidth = node.hasWidth;
         const colgroup = node.element!.querySelector('COLGROUP');
         const caption = node.find(item => item.tagName === 'CAPTION');
-        const captionBottom = caption && node.css('captionSide') === 'bottom';
+        const captionBottom = caption && node.valueOf('captionSide') === 'bottom';
         const rowWidth: number[] = [];
         const mapBounds: number[] = [];
         const tableFilled: T[][] = [];
@@ -167,7 +167,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         td.css('height', formatPX(parseFloat(value)));
                     }
                 }
-                if (td.cssInitial('verticalAlign') === '') {
+                if (td.valueOf('verticalAlign') === '') {
                     td.css('verticalAlign', 'middle');
                 }
                 const visibleStyle = td.visibleStyle;
@@ -223,7 +223,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         break;
                     }
                     case 'TH':
-                        if (td.cssInitial('textAlign') === '') {
+                        if (td.valueOf('textAlign') === '') {
                             td.css('textAlign', 'center');
                         }
                         if (td.borderTopWidth === 0) {
@@ -234,7 +234,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         }
                         break;
                 }
-                const columnWidth = td.cssInitial('width');
+                const columnWidth = td.valueOf('width');
                 const reevaluate = !mapWidth[j] || mapWidth[j] === 'auto';
                 const width = td.bounds.width;
                 if (i === 0 || reevaluate || !mainData.layoutFixed) {
@@ -377,7 +377,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     setBoundsWidth(caption as T);
                 }
             }
-            if (!caption.cssInitial('textAlign')) {
+            if (caption.valueOf('textAlign') === '') {
                 caption.css('textAlign', 'center');
             }
             this.data.set(caption as T, { colSpan: columnCount } as TableCellSpanData);

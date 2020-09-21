@@ -15,7 +15,7 @@ interface NegativeXData {
 
 export default class NegativeX<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
-        return !node.isEmpty() && node.css('overflowX') !== 'hidden' && !node.rootElement;
+        return !node.isEmpty() && node.cssInitial('overflowX') !== 'hidden' && !node.rootElement;
     }
 
     public condition(node: T) {

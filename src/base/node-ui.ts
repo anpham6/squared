@@ -6,7 +6,7 @@ import Node from './node';
 
 type T = NodeUI;
 
-const { CSS_PROPERTIES, isLength } = squared.lib.css;
+const { CSS_PROPERTIES } = squared.lib.css;
 const { createElement, getRangeClientRect } = squared.lib.dom;
 const { equal } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
@@ -215,10 +215,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 }
                 const renderA = a.rendering;
                 const renderB = b.rendering;
-                if (!renderA && renderB && b.find(item => item.css('verticalAlign') !== 'baseline')) {
-                    return -1;
+                if (!renderA) {
+                    if (renderB && b.find(item => item.css('verticalAlign') !== 'baseline')) {
+                        return -1;
+                    }
                 }
-                else if (!renderB && renderA && a.find(item => item.css('verticalAlign') !== 'baseline')) {
+                else if (!renderB && a.find(item => item.css('verticalAlign') !== 'baseline')) {
                     return 1;
                 }
                 if (renderA && a.baselineElement) {
@@ -1182,7 +1184,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 }
             }
             else if (this.gridElement) {
-                switch (this.css('alignContent')) {
+                switch (this.valueOf('alignContent')) {
                     case 'space-around':
                     case 'space-evenly':
                         return 0;
@@ -1248,7 +1250,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             );
         Object.assign(style, this.textStyle);
         if (this.naturalElement) {
-            style.fontSize = this.cssInitial('fontSize') || this.fontSize + 'px';
+            style.fontSize = this.valueOf('fontSize') || this.fontSize + 'px';
         }
         else {
             style.fontSize = this.fontSize + 'px';
@@ -1602,7 +1604,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     get verticalAligned() {
         const result = this._cache.verticalAligned;
-        return result === undefined ? this._cache.verticalAligned = isLength(this.cssInitial('verticalAlign'), true) && this.verticalAlign !== 0 : result;
+        return result === undefined ? this._cache.verticalAligned = this.verticalAlign !== 0 && !isNaN(parseFloat(this.valueOf('verticalAlign'))) : result;
     }
 
     set autoPosition(value) {
@@ -1630,7 +1632,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get leftTopAxis() {
         let result = this._cache.leftTopAxis;
         if (result === undefined) {
-            switch (this.cssInitial('position')) {
+            switch (this.valueOf('position')) {
                 case 'absolute':
                     result = this.absoluteParent === this.documentParent;
                     break;
@@ -1843,8 +1845,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 const hasTextIndent = (node: T) => node.blockDimension || node.display === 'table-cell';
                 if (hasTextIndent(this)) {
                     const value = this.css('textIndent');
-                    result = this.parseUnit(value);
-                    if (value === '100%' || result + this.bounds.width < 0) {
+                    if (value === '100%' || (result = this.parseUnit(value)) + this.bounds.width < 0) {
                         return this._cache.textIndent = NaN;
                     }
                 }

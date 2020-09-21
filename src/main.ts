@@ -264,9 +264,8 @@ export function parseDocumentSync(...elements: (HTMLElement | string)[]) {
 
 export function add(...values: ExtensionRequestObject[]) {
     let success = 0;
-    for (let i = 0, length = values.length; i < length; ++i) {
-        let value = values[i],
-            options: Undef<PlainObject>;
+    for (let value of values) {
+        let options: Undef<PlainObject>;
         if (Array.isArray(value)) {
             [value, options] = value;
         }
@@ -306,8 +305,7 @@ export function add(...values: ExtensionRequestObject[]) {
 
 export function remove(...values: ExtensionRequest[]) {
     let success = 0;
-    for (let i = 0, length = values.length; i < length; ++i) {
-        let value = values[i];
+    for (let value of values) {
         if (typeof value === 'string') {
             if (extensionManager) {
                 const ext = extensionManager.get(value);
@@ -341,14 +339,13 @@ export function remove(...values: ExtensionRequest[]) {
 
 export function get(...values: string[]) {
     if (extensionManager) {
-        const length = values.length;
-        if (length === 1) {
+        if (values.length === 1) {
             return findExtension(values[0]);
         }
         else {
             const result: Extension[] = [];
-            for (let i = 0; i < length; ++i) {
-                const item = findExtension(values[i]);
+            for (const value of values) {
+                const item = findExtension(value);
                 if (item) {
                     result.push(item);
                 }

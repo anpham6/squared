@@ -17,7 +17,7 @@ export default abstract class Column<T extends NodeUI> extends ExtensionUI<T> {
             multiline = false;
         const rows: T[][] = [items];
         node.each((item: T) => {
-            if (item.css('columnSpan') === 'all') {
+            if (item.valueOf('columnSpan') === 'all') {
                 if (items.length) {
                     rows.push([item]);
                 }
@@ -46,8 +46,8 @@ export default abstract class Column<T extends NodeUI> extends ExtensionUI<T> {
         const [borderLeftStyle, borderLeftWidth, borderLeftColor] = node.cssAsTuple('columnRuleStyle', 'columnRuleWidth', 'columnRuleColor');
         const boxWidth = node.box.width;
         const columnCount = node.toInt('columnCount');
-        const columnWidth = node.parseWidth(node.css('columnWidth'));
-        let columnGap = node.parseWidth(node.css('columnGap')),
+        const columnWidth = node.parseWidth(node.valueOf('columnWidth'));
+        let columnGap = node.parseWidth(node.valueOf('columnGap')),
             columnSized: number;
         const getColumnSizing = () => isNaN(columnCount) && columnWidth > 0 ? boxWidth / (columnWidth + columnGap) : Infinity;
         if (columnGap) {

@@ -236,17 +236,6 @@ function getWritingMode(value?: string) {
     return 0;
 }
 
-function hasBorderStyle(value: string) {
-    switch (value) {
-        case 'none':
-        case 'initial':
-        case 'hidden':
-            return false;
-        default:
-            return true;
-    }
-}
-
 function getContentBoxWidth(style: CSSStyleDeclaration) {
     return (
         (hasBorderStyle(style.getPropertyValue('border-left-style')) ? parseFloat(style.getPropertyValue('border-left-width')) : 0) +
@@ -305,6 +294,7 @@ function getContentBoxDimension(element: Null<StyleElement>) {
     return { width: 0, height: 0 };
 }
 
+const hasBorderStyle = (value: string) => value !== 'none' && value !== 'hidden';
 const calculateLength = (element: StyleElement, value: string) => formatVar(calculateVar(element, value, { min: 0, supportPercent: false }));
 const fromFontNamedValue = (index: number, fixedWidth?: boolean) => (!fixedWidth ? DOCUMENT_FONTMAP[index] : DOCUMENT_FIXEDMAP[index]).toPrecision(8) + 'rem';
 const getInnerWidth = (dimension: UndefNull<Dimension>) => dimension && dimension.width || window.innerWidth;

@@ -961,6 +961,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
                 switch (repeat) {
                     case 'repeat':
+                    case 'initial':
                         tileModeX = 'repeat';
                         tileModeY = 'repeat';
                         break;

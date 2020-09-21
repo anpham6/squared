@@ -283,7 +283,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                     children[j].parent = node;
                 }
             }
-            if (node.tableElement && node.css('borderCollapse') === 'collapse') {
+            if (node.tableElement && node.valueOf('borderCollapse') === 'collapse') {
                 node.resetBox(BOX_STANDARD.PADDING);
             }
             this.data.set(node, columnCount);

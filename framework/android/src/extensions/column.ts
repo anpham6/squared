@@ -61,14 +61,14 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                         borderLeftStyle,
                         borderLeftWidth,
                         borderLeftColor,
-                        lineHeight: 'initial',
+                        lineHeight: 'inherit',
                         boxSizing: 'border-box',
                         display: 'inline-block'
                     });
                 }
                 else {
                     width = formatPX(columnGap);
-                    rule.cssApply({ width, lineHeight: 'initial', display: 'inline-block' });
+                    rule.cssApply({ width, lineHeight: 'inherit', display: 'inline-block' });
                 }
                 rule.saveAsInitial();
                 rule.setLayoutWidth(width);

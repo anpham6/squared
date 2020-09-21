@@ -975,6 +975,10 @@ export function parseColor(value: string, opacity = 1, transparency?: boolean) {
         if (value[0] === '#') {
             rgba = parseRGBA(value);
         }
+        else if (value === 'transparent') {
+            rgba = { r: 0, g: 0, b: 0, a: 0 };
+            key = 'transparent';
+        }
         else {
             let match = CSS.RGBA.exec(value);
             if (match) {
@@ -996,26 +1000,13 @@ export function parseColor(value: string, opacity = 1, transparency?: boolean) {
                     });
                 }
                 else {
-                    switch (value) {
-                        case 'transparent':
-                            rgba = { r: 0, g: 0, b: 0, a: 0 };
-                            key = 'transparent';
-                            break;
-                        case 'initial':
-                            rgba = { r: 0, g: 0, b: 0, a: 255 };
-                            key = 'black';
-                            break;
-                        default: {
-                            const color = findColorName(value);
-                            if (color) {
-                                rgba = { ...color.rgb, a: clampOpacity(opacity) } as RGBA;
-                                key = value;
-                            }
-                            else {
-                                rgba = null;
-                            }
-                            break;
-                        }
+                    const color = findColorName(value);
+                    if (color) {
+                        rgba = { ...color.rgb, a: clampOpacity(opacity) } as RGBA;
+                        key = value;
+                    }
+                    else {
+                        rgba = null;
                     }
                 }
             }

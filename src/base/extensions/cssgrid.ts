@@ -174,8 +174,8 @@ function createDataAttribute(node: NodeUI): CssGridData<NodeUI> {
         rowDirection: !data.gridAutoFlow.includes('column'),
         dense: data.gridAutoFlow.includes('dense'),
         templateAreas: {},
-        row: CssGrid.createDataRowAttribute(node.parseHeight(node.css('rowGap'), false)),
-        column: CssGrid.createDataRowAttribute(node.parseWidth(node.css('columnGap'), false)),
+        row: CssGrid.createDataRowAttribute(node.parseHeight(node.valueOf('rowGap'), false)),
+        column: CssGrid.createDataRowAttribute(node.parseWidth(node.valueOf('columnGap'), false)),
         emptyRows: [],
         minCellHeight: 0
     });
@@ -249,11 +249,11 @@ const convertLength = (node: NodeUI, value: string, index: number) => isLength(v
 
 export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
     public static isAligned(node: NodeUI) {
-        return node.hasHeight && /^space-|center|flex-end|end/.test(node.css('alignContent'));
+        return node.hasHeight && /^space-|center|flex-end|end/.test(node.valueOf('alignContent'));
     }
 
     public static isJustified(node: NodeUI) {
-        return (node.blockStatic || node.hasWidth) && /^space-|center|flex-end|end|right/.test(node.css('justifyContent'));
+        return (node.blockStatic || node.hasWidth) && /^space-|center|flex-end|end|right/.test(node.valueOf('justifyContent'));
     }
 
     public static createDataRowAttribute(gap = 0): CssGridDirectionData {
@@ -289,7 +289,7 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
         const rowData: Undef<T[]>[][] = [];
         const openCells: number[][] = [];
         const layout: GridLayout[] = [];
-        const gridTemplates = [node.cssInitial('gridTemplateRows'), node.cssInitial('gridTemplateColumns'), node.css('gridAutoRows'), node.css('gridAutoColumns')];
+        const gridTemplates = [node.valueOf('gridTemplateRows'), node.valueOf('gridTemplateColumns'), node.css('gridAutoRows'), node.css('gridAutoColumns')];
         let autoWidth: Undef<boolean>,
             autoHeight: Undef<boolean>,
             rowA: number,

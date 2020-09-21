@@ -95,20 +95,16 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                             case 'square':
                                 ordinal = '■';
                                 break;
-                            case 'none': {
-                                let src = '',
-                                    position = '';
+                            case 'none':
                                 if (!item.visibleStyle.backgroundRepeat) {
-                                    src = item.backgroundImage;
-                                    position = item.css('backgroundPosition');
-                                }
-                                if (src !== '' && src !== 'none') {
-                                    mainData.imageSrc = src;
-                                    mainData.imagePosition = position;
-                                    item.exclude({ resource: NODE_RESOURCE.IMAGE_SOURCE });
+                                    const src = item.backgroundImage;
+                                    if (src !== '') {
+                                        mainData.imageSrc = src;
+                                        mainData.imagePosition = item.css('backgroundPosition');
+                                        item.exclude({ resource: NODE_RESOURCE.IMAGE_SOURCE });
+                                    }
                                 }
                                 return;
-                            }
                             default:
                                 ordinal = '○';
                                 break;

@@ -21,9 +21,9 @@ c4d8a75e15394cec1d22e3b7b2521213  ./app/src/main/res/drawable/textview_3_gradien
 cab9462a612489f935b0a33717b3bbf2  ./app/src/main/res/drawable/textview_7_gradient_1.xml
 09549ceef805cb8088cbfc78cd315a32  ./app/src/main/res/drawable/textview_9_gradient_1.xml
 fe574b46fffb46aa504ff11896cc09de  ./app/src/main/res/layout/activity_main.xml
-75e5cdc0c85c2c815f835fddb1326e22  ./app/src/main/res/layout/gradient_content.xml
-a2e9bde477263e71c2c04b60d188e5f0  ./app/src/main/res/layout/gradient_nested.xml
-93372eab0d065980cd546d8e50aab4c8  ./app/src/main/res/layout/gradient_single.xml
+87361914178a6ff47e7ee604f747083d  ./app/src/main/res/layout/gradient_content.xml
+e558d7cd33db2b088c4108d1f806e2ca  ./app/src/main/res/layout/gradient_nested.xml
+ca533d9e5ea7bcac86b12e4b0d56501c  ./app/src/main/res/layout/gradient_single.xml
 092af8a1cb82ff863c2f2b2996149058  ./app/src/main/res/values/colors.xml
 1c15a457faf0c7c1970fee1d7ed3c7d6  ./app/src/main/res/values/dimens.xml
 0c0ac3848531f11c60726eb84076935d  ./app/src/main/res/values/strings.xml

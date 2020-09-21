@@ -213,11 +213,8 @@ function setBorderStyle(node: NodeUI, boxStyle: BoxStyle, attr: string, border: 
     if (style !== 'none') {
         let width = formatPX(attr !== 'outline' ? node[border[0]] : parseFloat(node.style[border[0]]));
         if (width !== '0px') {
-            let color: Null<string | ColorData> = node.css(border[2]) || 'initial';
+            let color: Null<string | ColorData> = node.css(border[2]) || 'rgb(0, 0, 0)';
             switch (color) {
-                case 'initial':
-                    color = 'rgb(0, 0, 0)';
-                    break;
                 case 'currentcolor':
                 case 'currentColor':
                     color = node.css('color');
@@ -241,11 +238,7 @@ function setBorderStyle(node: NodeUI, boxStyle: BoxStyle, attr: string, border: 
 }
 
 function setBackgroundOffset(node: NodeUI, boxStyle: BoxStyle, attr: "backgroundClip" | "backgroundOrigin") {
-    let value = node.css(attr);
-    if (value === 'initial') {
-        value = attr === 'backgroundClip' ? 'border-box' : 'padding-box';
-    }
-    switch (value) {
+    switch (node.valueOf(attr) || (attr === 'backgroundClip' ? 'border-box' : 'padding-box')) {
         case 'border-box':
             return true;
         case 'padding-box':
@@ -929,7 +922,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
         }
         else if (!lineBreak && node.naturalChild) {
             const value = trim ? node.element!.textContent!.trim() : node.element!.textContent!;
-            return value.includes('\n') && (node.preserveWhiteSpace || node.plainText && node.actualParent!.preserveWhiteSpace || node.css('whiteSpace') === 'pre-line');
+            return value.includes('\n') && (node.preserveWhiteSpace || node.plainText && node.actualParent!.preserveWhiteSpace || node.valueOf('whiteSpace') === 'pre-line');
         }
         return false;
     }
@@ -1021,7 +1014,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
             if (visibleStyle.outline && setBorderStyle(node, boxStyle, 'outline', BORDER_OUTLINE)) {
                 borderWidth = true;
             }
-            if (backgroundColor === '' && node.has('backgroundColor') && !node.documentParent.visible) {
+            if (backgroundColor === '' && !node.documentParent.visible && node.has('backgroundColor')) {
                 backgroundColor = node.css('backgroundColor');
             }
             if (node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
@@ -1037,7 +1030,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                 if (setBackgroundOffset(node, boxStyle, 'backgroundClip')) {
                     setBackgroundOffset(node, boxStyle, 'backgroundOrigin');
                 }
-                if (node.css('borderRadius') !== '0px') {
+                if (node.style.borderRadius !== '0px') {
                     const [borderTopLeftRadius, borderTopRightRadius, borderBottomRightRadius, borderBottomLeftRadius] = node.cssAsTuple('borderTopLeftRadius', 'borderTopRightRadius', 'borderBottomRightRadius', 'borderBottomLeftRadius');
                     const [A, B] = splitPair(borderTopLeftRadius, ' ');
                     const [C, D] = splitPair(borderTopRightRadius, ' ');

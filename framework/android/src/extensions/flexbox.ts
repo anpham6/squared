@@ -139,12 +139,10 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
 }
 
 function getBaseline(nodes: View[]) {
-    const values = ['baseline', 'initial'];
     for (let i = 0, length = nodes.length; i < length; ++i) {
         const node = nodes[i];
-        const wrapperOf = node.wrapperOf;
-        const target = wrapperOf || node;
-        if (target.textElement && target.cssAny('verticalAlign', values)) {
+        const target = node.wrapperOf || node;
+        if (target.textElement && target.css('verticalAlign') === 'baseline') {
             return node;
         }
     }
@@ -643,7 +641,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                     }
                                                 }
                                                 else if ((chain.naturalElement ? (chain.data<BoxRectDimension>(this.name, 'boundsData') || chain.bounds)[HWL] : Infinity) < maxSize) {
-                                                    setLayoutWeightOpposing(chain, chain.flexElement && chain.css('flexDirection').startsWith(horizontal ? 'row' : 'column') ? 'match_parent' : '0px', horizontal);
+                                                    setLayoutWeightOpposing(chain, chain.flexElement && chain.flexdata.row ? 'match_parent' : '0px', horizontal);
                                                     if (innerWrapped && !innerWrapped.autoMargin[orientation]) {
                                                         setLayoutWeightOpposing(innerWrapped as T, 'match_parent', horizontal);
                                                     }

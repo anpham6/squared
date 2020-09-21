@@ -181,7 +181,7 @@ function convertBorderWidth(node: T, dimension: DimensionAttr, border: string[])
 function convertBox(node: T, attr: string, margin: boolean) {
     switch (node.display) {
         case 'table':
-            if (!margin && node.css('borderCollapse') === 'collapse') {
+            if (!margin && node.valueOf('borderCollapse') === 'collapse') {
                 return 0;
             }
             break;
@@ -1291,7 +1291,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public cssInitial(attr: string, options?: CssInitialOptions) {
-        return (this._initial?.styleMap || this._styleMap)[attr] || options && (options.modified && this._styleMap[attr] as string || options.computed && this.style[attr] as string) || '';
+        const initial = this._initial;
+        return (initial && initial.styleMap || this._styleMap)[attr] || options && (options.modified && this._styleMap[attr] as string || options.computed && this.style[attr] as string) || '';
     }
 
     public cssAscend(attr: string, options?: CssAscendOptions) {
@@ -1508,7 +1509,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             }
                         case '::before':
                         case '::after':
-                            return Node.sanitizeCss(this._element as HTMLElement, styleMap, styleMap.writingMode || this.cssInitial('writingMode'));
+                            return Node.sanitizeCss(this._element as HTMLElement, styleMap, styleMap.writingMode || this.valueOf('writingMode'));
                     }
                 }
             }
@@ -2045,7 +2046,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public valueOf(attr: string, options?: CssInitialOptions) {
-        return !this._preferInitial && this._styleMap[attr] || this.cssInitial(attr, options);
+        if (!this._preferInitial) {
+            const value = this._styleMap[attr];
+            if (value || !options) {
+                return value || '';
+            }
+        }
+        return this.cssInitial(attr, options);
     }
 
     set parent(value) {
@@ -2099,7 +2106,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get styleElement() {
         const result = this._cacheState.styleElement;
-        return result === undefined ? this._cacheState.styleElement = this.htmlElement || this.svgElement : result;
+        return result === undefined ? this._cacheState.styleElement = !!this._element && !this.plainText : result;
     }
 
     get naturalChild() { return true; }
@@ -2159,20 +2166,20 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return this.tagName === 'BR';
     }
 
+    get positionRelative() {
+        return this.valueOf('position') === 'relative';
+    }
+
     get display() {
         return this.css('display');
     }
 
-    get positionRelative() {
-        return this.css('position') === 'relative';
+    get float() {
+        return this.pageFlow && this.css('float') || 'none';
     }
 
     get floating() {
         return this.float !== 'none';
-    }
-
-    get float() {
-        return this.pageFlow && this.css('float') || 'none';
     }
 
     get zIndex() {
@@ -2295,11 +2302,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
     get hasHeight(): boolean {
         const result = this._cache.hasHeight;
-        if (result === undefined) {
-            const value = this.css('height');
-            return this._cache.hasHeight = isPercent(value) ? this.pageFlow ? this.actualParent?.hasHeight || this.documentBody : this.css('position') === 'fixed' || this.hasPX('top') || this.hasPX('bottom') : this.height > 0 || this.hasPX('height', { percent: false });
-        }
-        return result;
+        return result === undefined ? this._cache.hasHeight = isPercent(this.valueOf('height')) ? this.pageFlow ? this.actualParent?.hasHeight || this.documentBody : this.valueOf('position') === 'fixed' || this.hasPX('top') || this.hasPX('bottom') : this.height > 0 || this.hasPX('height', { percent: false }) : result;
     }
 
     get lineHeight() {
@@ -2343,7 +2346,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     get positionStatic() {
         let result = this._cache.positionStatic;
         if (result === undefined) {
-            switch (this.css('position')) {
+            switch (this.valueOf('position')) {
                 case 'absolute':
                 case 'fixed':
                     result = false;
@@ -2435,12 +2438,12 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get contentBoxWidth() {
         const result = this._cache.contentBoxWidth;
-        return result === undefined ? this._cache.contentBoxWidth = this.tableElement && this.css('borderCollapse') === 'collapse' ? 0 : this.borderLeftWidth + this.paddingLeft + this.paddingRight + this.borderRightWidth : result;
+        return result === undefined ? this._cache.contentBoxWidth = this.tableElement && this.valueOf('borderCollapse') === 'collapse' ? 0 : this.borderLeftWidth + this.paddingLeft + this.paddingRight + this.borderRightWidth : result;
     }
 
     get contentBoxHeight() {
         const result = this._cache.contentBoxHeight;
-        return result === undefined ? this._cache.contentBoxHeight = this.tableElement && this.css('borderCollapse') === 'collapse' ? 0 : this.borderTopWidth + this.paddingTop + this.paddingBottom + this.borderBottomWidth : result;
+        return result === undefined ? this._cache.contentBoxHeight = this.tableElement && this.valueOf('borderCollapse') === 'collapse' ? 0 : this.borderTopWidth + this.paddingTop + this.paddingBottom + this.borderBottomWidth : result;
     }
 
     get inline() {
@@ -2583,7 +2586,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 const display = this.display;
                 if (display.startsWith('inline') || display === 'list-item') {
                     const verticalAlign = this.css('verticalAlign');
-                    return this._cache.baseline = verticalAlign === 'baseline' || isLength(verticalAlign, true);
+                    return this._cache.baseline = verticalAlign === 'baseline' || !isNaN(parseFloat(verticalAlign));
                 }
             }
             return this._cache.baseline = false;
@@ -2594,8 +2597,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     get verticalAlign() {
         let result = this._cache.verticalAlign;
         if (result === undefined) {
-            if (this.pageFlow) {
-                const value = this.css('verticalAlign');
+            const value = this.css('verticalAlign');
+            if (value !== 'baseline' && this.pageFlow) {
                 if (value.endsWith('px')) {
                     result = parseFloat(value);
                 }
@@ -2774,7 +2777,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         const result = this._cache.percentHeight;
         if (result === undefined) {
             const value = this.valueOf('height');
-            return this._cache.percentHeight = isPercent(value) && (this.actualParent?.hasHeight || this.css('position') === 'fixed') ? parseFloat(value) / 100 : 0;
+            return this._cache.percentHeight = isPercent(value) && (this.actualParent?.hasHeight || this.valueOf('position') === 'fixed') ? parseFloat(value) / 100 : 0;
         }
         return result;
     }
@@ -2786,20 +2789,15 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 const borderWidth = this.borderTopWidth > 0 || this.borderRightWidth > 0 || this.borderBottomWidth > 0 || this.borderLeftWidth > 0;
                 const backgroundColor = this.backgroundColor !== '';
                 const backgroundImage = this.backgroundImage !== '';
+                const outlineStyle = this.valueOf('outlineStyle');
                 let backgroundRepeatX = false,
-                    backgroundRepeatY = false,
-                    outline = false;
+                    backgroundRepeatY = false;
                 if (backgroundImage) {
                     for (const repeat of this.css('backgroundRepeat').split(',')) {
                         const [repeatX, repeatY] = splitPair(repeat.trim(), ' ');
                         backgroundRepeatX ||= repeatX === 'repeat' || repeatX === 'repeat-x';
                         backgroundRepeatY ||= repeatX === 'repeat' || repeatX === 'repeat-y' || repeatY === 'repeat';
                     }
-                }
-                const outlineStyle = this.css('outlineStyle');
-                if (outlineStyle !== '' && outlineStyle !== 'none') {
-                    const outlineWidth = this.css('outlineWidth');
-                    outline = outlineWidth !== '' && parseFloat(outlineWidth) !== 0;
                 }
                 return this._cache.visibleStyle = {
                     background: borderWidth || backgroundImage || backgroundColor,
@@ -2809,7 +2807,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     backgroundRepeat: backgroundRepeatX || backgroundRepeatY,
                     backgroundRepeatX,
                     backgroundRepeatY,
-                    outline
+                    outline: outlineStyle !== '' && outlineStyle !== 'none' && !!parseFloat(this.css('outlineWidth'))
                 };
             }
             return this._cache.visibleStyle = {} as VisibleStyle;
@@ -2876,7 +2874,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         break;
                 }
             }
-            else if (this.inlineStatic && this.cssInitial('width') === '' || this.display === 'table-cell' || this.actualParent?.flexdata.row) {
+            else if (this.inlineStatic && this.valueOf('width') === '' || this.display === 'table-cell' || this.actualParent?.flexdata.row) {
                 result = this.bounds.width;
             }
             else {
@@ -2898,7 +2896,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     get actualHeight() {
         let result = this._cache.actualHeight;
         if (result === undefined) {
-            if (this.inlineStatic && this.cssInitial('height') === '' || this.display === 'table-cell' || this.actualParent?.flexdata.column) {
+            if (this.inlineStatic && this.valueOf('height') === '' || this.display === 'table-cell' || this.actualParent?.flexdata.column) {
                 result = this.bounds.height;
             }
             else {

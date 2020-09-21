@@ -424,7 +424,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     const element = item.element as HTMLElement;
                     let data: Undef<StringMap>;
                     if (!item.isEmpty()) {
-                        const textAlign = item.cssInitial('textAlign');
+                        const textAlign = item.valueOf('textAlign');
                         switch (textAlign) {
                             case 'center':
                             case 'right':
@@ -799,11 +799,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     const floated = new Set<string>();
                     let clearable: T[] = [];
                     for (const item of (node.documentChildren || node.naturalChildren) as T[]) {
-                        const floating = item.floating;
                         if (floated.size && item.pageFlow) {
-                            const clear = item.css('clear');
+                            const clear = item.valueOf('clear');
                             if (floated.has(clear) || clear === 'both') {
-                                if (!floating) {
+                                if (!item.floating) {
                                     item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1 });
                                 }
                                 clearMap.set(item, floated.size === 2 ? 'both' : floated.values().next().value as string);
@@ -816,7 +815,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 clearable = [];
                             }
                         }
-                        if (floating) {
+                        if (item.floating) {
                             const float = item.float;
                             floated.add(float);
                             clearable.push(item);

@@ -39,7 +39,7 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
             let valid = true,
                 contentWidth = 0;
             node.each((child: T) => {
-                if (child.textElement && child.css('whiteSpace') !== 'nowrap') {
+                if (child.textElement && child.cssInitial('whiteSpace') !== 'nowrap') {
                     children.push(child);
                 }
                 else {

@@ -49,13 +49,13 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
         let right: Undef<boolean>,
             bottom: Undef<boolean>;
         node.each((item: View) => {
-            const fixed = rootElement && item.css('position') === 'fixed';
+            const fixed = rootElement && item.cssInitial('position') === 'fixed';
             if (item.pageFlow || !contentBox && !fixed) {
                 return;
             }
             const fixedPosition = fixed && item.autoPosition;
             if (item.hasPX('left') || fixedPosition) {
-                if (documentBody && (item.css('width') === '100%' || item.css('minWidth') === '100%')) {
+                if (documentBody && (item.cssInitial('width') === '100%' || item.cssInitial('minWidth') === '100%')) {
                     if (paddingLeft || paddingRight) {
                         children.add(item);
                     }
@@ -96,7 +96,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                 children.add(item);
             }
             if (item.hasPX('top') || fixedPosition) {
-                if (documentBody && (item.css('height') === '100%' || item.css('minHeight') === '100%')) {
+                if (documentBody && (item.cssInitial('height') === '100%' || item.cssInitial('minHeight') === '100%')) {
                     if (paddingTop || paddingBottom) {
                         children.add(item);
                     }
@@ -195,7 +195,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
         if (mainData) {
             const documentId = node.documentId;
             for (const item of mainData.children) {
-                const nested = !item.pageFlow && (item.absoluteParent !== item.documentParent || item.css('position') === 'fixed' || node.documentBody);
+                const nested = !item.pageFlow && (item.absoluteParent !== item.documentParent || item.cssInitial('position') === 'fixed' || node.documentBody);
                 const wrapper = item.outerMostWrapper as T;
                 if (item.hasPX('left')) {
                     if (!nested) {

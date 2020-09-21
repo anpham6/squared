@@ -69,14 +69,14 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
             const children = node.children as T[];
             if (node.has('columnWidth') || node.has('columnCount')) {
                 const columnCount = node.toInt('columnCount', Infinity);
-                const columnWidth = node.parseWidth(node.css('columnWidth'));
-                const columnGap = node.parseWidth(node.css('columnGap'));
+                const columnWidth = node.parseWidth(node.cssInitial('columnWidth'));
+                const columnGap = node.parseWidth(node.cssInitial('columnGap'));
                 const minCount = columnWidth ? Math.min(Math.floor(node.box.width / (columnWidth + columnGap)), columnCount) : columnCount;
                 if (minCount !== Infinity) {
                     let remaining = minCount - length;
                     if (remaining > 0) {
                         const nodes: MultilineData<T> = [];
-                        const breakable = children.filter((child: T) => isTextElement(child) && checkBreakable(child, false) && child.css('columnSpan') !== 'all').sort((a, b) => b.textContent.length - a.textContent.length);
+                        const breakable = children.filter((child: T) => isTextElement(child) && checkBreakable(child, false) && child.cssInitial('columnSpan') !== 'all').sort((a, b) => b.textContent.length - a.textContent.length);
                         const q = breakable.length;
                         const maxCount = Math.ceil(q / remaining);
                         for (let i = 0; i < q; ++i) {
@@ -256,6 +256,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                         container.unsafe('element', element);
                         container.unsafe('initial', initialData);
                         container.unsafe('elementData', elementData);
+                        container.unsafe('preferInitial', false);
                         container.setCacheState('naturalChild', false);
                         container.setCacheState('naturalElement', naturalElement && !isNaN(columns));
                         container.setCacheState('htmlElement', naturalElement);

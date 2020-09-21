@@ -545,7 +545,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
             node.resetBox(BOX_STANDARD.PADDING, container);
             unsetContentBox = true;
             if (CssGrid.isJustified(node)) {
-                node.setLayoutWidth(getLayoutDimension(node.css('justifyContent')));
+                node.setLayoutWidth(getLayoutDimension(node.cssInitial('justifyContent')));
             }
             else if (node.hasPX('width', { percent: false })) {
                 node.setLayoutWidth('match_parent');
@@ -554,7 +554,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 container.setLayoutWidth(node.blockStatic ? 'match_parent' : 'wrap_content');
             }
             if (CssGrid.isAligned(node)) {
-                node.setLayoutHeight(getLayoutDimension(node.css('alignContent')));
+                node.setLayoutHeight(getLayoutDimension(node.cssInitial('alignContent')));
             }
             else if (node.hasPX('height', { percent: false })) {
                 node.setLayoutHeight('match_parent');

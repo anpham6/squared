@@ -436,7 +436,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 const actualParent = node.actualParent as T;
                 const absoluteParent = node.absoluteParent as T;
                 let parent: Undef<T>;
-                switch (node.css('position')) {
+                switch (node.valueOf('position')) {
                     case 'fixed':
                         if (!node.autoPosition) {
                             parent = documentRoot;
@@ -464,8 +464,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                     else if (parent !== documentRoot && (!parent.rightAligned && !parent.centerAligned || !parent.pageFlow)) {
                                         const linear = parent.linear;
                                         if (!outside) {
-                                            const overflowX = parent.css('overflowX') === 'hidden';
-                                            const overflowY = parent.css('overflowY') === 'hidden';
+                                            const overflowX = parent.valueOf('overflowX') === 'hidden';
+                                            const overflowY = parent.valueOf('overflowY') === 'hidden';
                                             if (overflowX && overflowY) {
                                                 break;
                                             }
@@ -569,7 +569,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     item.parent!.remove(item);
                     item.init(parent, depth);
                     item.documentParent = parent;
-                    const clear = item.css('clear');
+                    const clear = item.valueOf('clear');
                     switch (clear) {
                         case 'left':
                         case 'right':
@@ -596,7 +596,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                         }
                                     }
                                     else {
-                                        const clearBefore = sibling.css('clear');
+                                        const clearBefore = sibling.valueOf('clear');
                                         switch (clearBefore) {
                                             case 'left':
                                             case 'right':
