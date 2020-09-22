@@ -209,29 +209,27 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
 }
 
 function setBorderStyle(node: NodeUI, boxStyle: BoxStyle, attr: string, border: string[]) {
-    const style = node.css(border[1]) || 'none';
-    if (style !== 'none') {
-        let width = formatPX(attr !== 'outline' ? node[border[0]] : parseFloat(node.style[border[0]]));
-        if (width !== '0px') {
-            let color: Null<string | ColorData> = node.css(border[2]) || 'rgb(0, 0, 0)';
-            switch (color) {
-                case 'currentcolor':
-                case 'currentColor':
-                    color = node.css('color');
-                    break;
-            }
-            if (width === '2px' && (style === 'inset' || style === 'outset')) {
-                width = '1px';
-            }
-            color = parseColor(color, 1, true);
-            if (color) {
-                boxStyle[attr] = {
-                    width,
-                    style,
-                    color
-                } as BorderAttribute;
-                return true;
-            }
+    let width = node[border[0]] as number;
+    if (width > 0) {
+        const style = node.css(border[1]) || 'solid';
+        let color: Null<string | ColorData> = node.css(border[2]) || 'rgb(0, 0, 0)';
+        switch (color) {
+            case 'currentcolor':
+            case 'currentColor':
+                color = node.css('color');
+                break;
+        }
+        if (width === 2 && (style === 'inset' || style === 'outset')) {
+            width = 1;
+        }
+        color = parseColor(color, 1, true);
+        if (color) {
+            boxStyle[attr] = {
+                width: formatPX(width),
+                style,
+                color
+            } as BorderAttribute;
+            return true;
         }
     }
     return false;
@@ -922,7 +920,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
         }
         else if (!lineBreak && node.naturalChild) {
             const value = trim ? node.element!.textContent!.trim() : node.element!.textContent!;
-            return value.includes('\n') && (node.preserveWhiteSpace || node.plainText && node.actualParent!.preserveWhiteSpace || node.valueOf('whiteSpace') === 'pre-line');
+            return value.includes('\n') && (node.preserveWhiteSpace || node.plainText && node.actualParent!.preserveWhiteSpace || node.css('whiteSpace') === 'pre-line');
         }
         return false;
     }
@@ -1027,7 +1025,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                 if (setBackgroundOffset(node, boxStyle, 'backgroundClip')) {
                     setBackgroundOffset(node, boxStyle, 'backgroundOrigin');
                 }
-                if (node.style.borderRadius !== '0px') {
+                if (node.css('borderRadius') !== '0px') {
                     const [borderTopLeftRadius, borderTopRightRadius, borderBottomRightRadius, borderBottomLeftRadius] = node.cssAsTuple('borderTopLeftRadius', 'borderTopRightRadius', 'borderBottomRightRadius', 'borderBottomLeftRadius');
                     const [A, B] = splitPair(borderTopLeftRadius, ' ');
                     const [C, D] = splitPair(borderTopRightRadius, ' ');

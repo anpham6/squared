@@ -1,4 +1,3 @@
-3fca97234757cb10b7c4a4fe60f27ec5  ./app/src/main/res/drawable/button_button_1.xml
 0a98785910f711047b4d98e57533bac0  ./app/src/main/res/drawable/color_gradient_1.xml
 2a77bfc3770f402f0f66055b051f6d78  ./app/src/main/res/drawable/color_gradient_2.xml
 ef3904ab41d7df02b0b8f7a59f91fb3d  ./app/src/main/res/drawable/color_gradient_3.xml
@@ -11,9 +10,9 @@ aecb11b967f22887d64546bd824af620  ./app/src/main/res/drawable/input_color_color.
 c41feff6aa09e049add69ff1982cae54  ./app/src/main/res/drawable/legend_relativelayout_8.xml
 fb222c1a1815f87a4775605f66b78d60  ./app/src/main/res/drawable/legend_relativelayout_9.xml
 44e8d4b47c5371e66a15b8503d5ebe3c  ./app/src/main/res/drawable/span_range.xml
-78c6aaffd013c2a28bd7b4c7da245462  ./app/src/main/res/layout/activity_main.xml
+db13b85884c892b2395fef332fb71d3e  ./app/src/main/res/layout/activity_main.xml
 ba593e1cf5dea392941cf2316f5b4bdf  ./app/src/main/res/values/colors.xml
-eaf8f0d45a109e8b0bc6727f2194efd7  ./app/src/main/res/values/dimens.xml
+cf498ba2c8e57eaddd928efe184295ac  ./app/src/main/res/values/dimens.xml
 b53df46c587884b9a8d0ac90b90c7f11  ./app/src/main/res/values/strings.xml
-50a285de457921f62529674eac97a997  ./app/src/main/res/values/styles.xml
+81caddcb3329018f1f8c3e3479e999d4  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml

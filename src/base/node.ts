@@ -37,6 +37,7 @@ const BORDER_TOP = CSS_PROPERTIES.borderTop.value as string[];
 const BORDER_RIGHT = CSS_PROPERTIES.borderRight.value as string[];
 const BORDER_BOTTOM = CSS_PROPERTIES.borderBottom.value as string[];
 const BORDER_LEFT = CSS_PROPERTIES.borderLeft.value as string[];
+const BORDER_OUTLINE = CSS_PROPERTIES.outline.value as string[];
 
 const REGEXP_EM = /\dem$/;
 const REGEXP_QUERYNTH = /^:nth(-last)?-(child|of-type)\((.+)\)$/;
@@ -2046,13 +2047,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public valueOf(attr: string, options?: CssInitialOptions) {
-        if (!this._preferInitial) {
-            const value = this._styleMap[attr];
-            if (value || !options) {
-                return value || '';
-            }
-        }
-        return this.cssInitial(attr, options);
+        return this._preferInitial ? this.cssInitial(attr, options) : this._styleMap[attr] || options && options.computed && this.style[attr] as string || '';
     }
 
     set parent(value) {
@@ -2413,6 +2408,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     get borderLeftWidth() {
         const result = this._cache.borderLeftWidth;
         return result === undefined ? this._cache.borderLeftWidth = convertBorderWidth(this, 'width', BORDER_LEFT) : result;
+    }
+
+    get outlineWidth() {
+        const result = this._cache.outlineWidth;
+        return result === undefined ? this._cache.outlineWidth = convertBorderWidth(this, 'width', BORDER_OUTLINE) : result;
     }
 
     get paddingTop() {
@@ -2789,7 +2789,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 const borderWidth = this.borderTopWidth > 0 || this.borderRightWidth > 0 || this.borderBottomWidth > 0 || this.borderLeftWidth > 0;
                 const backgroundColor = this.backgroundColor !== '';
                 const backgroundImage = this.backgroundImage !== '';
-                const outlineStyle = this.valueOf('outlineStyle');
                 let backgroundRepeatX = false,
                     backgroundRepeatY = false;
                 if (backgroundImage) {
@@ -2807,7 +2806,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     backgroundRepeat: backgroundRepeatX || backgroundRepeatY,
                     backgroundRepeatX,
                     backgroundRepeatY,
-                    outline: outlineStyle !== '' && outlineStyle !== 'none' && !!parseFloat(this.css('outlineWidth'))
+                    outline: this.outlineWidth > 0
                 };
             }
             return this._cache.visibleStyle = {} as VisibleStyle;
@@ -2820,7 +2819,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (result === undefined) {
             result = this.actualParent;
             if (!this.pageFlow && !this.documentBody) {
-                while (result && result.valueOf('position', { computed: true }) === 'static' && !result.documentBody) {
+                while (result && result.css('position') === 'static' && !result.documentBody) {
                     result = result.actualParent;
                 }
             }

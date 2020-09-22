@@ -661,26 +661,26 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 case 'boxStyle': {
                     if (this.naturalElement) {
                         let properties: string[] = [];
-                        if (this.css('backgroundImage') === 'none') {
+                        if (this.backgroundImage === '') {
                             properties = properties.concat(CSS_PROPERTIES.background.value as string[]);
                             --properties.length;
+                        }
+                        if (this.borderTopWidth === 0) {
+                            properties = properties.concat(CSS_PROPERTIES.borderTop.value as string[]);
+                        }
+                        if (this.borderRightWidth === 0) {
+                            properties = properties.concat(CSS_PROPERTIES.borderRight.value as string[]);
+                        }
+                        if (this.borderBottomWidth === 0) {
+                            properties = properties.concat(CSS_PROPERTIES.borderBottom.value as string[]);
+                        }
+                        if (this.borderLeftWidth === 0) {
+                            properties = properties.concat(CSS_PROPERTIES.borderLeft.value as string[]);
                         }
                         if (this.cssAny('backgroundColor', ['none', 'transparent', 'rgba(0, 0, 0, 0)'])) {
                             properties.push('backgroundColor');
                         }
-                        if (this.css('borderTopStyle') === 'none') {
-                            properties = properties.concat(CSS_PROPERTIES.borderLeft.value as string[]);
-                        }
-                        if (this.css('borderRightStyle') === 'none') {
-                            properties = properties.concat(CSS_PROPERTIES.borderRight.value as string[]);
-                        }
-                        if (this.css('borderBottomStyle') === 'none') {
-                            properties = properties.concat(CSS_PROPERTIES.borderBottom.value as string[]);
-                        }
-                        if (this.css('borderLeftStyle') === 'none') {
-                            properties = properties.concat(CSS_PROPERTIES.borderLeft.value as string[]);
-                        }
-                        if (this.style.borderRadius !== '0px') {
+                        if (this.css('borderRadius') === '0px') {
                             properties = properties.concat(CSS_PROPERTIES.borderRadius.value as string[]);
                         }
                         this.cssCopy(node, ...properties);
@@ -705,6 +705,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             'borderRightStyle',
                             'borderBottomStyle',
                             'borderLeftStyle',
+                            'borderRadius',
                             'borderTopLeftRadius',
                             'borderTopRightRadius',
                             'borderBottomRightRadius',

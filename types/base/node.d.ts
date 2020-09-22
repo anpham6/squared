@@ -10,6 +10,7 @@ interface CacheValue extends Partial<BoxModel>, Partial<Dimension>, Partial<BoxR
     positionRelative?: boolean;
     contentBoxWidth?: number;
     contentBoxHeight?: number;
+    outlineWidth?: number;
     inline?: boolean;
     inlineStatic?: boolean;
     block?: boolean;
