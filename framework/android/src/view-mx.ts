@@ -1475,8 +1475,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                 }
                 if (!this.svgElement) {
-                    const opacity = this.css('opacity');
-                    if (opacity !== '1') {
+                    const opacity = this.valueOf('opacity');
+                    if (opacity !== '' && parseFloat(opacity) !== 1) {
                         this.android('alpha', opacity);
                     }
                 }
@@ -2310,8 +2310,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             };
             setAttribute('layout_gravity');
             setAttribute('gravity');
-            if (this.has('transform')) {
-                const transforms = parseTransform(this.css('transform'), { accumulate: true, boundingBox: this.bounds, fontSize: this.fontSize });
+            const transform = this.valueOf('transform');
+            if (transform !== '') {
+                const transforms = parseTransform(transform, { accumulate: true, boundingBox: this.bounds, fontSize: this.fontSize });
                 let offsetX = 0,
                     offsetY = 0,
                     pivoted: Undef<boolean>;
@@ -2388,9 +2389,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     this.android('minWidth') !== '' || this.android('minHeight') !== '' ||
                     this.android('maxWidth') !== '' || this.android('maxHeight') !== '')
                 {
-                    if (!isPercent(layoutWidth) || !isPercent(layoutHeight)) {
-                        this.android('adjustViewBounds', 'true');
-                    }
+                    this.android('adjustViewBounds', 'true');
                 }
             }
             else if (this.rendering) {

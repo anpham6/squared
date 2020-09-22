@@ -1359,6 +1359,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         case 'none':
                             scaleType = 'center';
                             break;
+                        default:
+                            if (node.width > 0 && node.height > 0) {
+                                scaleType = 'fitXY';
+                            }
+                            break;
                     }
                     if (scaleType) {
                         node.android('scaleType', scaleType);
