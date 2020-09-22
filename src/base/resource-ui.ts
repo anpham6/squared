@@ -954,10 +954,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
 
     public reset() {
         super.reset();
-        const STORED = ResourceUI.STORED;
-        for (const name in STORED) {
-            (STORED[name] as Map<unknown, unknown>).clear();
-        }
+        ResourceUI.resetDataMap(ResourceUI.STORED);
     }
 
     public writeRawImage(options: RawDataOptions) {

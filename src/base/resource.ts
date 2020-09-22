@@ -34,15 +34,21 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
         return match ? match[1] : '';
     }
 
+    public static resetDataMap(data: ResourceMap) {
+        for (const name in data) {
+            const map = data[name];
+            if (map.size) {
+                map.clear();
+            }
+        }
+    }
+
     private _fileHandler: Null<File<T>> = null;
 
     constructor(public readonly application: Application<T>) {}
 
     public reset() {
-        const ASSETS = Resource.ASSETS;
-        for (const name in ASSETS) {
-            (ASSETS[name] as Map<unknown, unknown>).clear();
-        }
+        Resource.resetDataMap(Resource.ASSETS);
         if (this._fileHandler) {
             this._fileHandler.reset();
         }

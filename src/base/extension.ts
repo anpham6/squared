@@ -7,7 +7,7 @@ export default class Extension<T extends Node> implements squared.base.Extension
     public enabled = true;
     public controller!: Controller<T>;
     public resource: Null<Resource<T>> = null;
-    public data = new WeakMap<T, unknown>();
+    public readonly data = new WeakMap<T, unknown>();
     public readonly options: StandardMap = {};
     public readonly dependencies: ExtensionDependency[] = [];
     public readonly subscribers = new Set<T>();
@@ -39,8 +39,9 @@ export default class Extension<T extends Node> implements squared.base.Extension
     }
 
     public reset() {
-        this.subscribers.clear();
-        this.data = new WeakMap();
+        if (this.subscribers.size) {
+            this.subscribers.clear();
+        }
     }
 
     public beforeParseDocument(sessionId: string) {}

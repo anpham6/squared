@@ -218,6 +218,7 @@ declare module "base" {
         static hasMimeType(formats: MIMEOrAll, value: string): boolean;
         static canCompressImage(filename: string, mimeType?: string): boolean;
         static getExtension(value: string): string;
+        static resetDataMap(data: ResourceMap): void;
         readonly application: Application<T>;
         reset(): void;
         addImage(element: HTMLImageElement): void;
