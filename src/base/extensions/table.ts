@@ -25,9 +25,8 @@ function setBorderStyle(node: NodeUI, attr: string, including: NodeUI) {
     const cssStyle = attr + 'Style';
     node.ascend({ including }).some((item: NodeUI) => {
         if (item.has(cssStyle)) {
-            const cssColor = attr + 'Color';
             const cssWidth = attr + 'Width';
-            node.cssApply(item.cssAsObject(cssStyle, cssColor, cssWidth));
+            node.cssApply(item.cssAsObject(cssStyle, attr + 'Color', cssWidth));
             node.unsetCache(cssWidth);
             return true;
         }
