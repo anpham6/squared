@@ -37,28 +37,31 @@ export default class FloatingActionButton<T extends View> extends squared.base.E
     }
 
     public processNode(node: T, parent: T) {
-        const resource = this.resource as android.base.Resource<T>;
-        const element = node.element as HTMLElement;
-        const target = node.target;
-        const options = createViewAttribute(this.options[element.id.trim()]);
-        const colorData = parseColor(node.backgroundColor, node.toFloat('opacity', 1));
-        const colorName = colorData ? Resource.addColor(colorData) : '';
-        assignEmptyValue(options, 'android', 'backgroundTint', colorName !== '' ? `@color/${colorName}` : '?attr/colorAccent');
+        const { element, target, backgroundColor } = node;
+        const options = createViewAttribute(this.options[element!.id.trim()]);
+        let colorName: Undef<string>;
+        if (backgroundColor !== '') {
+            const colorData = parseColor(backgroundColor, node.toFloat('opacity', 1));
+            if (colorData) {
+                colorName = Resource.addColor(colorData);
+            }
+        }
+        assignEmptyValue(options, 'android', 'backgroundTint', colorName ? `@color/${colorName}` : '?attr/colorAccent');
         if (!node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
             assignEmptyValue(options, 'android', 'focusable', 'false');
         }
         let src: Undef<string>;
-        switch (element.tagName) {
+        switch (element!.tagName) {
             case 'IMG':
-                src = resource.addImageSrc(element as HTMLImageElement, PREFIX_DIALOG);
+                src = (this.resource as android.base.Resource<T>).addImageSrc(element as HTMLImageElement, PREFIX_DIALOG);
                 break;
             case 'INPUT':
                 if ((element as HTMLInputElement).type === 'image') {
-                    src = resource.addImageSrc(element as HTMLImageElement, PREFIX_DIALOG);
+                    src = (this.resource as android.base.Resource<T>).addImageSrc(element as HTMLImageElement, PREFIX_DIALOG);
                     break;
                 }
             case 'BUTTON':
-                src = resource.addImageSrc(node.backgroundImage, PREFIX_DIALOG);
+                src = (this.resource as android.base.Resource<T>).addImageSrc(node.backgroundImage, PREFIX_DIALOG);
                 break;
         }
         if (src) {

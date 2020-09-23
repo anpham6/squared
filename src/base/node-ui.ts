@@ -453,7 +453,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     protected _boxReset?: number[];
     protected _boxAdjustment?: number[];
     protected _documentParent?: T;
-    protected abstract _namespaces: ObjectMap<StringMapChecked>;
+    protected abstract _namespaces: ObjectMap<StringMap>;
 
     private _locked: Null<ObjectMapNested<boolean>> = null;
     private _renderAs?: T;
@@ -512,7 +512,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 overwrite = false;
             }
             if (!overwrite && obj[attr]) {
-                return obj[attr];
+                return obj[attr]!;
             }
             else {
                 obj[attr] = value;

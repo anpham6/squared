@@ -1082,7 +1082,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                 fontStyle: node.css('fontStyle'),
                 fontSize: node.fontSize,
                 fontWeight,
-                color: color && color.valueAsRGBA || ''
+                color: color ? color.valueAsRGBA : ''
             } as FontAttribute);
         }
     }

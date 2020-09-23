@@ -639,8 +639,8 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
         const cellData = this.data.get(node) as Undef<CssGridCellData>;
         if (mainData && cellData) {
             const row = mainData.row;
-            const alignSelf = node.valueOf('alignSelf') || mainData.alignItems;
-            const justifySelf = node.valueOf('justifySelf') || mainData.justifyItems;
+            const alignSelf = node.cssInitial('alignSelf') || mainData.alignItems;
+            const justifySelf = node.cssInitial('justifySelf') || mainData.justifyItems;
             let renderAs: Undef<T>,
                 outputAs: Undef<NodeXmlTemplate<T>>;
             if (REGEXP_ALIGNSELF.test(alignSelf) || REGEXP_JUSTIFYSELF.test(justifySelf) || parent.layoutConstraint) {

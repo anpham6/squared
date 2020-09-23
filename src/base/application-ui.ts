@@ -54,20 +54,24 @@ function getFloatAlignmentType(nodes: NodeUI[]) {
     return result;
 }
 
-function checkPseudoDimension(styleMap: StringMapChecked, after: boolean, absolute: boolean) {
+function checkPseudoDimension(styleMap: StringMap, after: boolean, absolute: boolean) {
     switch (styleMap.display) {
         case 'inline':
         case 'block':
         case 'inherit':
         case 'initial':
-            if ((after || !parseFloat(styleMap.width)) && !parseFloat(styleMap.height)) {
+        case 'unset': {
+            const { width, height } = styleMap;
+            if ((after || !width || !parseFloat(width)) && (!height || !parseFloat(height))) {
                 for (const attr in styleMap) {
-                    if (/(padding|Width|Height)/.test(attr) && parseFloat(styleMap[attr]) || !absolute && attr.startsWith('margin') && parseFloat(styleMap[attr])) {
+                    const value = styleMap[attr]!;
+                    if (/(padding|Width|Height)/.test(attr) && parseFloat(value) || !absolute && attr.startsWith('margin') && parseFloat(value)) {
                         return true;
                     }
                 }
                 return false;
             }
+        }
         default:
             return true;
     }
@@ -1537,19 +1541,16 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected createPseduoElement(element: HTMLElement, pseudoElt: PseudoElt, sessionId: string) {
-        let styleMap = getElementCache<StringMapChecked>(element, 'styleMap' + pseudoElt, sessionId);
+        let styleMap = getElementCache<StringMap>(element, 'styleMap' + pseudoElt, sessionId);
         if (element.tagName === 'Q') {
             if (!styleMap) {
                 styleMap = {};
                 setElementCache(element, 'styleMap' + pseudoElt, styleMap, sessionId);
             }
-            let content = styleMap.content;
-            if (!content) {
-                content = getStyle(element, pseudoElt).getPropertyValue('content') || (pseudoElt === '::before' ? 'open-quote' : 'close-quote');
-                styleMap.content = content;
-            }
+            styleMap.content ||= getStyle(element, pseudoElt).getPropertyValue('content') || (pseudoElt === '::before' ? 'open-quote' : 'close-quote');
         }
         if (styleMap) {
+            styleMap.position ||= 'static';
             styleMap.display ||= 'inline';
             let value = styleMap.content;
             if (value) {

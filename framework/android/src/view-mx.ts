@@ -531,7 +531,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public alignedWithX?: T;
         public alignedWithY?: T;
 
-        protected _namespaces: ObjectMap<StringMapChecked> = { android: {} };
+        protected _namespaces: ObjectMap<StringMap> = { android: {} };
         protected _containerType = 0;
         protected _cache!: CacheValueUI;
         protected _localSettings!: LocalSettingsUI;
@@ -1475,8 +1475,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                 }
                 if (!this.svgElement) {
-                    const opacity = this.valueOf('opacity');
-                    if (opacity !== '' && parseFloat(opacity) !== 1) {
+                    const opacity = this.css('opacity');
+                    if (opacity !== '1') {
                         this.android('alpha', opacity);
                     }
                 }
@@ -2043,7 +2043,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public combine(...objs: string[]) {
             const all = objs.length === 0;
             const result: string[] = [];
-            let id = '',
+            let id: Undef<string>,
                 requireId: Undef<boolean>;
             for (const name in this._namespaces) {
                 if (all || objs.includes(name)) {
@@ -2058,7 +2058,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     }
                                     else {
                                         const data: ObjectMap<string | boolean> = {};
-                                        let value = obj[attr];
+                                        let value = obj[attr]!;
                                         if (!this.supported(attr, value, data)) {
                                             continue;
                                         }
@@ -2080,7 +2080,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                         id = obj.id;
                                     }
                                     else {
-                                        result.push(`${prefix + attr}="${obj[attr]}"`);
+                                        result.push(`${prefix + attr}="${obj[attr]!}"`);
                                     }
                                 }
                             }
@@ -2090,7 +2090,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             prefix = '';
                         default:
                             for (const attr in obj) {
-                                result.push(`${prefix + attr}="${obj[attr]}"`);
+                                result.push(`${prefix + attr}="${obj[attr]!}"`);
                             }
                             break;
                     }
@@ -2310,7 +2310,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             };
             setAttribute('layout_gravity');
             setAttribute('gravity');
-            const transform = this.valueOf('transform');
+            const transform = this.cssInitial('transform');
             if (transform !== '') {
                 const transforms = parseTransform(transform, { accumulate: true, boundingBox: this.bounds, fontSize: this.fontSize });
                 let offsetX = 0,

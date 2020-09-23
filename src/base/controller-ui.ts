@@ -135,7 +135,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             }, sessionId);
         }
         else {
-            let styleMap = getElementCache<StringMapChecked>(element, 'styleMap', sessionId);
+            let styleMap = getElementCache<StringMap>(element, 'styleMap', sessionId);
             if (!styleMap) {
                 styleMap = {};
                 setElementCache(element, 'styleMap', styleMap, sessionId);
@@ -175,10 +175,10 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         case 'time':
                         case 'date':
                         case 'datetime-local':
-                            styleMap.paddingTop = formatPX(convertFloat(styleMap.paddingTop) + 1);
-                            styleMap.paddingRight = formatPX(convertFloat(styleMap.paddingRight) + 1);
-                            styleMap.paddingBottom = formatPX(convertFloat(styleMap.paddingBottom) + 1);
-                            styleMap.paddingLeft = formatPX(convertFloat(styleMap.paddingLeft) + 1);
+                            styleMap.paddingTop = formatPX(convertFloat(styleMap.paddingTop!) + 1);
+                            styleMap.paddingRight = formatPX(convertFloat(styleMap.paddingRight!) + 1);
+                            styleMap.paddingBottom = formatPX(convertFloat(styleMap.paddingBottom!) + 1);
+                            styleMap.paddingLeft = formatPX(convertFloat(styleMap.paddingLeft!) + 1);
                             break;
                         default: {
                             const result = setBorderStyle(styleMap, this._settingsStyle.inputBorderColor);

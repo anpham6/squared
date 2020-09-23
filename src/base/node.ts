@@ -2246,13 +2246,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         const result = this._cache.flexdata;
         if (result === undefined) {
             if (this.flexElement) {
-                const { flexWrap, flexDirection, alignContent, justifyContent } = this.cssAsObject('flexWrap', 'flexDirection', 'alignContent', 'justifyContent') as StringMapChecked;
-                const row = flexDirection.startsWith('row');
+                const { flexWrap, flexDirection, alignContent, justifyContent } = this.cssAsObject('flexWrap', 'flexDirection', 'alignContent', 'justifyContent');
+                const row = flexDirection!.startsWith('row');
                 return this._cache.flexdata = {
                     row,
                     column: !row,
-                    reverse: flexDirection.endsWith('reverse'),
-                    wrap: flexWrap.startsWith('wrap'),
+                    reverse: flexDirection!.endsWith('reverse'),
+                    wrap: flexWrap!.startsWith('wrap'),
                     wrapReverse: flexWrap === 'wrap-reverse',
                     alignContent,
                     justifyContent
@@ -2585,8 +2585,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             if (this.pageFlow && !this.floating && !this.tableElement) {
                 const display = this.display;
                 if (display.startsWith('inline') || display === 'list-item') {
-                    const verticalAlign = this.css('verticalAlign');
-                    return this._cache.baseline = verticalAlign === 'baseline' || !isNaN(parseFloat(verticalAlign));
+                    const value = this.css('verticalAlign');
+                    return this._cache.baseline = value === 'baseline' || !isNaN(parseFloat(value));
                 }
             }
             return this._cache.baseline = false;

@@ -16,7 +16,6 @@ type FunctionVoid = () => void;
 type FunctionSort<T = any> = (a: T, b: T) => number;
 
 type StringMap = Record<string, Undef<string>>;
-type StringMapChecked = Record<string, string>;
 type CallbackResult = (result: any) => void;
 
 type NumString = number | string;
