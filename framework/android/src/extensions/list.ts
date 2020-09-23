@@ -23,7 +23,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
         const layout = new LayoutUI(parent, node);
         if (layout.linearY) {
             layout.rowCount = node.size();
-            layout.columnCount = node.find(item => item.cssInitial('listStylePosition') === 'inside') ? 3 : 2;
+            layout.columnCount = node.find((item: T) => item.valueAt('listStylePosition') === 'inside') ? 3 : 2;
             layout.setContainerType(CONTAINER_NODE.GRID, NODE_ALIGNMENT.VERTICAL);
         }
         else if (layout.linearX || layout.singleRowAligned) {

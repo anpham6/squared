@@ -91,7 +91,7 @@ export default class Grid <T extends View> extends squared.base.extensions.Grid<
 
     public postConstraints(node: T) {
         const columnCount = this.data.get(node) as Undef<number>;
-        if (columnCount && node.cssInitial('borderCollapse') !== 'collapse') {
+        if (columnCount && node.valueAt('borderCollapse') !== 'collapse') {
             let paddingTop = 0,
                 paddingRight = 0,
                 paddingBottom = 0,

@@ -192,7 +192,7 @@ function getTextBottom<T extends View>(nodes: T[]): T[] {
 }
 
 function isConstraintLayout(layout: LayoutUI<View>, vertical: boolean) {
-    if (layout.parent.flexElement && (layout.parent.cssInitial('alignItems') === 'baseline' || layout.find(item => item.flexbox.alignSelf === 'baseline')) || layout.singleRowAligned && layout.find(item => item.positionRelative && item.percentWidth === 0 && Math.ceil(item.actualRect('bottom', 'bounds')) > Math.floor(layout.node.box.bottom))) {
+    if (layout.parent.flexElement && (layout.parent.valueAt('alignItems') === 'baseline' || layout.find(item => item.flexbox.alignSelf === 'baseline')) || layout.singleRowAligned && layout.find(item => item.positionRelative && item.percentWidth === 0 && Math.ceil(item.actualRect('bottom', 'bounds')) > Math.floor(layout.node.box.bottom))) {
         return false;
     }
     return layout.find(item => (item.rightAligned || item.centerAligned) && layout.size() > 1 && (item.positionStatic && item.marginTop >= 0 || item.positionRelative && Math.floor(item.actualRect('bottom', 'bounds')) <= Math.ceil(layout.node.box.bottom)) && layout.singleRowAligned || item.percentWidth > 0 && item.percentWidth < 1 || item.hasPX('maxWidth')) && (!vertical || layout.every(item => item.marginTop >= 0));
@@ -1343,7 +1343,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 else {
                     let scaleType: Undef<string>;
-                    switch (node.cssInitial('objectFit')) {
+                    switch (node.valueAt('objectFit')) {
                         case 'fill':
                             scaleType = 'fitXY';
                             break;
@@ -1392,7 +1392,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         node.android('src', `@drawable/${src}`);
                     }
                 }
-                if (!node.pageFlow && parent === node.absoluteParent && (node.left < 0 && parent.cssInitial('overflowX') === 'hidden' || node.top < 0 && parent.cssInitial('overflowY') === 'hidden')) {
+                if (!node.pageFlow && parent === node.absoluteParent && (node.left < 0 && parent.valueAt('overflowX') === 'hidden' || node.top < 0 && parent.valueAt('overflowY') === 'hidden')) {
                     const container = this.application.createNode(node.sessionId, { parent, innerWrapped: node });
                     container.setControlType(CONTAINER_TAGNAME.FRAME, CONTAINER_NODE.FRAME);
                     container.inherit(node, 'base');
@@ -1676,10 +1676,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (node.has('letterSpacing')) {
                     node.android('letterSpacing', truncate(node.toFloat('letterSpacing') / node.fontSize, node.localSettings.floatPrecision));
                 }
-                if (node.cssInitial('textAlign') === 'justify') {
+                if (node.valueAt('textAlign') === 'justify') {
                     node.android('justificationMode', 'inter_word');
                 }
-                const textShadow = node.cssInitial('textShadow');
+                const textShadow = node.valueAt('textShadow');
                 if (textShadow !== '') {
                     const match = /((?:rgb|hsl)a?\([^)]+\)|[a-z]{4,})?\s*(-?[\d.]+[a-z]+)\s+(-?[\d.]+[a-z]+)\s*([\d.]+[a-z]+)?/.exec(textShadow);
                     if (match) {
@@ -1699,7 +1699,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 switch (node.css('whiteSpace')) {
                     case 'nowrap':
                         node.android('singleLine', 'true');
-                        if (node.cssInitial('textOverflow') === 'ellipsis' && node.cssInitial('overflowX') === 'hidden') {
+                        if (node.valueAt('textOverflow') === 'ellipsis' && node.valueAt('overflowX') === 'hidden') {
                             node.android('ellipsize', 'end');
                         }
                         break;
@@ -1707,7 +1707,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         node.android('breakStrategy', 'simple');
                         break;
                     default:
-                        if (node.cssInitial('overflowWrap') === 'break-word') {
+                        if (node.valueAt('overflowWrap') === 'break-word') {
                             node.android('breakStrategy', 'high_quality');
                         }
                         break;
@@ -2120,7 +2120,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const clearMap = this.application.clearMap;
                 const emptyMap = clearMap.size === 0;
                 const baseWidth = node.marginLeft + node.marginRight < 0 ? node.marginRight : 0;
-                const lineWrap = node.cssInitial('whiteSpace') !== 'nowrap';
+                const lineWrap = node.css('whiteSpace') !== 'nowrap';
                 let boxWidth = documentParent.actualBoxWidth(getBoxWidth(node)),
                     rowWidth = baseWidth,
                     rows!: T[][],
@@ -3476,7 +3476,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 node.anchor(LT, 'parent', true);
                 return;
             }
-            if (!node.pageFlow && node.cssInitial('position') !== 'fixed' && !parent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
+            if (!node.pageFlow && node.valueAt('position') !== 'fixed' && !parent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
                 const adjustBodyMargin = (item: T, position: string) => {
                     if (item.leftTopAxis) {
                         const absoluteParent = item.absoluteParent as T;

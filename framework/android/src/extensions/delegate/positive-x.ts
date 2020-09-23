@@ -49,7 +49,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
         let right: Undef<boolean>,
             bottom: Undef<boolean>;
         node.each((item: View) => {
-            const fixed = rootElement && item.cssInitial('position') === 'fixed';
+            const fixed = rootElement && item.valueAt('position') === 'fixed';
             if (item.pageFlow || !contentBox && !fixed) {
                 return;
             }
@@ -195,7 +195,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
         if (mainData) {
             const documentId = node.documentId;
             for (const item of mainData.children) {
-                const nested = !item.pageFlow && (item.absoluteParent !== item.documentParent || item.cssInitial('position') === 'fixed' || node.documentBody);
+                const nested = !item.pageFlow && (item.absoluteParent !== item.documentParent || item.valueAt('position') === 'fixed' || node.documentBody);
                 const wrapper = item.outerMostWrapper as T;
                 if (item.hasPX('left')) {
                     if (!nested) {

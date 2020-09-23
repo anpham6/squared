@@ -15,7 +15,7 @@ interface NegativeXData {
 
 export default class NegativeX<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
-        return !node.isEmpty() && node.cssInitial('overflowX') !== 'hidden' && !node.rootElement;
+        return !node.isEmpty() && node.valueAt('overflowX') !== 'hidden' && !node.rootElement;
     }
 
     public condition(node: T) {
@@ -75,7 +75,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
             container.setLayoutWidth('wrap_content');
         }
         else if (node.hasPX('width')) {
-            container.css('width', node.css('width'), true);
+            container.css('width', node.valueAt('width'), true);
             node.setLayoutWidth('0px');
         }
         node.resetBox(BOX_STANDARD.MARGIN_TOP | BOX_STANDARD.MARGIN_BOTTOM, container);

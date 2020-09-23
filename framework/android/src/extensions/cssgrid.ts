@@ -545,7 +545,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
             node.resetBox(BOX_STANDARD.PADDING, container);
             unsetContentBox = true;
             if (CssGrid.isJustified(node)) {
-                node.setLayoutWidth(getLayoutDimension(node.cssInitial('justifyContent')));
+                node.setLayoutWidth(getLayoutDimension(node.valueAt('justifyContent')));
             }
             else if (node.hasPX('width', { percent: false })) {
                 node.setLayoutWidth('match_parent');
@@ -554,7 +554,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 container.setLayoutWidth(node.blockStatic ? 'match_parent' : 'wrap_content');
             }
             if (CssGrid.isAligned(node)) {
-                node.setLayoutHeight(getLayoutDimension(node.cssInitial('alignContent')));
+                node.setLayoutHeight(getLayoutDimension(node.valueAt('alignContent')));
             }
             else if (node.hasPX('height', { percent: false })) {
                 node.setLayoutHeight('match_parent');
@@ -639,8 +639,8 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
         const cellData = this.data.get(node) as Undef<CssGridCellData>;
         if (mainData && cellData) {
             const row = mainData.row;
-            const alignSelf = node.cssInitial('alignSelf') || mainData.alignItems;
-            const justifySelf = node.cssInitial('justifySelf') || mainData.justifyItems;
+            const alignSelf = node.valueAt('alignSelf') || mainData.alignItems;
+            const justifySelf = node.valueAt('justifySelf') || mainData.justifyItems;
             let renderAs: Undef<T>,
                 outputAs: Undef<NodeXmlTemplate<T>>;
             if (REGEXP_ALIGNSELF.test(alignSelf) || REGEXP_JUSTIFYSELF.test(justifySelf) || parent.layoutConstraint) {

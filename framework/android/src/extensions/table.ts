@@ -142,7 +142,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                 );
             }
             node.mergeGravity('layout_gravity', 'fill');
-            if (node.textEmpty && parent.cssInitial('emptyCells') === 'hide') {
+            if (node.textEmpty && parent.valueAt('emptyCells') === 'hide') {
                 node.hide({ hidden: true });
             }
         }
@@ -154,7 +154,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
             if (node.bounds.width > layoutWidth) {
                 node.setLayoutWidth(formatPX(node.bounds.width));
             }
-            if (node.cssInitial('width') === 'auto' && node.every((item: T) => item.inlineWidth)) {
+            if (node.css('width') === 'auto' && node.every((item: T) => item.inlineWidth)) {
                 node.renderEach((item: T) => {
                     item.setLayoutWidth('0px');
                     item.android('layout_columnWeight', '1');

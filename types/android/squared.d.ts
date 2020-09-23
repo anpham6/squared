@@ -138,10 +138,11 @@ declare namespace base {
         getMatchConstraint(parent?: View): string;
         getAnchorPosition(parent: View, horizontal: boolean, modifyAnchor?: boolean): Partial<BoxRect>;
         isUnstyled(checkMargin?: boolean): boolean;
-        getHorizontalBias(): number;
-        getVerticalBias(): number;
+        getHorizontalBias(rect?: BoxRect): number;
+        getVerticalBias(rect?: BoxRect): number;
         adjustAbsolutePaddingOffset(direction: number, value: number): number;
         hasFlex(direction: FlowDirectionAttr): boolean;
+        valueAt(attr: string): string;
         set anchored(value);
         get anchored(): boolean;
         set localSettings(value);
