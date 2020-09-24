@@ -1,4 +1,4 @@
-/* squared.svg 2.0.0
+/* squared.svg 2.0.1
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -14,6 +14,7 @@
     var Pattern = squared.lib.base.Pattern;
     const { TRANSFORM: REGEXP_TRANSFORM } = squared.lib.regex;
     const {
+        CSS_PROPERTIES,
         calculateStyle: calculateCssStyle,
         calculateVar,
         calculateVarAsString,
@@ -25,7 +26,7 @@
         parseUnit,
     } = squared.lib.css;
     const { getNamedItem } = squared.lib.dom;
-    const { clamp, convertRadian, hypotenuse, truncateFraction, truncateTrailingZero } = squared.lib.math;
+    const { convertRadian, hypotenuse, truncateFraction, truncateTrailingZero } = squared.lib.math;
     const { getElementCache } = squared.lib.session;
     const { convertCamelCase, resolvePath, splitPair } = squared.lib.util;
     const REGEXP_TRUNCATECACHE = new Map();
@@ -58,6 +59,201 @@
     const getViewportArea = (viewBox, min) =>
         min ? Math.min(viewBox.width, viewBox.height) : hypotenuse(viewBox.width, viewBox.height);
     const createParseUnitOptions = (element, value) => (hasEm(value) ? { fontSize: getFontSize(element) } : undefined);
+    Object.assign(CSS_PROPERTIES, {
+        alignmentBaseline: {
+            trait: 0,
+            value: 'auto',
+        },
+        baselineShift: {
+            trait: 1 /* CALC */ | 256 /* UNIT */,
+            value: '0',
+        },
+        clipRule: {
+            trait: 0,
+            value: 'nonzero',
+        },
+        colorInterpolation: {
+            trait: 0,
+            value: 'sRGB',
+        },
+        colorIinterpolationFilters: {
+            trait: 0,
+            value: 'linearRGB',
+        },
+        cx: {
+            trait: 1 /* CALC */ | 256 /* UNIT */,
+            value: '0',
+        },
+        cy: {
+            trait: 1 /* CALC */ | 256 /* UNIT */,
+            value: '0',
+        },
+        dominantBaseline: {
+            trait: 0,
+            value: 'auto',
+        },
+        fill: {
+            trait: 1 /* CALC */ | 16 /* COLOR */,
+            value: 'black',
+        },
+        fillOpacity: {
+            trait: 1 /* CALC */,
+            value: '1',
+        },
+        fillRule: {
+            trait: 0,
+            value: 'nonzero',
+        },
+        floodColor: {
+            trait: 1 /* CALC */ | 16 /* COLOR */,
+            value: 'black',
+        },
+        floodOpacity: {
+            trait: 1 /* CALC */,
+            value: '1',
+        },
+        lightingColor: {
+            trait: 1 /* CALC */ | 16 /* COLOR */,
+            value: 'white',
+        },
+        markerEnd: {
+            trait: 0,
+            value: 'none',
+        },
+        markerMid: {
+            trait: 0,
+            value: 'none',
+        },
+        markerStart: {
+            trait: 0,
+            value: 'none',
+        },
+        mask: {
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 64 /* NONE */,
+            value: [
+                'maskImage',
+                'maskMode',
+                'maskRepeat',
+                'maskPosition',
+                'maskClip',
+                'maskOrigin',
+                'maskSize',
+                'maskComposite',
+            ],
+        },
+        maskComposite: {
+            trait: 0,
+            value: 'add',
+        },
+        maskClip: {
+            trait: 0,
+            value: 'border-box',
+        },
+        maskImage: {
+            trait: 1 /* CALC */,
+            value: 'none',
+        },
+        maskMode: {
+            trait: 0,
+            value: 'match-source',
+        },
+        maskRepeat: {
+            trait: 0,
+            value: 'no-repeat',
+        },
+        maskOrigin: {
+            trait: 0,
+            value: 'border-box',
+        },
+        maskPosition: {
+            trait: 1 /* CALC */,
+            value: 'center',
+        },
+        maskSize: {
+            trait: 1 /* CALC */,
+            value: 'auto',
+        },
+        pointerEvents: {
+            trait: 0,
+            value: 'visiblePainted',
+        },
+        r: {
+            trait: 1 /* CALC */ | 256 /* UNIT */,
+            value: '0',
+        },
+        rx: {
+            trait: 1 /* CALC */ | 256 /* UNIT */,
+            value: 'auto',
+        },
+        ry: {
+            trait: 1 /* CALC */ | 256 /* UNIT */,
+            value: 'auto',
+        },
+        shapeRendering: {
+            trait: 0,
+            value: 'auto',
+        },
+        stopColor: {
+            trait: 1 /* CALC */ | 16 /* COLOR */,
+            value: 'black',
+        },
+        stopOpacity: {
+            trait: 1 /* CALC */,
+            value: '1',
+        },
+        stroke: {
+            trait: 1 /* CALC */ | 16 /* COLOR */,
+            value: 'none',
+        },
+        strokeDasharray: {
+            trait: 0,
+            value: 'none',
+        },
+        strokeDashoffset: {
+            trait: 1 /* CALC */,
+            value: '0',
+        },
+        strokeLinecap: {
+            trait: 0,
+            value: 'butt',
+        },
+        strokeLinejoin: {
+            trait: 0,
+            value: 'miter',
+        },
+        strokeMiterlimit: {
+            trait: 1 /* CALC */,
+            value: '4',
+        },
+        strokeOpacity: {
+            trait: 1 /* CALC */,
+            value: '1',
+        },
+        strokeWidth: {
+            trait: 1 /* CALC */ | 256 /* UNIT */,
+            value: '1px',
+        },
+        textAnchor: {
+            trait: 0,
+            value: 'start',
+        },
+        textRendering: {
+            trait: 0,
+            value: 'auto',
+        },
+        vectorEffect: {
+            trait: 0,
+            value: 'none',
+        },
+        x: {
+            trait: 1 /* CALC */ | 256 /* UNIT */,
+            value: '0',
+        },
+        y: {
+            trait: 1 /* CALC */ | 256 /* UNIT */,
+            value: '0',
+        },
+    });
     const CACHE_VIEWNAME = new Map();
     const PATTERN_CUBICBEZIER =
         '([01](?:\\.\\d+)?),?\\s+(-?\\d+(?:\\.\\d+)?),?\\s+([01](?:\\.\\d+)?),?\\s+(-?\\d+(?:\\.\\d+)?)';
@@ -441,16 +637,7 @@
         return result;
     }
     function calculateStyle(element, attr, value) {
-        attr = convertCamelCase(attr);
         switch (attr) {
-            case 'clipPath':
-            case 'height':
-            case 'offsetAnchor':
-            case 'offsetPath':
-            case 'transform':
-            case 'transformOrigin':
-            case 'width':
-                return calculateCssStyle(element, attr, value, getNearestViewBox(element));
             case 'animationDelay':
             case 'animationDuration':
             case 'animationIterationCount':
@@ -459,12 +646,14 @@
                 return calculateCssStyle(element, attr, value);
             case 'fill':
             case 'stroke':
+            case 'floodColor':
+            case 'lightingColor':
+            case 'stopColor':
                 return calculateCssStyle(element, 'fontColor', value);
             case 'fillOpacity':
-            case 'strokeOpacity': {
-                const result = calculateVar(element, value, { boundingSize: 1, unitType: 32 /* DECIMAL */ });
-                return !isNaN(result) ? clamp(result).toString() : '';
-            }
+            case 'strokeOpacity':
+            case 'floodOpacity':
+                return calculateCssStyle(element, 'opacity', value);
             case 'strokeMiterlimit': {
                 const result = calculateVar(element, value, {
                     supportPercent: false,
@@ -478,6 +667,19 @@
             getNearestViewBox(element) ||
             (element.viewportElement || element.parentElement || element).getBoundingClientRect();
         switch (attr) {
+            case 'transform':
+            case 'transformOrigin':
+            case 'offsetAnchor':
+            case 'offsetPath':
+            case 'clipPath':
+            case 'maskImage':
+            case 'maskPosition':
+            case 'maskSize':
+            case 'width':
+            case 'height':
+                return calculateCssStyle(element, attr, value, viewBox);
+            case 'baselineShift':
+                return calculateCssStyle(element, 'verticalAlign', value, viewBox);
             case 'cx':
             case 'x':
             case 'x1':
@@ -806,7 +1008,7 @@
             let result = '';
             for (let i = 0, length = values.length; i < length; ++i) {
                 const value = values[i];
-                result += (result !== '' ? ' ' : '') + value.key;
+                result += i > 0 ? ' ' + value.key : value.key;
                 switch (value.key.toUpperCase()) {
                     case 'M':
                     case 'L':
@@ -3034,7 +3236,7 @@
         }
     }
 
-    const { clamp: clamp$1, equal, multipleOf } = squared.lib.math;
+    const { clamp, equal, multipleOf } = squared.lib.math;
     const {
         hasBit: hasBit$2,
         hasKeys,
@@ -3377,7 +3579,7 @@
         }
         const duration = item.duration;
         const offset = actualTime - (delay + duration * iteration);
-        const fraction = offset === 0 ? (index === 0 ? 0 : 1) : clamp$1(offset / duration);
+        const fraction = offset === 0 ? (index === 0 ? 0 : 1) : clamp(offset / duration);
         let previousIndex = -1,
             nextIndex = -1;
         for (let l = 0, length = keyTimes.length; l < length; ++l) {
@@ -5997,6 +6199,7 @@
     } = squared.lib.css;
     const { getNamedItem: getNamedItem$7 } = squared.lib.dom;
     const {
+        convertCamelCase: convertCamelCase$1,
         convertWord,
         iterateArray: iterateArray$1,
         replaceMap: replaceMap$3,
@@ -6184,7 +6387,7 @@
                             for (const attr in data) {
                                 let value = data[attr];
                                 if (hasCalc(value)) {
-                                    value = calculateStyle(element, attr, value);
+                                    value = calculateStyle(element, convertCamelCase$1(attr), value);
                                 } else if (isCustomProperty(value)) {
                                     value = parseVar(element, value);
                                 }
@@ -7300,7 +7503,7 @@
     } = squared.lib.css;
     const { truncate: truncate$1 } = squared.lib.math;
     const {
-        convertCamelCase: convertCamelCase$1,
+        convertCamelCase: convertCamelCase$2,
         isNumber: isNumber$3,
         joinArray: joinArray$1,
         plainMap: plainMap$3,
@@ -7442,8 +7645,8 @@
             setAttribute(attr) {
                 const element = this.element;
                 let value = this.getAttribute(attr);
-                attr = convertCamelCase$1(attr);
                 if (value !== '') {
+                    attr = convertCamelCase$2(attr);
                     if (hasCalc$1(value)) {
                         value = calculateStyle(element, attr, value) || getComputedStyle(element)[attr];
                     } else if (isCustomProperty$1(value)) {

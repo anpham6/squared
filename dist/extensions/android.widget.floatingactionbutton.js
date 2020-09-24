@@ -1,4 +1,4 @@
-/* android.widget.floatingactionbutton 2.0.0
+/* android.widget.floatingactionbutton 2.0.1
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -23,17 +23,21 @@ this.android.widget.floatingactionbutton = (function () {
             return this.included(node.element);
         }
         processNode(node, parent) {
-            const resource = this.resource;
-            const element = node.element;
-            const target = node.target;
+            const { element, target } = node;
             const options = createViewAttribute(this.options[element.id.trim()]);
-            const colorData = parseColor(node.css('backgroundColor'), node.toFloat('opacity', 1));
-            const colorName = colorData ? Resource.addColor(colorData) : '';
+            const backgroundColor = node.css('backgroundColor');
+            let colorName;
+            if (backgroundColor !== 'none') {
+                const colorData = parseColor(backgroundColor);
+                if (colorData) {
+                    colorName = Resource.addColor(colorData);
+                }
+            }
             assignEmptyValue(
                 options,
                 'android',
                 'backgroundTint',
-                colorName !== '' ? `@color/${colorName}` : '?attr/colorAccent'
+                colorName ? `@color/${colorName}` : '?attr/colorAccent'
             );
             if (!node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
                 assignEmptyValue(options, 'android', 'focusable', 'false');
@@ -41,15 +45,15 @@ this.android.widget.floatingactionbutton = (function () {
             let src;
             switch (element.tagName) {
                 case 'IMG':
-                    src = resource.addImageSrc(element, PREFIX_DIALOG);
+                    src = this.resource.addImageSrc(element, PREFIX_DIALOG);
                     break;
                 case 'INPUT':
                     if (element.type === 'image') {
-                        src = resource.addImageSrc(element, PREFIX_DIALOG);
+                        src = this.resource.addImageSrc(element, PREFIX_DIALOG);
                         break;
                     }
                 case 'BUTTON':
-                    src = resource.addImageSrc(node.backgroundImage, PREFIX_DIALOG);
+                    src = this.resource.addImageSrc(node.backgroundImage, PREFIX_DIALOG);
                     break;
             }
             if (src) {

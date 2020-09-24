@@ -1,4 +1,4 @@
-/* vdom-lite-framework 2.0.0
+/* vdom-lite-framework 2.0.1
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -34,7 +34,6 @@
         CSS_PROPERTIES,
         checkMediaRule,
         getSpecificity,
-        hasComputedStyle,
         insertStyleSheetRule,
         getPropertiesAsTraits,
         parseKeyframes,
@@ -79,14 +78,17 @@
             this._nextId = 0;
             this._resourceHandler = null;
             this._extensionManager = null;
-            this._controllerHandler = new ControllerConstructor(this);
+            const controller = new ControllerConstructor(this);
+            this._controllerHandler = controller;
             if (ExtensionManagerConstructor) {
                 this._extensionManager = new ExtensionManagerConstructor(this);
             }
             if (ResourceConstructor) {
                 this._resourceHandler = new ResourceConstructor(this);
             }
-            this._afterInsertNode = this._controllerHandler.afterInsertNode;
+            this._afterInsertNode = controller.afterInsertNode.bind(controller);
+            this._includeElement = controller.includeElement.bind(controller);
+            this._preventNodeCascade = controller.preventNodeCascade.bind(controller);
             this.Node = nodeConstructor;
             this.init();
         }
@@ -116,7 +118,7 @@
         }
         createNode(sessionId, options) {
             const node = new this.Node(this.nextId, sessionId, options.element);
-            this.controllerHandler.afterInsertNode(node);
+            this._afterInsertNode(node);
             const afterInsertNode = this.getProcessing(sessionId).afterInsertNode;
             if (afterInsertNode) {
                 afterInsertNode.some(item => item.afterInsertNode(node));
@@ -183,36 +185,34 @@
         }
         parseDocument(...elements) {
             const [processing, rootElements] = this.createSessionThread(elements);
-            let documentRoot;
             if (rootElements.size === 0) {
                 return reject(DOCUMENT_ROOT_NOT_FOUND);
-            } else {
-                documentRoot = rootElements.values().next().value;
             }
-            const resourceHandler = this._resourceHandler;
+            const resource = this._resourceHandler;
+            const documentRoot = rootElements.values().next().value;
             const preloadItems = [];
             let preloaded, preloadImages, preloadFonts;
-            if (resourceHandler) {
-                ({ preloadImages, preloadFonts } = resourceHandler.userSettings);
+            if (resource) {
+                ({ preloadImages, preloadFonts } = resource.userSettings);
             }
             const parseSrcSet = value => {
                 if (value !== '') {
                     for (const uri of value.split(',')) {
-                        resourceHandler.addImageData(resolvePath(splitPairStart(uri.trim(), ' ')));
+                        resource.addImageData(resolvePath(splitPairStart(uri.trim(), ' ')));
                     }
                 }
             };
-            if (resourceHandler) {
+            if (resource) {
                 for (const element of rootElements) {
                     element.querySelectorAll('picture > source').forEach(source => parseSrcSet(source.srcset));
-                    element.querySelectorAll('video').forEach(source => resourceHandler.addImageData(source.poster));
+                    element.querySelectorAll('video').forEach(source => resource.addImageData(source.poster));
                     element
                         .querySelectorAll('input[type=image]')
-                        .forEach(image => resourceHandler.addImageData(image.src, image.width, image.height));
+                        .forEach(image => resource.addImageData(image.src, image.width, image.height));
                     element.querySelectorAll('object, embed').forEach(source => {
                         const src = source.data || source.src;
                         if (src && (source.type.startsWith('image/') || parseMimeType(src).startsWith('image/'))) {
-                            resourceHandler.addImageData(src.trim());
+                            resource.addImageData(src.trim());
                         }
                     });
                     element.querySelectorAll('svg use').forEach(use => {
@@ -220,7 +220,7 @@
                         if (href && href.indexOf('#') > 0) {
                             const src = resolvePath(splitPairStart(href, '#'));
                             if (FILE.SVG.test(src)) {
-                                resourceHandler.addImageData(src);
+                                resource.addImageData(src);
                             }
                         }
                     });
@@ -228,7 +228,7 @@
             }
             if (preloadImages) {
                 preloaded = [];
-                const { image, rawData } = resourceHandler.mapOfAssets;
+                const { image, rawData } = resource.mapOfAssets;
                 for (const item of image.values()) {
                     const uri = item.uri;
                     if (FILE.SVG.test(uri)) {
@@ -272,7 +272,7 @@
                 }
             }
             if (preloadFonts) {
-                for (const item of resourceHandler.mapOfAssets.fonts.values()) {
+                for (const item of resource.mapOfAssets.fonts.values()) {
                     for (const font of item) {
                         const srcUrl = font.srcUrl;
                         if (srcUrl && !preloadItems.includes(srcUrl)) {
@@ -281,16 +281,16 @@
                     }
                 }
             }
-            if (resourceHandler) {
+            if (resource) {
                 for (const element of rootElements) {
                     element.querySelectorAll('img').forEach(image => {
                         parseSrcSet(image.srcset);
                         if (!preloadImages) {
-                            resourceHandler.addImage(image);
+                            resource.addImage(image);
                         } else if (FILE.SVG.test(image.src)) {
                             preloadItems.push(image.src);
                         } else if (image.complete) {
-                            resourceHandler.addImage(image);
+                            resource.addImage(image);
                         } else {
                             preloadItems.push(image);
                         }
@@ -322,11 +322,11 @@
                             if (typeof uri === 'string') {
                                 if (typeof value === 'string') {
                                     if (FILE.SVG.test(uri)) {
-                                        resourceHandler.addRawData(uri, 'image/svg+xml', value, { encoding: 'utf8' });
+                                        resource.addRawData(uri, 'image/svg+xml', value, { encoding: 'utf8' });
                                     }
                                 }
                             } else {
-                                resourceHandler.addImage(value);
+                                resource.addImage(value);
                             }
                         }
                         return this.resumeSessionThread(
@@ -491,11 +491,10 @@
         cascadeParentNode(cache, excluded, parentElement, sessionId, depth, rootElements, extensions) {
             const node = this.insertNode(parentElement, sessionId);
             if (node) {
-                const controllerHandler = this.controllerHandler;
                 if (depth === 0) {
                     cache.add(node);
                 }
-                if (controllerHandler.preventNodeCascade(node)) {
+                if (this._preventNodeCascade(node)) {
                     return node;
                 }
                 const childDepth = depth + 1;
@@ -518,7 +517,7 @@
                             }
                             plainText = true;
                         }
-                    } else if (controllerHandler.includeElement(element)) {
+                    } else if (this._includeElement(element)) {
                         if (extensions) {
                             const use = this.getDatasetName('use', element);
                             (use ? Application.prioritizeExtensions(use, extensions) : extensions).some(item =>
@@ -545,24 +544,27 @@
                         child = this.insertNode(element, sessionId);
                         if (child) {
                             excluded.add(child);
-                            inlineText = false;
                         }
                     }
                     if (child) {
                         child.init(node, childDepth, j);
                         child.actualParent = node;
                         children[j++] = child;
-                        cache.add(child);
                     }
                 }
                 children.length = j;
                 elements.length = k;
                 node.naturalChildren = children;
                 node.naturalElements = elements;
-                if (inlineText && plainText) {
-                    node.inlineText = inlineText;
+                if (j > 0) {
+                    node.inlineText = inlineText && plainText;
+                    node.retainAs(children);
+                    if (j > 1) {
+                        cache.addAll(children);
+                    } else {
+                        cache.add(children[0]);
+                    }
                 }
-                node.retainAs(children);
                 if (k > 0 && this.userSettings.createQuerySelectorMap) {
                     node.queryMap = this.createQueryMap(elements, k);
                 }
@@ -593,7 +595,7 @@
         }
         applyStyleRule(item, sessionId) {
             var _a, _b, _c, _d, _e, _f, _g, _h;
-            const resourceHandler = this._resourceHandler;
+            const resource = this._resourceHandler;
             const styleSheetHref =
                 ((_a = item.parentStyleSheet) === null || _a === void 0 ? void 0 : _a.href) || location.href;
             const cssText = item.cssText;
@@ -609,15 +611,15 @@
                             let result, match;
                             while ((match = REGEXP_DATAURI.exec(value))) {
                                 if (match[2]) {
-                                    if (resourceHandler) {
+                                    if (resource) {
                                         const [mimeType, encoding] = match[2].trim().split(/\s*;\s*/);
-                                        resourceHandler.addRawData(match[1], mimeType, match[3], { encoding });
+                                        resource.addRawData(match[1], mimeType, match[3], { encoding });
                                     }
                                 } else {
                                     const uri = resolvePath(match[3], styleSheetHref);
                                     if (uri !== '') {
-                                        if (resourceHandler) {
-                                            resourceHandler.addImageData(uri);
+                                        if (resource) {
+                                            resource.addImageData(uri);
                                         }
                                         result = (result || value).replace(match[0], `url("${uri}")`);
                                     }
@@ -734,7 +736,7 @@
                     break;
                 }
                 case CSSRule.FONT_FACE_RULE: {
-                    if (resourceHandler) {
+                    if (resource) {
                         const attr = (_c = REGEXP_FONTFACE.exec(cssText)) === null || _c === void 0 ? void 0 : _c[1];
                         if (attr) {
                             const src =
@@ -769,7 +771,7 @@
                                         } else {
                                             data.srcLocal = url;
                                         }
-                                        resourceHandler.addFont(data);
+                                        resource.addFont(data);
                                     }
                                 }
                             }
@@ -884,7 +886,7 @@
                     if (typeof element === 'string') {
                         element = document.getElementById(element);
                     }
-                    if (!element || !hasComputedStyle(element)) {
+                    if (!element || element.nodeName[0] === '#') {
                         continue;
                     }
                     rootElements.add(element);
@@ -908,14 +910,16 @@
             for (let i = 0; i < length; ++i) {
                 extensions[i].beforeParseDocument(sessionId);
             }
-            const success = [];
+            const success = new Array(rootElements.size);
+            let j = 0;
             for (const element of rootElements) {
                 const node = this.createCache(element, sessionId);
                 if (node) {
                     this.afterCreateCache(node);
-                    success.push(node);
+                    success[j++] = node;
                 }
             }
+            success.length = j;
             for (let i = 0; i < length; ++i) {
                 extensions[i].afterParseDocument(sessionId);
             }
@@ -1000,7 +1004,7 @@
         }
         init() {}
         sortInitialCache(cache) {}
-        applyDefaultStyles(element, sessionId) {}
+        applyDefaultStyles(element, sessionId, pseudoElt) {}
         reset() {}
         includeElement(element) {
             return true;
@@ -1040,9 +1044,9 @@
     } = squared.lib.css;
     const { assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
     const {
-        getElementData,
         getElementAsNode,
         getElementCache: getElementCache$1,
+        getElementData,
         setElementCache: setElementCache$1,
     } = squared.lib.session;
     const {
@@ -1056,7 +1060,6 @@
         iterateArray,
         iterateReverseArray,
         spliceString,
-        splitEnclosing,
         splitPair: splitPair$1,
     } = squared.lib.util;
     var STYLE_CACHE;
@@ -1082,8 +1085,8 @@
     const BORDER_RIGHT = CSS_PROPERTIES$1.borderRight.value;
     const BORDER_BOTTOM = CSS_PROPERTIES$1.borderBottom.value;
     const BORDER_LEFT = CSS_PROPERTIES$1.borderLeft.value;
+    const BORDER_OUTLINE = CSS_PROPERTIES$1.outline.value;
     const REGEXP_EM = /\dem$/;
-    const REGEXP_BACKGROUND = /\s*(url|[a-z-]+gradient)/;
     const REGEXP_QUERYNTH = /^:nth(-last)?-(child|of-type)\((.+)\)$/;
     const REGEXP_QUERYNTHPOSITION = /^(-)?(\d+)?n\s*([+-]\d+)?$/;
     function setStyleCache(element, attr, value, style, styleMap, sessionId) {
@@ -1230,7 +1233,7 @@
         var _a;
         switch (node.display) {
             case 'table':
-                if (!margin && node.css('borderCollapse') === 'collapse') {
+                if (!margin && node.valueOf('borderCollapse') === 'collapse') {
                     return 0;
                 }
                 break;
@@ -1927,7 +1930,7 @@
                 if (elementData) {
                     const styleMap = elementData.styleMap;
                     if (styleMap) {
-                        if (this.styleElement) {
+                        if (!this.plainText && this.naturalChild) {
                             if (!this.pseudoElement) {
                                 const items = Array.from(element.style);
                                 const length = items.length;
@@ -2310,9 +2313,9 @@
             return ((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.css(attr, value, cache)) || '';
         }
         cssInitial(attr, options) {
-            var _a;
+            const initial = this._initial;
             return (
-                (((_a = this._initial) === null || _a === void 0 ? void 0 : _a.styleMap) || this._styleMap)[attr] ||
+                ((initial && initial.styleMap) || this._styleMap)[attr] ||
                 (options && ((options.modified && this._styleMap[attr]) || (options.computed && this.style[attr]))) ||
                 ''
             );
@@ -2528,7 +2531,7 @@
                                 return Node.sanitizeCss(
                                     this._element,
                                     styleMap,
-                                    styleMap.writingMode || this.cssInitial('writingMode')
+                                    styleMap.writingMode || this.valueOf('writingMode')
                                 );
                         }
                     }
@@ -3034,7 +3037,9 @@
             return [];
         }
         valueOf(attr, options) {
-            return (!this._preferInitial && this._styleMap[attr]) || this.cssInitial(attr, options);
+            return this._preferInitial
+                ? this.cssInitial(attr, options)
+                : this._styleMap[attr] || (options && options.computed && this.style[attr]) || '';
         }
         set parent(value) {
             if (value) {
@@ -3085,13 +3090,13 @@
             const result = this._cacheState.svgElement;
             return result === undefined
                 ? (this._cacheState.svgElement =
-                      !this.plainText &&
-                      ((!this.htmlElement && this._element instanceof SVGElement) ||
-                          (this.imageElement && FILE$1.SVG.test(this.toElementString('src')))))
+                      (!this.htmlElement && this._element instanceof SVGElement) ||
+                      (this.imageElement && FILE$1.SVG.test(this.toElementString('src'))))
                 : result;
         }
         get styleElement() {
-            return this.htmlElement || this.svgElement;
+            const result = this._cacheState.styleElement;
+            return result === undefined ? (this._cacheState.styleElement = !!this._element && !this.plainText) : result;
         }
         get naturalChild() {
             return true;
@@ -3146,17 +3151,17 @@
         get lineBreak() {
             return this.tagName === 'BR';
         }
+        get positionRelative() {
+            return this.valueOf('position') === 'relative';
+        }
         get display() {
             return this.css('display');
         }
-        get positionRelative() {
-            return this.css('position') === 'relative';
+        get float() {
+            return (this.pageFlow && this.css('float')) || 'none';
         }
         get floating() {
             return this.float !== 'none';
-        }
-        get float() {
-            return (this.pageFlow && this.css('float')) || 'none';
         }
         get zIndex() {
             return this.toInt('zIndex', 0);
@@ -3278,16 +3283,14 @@
         get hasHeight() {
             var _a;
             const result = this._cache.hasHeight;
-            if (result === undefined) {
-                const value = this.css('height');
-                return (this._cache.hasHeight = isPercent(value)
-                    ? this.pageFlow
-                        ? ((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.hasHeight) ||
-                          this.documentBody
-                        : this.css('position') === 'fixed' || this.hasPX('top') || this.hasPX('bottom')
-                    : this.height > 0 || this.hasPX('height', { percent: false }));
-            }
-            return result;
+            return result === undefined
+                ? (this._cache.hasHeight = isPercent(this.valueOf('height'))
+                      ? this.pageFlow
+                          ? ((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.hasHeight) ||
+                            this.documentBody
+                          : this.valueOf('position') === 'fixed' || this.hasPX('top') || this.hasPX('bottom')
+                      : this.height > 0 || this.hasPX('height', { percent: false }))
+                : result;
         }
         get lineHeight() {
             let result = this._cache.lineHeight;
@@ -3340,7 +3343,7 @@
         get positionStatic() {
             let result = this._cache.positionStatic;
             if (result === undefined) {
-                switch (this.css('position')) {
+                switch (this.valueOf('position')) {
                     case 'absolute':
                     case 'fixed':
                         result = false;
@@ -3422,6 +3425,12 @@
                 ? (this._cache.borderLeftWidth = convertBorderWidth(this, 'width', BORDER_LEFT))
                 : result;
         }
+        get outlineWidth() {
+            const result = this._cache.outlineWidth;
+            return result === undefined
+                ? (this._cache.outlineWidth = convertBorderWidth(this, 'width', BORDER_OUTLINE))
+                : result;
+        }
         get paddingTop() {
             const result = this._cache.paddingTop;
             return result === undefined ? (this._cache.paddingTop = convertBox(this, 'paddingTop', false)) : result;
@@ -3447,7 +3456,7 @@
             const result = this._cache.contentBoxWidth;
             return result === undefined
                 ? (this._cache.contentBoxWidth =
-                      this.tableElement && this.css('borderCollapse') === 'collapse'
+                      this.tableElement && this.valueOf('borderCollapse') === 'collapse'
                           ? 0
                           : this.borderLeftWidth + this.paddingLeft + this.paddingRight + this.borderRightWidth)
                 : result;
@@ -3456,7 +3465,7 @@
             const result = this._cache.contentBoxHeight;
             return result === undefined
                 ? (this._cache.contentBoxHeight =
-                      this.tableElement && this.css('borderCollapse') === 'collapse'
+                      this.tableElement && this.valueOf('borderCollapse') === 'collapse'
                           ? 0
                           : this.borderTopWidth + this.paddingTop + this.paddingBottom + this.borderBottomWidth)
                 : result;
@@ -3619,8 +3628,8 @@
                 if (this.pageFlow && !this.floating && !this.tableElement) {
                     const display = this.display;
                     if (display.startsWith('inline') || display === 'list-item') {
-                        const verticalAlign = this.css('verticalAlign');
-                        return (this._cache.baseline = verticalAlign === 'baseline' || isLength(verticalAlign, true));
+                        const value = this.css('verticalAlign');
+                        return (this._cache.baseline = value === 'baseline' || !isNaN(parseFloat(value)));
                     }
                 }
                 return (this._cache.baseline = false);
@@ -3630,8 +3639,8 @@
         get verticalAlign() {
             let result = this._cache.verticalAlign;
             if (result === undefined) {
-                if (this.pageFlow) {
-                    const value = this.css('verticalAlign');
+                const value = this.css('verticalAlign');
+                if (value !== 'baseline' && this.pageFlow) {
                     if (value.endsWith('px')) {
                         result = parseFloat(value);
                     } else if (isLength(value)) {
@@ -3775,7 +3784,7 @@
                                 this.css('opacity') === '1'
                             ) {
                                 let parent = this.actualParent;
-                                while (parent && !REGEXP_BACKGROUND.test(parent.style.background)) {
+                                while (parent) {
                                     const backgroundImage = parent.valueOf('backgroundImage');
                                     if (backgroundImage === '' || backgroundImage === 'none') {
                                         const color = parent.backgroundColor;
@@ -3799,27 +3808,16 @@
             return result;
         }
         get backgroundImage() {
-            let result = this._cache.backgroundImage;
+            const result = this._cache.backgroundImage;
             if (result === undefined) {
-                result = '';
+                let value = '';
                 if (!this.plainText) {
-                    let value = this.css('backgroundImage');
-                    if (value !== '' && value !== 'none') {
-                        result = value;
-                    } else {
-                        value = this.css('background');
-                        if (REGEXP_BACKGROUND.test(value)) {
-                            const background = splitEnclosing(value);
-                            for (let i = 1, length = background.length; i < length; ++i) {
-                                const name = background[i - 1].trim();
-                                if (REGEXP_BACKGROUND.test(name)) {
-                                    result += (result !== '' ? ', ' : '') + name + background[i];
-                                }
-                            }
-                        }
+                    value = this.css('backgroundImage');
+                    if (value === 'none') {
+                        value = '';
                     }
                 }
-                this._cache.backgroundImage = result;
+                return (this._cache.backgroundImage = value);
             }
             return result;
         }
@@ -3839,7 +3837,7 @@
                 return (this._cache.percentHeight =
                     isPercent(value) &&
                     (((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.hasHeight) ||
-                        this.css('position') === 'fixed')
+                        this.valueOf('position') === 'fixed')
                         ? parseFloat(value) / 100
                         : 0);
             }
@@ -3857,8 +3855,7 @@
                     const backgroundColor = this.backgroundColor !== '';
                     const backgroundImage = this.backgroundImage !== '';
                     let backgroundRepeatX = false,
-                        backgroundRepeatY = false,
-                        outline = false;
+                        backgroundRepeatY = false;
                     if (backgroundImage) {
                         for (const repeat of this.css('backgroundRepeat').split(',')) {
                             const [repeatX, repeatY] = splitPair$1(repeat.trim(), ' ');
@@ -3868,11 +3865,6 @@
                                     repeatX === 'repeat' || repeatX === 'repeat-y' || repeatY === 'repeat');
                         }
                     }
-                    const outlineStyle = this.css('outlineStyle');
-                    if (outlineStyle !== '' && outlineStyle !== 'none') {
-                        const outlineWidth = this.css('outlineWidth');
-                        outline = outlineWidth !== '' && parseFloat(outlineWidth) !== 0;
-                    }
                     return (this._cache.visibleStyle = {
                         background: borderWidth || backgroundImage || backgroundColor,
                         borderWidth,
@@ -3881,7 +3873,7 @@
                         backgroundRepeat: backgroundRepeatX || backgroundRepeatY,
                         backgroundRepeatX,
                         backgroundRepeatY,
-                        outline,
+                        outline: this.outlineWidth > 0,
                     });
                 }
                 return (this._cache.visibleStyle = {});
@@ -3893,11 +3885,7 @@
             if (result === undefined) {
                 result = this.actualParent;
                 if (!this.pageFlow && !this.documentBody) {
-                    while (
-                        result &&
-                        result.valueOf('position', { computed: true }) === 'static' &&
-                        !result.documentBody
-                    ) {
+                    while (result && result.css('position') === 'static' && !result.documentBody) {
                         result = result.actualParent;
                     }
                 }
@@ -3950,7 +3938,7 @@
                             break;
                     }
                 } else if (
-                    (this.inlineStatic && this.cssInitial('width') === '') ||
+                    (this.inlineStatic && this.valueOf('width') === '') ||
                     this.display === 'table-cell' ||
                     ((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.flexdata.row)
                 ) {
@@ -3974,7 +3962,7 @@
             let result = this._cache.actualHeight;
             if (result === undefined) {
                 if (
-                    (this.inlineStatic && this.cssInitial('height') === '') ||
+                    (this.inlineStatic && this.valueOf('height') === '') ||
                     this.display === 'table-cell' ||
                     ((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.flexdata.column)
                 ) {

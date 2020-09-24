@@ -37,11 +37,12 @@ export default class FloatingActionButton<T extends View> extends squared.base.E
     }
 
     public processNode(node: T, parent: T) {
-        const { element, target, backgroundColor } = node;
+        const { element, target } = node;
         const options = createViewAttribute(this.options[element!.id.trim()]);
+        const backgroundColor = node.css('backgroundColor');
         let colorName: Undef<string>;
-        if (backgroundColor !== '') {
-            const colorData = parseColor(backgroundColor, node.toFloat('opacity', 1));
+        if (backgroundColor !== 'none') {
+            const colorData = parseColor(backgroundColor);
             if (colorData) {
                 colorName = Resource.addColor(colorData);
             }

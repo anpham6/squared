@@ -1,4 +1,4 @@
-/* squared 2.0.0
+/* squared 2.0.1
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -31,7 +31,7 @@
     const FILE = {
         NAME: /[/\\]?(([^/\\]+?)\.([^/\\]+?))$/,
         PROTOCOL: /^([A-Za-z]{3,}:\/\/)([A-Za-z\d\-.]+)(:\d+)?(\/[^?]*)?[?]?(.*)?$/,
-        SVG: /\.svg$/i,
+        SVG: /\.svg\s*$/i,
     };
     const CSS = {
         URL: /^\s*url\((.+)\)\s*$/,
@@ -740,10 +740,7 @@
                 for (const attr in source) {
                     const a = source[attr];
                     const b = other[attr];
-                    if (a !== b) {
-                        if (isPlainObject(a) && isPlainObject(b) && isEqual(a, b)) {
-                            continue;
-                        }
+                    if (a !== b && !(isPlainObject(a) && isPlainObject(b) && isEqual(a, b))) {
                         return false;
                     }
                 }
@@ -819,7 +816,7 @@
             } else if (value.startsWith('./')) {
                 value = value.substring(2);
             }
-            return `${location.origin + pathname.join('/')}/${value}`;
+            return location.origin + pathname.join('/') + '/' + value;
         }
         return value;
     }
@@ -1034,7 +1031,7 @@
         for (let i = 0, length = list.length; i < length; ++i) {
             const value = predicate(list[i], i, list);
             if (value !== '') {
-                result += (result !== '' ? char : '') + value;
+                result += result !== '' ? char + value : value;
             }
         }
         return result;
@@ -2314,6 +2311,9 @@
                 rgba;
             if (value[0] === '#') {
                 rgba = parseRGBA(value);
+            } else if (value === 'transparent') {
+                rgba = { r: 0, g: 0, b: 0, a: 0 };
+                key = 'transparent';
             } else {
                 let match = CSS.RGBA.exec(value);
                 if (match) {
@@ -2333,25 +2333,12 @@
                             a: clamp(match[4] ? convertOpacity(match[4]) : opacity),
                         });
                     } else {
-                        switch (value) {
-                            case 'transparent':
-                                rgba = { r: 0, g: 0, b: 0, a: 0 };
-                                key = 'transparent';
-                                break;
-                            case 'initial':
-                                rgba = { r: 0, g: 0, b: 0, a: 255 };
-                                key = 'black';
-                                break;
-                            default: {
-                                const color = findColorName(value);
-                                if (color) {
-                                    rgba = Object.assign(Object.assign({}, color.rgb), { a: clampOpacity(opacity) });
-                                    key = value;
-                                } else {
-                                    rgba = null;
-                                }
-                                break;
-                            }
+                        const color = findColorName(value);
+                        if (color) {
+                            rgba = Object.assign(Object.assign({}, color.rgb), { a: clampOpacity(opacity) });
+                            key = value;
+                        } else {
+                            rgba = null;
                         }
                     }
                 }
@@ -2848,6 +2835,23 @@
         }
         return segments.join('').trim();
     }
+    function calculateAngle(element, value) {
+        const result = calculateVar(element, value, { unitType: 8 /* ANGLE */, supportPercent: false });
+        if (!isNaN(result)) {
+            return result + 'deg';
+        }
+    }
+    function calculatePercent(element, value, clampRange) {
+        const percent = value.includes('%');
+        let result = calculateVar(element, value, { unitType: percent ? 2 /* PERCENT */ : 32 /* DECIMAL */ });
+        if (!isNaN(result)) {
+            if (percent) {
+                result /= 100;
+            }
+            return (clampRange ? clamp(result) : result).toString();
+        }
+        return '';
+    }
     function getWritingMode(value) {
         if (value) {
             switch (value) {
@@ -2858,16 +2862,6 @@
             }
         }
         return 0;
-    }
-    function hasBorderStyle(value) {
-        switch (value) {
-            case 'none':
-            case 'initial':
-            case 'hidden':
-                return false;
-            default:
-                return true;
-        }
     }
     function getContentBoxWidth(style) {
         return (
@@ -2933,6 +2927,9 @@
         }
         return { width: 0, height: 0 };
     }
+    const hasBorderStyle = value => value !== 'none' && value !== 'hidden';
+    const calculateLength = (element, value) =>
+        formatVar(calculateVar(element, value, { min: 0, supportPercent: false }));
     const fromFontNamedValue = (index, fixedWidth) =>
         (!fixedWidth ? DOCUMENT_FONTMAP[index] : DOCUMENT_FIXEDMAP[index]).toPrecision(8) + 'rem';
     const getInnerWidth = dimension => (dimension && dimension.width) || window.innerWidth;
@@ -3603,6 +3600,10 @@
             trait: 1 /* CALC */ | 4 /* LAYOUT */ | 256 /* UNIT */,
             value: '0',
         },
+        maskType: {
+            trait: 0,
+            value: 'luminance',
+        },
         maxHeight: {
             trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'none',
@@ -4098,7 +4099,7 @@
         if (style) {
             return style;
         }
-        if (hasComputedStyle(element)) {
+        if (element.nodeName[0] !== '#') {
             style = getComputedStyle(element, pseudoElt);
             setElementCache(element, 'style' + pseudoElt, style);
             return style;
@@ -4156,7 +4157,7 @@
         );
     }
     function hasComputedStyle(element) {
-        return element.nodeName[0] !== '#' && (element instanceof HTMLElement || element instanceof SVGElement);
+        return element.nodeName[0] !== '#';
     }
     function parseSelectorText(value, document) {
         value = document ? value.trim() : trimSelector(value.trim());
@@ -4487,6 +4488,7 @@
         }
     }
     function calculateStyle(element, attr, value, boundingBox) {
+        var _a;
         switch (attr) {
             case 'left':
             case 'right':
@@ -4532,19 +4534,17 @@
                 return formatVar(
                     calculateVar(element, value, { dimension: 'height', boundingBox, min: 0, parent: false })
                 );
-            case 'flexBasis': {
-                const parentElement = element.parentElement;
+            case 'flexBasis':
                 return formatVar(
                     calculateVar(element, value, {
                         dimension:
-                            parentElement && getStyle(parentElement).flexDirection.includes('column')
+                            element.parentElement && getStyle(element.parentElement).flexDirection.includes('column')
                                 ? 'height'
                                 : 'width',
                         boundingBox,
                         min: 0,
                     })
                 );
-            }
             case 'borderBottomWidth':
             case 'borderLeftWidth':
             case 'borderRightWidth':
@@ -4555,7 +4555,7 @@
             case 'outlineWidth':
             case 'perspective':
             case 'wordSpacing':
-                return formatVar(calculateVar(element, value, { min: 0, supportPercent: false }));
+                return calculateLength(element, value);
             case 'offsetDistance': {
                 let boundingSize = 0;
                 if (value.includes('%')) {
@@ -4599,6 +4599,8 @@
                 return calculateVarAsString(element, value, { dimension: 'width', boundingBox, min: 0 });
             case 'objectPosition':
                 return calculateVarAsString(element, value, { dimension: ['width', 'height'], boundingBox });
+            case 'backgroundSize':
+            case 'maskSize':
             case 'gap':
             case 'gridGap':
             case 'perspectiveOrigin':
@@ -4653,11 +4655,8 @@
                     calculateVar(element, value, { unitType: 32 /* DECIMAL */, min: 0, supportPercent: false })
                 );
             case 'opacity':
-            case 'shapeImageThreshold': {
-                const percent = value.includes('%');
-                const result = calculateVar(element, value, { unitType: percent ? 2 /* PERCENT */ : 32 /* DECIMAL */ });
-                return !isNaN(result) ? clamp(result / (percent ? 100 : 1)).toString() : '';
-            }
+            case 'shapeImageThreshold':
+                return calculatePercent(element, value, true);
             case 'fontStretch':
             case 'textSizeAdjust':
                 return calculateVarAsString(element, value, {
@@ -4742,16 +4741,9 @@
                                 case 'skewY':
                                 case 'rotateX':
                                 case 'rotateY':
-                                case 'rotateZ': {
-                                    const result = calculateVar(element, seg, {
-                                        unitType: 8 /* ANGLE */,
-                                        supportPercent: false,
-                                    });
-                                    if (!isNaN(result)) {
-                                        calc = result + 'deg';
-                                    }
+                                case 'rotateZ':
+                                    calc = calculateAngle(element, seg);
                                     break;
-                                }
                                 case 'rotate3d': {
                                     const component = seg.split(CHAR_SEPARATOR);
                                     const q = component.length;
@@ -4770,7 +4762,7 @@
                                                     return '';
                                                 }
                                             }
-                                            calc += (calc !== '' ? ', ' : '') + rotate;
+                                            calc += calc !== '' ? ', ' + rotate : rotate;
                                         }
                                     }
                                     break;
@@ -4788,6 +4780,7 @@
                 return value;
             }
             case 'backgroundImage':
+            case 'maskImage':
             case 'borderImageSource': {
                 const image = splitEnclosing(value);
                 const length = image.length;
@@ -4845,7 +4838,6 @@
                     supportPercent: false,
                     errorString: /-?[\d.]+[a-z]*\s+-?[\d.]+[a-z]*(\s+-[\d.]+[a-z]*)/,
                 });
-            case 'backgroundSize':
             case 'animation':
             case 'animationDelay':
             case 'animationDuration':
@@ -4871,7 +4863,8 @@
             case 'flex':
             case 'font':
                 return calculateGeneric(element, value, 32 /* DECIMAL */, 0, boundingBox);
-            case 'backgroundPosition': {
+            case 'backgroundPosition':
+            case 'maskPosition': {
                 const result = [];
                 for (const position of value.split(CHAR_SEPARATOR)) {
                     const segment = calculatePosition(element, position, boundingBox);
@@ -4956,7 +4949,7 @@
                                                 return '';
                                             }
                                         }
-                                        calc += (calc !== '' ? ', ' : '') + bezier;
+                                        calc += calc !== '' ? ', ' + bezier : bezier;
                                     }
                                 }
                             } else if (prefix.endsWith('steps')) {
@@ -5176,13 +5169,59 @@
                 }
                 return '';
             }
-            case 'background':
             case 'filter':
-            case 'backdropFilter':
+            case 'backdropFilter': {
+                const filters = splitEnclosing(value);
+                const length = filters.length;
+                if (length > 1) {
+                    for (let i = 1; i < length; ++i) {
+                        let seg = filters[i];
+                        if (hasCalc(seg)) {
+                            seg = trimEnclosing(seg);
+                            let result;
+                            switch (filters[i - 1].trim()) {
+                                case 'blur':
+                                    result = calculateLength(element, seg);
+                                    break;
+                                case 'brightness':
+                                case 'saturate':
+                                    result = calculatePercent(element, seg, false);
+                                    break;
+                                case 'contrast':
+                                case 'grayscale':
+                                case 'invert':
+                                case 'opacity':
+                                case 'sepia':
+                                    result = calculatePercent(element, seg, true);
+                                    break;
+                                case 'drop-shadow':
+                                    result = calculateStyle(element, 'boxShadow', seg, boundingBox);
+                                    break;
+                                case 'hue-rotate':
+                                    result = calculateAngle(element, seg);
+                                    break;
+                                case 'url':
+                                    continue;
+                            }
+                            if (result) {
+                                filters[i] = `(${result})`;
+                            } else {
+                                return '';
+                            }
+                        }
+                    }
+                    return filters.join('');
+                }
+                return value;
+            }
+            case 'background':
             case 'gridTemplate':
                 return getStyle(element)[attr];
             default:
-                if (attr.endsWith('Color')) {
+                if (
+                    attr.endsWith('Color') ||
+                    hasBit((_a = CSS_PROPERTIES[attr]) === null || _a === void 0 ? void 0 : _a.trait, 16 /* COLOR */)
+                ) {
                     return calculateColor(element, value.trim());
                 } else {
                     const alias = checkWritingMode(attr, getStyle(element).writingMode);
@@ -5584,10 +5623,11 @@
         const output = parseVar(element, value);
         if (output) {
             const { precision, supportPercent, unitType } = options;
+            const boundingSize = !unitType || unitType === 1; /* LENGTH */
             if (value.includes('%')) {
                 if (supportPercent === false || unitType === 16 /* INTEGER */) {
                     return NaN;
-                } else if (options.boundingSize === undefined) {
+                } else if (boundingSize && options.boundingSize === undefined) {
                     const { dimension, boundingBox } = options;
                     if (dimension) {
                         if (boundingBox) {
@@ -5638,7 +5678,7 @@
             } else if (supportPercent) {
                 return NaN;
             }
-            if (options.fontSize === undefined && (!unitType || unitType === 1) /* LENGTH */ && hasEm(value)) {
+            if (boundingSize && options.fontSize === undefined && hasEm(value)) {
                 options.fontSize = getFontSize(element);
             }
             const result = calculate(output, options);
@@ -6814,18 +6854,21 @@
             if (!Array.isArray(list)) {
                 list = list.children;
             }
-            const result = [];
+            const length = list.length;
+            const result = new Array(length);
             const children = this.children;
-            for (let i = 0, length = list.length; i < length; ++i) {
+            let k = 0;
+            for (let i = 0; i < length; ++i) {
                 const item = list[i];
-                for (let j = 0; j < children.length; ++j) {
+                for (let j = 0, q = children.length; j < q; ++j) {
                     if (children[j] === item) {
                         children.splice(j, 1);
-                        result.push(item);
+                        result[k++] = item;
                         break;
                     }
                 }
             }
+            result.length = k;
             return result;
         }
         retainAs(list) {
@@ -7185,10 +7228,10 @@
         }
     }
 
-    const addQueue = new Set();
-    const removeQueue = new Set();
+    const extensionCache = [];
+    const addQueue = [];
+    const removeQueue = [];
     const optionsQueue = new Map();
-    const extensionCache = new Set();
     const prototypeMap = new Map();
     const settings = {};
     let main = null;
@@ -7221,20 +7264,20 @@
     }
     function loadExtensions() {
         if (extensionManager) {
-            if (extensionCache.size) {
+            if (extensionCache.length) {
                 for (const item of extensionCache) {
                     extensionManager.cache.add(item);
                 }
-                extensionCache.clear();
+                extensionCache.length = 0;
             }
-            if (addQueue.size) {
+            if (addQueue.length) {
                 for (const item of addQueue) {
                     if (!extensionManager.add(item)) {
                         console.log('FAIL: ' + (typeof item === 'string' ? item : item.name));
                         extensionCheck = true;
                     }
                 }
-                addQueue.clear();
+                addQueue.length = 0;
             }
             if (optionsQueue.size) {
                 for (const data of optionsQueue) {
@@ -7245,13 +7288,13 @@
                 }
                 optionsQueue.clear();
             }
-            if (removeQueue.size) {
+            if (removeQueue.length) {
                 for (const item of removeQueue) {
                     if (extensionManager.remove(item)) {
                         extensionCheck = true;
                     }
                 }
-                removeQueue.clear();
+                removeQueue.length = 0;
             }
             if (extensionCheck) {
                 const errors = extensionManager.checkDependencies();
@@ -7318,7 +7361,7 @@
     const findExtension = value =>
         extensionManager.get(value, true) ||
         findSet(extensionManager.cache, item => item.name === value) ||
-        findSet(extensionCache, item => item.name === value);
+        extensionCache.find(item => item.name === value);
     const frameworkNotInstalled = () => reject(FRAMEWORK_NOT_INSTALLED);
     function setHostname(value) {
         if (main) {
@@ -7405,9 +7448,8 @@
     }
     function add(...values) {
         let success = 0;
-        for (let i = 0, length = values.length; i < length; ++i) {
-            let value = values[i],
-                options;
+        for (let value of values) {
+            let options;
             if (Array.isArray(value)) {
                 [value, options] = value;
             }
@@ -7416,7 +7458,7 @@
                 if (ext) {
                     value = ext;
                 } else {
-                    addQueue.add(value);
+                    addQueue.push(value);
                     if (options) {
                         apply(value, options);
                     }
@@ -7425,11 +7467,11 @@
             }
             if (squared.base && value instanceof squared.base.Extension) {
                 if (!extensionManager) {
-                    addQueue.add(value);
-                    extensionCache.add(value);
+                    addQueue.push(value);
+                    extensionCache.push(value);
                 } else {
                     if (!extensionManager.add(value)) {
-                        addQueue.add(value);
+                        addQueue.push(value);
                     }
                     extensionManager.cache.add(value);
                 }
@@ -7444,8 +7486,7 @@
     }
     function remove(...values) {
         let success = 0;
-        for (let i = 0, length = values.length; i < length; ++i) {
-            let value = values[i];
+        for (let value of values) {
             if (typeof value === 'string') {
                 if (extensionManager) {
                     const ext = extensionManager.get(value);
@@ -7456,17 +7497,17 @@
                         continue;
                     }
                 } else {
-                    addQueue.delete(value);
-                    removeQueue.add(value);
+                    spliceArray(addQueue, item => item === value);
+                    removeQueue.push(value);
                     extensionCheck = true;
                     ++success;
                     continue;
                 }
             }
             if (squared.base && value instanceof squared.base.Extension) {
-                addQueue.delete(value);
+                spliceArray(addQueue, item => item === value);
                 if (!(extensionManager && extensionManager.remove(value))) {
-                    removeQueue.add(value);
+                    removeQueue.push(value);
                 }
                 extensionCheck = true;
                 ++success;
@@ -7476,13 +7517,12 @@
     }
     function get(...values) {
         if (extensionManager) {
-            const length = values.length;
-            if (length === 1) {
+            if (values.length === 1) {
                 return findExtension(values[0]);
             } else {
                 const result = [];
-                for (let i = 0; i < length; ++i) {
-                    const item = findExtension(values[i]);
+                for (const value of values) {
+                    const item = findExtension(value);
                     if (item) {
                         result.push(item);
                     }
@@ -7515,7 +7555,7 @@
             if (typeof value === 'string') {
                 const ext =
                     (extensionManager && extensionManager.get(value, true)) ||
-                    findSet(addQueue, item => typeof item !== 'string' && item.name === value);
+                    addQueue.find(item => typeof item !== 'string' && item.name === value);
                 if (!ext) {
                     optionsQueue.set(value, mergeSettings(value));
                     return true;
