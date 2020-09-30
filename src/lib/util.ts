@@ -504,6 +504,15 @@ export function convertFloat(value: string, fallback = 0) {
     return !isNaN(result) ? result : fallback;
 }
 
+export function convertBase64(value: ArrayBuffer) {
+    let result = '';
+    const data = new Uint8Array(value);
+    for (let i = 0, length = data.byteLength; i < length; ++i) {
+        result += String.fromCharCode(data[i]);
+    }
+    return window.btoa(result);
+}
+
 export function delimitString(options: DelimitStringOptions, ...appending: string[]) {
     const { value, not, remove, sort } = options;
     const length = appending.length;
@@ -537,8 +546,8 @@ export function spliceString(value: string, index: number, length: number) {
     return index === 0 ? value.substring(length) : value.substring(0, index) + value.substring(index + length);
 }
 
-export function splitPair(value: string, char: string, trim?: boolean): [string, string] {
-    const index = value.indexOf(char);
+export function splitPair(value: string, char: string, trim?: boolean, last?: boolean): [string, string] {
+    const index = !last ? value.indexOf(char) : value.lastIndexOf(char);
     if (index !== -1) {
         const start = value.substring(0, index);
         const end = value.substring(index + char.length);
@@ -547,14 +556,14 @@ export function splitPair(value: string, char: string, trim?: boolean): [string,
     return !trim ? [value, ''] : [value.trim(), ''];
 }
 
-export function splitPairStart(value: string, char: string, trim?: boolean) {
-    const index = value.indexOf(char);
+export function splitPairStart(value: string, char: string, trim?: boolean, last?: boolean) {
+    const index = !last ? value.indexOf(char) : value.lastIndexOf(char);
     const result = index !== -1 ? value.substring(0, index) : value;
     return !trim ? result : result.trim();
 }
 
-export function splitPairEnd(value: string, char: string, trim?: boolean) {
-    const index = value.indexOf(char);
+export function splitPairEnd(value: string, char: string, trim?: boolean, last?: boolean) {
+    const index = !last ? value.indexOf(char) : value.lastIndexOf(char);
     if (index !== -1) {
         const result = value.substring(index + char.length);
         return !trim ? result : result.trim();

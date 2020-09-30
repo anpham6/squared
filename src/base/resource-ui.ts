@@ -17,7 +17,7 @@ const { CSS_PROPERTIES, calculate, convertAngle, formatPercent, formatPX, hasCoo
 const { getNamedItem } = squared.lib.dom;
 const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
-const { convertCamelCase, hasValue, isEqual, isNumber, isString, iterateArray, splitPair, splitPairEnd } = squared.lib.util;
+const { convertBase64, convertCamelCase, hasValue, isEqual, isNumber, isString, iterateArray, splitPair } = squared.lib.util;
 
 const BORDER_TOP = CSS_PROPERTIES.borderTop.value as string[];
 const BORDER_RIGHT = CSS_PROPERTIES.borderRight.value as string[];
@@ -956,31 +956,28 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
     }
 
     public writeRawImage(options: RawDataOptions) {
-        const fileHandler = this.fileHandler;
-        if (fileHandler) {
-            const { mimeType, filename, data, encoding, width, height } = options;
-            if (filename && data) {
-                const asset = {
-                    pathname: appendSeparator((this.userSettings as UserResourceSettingsUI).outputDirectory, this.controllerSettings.directory.image),
-                    filename,
-                    mimeType,
-                    width,
-                    height
-                } as Partial<RawAsset>;
-                if (typeof data === 'string') {
-                    if (encoding === 'base64') {
-                        asset.base64 = data.startsWith('data:image/') ? splitPairEnd(data, ',') : data;
-                    }
-                }
-                else if (Array.isArray(data)) {
-                    asset.bytes = data;
-                }
-                else {
-                    return null;
-                }
-                fileHandler.addAsset(asset);
-                return asset;
+        const { filename, data } = options;
+        if (filename && data) {
+            let base64: string;
+            if (data instanceof ArrayBuffer) {
+                base64 = convertBase64(data);
             }
+            else if (typeof data === 'string' && options.encoding === 'base64') {
+                base64 = data.startsWith('data:image/') ? splitPair(data, ',')[1] : data;
+            }
+            else {
+                return null;
+            }
+            const result = {
+                pathname: appendSeparator((this.userSettings as UserResourceSettingsUI).outputDirectory, this.controllerSettings.directory.image),
+                filename,
+                mimeType: options.mimeType,
+                base64,
+                width: options.width,
+                height: options.height
+            } as RawAsset;
+            this.fileHandler?.addAsset(result);
+            return result;
         }
         return null;
     }

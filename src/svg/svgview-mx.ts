@@ -46,12 +46,9 @@ function parseAttribute(element: SVGElement, attr: string) {
 }
 
 function convertRotate(value: string) {
-    if (value === 'reverse') {
-        return 'auto 180deg';
-    }
-    else if (/^reverse\s+/.test(value)) {
-        const angle = splitPairEnd(value, ' ');
-        return `auto ${isAngle(angle) ? 180 + parseAngle(angle, 0) : '0'}deg`;
+    if (value.startsWith('reverse')) {
+        const angle = splitPairEnd(value, ' ', true);
+        return `auto ${angle === '' ? '180' : isAngle(angle) ? 180 + parseAngle(angle, 0) : '0'}deg`;
     }
     return value;
 }

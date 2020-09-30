@@ -273,11 +273,12 @@ declare module "lib" {
         function convertWord(value: string, dash?: boolean): string;
         function convertInt(value: string, fallback?: number): number;
         function convertFloat(value: string, fallback?: number): number;
+        function convertBase64(value: ArrayBuffer): string;
         function delimitString(options: DelimitStringOptions, ...appending: string[]): string;
         function spliceString(value: string, index: number, length: number): string;
-        function splitPair(value: string, char: string, trim?: boolean): [string, string];
-        function splitPairStart(value: string, char: string, trim?: boolean): string;
-        function splitPairEnd(value: string, char: string, trim?: boolean): string;
+        function splitPair(value: string, char: string, trim?: boolean, last?: boolean): [string, string];
+        function splitPairStart(value: string, char: string, trim?: boolean, last?: boolean): string;
+        function splitPairEnd(value: string, char: string, trim?: boolean, last?: boolean): string;
         function splitEnclosing(value: string, prefix?: string, separator?: string, opening?: string, closing?: string): string[];
         function lastItemOf<T>(value: ArrayLike<T>): Undef<T>;
         function hasBit(value: number, offset: number): boolean;

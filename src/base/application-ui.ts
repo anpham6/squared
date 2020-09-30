@@ -151,7 +151,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public builtInExtensions!: Map<string, ExtensionUI<T>>;
     public readonly session: squared.base.AppSessionUI<T> = {
         active: new Map<string, squared.base.AppProcessing<T>>(),
-        unusedStyles: new Set<string>(),
         extensionMap: new Map<T, ExtensionUI<T>[]>(),
         clearMap: new Map<T, string>()
     };

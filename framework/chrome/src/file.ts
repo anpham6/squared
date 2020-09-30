@@ -10,7 +10,7 @@ const { FILE } = squared.lib.regex;
 
 const ASSETS = squared.base.Resource.ASSETS;
 
-const { convertWord, fromLastIndexOf, isString, iterateReverseArray, parseMimeType, resolvePath, splitPairStart, trimEnd } = squared.lib.util;
+const { convertWord, fromLastIndexOf, isString, iterateReverseArray, parseMimeType, resolvePath, splitPair, splitPairStart, trimEnd } = squared.lib.util;
 
 const { appendSeparator, randomUUID } = squared.base.lib.util;
 
@@ -49,7 +49,7 @@ function getFilePath(value: string, saveTo?: boolean): [Undef<string>, string, s
     else if (value.startsWith('./')) {
         value = value.substring(2);
     }
-    const result = splitLastIndexOf(value, '/');
+    const result = splitPair(value, '/', false, true);
     if (saveTo) {
         const extension = getFileExt(result[1]);
         result[1] = randomUUID() + (extension ? '.' + extension : '');
@@ -149,17 +149,6 @@ function sortBundle(a: ChromeAsset, b: ChromeAsset) {
     return 0;
 }
 
-function splitLastIndexOf(value: string, ...char: string[]): [string, string] {
-    let i = 0;
-    while (i < char.length) {
-        const index = value.lastIndexOf(char[i++]);
-        if (index !== -1) {
-            return [value.substring(0, index), value.substring(index + 1)];
-        }
-    }
-    return ['', value];
-}
-
 const getFileExt = (value: string) => value.includes('.') ? fromLastIndexOf(value, '.').toLowerCase() : '';
 const getDirectory = (path: string, start: number) => path.substring(start, path.lastIndexOf('/'));
 
@@ -216,7 +205,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 }
             }
             else {
-                prefix = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
+                prefix = splitPairStart(location.pathname, '/', false, true) + '/';
                 let length = path.length;
                 if (length) {
                     let index = 0;

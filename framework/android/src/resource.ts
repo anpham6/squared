@@ -9,7 +9,7 @@ const { FILE } = squared.lib.regex;
 
 const { findColorShade, parseColor } = squared.lib.color;
 const { extractURL, getSrcSet } = squared.lib.css;
-const { fromLastIndexOf, isNumber, isPlainObject, isString, resolvePath, trimString } = squared.lib.util;
+const { fromLastIndexOf, isNumber, isPlainObject, isString, resolvePath, splitPairStart, trimString } = squared.lib.util;
 
 const STORED = squared.base.ResourceUI.STORED;
 
@@ -288,17 +288,17 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
             mdpi ||= element.src;
         }
         if (mdpi) {
-            const rawData = this.getRawData(mdpi);
-            if (rawData) {
-                if (rawData.base64) {
-                    const filename = rawData.filename;
+            const data = this.getRawData(mdpi);
+            if (data) {
+                if (data.base64) {
+                    const filename = data.filename;
                     this.writeRawImage({
-                        mimeType: rawData.mimeType,
+                        mimeType: data.mimeType,
                         filename: prefix + filename,
-                        data: rawData.base64,
+                        data: data.base64,
                         encoding: 'base64'
                     });
-                    return filename.substring(0, filename.lastIndexOf('.'));
+                    return splitPairStart(filename, '.', false, true);
                 }
                 return '';
             }

@@ -3,27 +3,31 @@ interface Asset {
     mimeType?: string;
 }
 
-interface FileAsset extends Asset {
+interface TextAsset extends Asset {
     pathname: string;
     filename: string;
     content?: string;
-    compress?: CompressFormat[];
-    exclusions?: Exclusions;
 }
 
 interface ImageAsset extends Asset, Dimension {}
 
-interface LayoutAsset extends FileAsset {
+interface LayoutAsset extends TextAsset {
     index?: number;
 }
 
-interface RequestAsset extends FileAsset {
-    bytes?: number[];
+interface FileAsset extends TextAsset {
     base64?: string;
-    dataMap?: StandardMap;
+    compress?: CompressFormat[];
 }
 
-interface RawAsset extends RequestAsset, Partial<ImageAsset> {}
+interface RawAsset extends FileAsset, Partial<ImageAsset> {
+    buffer?: ArrayBuffer;
+}
+
+interface RequestAsset extends FileAsset {
+    dataMap?: StandardMap;
+    exclusions?: Exclusions;
+}
 
 interface Exclusions {
     pathname?: string[];

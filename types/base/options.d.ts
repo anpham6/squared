@@ -41,7 +41,7 @@ interface ExtensionUIOptions extends ExtensionOptions {
 
 interface RawDataOptions extends Partial<Dimension> {
     mimeType?: string;
-    data?: any;
+    data?: string | ArrayBuffer;
     encoding?: string;
     filename?: string;
 }

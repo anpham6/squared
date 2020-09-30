@@ -280,12 +280,14 @@ export default abstract class Application<T extends Node> implements squared.bas
             return Promise.all(preloadItems.map(item => {
                 return new Promise((success, error) => {
                     if (typeof item === 'string') {
-                        if (FILE.SVG.test(item)) {
-                            fetch(item).then(async result => success(await result.text()));
-                        }
-                        else {
-                            fetch(item).then(async result => success(await result.arrayBuffer()));
-                        }
+                        fetch(item).then(async result => {
+                            if (FILE.SVG.test(item)) {
+                                success({ mimeType: 'image/svg+xml', encoding: 'utf8', data: await result.text() } as RawDataOptions);
+                            }
+                            else {
+                                success({ mimeType: result.headers.get('content-type') || 'font/' + (splitPair(item, '.', false, true)[1].toLowerCase() || 'ttf'), data: await result.arrayBuffer() } as RawDataOptions);
+                            }
+                        });
                     }
                     else {
                         item.addEventListener('load', () => success(item));
@@ -293,19 +295,14 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                 });
             }))
-            .then((result: PreloadItem[]) => {
+            .then((result: (HTMLImageElement | RawDataOptions)[]) => {
                 for (let i = 0, length = result.length; i < length; ++i) {
-                    const value = result[i];
-                    const uri = preloadItems[i];
-                    if (typeof uri === 'string') {
-                        if (typeof value === 'string') {
-                            if (FILE.SVG.test(uri)) {
-                                resource!.addRawData(uri, 'image/svg+xml', value, { encoding: 'utf8' });
-                            }
-                        }
+                    const item = preloadItems[i];
+                    if (typeof item === 'string') {
+                        resource!.addRawData(item, '', '', result[i] as RawDataOptions);
                     }
                     else {
-                        resource!.addImage(value as HTMLImageElement);
+                        resource!.addImage(item);
                     }
                 }
                 return this.resumeSessionThread(processing, rootElements, elements.length, documentRoot, preloaded);

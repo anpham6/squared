@@ -1260,7 +1260,7 @@ class FileManager implements serve.IFileManager {
                         }
                         continue;
                     }
-                    else if (item === file || item.content || item.bytes || !item.uri) {
+                    else if (item === file || item.content || !item.uri) {
                         continue;
                     }
                     const value = Express.getFullUri(item);
@@ -2003,29 +2003,6 @@ class FileManager implements serve.IFileManager {
                         }
                     }
                 );
-            }
-            else if (file.bytes) {
-                const { width, height } = file;
-                if (width && height) {
-                    this.performAsyncTask();
-                    new jimp({ width, height, data: Uint8Array.from(file.bytes) }, (err: unknown, img: jimp) => {
-                        if (!err) {
-                            img.write(filepath, error => {
-                                if (error) {
-                                    this.completeAsyncTask('');
-                                    Node.writeFail(filepath, error);
-                                }
-                                else {
-                                    this.writeBuffer(assets, file, filepath);
-                                }
-                            });
-                        }
-                        else {
-                            file.excluded = true;
-                            this.completeAsyncTask('');
-                        }
-                    });
-                }
             }
             else {
                 const uri = file.uri;

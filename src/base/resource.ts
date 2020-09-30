@@ -7,7 +7,7 @@ import { randomUUID } from './lib/util';
 const { STRING } = squared.lib.regex;
 
 const { extractURL } = squared.lib.css;
-const { fromLastIndexOf, fromMimeType, parseMimeType } = squared.lib.util;
+const { convertBase64, fromLastIndexOf, fromMimeType, parseMimeType } = squared.lib.util;
 
 const REGEXP_DATAURI = new RegExp(`^${STRING.DATAURI}$`);
 
@@ -94,15 +94,17 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
     public addRawData(uri: string, mimeType: string, content: Undef<string>, options?: RawDataOptions) {
         let filename: Undef<string>,
             encoding: Undef<string>,
-            data: Undef<any>,
+            data: Undef<string | ArrayBuffer>,
             width: Undef<number>,
             height: Undef<number>;
         if (options) {
             ({ filename, encoding, data, width, height } = options);
+            mimeType ||= options.mimeType || '';
             encoding &&= encoding.toLowerCase();
         }
         mimeType = mimeType.toLowerCase();
-        let base64: Undef<string>;
+        let base64: Undef<string>,
+            buffer: Undef<ArrayBuffer>;
         if (encoding === 'base64') {
             if (content) {
                 if (mimeType === 'image/svg+xml') {
@@ -113,37 +115,38 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
                 }
             }
             else if (data) {
-                base64 = data;
-            }
-            else {
-                return '';
+                base64 = data instanceof ArrayBuffer ? convertBase64(data) : data;
             }
         }
-        else if (content) {
-            content = content.replace(/\\(["'])/g, (match, ...capture: string[]) => capture[0]);
+        else {
+            if (data) {
+                if (data instanceof ArrayBuffer) {
+                    buffer = data;
+                }
+                else if (!content) {
+                    content = data;
+                }
+            }
+            content &&= content.replace(/\\(["'])/g, (match, ...capture: string[]) => capture[0]);
         }
-        else if (!Array.isArray(data)) {
+        if (!content && !base64 && !buffer) {
             return '';
         }
-        const imageMimeType = this.mimeTypeMap.image;
-        if (imageMimeType === '*' || imageMimeType.has(mimeType)) {
-            if (!filename) {
-                const ext = '.' + (fromMimeType(mimeType) || 'unknown');
-                filename = uri.endsWith(ext) ? fromLastIndexOf(uri, '/', '\\') : this.randomUUID + ext;
-            }
-            Resource.ASSETS.rawData.set(uri, {
-                pathname: uri.startsWith(location.origin) ? uri.substring(location.origin.length + 1, uri.lastIndexOf('/')) : '',
-                filename,
-                content,
-                base64,
-                mimeType,
-                bytes: data,
-                width,
-                height
-            });
-            return filename;
+        if (!filename) {
+            const ext = '.' + (fromMimeType(mimeType) || 'unknown');
+            filename = uri.endsWith(ext) ? fromLastIndexOf(uri, '/', '\\') : this.randomUUID + ext;
         }
-        return '';
+        Resource.ASSETS.rawData.set(uri, {
+            pathname: uri.startsWith(location.origin) ? uri.substring(location.origin.length + 1, uri.lastIndexOf('/')) : '',
+            filename,
+            content,
+            base64,
+            mimeType,
+            buffer,
+            width,
+            height
+        });
+        return filename;
     }
 
     public getImage(uri: string) {

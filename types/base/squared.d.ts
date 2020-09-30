@@ -254,7 +254,7 @@ declare module "base" {
         static hasLineBreak<U extends NodeUI>(node: U, lineBreak?: boolean, trim?: boolean): boolean;
         static checkPreIndent(node: NodeUI): Undef<[string, NodeUI]>;
         finalize(layouts: FileAsset[]): void;
-        writeRawImage(options: RawDataOptions): Null<Partial<RawAsset>>;
+        writeRawImage(options: RawDataOptions): Null<RawAsset>;
         setBoxStyle(node: T): void;
         setFontStyle(node: T): void;
         setValueString(node: T): void;
@@ -332,7 +332,7 @@ declare module "base" {
         static downloadFile(data: Blob, filename: string, mimeType?: string): void;
         resource: Resource<T>;
         readonly assets: FileAsset[];
-        addAsset(asset: Partial<RawAsset>): void;
+        addAsset(asset: RawAsset): void;
         reset(): void;
         copying(options: FileCopyingOptions): FileActionResult;
         archiving(options: FileArchivingOptions): FileActionResult;

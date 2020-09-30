@@ -66,7 +66,7 @@ const { NODE_RESOURCE } = squared.base.lib.constant;
 const { reduceRGBA } = squared.lib.color;
 const { extractURL, formatPercent, formatPX } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { delimitString, isEqual, plainMap, resolvePath, spliceArray, splitPair } = squared.lib.util;
+const { delimitString, isEqual, plainMap, resolvePath, spliceArray, splitPair, splitPairStart } = squared.lib.util;
 
 const CHAR_SEPARATOR = /\s*,\s*/;
 
@@ -803,7 +803,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         if (rawData) {
                                             const { base64, filename } = rawData;
                                             if (base64 && filename) {
-                                                images[length] = filename.substring(0, filename.lastIndexOf('.'));
+                                                images[length] = splitPairStart(filename, '.', false, true);
                                                 imageDimensions[length] = rawData.width && rawData.height ? rawData as Dimension : null;
                                                 resource.writeRawImage({
                                                     mimeType: rawData.mimeType,

@@ -27,7 +27,7 @@ interface ItemValue {
     innerText: string;
 }
 
-const { fromLastIndexOf, parseMimeType, plainMap, splitPairStart } = squared.lib.util;
+const { convertBase64, fromLastIndexOf, fromMimeType, parseMimeType, plainMap, splitPairStart } = squared.lib.util;
 
 const STORED = Resource.STORED;
 
@@ -258,12 +258,26 @@ export default class File<T extends View> extends squared.base.File<T> implement
                         fontStyle,
                         fontWeight
                     });
-                    const uri = resource.getFont(fontFamily, fontStyle, fontWeight)?.srcUrl;
-                    if (uri) {
+                    const url = resource.getFont(fontFamily, fontStyle, fontWeight)?.srcUrl;
+                    if (url) {
+                        const data = this.resource.getRawData(url);
+                        let base64: Undef<string>,
+                            ext: Undef<string>;
+                        if (data) {
+                            base64 = data.base64;
+                            if (!base64 && data.buffer) {
+                                base64 = convertBase64(data.buffer);
+                                data.base64 = base64;
+                            }
+                            if (data.mimeType) {
+                                ext = fromMimeType(data.mimeType);
+                            }
+                        }
                         this.addAsset({
                             pathname: directory + pathname,
-                            filename: fontName + '.' + (Resource.getExtension(splitPairStart(uri, '?')).toLowerCase() || 'ttf'),
-                            uri
+                            filename: fontName + '.' + (ext || Resource.getExtension(splitPairStart(url, '?')).toLowerCase() || 'ttf'),
+                            uri: !base64 ? url : undefined,
+                            base64
                         });
                     }
                 }

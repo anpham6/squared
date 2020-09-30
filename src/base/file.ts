@@ -8,15 +8,16 @@ type FileCopyingOptions = squared.base.FileCopyingOptions;
 const { SERVER_REQUIRED } = squared.lib.error;
 
 const { fromLastIndexOf, trimEnd } = squared.lib.util;
+const { createElement } = squared.lib.dom;
 
 export default abstract class File<T extends Node> implements squared.base.File<T> {
     public static downloadFile(data: Blob, filename: string, mimeType?: string) {
         const blob = new Blob([data], { type: mimeType || 'application/octet-stream' });
-        const url = window.URL.createObjectURL(blob);
-        const element = document.createElement('a');
-        element.style.setProperty('display', 'none');
-        element.setAttribute('href', url);
-        element.setAttribute('download', filename);
+        const href = window.URL.createObjectURL(blob);
+        const element = createElement('a', {
+            style: { display: 'none' },
+            attrs: { href, download: filename }
+        }) as HTMLAnchorElement;
         if (!element.download) {
             element.setAttribute('target', '_blank');
         }
@@ -24,7 +25,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
         body.appendChild(element);
         element.click();
         body.removeChild(element);
-        setTimeout(() => window.URL.revokeObjectURL(url), 1);
+        setTimeout(() => window.URL.revokeObjectURL(href), 1);
     }
 
     public resource!: Resource<T>;
@@ -54,15 +55,15 @@ export default abstract class File<T extends Node> implements squared.base.File<
         return this.copying({ ...options, directory });
     }
 
-    public addAsset(asset: Partial<RawAsset>) {
-        if (asset.content || asset.bytes || asset.base64 || asset.uri) {
+    public addAsset(asset: RawAsset) {
+        if (asset.content || asset.uri || asset.base64) {
             const { pathname, filename } = asset;
             const append = this.assets.find(item => item.pathname === pathname && item.filename === filename);
             if (append) {
                 Object.assign(append, asset);
             }
             else {
-                this.assets.push(asset as RawAsset);
+                this.assets.push(asset);
             }
         }
     }
