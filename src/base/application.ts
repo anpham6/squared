@@ -595,7 +595,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         REGEXP_DATAURI.lastIndex = 0;
                     }
                 };
-                const hasExactValue = (attr: string, value: string) => new RegExp(`\\b${attr}[\\s\\n]*:[\\s\\n]*(?:${value})[\\s\\n]*;?`).test(cssText);
+                const hasExactValue = (attr: string, value: string) => new RegExp(`\\b${attr}[\\s\\n]*:[\\s\\n]*${value}[\\s\\n]*;?`).test(cssText);
                 const hasPartialValue = (attr: string, value: string) => new RegExp(`\\b${attr}[\\s\\n]*:[^;]*?${value}[^;]*;?`).test(cssText);
                 const items = Array.from(cssStyle);
                 for (let i = 0, length = items.length; i < length; ++i) {
@@ -606,25 +606,22 @@ export default abstract class Application<T extends Node> implements squared.bas
                     const baseAttr = convertCamelCase(attr);
                     let value: string = cssStyle[attr];
                     switch (value) {
-                        case 'initial': {
+                        case 'initial':
                             if (isUserAgent(USER_AGENT.SAFARI) && baseAttr.startsWith('background')) {
                                 break;
                             }
-                            const property = CSS_PROPERTIES[baseAttr];
-                            if (property && property.value === 'auto') {
+                            if (CSS_PROPERTIES[baseAttr]?.value === 'auto') {
                                 value = 'auto';
                                 break;
                             }
-                        }
                         case 'normal':
-                            valid: {
-                                if (!hasExactValue(attr, value)) {
+                            if (CSS_PROPERTIES[baseAttr]?.value === 'normal' && !hasExactValue(attr, value)) {
+                                required: {
                                     for (const name in CSS_SHORTHANDNONE) {
                                         const css = CSS_SHORTHANDNONE[name];
                                         if ((css.value as string[]).includes(baseAttr)) {
-                                            const cssName = css.name!;
-                                            if (hasExactValue(cssName, 'none|initial') || value === 'initial' && hasPartialValue(cssName, 'initial') || css.valueOfNone && hasExactValue(cssName, css.valueOfNone)) {
-                                                break valid;
+                                            if (hasExactValue(css.name!, 'none|initial') || value === 'initial' && hasPartialValue(css.name!, 'initial') || css.valueOfNone && hasExactValue(css.name!, css.valueOfNone)) {
+                                                break required;
                                             }
                                             break;
                                         }

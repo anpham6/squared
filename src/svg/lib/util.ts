@@ -615,15 +615,17 @@ export function calculateStyle(element: SVGGraphicsElement, attr: string, value:
         case 'animationIterationCount':
         case 'offsetDistance':
         case 'offsetRotate':
+        case 'mask':
             return calculateCssStyle(element, attr, value);
         case 'fill':
         case 'stroke':
+        case 'stopColor':
         case 'floodColor':
         case 'lightingColor':
-        case 'stopColor':
             return calculateCssStyle(element, 'fontColor', value);
         case 'fillOpacity':
         case 'strokeOpacity':
+        case 'stopOpacity':
         case 'floodOpacity':
             return calculateCssStyle(element, 'opacity', value);
         case 'strokeMiterlimit': {

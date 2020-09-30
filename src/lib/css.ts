@@ -360,7 +360,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'running'
     },
     animationTimingFunction: {
-        trait: 0,
+        trait: CSS_TRAITS.CALC,
         value: 'ease'
     },
     backdropFilter: {
@@ -649,7 +649,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'top'
     },
     caretColor: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR | CSS_TRAITS.AUTO,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
         value: 'auto'
     },
     clear: {
@@ -1104,7 +1104,7 @@ export const CSS_PROPERTIES: CssProperties = {
         ]
     },
     offsetPath: {
-        trait: 0,
+        trait: CSS_TRAITS.CALC,
         value: 'none'
     },
     offsetDistance: {
@@ -1215,16 +1215,19 @@ export const CSS_PROPERTIES: CssProperties = {
         value: '0'
     },
     pageBreakAfter: {
-        trait: 0,
-        value: 'auto'
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'auto',
+        alias: 'breakAfter'
     },
     pageBreakBefore: {
-        trait: 0,
-        value: 'auto'
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'auto',
+        alias: 'breakBefore'
     },
     pageBreakInside: {
-        trait: 0,
-        value: 'auto'
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'auto',
+        alias: 'breakInside'
     },
     perspective: {
         trait: CSS_TRAITS.CALC,
@@ -1314,19 +1317,19 @@ export const CSS_PROPERTIES: CssProperties = {
         ]
     },
     scrollPaddingBottom: {
-        trait: CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
         value: 'auto'
     },
     scrollPaddingLeft: {
-        trait: CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
         value: 'auto'
     },
     scrollPaddingRight: {
-        trait: CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
         value: 'auto'
     },
     scrollPaddingTop: {
-        trait: CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
         value: 'auto'
     },
     scrollSnapAlign: {
@@ -1343,7 +1346,7 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     shapeImageThreshold: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
-        value: '0.0'
+        value: '0'
     },
     shapeMargin: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.UNIT,
@@ -1354,7 +1357,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'none'
     },
     tabSize: {
-        trait: CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
         value: '8'
     },
     tableLayout: {
@@ -2107,6 +2110,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
         case 'gridAutoRows':
         case 'gridTemplateRows':
             return calculateGeneric(element, value, CSS_UNIT.INTEGER, 1, boundingBox, 'height');
+        case 'order':
         case 'zIndex':
             return formatDecimal(calculateVar(element, value, { unitType: CSS_UNIT.INTEGER }));
         case 'tabSize':
@@ -2649,6 +2653,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
             return value;
         }
         case 'background':
+        case 'mask':
         case 'gridTemplate':
             return getStyle(element)[attr];
         default:

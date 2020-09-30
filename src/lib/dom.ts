@@ -154,12 +154,13 @@ export function createElement(tagName: string, options: CreateElementOptions) {
     const { parent, attrs, style } = options;
     const element = document.createElement(tagName);
     if (style) {
+        const cssStyle = element.style;
         for (const attr in style) {
             if (attr.includes('-')) {
-                element.style.setProperty(attr, style[attr]!);
+                cssStyle.setProperty(attr, style[attr]!);
             }
-            else {
-                element.style[attr] = style[attr];
+            else if (attr in cssStyle) {
+                cssStyle[attr] = style[attr];
             }
         }
     }
