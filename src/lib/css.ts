@@ -1546,7 +1546,7 @@ export const PROXY_INLINESTYLE = Object.freeze(
             fontSize: 'inherit',
             lineHeight: 'inherit',
             "setProperty": function() {},
-            "getPropertyValue": function(property: string) { return this[convertCamelCase(property)] as string; }
+            "getPropertyValue": function(p: string) { return this[convertCamelCase(p)] as string; }
         }
     ) as CSSStyleDeclaration,
     {

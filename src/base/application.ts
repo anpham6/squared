@@ -555,7 +555,6 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     private applyStyleRule(item: CSSStyleRule, sessionId: string) {
-        const resource = this._resourceHandler;
         const styleSheetHref = item.parentStyleSheet?.href || location.href;
         const cssText = item.cssText;
         switch (item.type) {
@@ -567,6 +566,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const parseImageUrl = (attr: string) => {
                     const value = baseMap[attr];
                     if (value && value !== 'initial') {
+                        const resource = this._resourceHandler;
                         let result: Undef<string>,
                             match: Null<RegExpExecArray>;
                         while (match = REGEXP_DATAURI.exec(value)) {
@@ -612,7 +612,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                 break;
                             }
                         case 'normal':
-                            if (CSS_PROPERTIES[baseAttr]?.value === 'normal' && !hasExactValue(attr, value)) {
+                            if (!hasExactValue(attr, value)) {
                                 required: {
                                     for (const name in CSS_SHORTHANDNONE) {
                                         const css = CSS_SHORTHANDNONE[name];
@@ -689,8 +689,8 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
                 break;
             }
-            case CSSRule.FONT_FACE_RULE: {
-                if (resource) {
+            case CSSRule.FONT_FACE_RULE:
+                if (this._resourceHandler) {
                     const attr = REGEXP_FONTFACE.exec(cssText)?.[1];
                     if (attr) {
                         const src = REGEXP_FONTSRC.exec(attr)?.[1].trim();
@@ -700,29 +700,28 @@ export default abstract class Application<T extends Node> implements squared.bas
                             const fontStyle = REGEXP_FONTSTYLE.exec(attr)?.[1].toLowerCase() || 'normal';
                             const fontWeight = parseInt(REGEXP_FONTWEIGHT.exec(attr)?.[1] || '400');
                             for (const value of src.split(',')) {
-                                const urlMatch = REGEXP_FONTURL.exec(value);
-                                if (urlMatch) {
+                                const match = REGEXP_FONTURL.exec(value);
+                                if (match) {
                                     const data: FontFaceData = {
                                         fontFamily,
                                         fontWeight,
                                         fontStyle,
-                                        srcFormat: urlMatch[4]?.toLowerCase().trim() || 'truetype'
+                                        srcFormat: match[4]?.toLowerCase().trim() || 'truetype'
                                     };
-                                    const url = (urlMatch[2] || urlMatch[3]).trim();
-                                    if (urlMatch[1] === 'url') {
+                                    const url = (match[2] || match[3]).trim();
+                                    if (match[1] === 'url') {
                                         data.srcUrl = resolvePath(url, styleSheetHref);
                                     }
                                     else {
                                         data.srcLocal = url;
                                     }
-                                    resource.addFont(data);
+                                    this._resourceHandler.addFont(data);
                                 }
                             }
                         }
                     }
                 }
                 break;
-            }
             case CSSRule.SUPPORTS_RULE:
                 this.applyCSSRuleList(((item as unknown) as CSSSupportsRule).cssRules, sessionId);
                 break;

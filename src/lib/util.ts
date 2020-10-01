@@ -8,8 +8,6 @@ interface XMLTagData {
 }
 
 const CACHE_CAMELCASE: StringMap = {};
-const CACHE_HYPHENATED: StringMap = {};
-const CACHE_UNDERSCORE: StringMap = {};
 const CACHE_TRIMBOTH: ObjectMap<RegExp> = {};
 const CACHE_TRIMSTRING: ObjectMap<RegExp> = {};
 const REGEXP_DECIMAL = new RegExp(`^${STRING.DECIMAL}$`);
@@ -432,22 +430,6 @@ export function capitalize(value: string, upper?: boolean) {
 }
 
 export function convertHyphenated(value: string, char = '-') {
-    switch (char) {
-        case '-': {
-            const cacheData = CACHE_HYPHENATED[value];
-            if (cacheData) {
-                return cacheData;
-            }
-            break;
-        }
-        case '_': {
-            const cacheData = CACHE_UNDERSCORE[value];
-            if (cacheData) {
-                return cacheData;
-            }
-            break;
-        }
-    }
     let result = value[0].toLowerCase(),
         lower = true;
     for (let i = 1, length = value.length; i < length; ++i) {
@@ -456,38 +438,35 @@ export function convertHyphenated(value: string, char = '-') {
         result += lower && upper && ch !== char ? char + ch.toLowerCase() : ch;
         lower = !upper;
     }
-    switch (char) {
-        case '-':
-            CACHE_HYPHENATED[value] = result;
-            break;
-        case '_':
-            CACHE_UNDERSCORE[value] = result;
-            break;
-    }
     return result;
 }
 
 export function convertCamelCase(value: string, char = '-') {
-    let i = value.indexOf(char);
-    if (i === -1) {
-        return value;
-    }
     const cacheData = CACHE_CAMELCASE[value];
     if (cacheData) {
         return cacheData;
     }
-    let result = value.substring(0, i),
-        previous = '';
+    let i = value.indexOf(char);
+    if (i === -1) {
+        return CACHE_CAMELCASE[value] = value;
+    }
+    let result = value.substring(0, i++),
+        previous = true;
     const length = value.length;
     while (i < length) {
         const ch = value[i++];
-        if (ch !== char) {
-            result += previous === char ? ch.toUpperCase() : ch;
+        if (ch === char) {
+            previous = true;
         }
-        previous = ch;
+        else if (previous) {
+            result += ch.toUpperCase();
+            previous = false;
+        }
+        else {
+            result += ch;
+        }
     }
-    CACHE_CAMELCASE[value] = result;
-    return result;
+    return CACHE_CAMELCASE[value] = result;
 }
 
 export function convertWord(value: string, dash?: boolean) {

@@ -1318,6 +1318,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             case 'IMG':
             case 'CANVAS': {
                 const element = node.element as HTMLImageElement;
+                const resource = this.application.resourceHandler;
                 let imageSet: Undef<ImageSrcSet[]>;
                 if (node.actualParent!.tagName === 'PICTURE') {
                     imageSet = getSrcSet(element, this.localSettings.mimeType.image);
@@ -1331,10 +1332,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         };
                         const image = imageSet[0];
                         if (image.actualWidth) {
-                            setImageDimension(image.actualWidth, this.application.resourceHandler.getImage(element.src));
+                            setImageDimension(image.actualWidth, resource.getImage(element.src));
                         }
                         else {
-                            const stored = this.application.resourceHandler.getImage(image.src);
+                            const stored = resource.getImage(image.src);
                             if (stored) {
                                 setImageDimension(stored.width, stored);
                             }
@@ -1382,11 +1383,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         if (data) {
                             node.setControlType(controlName, containerType);
                             src = 'canvas_' + convertWord(node.controlId, true);
-                            this.application.resourceHandler.writeRawImage({ mimeType: 'image/png', filename: src + '.png', data, encoding: 'base64' });
+                            resource.writeRawImage({ mimeType: 'image/png', filename: src + '.png', data, encoding: 'base64' });
                         }
                     }
                     else {
-                        src = (this.application.resourceHandler as android.base.Resource<T>).addImageSrc(element, '', imageSet);
+                        src = (resource as android.base.Resource<T>).addImageSrc(element, '', imageSet);
                     }
                     if (src) {
                         node.android('src', `@drawable/${src}`);

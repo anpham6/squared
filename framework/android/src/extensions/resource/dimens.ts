@@ -8,6 +8,8 @@ type GroupData = ObjectMap<View[]>;
 
 const { convertHyphenated, fromLastIndexOf } = squared.lib.util;
 
+const CACHE_UNDERSCORE: StringMap = {};
+
 const RE_DIMENS = new Pattern(/:(\w+)="(-?[\d.]+px)"/g);
 
 function getResourceName(map: Map<string, string>, name: string, value: string) {
@@ -55,7 +57,8 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
             const group = groups[containerName];
             for (const name in group) {
                 const [namespace, attr, value] = name.split(',');
-                const key = getResourceName(dimens, fromLastIndexOf(containerName, '.') + '_' + convertHyphenated(attr, '_'), value);
+                CACHE_UNDERSCORE[attr] ||= convertHyphenated(attr, '_');
+                const key = getResourceName(dimens, fromLastIndexOf(containerName, '.') + '_' + CACHE_UNDERSCORE[attr], value);
                 const items = group[name];
                 for (let i = 0, length = items.length; i < length; ++i) {
                     items[i].attr(namespace, attr, `@dimen/${key}`);
@@ -74,7 +77,8 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
                 while (RE_DIMENS.find()) {
                     const [original, name, value] = RE_DIMENS.groups();
                     if (name !== 'text') {
-                        const key = getResourceName(dimens, 'custom_' + convertHyphenated(name, '_'), value);
+                        CACHE_UNDERSCORE[name] ||= convertHyphenated(name, '_');
+                        const key = getResourceName(dimens, 'custom_' + CACHE_UNDERSCORE[name], value);
                         content = content.replace(original, original.replace(value, `@dimen/${key}`));
                         dimens.set(key, value);
                     }
