@@ -18,7 +18,7 @@ type FileActionOptions = squared.FileActionOptions;
 const { FILE } = squared.lib.regex;
 
 const { formatPX, getStyle, hasCoords, insertStyleSheetRule, resolveURL } = squared.lib.css;
-const { getNamedItem, removeElementsByClassName } = squared.lib.dom;
+const { getNamedItem, getShadowRoot, removeElementsByClassName } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;
 const { capitalize, convertWord, flatArray, hasBit, isString, iterateArray, partitionArray, trimBoth, trimString } = squared.lib.util;
 
@@ -477,44 +477,53 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     pseudoElements.push(item);
                 }
             });
+            console.log(cache);
             const length = pseudoElements.length;
             if (length) {
-                const pseudoMap: { item: T; id: string; parentElement: Element; styleElement?: HTMLStyleElement }[] = new Array(length);
+                const pseudoMap: [item: T, id: string, styleElement: Undef<HTMLStyleElement>][] = new Array(length);
                 let q = 0;
                 for (let i = 0; i < length; ++i) {
                     const item = pseudoElements[i];
-                    const parentElement = item.parentElement as HTMLElement;
-                    let id = parentElement.id.trim(),
+                    const parentElement = item.parentElement!;
+                    let id = '',
                         styleElement: Undef<HTMLStyleElement>;
                     if (item.pageFlow) {
-                        if (id === '') {
-                            id = '__squared_' + Math.round(Math.random() * new Date().getTime());
-                            parentElement.id = id;
+                        let tagName: string;
+                        if (parentElement.shadowRoot) {
+                            tagName = ':host';
                         }
-                        styleElement = insertStyleSheetRule(`#${id + item.pseudoElt!} { display: none !important; }`);
+                        else {
+                            id = parentElement.id.trim();
+                            if (id === '') {
+                                id = '__squared_' + Math.round(Math.random() * new Date().getTime());
+                                parentElement.id = id;
+                            }
+                            tagName = '#' + id;
+                        }
+                        styleElement = insertStyleSheetRule(`${tagName + item.pseudoElt!} { display: none !important; }`, 0, item.shadowChildOf);
                     }
                     if (item.cssTry('display', item.display)) {
-                        pseudoMap[q++] = { item, id, parentElement, styleElement };
+                        pseudoMap[q++] = [item, id, styleElement];
                     }
                 }
                 pseudoMap.length = q;
                 for (let i = 0; i < q; ++i) {
-                    pseudoMap[i].item.setBounds(false);
+                    pseudoMap[i][0].setBounds(false);
                 }
                 for (let i = 0; i < q; ++i) {
                     const data = pseudoMap[i];
-                    const styleElement = data.styleElement;
-                    if (data.id.startsWith('__squared_')) {
-                        data.parentElement.id = '';
+                    const item = data[0];
+                    if (data[1].startsWith('__squared_')) {
+                        item.parentElement!.id = '';
                     }
-                    if (styleElement) {
+                    if (data[2]) {
                         try {
-                            document.head.removeChild(styleElement);
+                            (item.shadowChildOf || document.head).removeChild(data[2]);
                         }
                         catch {
                         }
                     }
-                    data.item.cssFinally('display');
+                    item.cssFinally('display');
                 }
             }
             excluded.each(item => {
@@ -575,7 +584,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return this.layouts[0]?.content || '';
     }
 
-    protected cascadeParentNode(cache: NodeList<T>, excluded: NodeList<T>, parentElement: HTMLElement, sessionId: string, depth: number, rootElements: Set<HTMLElement>, extensions: Null<ExtensionUI<T>[]>, cascadeAll?: boolean) {
+    protected cascadeParentNode(cache: NodeList<T>, excluded: NodeList<T>, parentElement: HTMLElement, sessionId: string, depth: number, rootElements: Set<HTMLElement>, extensions: Null<ExtensionUI<T>[]>, shadowParent?: ShadowRoot, cascadeAll?: boolean) {
         const setElementState = (child: T, styleElement: boolean, naturalElement: boolean, htmlElement: boolean, svgElement: boolean) => {
             child.setCacheState('styleElement', styleElement);
             child.setCacheState('naturalElement', naturalElement);
@@ -602,12 +611,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (node.excluded || this._preventNodeCascade(node)) {
                 return node;
             }
-            const beforeElement = this.createPseduoElement(parentElement, '::before', sessionId);
-            const afterElement = this.createPseduoElement(parentElement, '::after', sessionId);
-            const childNodes = parentElement.childNodes;
+            const hostElement = getShadowRoot(parentElement) || parentElement;
+            const elements: T[] = new Array(hostElement.childElementCount);
+            const beforeElement = this.createPseduoElement(parentElement, '::before', sessionId, hostElement);
+            const afterElement = this.createPseduoElement(parentElement, '::after', sessionId, hostElement);
+            const childNodes = hostElement.childNodes;
             const length = childNodes.length;
             const children: T[] = new Array(length);
-            const elements: T[] = new Array(parentElement.childElementCount);
             const childDepth = depth + 1;
             let inlineText = true,
                 plainText = -1,
@@ -653,7 +663,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         (use ? ApplicationUI.prioritizeExtensions(use, extensions) : extensions).some(item => item.beforeInsertNode!(element, sessionId));
                     }
                     if (!rootElements.has(element)) {
-                        if (element.childNodes.length === 0) {
+                        const shadowRoot = getShadowRoot(element);
+                        if (shadowRoot) {
+                            this.setStyleMap(sessionId, this.getProcessing(sessionId)!, shadowRoot);
+                        }
+                        if ((shadowRoot || element).childNodes.length) {
+                            child = this.cascadeParentNode(cache, excluded, element, sessionId, childDepth, rootElements, extensions, shadowRoot || shadowParent, cascadeAll);
+                        }
+                        else {
                             child = this.insertNode(element, sessionId, cascadeAll);
                             if (element.tagName === 'svg') {
                                 setElementState(child, true, true, false, true);
@@ -661,9 +678,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             else {
                                 setElementState(child, true, true, true, child.imageElement && FILE.SVG.test(child.toElementString('src')));
                             }
-                        }
-                        else {
-                            child = this.cascadeParentNode(cache, excluded, element, sessionId, childDepth, rootElements, extensions, cascadeAll);
                         }
                         if (!child.excluded) {
                             inlineText = false;
@@ -686,12 +700,16 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
                 child.init(node, childDepth, j);
                 child.actualParent = node;
+                if (shadowParent) {
+                    child.shadowChildOf = shadowParent;
+                }
                 children[j++] = child;
             }
             children.length = j;
             elements.length = k;
             node.naturalChildren = children;
             node.naturalElements = elements;
+            node.shadowRoot = hostElement !== parentElement;
             if (!inlineText) {
                 node.inlineText = false;
                 if (j > 0) {
@@ -756,6 +774,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
                 if (child.excluded) {
+                    console.log(child, child.textEmpty, child.pseudoElt);
                     hasExcluded = true;
                     excluded.add(child);
                 }
@@ -1539,7 +1558,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return layout;
     }
 
-    protected createPseduoElement(element: HTMLElement, pseudoElt: PseudoElt, sessionId: string) {
+    protected createPseduoElement(element: HTMLElement, pseudoElt: PseudoElt, sessionId: string, parentRoot: HTMLElement | ShadowRoot) {
         let styleMap = getElementCache<StringMap>(element, 'styleMap' + pseudoElt, sessionId);
         if (element.tagName === 'Q') {
             if (!styleMap) {
@@ -1563,7 +1582,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                     }
                     else {
-                        const childNodes = element.childNodes;
+                        const childNodes = parentRoot.childNodes;
                         for (let i = 0, length = childNodes.length; i < length; ++i) {
                             const child = childNodes[i] as Element;
                             if (child.nodeName[0] === '#') {
@@ -1762,10 +1781,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     pseudoElement.className = '__squared.pseudo';
                     pseudoElement.style.setProperty('display', 'none');
                     if (pseudoElt === '::before') {
-                        element.insertBefore(pseudoElement, element.childNodes[0]);
+                        parentRoot.insertBefore(pseudoElement, parentRoot.childNodes[0]);
                     }
                     else {
-                        element.appendChild(pseudoElement);
+                        parentRoot.appendChild(pseudoElement);
                     }
                     if (content !== '') {
                         if (tagName === 'img') {

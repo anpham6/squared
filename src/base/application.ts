@@ -15,8 +15,9 @@ type PreloadItem = HTMLImageElement | string;
 const { CSS_CANNOT_BE_PARSED, DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, reject } = squared.lib.error;
 const { FILE, STRING } = squared.lib.regex;
 
-const { CSS_PROPERTIES, checkMediaRule, getSpecificity, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText } = squared.lib.css;
 const { isUserAgent } = squared.lib.client;
+const { CSS_PROPERTIES, checkMediaRule, getSpecificity, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText } = squared.lib.css;
+const { getShadowRoot } = squared.lib.dom;
 const { getElementCache, newSessionInit, resetSessionAll, setElementCache } = squared.lib.session;
 const { capitalize, convertCamelCase, isEmptyString, parseMimeType, resolvePath, splitPair, splitPairStart, trimBoth } = squared.lib.util;
 
@@ -28,6 +29,7 @@ const REGEXP_FONTSTYLE = /\s*font-style:\s*(\w+)\s*;/;
 const REGEXP_FONTWEIGHT = /\s*font-weight:\s*(\d+)\s*;/;
 const REGEXP_FONTURL = /\s*(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*format\("?([\w-]+)"?\))?\s*/;
 const REGEXP_DATAURI = new RegExp(`url\\("?(${STRING.DATAURI})"?\\),?\\s*`, 'g');
+const REGEXP_CSSHOST = /^:(host|host-context)\(\s*([^)]+)\s*\)/;
 const CSS_SHORTHANDNONE = getPropertiesAsTraits(CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE);
 
 export default abstract class Application<T extends Node> implements squared.base.Application<T> {
@@ -339,8 +341,8 @@ export default abstract class Application<T extends Node> implements squared.bas
         return node;
     }
 
-    public setStyleMap(sessionId: string, processing: squared.base.AppProcessing<T>) {
-        const styleSheets = document.styleSheets;
+    public setStyleMap(sessionId: string, processing: squared.base.AppProcessing<T>, documentRoot: DocumentRoot = document) {
+        const styleSheets = documentRoot.styleSheets;
         for (let i = 0, length = styleSheets.length; i < length; ++i) {
             const styleSheet = styleSheets[i];
             let mediaText: Undef<string>;
@@ -350,7 +352,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             catch {
             }
             if (!mediaText || checkMediaRule(mediaText)) {
-                this.applyStyleSheet(styleSheet, sessionId, processing);
+                this.applyStyleSheet(styleSheet, sessionId, processing, documentRoot);
             }
         }
     }
@@ -464,7 +466,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         return node;
     }
 
-    protected cascadeParentNode(cache: NodeList<T>, excluded: NodeList<T>, parentElement: HTMLElement, sessionId: string, depth: number, rootElements: Set<HTMLElement>, extensions: Null<Extension<T>[]>) {
+    protected cascadeParentNode(cache: NodeList<T>, excluded: NodeList<T>, parentElement: HTMLElement, sessionId: string, depth: number, rootElements: Set<HTMLElement>, extensions: Null<Extension<T>[]>, shadowParent?: Null<ShadowRoot>) {
         const node = this.insertNode(parentElement, sessionId);
         if (node) {
             if (depth === 0) {
@@ -474,10 +476,11 @@ export default abstract class Application<T extends Node> implements squared.bas
                 return node;
             }
             const childDepth = depth + 1;
-            const childNodes = parentElement.childNodes;
+            const hostElement = getShadowRoot(parentElement) || parentElement;
+            const childNodes = hostElement.childNodes;
             const length = childNodes.length;
             const children: T[] = new Array(length);
-            const elements: T[] = new Array(parentElement.childElementCount);
+            const elements: T[] = new Array(hostElement.childElementCount);
             let inlineText = true,
                 plainText = false,
                 j = 0, k = 0;
@@ -498,7 +501,11 @@ export default abstract class Application<T extends Node> implements squared.bas
                         const use = this.getDatasetName('use', element);
                         (use ? Application.prioritizeExtensions(use, extensions) : extensions).some(item => item.beforeInsertNode!(element, sessionId));
                     }
-                    child = element.childNodes.length === 0 ? this.insertNode(element, sessionId) : this.cascadeParentNode(cache, excluded, element, sessionId, childDepth, rootElements, extensions);
+                    const shadowRoot = getShadowRoot(element);
+                    if (shadowRoot) {
+                        this.setStyleMap(sessionId, this.getProcessing(sessionId)!, shadowRoot);
+                    }
+                    child = (shadowRoot || element).childNodes.length ? this.cascadeParentNode(cache, excluded, element, sessionId, childDepth, rootElements, extensions, shadowRoot || shadowParent) : this.insertNode(element, sessionId);
                     if (child) {
                         elements[k++] = child;
                         inlineText = false;
@@ -513,6 +520,9 @@ export default abstract class Application<T extends Node> implements squared.bas
                 if (child) {
                     child.init(node, childDepth, j);
                     child.actualParent = node;
+                    if (shadowParent) {
+                        child.shadowChildOf = shadowParent;
+                    }
                     children[j++] = child;
                 }
             }
@@ -520,6 +530,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             elements.length = k;
             node.naturalChildren = children;
             node.naturalElements = elements;
+            node.shadowRoot = hostElement !== parentElement;
             if (j > 0) {
                 node.inlineText = inlineText && plainText;
                 node.retainAs(children);
@@ -554,7 +565,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         return result;
     }
 
-    private applyStyleRule(item: CSSStyleRule, sessionId: string) {
+    private applyStyleRule(item: CSSStyleRule, sessionId: string, documentRoot: DocumentRoot) {
         const styleSheetHref = item.parentStyleSheet?.href || location.href;
         const cssText = item.cssText;
         switch (item.type) {
@@ -651,15 +662,51 @@ export default abstract class Application<T extends Node> implements squared.bas
                     const specificity = getSpecificity(selectorText);
                     const [selector, target] = splitPair(selectorText, '::');
                     const targetElt = target ? '::' + target : '';
-                    const elements = document.querySelectorAll(selector || '*');
-                    const q = elements.length;
-                    if (q === 0) {
+                    let elements: ArrayLike<Element>;
+                    if (selector.startsWith(':host')) {
+                        const hostElement = (documentRoot as ShadowRoot).host;
+                        if (!hostElement) {
+                            continue;
+                        }
+                        let valid = false;
+                        if (selector === ':host') {
+                            valid = true;
+                        }
+                        else {
+                            const matchHost = REGEXP_CSSHOST.exec(selector);
+                            if (matchHost) {
+                                if (matchHost[2] === '*') {
+                                    valid = true;
+                                }
+                                else {
+                                    const result = document.querySelectorAll(matchHost[1] === 'host' ? hostElement.tagName + matchHost[2] : matchHost[2] + ' ' + hostElement.tagName);
+                                    for (let i = 0, length = result.length; i < length; ++i) {
+                                        if (result[i] === hostElement) {
+                                            valid = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        if (valid) {
+                            elements = [hostElement];
+                        }
+                        else {
+                            continue;
+                        }
+                    }
+                    else {
+                        elements = documentRoot.querySelectorAll(selector || '*');
+                    }
+                    const length = elements.length;
+                    if (length === 0) {
                         if (unusedStyles) {
                             unusedStyles.add(selectorText);
                         }
                         continue;
                     }
-                    for (let i = 0; i < q; ++i) {
+                    for (let i = 0; i < length; ++i) {
                         const element = elements[i];
                         const attrStyle = 'styleMap' + targetElt;
                         const attrSpecificity = 'styleSpecificity' + targetElt;
@@ -723,12 +770,12 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
                 break;
             case CSSRule.SUPPORTS_RULE:
-                this.applyCSSRuleList(((item as unknown) as CSSSupportsRule).cssRules, sessionId);
+                this.applyCSSRuleList(((item as unknown) as CSSSupportsRule).cssRules, sessionId, documentRoot);
                 break;
         }
     }
 
-    private applyStyleSheet(item: CSSStyleSheet, sessionId: string, processing: squared.base.AppProcessing<T>) {
+    private applyStyleSheet(item: CSSStyleSheet, sessionId: string, processing: squared.base.AppProcessing<T>, documentRoot: DocumentRoot) {
         try {
             const cssRules = item.cssRules;
             if (cssRules) {
@@ -738,7 +785,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     switch (rule.type) {
                         case CSSRule.STYLE_RULE:
                         case CSSRule.FONT_FACE_RULE:
-                            this.applyStyleRule(rule as CSSStyleRule, sessionId);
+                            this.applyStyleRule(rule as CSSStyleRule, sessionId, documentRoot);
                             break;
                         case CSSRule.IMPORT_RULE:
                             if (this._resourceHandler) {
@@ -747,16 +794,16 @@ export default abstract class Application<T extends Node> implements squared.bas
                                     this._resourceHandler.addRawData(uri, 'text/css', undefined, { encoding: 'utf8' });
                                 }
                             }
-                            this.applyStyleSheet((rule as CSSImportRule).styleSheet, sessionId, processing);
+                            this.applyStyleSheet((rule as CSSImportRule).styleSheet, sessionId, processing, documentRoot);
                             break;
                         case CSSRule.MEDIA_RULE:
                             if (checkMediaRule((rule as CSSConditionRule).conditionText || parseConditionText('media', rule.cssText))) {
-                                this.applyCSSRuleList((rule as CSSConditionRule).cssRules, sessionId);
+                                this.applyCSSRuleList((rule as CSSConditionRule).cssRules, sessionId, documentRoot);
                             }
                             break;
                         case CSSRule.SUPPORTS_RULE:
                             if (CSS.supports((rule as CSSConditionRule).conditionText || parseConditionText('supports', rule.cssText))) {
-                                this.applyCSSRuleList((rule as CSSConditionRule).cssRules, sessionId);
+                                this.applyCSSRuleList((rule as CSSConditionRule).cssRules, sessionId, documentRoot);
                             }
                             break;
                         case CSSRule.KEYFRAMES_RULE: {
@@ -782,9 +829,9 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
     }
 
-    private applyCSSRuleList(rules: CSSRuleList, sessionId: string) {
+    private applyCSSRuleList(rules: CSSRuleList, sessionId: string, documentRoot: DocumentRoot) {
         for (let i = 0, length = rules.length; i < length; ++i) {
-            this.applyStyleRule(rules[i] as CSSStyleRule, sessionId);
+            this.applyStyleRule(rules[i] as CSSStyleRule, sessionId, documentRoot);
         }
     }
 

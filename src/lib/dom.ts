@@ -106,6 +106,20 @@ export function getRangeClientRect(element: Element) {
     return bounds;
 }
 
+export function getShadowRoot(element: Element) {
+    const shadowRoot = element.shadowRoot;
+    return shadowRoot && shadowRoot.mode === 'open' ? shadowRoot : null;
+}
+
+export function getParentElement(element: Element) {
+    const parentElement = element.parentElement;
+    if (parentElement) {
+        return parentElement;
+    }
+    const parentNode = element.parentNode;
+    return parentNode && parentNode instanceof ShadowRoot ? parentNode.host as HTMLElement : null;
+}
+
 export function removeElementsByClassName(className: string) {
     const elements = Array.from(document.getElementsByClassName(className));
     for (let i = 0, length = elements.length; i < length; ++i) {
@@ -118,12 +132,12 @@ export function removeElementsByClassName(className: string) {
 }
 
 export function getElementsBetweenSiblings(elementStart: Null<Element>, elementEnd: Element) {
-    const parentElement = elementEnd.parentElement;
+    const parentNode = elementEnd.parentNode;
     const result: Element[] = [];
-    if (parentElement && (!elementStart || elementStart.parentElement === parentElement)) {
+    if (parentNode && (!elementStart || parentNode === elementStart.parentNode)) {
         let startIndex = elementStart ? -1 : 0,
             endIndex = -1;
-        iterateArray(parentElement.childNodes, (element: Element, index: number) => {
+        iterateArray(parentNode.childNodes, (element: Element, index: number) => {
             if (element === elementEnd) {
                 endIndex = index;
                 if (startIndex !== -1) {
@@ -138,7 +152,7 @@ export function getElementsBetweenSiblings(elementStart: Null<Element>, elementE
             }
         });
         if (startIndex !== -1 && endIndex !== -1) {
-            iterateArray(parentElement.childNodes, (element: Element) => {
+            iterateArray(parentNode.childNodes, (element: Element) => {
                 const nodeName = element.nodeName;
                 if (nodeName[0] !== '#' || nodeName === '#text') {
                     result.push(element);

@@ -137,7 +137,7 @@ declare module "lib" {
         function parseSelectorText(value: string, document?: boolean): string[];
         function getSpecificity(value: string): number;
         function parseKeyframes(rules: CSSRuleList): Null<KeyframeData>;
-        function getKeyframesRules(): KeyframesMap;
+        function getKeyframesRules(documentRoot?: DocumentOrShadowRoot): KeyframesMap;
         function calculate(value: string, options?: CalculateOptions): number;
         function calculateVar(element: StyleElement, value: string, options?: CalculateVarOptions): number;
         function calculateVarAsString(element: StyleElement, value: string, options?: CalculateVarAsStringOptions): string;
@@ -146,7 +146,7 @@ declare module "lib" {
         function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll): Undef<ImageSrcSet[]>;
         function extractURL(value: string): Undef<string>;
         function resolveURL(value: string): Undef<string>;
-        function insertStyleSheetRule(value: string, index?: number): HTMLStyleElement;
+        function insertStyleSheetRule(value: string, index?: number, shadowRoot?: ShadowRoot): HTMLStyleElement;
         function parseUnit(value: string, options?: ParseUnitOptions): number;
         function parseTransform(value: string, options?: TransformOptions): TransformData[];
         function parseAngle(value: string, fallback?: number): number;
@@ -170,6 +170,8 @@ declare module "lib" {
         function withinViewport(rect: DOMRect | ClientRect): boolean;
         function assignRect(rect: DOMRect | ClientRect | BoxRectDimension, scrollPosition?: boolean): BoxRectDimension;
         function getRangeClientRect(element: Element): Null<BoxRectDimension>;
+        function getShadowRoot(element: Element): Null<ShadowRoot>;
+        function getParentElement(element: Element): Null<HTMLElement>;
         function removeElementsByClassName(className: string): void;
         function getElementsBetweenSiblings(elementStart: Null<Element>, elementEnd: Element): Element[];
         function getNamedItem(element: Element, attr: string): string;

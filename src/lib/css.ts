@@ -2762,10 +2762,10 @@ export function checkFontSizeValue(value: string, fixedWidth?: boolean) {
     }
 }
 
-export function getKeyframesRules(): KeyframesMap {
+export function getKeyframesRules(documentRoot: DocumentOrShadowRoot = document): KeyframesMap {
     const result = new Map<string, KeyframeData>();
     violation: {
-        const styleSheets = document.styleSheets;
+        const styleSheets = documentRoot.styleSheets;
         for (let i = 0, length = styleSheets.length; i < length; ++i) {
             try {
                 const cssRules = styleSheets[i].cssRules;
@@ -3292,12 +3292,12 @@ export function resolveURL(value: string) {
     }
 }
 
-export function insertStyleSheetRule(value: string, index = 0) {
+export function insertStyleSheetRule(value: string, index = 0, shadowRoot?: ShadowRoot) {
     const style = document.createElement('style');
     if (isUserAgent(USER_AGENT.SAFARI)) {
         style.appendChild(document.createTextNode(''));
     }
-    document.head.appendChild(style);
+    (shadowRoot || document.head).appendChild(style);
     const sheet = style.sheet as CSSStyleSheet;
     if (sheet && typeof sheet.insertRule === 'function') {
         try {

@@ -10,7 +10,7 @@ const { CSS_PROPERTIES } = squared.lib.css;
 const { createElement, getRangeClientRect } = squared.lib.dom;
 const { equal } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
-const { cloneObject, convertWord, hasBit, hasKeys, isArray, isEmptyString, iterateArray, searchObject, withinRange } = squared.lib.util;
+const { cloneObject, convertWord, hasBit, hasKeys, isArray, isEmptyString, searchObject, withinRange } = squared.lib.util;
 
 const CSS_SPACING = new Map<number, number>([
     [BOX_STANDARD.MARGIN_TOP, 0],
@@ -1402,7 +1402,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         const result = this._cacheState.naturalChild;
         if (result === undefined) {
             const element = this._element;
-            return this._cacheState.naturalChild = !!(element && (element.parentElement || element === document.documentElement));
+            return this._cacheState.naturalChild = !!(element && (element.parentNode || element === document.documentElement));
         }
         return result;
     }
@@ -1879,39 +1879,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     set childIndex(value) {
         this._childIndex = value;
     }
-    get childIndex() {
-        let result = this._childIndex;
-        if (result === Infinity) {
-            let wrapped = this.innerWrapped;
-            if (wrapped) {
-                do {
-                    const index = wrapped.childIndex;
-                    if (index !== Infinity) {
-                        result = index;
-                        this._childIndex = result;
-                        break;
-                    }
-                    wrapped = wrapped.innerWrapped;
-                }
-                while (wrapped);
-            }
-            else {
-                const element = this._element;
-                if (element) {
-                    const parentElement = element.parentElement;
-                    if (parentElement) {
-                        iterateArray(parentElement.childNodes, (item: Element, index: number) => {
-                            if (item === element) {
-                                result = index;
-                                this._childIndex = index;
-                                return true;
-                            }
-                        });
-                    }
-                }
-            }
-        }
-        return result;
+    get childIndex(): number {
+        const result = this._childIndex;
+        return result === Infinity && this.innerWrapped ? this._childIndex = this.innerMostWrapped.childIndex : result;
     }
 
     get innerMostWrapped() {

@@ -9,7 +9,7 @@ const { SELECTOR_ATTR, SELECTOR_G, SELECTOR_LABEL, SELECTOR_PSEUDO_CLASS } = CSS
 
 const { isUserAgent } = squared.lib.client;
 const { CSS_PROPERTIES, PROXY_INLINESTYLE, checkFontSizeValue, checkStyleValue, checkWritingMode, formatPX, getRemSize, getStyle, isAngle, isLength, isPercent, isTime, parseSelectorText, parseUnit } = squared.lib.css;
-const { assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
+const { assignRect, getNamedItem, getParentElement, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { getElementAsNode, getElementCache, getElementData, setElementCache } = squared.lib.session;
 const { convertCamelCase, convertFloat, convertInt, hasBit, hasValue, isNumber, isObject, iterateArray, iterateReverseArray, spliceString, splitPair } = squared.lib.util;
 
@@ -786,9 +786,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public documentRoot = false;
+    public shadowRoot = false;
     public depth = -1;
     public queryMap?: T[][];
     public pseudoElt?: PseudoElt;
+    public shadowChildOf?: ShadowRoot;
 
     protected _parent: Null<T> = null;
     protected _cache: CacheValue = {};
@@ -2112,7 +2114,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get parentElement() {
-        return this._element ? this._element.parentElement : this.actualParent?.element || null;
+        return this._element ? getParentElement(this._element) : this.actualParent?.element || null;
     }
 
     get textElement() {
@@ -2834,7 +2836,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     get actualParent() {
         const result = this._cacheState.actualParent;
         if (result === undefined) {
-            const parentElement = this.element?.parentElement;
+            const element = this.element;
+            const parentElement = element && getParentElement(element);
             return this._cacheState.actualParent = parentElement && getElementAsNode<T>(parentElement, this.sessionId) || this.parent;
         }
         return result;
@@ -3094,7 +3097,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get style() {
-        return this._style ||= this.styleElement ? !this.pseudoElt ? getStyle(this._element!) : getStyle(this._element!.parentElement!, this.pseudoElt) : PROXY_INLINESTYLE;
+        return this._style ||= this.styleElement ? !this.pseudoElt ? getStyle(this._element!) : getStyle(getParentElement(this._element!)!, this.pseudoElt) : PROXY_INLINESTYLE;
     }
 
     get cssStyle() {

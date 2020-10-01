@@ -109,7 +109,7 @@ declare module "base" {
         parseDocument(...elements: (string | HTMLElement)[]): Promise<Void<T | T[]>>;
         parseDocumentSync(...elements: (string | HTMLElement)[]): Void<T | T[]>;
         createCache(documentRoot: HTMLElement, sessionId: string): Undef<T>;
-        setStyleMap(sessionId: string, processing: AppProcessing<T>): void;
+        setStyleMap(sessionId: string, processing: AppProcessing<T>, documentRoot?: DocumentRoot): void;
         createNode(sessionId: string, options: CreateNodeOptions): T;
         insertNode(element: Element, sessionId: string): Undef<T>;
         afterCreateCache(node: T): void;
@@ -393,9 +393,11 @@ declare module "base" {
         static sanitizeCss(element: DocumentElement, styleMap: StringMap, writingMode?: string): StringMap;
         depth: number;
         documentRoot: boolean;
+        shadowRoot: boolean;
         sessionId: string;
         queryMap?: Node[][];
         pseudoElt?: PseudoElt;
+        shadowChildOf?: ShadowRoot;
         readonly id: number;
         init(parent: Node, depth: number, index?: number): void;
         syncWith(sessionId?: string, cache?: boolean): boolean;

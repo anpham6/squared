@@ -12,7 +12,7 @@ import Controller from './controller';
 
 const { isUserAgent } = squared.lib.client;
 const { CSS_PROPERTIES, formatPX, getStyle, hasCoords, isLength } = squared.lib.css;
-const { withinViewport } = squared.lib.dom;
+const { getParentElement, withinViewport } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;
 const { capitalize, convertFloat, iterateArray, joinArray } = squared.lib.util;
 
@@ -206,7 +206,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     break;
                 case 'BODY': {
                     const backgroundColor = styleMap.backgroundColor;
-                    if (!backgroundColor || backgroundColor === 'initial') {
+                    if ((!backgroundColor || backgroundColor === 'initial') && (getComputedStyle(document.documentElement).backgroundColor === 'rgba(0, 0, 0, 0)')) {
                         styleMap.backgroundColor = 'rgb(255, 255, 255)';
                     }
                     break;
@@ -392,7 +392,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             }
         }
         else {
-            const parentElement = element.parentElement;
+            const parentElement = getParentElement(element);
             style = parentElement ? getStyle(parentElement, pseudoElt) : getStyle(element);
             if (style.getPropertyValue('display') === 'none') {
                 return false;
