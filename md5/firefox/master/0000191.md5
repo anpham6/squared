@@ -4,7 +4,7 @@ c86b01f6bf18fa7de1bb101c39980d48  ./app/src/main/res/drawable/a_textview_11.xml
 a1f4b7c5b1ed66b956089e0662c0e046  ./app/src/main/res/drawable/a_textview_16.xml
 4e6637ba350301cd3d0e233eb2116e44  ./app/src/main/res/drawable/about_title.png
 36a6587505eea41877c1bf9f7a0e07cf  ./app/src/main/res/drawable/bg_about.jpg
-bb6f7604bee438330084c2208ee09ebf  ./app/src/main/res/drawable/body_constraintlayout_1.xml
+bb6f7604bee438330084c2208ee09ebf  ./app/src/main/res/drawable/body_about.xml
 4c741992c7185efcc687231c6ba83f6c  ./app/src/main/res/drawable/div_banner.xml
 5d1243b0f4160d08b2424a5b008c4014  ./app/src/main/res/drawable/div_navwrapper.xml
 af8438cc43e98d9412b1c8eb13e12c5e  ./app/src/main/res/drawable/h1_textview_9.xml
@@ -14,7 +14,7 @@ aa695052c6730b47dd9db51d7966e2db  ./app/src/main/res/drawable/logo.png
 a2881b92251a994c58f62a981802b8dc  ./app/src/main/res/drawable/screen.png
 17220c91204acfebbe08287706dbb613  ./app/src/main/res/drawable/ul_linearlayout_1.xml
 34b03a1b5a30c909945039f56d6793fe  ./app/src/main/res/drawable/ul_sidenav.xml
-c50a59b96664f428538554d214baae40  ./app/src/main/res/layout/activity_main.xml
+6dd63e36015a119ef5d71ca346871946  ./app/src/main/res/layout/activity_main.xml
 c76dcf3c080d9240f9358dc0e0f4b925  ./app/src/main/res/values/colors.xml
 a34758e11e7aaa4d0346dff2e36e89d2  ./app/src/main/res/values/dimens.xml
 306387df2cdad478ccfbe09bd77e26be  ./app/src/main/res/values/strings.xml

@@ -1088,12 +1088,16 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 }
                                 else if (dimen !== 'auto') {
                                     if (index === 0) {
-                                        if (tileModeX !== 'repeat' || !bitmap) {
-                                            width = node.parseWidth(dimen, false);
+                                        const unit = node.parseWidth(dimen, false);
+                                        if (tileModeX !== 'repeat' || unit === boundsWidth || !bitmap) {
+                                            width = unit;
                                         }
                                     }
-                                    else if (tileModeY !== 'repeat' || !bitmap) {
-                                        height = node.parseHeight(dimen, false);
+                                    else {
+                                        const unit = node.parseHeight(dimen, false);
+                                        if (tileModeY !== 'repeat' || unit === boundsHeight || !bitmap) {
+                                            height = unit;
+                                        }
                                     }
                                 }
                             });
@@ -1243,11 +1247,15 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             }
                             break;
                         default:
-                            if (width === 0 && height) {
+                            if (height && !width) {
                                 width = getImageWidth();
                             }
-                            if (height === 0 && width) {
+                            if (width && !height) {
                                 height = getImageHeight();
+                            }
+                            if (width === boundsWidth && height === boundsHeight) {
+                                tileModeX = '';
+                                tileModeY = '';
                             }
                             break;
                     }

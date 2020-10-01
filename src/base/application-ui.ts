@@ -477,7 +477,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     pseudoElements.push(item);
                 }
             });
-            console.log(cache);
             const length = pseudoElements.length;
             if (length) {
                 const pseudoMap: [item: T, id: string, styleElement: Undef<HTMLStyleElement>][] = new Array(length);
@@ -774,7 +773,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
                 if (child.excluded) {
-                    console.log(child, child.textEmpty, child.pseudoElt);
                     hasExcluded = true;
                     excluded.add(child);
                 }

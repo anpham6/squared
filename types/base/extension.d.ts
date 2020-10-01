@@ -101,7 +101,7 @@ interface ColumnData<T> {
     multiline: boolean;
 }
 
-interface SpriteData {
+interface SpriteData extends Dimension {
     image: Required<RawAsset>;
     position: BoxRectPosition;
 }

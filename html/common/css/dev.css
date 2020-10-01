@@ -8,29 +8,3 @@ body > div {
     vertical-align: top;
     display: inline-block;
 }
-
-button {
-    font-size: 10px;
-    margin-top: 6px;
-}
-
-.output {
-    width: 400px;
-    overflow: auto;
-    vertical-align: top;
-    display: inline-block;
-}
-
-.output pre {
-    height: 600px;
-    font-size: 10px;
-    margin: 0 0 0 15px;
-    padding: 10px;
-    background-color: floralwhite;
-    border: 1px solid #ccc;
-    overflow: auto;
-}
-
-.output div {
-    text-align: right;
-}

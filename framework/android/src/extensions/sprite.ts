@@ -15,7 +15,7 @@ export default class <T extends View> extends squared.base.extensions.Sprite<T> 
     public processNode(node: T, parent: T): Void<ExtensionResult<T>> {
         const drawable = (this.resource as android.base.Resource<T>).addImageSrc(node.backgroundImage);
         if (drawable !== '') {
-            const { image, position } = this.data.get(node) as SpriteData;
+            const { width, height, position } = this.data.get(node) as SpriteData;
             const container = this.application.createNode(node.sessionId, { parent, innerWrapped: node });
             container.inherit(node, 'base', 'initial', 'styleMap');
             container.setControlType(CONTAINER_TAGNAME.FRAME, CONTAINER_NODE.FRAME);
@@ -35,8 +35,8 @@ export default class <T extends View> extends squared.base.extensions.Sprite<T> 
                 bottom: 'auto',
                 left: 'auto',
                 display: 'inline-block',
-                width: image.width ? formatPX(image.width) : 'auto',
-                height: image.height ? formatPX(image.height) : 'auto',
+                width: width ? formatPX(width) : 'auto',
+                height: height ? formatPX(height) : 'auto',
                 borderTopStyle: 'none',
                 borderRightStyle: 'none',
                 borderBottomStyle: 'none',

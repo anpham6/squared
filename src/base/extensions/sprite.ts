@@ -3,7 +3,7 @@ import type NodeUI from '../node-ui';
 import ExtensionUI from '../extension-ui';
 import ResourceUI from '../resource-ui';
 
-const { resolveURL } = squared.lib.css;
+const { resolveURL, isLength } = squared.lib.css;
 
 const REGEXP_POSITION = /^0[a-z%]+|left|start|top/;
 
@@ -23,12 +23,26 @@ export default abstract class Sprite<T extends NodeUI> extends ExtensionUI<T> {
         }
         if (image) {
             const dimension = node.actualDimension;
-            const [backgroundPositionX, backgroundPositionY] = node.cssAsTuple('backgroundPositionX', 'backgroundPositionY');
+            const [backgroundPositionX, backgroundPositionY, backgroundSize] = node.cssAsTuple('backgroundPositionX', 'backgroundPositionY', 'backgroundSize');
             const position = ResourceUI.getBackgroundPosition(backgroundPositionX + ' ' + backgroundPositionY, dimension, { fontSize: node.fontSize, screenDimension: node.localSettings.screenDimension });
-            const x = (position.left < 0 || REGEXP_POSITION.test(backgroundPositionX)) && image.width > dimension.width;
-            const y = (position.top < 0 || REGEXP_POSITION.test(backgroundPositionY)) && image.height > dimension.height;
+            const [sizeW, sizeH] = backgroundSize.split(' ');
+            let { width, height } = image;
+            if (isLength(sizeW, true)) {
+                width = node.parseWidth(sizeW, false);
+                if (sizeH === 'auto') {
+                    height = image.height * width / image.width;
+                }
+            }
+            if (isLength(sizeH, true)) {
+                height = node.parseHeight(sizeH, false);
+                if (sizeW === 'auto') {
+                    width = image.width * height / image.height;
+                }
+            }
+            const x = width > dimension.width && (position.left < 0 || REGEXP_POSITION.test(backgroundPositionX));
+            const y = height > dimension.height && (position.top < 0 || REGEXP_POSITION.test(backgroundPositionY));
             if ((x || y) && (x || position.left === 0) && (y || position.top === 0)) {
-                this.data.set(node, { image, position } as SpriteData);
+                this.data.set(node, { image, width, height, position } as SpriteData);
                 return true;
             }
         }
