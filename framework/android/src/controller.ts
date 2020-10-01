@@ -1312,8 +1312,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             node.setCacheValue('centerAligned', centerAligned);
             node.setCacheValue('rightAligned', rightAligned);
         };
-        const setBoundsWidth = () => node.css('width', formatPX(node.bounds.width - (node.contentBox ? node.contentBoxWidth : 0)), true);
-        const setBoundsHeight = () => node.css('height', formatPX(node.bounds.height - (node.contentBox ? node.contentBoxHeight : 0)), true);
+        const setBoundsWidth = () => node.css('width', Math.ceil(node.bounds.width - (node.contentBox ? node.contentBoxWidth : 0)) + 'px', true);
+        const setBoundsHeight = () => node.css('height', Math.ceil(node.bounds.height - (node.contentBox ? node.contentBoxHeight : 0)) + 'px', true);
         switch (node.tagName) {
             case 'IMG':
             case 'CANVAS': {
@@ -1519,6 +1519,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 for (const item of node.naturalChildren as T[]) {
                     if (!item.pageFlow || !item.textElement) {
                         item.android('elevation', '2px');
+                    }
+                }
+                if (!node.hasWidth) {
+                    const textContent = node.textContent.trim();
+                    if (textContent.length === 1 || !/[\w\s-]/.test(textContent)) {
+                        setBoundsWidth();
                     }
                 }
                 break;

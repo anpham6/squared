@@ -1556,7 +1556,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public parseUnit(value: string, options?: NodeParseUnitOptions) {
-        if (value === '') {
+        if (!value) {
             return 0;
         }
         else if (value.endsWith('px')) {
@@ -2268,7 +2268,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     get flexbox() {
         const result = this._cache.flexbox;
         if (result === undefined) {
-            if (this.styleElement && this.actualParent?.flexElement) {
+            if (this.naturalChild && this.actualParent?.flexElement) {
                 const [alignSelf, justifySelf, basis] = this.cssAsTuple('alignSelf', 'justifySelf', 'flexBasis');
                 return this._cache.flexbox = {
                     alignSelf: alignSelf === 'auto' ? this.cssParent('alignItems') : alignSelf,

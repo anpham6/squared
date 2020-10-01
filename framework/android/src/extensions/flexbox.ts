@@ -10,8 +10,8 @@ import LayoutUI = squared.base.LayoutUI;
 
 interface FlexBasis {
     item: View;
+    size: number;
     basis: number;
-    dimension: number;
     shrink: number;
     grow: number;
 }
@@ -20,8 +20,8 @@ const { isLength } = squared.lib.css;
 const { truncate } = squared.lib.math;
 const { capitalize, iterateReverseArray, sameArray, withinRange } = squared.lib.util;
 
-function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
-    const horizontal = attr === 'width';
+function adjustGrowRatio(parent: View, items: View[], dimension: DimensionAttr) {
+    const horizontal = dimension === 'width';
     const hasDimension = horizontal ? 'hasWidth' : 'hasHeight';
     let percent = parent[hasDimension] || horizontal && parent.blockStatic && withinRange(parent.parseWidth(parent.valueAt('maxWidth')), parent.box.width),
         growShrinkType = 0,
@@ -46,6 +46,7 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
     if (length > 1 && (horizontal || percent)) {
         const groupBasis: FlexBasis[] = [];
         const percentage: View[] = [];
+        const options: NodeParseUnitOptions = { dimension };
         let maxBasisUnit = 0,
             maxDimension = 0,
             maxRatio = NaN,
@@ -53,13 +54,13 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
         for (let i = 0; i < length; ++i) {
             const item = items[i].innerMostWrapped as View;
             const { alignSelf, basis, shrink, grow } = item.flexbox;
-            const dimension = item.bounds[attr];
+            const size = item.bounds[dimension];
             let growPercent: Undef<boolean>;
             if (grow > 0 || shrink !== 1) {
-                const value = item.parseUnit(basis === 'auto' ? item.css(attr) : basis, { dimension: attr });
+                const value = item.parseUnit(basis === 'auto' ? item.css(dimension) : basis, options);
                 if (value) {
                     let largest: Undef<boolean>;
-                    if (dimension < value) {
+                    if (size < value) {
                         if (isNaN(maxRatio) || shrink < maxRatio) {
                             maxRatio = shrink;
                             largest = true;
@@ -74,12 +75,12 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
                     if (largest) {
                         maxBasis = item;
                         maxBasisUnit = value;
-                        maxDimension = dimension;
+                        maxDimension = size;
                     }
                     groupBasis.push({
                         item,
+                        size,
                         basis: value,
-                        dimension,
                         shrink,
                         grow
                     });
@@ -92,8 +93,8 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
             else if (isLength(basis)) {
                 groupBasis.push({
                     item,
-                    basis: Math.min(dimension, item.parseUnit(basis, { dimension: attr })),
-                    dimension,
+                    size,
+                    basis: Math.min(size, item.parseUnit(basis, options)),
                     shrink,
                     grow
                 });
@@ -114,13 +115,13 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
                         item.flexbox.grow = 1;
                     }
                     else if (basis) {
-                        item.flexbox.grow = ((data.dimension / basis) / (maxDimension / maxBasisUnit)) * basis / maxBasisUnit;
+                        item.flexbox.grow = ((data.size / basis) / (maxDimension / maxBasisUnit)) * basis / maxBasisUnit;
                     }
                 }
             }
             q = percentage.length;
             for (let i = 0; i < q; ++i) {
-                setBoxPercentage(parent, percentage[i], attr);
+                setBoxPercentage(parent, percentage[i], dimension);
             }
         }
     }
@@ -129,7 +130,7 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
             const item = items[i];
             if (item.find(child => child.multiline && child.ascend({ condition: above => above[hasDimension], including: parent }).length === 0, { cascade: true })) {
                 for (let j = 0; j < length; ++j) {
-                    setBoxPercentage(parent, items[j], attr);
+                    setBoxPercentage(parent, items[j], dimension);
                 }
                 break;
             }

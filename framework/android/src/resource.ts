@@ -182,7 +182,8 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
             const ext = this.getExtension(src);
             const length = ext.length;
             if (!imageFormat || Resource.hasMimeType(imageFormat, ext) || length === 0) {
-                const asset = Resource.insertStoredAsset('images', Resource.formatName(prefix + src.substring(0, src.length - (length ? length + 1 : 0))).toLowerCase(), images);
+                const name = Resource.formatName(prefix + src.substring(0, src.length - (length ? length + 1 : 0))).toLowerCase();
+                const asset = Resource.insertStoredAsset('images', (RESERVED_JAVA.has(name) ? '_' : '') + name, images);
                 CACHE_IMAGE[mdpi] = asset;
                 return asset;
             }

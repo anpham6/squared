@@ -1195,9 +1195,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             break;
                     }
                 }
+                let unmergeable: Undef<boolean>;
                 if (margin) {
+                    const renderParent = this.renderParent as T;
                     if (this.floating) {
-                        let sibling = this.renderParent!.renderChildren.find(item => !item.floating) as Undef<T>;
+                        let sibling = renderParent.renderChildren.find(item => !item.floating) as Undef<T>;
                         if (sibling) {
                             const boundsTop = Math.floor(this.bounds.top);
                             let actualNode: Undef<T>;
@@ -1216,6 +1218,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 top += (reset === 0 ? actualNode.marginTop : 0) + adjustment;
                             }
                         }
+                    }
+                    else if (this.inlineStatic && renderParent.layoutVertical && this.renderChildren.find(item => item.blockStatic)) {
+                        left = 0;
+                        right = 0;
                     }
                     if (this.positionStatic && !this.blockWidth && (left < 0 || right < 0)) {
                         switch (this.cssAscend('textAlign')) {
@@ -1273,7 +1279,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 bottom = 0;
                             }
                         }
-                        else if (this.blockDimension && !this.inputElement && (this.renderParent as T).layoutConstraint) {
+                        else if (this.blockDimension && !this.inputElement && renderParent.layoutConstraint) {
                             for (const item of this.anchorChain('bottom')) {
                                 item.translateY(-bottom);
                             }
@@ -1311,13 +1317,14 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 right = 0;
                             }
                         }
-                        else if (this.blockDimension && (this.renderParent as T).layoutConstraint) {
+                        else if (this.blockDimension && renderParent.layoutConstraint) {
                             for (const item of this.anchorChain('right')) {
                                 item.translateX(right);
                             }
                             right = 0;
                         }
                     }
+                    unmergeable = renderParent.layoutGrid;
                 }
                 else if (this.visibleStyle.borderWidth && !this.is(CONTAINER_NODE.LINE)) {
                     top += this.borderTopWidth;
@@ -1332,7 +1339,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     right = Math.round(right);
                     bottom = Math.round(bottom);
                     left = Math.round(left);
-                    if ((!margin || !(this.renderParent as T).layoutGrid) && this.api >= BUILD_VERSION.OREO) {
+                    if (!unmergeable && this.api >= BUILD_VERSION.OREO) {
                         if (top === right && right === bottom && bottom === left) {
                             if (top !== 0) {
                                 this.android(margin ? LAYOUT_STRING.MARGIN : LAYOUT_STRING.PADDING, top + 'px');

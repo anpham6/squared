@@ -4,8 +4,6 @@ import Resource from '../resource';
 
 const { NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.constant;
 
-const { formatPX } = squared.lib.css;
-
 export default class <T extends View> extends squared.base.extensions.Accessibility<T> {
     public readonly options: ExtensionAccessibilityOptions = {
         displayLabel: false
@@ -77,10 +75,10 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                                 }
                             });
                             if (modified) {
-                                node.css('minWidth', formatPX(width));
-                                node.css('minHeight', formatPX(height));
+                                node.css('minWidth', Math.ceil(width) + 'px');
+                                node.css('minHeight', Math.ceil(height) + 'px');
                             }
-                            const boxImage = node.removeIf((item: T) => !item.textElement) as T[];
+                            const boxImage = node.removeIf(item => !item.textElement).filter(item => item.imageElement);
                             if (boxImage.length && node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
                                 node.data(Resource.KEY_NAME, 'boxImage', boxImage);
                             }

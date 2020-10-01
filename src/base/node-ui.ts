@@ -575,7 +575,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public parseUnit(value: string, options?: NodeParseUnitOptions) {
-        if (value === '') {
+        if (!value) {
             return 0;
         }
         if (REGEXP_PARSEUNIT.test(value)) {
@@ -585,11 +585,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public parseWidth(value: string, parent = true) {
-        return value === '' ? 0 : super.parseUnit(value, REGEXP_PARSEUNIT.test(value) ? { parent, screenDimension: this.localSettings.screenDimension } : undefined);
+        return !value ? 0 : super.parseUnit(value, REGEXP_PARSEUNIT.test(value) ? { parent, screenDimension: this.localSettings.screenDimension } : undefined);
     }
 
     public parseHeight(value: string, parent = true) {
-        return value === '' ? 0 : super.parseUnit(value, REGEXP_PARSEUNIT.test(value) ? { dimension: 'height', parent, screenDimension: this.localSettings.screenDimension } : undefined);
+        return !value ? 0 : super.parseUnit(value, REGEXP_PARSEUNIT.test(value) ? { dimension: 'height', parent, screenDimension: this.localSettings.screenDimension } : undefined);
     }
 
     public renderEach(predicate: IteratorPredicate<T, void>) {
@@ -1589,9 +1589,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return super.blockStatic || this.hasAlign(NODE_ALIGNMENT.BLOCK) && this.pageFlow && !this.floating;
     }
 
-    get blockDimension() {
+    get blockDimension(): boolean {
         const result = this._cache.blockDimension;
-        return result === undefined ? this.block || this.inlineDimension || this.imageElement || this.svgElement || this.display === 'table' : result;
+        return result === undefined ? this._cache.blockDimension = this.inlineStatic && !this.isEmpty() ? !!this.firstStaticChild?.blockStatic : this.block || this.inlineDimension || this.display === 'table' || this.imageElement || this.svgElement : result;
     }
 
     get blockVertical() {

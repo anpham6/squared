@@ -27,15 +27,18 @@ function getRowIndex(columns: NodeUI[][], target: NodeUI) {
 }
 
 function checkAlignment(node: NodeUI) {
-    switch (node.css('verticalAlign')) {
-        case 'baseline':
-        case 'top':
-        case 'middle':
-        case 'bottom':
-            return true;
-        default:
-            return node.floating;
+    if (node.float !== 'right') {
+        switch (node.css('verticalAlign')) {
+            case 'baseline':
+            case 'top':
+            case 'middle':
+            case 'bottom':
+                return true;
+            default:
+                return node.floating;
+        }
     }
+    return false;
 }
 
 export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
