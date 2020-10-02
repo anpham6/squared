@@ -25,7 +25,7 @@ const { formatPX, getSrcSet, hasCoords } = squared.lib.css;
 const { getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
-const { assignEmptyValue, capitalize, convertWord, hasBit, isString, iterateArray, lastItemOf, parseMimeType, partitionArray, plainMap, withinRange } = squared.lib.util;
+const { assignEmptyValue, capitalize, convertWord, hasBit, iterateArray, lastItemOf, parseMimeType, partitionArray, plainMap, withinRange } = squared.lib.util;
 
 const REGEXP_TEXTSYMBOL = /^[^\w\s\n]+[\s\n]+$/;
 
@@ -1295,6 +1295,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public renderNode(layout: ContentUI<T>): NodeXmlTemplate<T> {
         const node = layout.node;
+        const tagName = node.tagName;
         let { parent, containerType } = layout,
             controlName = View.getControlName(containerType, node.api);
         const setReadOnly = () => {
@@ -1314,7 +1315,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         };
         const setBoundsWidth = () => node.css('width', Math.ceil(node.bounds.width - (node.contentBox ? node.contentBoxWidth : 0)) + 'px', true);
         const setBoundsHeight = () => node.css('height', Math.ceil(node.bounds.height - (node.contentBox ? node.contentBoxHeight : 0)) + 'px', true);
-        switch (node.tagName) {
+        switch (tagName) {
             case 'IMG':
             case 'CANVAS': {
                 const element = node.element as HTMLImageElement;
@@ -1378,7 +1379,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 if (node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
                     let src: Undef<string>;
-                    if (node.tagName === 'CANVAS') {
+                    if (tagName === 'CANVAS') {
                         const data = ((element as unknown) as HTMLCanvasElement).toDataURL();
                         if (data) {
                             node.setControlType(controlName, containerType);
@@ -1573,7 +1574,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const { min, max, value } = node.element as HTMLMeterElement;
                 let foregroundColor: Undef<string>,
                     backgroundColor: Undef<string>;
-                if (node.tagName === 'METER') {
+                if (tagName === 'METER') {
                     ({ meterForegroundColor: foregroundColor, meterBackgroundColor: backgroundColor } = this.localSettings.style);
                     if (max) {
                         if (value) {
@@ -1608,25 +1609,25 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
             case 'AUDIO':
             case 'VIDEO': {
-                const videoMimeType = this.localSettings.mimeType.video;
+                const validMimeType = this.localSettings.mimeType[tagName === 'VIDEO' ? 'video' : 'audio'];
                 const element = node.element as HTMLVideoElement;
                 let src = element.src.trim(),
                     mimeType: Undef<string>;
-                if (Resource.hasMimeType(videoMimeType, src)) {
+                if (Resource.hasMimeType(validMimeType, src)) {
                     mimeType = parseMimeType(src);
                 }
                 else {
                     src = '';
                     iterateArray(element.children, (source: HTMLSourceElement) => {
                         if (source.tagName === 'SOURCE') {
-                            if (Resource.hasMimeType(videoMimeType, source.src)) {
+                            if (Resource.hasMimeType(validMimeType, source.src)) {
                                 src = source.src.trim();
                                 mimeType = parseMimeType(src);
                                 return true;
                             }
                             else {
                                 mimeType = source.type.trim().toLowerCase();
-                                if (videoMimeType === '*' || videoMimeType.has(mimeType)) {
+                                if (validMimeType === '*' || validMimeType.has(mimeType)) {
                                     src = source.src;
                                     return true;
                                 }
@@ -1644,14 +1645,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     setInlineBlock();
                 }
                 if (src !== '') {
-                    this.application.resourceHandler.addVideo(src, mimeType);
+                    this.application.resourceHandler[tagName === 'VIDEO' ? 'addVideo' : 'addAudio'](src, mimeType);
                     node.inlineText = false;
                     node.exclude({ resource: NODE_RESOURCE.FONT_STYLE });
-                    if (isString(element.poster)) {
+                    if (element.poster) {
                         Resource.addImage({ mdpi: element.poster.trim() });
                     }
                 }
-                else if (isString(element.poster)) {
+                else if (element.poster) {
                     node.setCacheValue('tagName', 'IMG');
                     src = element.src;
                     element.src = element.poster.trim();
