@@ -672,7 +672,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         if (pierceShadowRoot) {
                             shadowRoot = element.shadowRoot;
                             if (shadowRoot) {
-                                this.setStyleMap(sessionId, processing, shadowRoot);
+                                this.setStyleMap(sessionId, shadowRoot);
                             }
                         }
                         if ((shadowRoot || element).childNodes.length) {

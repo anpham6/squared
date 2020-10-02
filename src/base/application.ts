@@ -346,7 +346,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         return node;
     }
 
-    public setStyleMap(sessionId: string, processing: squared.base.AppProcessing<T>, documentRoot: DocumentRoot = document) {
+    public setStyleMap(sessionId: string, documentRoot: DocumentRoot = document, queryRoot?: DocumentQueryRoot) {
         const styleSheets = documentRoot.styleSheets;
         for (let i = 0, length = styleSheets.length; i < length; ++i) {
             const styleSheet = styleSheets[i];
@@ -357,7 +357,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             catch {
             }
             if (!mediaText || checkMediaRule(mediaText)) {
-                this.applyStyleSheet(styleSheet, sessionId, processing, documentRoot);
+                this.applyStyleSheet(styleSheet, sessionId, documentRoot, queryRoot);
             }
         }
     }
@@ -510,7 +510,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     if (pierceShadowRoot) {
                         shadowRoot = element.shadowRoot;
                         if (shadowRoot) {
-                            this.setStyleMap(sessionId, processing, shadowRoot);
+                            this.setStyleMap(sessionId, shadowRoot);
                         }
                     }
                     child = (shadowRoot || element).childNodes.length ? this.cascadeParentNode(processing, element, sessionId, childDepth, extensions, shadowRoot || shadowParent) : this.insertNode(element, sessionId);
@@ -565,15 +565,16 @@ export default abstract class Application<T extends Node> implements squared.bas
         for (let i = 0; i < length; ++i) {
             const childMap = elements[i].queryMap;
             if (childMap) {
-                for (let j = 0, k = 1, q = childMap.length; j < q; ++j) {
-                    result[k] = result[k++]?.concat(childMap[j] as T[]) || childMap[j];
+                for (let j = 0, k = 1, q = childMap.length; j < q; ++j, ++k) {
+                    const items = result[k];
+                    result[k] = items ? items.concat(childMap[j] as T[]) : childMap[j] as T[];
                 }
             }
         }
         return result;
     }
 
-    private applyStyleRule(item: CSSStyleRule, sessionId: string, documentRoot: DocumentRoot) {
+    private applyStyleRule(item: CSSStyleRule, sessionId: string, documentRoot: DocumentRoot, queryRoot?: DocumentQueryRoot) {
         const resource = this.resourceHandler;
         const styleSheetHref = item.parentStyleSheet?.href || location.href;
         const cssText = item.cssText;
@@ -705,7 +706,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         }
                     }
                     else {
-                        elements = documentRoot.querySelectorAll(selector || '*');
+                        elements = (queryRoot || documentRoot).querySelectorAll(selector || '*');
                     }
                     const length = elements.length;
                     if (length === 0) {
@@ -783,7 +784,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
     }
 
-    private applyStyleSheet(item: CSSStyleSheet, sessionId: string, processing: squared.base.AppProcessing<T>, documentRoot: DocumentRoot) {
+    private applyStyleSheet(item: CSSStyleSheet, sessionId: string, documentRoot: DocumentRoot, queryRoot?: DocumentQueryRoot) {
         try {
             const cssRules = item.cssRules;
             if (cssRules) {
@@ -793,30 +794,30 @@ export default abstract class Application<T extends Node> implements squared.bas
                     switch (rule.type) {
                         case CSSRule.STYLE_RULE:
                         case CSSRule.FONT_FACE_RULE:
-                            this.applyStyleRule(rule as CSSStyleRule, sessionId, documentRoot);
+                            this.applyStyleRule(rule as CSSStyleRule, sessionId, documentRoot, queryRoot);
                             break;
                         case CSSRule.IMPORT_RULE: {
                             const uri = resolvePath((rule as CSSImportRule).href, rule.parentStyleSheet?.href || location.href);
                             if (uri !== '') {
                                 this.resourceHandler?.addRawData(uri, 'text/css', undefined, { encoding: 'utf8' });
                             }
-                            this.applyStyleSheet((rule as CSSImportRule).styleSheet, sessionId, processing, documentRoot);
+                            this.applyStyleSheet((rule as CSSImportRule).styleSheet, sessionId, documentRoot, queryRoot);
                             break;
                         }
                         case CSSRule.MEDIA_RULE:
                             if (checkMediaRule((rule as CSSConditionRule).conditionText || parseConditionText('media', rule.cssText))) {
-                                this.applyCSSRuleList((rule as CSSConditionRule).cssRules, sessionId, documentRoot);
+                                this.applyCSSRuleList((rule as CSSConditionRule).cssRules, sessionId, documentRoot, queryRoot);
                             }
                             break;
                         case CSSRule.SUPPORTS_RULE:
                             if (CSS.supports((rule as CSSConditionRule).conditionText || parseConditionText('supports', rule.cssText))) {
-                                this.applyCSSRuleList((rule as CSSConditionRule).cssRules, sessionId, documentRoot);
+                                this.applyCSSRuleList((rule as CSSConditionRule).cssRules, sessionId, documentRoot, queryRoot);
                             }
                             break;
                         case CSSRule.KEYFRAMES_RULE: {
                             const value = parseKeyframes((rule as CSSKeyframesRule).cssRules);
                             if (value) {
-                                const keyframesMap = processing.keyframesMap ||= new Map<string, KeyframeData>();
+                                const keyframesMap = this.getProcessing(sessionId)!.keyframesMap ||= new Map<string, KeyframeData>();
                                 const name = (rule as CSSKeyframesRule).name;
                                 const keyframe = keyframesMap.get(name);
                                 if (keyframe) {
@@ -836,9 +837,9 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
     }
 
-    private applyCSSRuleList(rules: CSSRuleList, sessionId: string, documentRoot: DocumentRoot) {
+    private applyCSSRuleList(rules: CSSRuleList, sessionId: string, documentRoot: DocumentRoot, queryRoot?: DocumentQueryRoot) {
         for (let i = 0, length = rules.length; i < length; ++i) {
-            this.applyStyleRule(rules[i] as CSSStyleRule, sessionId, documentRoot);
+            this.applyStyleRule(rules[i] as CSSStyleRule, sessionId, documentRoot, queryRoot);
         }
     }
 
@@ -862,7 +863,6 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
         this.session.active.set(sessionId, processing);
         controller.init();
-        this.setStyleMap(sessionId, processing);
         const length = elements.length;
         if (length === 0) {
             rootElements.add(this.mainElement);
@@ -906,6 +906,13 @@ export default abstract class Application<T extends Node> implements squared.bas
                     });
                 }
             }
+        }
+        const queryRoot = rootElements.size === 1 && (rootElements.values().next().value as HTMLElement).parentElement;
+        if (queryRoot && queryRoot !== document.documentElement) {
+            this.setStyleMap(sessionId, document, queryRoot);
+        }
+        else {
+            this.setStyleMap(sessionId);
         }
         return [processing, rootElements, shadowElements || rootElements, styleSheets];
     }

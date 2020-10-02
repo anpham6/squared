@@ -140,6 +140,14 @@
             console.log(squared.querySelectorAll(query, true));
             console.log('chrome sync #5:' + (performance.now() - time));
 
+            time = performance.now();
+            console.log(await squared.getElementById('order', true, false));
+            console.log('chrome #6: ' + (performance.now() - time));
+
+            time = performance.now();
+            console.log(squared.fromElement(document.getElementById('order'), true));
+            console.log('chrome sync #7: ' + (performance.now() - time));
+
             squared.setFramework(vdom);
             time = performance.now();
             searchQuery(await squared.fromElement(document.documentElement), 'vdom #1');
@@ -157,6 +165,14 @@
             time = performance.now();
             console.log(squared.querySelectorAll(query, true));
             console.log('vdom sync #5: ' + (performance.now() - time));
+
+            time = performance.now();
+            console.log(await squared.getElementById('order', true, false));
+            console.log('vdom #6: ' + (performance.now() - time));
+
+            time = performance.now();
+            console.log(squared.fromElement(document.getElementById('order'), true));
+            console.log('vdom sync #7: ' + (performance.now() - time));
 
             const body = await squared.fromElement(document.body);
             console.log('getId(): ' + body.getId());

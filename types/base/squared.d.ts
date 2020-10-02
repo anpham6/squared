@@ -109,7 +109,7 @@ declare module "base" {
         parseDocument(...elements: (string | HTMLElement)[]): Promise<Void<T | T[]>>;
         parseDocumentSync(...elements: (string | HTMLElement)[]): Void<T | T[]>;
         createCache(documentRoot: HTMLElement, sessionId: string): Undef<T>;
-        setStyleMap(sessionId: string, processing: AppProcessing<T>, documentRoot?: DocumentRoot): void;
+        setStyleMap(sessionId: string, documentRoot?: DocumentRoot, queryRoot?: DocumentQueryRoot): void;
         createNode(sessionId: string, options: CreateNodeOptions): T;
         insertNode(element: Element, sessionId: string): Undef<T>;
         afterCreateCache(node: T): void;
