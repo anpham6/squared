@@ -125,7 +125,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     public saveAs(filename?: string, options?: FileActionOptions) {
-        return this.fileHandler?.saveAs(filename || this._resourceHandler!.userSettings.outputArchiveName, options) || reject(OPERATION_NOT_SUPPORTED);
+        return this.fileHandler?.saveAs(filename || this.resourceHandler!.userSettings.outputArchiveName, options) || reject(OPERATION_NOT_SUPPORTED);
     }
 
     public saveFiles(format: string, options: FileActionOptions) {
@@ -145,10 +145,8 @@ export default abstract class Application<T extends Node> implements squared.bas
         this.elementMap = new WeakMap();
         resetSessionAll();
         this.session.active.clear();
-        this._controllerHandler.reset();
-        if (this._resourceHandler) {
-            this._resourceHandler.reset();
-        }
+        this.controllerHandler.reset();
+        this.resourceHandler?.reset();
         for (const ext of this.extensions) {
             ext.reset();
         }
@@ -156,14 +154,14 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     public parseDocument(...elements: (string | HTMLElement)[]) {
-        const resource = this._resourceHandler;
+        const resource = this.resourceHandler;
         let preloadImages: Undef<boolean>,
             preloadFonts: Undef<boolean>,
-            preloadCustomElements: Undef<boolean>;
+            preloadCustomElements = true;
         if (resource) {
             ({ preloadImages, preloadFonts, preloadCustomElements } = resource.userSettings);
         }
-        const [processing, rootElements, shadowElements, styleSheets] = this.createSessionThread(elements, this.userSettings.pierceShadowRoot && !!preloadCustomElements);
+        const [processing, rootElements, shadowElements, styleSheets] = this.createSessionThread(elements, this.userSettings.pierceShadowRoot && preloadCustomElements);
         if (rootElements.size === 0) {
             return reject(DOCUMENT_ROOT_NOT_FOUND);
         }
@@ -577,6 +575,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     private applyStyleRule(item: CSSStyleRule, sessionId: string, documentRoot: DocumentRoot) {
+        const resource = this.resourceHandler;
         const styleSheetHref = item.parentStyleSheet?.href || location.href;
         const cssText = item.cssText;
         switch (item.type) {
@@ -588,7 +587,6 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const parseImageUrl = (attr: string) => {
                     const value = baseMap[attr];
                     if (value && value !== 'initial') {
-                        const resource = this._resourceHandler;
                         let result: Undef<string>,
                             match: Null<RegExpExecArray>;
                         while (match = REGEXP_DATAURI.exec(value)) {
@@ -748,7 +746,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 break;
             }
             case CSSRule.FONT_FACE_RULE:
-                if (this._resourceHandler) {
+                if (resource) {
                     const attr = REGEXP_FONTFACE.exec(cssText)?.[1];
                     if (attr) {
                         const src = REGEXP_FONTSRC.exec(attr)?.[1].trim();
@@ -773,7 +771,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                     else {
                                         data.srcLocal = url;
                                     }
-                                    this._resourceHandler.addFont(data);
+                                    resource.addFont(data);
                                 }
                             }
                         }
@@ -798,15 +796,14 @@ export default abstract class Application<T extends Node> implements squared.bas
                         case CSSRule.FONT_FACE_RULE:
                             this.applyStyleRule(rule as CSSStyleRule, sessionId, documentRoot);
                             break;
-                        case CSSRule.IMPORT_RULE:
-                            if (this._resourceHandler) {
-                                const uri = resolvePath((rule as CSSImportRule).href, rule.parentStyleSheet?.href || location.href);
-                                if (uri !== '') {
-                                    this._resourceHandler.addRawData(uri, 'text/css', undefined, { encoding: 'utf8' });
-                                }
+                        case CSSRule.IMPORT_RULE: {
+                            const uri = resolvePath((rule as CSSImportRule).href, rule.parentStyleSheet?.href || location.href);
+                            if (uri !== '') {
+                                this.resourceHandler?.addRawData(uri, 'text/css', undefined, { encoding: 'utf8' });
                             }
                             this.applyStyleSheet((rule as CSSImportRule).styleSheet, sessionId, processing, documentRoot);
                             break;
+                        }
                         case CSSRule.MEDIA_RULE:
                             if (checkMediaRule((rule as CSSConditionRule).conditionText || parseConditionText('media', rule.cssText))) {
                                 this.applyCSSRuleList((rule as CSSConditionRule).cssRules, sessionId, documentRoot);
@@ -847,7 +844,8 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     private createSessionThread(elements: (string | HTMLElement)[], pierceShadowRoot: boolean): [squared.base.AppProcessing<T>, Set<HTMLElement>, Set<HTMLElement | ShadowRoot>, Undef<string[]>] {
-        const sessionId = this._controllerHandler.generateSessionId;
+        const controller = this.controllerHandler;
+        const sessionId = controller.generateSessionId;
         const rootElements = new Set<HTMLElement>();
         const extensions = this.extensionsAll;
         const processing: squared.base.AppProcessing<T> = {
@@ -864,7 +862,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             processing.afterInsertNode = afterInsertNode;
         }
         this.session.active.set(sessionId, processing);
-        this._controllerHandler.init();
+        controller.init();
         this.setStyleMap(sessionId, processing);
         const length = elements.length;
         if (length === 0) {
@@ -972,7 +970,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     get fileHandler() {
-        return this._resourceHandler ? this._resourceHandler.fileHandler : null;
+        return this.resourceHandler?.fileHandler || null;
     }
 
     get extensionManager() {

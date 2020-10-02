@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Pop-up info box — web components</title>
+    <link src="style.css" rel="stylesheet"></link>
+    <script src="main.js"></script>
+    <script src="/common/system.js"></script>
+    <script src="/common/transform.js"></script>
+    <script src="/common/babel-transform.js"></script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script src="/common/loader.js"></script>
+  </head>
+  <body>
+    <h1>Pop-up info widget - web components</h1>
+
+    <form>
+      <div>
+        <label for="cvc">Enter your CVC <popup-info img="img/alt.png" data-text="Your card validation code (CVC) is an extra security feature — it is the last 3 or 4 numbers on the back of your card."></popup-info></label>
+        <input type="text" id="cvc">
+      </div>
+    </form>
+
+  </body>
+</html>

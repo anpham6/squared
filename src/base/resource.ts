@@ -49,9 +49,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
 
     public reset() {
         Resource.resetDataMap(Resource.ASSETS);
-        if (this._fileHandler) {
-            this._fileHandler.reset();
-        }
+        this.fileHandler?.reset();
     }
 
     public addImage(element: HTMLImageElement) {
