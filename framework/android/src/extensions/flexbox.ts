@@ -23,7 +23,7 @@ const { capitalize, iterateReverseArray, sameArray, withinRange } = squared.lib.
 function adjustGrowRatio(parent: View, items: View[], dimension: DimensionAttr) {
     const horizontal = dimension === 'width';
     const hasDimension = horizontal ? 'hasWidth' : 'hasHeight';
-    let percent = parent[hasDimension] || horizontal && parent.blockStatic && withinRange(parent.parseWidth(parent.valueAt('maxWidth')), parent.box.width),
+    let percent = parent[hasDimension] || horizontal && parent.blockStatic && withinRange(parent.parseUnit(parent.valueAt('maxWidth')), parent.box.width),
         growShrinkType = 0,
         result = 0;
     const length = items.length;

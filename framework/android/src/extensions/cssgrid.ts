@@ -324,7 +324,7 @@ function applyLayout(node: View, parent: View, item: View, mainData: CssGridData
         const k = cellStart + i;
         const min = unitMin[k];
         if (min) {
-            minUnitSize += horizontal ? parent.parseUnit(min) : parent.parseUnit(min, { dimension: 'height' });
+            minUnitSize += horizontal ? parent.parseUnit(min) : parent.parseHeight(min);
         }
         let value = unit[k];
         if (!value) {
@@ -388,7 +388,7 @@ function applyLayout(node: View, parent: View, item: View, mainData: CssGridData
             size = 0;
         }
         else {
-            const cellSize = horizontal ? item.parseUnit(value) : item.parseUnit(value, { dimension: 'height' });
+            const cellSize = horizontal ? item.parseUnit(value) : item.parseHeight(value);
             if (minSize === 0) {
                 size += cellSize;
             }

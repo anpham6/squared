@@ -225,7 +225,7 @@ function constraintMinMax(node: T, horizontal: boolean) {
                 if (ascendFlexibleWidth(node)) {
                     node.setLayoutWidth('0px', false);
                     if (node.flexibleWidth) {
-                        node.app('layout_constraintWidth_min', formatPX(node.parseWidth(minWH) + node.contentBoxWidth));
+                        node.app('layout_constraintWidth_min', formatPX(node.parseUnit(minWH) + node.contentBoxWidth));
                         node.css('minWidth', 'auto');
                     }
                 }
@@ -244,7 +244,7 @@ function constraintMinMax(node: T, horizontal: boolean) {
         if (maxWH !== '' && maxWH !== '100%' && isLength(maxWH, true)) {
             if (horizontal) {
                 if (ascendFlexibleWidth(node)) {
-                    const value = node.parseWidth(maxWH);
+                    const value = node.parseUnit(maxWH);
                     if (value > node.width || node.percentWidth) {
                         node.setLayoutWidth('0px');
                         node.app('layout_constraintWidth_max', formatPX(value + (node.contentBox ? node.contentBoxWidth : 0)));
@@ -621,7 +621,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         else if (width === '100%') {
                             if (!this.support.maxDimension && this.hasPX('maxWidth')) {
                                 const maxWidth = this.valueAt('maxWidth');
-                                const maxValue = this.parseWidth(maxWidth);
+                                const maxValue = this.parseUnit(maxWidth);
                                 const absoluteParent = this.absoluteParent || actualParent;
                                 if (maxWidth === '100%') {
                                     if (containsWidth && Math.ceil(maxValue) >= absoluteParent.box.width) {
@@ -866,7 +866,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     this.setLayoutWidth(this.getMatchConstraint(renderParent));
                 }
                 else {
-                    const width = this.parseWidth(minWidth) + (this.contentBox ? this.contentBoxWidth : 0);
+                    const width = this.parseUnit(minWidth) + (this.contentBox ? this.contentBoxWidth : 0);
                     if (width) {
                         this.android('minWidth', formatPX(width), false);
                     }
@@ -909,7 +909,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                     }
                     else {
-                        width = this.parseWidth(maxWidth);
+                        width = this.parseUnit(maxWidth);
                     }
                 }
                 else if (!this.pageFlow && this.multiline && this.inlineWidth && !this.preserveWhiteSpace && (this.ascend({ condition: item => item.hasPX('width') }).length || !this.textContent.includes('\n'))) {
@@ -2360,7 +2360,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                 }
                 if (pivoted && this.has('transformOrigin')) {
-                    const { left, top } = Resource.getBackgroundPosition(this.valueAt('transformOrigin'), this.bounds, { fontSize: this.fontSize });
+                    const { left, top } = Resource.getBackgroundPosition(this.valueAt('transformOrigin'), this.bounds, { fontSize: this.fontSize, screenDimension: this.localSettings.screenDimension });
                     if (top !== 0) {
                         this.android('transformPivotX', formatPX(top - (offsetX >= 0 ? offsetX : offsetX * -2)));
                     }

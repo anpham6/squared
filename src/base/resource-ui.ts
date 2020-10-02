@@ -683,7 +683,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
         return numberArray ? [undefined, result] : [result];
     }
 
-    public static parseBackgroundImage(node: NodeUI, backgroundImage: string, screenDimension?: Null<Dimension>) {
+    public static parseBackgroundImage(node: NodeUI, backgroundImage: string) {
         const backgroundSize = node.css('backgroundSize').split(/\s*,\s*/);
         const images: (string | Gradient)[] = [];
         const getGradientPosition = (value: string) => isString(value) ? value.includes('at ') ? /(.+?)?\s*at (.+?)\s*$/.exec(value) : [value, value] as RegExpExecArray : null;
@@ -711,7 +711,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                 const repeating = !!match[1];
                 const type = match[2];
                 const direction = match[3];
-                const imageDimension = backgroundSize.length ? ResourceUI.getBackgroundSize(node, backgroundSize[i % backgroundSize.length], screenDimension) : null;
+                const imageDimension = backgroundSize.length ? ResourceUI.getBackgroundSize(node, backgroundSize[i % backgroundSize.length]) : null;
                 const dimension = node.fitToScreen(imageDimension || node.actualDimension);
                 let gradient: Undef<Gradient>;
                 switch (type) {
@@ -780,7 +780,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                     }
                     case 'radial': {
                         const position = getGradientPosition(direction);
-                        const center = ResourceUI.getBackgroundPosition(position?.[2] || 'center', dimension, { fontSize: node.fontSize, imageDimension, screenDimension });
+                        const center = ResourceUI.getBackgroundPosition(position?.[2] || 'center', dimension, { fontSize: node.fontSize, imageDimension, screenDimension: node.localSettings.screenDimension });
                         const { left, top } = center;
                         const { width, height } = dimension;
                         let shape = 'ellipse',
@@ -866,7 +866,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                             type,
                             dimension,
                             angle: getAngle(direction),
-                            center: ResourceUI.getBackgroundPosition(position?.[2] || 'center', dimension, { fontSize: node.fontSize, imageDimension, screenDimension })
+                            center: ResourceUI.getBackgroundPosition(position?.[2] || 'center', dimension, { fontSize: node.fontSize, imageDimension, screenDimension: node.localSettings.screenDimension })
                         } as ConicGradient;
                         gradient.colorStops = parseColorStops(node, gradient, match[4]);
                         break;
@@ -882,7 +882,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
         }
     }
 
-    public static getBackgroundSize(node: NodeUI, value: string, screenDimension?: Null<Dimension>): Null<Dimension> {
+    public static getBackgroundSize(node: NodeUI, value: string): Null<Dimension> {
         let width = 0,
             height = 0;
         switch (value) {
@@ -901,10 +901,10 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                     }
                     switch (index) {
                         case 0:
-                            width = node.parseUnit(size, { parent: false, screenDimension });
+                            width = node.parseWidth(size, false);
                             break;
                         case 1:
-                            height = node.parseUnit(size, { dimension: 'height', parent: false, screenDimension });
+                            height = node.parseHeight(size, false);
                             break;
                     }
                 });
@@ -1012,7 +1012,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
             if (node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
                 const value = node.backgroundImage;
                 if (value !== '') {
-                    backgroundImage = ResourceUI.parseBackgroundImage(node, value, node.localSettings.screenDimension);
+                    backgroundImage = ResourceUI.parseBackgroundImage(node, value);
                 }
             }
             if (backgroundColor || backgroundImage || borderWidth) {

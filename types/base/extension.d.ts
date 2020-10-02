@@ -94,7 +94,7 @@ interface ColumnData<T> {
     columnGap: number;
     columnRule: {
         borderLeftStyle: string;
-        borderLeftWidth: string;
+        borderLeftWidth: number;
         borderLeftColor: string;
     };
     boxWidth: number;

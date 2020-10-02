@@ -107,7 +107,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         inheritStyles(thead, false);
         inheritStyles(tfoot, true);
         const borderCollapse = mainData.borderCollapse;
-        const [horizontal, vertical] = !borderCollapse ? replaceMap(node.css('borderSpacing').split(' '), (value, index) => index === 0 ? node.parseWidth(value) : node.parseHeight(value)) : [0, 0];
+        const [horizontal, vertical] = !borderCollapse ? replaceMap(node.css('borderSpacing').split(' '), (value, index) => index === 0 ? node.parseUnit(value) : node.parseHeight(value)) : [0, 0];
         const spacingWidth = horizontal > 1 ? Math.round(horizontal / 2) : horizontal;
         const spacingHeight = vertical > 1 ? Math.round(vertical / 2) : vertical;
         const hasWidth = node.hasWidth;
@@ -253,7 +253,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     else {
                         const percent = isPercent(columnWidth);
                         const length = isLength(mapWidth[j]);
-                        if (width < mapBounds[j] || width === mapBounds[j] && (percent && length || percent && isPercent(mapWidth[j]) && td.parseWidth(columnWidth) >= td.parseWidth(mapWidth[j]) || length && isLength(columnWidth) && td.parseWidth(columnWidth) > td.parseWidth(mapWidth[j]))) {
+                        if (width < mapBounds[j] || width === mapBounds[j] && (percent && length || percent && isPercent(mapWidth[j]) && td.parseUnit(columnWidth) >= td.parseUnit(mapWidth[j]) || length && isLength(columnWidth) && td.parseUnit(columnWidth) > td.parseUnit(mapWidth[j]))) {
                             mapWidth[j] = columnWidth;
                         }
                         if (element.colSpan === 1) {

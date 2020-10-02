@@ -30,22 +30,6 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
             const application = this.application;
             const { columnCount, columnGap, columnWidth, columnRule, columnSized, boxWidth, rows, multiline } = mainData;
             const { borderLeftWidth, borderLeftColor, borderLeftStyle } = columnRule;
-            let borderWidth: number;
-            switch (borderLeftWidth) {
-                case 'thin':
-                    borderWidth = 1;
-                    break;
-                case 'medium':
-                    borderWidth = 3;
-                    break;
-                case 'thick':
-                    borderWidth = 5;
-                    break;
-                default:
-                    borderWidth = node.parseWidth(borderLeftWidth);
-                    break;
-            }
-            const borderVisible = borderLeftStyle !== 'none' && borderWidth > 0;
             const createColumnRule = () => {
                 const rule = application.createNode(node.sessionId, { parent: node, append: true });
                 rule.containerName = node.containerName + '_COLUMNRULE';
@@ -53,13 +37,13 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                 rule.setControlType(CONTAINER_TAGNAME.LINE, CONTAINER_NODE.LINE);
                 rule.exclude({ resource: NODE_RESOURCE.ASSET, procedure: NODE_PROCEDURE.ALL });
                 let width: string;
-                if (borderVisible) {
-                    width = formatPX(borderWidth);
+                if (borderLeftWidth) {
+                    width = formatPX(borderLeftWidth);
                     rule.cssApply({
                         width,
                         paddingLeft: width,
                         borderLeftStyle,
-                        borderLeftWidth,
+                        borderLeftWidth: width,
                         borderLeftColor,
                         lineHeight: 'inherit',
                         boxSizing: 'border-box',

@@ -147,6 +147,15 @@ function setColumnMaxWidth(nodes: NodeUI[], offset: number) {
     }
 }
 
+function setElementState(node: NodeUI, styleElement: boolean, naturalElement: boolean, htmlElement: boolean, svgElement: boolean) {
+    const cacheState = node.unsafe<CacheStateUI<NodeUI>>('cacheState')!;
+    cacheState.naturalChild = true;
+    cacheState.styleElement = styleElement;
+    cacheState.naturalElement = naturalElement;
+    cacheState.htmlElement = htmlElement;
+    cacheState.svgElement = svgElement;
+}
+
 export default abstract class ApplicationUI<T extends NodeUI> extends Application<T> implements squared.base.ApplicationUI<T> {
     public builtInExtensions!: Map<string, ExtensionUI<T>>;
     public readonly session: squared.base.AppSessionUI<T> = {
@@ -411,6 +420,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (parent) {
                 parent.visible = false;
                 node.documentParent = parent;
+                setElementState(parent, true, true, true, false);
                 if (parent.tagName === 'HTML') {
                     parent.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
                     parent.exclude({ resource: NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING, procedure: NODE_PROCEDURE.ALL });
@@ -584,12 +594,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected cascadeParentNode(processing: squared.base.AppProcessing<T>, parentElement: HTMLElement, sessionId: string, depth: number, extensions: Null<ExtensionUI<T>[]>, shadowParent?: ShadowRoot, cascadeAll?: boolean) {
-        const setElementState = (child: T, styleElement: boolean, naturalElement: boolean, htmlElement: boolean, svgElement: boolean) => {
-            child.setCacheState('styleElement', styleElement);
-            child.setCacheState('naturalElement', naturalElement);
-            child.setCacheState('htmlElement', htmlElement);
-            child.setCacheState('svgElement', svgElement);
-        };
         const node = this.insertNode(parentElement, sessionId, cascadeAll);
         if (parentElement.tagName === 'svg') {
             setElementState(node, true, true, false, true);

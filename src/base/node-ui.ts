@@ -24,7 +24,6 @@ const CSS_SPACING = new Map<number, number>([
 ]);
 
 const CSS_SPACINGINDEX = [BOX_STANDARD.MARGIN_TOP, BOX_STANDARD.MARGIN_RIGHT, BOX_STANDARD.MARGIN_BOTTOM, BOX_STANDARD.MARGIN_LEFT, BOX_STANDARD.PADDING_TOP, BOX_STANDARD.PADDING_RIGHT, BOX_STANDARD.PADDING_BOTTOM, BOX_STANDARD.PADDING_LEFT];
-const REGEXP_PARSEUNIT = /(?:%|vw|vh|vmin|vmax)$/;
 
 function cascadeActualPadding(children: T[], attr: "paddingTop" | "paddingBottom", value: number) {
     let valid = false;
@@ -578,18 +577,19 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (!value) {
             return 0;
         }
-        if (REGEXP_PARSEUNIT.test(value)) {
-            (options ||= {}).screenDimension ||= this.localSettings.screenDimension;
+        else if (value.endsWith('px')) {
+            return parseFloat(value);
         }
+        (options ||= {}).screenDimension ||= this.localSettings.screenDimension;
         return super.parseUnit(value, options);
     }
 
-    public parseWidth(value: string, parent = true) {
-        return !value ? 0 : super.parseUnit(value, REGEXP_PARSEUNIT.test(value) ? { parent, screenDimension: this.localSettings.screenDimension } : undefined);
+    public parseWidth(value: string, parent?: boolean) {
+        return this.parseUnit(value, { parent });
     }
 
-    public parseHeight(value: string, parent = true) {
-        return !value ? 0 : super.parseUnit(value, REGEXP_PARSEUNIT.test(value) ? { dimension: 'height', parent, screenDimension: this.localSettings.screenDimension } : undefined);
+    public parseHeight(value: string, parent?: boolean) {
+        return this.parseUnit(value, { dimension: 'height', parent });
     }
 
     public renderEach(predicate: IteratorPredicate<T, void>) {

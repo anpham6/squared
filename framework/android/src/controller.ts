@@ -1697,9 +1697,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             if (colorName !== '') {
                                 const precision = node.localSettings.floatPrecision;
                                 node.android('shadowColor', `@color/${colorName}`);
-                                node.android('shadowDx', truncate(node.parseWidth(match[2]) * 2, precision));
+                                node.android('shadowDx', truncate(node.parseUnit(match[2]) * 2, precision));
                                 node.android('shadowDy', truncate(node.parseHeight(match[3]) * 2, precision));
-                                node.android('shadowRadius', truncate(match[4] ? Math.max(node.parseWidth(match[4]), 0) : 0.01, precision));
+                                node.android('shadowRadius', truncate(match[4] ? Math.max(node.parseUnit(match[4]), 0) : 0.01, precision));
                             }
                         }
                     }

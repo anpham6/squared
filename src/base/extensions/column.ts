@@ -2,6 +2,8 @@ import type NodeUI from '../node-ui';
 
 import ExtensionUI from '../extension-ui';
 
+const { isLength } = squared.lib.css;
+
 export default abstract class Column<T extends NodeUI> extends ExtensionUI<T> {
     public is(node: T) {
         return node.size() > 1 && (node.blockDimension && node.display !== 'table') && !node.layoutElement;
@@ -46,8 +48,8 @@ export default abstract class Column<T extends NodeUI> extends ExtensionUI<T> {
         const [borderLeftStyle, borderLeftWidth, borderLeftColor] = node.cssAsTuple('columnRuleStyle', 'columnRuleWidth', 'columnRuleColor');
         const boxWidth = node.box.width;
         const columnCount = node.toInt('columnCount');
-        const columnWidth = node.parseWidth(node.valueOf('columnWidth'));
-        let columnGap = node.parseWidth(node.valueOf('columnGap')),
+        const columnWidth = node.parseUnit(node.valueOf('columnWidth'));
+        let columnGap = node.parseUnit(node.valueOf('columnGap')),
             columnSized: number;
         const getColumnSizing = () => isNaN(columnCount) && columnWidth > 0 ? boxWidth / (columnWidth + columnGap) : Infinity;
         if (columnGap) {
@@ -65,7 +67,7 @@ export default abstract class Column<T extends NodeUI> extends ExtensionUI<T> {
             columnSized,
             columnRule: {
                 borderLeftStyle,
-                borderLeftWidth,
+                borderLeftWidth: borderLeftStyle !== 'none' ? borderLeftWidth.endsWith('px') ? parseFloat(borderLeftWidth) : isLength(borderLeftWidth, true) ? node.parseUnit(borderLeftWidth) : parseFloat(node.style.borderLeftWidth) : 0,
                 borderLeftColor
             },
             boxWidth: parent.actualBoxWidth(boxWidth),

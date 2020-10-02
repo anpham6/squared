@@ -69,8 +69,8 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
             const children = node.children as T[];
             if (node.has('columnWidth') || node.has('columnCount')) {
                 const columnCount = node.toInt('columnCount', Infinity);
-                const columnWidth = node.parseWidth(node.valueAt('columnWidth'));
-                const columnGap = node.parseWidth(node.valueAt('columnGap'));
+                const columnWidth = node.parseUnit(node.valueAt('columnWidth'));
+                const columnGap = node.parseUnit(node.valueAt('columnGap'));
                 const minCount = columnWidth ? Math.min(Math.floor(node.box.width / (columnWidth + columnGap)), columnCount) : columnCount;
                 if (minCount !== Infinity) {
                     let remaining = minCount - length;
