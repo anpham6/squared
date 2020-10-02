@@ -790,7 +790,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     public depth = -1;
     public queryMap?: T[][];
     public pseudoElt?: PseudoElt;
-    public shadowChildOf?: ShadowRoot;
+    public shadowHost?: ShadowRoot;
 
     protected _parent: Null<T> = null;
     protected _cache: CacheValue = {};

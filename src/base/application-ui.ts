@@ -499,7 +499,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             }
                             tagName = '#' + id;
                         }
-                        styleElement = insertStyleSheetRule(`${tagName + item.pseudoElt!} { display: none !important; }`, 0, item.shadowChildOf);
+                        styleElement = insertStyleSheetRule(`${tagName + item.pseudoElt!} { display: none !important; }`, 0, item.shadowHost);
                     }
                     if (item.cssTry('display', item.display)) {
                         pseudoMap[q++] = [item, id, styleElement];
@@ -517,7 +517,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                     if (data[2]) {
                         try {
-                            (item.shadowChildOf || document.head).removeChild(data[2]);
+                            (item.shadowHost || document.head).removeChild(data[2]);
                         }
                         catch {
                         }
@@ -583,7 +583,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return this.layouts[0]?.content || '';
     }
 
-    protected cascadeParentNode(cache: NodeList<T>, excluded: NodeList<T>, parentElement: HTMLElement, sessionId: string, depth: number, rootElements: Set<HTMLElement>, extensions: Null<ExtensionUI<T>[]>, shadowParent?: ShadowRoot, cascadeAll?: boolean) {
+    protected cascadeParentNode(processing: squared.base.AppProcessing<T>, parentElement: HTMLElement, sessionId: string, depth: number, extensions: Null<ExtensionUI<T>[]>, shadowParent?: ShadowRoot, cascadeAll?: boolean) {
         const setElementState = (child: T, styleElement: boolean, naturalElement: boolean, htmlElement: boolean, svgElement: boolean) => {
             child.setCacheState('styleElement', styleElement);
             child.setCacheState('naturalElement', naturalElement);
@@ -598,7 +598,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             setElementState(node, true, true, true, false);
         }
         if (depth === 0) {
-            cache.add(node);
+            processing.cache.add(node);
             for (const name of node.extensions) {
                 if ((this.extensionManager.get(name) as ExtensionUI<T>)?.cascadeAll) {
                     cascadeAll = true;
@@ -610,6 +610,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (node.excluded || this._preventNodeCascade(node)) {
                 return node;
             }
+            const { cache, rootElements } = processing;
+            const pierceShadowRoot = this.userSettings.pierceShadowRoot;
             const hostElement = getShadowRoot(parentElement) || parentElement;
             const elements: T[] = new Array(hostElement.childElementCount);
             const beforeElement = this.createPseduoElement(parentElement, '::before', sessionId, hostElement);
@@ -662,12 +664,15 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         (use ? ApplicationUI.prioritizeExtensions(use, extensions) : extensions).some(item => item.beforeInsertNode!(element, sessionId));
                     }
                     if (!rootElements.has(element)) {
-                        const shadowRoot = getShadowRoot(element);
-                        if (shadowRoot) {
-                            this.setStyleMap(sessionId, this.getProcessing(sessionId)!, shadowRoot);
+                        let shadowRoot: UndefNull<ShadowRoot>;
+                        if (pierceShadowRoot) {
+                            shadowRoot = getShadowRoot(element);
+                            if (shadowRoot) {
+                                this.setStyleMap(sessionId, processing, shadowRoot);
+                            }
                         }
                         if ((shadowRoot || element).childNodes.length) {
-                            child = this.cascadeParentNode(cache, excluded, element, sessionId, childDepth, rootElements, extensions, shadowRoot || shadowParent, cascadeAll);
+                            child = this.cascadeParentNode(processing, element, sessionId, childDepth, extensions, shadowRoot || shadowParent, cascadeAll);
                         }
                         else {
                             child = this.insertNode(element, sessionId, cascadeAll);
@@ -700,7 +705,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 child.init(node, childDepth, j);
                 child.actualParent = node;
                 if (shadowParent) {
-                    child.shadowChildOf = shadowParent;
+                    child.shadowHost = shadowParent;
                 }
                 children[j++] = child;
             }
@@ -712,7 +717,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (!inlineText) {
                 node.inlineText = false;
                 if (j > 0) {
-                    this.cacheNodeChildren(cache, excluded, node, children);
+                    this.cacheNodeChildren(processing, cache, node, children);
                 }
             }
             else {
@@ -740,7 +745,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return node;
     }
 
-    protected cacheNodeChildren(cache: NodeList<T>, excluded: NodeList<T>, node: T, children: T[]) {
+    protected cacheNodeChildren(processing: squared.base.AppProcessing<T>, cache: NodeList<T>, node: T, children: T[]) {
         const length = children.length;
         if (length > 1) {
             let siblingsLeading: T[] = [],
@@ -774,7 +779,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
                 if (child.excluded) {
                     hasExcluded = true;
-                    excluded.add(child);
+                    processing.excluded.add(child);
                 }
             }
             trailing.siblingsTrailing = siblingsTrailing;
@@ -785,7 +790,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         else {
             const child = children[0];
             if (child.excluded) {
-                excluded.add(child);
+                processing.excluded.add(child);
             }
             else {
                 node.add(child);

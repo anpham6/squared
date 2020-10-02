@@ -397,7 +397,7 @@ declare module "base" {
         sessionId: string;
         queryMap?: Node[][];
         pseudoElt?: PseudoElt;
-        shadowChildOf?: ShadowRoot;
+        shadowHost?: ShadowRoot;
         readonly id: number;
         init(parent: Node, depth: number, index?: number): void;
         syncWith(sessionId?: string, cache?: boolean): boolean;

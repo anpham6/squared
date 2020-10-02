@@ -1,6 +1,7 @@
 interface UserSettings extends StandardMap {
     builtInExtensions: string[];
     showErrorMessages: boolean;
+    pierceShadowRoot: boolean;
     createElementMap: boolean;
     createQuerySelectorMap: boolean;
 }
@@ -8,6 +9,7 @@ interface UserSettings extends StandardMap {
 interface UserResourceSettings extends UserSettings {
     preloadImages: boolean;
     preloadFonts: boolean;
+    preloadCustomElements: boolean;
     outputEmptyCopyDirectory: boolean;
     outputArchiveFormat: string;
     outputArchiveName: string;

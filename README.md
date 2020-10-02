@@ -177,6 +177,7 @@ squared.settings = {
     compressImages: false, // png | jpeg - TinyPNG API Key <https://tinypng.com/developers>
     convertImages: '', // png | jpeg | bmp | squared-apache: gif | tiff
     preloadFonts: true,
+    preloadCustomElements: true,
     supportNegativeLeftTop: true,
     fontMeasureWrap: true, // slower rendering performance (alias: android.delegate.multiline)
     fontMeasureAdjust: 0.75, // wider < 0 | thinner > 0 (element: data-android-font-measure-adjust)
@@ -185,6 +186,7 @@ squared.settings = {
     showAttributes: true,
     createElementMap: false,
     createQuerySelectorMap: false,
+    pierceShadowRoot: true,
     convertPixels: 'dp',
     insertSpaces: 4,
     showErrorMessages: true,
@@ -216,9 +218,11 @@ squared.settings = {
     ],
     preloadImages: false,
     preloadFonts: false,
+    preloadCustomElements: false,
     excludePlainText: true,
     createElementMap: true,
     createQuerySelectorMap: true,
+    pierceShadowRoot: false,
     showErrorMessages: false,
     outputFileExclusions: [], // ['squared.*', '*.mp4'] | <script|link> data-chrome-file="exclude" | default is none
     outputEmptyCopyDirectory: false,
@@ -234,6 +238,7 @@ squared.settings = {
     builtInExtensions: [],
     createElementMap: true,
     createQuerySelectorMap: true,
+    pierceShadowRoot: false,
     showErrorMessages: false
 };
 ```

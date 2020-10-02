@@ -11,7 +11,7 @@ import type NodeList from './nodelist';
 import Controller from './controller';
 
 const { isUserAgent } = squared.lib.client;
-const { CSS_PROPERTIES, formatPX, getStyle, hasCoords, isLength } = squared.lib.css;
+const { CSS_PROPERTIES, formatPX, getStyle, hasCoords, isLength, parseUnit } = squared.lib.css;
 const { getParentElement, withinViewport } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;
 const { capitalize, convertFloat, iterateArray, joinArray } = squared.lib.util;
@@ -784,7 +784,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     if (value && isLength(value)) {
                         const attrMax = 'max' + capitalize(attr);
                         if (!styleMap[attrMax] || !attrMax.endsWith('%')) {
-                            styleMap[attr] = formatPX(image[attr] * parseFloat(value) / image[opposing]);
+                            styleMap[attr] = formatPX(image[attr] * parseUnit(value, { fontSize: parseFloat(getStyle(element).fontSize) }) / image[opposing]);
                         }
                     }
                 }
