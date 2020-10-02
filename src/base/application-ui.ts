@@ -18,7 +18,7 @@ type FileActionOptions = squared.FileActionOptions;
 const { FILE } = squared.lib.regex;
 
 const { formatPX, getStyle, hasCoords, insertStyleSheetRule, resolveURL } = squared.lib.css;
-const { getNamedItem, getShadowRoot, removeElementsByClassName } = squared.lib.dom;
+const { getNamedItem, removeElementsByClassName } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;
 const { capitalize, convertWord, flatArray, hasBit, isString, iterateArray, partitionArray, trimBoth, trimString } = squared.lib.util;
 
@@ -616,7 +616,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             const { cache, rootElements } = processing;
             const pierceShadowRoot = this.userSettings.pierceShadowRoot;
-            const hostElement = getShadowRoot(parentElement) || parentElement;
+            const hostElement = parentElement.shadowRoot || parentElement;
             const elements: T[] = new Array(hostElement.childElementCount);
             const beforeElement = this.createPseduoElement(parentElement, '::before', sessionId, hostElement);
             const afterElement = this.createPseduoElement(parentElement, '::after', sessionId, hostElement);
@@ -670,7 +670,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (!rootElements.has(element)) {
                         let shadowRoot: UndefNull<ShadowRoot>;
                         if (pierceShadowRoot) {
-                            shadowRoot = getShadowRoot(element);
+                            shadowRoot = element.shadowRoot;
                             if (shadowRoot) {
                                 this.setStyleMap(sessionId, processing, shadowRoot);
                             }

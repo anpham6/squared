@@ -303,7 +303,6 @@ const isColor = (value: string) => /(rgb|hsl)a?/.test(value);
 const formatVar = (value: number) => !isNaN(value) ? value + 'px' : '';
 const formatDecimal = (value: number) => !isNaN(value) ? value.toString() : '';
 const trimEnclosing = (value: string) => value.substring(1, value.length - 1);
-const trimSelector = (value: string) => /^\*(\s+\*){0,2}$/.test(value) ? '*' : value.replace(/^(\*\s+){1,2}/, '');
 
 export const CSS_PROPERTIES: CssProperties = {
     alignContent: {
@@ -1679,8 +1678,8 @@ export function hasComputedStyle(element: Element): element is HTMLElement {
     return element.nodeName[0] !== '#';
 }
 
-export function parseSelectorText(value: string, document?: boolean) {
-    value = document ? value.trim() : trimSelector(value.trim());
+export function parseSelectorText(value: string) {
+    value = value.trim();
     if (value.includes(',')) {
         let normalized = value,
             found: Undef<boolean>,
@@ -1697,20 +1696,19 @@ export function parseSelectorText(value: string, document?: boolean) {
             while (true) {
                 const index = normalized.indexOf(',', position);
                 if (index !== -1) {
-                    const segment = value.substring(position, index).trim();
-                    result.push(position === 0 ? segment : trimSelector(segment));
+                    result.push(value.substring(position, index).trim());
                     position = index + 1;
                 }
                 else {
                     if (position > 0) {
-                        result.push(trimSelector(value.substring(position).trim()));
+                        result.push(value.substring(position).trim());
                     }
                     break;
                 }
             }
             return result.length ? result : [value];
         }
-        return replaceMap(value.split(CHAR_SEPARATOR), selector => trimSelector(selector));
+        return value.split(CHAR_SEPARATOR);
     }
     return [value];
 }
@@ -1753,16 +1751,17 @@ export function getSpecificity(value: string) {
             segment = spliceString(segment, subMatch.index, subMatch[0].length);
         }
         while (subMatch = CSS.SELECTOR_PSEUDO_CLASS.exec(segment)) {
-            if (subMatch[0].startsWith(':not(')) {
-                const attr = subMatch[1];
-                if (attr) {
+            const pseudoClass = subMatch[0];
+            if (pseudoClass.startsWith(':not(')) {
+                const negate = subMatch[1];
+                if (negate) {
                     const lastIndex = CSS.SELECTOR_G.lastIndex;
-                    result += getSpecificity(attr);
+                    result += getSpecificity(negate);
                     CSS.SELECTOR_G.lastIndex = lastIndex;
                 }
             }
             else {
-                switch (match[2]) {
+                switch (pseudoClass) {
                     case ':scope':
                     case ':root':
                         break;
@@ -1771,15 +1770,15 @@ export function getSpecificity(value: string) {
                         break;
                 }
             }
-            segment = spliceString(segment, subMatch.index, subMatch[0].length);
+            segment = spliceString(segment, subMatch.index, pseudoClass.length);
         }
         while (subMatch = CSS.SELECTOR_PSEUDO_ELEMENT.exec(segment)) {
             result += 1;
             segment = spliceString(segment, subMatch.index, subMatch[0].length);
         }
         while (subMatch = CSS.SELECTOR_LABEL.exec(segment)) {
-            const command = subMatch[0];
-            switch (command[0]) {
+            const label = subMatch[0];
+            switch (label[0]) {
                 case '#':
                     result += 100;
                     break;
@@ -1790,7 +1789,7 @@ export function getSpecificity(value: string) {
                     result += 1;
                     break;
             }
-            segment = spliceString(segment, subMatch.index, command.length);
+            segment = spliceString(segment, subMatch.index, label.length);
         }
     }
     CSS.SELECTOR_G.lastIndex = 0;

@@ -1,8 +1,9 @@
-ad6a1caad2dfcb711956825b80ccd999  ./app/src/main/res/drawable/_default.png
+cd3ebab2d152eb72aa06b882b93d61e5  ./app/src/main/res/drawable/alt.png
 084c5166290af904d136eb755fb0b4c4  ./app/src/main/res/drawable/input_text_cvc.xml
-d8562f9138537d6d92cc1cdbc37164fb  ./app/src/main/res/layout/activity_main.xml
+ab14e5804d6919a17de339c3c638e27a  ./app/src/main/res/drawable/span_textview_1.xml
+b9ca46d1bd9e213368207fca56ef64c5  ./app/src/main/res/layout/activity_main.xml
 1d453f2da56fb85c29bde2c27bb621d8  ./app/src/main/res/values/colors.xml
-2cd9d68d8325293171b2ab82718a26e1  ./app/src/main/res/values/dimens.xml
-b6f382f072664d17e82659f7609ea1d1  ./app/src/main/res/values/strings.xml
-23acae7c1e96b6fc8d769dc186c16996  ./app/src/main/res/values/styles.xml
+a482b4c8fc0e7ebe399b6276e99c0f2e  ./app/src/main/res/values/dimens.xml
+0b1b761bae3e34143e9e786557c88159  ./app/src/main/res/values/strings.xml
+29b57dbdd1261dca7e481c383d73e09a  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml

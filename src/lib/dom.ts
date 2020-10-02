@@ -106,11 +106,6 @@ export function getRangeClientRect(element: Element) {
     return bounds;
 }
 
-export function getShadowRoot(element: Element) {
-    const shadowRoot = element.shadowRoot;
-    return shadowRoot && shadowRoot.mode === 'open' ? shadowRoot : null;
-}
-
 export function getParentElement(element: Element) {
     const parentElement = element.parentElement;
     if (parentElement) {

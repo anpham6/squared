@@ -134,7 +134,7 @@ declare module "lib" {
         function checkStyleValue(element: StyleElement, attr: string, value: string): string;
         function checkFontSizeValue(value: string, fixedWidth?: boolean): string;
         function checkMediaRule(value: string, fontSize?: number): boolean;
-        function parseSelectorText(value: string, document?: boolean): string[];
+        function parseSelectorText(value: string): string[];
         function getSpecificity(value: string): number;
         function parseKeyframes(rules: CSSRuleList): Null<KeyframeData>;
         function getKeyframesRules(documentRoot?: DocumentOrShadowRoot): KeyframesMap;
@@ -170,7 +170,6 @@ declare module "lib" {
         function withinViewport(rect: DOMRect | ClientRect): boolean;
         function assignRect(rect: DOMRect | ClientRect | BoxRectDimension, scrollPosition?: boolean): BoxRectDimension;
         function getRangeClientRect(element: Element): Null<BoxRectDimension>;
-        function getShadowRoot(element: Element): Null<ShadowRoot>;
         function getParentElement(element: Element): Null<HTMLElement>;
         function removeElementsByClassName(className: string): void;
         function getElementsBetweenSiblings(elementStart: Null<Element>, elementEnd: Element): Element[];

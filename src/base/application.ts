@@ -17,7 +17,6 @@ const { FILE, STRING } = squared.lib.regex;
 
 const { isUserAgent } = squared.lib.client;
 const { CSS_PROPERTIES, checkMediaRule, getSpecificity, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText } = squared.lib.css;
-const { getShadowRoot } = squared.lib.dom;
 const { getElementCache, newSessionInit, resetSessionAll, setElementCache } = squared.lib.session;
 const { capitalize, convertCamelCase, isEmptyString, parseMimeType, resolvePath, splitPair, splitPairStart, trimBoth } = squared.lib.util;
 
@@ -481,7 +480,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 return node;
             }
             const childDepth = depth + 1;
-            const hostElement = getShadowRoot(parentElement) || parentElement;
+            const hostElement = parentElement.shadowRoot || parentElement;
             const childNodes = hostElement.childNodes;
             const length = childNodes.length;
             const children: T[] = new Array(length);
@@ -509,7 +508,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                     let shadowRoot: UndefNull<ShadowRoot>;
                     if (pierceShadowRoot) {
-                        shadowRoot = getShadowRoot(element);
+                        shadowRoot = element.shadowRoot;
                         if (shadowRoot) {
                             this.setStyleMap(sessionId, processing, shadowRoot);
                         }
@@ -667,7 +666,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 parseImageUrl('backgroundImage');
                 parseImageUrl('listStyleImage');
                 parseImageUrl('content');
-                for (const selectorText of parseSelectorText(item.selectorText, true)) {
+                for (const selectorText of parseSelectorText(item.selectorText)) {
                     const specificity = getSpecificity(selectorText);
                     const [selector, target] = splitPair(selectorText, '::');
                     const targetElt = target ? '::' + target : '';
@@ -886,7 +885,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             let shadowRootItems: Undef<Set<ShadowRoot>>;
             for (const element of rootElements) {
                 element.querySelectorAll('*').forEach(child => {
-                    const shadowRoot = getShadowRoot(child);
+                    const shadowRoot = child.shadowRoot;
                     if (shadowRoot) {
                         (shadowRootItems ||= new Set<ShadowRoot>()).add(shadowRoot);
                     }

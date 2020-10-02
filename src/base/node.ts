@@ -271,7 +271,7 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, last: boo
                 case ':nth-last-child(n)':
                     break;
                 case ':empty':
-                    if ((child.element as HTMLElement).hasChildNodes()) {
+                    if (child.element!.hasChildNodes()) {
                         return false;
                     }
                     break;
@@ -355,7 +355,7 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, last: boo
                             const form = child.ascend({ condition: item => item.tagName === 'FORM' })[0];
                             if (form) {
                                 let valid: Undef<boolean>;
-                                const element = child.element as HTMLElement;
+                                const element = child.element!;
                                 iterateArray(form.element!.querySelectorAll('*'), (item: HTMLInputElement) => {
                                     switch (item.tagName) {
                                         case 'BUTTON':
@@ -434,10 +434,7 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, last: boo
                     }
                     break;
                 case ':target':
-                    if (location.hash === '') {
-                        return false;
-                    }
-                    else if (!(location.hash === `#${child.elementId}` || tagName === 'A' && location.hash === `#${child.toElementString('name')}`)) {
+                    if (location.hash === '' || !(location.hash === `#${child.elementId}` || tagName === 'A' && location.hash === `#${child.toElementString('name')}`)) {
                         return false;
                     }
                     break;
@@ -447,10 +444,11 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, last: boo
                     }
                     break;
                 case ':root':
-                    if (!last && node.tagName !== 'HTML') {
+                    if (!last || adjacent === '>') {
                         return false;
                     }
                     break;
+                case ':defined':
                 case ':link':
                 case ':visited':
                 case ':any-link':
@@ -460,7 +458,7 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, last: boo
                 case ':valid':
                 case ':invalid': {
                     const element = child.element;
-                    if (iterateArray((parent!.element as HTMLElement).querySelectorAll(':scope > ' + pseudo), item => item === element) !== Infinity) {
+                    if (iterateArray(parent!.element!.querySelectorAll(':scope > ' + pseudo), item => item === element) !== Infinity) {
                         return false;
                     }
                     break;
@@ -535,16 +533,16 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, last: boo
                                     }
                                 }
                             }
-                            continue;
+                            break;
                         }
                     }
                     else if (child.attributes['lang']) {
-                        match = /^:lang\((.+)\)$/.exec(pseudo);
-                        if (match && child.attributes['lang'].trim().toLowerCase() === match[1].trim().toLowerCase()) {
-                            continue;
+                        match = /^:lang\(\s*(.+)\s*\)$/.exec(pseudo);
+                        if (match && child.attributes['lang'].trim().toLowerCase() === match[1].toLowerCase()) {
+                            break;
                         }
                     }
-                    return false;
+                    return !selector.fromNot ? false : true;
                 }
             }
         }
@@ -552,7 +550,7 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, last: boo
     if (notList) {
         for (let i = 0, length = notList.length; i < length; ++i) {
             const not = notList[i];
-            const notData: QueryData = {};
+            const notData: QueryData = { fromNot: true };
             switch (not[0]) {
                 case '.':
                     notData.classList = [not];
@@ -564,42 +562,28 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, last: boo
                     notData.pseudoList = [not];
                     break;
                 case '[': {
-                    const match = SELECTOR_ATTR.exec(not);
-                    if (match) {
-                        const caseInsensitive = match[6] === 'i';
-                        let value = match[3] || match[4] || match[5] || '';
-                        if (caseInsensitive) {
-                            value = value.toLowerCase();
-                        }
-                        notData.attrList = [{
-                            key: match[1],
-                            symbol: match[2],
-                            value,
-                            caseInsensitive
-                        }];
-                        SELECTOR_ATTR.lastIndex = 0;
-                    }
-                    else {
-                        continue;
-                    }
+                    const match = SELECTOR_ATTR.exec(not)!;
+                    const caseInsensitive = match[6] === 'i';
+                    const value = match[3] || match[4] || match[5];
+                    notData.attrList = [{
+                        key: match[1],
+                        symbol: match[2],
+                        value: caseInsensitive && value ? value.toLowerCase() : value,
+                        caseInsensitive
+                    }];
                     break;
                 }
                 default:
-                    if (/^[a-z\d+#.-]+$/i.test(not)) {
-                        notData.tagName = not;
-                    }
-                    else {
-                        return false;
-                    }
+                    notData.tagName = not.toUpperCase();
                     break;
             }
-            if (validateQuerySelector(node, child, notData, last)) {
+            if (validateQuerySelector(node, child, notData, false)) {
                 return false;
             }
         }
     }
     if (classList) {
-        const elementList = (child.element as HTMLElement).classList;
+        const elementList = child.element!.classList;
         for (let i = 0, length = classList.length; i < length; ++i) {
             if (!elementList.contains(classList[i])) {
                 return false;
@@ -671,11 +655,11 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, last: boo
     return true;
 }
 
-function ascendQuerySelector(node: T, selectors: QueryData[], i: number, j: number, nodes: T[], adjacent: Undef<string>): boolean {
+function ascendQuerySelector(node: T, selectors: QueryData[], index: number, nodes: T[], adjacent: Undef<string>): boolean {
     const depth = node.depth;
-    const selector = selectors[j];
+    const selector = selectors[index];
     const length = selectors.length;
-    const last = j === length - 1;
+    const last = index === length - 1;
     const next: T[] = [];
     for (let k = 0, q = nodes.length; k < q; ++k) {
         const child = nodes[k];
@@ -714,7 +698,7 @@ function ascendQuerySelector(node: T, selectors: QueryData[], i: number, j: numb
                 }
             }
         }
-        else if (child.depth - depth >= length - j) {
+        else if (child.depth - depth >= length - index) {
             let parent = child.actualParent;
             while (parent) {
                 if (validateQuerySelector(node, parent, selector, last)) {
@@ -727,9 +711,10 @@ function ascendQuerySelector(node: T, selectors: QueryData[], i: number, j: numb
     if (next.length === 0) {
         return false;
     }
-    return ++j === length ? true : ascendQuerySelector(node, selectors, i, j, next, selector.adjacent);
+    return ++index === length ? true : ascendQuerySelector(node, selectors, index, next, selector.adjacent);
 }
 
+const trimSelector = (value: string) => value[0] !== '*' || value.includes(':root') ? value : /^\*(\s+\*){0,2}$/.test(value) ? '*' : value.replace(/^(\*\s+){1,2}/, '');
 const aboveRange = (a: number, b: number, offset = 1) => a + offset > b;
 const belowRange = (a: number, b: number, offset = 1) => a - offset < b;
 const sortById = (a: T, b: T) => a.id - b.id;
@@ -1722,9 +1707,15 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         const queryMap = customMap || this.queryMap;
         let result: T[] = [];
         if (queryMap && resultCount !== 0) {
+            const depthCount = queryMap.length;
             const queries = parseSelectorText(value);
             for (let i = 0, length = queries.length; i < length; ++i) {
-                const query = queries[i];
+                const query = trimSelector(queries[i]);
+                switch (query) {
+                    case ':root':
+                    case ':scope':
+                        continue;
+                }
                 const selectors: QueryData[] = [];
                 let offset = -1;
                 if (query === '*') {
@@ -1821,11 +1812,37 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                 while (subMatch = SELECTOR_PSEUDO_CLASS.exec(segment)) {
                                     const pseudoClass = subMatch[0];
                                     if (pseudoClass.startsWith(':not(')) {
-                                        if (subMatch[1]) {
-                                            (notList ||= []).push(subMatch[1]);
+                                        const negate = subMatch[1];
+                                        switch (negate[0]) {
+                                            case '.':
+                                            case ':':
+                                                if (negate.split(/[.:]/).length > 1) {
+                                                    selectors.length = 0;
+                                                    break invalid;
+                                                }
+                                                break;
+                                            case '[':
+                                                if (!SELECTOR_ATTR.test(negate)) {
+                                                    selectors.length = 0;
+                                                    break invalid;
+                                                }
+                                                break;
+                                            default:
+                                                if (!/^#?[a-z][a-z\d_-]+$/i.test(negate)) {
+                                                    selectors.length = 0;
+                                                    break invalid;
+                                                }
+                                                break;
                                         }
+                                        (notList ||= []).push(negate);
                                     }
                                     else {
+                                        switch (pseudoClass) {
+                                            case ':root':
+                                            case ':scope':
+                                                --offset;
+                                                break;
+                                        }
                                         (pseudoList ||= []).push(pseudoClass);
                                     }
                                     segment = spliceString(segment, subMatch.index, pseudoClass.length);
@@ -1833,13 +1850,23 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                 while (subMatch = SELECTOR_LABEL.exec(segment)) {
                                     const label = subMatch[0];
                                     switch (label[0]) {
-                                        case '#':
-                                            id = label.substring(1);
+                                        case '#': {
+                                            const idValue = label.substring(1);
+                                            if (id && id !== idValue) {
+                                                selectors.length = 0;
+                                                break invalid;
+                                            }
+                                            id = idValue;
                                             break;
+                                        }
                                         case '.':
                                             (classList ||= []).push(label.substring(1));
                                             break;
                                         default:
+                                            if (id || classList || tagName) {
+                                                selectors.length = 0;
+                                                break invalid;
+                                            }
                                             tagName = label.toUpperCase();
                                             break;
                                     }
@@ -1864,20 +1891,18 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 if (customMap) {
                     offset = 0;
                 }
-                const q = queryMap.length;
                 let r = selectors.length;
-                if (r && offset !== -1 && offset < q) {
+                if (r && offset !== -1 && offset < depthCount) {
                     const dataEnd = selectors.pop() as QueryData;
-                    --r;
-                    const lastEnd = r === 0;
+                    const lastEnd = --r === 0;
                     const currentCount = result.length;
                     let pending: T[];
-                    if (dataEnd.all && q - offset === 1) {
+                    if (dataEnd.all && depthCount - offset === 1) {
                         pending = queryMap[offset];
                     }
                     else {
                         pending = [];
-                        for (let j = offset; j < q; ++j) {
+                        for (let j = offset; j < depthCount; ++j) {
                             const children = queryMap[j];
                             if (dataEnd.all) {
                                 pending = pending.concat(children);
@@ -1893,14 +1918,14 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         }
                     }
                     const s = pending.length;
-                    if (r && (dataEnd.adjacent || resultCount !== -Infinity)) {
+                    if (!lastEnd && (dataEnd.adjacent || resultCount !== -Infinity)) {
                         if (r > 1) {
                             selectors.reverse();
                         }
                         let count = currentCount;
                         for (let j = 0; j < s; ++j) {
                             const node = pending[j];
-                            if ((currentCount === 0 || !result.includes(node)) && ascendQuerySelector(this, selectors, i, 0, [node], dataEnd.adjacent)) {
+                            if ((currentCount === 0 || !result.includes(node)) && ascendQuerySelector(this, selectors, 0, [node], dataEnd.adjacent)) {
                                 result.push(node);
                                 if (++count === resultCount) {
                                     return result.sort(sortById);
@@ -2038,6 +2063,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return this._preferInitial ? this.cssInitial(attr, options) : this._styleMap[attr] || options && options.computed && this.style[attr] as string || '';
     }
 
+    get naturalChild() { return true; }
+
+    get pseudoElement() { return false; }
+
     set parent(value) {
         if (value) {
             const parent = this._parent;
@@ -2092,8 +2121,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return result === undefined ? this._cacheState.styleElement = !!this._element && !this.plainText : result;
     }
 
-    get naturalChild() { return true; }
-
     get naturalElement() {
         const result = this._cacheState.naturalElement;
         return result === undefined ? this._cacheState.naturalElement = this.naturalChild && this.styleElement && !this.pseudoElement : result;
@@ -2106,8 +2133,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     get textElement() {
         return this.plainText || this.inlineText && this.tagName !== 'BUTTON';
     }
-
-    get pseudoElement() { return false; }
 
     get imageElement() {
         return this.tagName === 'IMG';
