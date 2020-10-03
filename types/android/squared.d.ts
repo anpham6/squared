@@ -118,7 +118,7 @@ declare namespace base {
         android(attr: string, value?: string, overwrite?: boolean): string;
         app(attr: string, value?: string, overwrite?: boolean): string;
         clone(id: number, options?: CloneOptions): View;
-        applyOptimizations(): void;
+        applyOptimizations(): boolean;
         applyCustomizations(overwrite?: boolean): void;
         formatted(value: string, overwrite?: boolean): void;
         mergeGravity(attr: string, alignment: string, overwrite?: boolean): void;

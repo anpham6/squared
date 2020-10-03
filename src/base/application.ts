@@ -362,6 +362,25 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
     }
 
+    public replaceShadowRootSlots(shadowRoot: ShadowRoot) {
+        shadowRoot.host.querySelectorAll('[slot]').forEach(hostChild => {
+            const slot = shadowRoot.querySelector(`slot[name=${hostChild.slot}`);
+            if (slot) {
+                const parentSlot = slot.parentElement;
+                if (parentSlot) {
+                    const childNodes = parentSlot.childNodes;
+                    for (let k = 0, q = childNodes.length; k < q; ++k) {
+                        const item = childNodes[k];
+                        if (item === slot) {
+                            parentSlot.insertBefore(hostChild.cloneNode(true), item);
+                            parentSlot.removeChild(item);
+                        }
+                    }
+                }
+            }
+        });
+    }
+
     public setExtensions(namespaces: string[] = this.userSettings.builtInExtensions) {
         const { builtInExtensions, extensions } = this;
         extensions.length = 0;
@@ -574,7 +593,8 @@ export default abstract class Application<T extends Node> implements squared.bas
         const cssText = item.cssText;
         switch (item.type) {
             case CSSRule.STYLE_RULE: {
-                const unusedStyles = this.session.unusedStyles;
+                const hostElement = (documentRoot as ShadowRoot).host as Undef<Element>;
+                const unusedStyles = !hostElement && this.session.unusedStyles;
                 const baseMap: StringMap = {};
                 const important: ObjectMap<boolean> = {};
                 const cssStyle = item.style;
@@ -667,7 +687,6 @@ export default abstract class Application<T extends Node> implements squared.bas
                     const targetElt = target ? '::' + target : '';
                     let elements: ArrayLike<Element>;
                     if (selector.startsWith(':host')) {
-                        const hostElement = (documentRoot as ShadowRoot).host;
                         if (!hostElement) {
                             continue;
                         }

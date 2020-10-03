@@ -593,7 +593,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     public optimize(rendered: T[]) {
         for (let i = 0, length = rendered.length; i < length; ++i) {
             const node = rendered[i];
-            node.applyOptimizations();
+            if (!node.applyOptimizations()) {
+                rendered.splice(i--, 1);
+                --length;
+                continue;
+            }
             if (node.hasProcedure(NODE_PROCEDURE.CUSTOMIZATION)) {
                 node.applyCustomizations(this.userSettings.customizationsOverwritePrivilege);
             }

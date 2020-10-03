@@ -22,7 +22,9 @@ export default class BottomNavigation<T extends android.base.View> extends squar
         assignEmptyValue(options, 'android', 'background', '?android:attr/windowBackground');
         iterateArray(node.children, (item: T) => {
             item.hide();
-            item.cascade((child: T) => child.hide());
+            item.cascade((child: T) => {
+                child.hide();
+            });
         }, 5);
         const controlName = node.api < BUILD_VERSION.Q ? SUPPORT_TAGNAME.BOTTOM_NAVIGATION : SUPPORT_TAGNAME_X.BOTTOM_NAVIGATION;
         node.setControlType(controlName, CONTAINER_NODE.BLOCK);

@@ -76,7 +76,7 @@ function parseLineHeight(lineHeight: string, fontSize: number) {
 
 function isFontFixedWidth(node: T) {
     const [fontFirst, fontSecond] = splitPair(node.css('fontFamily'), ',', true);
-    return fontFirst.toLowerCase() === 'monospace' && !(fontSecond !== '' && fontSecond.toLowerCase() === 'monospace');
+    return fontFirst === 'monospace' && !(fontSecond !== '' && fontSecond === 'monospace');
 }
 
 function getFlexValue(node: T, attr: string, fallback: number, parent?: Null<Node>): number {
@@ -2510,7 +2510,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         const result = this._cache.blockStatic;
         if (result === undefined) {
             const pageFlow = this.pageFlow;
-            if (pageFlow && (this.block && !this.floating || this.lineBreak)) {
+            if (pageFlow && (this.block && !this.floating || this.inlineStatic && this.firstChild?.blockStatic || this.lineBreak)) {
                 return this._cache.blockStatic = true;
             }
             else if (!pageFlow || !this.inline && !this.display.startsWith('table-') && !this.hasPX('maxWidth')) {
@@ -2941,11 +2941,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get firstChild(): Null<T> {
-        return this.naturalElements[0] || null;
+        return this.naturalChildren[0] || null;
     }
 
     get lastChild(): Null<T> {
-        const children = this.naturalElements;
+        const children = this.naturalChildren;
         return children[children.length - 1] || null;
     }
 
@@ -3029,64 +3029,68 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             if (this.naturalChild) {
                 if (this.styleElement) {
                     const fixedWidth = isFontFixedWidth(this);
-                    let value = checkFontSizeValue(this.valueOf('fontSize'), fixedWidth),
-                        emRatio = 1;
-                    if (REGEXP_EM.test(value)) {
-                        emRatio *= parseFloat(value);
-                        value = 'inherit';
-                    }
-                    if (value === 'inherit') {
-                        let parent: Null<T> = this.actualParent;
-                        if (parent) {
-                            do {
-                                if (parent.tagName === 'HTML') {
-                                    value = '1rem';
-                                    break;
-                                }
-                                else {
-                                    const fontSize = parent.valueOf('fontSize');
-                                    if (fontSize !== '' && fontSize !== 'inherit') {
-                                        value = checkFontSizeValue(fontSize);
-                                        if (isPercent(value)) {
-                                            emRatio *= parseFloat(value) / 100;
-                                        }
-                                        else if (REGEXP_EM.test(value)) {
-                                            emRatio *= parseFloat(value);
-                                        }
-                                        else {
-                                            break;
-                                        }
-                                    }
-                                    parent = parent.actualParent;
-                                }
-                            }
-                            while (parent);
-                        }
-                        else {
-                            value = '1rem';
-                        }
-                    }
-                    if (value === '1rem') {
-                        result = getRemSize(fixedWidth);
-                    }
-                    else if (value.endsWith('px')) {
+                    let value = checkFontSizeValue(this.valueOf('fontSize'), fixedWidth);
+                    if (value.endsWith('px')) {
                         result = parseFloat(value);
                     }
                     else if (isPercent(value)) {
                         const parent = this.actualParent;
-                        result = parent ? parseFloat(value) / 100 * parent.fontSize : getRemSize();
+                        if (parent) {
+                            result = parseFloat(value) / 100 * parent.fontSize;
+                            if (fixedWidth && !isFontFixedWidth(parent)) {
+                                result *= 13 / getRemSize();
+                            }
+                        }
+                        else {
+                            result = getRemSize(fixedWidth);
+                        }
                     }
                     else {
-                        result = parseUnit(value, fixedWidth ? { fixedWidth: true } : undefined);
+                        let emRatio = 1;
+                        if (REGEXP_EM.test(value)) {
+                            emRatio = parseFloat(value);
+                            value = 'inherit';
+                        }
+                        if (value === 'inherit') {
+                            let parent: Null<T> = this.actualParent;
+                            if (parent) {
+                                do {
+                                    if (parent.tagName === 'HTML') {
+                                        value = '1rem';
+                                        break;
+                                    }
+                                    else {
+                                        const fontSize = parent.valueOf('fontSize');
+                                        if (fontSize !== '' && fontSize !== 'inherit') {
+                                            value = checkFontSizeValue(fontSize);
+                                            if (isPercent(value)) {
+                                                emRatio *= parseFloat(value) / 100;
+                                            }
+                                            else if (REGEXP_EM.test(value)) {
+                                                emRatio *= parseFloat(value);
+                                            }
+                                            else {
+                                                break;
+                                            }
+                                        }
+                                        parent = parent.actualParent;
+                                    }
+                                }
+                                while (parent);
+                            }
+                            else {
+                                value = '1rem';
+                            }
+                        }
+                        result = (value.endsWith('rem') ? parseFloat(value) * getRemSize(fixedWidth) : parseUnit(value, { fixedWidth })) * emRatio;
                     }
-                    result *= emRatio;
                 }
                 else {
-                    result = this.plainText ? this.actualParent!.fontSize : getRemSize();
+                    result = this.actualParent!.fontSize;
                 }
             }
             else {
-                const options = isFontFixedWidth(this) ? { fixedWidth: true } : undefined;
+                const options = { fixedWidth: isFontFixedWidth(this) };
                 result = parseUnit(this.css('fontSize'), options) || (this.ascend({ condition: item => item.fontSize > 0 })[0]?.fontSize ?? parseUnit('1rem', options));
             }
             this._cache.fontSize = result;

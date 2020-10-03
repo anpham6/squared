@@ -590,11 +590,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public hide(options?: HideOptions<T>) {
-        if (options && options.remove) {
-            this.removeTry(options);
-        }
         this.rendered = true;
         this.visible = false;
+        return options && options.remove ? this.removeTry(options) : null;
     }
 
     public inherit(node: T, ...modules: string[]) {
@@ -1370,6 +1368,16 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             }
         }
         super.unsetCache(...attrs);
+    }
+
+    public getBoxSpacing(): [number, number, number, number] {
+        const { boxReset, boxAdjustment } = this;
+        return [
+            (boxReset[0] === 0 ? this.marginTop : 0) + this.borderTopWidth + (boxReset[4] === 0 ? this.paddingTop : 0) + boxAdjustment[0] + boxAdjustment[4],
+            (boxReset[1] === 0 ? this.marginRight : 0) + this.borderRightWidth + (boxReset[5] === 0 ? this.paddingRight : 0) + boxAdjustment[1] + boxAdjustment[5],
+            (boxReset[2] === 0 ? this.marginBottom : 0) + this.borderBottomWidth + (boxReset[6] === 0 ? this.paddingBottom : 0) + boxAdjustment[2] + boxAdjustment[6],
+            (boxReset[3] === 0 ? this.marginLeft : 0) + this.borderLeftWidth + (boxReset[7] === 0 ? this.paddingLeft : 0) + boxAdjustment[3] + boxAdjustment[7]
+        ];
     }
 
     public fitToScreen(value: Dimension): Dimension {

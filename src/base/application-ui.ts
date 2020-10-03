@@ -197,8 +197,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         const controller = this.controllerHandler;
         const [extensions, children] = this.sessionAll;
-        let length = children.length,
-            j = 0;
+        let itemCount = 0,
+            length = children.length;
         const rendered: T[] = new Array(length);
         for (let i = 0; i < length; ++i) {
             const node = children[i];
@@ -209,22 +209,23 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (node.hasProcedure(NODE_PROCEDURE.ALIGNMENT)) {
                     node.setAlignment();
                 }
-                rendered[j++] = node;
+                rendered[itemCount++] = node;
             }
         }
-        if (j < length) {
-            rendered.length = j;
+        if (itemCount < length) {
+            rendered.length = itemCount;
         }
         controller.optimize(rendered);
         length = extensions.length;
         for (let i = 0; i < length; ++i) {
-            const ext = extensions[i];
+            const ext = extensions[i] as ExtensionUI<T>;
             for (const node of ext.subscribers) {
-                (ext as ExtensionUI<T>).postOptimize(node, rendered);
+                ext.postOptimize(node, rendered);
             }
         }
         const documentRoot: squared.base.LayoutRoot<T>[] = [];
-        for (let i = 0; i < j; ++i) {
+        itemCount = rendered.length;
+        for (let i = 0; i < itemCount; ++i) {
             const node = rendered[i];
             if (node.hasResource(NODE_RESOURCE.BOX_SPACING)) {
                 node.setBoxSpacing();
@@ -672,6 +673,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         if (pierceShadowRoot) {
                             shadowRoot = element.shadowRoot;
                             if (shadowRoot) {
+                                this.replaceShadowRootSlots(shadowRoot);
                                 this.setStyleMap(sessionId, shadowRoot);
                             }
                         }
@@ -1659,9 +1661,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             let found: Undef<boolean>,
                                 match: Null<RegExpExecArray>;
                             while (match = REGEXP_PSEUDOCOUNTER.exec(value)) {
-                                const attr = match[1];
-                                if (attr) {
-                                    content += getNamedItem(element, attr.trim());
+                                if (match[1]) {
+                                    content += getNamedItem(element, match[1].trim());
                                 }
                                 else if (match[2] || match[5]) {
                                     const counterType = match[2] === 'counter';

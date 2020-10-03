@@ -1760,14 +1760,14 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (options) {
                 if (options.hidden) {
                     this.android('visibility', 'invisible');
-                    return;
+                    return null;
                 }
                 else if (options.collapse) {
                     this.android('visibility', 'gone');
-                    return;
+                    return null;
                 }
             }
-            super.hide(options);
+            return super.hide(options);
         }
 
         public android(attr: string, value?: string, overwrite = true) {
@@ -2207,11 +2207,14 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public applyOptimizations() {
-            if (this.renderExclude) {
-                this.hide(!this.alignSibling('topBottom') && !this.alignSibling('bottomTop') && !this.alignSibling('leftRight') && !this.alignSibling('rightLeft') ? { remove: true } : { collapse: true });
-                return;
-            }
             const renderParent = this.renderParent!;
+            if (this.renderExclude || renderParent.layoutVertical && this.layoutFrame && !this.rendering && this.inlineHeight && this.getBoxSpacing().every((value, index) => value === 0 || index % 2 === 1)) {
+                if (!this.alignSibling('topBottom') && !this.alignSibling('bottomTop') && !this.alignSibling('leftRight') && !this.alignSibling('rightLeft') && this.hide({ remove: true })) {
+                    return false;
+                }
+                this.hide({ collapse: true });
+                return true;
+            }
             const lineHeight = this.lineHeight;
             if (lineHeight) {
                 const hasOwnStyle = this.has('lineHeight', { initial: true });
@@ -2456,12 +2459,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                         renderParent.renderChildren = this.renderChildren;
                         renderParent.renderTemplates = renderTemplates;
-                        const { boxReset, boxAdjustment } = this;
                         const renderAdjustment = renderParent.boxAdjustment;
-                        renderAdjustment[4] += (boxReset[0] === 0 ? this.marginTop : 0) + (boxReset[4] === 0 ? this.paddingTop : 0) + boxAdjustment[0] + boxAdjustment[4];
-                        renderAdjustment[5] += (boxReset[1] === 0 ? this.marginRight : 0) + (boxReset[5] === 0 ? this.paddingRight : 0) + boxAdjustment[1] + boxAdjustment[5];
-                        renderAdjustment[6] += (boxReset[2] === 0 ? this.marginBottom : 0) + (boxReset[6] === 0 ? this.paddingBottom : 0) + boxAdjustment[2] + boxAdjustment[6];
-                        renderAdjustment[7] += (boxReset[3] === 0 ? this.marginLeft : 0) + (boxReset[7] === 0 ? this.paddingLeft : 0) + boxAdjustment[3] + boxAdjustment[7];
+                        const boxSpacing = this.getBoxSpacing();
+                        renderAdjustment[4] += boxSpacing[0];
+                        renderAdjustment[5] += boxSpacing[1];
+                        renderAdjustment[6] += boxSpacing[2];
+                        renderAdjustment[7] += boxSpacing[3];
                     }
                 }
             }
@@ -2471,6 +2474,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (this.alignedWithY) {
                 this.translateY(parseFloat(this.alignedWithY.android('translationY')));
             }
+            return true;
         }
 
         public applyCustomizations(overwrite = true) {

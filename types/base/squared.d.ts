@@ -110,6 +110,7 @@ declare module "base" {
         parseDocumentSync(...elements: (string | HTMLElement)[]): Void<T | T[]>;
         createCache(documentRoot: HTMLElement, sessionId: string): Undef<T>;
         setStyleMap(sessionId: string, documentRoot?: DocumentRoot, queryRoot?: DocumentQueryRoot): void;
+        replaceShadowRootSlots(shadowRoot: ShadowRoot): void;
         createNode(sessionId: string, options: CreateNodeOptions): T;
         insertNode(element: Element, sessionId: string): Undef<T>;
         afterCreateCache(node: T): void;
@@ -619,7 +620,7 @@ declare module "base" {
         hasResource(value: number): boolean;
         hasSection(value: number): boolean;
         exclude(options: ExcludeOptions): void;
-        hide(options?: HideOptions<NodeUI>): void;
+        hide(options?: HideOptions<NodeUI>): Null<NodeTemplate<NodeUI>>;
         replaceTry(options: ReplaceTryOptions<NodeUI>): boolean;
         removeTry(options?: RemoveTryOptions<NodeUI>): Null<NodeTemplate<NodeUI>>;
         render(parent: NodeUI): void;
@@ -645,6 +646,7 @@ declare module "base" {
         cssSet(attr: string, value: string, cache?: boolean): string;
         translateX(value: number, options?: TranslateOptions): boolean;
         translateY(value: number, options?: TranslateOptions): boolean;
+        getBoxSpacing(): [number, number, number, number];
         fitToScreen(value: Dimension): Dimension;
         set documentParent(value);
         get documentParent(): NodeUI;

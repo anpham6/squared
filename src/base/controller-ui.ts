@@ -373,13 +373,15 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         return node ? this._beforeOutside.has(node) || this._beforeInside.has(node) || this._afterInside.has(node) || this._afterOutside.has(node) : this._requireFormat;
     }
 
-    public visibleElement(element: HTMLElement, sessionId: string, pseudoElt?: PseudoElt) {
+    public visibleElement(element: HTMLElement, sessionId: string, pseudoElt?: PseudoElt): boolean {
         let style: CSSStyleDeclaration,
             width: number,
-            height: number;
+            height: number,
+            display: string;
         if (!pseudoElt) {
             style = getStyle(element);
-            if (style.getPropertyValue('display') !== 'none') {
+            display = style.getPropertyValue('display');
+            if (display !== 'none') {
                 const bounds = element.getBoundingClientRect();
                 if (!withinViewport(bounds)) {
                     return false;
@@ -394,7 +396,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         else {
             const parentElement = getParentElement(element);
             style = parentElement ? getStyle(parentElement, pseudoElt) : getStyle(element);
-            if (style.getPropertyValue('display') === 'none') {
+            display = style.getPropertyValue('display');
+            if (display === 'none') {
                 return false;
             }
             width = 1;
@@ -403,10 +406,30 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         if (width && height) {
             return style.getPropertyValue('visibility') === 'visible' || !hasCoords(style.getPropertyValue('position'));
         }
-        else if (element.tagName === 'IMG' && style.getPropertyValue('display') !== 'none' || iterateArray(element.children, (item: HTMLElement) => this.visibleElement(item, sessionId)) === Infinity) {
-            return true;
+        else {
+            let parent = element.parentElement;
+            while (parent) {
+                switch (parent.tagName) {
+                    case 'DETAILS':
+                        return false;
+                    case 'SUMMARY':
+                        return true;
+                    default:
+                        parent = parent.parentElement;
+                        break;
+                }
+            }
+            switch (element.tagName) {
+                case 'IMG':
+                    return display !== 'none';
+                case 'SLOT':
+                    return true;
+            }
         }
-        return !hasCoords(style.getPropertyValue('position')) && (width > 0 && style.getPropertyValue('float') !== 'none' || style.getPropertyValue('display') === 'block' && element.parentElement?.tagName !== 'DETAILS' || style.getPropertyValue('clear') !== 'none');
+        return (
+            !hasCoords(style.getPropertyValue('position')) && (display === 'block' || width > 0 && style.getPropertyValue('float') !== 'none' || style.getPropertyValue('clear') !== 'none') ||
+            iterateArray(element.children, (item: HTMLElement) => this.visibleElement(item, sessionId)) === Infinity
+        );
     }
 
     public evaluateNonStatic(documentRoot: T, cache: NodeList<T>) {
