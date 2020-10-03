@@ -173,7 +173,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     private _applyDefaultStyles!: (element: Element, sessionId: string, pseudoElt?: PseudoElt) => void;
     private _renderNode!: (layout: ContentUI<T>) => Undef<NodeTemplate<T>>;
     private _renderNodeGroup!: (layout: LayoutUI<T>) => Undef<NodeTemplate<T>>;
-    private readonly _layouts: LayoutAsset[] = [];
+    private _layouts: LayoutAsset[] = [];
 
     public abstract get controllerHandler(): ControllerUI<T>;
     public abstract get resourceHandler(): ResourceUI<T>;
@@ -212,7 +212,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 rendered[j++] = node;
             }
         }
-        rendered.length = j;
+        if (j < length) {
+            rendered.length = j;
+        }
         controller.optimize(rendered);
         length = extensions.length;
         for (let i = 0; i < length; ++i) {
@@ -279,7 +281,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         session.extensionMap.clear();
         session.clearMap.clear();
-        this._layouts.length = 0;
+        this._layouts = [];
         super.reset();
     }
 
@@ -487,11 +489,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     pseudoElements.push(item);
                 }
             });
-            const length = pseudoElements.length;
-            if (length) {
-                const pseudoMap: [item: T, id: string, styleElement: Undef<HTMLStyleElement>][] = new Array(length);
-                let q = 0;
-                for (let i = 0; i < length; ++i) {
+            if (pseudoElements.length) {
+                const pseudoMap: [item: T, id: string, styleElement: Undef<HTMLStyleElement>][] = [];
+                for (let i = 0, length = pseudoElements.length; i < length; ++i) {
                     const item = pseudoElements[i];
                     const parentElement = item.parentElement!;
                     let id = '',
@@ -512,14 +512,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         styleElement = insertStyleSheetRule(`${tagName + item.pseudoElt!} { display: none !important; }`, 0, item.shadowHost);
                     }
                     if (item.cssTry('display', item.display)) {
-                        pseudoMap[q++] = [item, id, styleElement];
+                        pseudoMap.push([item, id, styleElement]);
                     }
                 }
-                pseudoMap.length = q;
-                for (let i = 0; i < q; ++i) {
+                const length = pseudoMap.length;
+                for (let i = 0; i < length; ++i) {
                     pseudoMap[i][0].setBounds(false);
                 }
-                for (let i = 0; i < q; ++i) {
+                for (let i = 0; i < length; ++i) {
                     const data = pseudoMap[i];
                     const item = data[0];
                     if (data[1].startsWith('__squared_')) {
@@ -617,17 +617,17 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             const { cache, rootElements } = processing;
             const pierceShadowRoot = this.userSettings.pierceShadowRoot;
             const hostElement = parentElement.shadowRoot || parentElement;
-            const elements: T[] = new Array(hostElement.childElementCount);
             const beforeElement = this.createPseduoElement(parentElement, '::before', sessionId, hostElement);
             const afterElement = this.createPseduoElement(parentElement, '::after', sessionId, hostElement);
             const childNodes = hostElement.childNodes;
             const length = childNodes.length;
-            const children: T[] = new Array(length);
+            const children: T[] = [];
+            const elements: T[] = [];
             const childDepth = depth + 1;
             let inlineText = true,
                 plainText = -1,
                 lineBreak = -1,
-                j = 0, k = 0;
+                j = 0;
             for (let i = 0; i < length; ++i) {
                 const element = childNodes[i] as HTMLElement;
                 let child: T;
@@ -701,7 +701,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         child.excluded = true;
                         inlineText = false;
                     }
-                    elements[k++] = child;
+                    elements.push(child);
                 }
                 else {
                     continue;
@@ -711,10 +711,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (shadowParent) {
                     child.shadowHost = shadowParent;
                 }
-                children[j++] = child;
+                children.push(child);
+                ++j;
             }
-            children.length = j;
-            elements.length = k;
             node.naturalChildren = children;
             node.naturalElements = elements;
             node.shadowRoot = hostElement !== parentElement;
@@ -742,8 +741,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
             }
-            if (k > 0 && this.userSettings.createQuerySelectorMap) {
-                node.queryMap = this.createQueryMap(elements, k);
+            if (elements.length && this.userSettings.createQuerySelectorMap) {
+                node.queryMap = this.createQueryMap(elements);
             }
         }
         return node;
@@ -836,7 +835,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 }
                                 clearMap.set(item, floated.size === 2 ? 'both' : floated.values().next().value as string);
                                 floated.clear();
-                                clearable.length = 0;
+                                clearable = [];
                             }
                             else if (item.blockStatic && Math.ceil(item.bounds.top) >= Math.max(...clearable.map(previous => previous.bounds.bottom))) {
                                 item.data(Application.KEY_NAME, 'cleared', clearable);
@@ -1451,11 +1450,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         const staticRows: T[][] = [];
         const floatedRows: Null<T[]>[] = [];
-        const current: T[] = [];
-        const floated: T[] = [];
-        let clearReset: Undef<boolean>,
-            blockArea: Undef<boolean>,
-            layoutVertical = true;
+        let current: T[] = [],
+            floated: T[] = [],
+            layoutVertical = true,
+            clearReset: Undef<boolean>,
+            blockArea: Undef<boolean>;
         layout.each(node => {
             if (node.blockStatic && floated.length === 0) {
                 current.push(node);
@@ -1467,8 +1466,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         node.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1 });
                         staticRows.push(current.slice(0));
                         floatedRows.push(floated.slice(0));
-                        current.length = 0;
-                        floated.length = 0;
+                        current = [];
+                        floated = [];
                     }
                     else {
                         clearReset = true;
@@ -1478,8 +1477,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (blockArea) {
                         staticRows.push(current.slice(0));
                         floatedRows.push(null);
-                        current.length = 0;
-                        floated.length = 0;
+                        current = [];
+                        floated = [];
                         blockArea = false;
                     }
                     floated.push(node);

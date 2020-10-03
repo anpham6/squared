@@ -182,27 +182,17 @@ const canCascadeChildren = (node: T) => node.naturalElements.length > 0 && !node
 
 export default abstract class NodeUI extends Node implements squared.base.NodeUI {
     public static baseline(list: T[], text?: boolean, image?: boolean): Null<T> {
-        const length = list.length;
-        const result: T[] = new Array(length);
-        let j = 0;
-        for (let i = 0; i < length; ++i) {
+        const result: T[] = [];
+        for (let i = 0, length = list.length; i < length; ++i) {
             const item = list[i];
-            if (image && item.imageContainer) {
+            if (item.naturalElements.length && !item.baselineElement || image && item.imageContainer) {
                 continue;
             }
             if (item.baseline && !item.baselineAltered && (!text || item.textElement)) {
-                if (item.naturalElements.length) {
-                    if (item.baselineElement) {
-                        result[j++] = item;
-                    }
-                }
-                else {
-                    result[j++] = item;
-                }
+                result.push(item);
             }
         }
-        if (j > 1) {
-            result.length = j;
+        if (result.length > 1) {
             result.sort((a, b) => {
                 const vA = a.css('verticalAlign') === 'baseline';
                 const vB = b.css('verticalAlign') === 'baseline';
@@ -279,23 +269,22 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             linearY = false;
         const length = list.length;
         if (length > 1) {
-            const nodes: T[] = new Array(length);
-            let floated: Undef<Set<string>>,
-                n = 0;
+            const nodes: T[] = [];
+            let floated: Undef<Set<string>>;
             for (let i = 0; i < length; ++i) {
                 const item = list[i];
                 if (item.pageFlow) {
                     if (item.floating) {
                         (floated ||= new Set<string>()).add(item.float);
                     }
-                    nodes[n++] = item;
                 }
-                else if (item.autoPosition) {
-                    nodes[n++] = item;
+                else if (!item.autoPosition) {
+                    continue;
                 }
+                nodes.push(item);
             }
+            const n = nodes.length;
             if (n) {
-                nodes.length = n;
                 const siblings = [nodes[0]];
                 let x = 1,
                     y = 1;
@@ -390,7 +379,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     }
                     result.push([node]);
                     row = [];
-                    siblings.length = 0;
+                    siblings = [];
                     continue;
                 }
                 const wrapped = node.innerMostWrapped;

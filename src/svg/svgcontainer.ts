@@ -491,7 +491,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
             this._clipRegion.push(value);
         }
         else {
-            this._clipRegion.length = 0;
+            this._clipRegion = [];
         }
     }
     get clipRegion() {

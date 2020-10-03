@@ -434,10 +434,9 @@ export default abstract class Application<T extends Node> implements squared.bas
                     const elements: T[] = new Array(length);
                     const parent = new this.Node(id--, sessionId, currentElement, [previousNode]);
                     this._afterInsertNode(parent);
-                    let j = 0;
                     for (let i = 0; i < length; ++i) {
                         const element = children[i] as HTMLElement;
-                        let child: Undef<T>;
+                        let child: T;
                         if (element === previousElement) {
                             child = previousNode;
                         }
@@ -445,13 +444,10 @@ export default abstract class Application<T extends Node> implements squared.bas
                             child = new this.Node(id--, sessionId, element);
                             this._afterInsertNode(child);
                         }
-                        if (child) {
-                            child.init(parent, depth + 1, j);
-                            child.actualParent = parent;
-                            elements[j++] = child;
-                        }
+                        child.init(parent, depth + 1, i);
+                        child.actualParent = parent;
+                        elements[i] = child;
                     }
-                    elements.length = j;
                     parent.naturalChildren = elements;
                     parent.naturalElements = elements;
                     if (currentElement === document.documentElement) {
@@ -483,12 +479,12 @@ export default abstract class Application<T extends Node> implements squared.bas
             const hostElement = parentElement.shadowRoot || parentElement;
             const childNodes = hostElement.childNodes;
             const length = childNodes.length;
-            const children: T[] = new Array(length);
-            const elements: T[] = new Array(hostElement.childElementCount);
+            const children: T[] = [];
+            const elements: T[] = [];
             const pierceShadowRoot = this.userSettings.pierceShadowRoot;
             let inlineText = true,
                 plainText = false,
-                j = 0, k = 0;
+                j = 0;
             for (let i = 0; i < length; ++i) {
                 const element = childNodes[i] as HTMLElement;
                 let child: Undef<T>;
@@ -515,7 +511,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                     child = (shadowRoot || element).childNodes.length ? this.cascadeParentNode(processing, element, sessionId, childDepth, extensions, shadowRoot || shadowParent) : this.insertNode(element, sessionId);
                     if (child) {
-                        elements[k++] = child;
+                        elements.push(child);
                         inlineText = false;
                     }
                 }
@@ -526,16 +522,14 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                 }
                 if (child) {
-                    child.init(node, childDepth, j);
+                    child.init(node, childDepth, j++);
                     child.actualParent = node;
                     if (shadowParent) {
                         child.shadowHost = shadowParent;
                     }
-                    children[j++] = child;
+                    children.push(child);
                 }
             }
-            children.length = j;
-            elements.length = k;
             node.naturalChildren = children;
             node.naturalElements = elements;
             node.shadowRoot = hostElement !== parentElement;
@@ -549,8 +543,8 @@ export default abstract class Application<T extends Node> implements squared.bas
                     cache.add(children[0]);
                 }
             }
-            if (k > 0 && this.userSettings.createQuerySelectorMap) {
-                node.queryMap = this.createQueryMap(elements, k);
+            if (elements.length && this.userSettings.createQuerySelectorMap) {
+                node.queryMap = this.createQueryMap(elements);
             }
         }
         return node;
@@ -560,9 +554,9 @@ export default abstract class Application<T extends Node> implements squared.bas
         return element.nodeName === '#text' && (!isEmptyString(element.textContent!) || node.preserveWhiteSpace && (node.tagName !== 'PRE' || node.element!.childElementCount === 0));
     }
 
-    protected createQueryMap(elements: T[], length: number) {
+    protected createQueryMap(elements: T[]) {
         const result: T[][] = [elements];
-        for (let i = 0; i < length; ++i) {
+        for (let i = 0, length = elements.length; i < length; ++i) {
             const childMap = elements[i].queryMap;
             if (childMap) {
                 for (let j = 0, k = 1, q = childMap.length; j < q; ++j, ++k) {
@@ -933,16 +927,14 @@ export default abstract class Application<T extends Node> implements squared.bas
         for (let i = 0; i < length; ++i) {
             extensions[i].beforeParseDocument(sessionId);
         }
-        const success: T[] = new Array(rootElements.size);
-        let j = 0;
+        const success: T[] = [];
         for (const element of rootElements) {
             const node = this.createCache(element, sessionId);
             if (node) {
                 this.afterCreateCache(node);
-                success[j++] = node;
+                success.push(node);
             }
         }
-        success.length = j;
         for (let i = 0; i < length; ++i) {
             extensions[i].afterParseDocument(sessionId);
         }

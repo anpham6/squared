@@ -1189,14 +1189,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 else if (node.layoutConstraint) {
                     const renderChildren = node.renderChildren as T[];
-                    const length = renderChildren.length;
-                    const pageFlow: T[] = new Array(length);
-                    let j = 0;
-                    for (let i = 0; i < length; ++i) {
+                    const pageFlow: T[] = [];
+                    for (let i = 0, length = renderChildren.length; i < length; ++i) {
                         const item = renderChildren[i];
                         if (!item.positioned) {
                             if (item.pageFlow || item.autoPosition) {
-                                pageFlow[j++] = item;
+                                pageFlow.push(item);
                             }
                             else {
                                 const constraint = item.constraint;
@@ -1228,12 +1226,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                         }
                     }
-                    if (j > 0) {
-                        pageFlow.length = j;
+                    if (pageFlow.length) {
                         if (node.layoutHorizontal) {
                             this.processConstraintHorizontal(node, pageFlow);
                         }
-                        else if (j > 1) {
+                        else if (pageFlow.length > 1) {
                             this.processConstraintChain(node, pageFlow);
                         }
                         else {

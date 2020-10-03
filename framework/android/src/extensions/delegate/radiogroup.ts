@@ -24,9 +24,9 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
 
     public processNode(node: T, parent: T): Void<ExtensionResult<T>> {
         const inputName = getInputName(node);
-        const radiogroup: T[] = [];
         const removeable: T[] = [];
-        let first = -1,
+        let radiogroup: T[] = [],
+            first = -1,
             last = -1;
         parent.each((item: T, index) => {
             const renderAs = item.renderAs as T;
@@ -88,7 +88,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
             };
         }
         else {
-            radiogroup.length = 0;
+            radiogroup = [];
             const sessionId = node.sessionId;
             document.querySelectorAll(`input[type=radio][name=${getInputName(node)}]`).forEach((element: Element) => {
                 const item = getElementAsNode(element, sessionId) as T;

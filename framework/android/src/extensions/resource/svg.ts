@@ -279,10 +279,10 @@ function groupTransforms(element: SVGGraphicsElement, transforms: SvgTransform[]
         const client: SvgTransform[] = [];
         const rotateOrigin = transforms[0].fromStyle ? [] : TRANSFORM.rotateOrigin(element).reverse();
         const items = transforms.slice(0).reverse();
-        const current: SvgTransform[] = [];
+        let current: SvgTransform[] = [];
         const restart = () => {
             host.push(current.slice(0));
-            current.length = 0;
+            current = [];
         };
         for (let i = 1; i < items.length; ++i) {
             const itemA = items[i];
@@ -706,7 +706,7 @@ const getTemplateFilename = (templateName: string, length: number, prefix?: stri
 const isColorType = (attr: string) => attr === 'fill' || attr === 'stroke';
 const getVectorName = (target: SvgView, section: string, index = -1) => target.name + '_' + section + (index !== -1 ? '_' + (index + 1) : '');
 const getDrawableSrc = (name: string) => `@drawable/${name}`;
-const getFillData = (ordering = ''): FillData => ({ ordering, objectAnimator: [] });
+const getFillData = (ordering = '') => ({ ordering, objectAnimator: [] }) as FillData;
 
 export default class ResourceSvg<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly options: ResourceSvgOptions = {
@@ -832,6 +832,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         if (contentMap) {
             svg.contentMap = contentMap;
         }
+        this._imageData = [];
         const supportedKeyframes = node.api >= BUILD_VERSION.MARSHMALLOW;
         const keyTimeMode = SYNCHRONIZE_MODE.FROMTO_ANIMATE | (supportedKeyframes ? SYNCHRONIZE_MODE.KEYTIME_TRANSFORM : SYNCHRONIZE_MODE.IGNORE_TRANSFORM);
         const animateData = this._animateData;
@@ -840,7 +841,6 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         this._vectorData.clear();
         animateData.clear();
         this._animateTarget.clear();
-        imageData.length = 0;
         this._namespaceAapt = false;
         this._synchronizeMode = keyTimeMode;
         const templateName = (node.tagName + '_' + convertWord(node.controlId, true) + '_viewbox').toLowerCase();
@@ -1032,10 +1032,10 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                             const repeating = getFillData();
                             const fillCustom = getFillData();
                             const fillAfter = getFillData();
-                            const objectAnimator = repeating.objectAnimator;
-                            const customAnimator = fillCustom.objectAnimator;
                             let beforeAnimator = fillBefore.objectAnimator,
                                 afterAnimator = fillAfter.objectAnimator,
+                                objectAnimator = repeating.objectAnimator,
+                                customAnimator = fillCustom.objectAnimator,
                                 together: PropertyValue[] = [];
                             const targeted = synchronized ? partitionArray(items, (animate: SvgAnimate) => animate.iterationCount !== -1) : [items];
                             for (let i = 0, u = targeted.length; i < u; ++i) {
@@ -1358,15 +1358,15 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                             if (ordering === 'sequentially') {
                                 if (valid && beforeAnimator.length === 1) {
                                     objectAnimator.unshift(beforeAnimator[0]);
-                                    beforeAnimator.length = 0;
+                                    beforeAnimator = [];
                                 }
                                 if (customAnimator.length === 1) {
                                     objectAnimator.push(customAnimator[0]);
-                                    customAnimator.length = 0;
+                                    customAnimator = [];
                                 }
                                 if (valid && afterAnimator.length === 1) {
                                     objectAnimator.push(afterAnimator[0]);
-                                    afterAnimator.length = 0;
+                                    afterAnimator = [];
                                 }
                             }
                             if (beforeAnimator.length === 0 && customAnimator.length === 0 && afterAnimator.length === 0) {
@@ -1375,7 +1375,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                 }
                                 if (setData.ordering !== 'sequentially' && ordering !== 'sequentially') {
                                     together = together.concat(objectAnimator);
-                                    objectAnimator.length = 0;
+                                    objectAnimator = [];
                                 }
                             }
                             if (objectAnimator.length || customAnimator.length) {

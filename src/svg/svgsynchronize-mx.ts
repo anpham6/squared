@@ -952,9 +952,9 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                             }
                         }
                         const setterData = setterAttributeMap[attr] || [];
-                        const incomplete: SvgAnimate[] = [];
                         const groupDelay: number[] = [];
                         const groupData: SvgAnimate[][] = [];
+                        let incomplete: SvgAnimate[] = [];
                         for (const [delay, data] of groupName[attr].entries()) {
                             groupDelay.push(delay);
                             groupData.push(data);
@@ -1069,7 +1069,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                             if (item && SvgBuild.isAnimate(item) && !item.fillReplace) {
                                 if (item.fillForwards) {
                                     spliceArray(setterData, set => set.group.id < item.group.id || set.delay < time);
-                                    incomplete.length = 0;
+                                    incomplete = [];
                                     for (let i = 0, length = groupData.length; i < length; ++i) {
                                         const group = groupData[i];
                                         for (let j = 0, q = group.length; j < q; ++j) {
@@ -1527,8 +1527,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                             }
                                         }
                                         else {
-                                            incomplete.length = 0;
-                                            incomplete.push(item);
+                                            incomplete = [item];
                                             continue;
                                         }
                                     }

@@ -865,8 +865,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             if (boxImage) {
                 const getPixelUnit = (width: number, height: number) => `${width}px ${height}px`;
                 if (length === 0) {
-                    backgroundRepeat.length = 0;
-                    backgroundSize.length = 0;
+                    backgroundRepeat = [];
+                    backgroundSize = [];
                 }
                 for (const image of boxImage.filter(item => item.visible && (item.imageElement || item.containerName === 'INPUT_IMAGE'))) {
                     const element = image.element as HTMLImageElement;

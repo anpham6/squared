@@ -902,8 +902,8 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                 }
             }
             if (node.floatContainer && node.layoutVertical) {
-                const floating: T[] = [];
                 const children = node.naturalChildren as T[];
+                let floating: T[] = [];
                 for (let i = 0, length = children.length; i < length; ++i) {
                     const item = children[i];
                     if (!item.pageFlow) {
@@ -935,7 +935,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                     }
                                 }
                             }
-                            floating.length = 0;
+                            floating = [];
                         }
                     }
                     else {

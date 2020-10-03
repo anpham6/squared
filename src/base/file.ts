@@ -29,7 +29,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
     }
 
     public resource!: Resource<T>;
-    public readonly assets: RawAsset[] = [];
+    public assets: RawAsset[] = [];
 
     private _hostname = '';
 
@@ -69,7 +69,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
     }
 
     public reset() {
-        this.assets.length = 0;
+        this.assets = [];
     }
 
     public copying(options: FileCopyingOptions) {

@@ -80,21 +80,18 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
         if (!Array.isArray(list)) {
             list = list.children;
         }
-        const length = list.length;
-        const result: T[] = new Array(length);
+        const result: T[] = [];
         const children = this.children;
-        let k = 0;
-        for (let i = 0; i < length; ++i) {
+        for (let i = 0, length = list.length; i < length; ++i) {
             const item = list[i];
             for (let j = 0, q = children.length; j < q; ++j) {
                 if (children[j] === item) {
                     children.splice(j, 1);
-                    result[k++] = item;
+                    result.push(item);
                     break;
                 }
             }
         }
-        result.length = k;
         return result;
     }
 

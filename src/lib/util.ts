@@ -990,21 +990,17 @@ export function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolea
 }
 
 export function partitionArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>): [T[], T[]] {
-    const length = list.length;
-    const valid: T[] = new Array(length);
-    const invalid: T[] = new Array(length);
-    let j = 0, k = 0;
-    for (let i = 0; i < length; ++i) {
+    const valid: T[] = [];
+    const invalid: T[] = [];
+    for (let i = 0, length = list.length; i < length; ++i) {
         const item = list[i];
         if (predicate(item, i, list)) {
-            valid[j++] = item;
+            valid.push(item);
         }
         else {
-            invalid[k++] = item;
+            invalid.push(item);
         }
     }
-    valid.length = j;
-    invalid.length = k;
     return [valid, invalid];
 }
 

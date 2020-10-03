@@ -25,12 +25,12 @@ type Extension = squared.base.Extension<Node>;
 type ExtensionManager = squared.base.ExtensionManager<Node>;
 type ExtendPrototypeMap = ObjectMap<FunctionType<any> | { set?: (value: any) => void; get?: () => any }>;
 
-const extensionCache: Extension[] = [];
-const addQueue: ExtensionRequest[] = [];
-const removeQueue: ExtensionRequest[] = [];
 const optionsQueue = new Map<string, PlainObject>();
 const prototypeMap = new Map<number, ExtendPrototypeMap>();
 const settings = {} as UserSettings;
+let extensionCache: Extension[] = [];
+let addQueue: ExtensionRequest[] = [];
+let removeQueue: ExtensionRequest[] = [];
 
 let main: Null<Main> = null;
 let framework: Null<Framework> = null;
@@ -68,7 +68,7 @@ function loadExtensions() {
             for (const item of extensionCache) {
                 extensionManager.cache.add(item);
             }
-            extensionCache.length = 0;
+            extensionCache = [];
         }
         if (addQueue.length) {
             for (const item of addQueue) {
@@ -77,7 +77,7 @@ function loadExtensions() {
                     extensionCheck = true;
                 }
             }
-            addQueue.length = 0;
+            addQueue = [];
         }
         if (optionsQueue.size) {
             for (const data of optionsQueue) {
@@ -94,7 +94,7 @@ function loadExtensions() {
                     extensionCheck = true;
                 }
             }
-            removeQueue.length = 0;
+            removeQueue = [];
         }
         if (extensionCheck) {
             const errors = extensionManager.checkDependencies();

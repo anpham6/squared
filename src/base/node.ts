@@ -708,10 +708,7 @@ function ascendQuerySelector(node: T, selectors: QueryData[], index: number, nod
             }
         }
     }
-    if (next.length === 0) {
-        return false;
-    }
-    return ++index === length ? true : ascendQuerySelector(node, selectors, index, next, selector.adjacent);
+    return next.length > 0 && (++index === length ? true : ascendQuerySelector(node, selectors, index, next, selector.adjacent));
 }
 
 const trimSelector = (value: string) => value[0] !== '*' || value.includes(':root') ? value : /^\*(\s+\*){0,2}$/.test(value) ? '*' : value.replace(/^(\*\s+){1,2}/, '');
@@ -1710,20 +1707,21 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             const depthCount = queryMap.length;
             const queries = parseSelectorText(value);
             for (let i = 0, length = queries.length; i < length; ++i) {
-                const query = trimSelector(queries[i]);
-                switch (query) {
-                    case ':root':
-                    case ':scope':
-                        continue;
-                }
-                const selectors: QueryData[] = [];
-                let offset = -1;
-                if (query === '*') {
-                    selectors.push({ all: true });
-                    ++offset;
-                }
-                else {
-                    invalid: {
+                invalid: {
+                    const query = trimSelector(queries[i]);
+                    switch (query) {
+                        case ':root':
+                        case ':scope':
+                            continue;
+                    }
+                    const selectors: QueryData[] = [];
+                    let offset = -1;
+                    if (query === '*') {
+                        selectors.push({ all: true });
+                        ++offset;
+                    }
+                    else {
+                        SELECTOR_G.lastIndex = 0;
                         let adjacent = '',
                             segment: string,
                             all: boolean,
@@ -1739,7 +1737,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                         --offset;
                                     case '>':
                                         if (adjacent !== '' || selectors.length === 0) {
-                                            selectors.length = 0;
                                             break invalid;
                                         }
                                         adjacent = ch;
@@ -1751,7 +1748,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             }
                             else if (segment.startsWith('*|*')) {
                                 if (segment.length > 3) {
-                                    selectors.length = 0;
                                     break invalid;
                                 }
                                 all = true;
@@ -1760,7 +1756,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                 segment = segment.substring(2);
                             }
                             else if (segment.startsWith('::')) {
-                                selectors.length = 0;
                                 break invalid;
                             }
                             if (all) {
@@ -1788,7 +1783,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                                 break;
                                             }
                                         default:
-                                            selectors.length = 0;
                                             break invalid;
                                     }
                                     const caseInsensitive = subMatch[6] === 'i';
@@ -1806,7 +1800,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                     segment = spliceString(segment, subMatch.index, subMatch[0].length);
                                 }
                                 if (segment.includes('::')) {
-                                    selectors.length = 0;
                                     break invalid;
                                 }
                                 while (subMatch = SELECTOR_PSEUDO_CLASS.exec(segment)) {
@@ -1817,19 +1810,16 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                             case '.':
                                             case ':':
                                                 if (negate.split(/[.:]/).length > 1) {
-                                                    selectors.length = 0;
                                                     break invalid;
                                                 }
                                                 break;
                                             case '[':
                                                 if (!SELECTOR_ATTR.test(negate)) {
-                                                    selectors.length = 0;
                                                     break invalid;
                                                 }
                                                 break;
                                             default:
                                                 if (!/^#?[a-z][a-z\d_-]+$/i.test(negate)) {
-                                                    selectors.length = 0;
                                                     break invalid;
                                                 }
                                                 break;
@@ -1853,7 +1843,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                         case '#': {
                                             const idValue = label.substring(1);
                                             if (id && id !== idValue) {
-                                                selectors.length = 0;
                                                 break invalid;
                                             }
                                             id = idValue;
@@ -1864,7 +1853,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                             break;
                                         default:
                                             if (id || classList || tagName) {
-                                                selectors.length = 0;
                                                 break invalid;
                                             }
                                             tagName = label.toUpperCase();
@@ -1886,72 +1874,71 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             adjacent = '';
                         }
                     }
-                    SELECTOR_G.lastIndex = 0;
-                }
-                if (customMap) {
-                    offset = 0;
-                }
-                let r = selectors.length;
-                if (r && offset !== -1 && offset < depthCount) {
-                    const dataEnd = selectors.pop() as QueryData;
-                    const lastEnd = --r === 0;
-                    const currentCount = result.length;
-                    let pending: T[];
-                    if (dataEnd.all && depthCount - offset === 1) {
-                        pending = queryMap[offset];
+                    if (customMap) {
+                        offset = 0;
                     }
-                    else {
-                        pending = [];
-                        for (let j = offset; j < depthCount; ++j) {
-                            const children = queryMap[j];
-                            if (dataEnd.all) {
-                                pending = pending.concat(children);
-                            }
-                            else {
-                                for (let k = 0, s = children.length; k < s; ++k) {
-                                    const node = children[k];
-                                    if ((currentCount === 0 || !result.includes(node)) && validateQuerySelector(this, node, dataEnd, lastEnd)) {
-                                        pending.push(node);
+                    let r = selectors.length;
+                    if (r && offset !== -1 && offset < depthCount) {
+                        const dataEnd = selectors.pop() as QueryData;
+                        const lastEnd = --r === 0;
+                        const currentCount = result.length;
+                        let pending: T[];
+                        if (dataEnd.all && depthCount - offset === 1) {
+                            pending = queryMap[offset];
+                        }
+                        else {
+                            pending = [];
+                            for (let j = offset; j < depthCount; ++j) {
+                                const children = queryMap[j];
+                                if (dataEnd.all) {
+                                    pending = pending.concat(children);
+                                }
+                                else {
+                                    for (let k = 0, s = children.length; k < s; ++k) {
+                                        const node = children[k];
+                                        if ((currentCount === 0 || !result.includes(node)) && validateQuerySelector(this, node, dataEnd, lastEnd)) {
+                                            pending.push(node);
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
-                    const s = pending.length;
-                    if (!lastEnd && (dataEnd.adjacent || resultCount !== -Infinity)) {
-                        if (r > 1) {
-                            selectors.reverse();
-                        }
-                        let count = currentCount;
-                        for (let j = 0; j < s; ++j) {
-                            const node = pending[j];
-                            if ((currentCount === 0 || !result.includes(node)) && ascendQuerySelector(this, selectors, 0, [node], dataEnd.adjacent)) {
-                                result.push(node);
-                                if (++count === resultCount) {
-                                    return result.sort(sortById);
+                        const s = pending.length;
+                        if (!lastEnd && (dataEnd.adjacent || resultCount !== -Infinity)) {
+                            if (r > 1) {
+                                selectors.reverse();
+                            }
+                            let count = currentCount;
+                            for (let j = 0; j < s; ++j) {
+                                const node = pending[j];
+                                if ((currentCount === 0 || !result.includes(node)) && ascendQuerySelector(this, selectors, 0, [node], dataEnd.adjacent)) {
+                                    result.push(node);
+                                    if (++count === resultCount) {
+                                        return result.sort(sortById);
+                                    }
                                 }
                             }
                         }
-                    }
-                    else if (currentCount === 0) {
-                        if (i === queries.length - 1 || resultCount > 0 && resultCount <= s) {
-                            if (resultCount > 0 && s > resultCount) {
-                                pending.length = resultCount;
+                        else if (currentCount === 0) {
+                            if (i === queries.length - 1 || resultCount > 0 && resultCount <= s) {
+                                if (resultCount > 0 && s > resultCount) {
+                                    pending.length = resultCount;
+                                }
+                                return pending.sort(sortById);
                             }
-                            return pending.sort(sortById);
+                            else {
+                                result = pending;
+                            }
                         }
                         else {
-                            result = pending;
-                        }
-                    }
-                    else {
-                        let count = currentCount;
-                        for (let j = 0; j < s; ++j) {
-                            const node = pending[j];
-                            if (currentCount === 0 || !result.includes(node)) {
-                                result.push(node);
-                                if (resultCount > 0 && ++count === resultCount) {
-                                    return result.sort(sortById);
+                            let count = currentCount;
+                            for (let j = 0; j < s; ++j) {
+                                const node = pending[j];
+                                if (currentCount === 0 || !result.includes(node)) {
+                                    result.push(node);
+                                    if (resultCount > 0 && ++count === resultCount) {
+                                        return result.sort(sortById);
+                                    }
                                 }
                             }
                         }
