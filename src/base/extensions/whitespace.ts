@@ -837,12 +837,12 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 horizontal = renderParent.renderChildren as T[];
                             }
                             if (horizontal) {
-                                let siblings: T[] = [],
-                                    maxBottom = -Infinity;
+                                const siblings: T[] = [];
+                                let maxBottom = -Infinity;
                                 for (let i = 0, length = horizontal.length; i < length; ++i) {
                                     const item = horizontal[i];
                                     if (item.nodeGroup) {
-                                        siblings = siblings.concat(item.cascade(child => child.naturalChild) as T[]);
+                                        siblings.push(...item.cascade(child => child.naturalChild) as T[]);
                                     }
                                     else if (item.innerWrapped) {
                                         siblings.push(item.innerMostWrapped as T);

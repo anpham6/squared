@@ -1105,7 +1105,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         }
         let invalid: Undef<boolean>;
         const recurse = (parent: T) => {
-            let result: T[] = [];
+            const result: T[] = [];
             const children = parent.naturalElements;
             for (let i = 0, length = children.length; i < length; ++i) {
                 const item = children[i];
@@ -1130,7 +1130,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     }
                 }
                 if (item instanceof Node && !item.isEmpty()) {
-                    result = result.concat(recurse(item));
+                    result.push(...recurse(item));
                     if (invalid) {
                         break;
                     }
@@ -1891,7 +1891,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             for (let j = offset; j < depthCount; ++j) {
                                 const children = queryMap[j];
                                 if (dataEnd.all) {
-                                    pending = pending.concat(children);
+                                    pending.push(...children);
                                 }
                                 else {
                                     for (let k = 0, s = children.length; k < s; ++k) {

@@ -1054,7 +1054,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                     if (invalid.length) {
                         invalid.sort(sortTemplateInvalid);
-                        result = result.concat(invalid);
+                        result.push(...invalid);
                     }
                 }
                 return result;
@@ -3231,8 +3231,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
             return false;
         };
+        const previousSiblings: T[] = [];
         let checkPercent = !node.hasWidth ? 1 : 0,
-            previousSiblings: T[] = [],
             previousRow: Undef<T[]>,
             previousAlignParent: Undef<boolean>;
         for (let i = 0, length = horizontal.length, start = false; i < length; ++i) {
@@ -3330,9 +3330,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             chain.modifyBox(BOX_STANDARD.MARGIN_TOP, lastItemOf(previousRow)!.bounds.height * -1, false);
                         }
                         if (floating) {
+                            const chainTop = Math.ceil(chain.bounds.top);
                             let checkBottom: Undef<boolean>;
-                            for (let l = 0, r = previousSiblings.length; l < r; ++l) {
-                                if (chain.bounds.top < Math.floor(previousSiblings[l].bounds.bottom)) {
+                            for (let l = previousSiblings.length - 1; l >= 0; --l) {
+                                if (chainTop < Math.floor(previousSiblings[l].bounds.bottom)) {
                                     checkBottom = true;
                                     break;
                                 }
@@ -3388,7 +3389,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
             }
             if (floating) {
-                previousSiblings = previousSiblings.concat(floatingLeft, floatingRight);
+                previousSiblings.push(...partition);
             }
             if (!alignParent) {
                 if (previousRow) {

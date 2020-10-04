@@ -957,12 +957,12 @@ export function sortByArray<T = unknown>(list: T[], ...attrs: (string | boolean)
 }
 
 export function flatArray<T>(list: T[], depth = 1, current = 0): T[] {
-    let result: T[] = [];
+    const result: T[] = [];
     for (let i = 0, length = list.length; i < length; ++i) {
         const item = list[i];
         if (current < depth && Array.isArray(item)) {
             if (item.length) {
-                result = result.concat(flatArray<T>(item, depth, current + 1));
+                result.push(...flatArray<T>(item, depth, current + 1));
             }
         }
         else if (item !== undefined && item !== null) {

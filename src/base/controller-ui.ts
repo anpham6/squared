@@ -691,7 +691,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             });
             const length = layers.length;
             if (length) {
-                let children: T[] = [];
+                const children: T[] = [];
                 for (let i = 0; i < length; ++i) {
                     const order = layers[i];
                     if (order) {
@@ -703,7 +703,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             }
                             return 0;
                         });
-                        children = children.concat(order);
+                        children.push(...order);
                     }
                 }
                 node.each((item: T) => {

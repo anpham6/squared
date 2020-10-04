@@ -390,21 +390,19 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
         if (value !== this._alternate && (iterationCount === -1 || iterationCount > 1)) {
             const { keyTimes, keyPoints } = this.reverseKeyPoints();
             if (keyTimes && keyPoints) {
-                let keyTimesBase = super.keyTimes,
-                    keyPointsBase = this.keyPoints;
+                const keyTimesBase = super.keyTimes.slice(0);
+                const keyPointsBase = this.keyPoints.slice(0);
                 const length = keyTimesBase.length;
                 if (iterationCount === -1) {
                     for (let i = 0; i < length; ++i) {
                         keyTimesBase[i] /= 2;
                         keyTimes[i] = 0.5 + keyTimes[i] / 2;
                     }
-                    keyTimesBase = keyTimesBase.concat(keyTimes);
-                    keyPointsBase = keyPointsBase.concat(keyPoints);
+                    keyTimesBase.push(...keyTimes);
+                    keyPointsBase.push(...keyPoints);
                     this.duration *= 2;
                 }
                 else {
-                    const keyTimesStatic = keyTimesBase.slice(0);
-                    const keyPointsStatic = keyPointsBase.slice(0);
                     for (let i = 0; i < iterationCount; ++i) {
                         if (i === 0) {
                             for (let j = 0; j < length; ++j) {
@@ -413,12 +411,12 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                         }
                         else {
                             const baseTime = i * (1 / iterationCount);
-                            const keyTimesAppend = i % 2 === 0 ? keyTimesStatic.slice(0) : keyTimes.slice(0);
+                            const keyTimesAppend = i % 2 === 0 ? super.keyTimes.slice(0) : keyTimes.slice(0);
                             for (let j = 0; j < length; ++j) {
                                 keyTimesAppend[j] = truncateFraction(baseTime + keyTimesAppend[j] / iterationCount);
                             }
-                            keyTimesBase = keyTimesBase.concat(keyTimesAppend);
-                            keyPointsBase = keyPointsBase.concat(i % 2 === 0 ? keyPointsStatic : keyPoints);
+                            keyTimesBase.push(...keyTimesAppend);
+                            keyPointsBase.push(...i % 2 === 0 ? this.keyPoints.slice(0) : keyPoints);
                         }
                     }
                     this.duration = this.duration * iterationCount;

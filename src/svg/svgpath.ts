@@ -689,8 +689,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                             }
                         }
                     };
-                    let extracted: SvgAnimation[] = [],
-                        initialized: Undef<boolean>,
+                    const extracted: SvgAnimation[] = [];
+                    let initialized: Undef<boolean>,
                         modified: Undef<boolean>;
                     if (sorted.length > 1) {
                         for (let i = 0; i < sorted.length; ++i) {
@@ -769,7 +769,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                             group[j].replaceValue = getFromToValue(replaceValue[j]);
                                         }
                                     }
-                                    extracted = extracted.concat(group);
+                                    extracted.push(...group);
                                     modified = true;
                                     continue;
                                 }

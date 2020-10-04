@@ -148,12 +148,12 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
             const groupName: SvgAnimate[] = [];
             const groupOrdering: SvgAnimationAttribute[] = [];
             for (const name in ANIMATION_DEFAULT) {
-                let values = parseAttribute(element, name);
+                const values = parseAttribute(element, name);
                 if (values.length === 0) {
                     values.push(ANIMATION_DEFAULT[name]);
                 }
                 while (values.length < length) {
-                    values = values.concat(values.slice(0));
+                    values.push(...values.slice(0));
                 }
                 values.length = length;
                 cssData[name] = values;

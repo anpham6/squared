@@ -85,7 +85,12 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             break;
                     }
                 });
-                table = append ? table.concat(parent.children as T[]) : (parent.children as T[]).concat(table);
+                if (append) {
+                    table.push(...parent.children as T[]);
+                }
+                else {
+                    table = parent.children.concat(table) as T[];
+                }
             }
         };
         node.each((item: T) => {
@@ -95,7 +100,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     hideCell(item);
                     break;
                 case 'TBODY':
-                    table = table.concat(item.children as T[]);
+                    table.push(...item.children as T[]);
                     hideCell(item);
                     break;
                 case 'TFOOT':

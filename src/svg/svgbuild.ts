@@ -303,9 +303,9 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         const totalLength = Math.ceil(element.getTotalLength());
         const result: SvgOffsetPath[] = [];
         if (totalLength) {
-            let keyPoints: Point[] = [],
-                rotatingPoints: boolean[] = [],
-                rotateFixed = 0,
+            const keyPoints: Point[] = [];
+            const rotatingPoints: boolean[] = [];
+            let rotateFixed = 0,
                 rotateInitial = 0,
                 rotatePrevious = 0,
                 overflow = 0,
@@ -322,8 +322,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                         case 'H':
                         case 'V':
                         case 'Z':
-                            keyPoints = keyPoints.concat(item.value);
-                            rotatingPoints = rotatingPoints.concat(new Array(item.value.length).fill(false));
+                            keyPoints.push(...item.value);
+                            rotatingPoints.push(...new Array(item.value.length).fill(false));
                             break;
                         case 'C':
                         case 'S':
@@ -846,9 +846,9 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     }
 
     public static boxRectOf(values: string[]) {
-        let points: SvgPoint[] = [];
+        const points: SvgPoint[] = [];
         for (let i = 0, length = values.length; i < length; ++i) {
-            points = points.concat(SvgBuild.toPathPoints(SvgBuild.toPathCommands(values[i])));
+            points.push(...SvgBuild.toPathPoints(SvgBuild.toPathCommands(values[i])));
         }
         return this.minMaxOf(points, true);
     }

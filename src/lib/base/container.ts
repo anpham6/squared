@@ -50,7 +50,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
     }
 
     public addAll(list: T[] | Container) {
-        this.children = this.children.concat(Array.isArray(list) ? list : list.children);
+        this.children.push(...Array.isArray(list) ? list : list.children);
         return this;
     }
 
@@ -156,7 +156,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
         }
         let complete: Undef<boolean>;
         const recurse = (container: Container<T>) => {
-            let result: T[] = [];
+            const result: T[] = [];
             const children = container.children;
             for (let i = 0; i < children.length; ++i) {
                 const item = children[i];
@@ -176,7 +176,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
                     }
                 }
                 if (cascade && item instanceof Container && !item.isEmpty()) {
-                    result = result.concat(recurse(item));
+                    result.push(...recurse(item));
                     if (complete) {
                         break;
                     }
@@ -251,7 +251,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
         }
         let complete: Undef<boolean>;
         const recurse = (container: Container<T>) => {
-            let result: T[] = [];
+            const result: T[] = [];
             const children = container.children;
             for (let i = 0, length = children.length; i < length; ++i) {
                 const item = children[i];
@@ -270,7 +270,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
                     }
                 }
                 if (item instanceof Container && !item.isEmpty()) {
-                    result = result.concat(recurse(item));
+                    result.push(...recurse(item));
                     if (complete) {
                         break;
                     }

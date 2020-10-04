@@ -549,7 +549,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                     else if (outlineLayerList) {
                         if (layerList) {
-                            layerList[0].item = layerList[0].item.concat(outlineLayerList[0].item);
+                            layerList[0].item.push(...outlineLayerList[0].item);
                         }
                         else {
                             layerList = outlineLayerList;
@@ -743,7 +743,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 const q = backgroundImage.length;
                 const fillAttribute = (attribute: string[]) => {
                     while (attribute.length < q) {
-                        attribute = attribute.concat(attribute.slice(0));
+                        attribute.push(...attribute.slice(0));
                     }
                     attribute.length = q;
                     return attribute;

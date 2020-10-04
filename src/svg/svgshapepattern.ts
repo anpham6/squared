@@ -188,7 +188,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                             break;
                     }
                 }
-                this._transforms = this._transforms.concat(SvgBuild.filterTransforms(transforms));
+                this._transforms.push(...SvgBuild.filterTransforms(transforms));
             }
         }
         return this._transforms;

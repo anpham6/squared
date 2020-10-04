@@ -160,24 +160,27 @@ export default class File<T extends View> extends squared.base.File<T> implement
         }
         if (options && (options.directory || options.filename)) {
             const outputDirectory = getOutputDirectory(this.userSettings.outputDirectory);
-            let assets: FileAsset[] = [];
+            const assets: FileAsset[] = [];
             for (const name in result) {
                 switch (name) {
                     case 'drawableImage':
-                        assets = assets.concat(getImageAssets(outputDirectory, result[name], this.userSettings.convertImages, this.userSettings.compressImages));
+                        assets.push(...getImageAssets(outputDirectory, result[name], this.userSettings.convertImages, this.userSettings.compressImages));
                         break;
                     case 'rawVideo':
-                        assets = assets.concat(getRawAssets(outputDirectory + this.directory.video, result[name]));
+                        assets.push(...getRawAssets(outputDirectory + this.directory.video, result[name]));
                         break;
                     case 'rawAudio':
-                        assets = assets.concat(getRawAssets(outputDirectory + this.directory.audio, result[name]));
+                        assets.push(...getRawAssets(outputDirectory + this.directory.audio, result[name]));
                         break;
                     default:
-                        assets = assets.concat(getFileAssets(outputDirectory, result[name]));
+                        assets.push(...getFileAssets(outputDirectory, result[name]));
                         break;
                 }
             }
-            options.assets = options.assets ? assets.concat(options.assets) : assets;
+            if (options.assets) {
+                assets.push(...options.assets);
+            }
+            options.assets = assets;
             if (options.directory) {
                 this.copying(options);
             }
@@ -455,7 +458,10 @@ export default class File<T extends View> extends squared.base.File<T> implement
             }
             if (options && (options.directory || options.filename)) {
                 const assets = getImageAssets(getOutputDirectory(this.userSettings.outputDirectory), result, this.userSettings.convertImages, this.userSettings.compressImages);
-                options.assets = options.assets ? assets.concat(options.assets) : assets;
+                if (options.assets) {
+                    assets.push(...options.assets);
+                }
+                options.assets = assets;
                 if (options.directory) {
                     this.copying(options);
                 }
@@ -488,7 +494,10 @@ export default class File<T extends View> extends squared.base.File<T> implement
             }
         }
         if (actionable) {
-            options!.assets = options!.assets ? assets.concat(options!.assets) : assets;
+            if (options!.assets) {
+                assets.push(...options!.assets);
+            }
+            options!.assets = assets;
             if (options!.directory) {
                 this.copying(options!);
             }
@@ -501,7 +510,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
 
     protected combineAssets(assets?: FileAsset[]) {
         const userSettings = this.userSettings;
-        let result: FileAsset[] = [];
+        const result: FileAsset[] = [];
         if (assets) {
             for (let i = 0, length = assets.length, first = true; i < length; ++i) {
                 const item = assets[i];
@@ -518,29 +527,33 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     }
                 }
             }
-            result = result.concat(assets);
+            result.push(...assets);
         }
         const outputDirectory = getOutputDirectory(userSettings.outputDirectory);
-        return result.concat(
-            getFileAssets(outputDirectory, this.resourceStringToXml()),
-            getFileAssets(outputDirectory, this.resourceStringArrayToXml()),
-            getFileAssets(outputDirectory, this.resourceFontToXml()),
-            getFileAssets(outputDirectory, this.resourceColorToXml()),
-            getFileAssets(outputDirectory, this.resourceDimenToXml()),
-            getFileAssets(outputDirectory, this.resourceStyleToXml()),
-            getFileAssets(outputDirectory, this.resourceDrawableToXml()),
-            getImageAssets(outputDirectory, this.resourceDrawableImageToString(), userSettings.convertImages, userSettings.compressImages),
-            getFileAssets(outputDirectory, this.resourceAnimToXml()),
-            getRawAssets(outputDirectory + this.directory.video, this.resourceRawVideoToString()),
-            getRawAssets(outputDirectory + this.directory.audio, this.resourceRawAudioToString())
+        result.push(
+            ...getFileAssets(outputDirectory, this.resourceStringToXml()),
+            ...getFileAssets(outputDirectory, this.resourceStringArrayToXml()),
+            ...getFileAssets(outputDirectory, this.resourceFontToXml()),
+            ...getFileAssets(outputDirectory, this.resourceColorToXml()),
+            ...getFileAssets(outputDirectory, this.resourceDimenToXml()),
+            ...getFileAssets(outputDirectory, this.resourceStyleToXml()),
+            ...getFileAssets(outputDirectory, this.resourceDrawableToXml()),
+            ...getImageAssets(outputDirectory, this.resourceDrawableImageToString(), userSettings.convertImages, userSettings.compressImages),
+            ...getFileAssets(outputDirectory, this.resourceAnimToXml()),
+            ...getRawAssets(outputDirectory + this.directory.video, this.resourceRawVideoToString()),
+            ...getRawAssets(outputDirectory + this.directory.audio, this.resourceRawAudioToString())
         );
+        return result;
     }
 
     protected checkFileAssets(content: string[], options?: FileUniversalOptions) {
         if (options) {
             if (options.directory || options.filename) {
                 const assets = getFileAssets(getOutputDirectory(this.userSettings.outputDirectory), content);
-                options.assets = options.assets ? assets.concat(options.assets) : assets;
+                if (options.assets) {
+                    assets.push(...options.assets);
+                }
+                options.assets = assets;
                 if (options.directory) {
                     this.copying(options);
                 }
@@ -565,7 +578,10 @@ export default class File<T extends View> extends squared.base.File<T> implement
             }
             if (options && (options.directory || options.filename)) {
                 const assets = getRawAssets(getOutputDirectory(this.userSettings.outputDirectory) + this.directory[name], result);
-                options.assets = options.assets ? assets.concat(options.assets) : assets;
+                if (options.assets) {
+                    assets.push(...options.assets);
+                }
+                options.assets = assets;
                 if (options.directory) {
                     this.copying(options);
                 }

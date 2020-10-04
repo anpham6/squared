@@ -650,8 +650,8 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
     }
 
     public static getOptionArray(element: HTMLSelectElement | HTMLOptGroupElement, showDisabled?: boolean) {
-        let result: string[] = [],
-            numberArray = true;
+        const result: string[] = [];
+        let numberArray = true;
         iterateArray(element.children, (item: HTMLOptionElement) => {
             if (item.disabled && !showDisabled) {
                 return;
@@ -670,11 +670,11 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                 case 'OPTGROUP': {
                     const [groupStringArray, groupNumberArray] = this.getOptionArray(item, showDisabled);
                     if (groupStringArray) {
-                        result = result.concat(groupStringArray);
+                        result.push(...groupStringArray);
                         numberArray = false;
                     }
                     else if (groupNumberArray) {
-                        result = result.concat(groupNumberArray);
+                        result.push(...groupNumberArray);
                     }
                     break;
                 }

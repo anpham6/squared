@@ -123,7 +123,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         const { fonts, styles } = resource.mapOfStored;
         const nameMap: ObjectMap<T[]> = {};
         const groupMap: ObjectMap<StyleList<T>[]> = {};
-        let cache: T[] = [];
+        const cache: T[] = [];
         this.application.getProcessingCache(sessionId).each(node => {
             if (node.data(Resource.KEY_NAME, 'fontStyle') && node.hasResource(NODE_RESOURCE.FONT_STYLE)) {
                 const containerName = node.containerName;
@@ -138,7 +138,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 const name = FONT_STYLE[attr] + value + '"';
                 (items[name] ||= []).push(node);
             };
-            cache = cache.concat(data);
+            cache.push(...data);
             for (let i = 0, length = data.length; i < length; ++i) {
                 const node = data[i];
                 const stored = node.data<FontAttribute>(Resource.KEY_NAME, 'fontStyle')!;

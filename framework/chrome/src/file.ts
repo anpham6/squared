@@ -681,15 +681,16 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             }
         }
         const [scriptAssets, transpileMap] = this.getScriptAssets(options);
-        options.assets = assets
-            .concat(scriptAssets)
-            .concat(this.getImageAssets(options))
-            .concat(this.getVideoAssets(options))
-            .concat(this.getAudioAssets(options))
-            .concat(this.getRawAssets('object', options))
-            .concat(this.getRawAssets('embed', options))
-            .concat(this.getFontAssets(options))
-            .concat(options.assets || []);
+        assets.push(
+            ...scriptAssets,
+            ...this.getImageAssets(options),
+            ...this.getVideoAssets(options),
+            ...this.getAudioAssets(options),
+            ...this.getRawAssets('object', options),
+            ...this.getRawAssets('embed', options),
+            ...this.getFontAssets(options)
+        );
+        options.assets = assets;
         options.transpileMap = transpileMap;
         return options;
     }

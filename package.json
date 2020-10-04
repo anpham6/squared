@@ -57,8 +57,8 @@
     "prod-android-extension": "tsc -p ./config/tsconfig.android-extension.json && rollup -c ./extension/android/constraint/rollup.config.js && rollup -c ./extension/android/widget/rollup.config.js",
     "prod-express": "cd ./node/express && eslint **/*.ts && tsc && rollup -c rollup.config.js",
     "prod-scripts": "cd ./node/scripts && eslint **/*.ts && tsc -outDir ../../",
-    "prod-all": "npm run clean && eslint **/*.ts && npm run prod && npm run prod-android && npm run prod-chrome && npm run prod-vdom && npm run prod-vdom-lite && npm run prod-android-extension && npm run prod-express && npm run prod-scripts && npm run bundles",
-    "prod-win": "npm run clean && eslint **/*.ts && npm run prod && npm run prod-android && npm run prod-chrome && npm run prod-vdom && npm run prod-vdom-lite && npm run prod-android-extension && npm run prod-express && npm run prod-scripts && npm run bundles-win",
+    "prod-all": "npm run clean && eslint **/*.ts && npm run prod && npm run prod-android && npm run prod-chrome && npm run prod-vdom && npm run prod-vdom-lite && npm run prod-android-extension && npm run prod-express && npm run bundles",
+    "prod-win": "npm run clean && eslint **/*.ts && npm run prod && npm run prod-android && npm run prod-chrome && npm run prod-vdom && npm run prod-vdom-lite && npm run prod-android-extension && npm run prod-express && npm run bundles-win",
     "install-chrome": "npm i @babel/core && npm i @babel/preset-env && npm i terser && npm i uglify-js && npm i prettier && npm i clean-css && npm i html-minifier-terser && npm i html-minifier",
     "clean": "rimraf build/* && rimraf dist/* && rimraf temp/*"
   },

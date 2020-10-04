@@ -165,8 +165,8 @@ export default abstract class Application<T extends Node> implements squared.bas
             return reject(DOCUMENT_ROOT_NOT_FOUND);
         }
         const documentRoot: HTMLElement = rootElements.values().next().value;
-        let preloadItems: PreloadItem[] = [],
-            preloaded: Undef<HTMLImageElement[]>;
+        const preloadItems: PreloadItem[] = [];
+        let preloaded: Undef<HTMLImageElement[]>;
         const parseSrcSet = (value: string) => {
             if (value !== '') {
                 for (const uri of value.split(',')) {
@@ -276,7 +276,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
         }
         if (styleSheets) {
-            preloadItems = preloadItems.concat(styleSheets);
+            preloadItems.push(...styleSheets);
         }
         if (preloadItems.length) {
             processing.initializing = true;
@@ -580,7 +580,15 @@ export default abstract class Application<T extends Node> implements squared.bas
             if (childMap) {
                 for (let j = 0, k = 1, q = childMap.length; j < q; ++j, ++k) {
                     const items = result[k];
-                    result[k] = items ? items.concat(childMap[j] as T[]) : childMap[j] as T[];
+                    if (items) {
+                        items.push(...childMap[j] as T[]);
+                    }
+                    else if (q === 1) {
+                        result[k] = childMap[j] as T[];
+                    }
+                    else {
+                        result[k] = childMap[j].slice(0) as T[];
+                    }
                 }
             }
         }
@@ -1004,11 +1012,11 @@ export default abstract class Application<T extends Node> implements squared.bas
             const processing: squared.base.AppProcessing<T> = active.values().next().value;
             return [processing.extensions as Extension<T>[], processing.cache.children];
         }
-        let extensions: Extension<T>[] = [],
+        const extensions: Extension<T>[] = [],
             children: T[] = [];
         for (const processing of active.values()) {
-            extensions = extensions.concat(processing.extensions as Extension<T>[]);
-            children = children.concat(processing.cache.children);
+            extensions.push(...processing.extensions as Extension<T>[]);
+            children.push(...processing.cache.children);
         }
         return [Array.from(new Set(extensions)), children];
     }

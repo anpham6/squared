@@ -30,7 +30,7 @@ let file: Null<File<Node>> = null;
 function createAssetsOptions(assets: ChromeAsset[], options?: FileOptions, directory?: string, filename?: string): FileOptions {
     if (isPlainObject<FileOptions>(options)) {
         if (options.assets) {
-            assets = assets.concat(options.assets);
+            assets.push(...options.assets);
         }
     }
     else {

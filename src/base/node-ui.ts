@@ -647,28 +647,28 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     break;
                 case 'boxStyle': {
                     if (this.naturalElement) {
-                        let properties: string[] = [];
+                        const properties: string[] = [];
                         if (this.backgroundImage === '') {
-                            properties = properties.concat(CSS_PROPERTIES.background.value as string[]);
+                            properties.push(...CSS_PROPERTIES.background.value as string[]);
                             --properties.length;
                         }
                         if (this.borderTopWidth === 0) {
-                            properties = properties.concat(CSS_PROPERTIES.borderTop.value as string[]);
+                            properties.push(...CSS_PROPERTIES.borderTop.value as string[]);
                         }
                         if (this.borderRightWidth === 0) {
-                            properties = properties.concat(CSS_PROPERTIES.borderRight.value as string[]);
+                            properties.push(...CSS_PROPERTIES.borderRight.value as string[]);
                         }
                         if (this.borderBottomWidth === 0) {
-                            properties = properties.concat(CSS_PROPERTIES.borderBottom.value as string[]);
+                            properties.push(...CSS_PROPERTIES.borderBottom.value as string[]);
                         }
                         if (this.borderLeftWidth === 0) {
-                            properties = properties.concat(CSS_PROPERTIES.borderLeft.value as string[]);
+                            properties.push(...CSS_PROPERTIES.borderLeft.value as string[]);
                         }
                         if (this.cssAny('backgroundColor', ['none', 'transparent', 'rgba(0, 0, 0, 0)'])) {
                             properties.push('backgroundColor');
                         }
                         if (this.css('borderRadius') === '0px') {
-                            properties = properties.concat(CSS_PROPERTIES.borderRadius.value as string[]);
+                            properties.push(...CSS_PROPERTIES.borderRadius.value as string[]);
                         }
                         this.cssCopy(node, ...properties);
                     }

@@ -249,13 +249,13 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                     const keyTimesBase = this.keyTimes;
                     if (keyTimesBase[0] === 0 && keyTimesBase.length === 2) {
                         const valuesBase = this.values;
-                        let keyTimes: number[] = [],
+                        const keyTimes: number[] = [],
                             values: string[] = [];
                         for (let i = 0, length = keyTimesBase.length - 1; i < length; ++i) {
                             const result = SvgAnimate.fromStepTimingFunction(animationElement, attributeName || this.attributeName, 'step-end', keyTimesBase, valuesBase, i);
                             if (result) {
-                                keyTimes = keyTimes.concat(result[0]);
-                                values = values.concat(result[1]);
+                                keyTimes.push(...result[0]);
+                                values.push(...result[1]);
                             }
                         }
                         keyTimes.push(keyTimesBase.pop()!);

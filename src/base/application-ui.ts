@@ -1365,11 +1365,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (Array.isArray(item[0])) {
                 segments = item as T[][];
                 itemCount = segments.length;
-                let grouping: T[] = segments[0];
-                for (let j = 1; j < itemCount; ++j) {
-                    grouping = grouping.concat(segments[j]);
-                }
-                grouping.sort((a: T, b: T) => a.childIndex - b.childIndex);
+                const grouping = flatArray(segments, Infinity).sort((a: T, b: T) => a.childIndex - b.childIndex) as T[];
                 const node = layout.node;
                 if (node.layoutVertical) {
                     floatgroup = node;
@@ -1825,14 +1821,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     protected setFloatPadding(parent: T, target: T, inlineAbove: T[], leftAbove: T[] = [], rightAbove: T[] = []) {
         const requirePadding = (node: NodeUI, depth?: number): boolean => node.textElement && (node.blockStatic || node.multiline || depth === 1);
-        let paddingNodes: T[] = [];
+        const paddingNodes: T[] = [];
         for (let i = 0, length = inlineAbove.length; i < length; ++i) {
             const child = inlineAbove[i];
             if (requirePadding(child) || child.centerAligned) {
                 paddingNodes.push(child);
             }
             if (child.blockStatic) {
-                paddingNodes = paddingNodes.concat(child.cascade((item: T) => requirePadding(item, item.depth - child.depth)) as T[]);
+                paddingNodes.push(...child.cascade((item: T) => requirePadding(item, item.depth - child.depth)) as T[]);
             }
         }
         const length = paddingNodes.length;
