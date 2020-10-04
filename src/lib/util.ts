@@ -645,12 +645,10 @@ export function lastItemOf<T>(value: ArrayLike<T>): Undef<T> {
 }
 
 export function minMaxOf<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, number>, operator: ">" | "<" | ">=" | "<="): [Null<T>, number] {
-    let value = predicate(list[0], 0, list),
-        result: Null<T> = null;
-    if (!isNaN(value)) {
-        result = list[0];
-    }
-    else {
+    let result: Null<T> = list[0],
+        value = predicate(result, 0, list);
+    if (isNaN(value)) {
+        result = null;
         value = operator[0] === '>' ? -Infinity : Infinity;
     }
     for (let i = 1, length = list.length; i < length; ++i) {

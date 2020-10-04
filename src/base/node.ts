@@ -2243,12 +2243,12 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get flexdata() {
-        const result = this._cache.flexdata;
+        let result = this._cache.flexdata;
         if (result === undefined) {
             if (this.flexElement) {
                 const { flexWrap, flexDirection, alignContent, justifyContent } = this.cssAsObject('flexWrap', 'flexDirection', 'alignContent', 'justifyContent');
                 const row = flexDirection!.startsWith('row');
-                return this._cache.flexdata = {
+                result = {
                     row,
                     column: !row,
                     reverse: flexDirection!.endsWith('reverse'),
@@ -2258,17 +2258,17 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     justifyContent
                 };
             }
-            return this._cache.flexdata = {};
+            return this._cache.flexdata = result || {};
         }
         return result;
     }
 
     get flexbox() {
-        const result = this._cache.flexbox;
+        let result = this._cache.flexbox;
         if (result === undefined) {
             if (this.naturalChild && this.actualParent?.flexElement) {
                 const [alignSelf, justifySelf, basis] = this.cssAsTuple('alignSelf', 'justifySelf', 'flexBasis');
-                return this._cache.flexbox = {
+                result = {
                     alignSelf: alignSelf === 'auto' ? this.cssParent('alignItems') : alignSelf,
                     justifySelf: justifySelf === 'auto' ? this.cssParent('justifyItems') : justifySelf,
                     basis,
@@ -2277,7 +2277,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     order: this.toInt('order', 0)
                 };
             }
-            return this._cache.flexbox = {} as FlexBox;
+            return this._cache.flexbox = result || {} as FlexBox;
         }
         return result;
     }
@@ -2479,7 +2479,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         }
     }
     get inlineText() {
-        return this._cacheState.inlineText ?? false;
+        return !!this._cacheState.inlineText;
     }
 
     get block() {
@@ -2507,11 +2507,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get blockStatic() {
-        const result = this._cache.blockStatic;
+        let result = this._cache.blockStatic;
         if (result === undefined) {
             const pageFlow = this.pageFlow;
             if (pageFlow && (this.block && !this.floating || this.inlineStatic && this.firstChild?.blockStatic || this.lineBreak)) {
-                return this._cache.blockStatic = true;
+                result = true;
             }
             else if (!pageFlow || !this.inline && !this.display.startsWith('table-') && !this.hasPX('maxWidth')) {
                 const width = this.valueOf('width');
@@ -2526,10 +2526,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 if (percent) {
                     const marginLeft = this.valueOf('marginLeft');
                     const marginRight = this.valueOf('marginRight');
-                    return this._cache.blockStatic = percent + (isPercent(marginLeft) ? Math.max(0, parseFloat(marginLeft)) : 0) + (isPercent(marginRight) ? parseFloat(marginRight) : 0) >= 100;
+                    result = percent + (isPercent(marginLeft) ? Math.max(0, parseFloat(marginLeft)) : 0) + (isPercent(marginRight) ? parseFloat(marginRight) : 0) >= 100;
                 }
             }
-            return this._cache.blockStatic = false;
+            return this._cache.blockStatic = !!result;
         }
         return result;
     }
@@ -2555,7 +2555,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get autoMargin() {
-        const result = this._cache.autoMargin;
+        let result = this._cache.autoMargin;
         if (result === undefined) {
             if (!this.pageFlow || this.blockStatic || this.display === 'table') {
                 const styleMap = this._styleMap;
@@ -2563,7 +2563,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 const right = styleMap.marginRight === 'auto' && (this.pageFlow || this.hasPX('left'));
                 const top = styleMap.marginTop === 'auto' && (this.pageFlow || this.hasPX('bottom'));
                 const bottom = styleMap.marginBottom === 'auto' && (this.pageFlow || this.hasPX('top'));
-                return this._cache.autoMargin = {
+                result = {
                     horizontal: left || right,
                     left: left && !right,
                     right: !left && right,
@@ -2574,22 +2574,22 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     topBottom: top && bottom
                 };
             }
-            return this._cache.autoMargin = {};
+            return this._cache.autoMargin = result || {};
         }
         return result;
     }
 
     get baseline() {
-        const result = this._cache.baseline;
+        let result = this._cache.baseline;
         if (result === undefined) {
             if (this.pageFlow && !this.floating && !this.tableElement) {
                 const display = this.display;
                 if (display.startsWith('inline') || display === 'list-item') {
                     const value = this.css('verticalAlign');
-                    return this._cache.baseline = value === 'baseline' || !isNaN(parseFloat(value));
+                    result = value === 'baseline' || !isNaN(parseFloat(value));
                 }
             }
-            return this._cache.baseline = false;
+            return this._cache.baseline = !!result;
         }
         return result;
     }
@@ -2783,7 +2783,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get visibleStyle() {
-        const result = this._cache.visibleStyle;
+        let result = this._cache.visibleStyle;
         if (result === undefined) {
             if (!this.plainText) {
                 const borderWidth = this.borderTopWidth > 0 || this.borderRightWidth > 0 || this.borderBottomWidth > 0 || this.borderLeftWidth > 0;
@@ -2798,7 +2798,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         backgroundRepeatY ||= repeatX === 'repeat' || repeatX === 'repeat-y' || repeatY === 'repeat';
                     }
                 }
-                return this._cache.visibleStyle = {
+                result = {
                     background: borderWidth || backgroundImage || backgroundColor,
                     borderWidth,
                     backgroundImage,
@@ -2809,7 +2809,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     outline: this.outlineWidth > 0
                 };
             }
-            return this._cache.visibleStyle = {} as VisibleStyle;
+            return this._cache.visibleStyle = result || {} as VisibleStyle;
         }
         return result;
     }
@@ -3009,16 +3009,16 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get preserveWhiteSpace() {
-        const result = this._cache.preserveWhiteSpace;
+        let result = this._cache.preserveWhiteSpace;
         if (result === undefined) {
             switch (this.css('whiteSpace')) {
                 case 'pre':
                 case 'pre-wrap':
                 case 'break-spaces':
-                    return this._cache.preserveWhiteSpace = true;
-                default:
-                    return this._cache.preserveWhiteSpace = false;
+                    result = true;
+                    break;
             }
+            return this._cache.preserveWhiteSpace = !!result;
         }
         return result;
     }

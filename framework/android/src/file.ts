@@ -123,20 +123,20 @@ export default class File<T extends View> extends squared.base.File<T> implement
     public resource!: Resource<T>;
 
     public copyTo(directory: string, options?: FileCopyingOptions) {
-        return this.copying({ ...options, assets: this.combineAssets(options?.assets), directory });
+        return this.copying({ ...options, assets: this.combineAssets(options ? options.assets : undefined), directory });
     }
 
     public appendTo(pathname: string, options?: FileArchivingOptions) {
         return this.archiving({
             filename: this.userSettings.outputArchiveName,
             ...options,
-            assets: this.combineAssets(options?.assets),
+            assets: this.combineAssets(options ? options.assets : undefined),
             appendTo: pathname
         });
     }
 
     public saveAs(filename: string, options?: FileArchivingOptions) {
-        return this.archiving({ ...options, assets: this.combineAssets(options?.assets), filename });
+        return this.archiving({ ...options, assets: this.combineAssets(options ? options.assets : undefined), filename });
     }
 
     public resourceAllToXml(options?: FileUniversalOptions) {

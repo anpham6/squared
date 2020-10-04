@@ -2974,7 +2974,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                     }
                 }
-                return this._cache.renderExclude = result || false;
+                return this._cache.renderExclude = !!result;
             }
             return result;
         }

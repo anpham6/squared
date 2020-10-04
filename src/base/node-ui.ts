@@ -1451,7 +1451,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         break;
                 }
             }
-            return this._cache.scrollElement = result || false;
+            return this._cache.scrollElement = !!result;
         }
         return result;
     }
@@ -1492,7 +1492,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get float() {
-        return this._cache.float ||= super.float;
+        const result = this._cache.float;
+        return result === undefined ? this._cache.float = super.float : result;
     }
 
     set textContent(value) {
@@ -1561,13 +1562,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get inlineVertical() {
-        const result = this._cache.inlineVertical;
+        let result = this._cache.inlineVertical;
         if (result === undefined) {
             if (this.naturalElement || this.pseudoElement) {
                 const value = this.display;
-                return this._cache.inlineVertical = (value.startsWith('inline') || value === 'table-cell') && !this.floating && this._element !== document.documentElement;
+                result = (value.startsWith('inline') || value === 'table-cell') && !this.floating && this._element !== document.documentElement;
             }
-            return this._cache.inlineVertical = false;
+            return this._cache.inlineVertical = !!result;
         }
         return result;
     }
@@ -1609,15 +1610,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         this._cache.autoPosition = value;
     }
     get autoPosition() {
-        const result = this._cache.autoPosition;
+        let result = this._cache.autoPosition;
         if (result === undefined) {
-            if (this.pageFlow) {
-                return this._cache.autoPosition = false;
-            }
-            else {
+            if (!this.pageFlow) {
                 const { top, right, bottom, left } = this._styleMap;
-                return this._cache.autoPosition = (!top || top === 'auto') && (!left || left === 'auto') && (!right || right === 'auto') && (!bottom || bottom === 'auto');
+                result = (!top || top === 'auto') && (!left || left === 'auto') && (!right || right === 'auto') && (!bottom || bottom === 'auto');
             }
+            return this._cache.autoPosition = !!result;
         }
         return result;
     }
@@ -1676,7 +1675,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     result = this.inlineText && this.textElement || this.plainText && !this.multiline || this.inputElement || this.imageElement || this.svgElement;
                 }
             }
-            return this._cache.baselineElement = result || false;
+            return this._cache.baselineElement = !!result;
         }
         return result;
     }
@@ -1822,13 +1821,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get textEmpty() {
-        const result = this._cacheState.textEmpty;
+        let result = this._cacheState.textEmpty;
         if (result === undefined) {
             if (this.styleElement && !this.imageElement && !this.svgElement && !this.inputElement) {
                 const value = this.textContent;
-                return this._cacheState.textEmpty = value === '' || !this.preserveWhiteSpace && isEmptyString(value);
+                result = value === '' || !this.preserveWhiteSpace && isEmptyString(value);
             }
-            return this._cacheState.textEmpty = false;
+            return this._cacheState.textEmpty = !!result;
         }
         return result;
     }

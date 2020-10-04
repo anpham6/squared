@@ -11,6 +11,7 @@ import NodeList from './nodelist';
 
 type FileActionOptions = squared.FileActionOptions;
 type PreloadItem = HTMLImageElement | string;
+type SessionThreadData<T extends Node> = [Set<HTMLElement>, squared.base.AppProcessing<T>, Set<HTMLElement | ShadowRoot>, Undef<string[]>];
 
 const { CSS_CANNOT_BE_PARSED, DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, reject } = squared.lib.error;
 const { FILE, STRING } = squared.lib.regex;
@@ -160,7 +161,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         if (resource) {
             ({ preloadImages, preloadFonts, preloadCustomElements } = resource.userSettings);
         }
-        const [processing, rootElements, shadowElements, styleSheets] = this.createSessionThread(elements, this.userSettings.pierceShadowRoot && preloadCustomElements);
+        const [rootElements, processing, shadowElements, styleSheets] = this.createSessionThread(elements, this.userSettings.pierceShadowRoot && preloadCustomElements);
         if (rootElements.size === 0) {
             return reject(DOCUMENT_ROOT_NOT_FOUND);
         }
@@ -312,7 +313,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         resource!.addImage(item);
                     }
                 }
-                return this.resumeSessionThread(processing, rootElements, elements.length, documentRoot, preloaded);
+                return this.resumeSessionThread(rootElements, processing, elements.length, documentRoot, preloaded);
             })
             .catch((error: Error | Event | HTMLImageElement) => {
                 let message: Undef<string>;
@@ -327,10 +328,10 @@ export default abstract class Application<T extends Node> implements squared.bas
                         message = error.src;
                     }
                 }
-                return !message || !this.userSettings.showErrorMessages || confirm(`FAIL: ${message}`) ? this.resumeSessionThread(processing, rootElements, elements.length, documentRoot, preloaded) : Promise.reject(new Error(message));
+                return !message || !this.userSettings.showErrorMessages || confirm(`FAIL: ${message}`) ? this.resumeSessionThread(rootElements, processing, elements.length, documentRoot, preloaded) : Promise.reject(new Error(message));
             });
         }
-        return Promise.resolve(this.resumeSessionThread(processing, rootElements, elements.length));
+        return Promise.resolve(this.resumeSessionThread(rootElements, processing, elements.length));
     }
 
     public parseDocumentSync(...elements: (string | HTMLElement)[]): Undef<T | T[]> {
@@ -864,26 +865,8 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
     }
 
-    private createSessionThread(elements: (string | HTMLElement)[], pierceShadowRoot: boolean): [squared.base.AppProcessing<T>, Set<HTMLElement>, Set<HTMLElement | ShadowRoot>, Undef<string[]>] {
-        const controller = this.controllerHandler;
-        const sessionId = controller.generateSessionId;
+    private createSessionThread(elements: (string | HTMLElement)[], pierceShadowRoot: boolean): SessionThreadData<T> {
         const rootElements = new Set<HTMLElement>();
-        const extensions = this.extensionsAll;
-        const processing: squared.base.AppProcessing<T> = {
-            sessionId,
-            initializing: false,
-            cache: new NodeList<T>(undefined, sessionId),
-            excluded: new NodeList<T>(undefined, sessionId),
-            rootElements,
-            elementMap: newSessionInit(sessionId),
-            extensions
-        };
-        const afterInsertNode = extensions.filter(item => !!item.afterInsertNode);
-        if (afterInsertNode.length) {
-            processing.afterInsertNode = afterInsertNode;
-        }
-        this.session.active.set(sessionId, processing);
-        controller.init();
         const length = elements.length;
         if (length === 0) {
             rootElements.add(this.mainElement);
@@ -894,10 +877,12 @@ export default abstract class Application<T extends Node> implements squared.bas
                 if (typeof element === 'string') {
                     element = document.getElementById(element);
                 }
-                if (!element || element.nodeName[0] === '#') {
-                    continue;
+                if (element) {
+                    rootElements.add(element);
                 }
-                rootElements.add(element);
+            }
+            if (rootElements.size === 0) {
+                return ([rootElements] as unknown) as SessionThreadData<T>;
             }
         }
         let shadowElements: Undef<Set<HTMLElement | ShadowRoot>>,
@@ -928,6 +913,24 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
             }
         }
+        const controller = this.controllerHandler;
+        const sessionId = controller.generateSessionId;
+        const extensions = this.extensionsAll;
+        const processing: squared.base.AppProcessing<T> = {
+            sessionId,
+            initializing: false,
+            cache: new NodeList<T>(undefined, sessionId),
+            excluded: new NodeList<T>(undefined, sessionId),
+            rootElements,
+            elementMap: newSessionInit(sessionId),
+            extensions
+        };
+        const afterInsertNode = extensions.filter(item => !!item.afterInsertNode);
+        if (afterInsertNode.length) {
+            processing.afterInsertNode = afterInsertNode;
+        }
+        this.session.active.set(sessionId, processing);
+        controller.init();
         const queryRoot = rootElements.size === 1 && (rootElements.values().next().value as HTMLElement).parentElement;
         if (queryRoot && queryRoot !== document.documentElement) {
             this.setStyleMap(sessionId, document, queryRoot);
@@ -935,10 +938,10 @@ export default abstract class Application<T extends Node> implements squared.bas
         else {
             this.setStyleMap(sessionId);
         }
-        return [processing, rootElements, shadowElements || rootElements, styleSheets];
+        return [rootElements, processing, shadowElements || rootElements, styleSheets];
     }
 
-    private resumeSessionThread(processing: squared.base.AppProcessing<T>, rootElements: Set<HTMLElement>, multipleRequest: number, documentRoot?: HTMLElement, preloaded?: HTMLImageElement[]) {
+    private resumeSessionThread(rootElements: Set<HTMLElement>, processing: squared.base.AppProcessing<T>, multipleRequest: number, documentRoot?: HTMLElement, preloaded?: HTMLImageElement[]) {
         processing.initializing = false;
         const { sessionId, extensions } = processing;
         const styleElement = insertStyleSheetRule('html > body { overflow: hidden !important; }');
