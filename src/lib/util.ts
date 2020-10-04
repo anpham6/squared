@@ -644,6 +644,51 @@ export function lastItemOf<T>(value: ArrayLike<T>): Undef<T> {
     return value[value.length - 1];
 }
 
+export function minMaxOf<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, number>, operator: ">" | "<" | ">=" | "<="): [Null<T>, number] {
+    let value = predicate(list[0], 0, list),
+        result: Null<T> = null;
+    if (!isNaN(value)) {
+        result = list[0];
+    }
+    else {
+        value = operator[0] === '>' ? -Infinity : Infinity;
+    }
+    for (let i = 1, length = list.length; i < length; ++i) {
+        const item = list[i];
+        const itemValue = predicate(item, i, list);
+        if (isNaN(itemValue)) {
+            continue;
+        }
+        switch (operator) {
+            case '>':
+                if (itemValue > value) {
+                    result = item;
+                    value = itemValue;
+                }
+                break;
+            case '<':
+                if (itemValue < value) {
+                    result = item;
+                    value = itemValue;
+                }
+                break;
+            case '>=':
+                if (itemValue >= value) {
+                    result = item;
+                    value = itemValue;
+                }
+                break;
+            case '<=':
+                if (itemValue <= value) {
+                    result = item;
+                    value = itemValue;
+                }
+                break;
+        }
+    }
+    return [result, value];
+}
+
 export function hasBit(value: number, offset: number) {
     return (value & offset) === offset;
 }

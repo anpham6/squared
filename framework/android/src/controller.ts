@@ -25,7 +25,7 @@ const { formatPX, getSrcSet, hasCoords } = squared.lib.css;
 const { getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
-const { assignEmptyValue, capitalize, convertWord, hasBit, iterateArray, lastItemOf, parseMimeType, partitionArray, plainMap, withinRange } = squared.lib.util;
+const { assignEmptyValue, capitalize, convertWord, hasBit, iterateArray, lastItemOf, minMaxOf, parseMimeType, partitionArray, plainMap, withinRange } = squared.lib.util;
 
 const REGEXP_TEXTSYMBOL = /^[^\w\s\n]+[\s\n]+$/;
 
@@ -2926,8 +2926,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         let bias = 0,
             baselineCount = 0,
             tallest: Undef<T>,
-            bottom: Undef<T>,
             previous: Undef<T>,
+            bottom: UndefNull<T>,
             textBaseline: UndefNull<T>,
             textBottom: UndefNull<T>;
         if (!reverse) {
@@ -3079,14 +3079,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     break;
                                 }
                             case 'bottom':
-                                if (!bottom) {
-                                    bottom = children[0];
-                                    for (let j = 1; j < length; ++j) {
-                                        const child = children[j];
-                                        if (!child.baseline && child.linear.bottom > bottom.linear.bottom) {
-                                            bottom = child;
-                                        }
-                                    }
+                                if (bottom === undefined) {
+                                    bottom = minMaxOf(children, child => !child.baseline ? child.linear.bottom : NaN, '>')[0];
                                 }
                                 if (item === bottom) {
                                     constraintAlignTop(item, boxTop);
@@ -3330,15 +3324,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             chain.modifyBox(BOX_STANDARD.MARGIN_TOP, lastItemOf(previousRow)!.bounds.height * -1, false);
                         }
                         if (floating) {
-                            const chainTop = Math.ceil(chain.bounds.top);
-                            let checkBottom: Undef<boolean>;
-                            for (let l = previousSiblings.length - 1; l >= 0; --l) {
-                                if (chainTop < Math.floor(previousSiblings[l].bounds.bottom)) {
-                                    checkBottom = true;
-                                    break;
-                                }
-                            }
-                            if (checkBottom) {
+                            if (Math.ceil(chain.bounds.top) < minMaxOf(previousSiblings, item => Math.floor(item.bounds.bottom), '>')[1]) {
                                 aboveRowEnd = lastItemOf(previousRow)!;
                                 for (let l = previousSiblings.length - 2; l >= 0; --l) {
                                     const aboveBefore = previousSiblings[l];
@@ -3404,13 +3390,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                     else {
                         if (!aboveRowEnd || !currentRowTop) {
-                            aboveRowEnd = previousRow[0];
-                            for (let k = 1; k < q; ++k) {
-                                const item = previousRow[k];
-                                if (item.linear.bottom > aboveRowEnd.linear.bottom) {
-                                    aboveRowEnd = item;
-                                }
-                            }
+                            aboveRowEnd = minMaxOf(previousRow, item => item.linear.bottom, '>')[0]!;
                         }
                         if (!currentRowTop) {
                             currentRowTop = partition[0];

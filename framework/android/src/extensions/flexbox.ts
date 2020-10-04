@@ -273,7 +273,6 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
             const segmented: T[] = [];
             let marginBottom = 0;
             if (wrap) {
-                let previous: Undef<T[]>;
                 node.each((item: T) => {
                     if (item.hasAlign(NODE_ALIGNMENT.SEGMENTED)) {
                         const pageFlow = item.renderChildren.filter(child => child.pageFlow) as T[];
@@ -284,18 +283,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             }
                             else {
                                 item.setLayoutHeight('match_parent');
-                                if (previous) {
-                                    let largest = previous[0];
-                                    for (let j = 1, length = previous.length; j < length; ++j) {
-                                        const sibling = previous[j];
-                                        if (sibling.linear.right > largest.linear.right) {
-                                            largest = sibling;
-                                        }
-                                    }
-                                    item.constraint.horizontal = true;
-                                }
                                 chainVertical.push(pageFlow);
-                                previous = pageFlow;
                             }
                             segmented.push(item);
                         }
