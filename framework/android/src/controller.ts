@@ -27,7 +27,7 @@ const { truncate } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
 const { assignEmptyValue, capitalize, convertWord, hasBit, iterateArray, lastItemOf, minMaxOf, parseMimeType, partitionArray, plainMap, withinRange } = squared.lib.util;
 
-const REGEXP_TEXTSYMBOL = /^[^\w\s\n]+[\s\n]+$/;
+const REGEXP_TEXTSYMBOL = /^[^\w\s]+\s+$/;
 
 function sortHorizontalFloat(list: View[]) {
     list.sort((a, b) => {

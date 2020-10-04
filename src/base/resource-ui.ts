@@ -31,7 +31,7 @@ const PATTERN_COLORSTOP = `${PATTERN_COLOR}(?:\\s*(${PATTERN_COLORLENGTH})\\s*,?
 const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\([^)]+\\)|(repeating-)?(linear|radial|conic)-gradient\\(((?:to\\s+[a-z\\s]+|(?:from\\s+)?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*(?:(?:-?[\\d.]+(?:[a-z%]+)?\\s*)+)?(?:at\\s+[\\w %]+)?)?),?\\s*((?:${PATTERN_COLORSTOP})+)\\))`, 'g');
 const REGEXP_COLORSTOP = new RegExp(PATTERN_COLORSTOP, 'g');
 const REGEXP_TRAILINGINDENT = /\n([^\S\n]*)?$/;
-const CHAR_EMPTYSTRING = /^[\s\n]+$/;
+const CHAR_EMPTYSTRING = /^\s+$/;
 const CHAR_LEADINGSPACE = /^\s+/;
 const CHAR_TRAILINGSPACE = /\s+$/;
 

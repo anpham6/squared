@@ -32,7 +32,7 @@ const REGEXP_IMGSRCSET = /^(.*?)(?:\s+([\d.]+)([xw]))?$/;
 const REGEXP_CALCOPERATION = /\s+([+-]\s+|\s*[*/])\s*/;
 const REGEXP_CALCUNIT = /\s*{(\d+)}\s*/;
 const REGEXP_TRANSFORM = /(\w+)\([^)]+\)/g;
-const REGEXP_EMBASED = /\b-?[\d.]+(?:em|ch|ex)\b/;
+const REGEXP_EMBASED = /\s*-?[\d.]+(?:em|ch|ex)\s*/;
 const CHAR_SPACE = /\s+/;
 const CHAR_SEPARATOR = /\s*,\s*/;
 const CHAR_DIVIDER = /\s*\/\s*/;
@@ -3558,7 +3558,7 @@ export function calculate(value: string, options?: CalculateOptions) {
     return NaN;
 }
 
-export function parseUnit(value: string, options?: ParseUnitOptions) {
+export function parseUnit(value: string, options: ParseUnitOptions = {}) {
     const match = REGEXP_LENGTH.exec(value);
     if (match) {
         let result = parseFloat(match[1]);
@@ -3568,14 +3568,12 @@ export function parseUnit(value: string, options?: ParseUnitOptions) {
             case 'ex':
                 result /= 2;
             case 'em':
-            case 'ch': {
-                const fontSize = options && options.fontSize;
-                if (fontSize !== undefined) {
-                    return result * fontSize;
+            case 'ch':
+                if (options.fontSize !== undefined) {
+                    return result * options.fontSize;
                 }
-            }
             case 'rem':
-                return result * (options && options.fixedWidth ? DOCUMENT_FIXEDSIZE : DOCUMENT_FONTSIZE);
+                return result * (options.fixedWidth ? DOCUMENT_FIXEDSIZE : DOCUMENT_FONTSIZE);
             case 'pc':
                 result *= 12;
             case 'pt':
@@ -3589,17 +3587,13 @@ export function parseUnit(value: string, options?: ParseUnitOptions) {
             case 'in':
                 return result * getDeviceDPI();
             case 'vw':
-                return result * getInnerWidth(options?.screenDimension) / 100;
+                return result * getInnerWidth(options.screenDimension) / 100;
             case 'vh':
-                return result * getInnerHeight(options?.screenDimension) / 100;
-            case 'vmin': {
-                const screenDimension = options && options.screenDimension;
-                return result * Math.min(getInnerWidth(screenDimension), getInnerHeight(screenDimension)) / 100;
-            }
-            case 'vmax': {
-                const screenDimension = options && options.screenDimension;
-                return result * Math.max(getInnerWidth(screenDimension), getInnerHeight(screenDimension)) / 100;
-            }
+                return result * getInnerHeight(options.screenDimension) / 100;
+            case 'vmin':
+                return result * Math.min(getInnerWidth(options.screenDimension), getInnerHeight(options.screenDimension)) / 100;
+            case 'vmax':
+                return result * Math.max(getInnerWidth(options.screenDimension), getInnerHeight(options.screenDimension)) / 100;
         }
     }
     return 0;

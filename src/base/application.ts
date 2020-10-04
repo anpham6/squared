@@ -635,8 +635,8 @@ export default abstract class Application<T extends Node> implements squared.bas
                         REGEXP_DATAURI.lastIndex = 0;
                     }
                 };
-                const hasExactValue = (attr: string, value: string) => new RegExp(`\\b${attr}[\\s\\n]*:[\\s\\n]*${value}[\\s\\n]*;?`).test(cssText);
-                const hasPartialValue = (attr: string, value: string) => new RegExp(`\\b${attr}[\\s\\n]*:[^;]*?${value}[^;]*;?`).test(cssText);
+                const hasExactValue = (attr: string, value: string) => new RegExp(`\\s*${attr}\\s*:\\s*${value}\\s*;?`).test(cssText);
+                const hasPartialValue = (attr: string, value: string) => new RegExp(`\\s*${attr}\\s*:[^;]*?${value}[^;]*;?`).test(cssText);
                 const items = Array.from(cssStyle);
                 for (let i = 0, length = items.length; i < length; ++i) {
                     const attr = items[i];

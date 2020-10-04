@@ -14,7 +14,7 @@ const { APP_SECTION, NODE_RESOURCE } = squared.base.lib.constant;
 
 const { getTextMetrics } = squared.lib.dom;
 
-const REGEXP_WORD = /(?:[^\w\s\n]+[\s\n]+|(?:&#?[A-Za-z0-9]{2};[^\w]*|[^\w]+|\b)*\w+?(?:'[A-Za-z]\s*|[^\w]*&#?[A-Za-z0-9]{2};|[^\w]+|\b))/g;
+const REGEXP_WORD = /(?:[^\w\s]+\s+|(?:&#?[A-Za-z0-9]{2};[^\w]*|[^\w]+|\b)*\w+?(?:'[A-Za-z]\s*|[^\w]*&#?[A-Za-z0-9]{2};|[^\w]+|\b))/g;
 
 function getFontMeasureAdjust(node: View) {
     const value = node.dataset.androidFontMeasureAdjust;

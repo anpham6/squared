@@ -16,7 +16,7 @@ const { appendSeparator, randomUUID } = squared.base.lib.util;
 
 const STRING_SERVERROOT = '__serverroot__';
 
-const RE_SRCSET = new Pattern(/[\s\n]*(.+?\.[^\s,]+)(\s+[\d.]+[wx]\s*)?,?/g);
+const RE_SRCSET = new Pattern(/\s*(.+?\.[^\s,]+)(\s+[\d.]+[wx]\s*)?,?/g);
 
 function parseFileAs(attr: string, value: Undef<string>): Undef<[string, Undef<string>, boolean]> {
     if (value) {

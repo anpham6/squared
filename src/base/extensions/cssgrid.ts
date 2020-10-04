@@ -571,7 +571,7 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             let previousPlacement: Undef<number[]>;
             autoWidth = setAutoFill(column, node.actualWidth);
             autoHeight = setAutoFill(row, node.actualHeight);
-            node.css('gridTemplateAreas').split(/"[\s\n]+"/).forEach((template, rowStart) => {
+            node.css('gridTemplateAreas').split(/"\s+"/).forEach((template, rowStart) => {
                 if (template !== 'none') {
                     trimString(template.trim(), '"').split(/\s+/).forEach((area, columnStart) => {
                         if (area[0] !== '.') {
