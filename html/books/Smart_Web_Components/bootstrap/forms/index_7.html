@@ -1,0 +1,101 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Material Bootstrap Forms | https://www.htmlelements.com</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+	<link rel="stylesheet" type="text/css" href="../source/styles/smart.bootstrap.css" />
+	<link rel="stylesheet" type="text/css" href="styles.css" />
+	
+	<script type="text/javascript" src="../source/smart.element.js"></script>
+	<script type="text/javascript" src="../source/smart.bootstrap.js"></script>
+	<script src="index.js"></script>
+    <script src="/common/system.js"></script>
+    <script src="/common/transform.js"></script>
+    <script src="/common/babel-transform.js"></script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script src="/common/loader.js"></script>
+</head>
+<body class="smart viewport">
+
+	<h3>Select menu</h3>
+
+	<p>
+		Custom &lt;select&gt; menus need only a custom class, .select to trigger the custom styles.
+		Custom
+		styles are limited to the &lt;select&gt;’s initial appearance and cannot modify the &lt;option&gt;s
+		due to
+		browser limitatio
+	</p>
+
+	<div class="group">
+		<select class="select select-lg mb-3">
+			<option selected>Open this select menu</option>
+			<option value="1">One</option>
+			<option value="2">Two</option>
+			<option value="3">Three</option>
+		</select>
+
+		<select class="select select-sm">
+			<option selected>Open this select menu</option>
+			<option value="1">One</option>
+			<option value="2">Two</option>
+			<option value="3">Three</option>
+		</select>
+	</div>
+	
+
+	<h2>Range</h2>
+
+	<p>
+		Create custom &lt;input type="range"&gt; components with .range. The track (the background) and
+		thumb
+		(the value) are both styled to appear the same across browsers. As only IE and Firefox support
+		“filling” their track from the left or right of the thumb as a means to visually indicate progress,
+		we do not currently support it.
+	</p>
+
+	<div class="group">
+		<bootstrap-range></bootstrap-range>
+	</div>
+
+
+	<h2>File browser</h2>
+
+	<p>
+		The file input is the most gnarly of the bunch and requires additional JavaScript if you’d like to
+		hook them up with functional Choose file… and selected file name text.
+	</p>
+
+	<div class="group">
+		<div class="file">
+			<input type="file" class="file-input" id="customFile">
+			<label class="file-label" for="customFile">Choose file</label>
+		</div>
+	</div>
+
+
+	<p>
+		We hide the default file &lt;input&gt; via opacity and instead style the &lt;label&gt;. The button
+		is generated
+		and positioned with ::after. Lastly, we declare a width and height on the &lt;input&gt; for proper
+		spacing for surrounding content.
+	</p>
+	<h3>Progress</h3>
+	The "bootstrap-progress-bar" is the custom element which displays a Progress bar.
+	<div>
+		<bootstrap-progress-bar value=25 max=100 min=0></bootstrap-progress-bar><br/>
+		<bootstrap-progress-bar style-mode="info" value=50 max=100 min=0></bootstrap-progress-bar><br/>
+		<bootstrap-progress-bar style-mode="success" value=75 max=100 min=0></bootstrap-progress-bar><br/>
+		<bootstrap-progress-bar style-mode="warning" value=100 max=100 min=0></bootstrap-progress-bar><br/>
+	</div>			
+	By adding the 'striped' attribute adds stripes to the progress.
+	<div>
+		<bootstrap-progress-bar striped style-mode="danger" value=50 max=100 min=0></bootstrap-progress-bar>
+	</div>
+
+</body>
+</html>

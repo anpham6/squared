@@ -1,0 +1,156 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Material Bootstrap Modal | https://www.htmlelements.com</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+	<link rel="stylesheet" type="text/css" href="../source/styles/smart.bootstrap.css" />
+	<link rel="stylesheet" type="text/css" href="styles.css" />
+	
+	<script type="text/javascript" src="../source/smart.element.js"></script>
+	<script type="text/javascript" src="../source/smart.bootstrap.js"></script>
+	<script src="index.js"></script>
+	<script src="/common/system.js"></script>
+    <script src="/common/transform.js"></script>
+    <script src="/common/babel-transform.js"></script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script src="/common/loader.js"></script>
+</head>
+<body class="smart viewport">
+
+	<h2>Optional Sizes</h2>
+	<p>Modals have three optional sizes, available via modifier classes to be placed on a Modal
+		These sizes kick in at certain breakpoints to avoid horizontal scrollbars on narrower viewports.</p>
+
+	<table class="table table-bordered table-striped">
+		<thead>
+			<tr>
+				<th>Size</th>
+				<th>Class</th>
+				<th>Modal max-width</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td>Small</td>
+				<td><code>.modal-sm</code></td>
+				<td><code>300px</code></td>
+			</tr>
+			<tr>
+				<td>Default</td>
+				<td class="text-muted">None</td>
+				<td><code>500px</code></td>
+			</tr>
+			<tr>
+				<td>Large</td>
+				<td><code>.modal-lg</code></td>
+				<td><code>800px</code></td>
+			</tr>
+			<tr>
+				<td>Extra large</td>
+				<td><code>.modal-xl</code></td>
+				<td><code>1140px</code></td>
+			</tr>
+		</tbody>
+	</table>
+
+	<bootstrap-modal id="sizeModeModal" class="fade" style-mode="primary">
+		<div class="modal-header">
+			<h5 class="modal-title h4" id="myExtraLargeModalLabel">Extra large modal</h5>
+			<bootstrap-button  class="close" data-dismiss="modal" aria-label="Close">
+				<span aria-hidden="true">×</span>
+			</bootstrap-button>
+		</div>
+		<div class="modal-body">
+				<p>Modals have three optional sizes, available via modifier classes to be placed on a Modal
+		These sizes kick in at certain breakpoints to avoid horizontal scrollbars on narrower viewports.</p>
+
+
+		</div>
+	</bootstrap-modal>
+	<div class="group">
+		<bootstrap-button  style-mode="primary" data-toggle="modal" data-target="#sizeModeModal"
+			data-size="xl">Extra large modal</bootstrap-button>
+		<bootstrap-button  style-mode="primary" data-toggle="modal" data-target="#sizeModeModal"
+			data-size="lg">Large modal</bootstrap-button>
+		<bootstrap-button  style-mode="primary" data-toggle="modal" data-target="#sizeModeModal"
+			data-size="sm">Small modal</bootstrap-button>
+	</div>
+	
+
+	<h2>Usage</h2>
+	<p>
+		The modal plugin toggles your hidden content on demand. It also
+		adds .modal-open to the &lt;body&gt; to override default scrolling behavior and generates a
+		.modal-backdrop to provide a click area for dismissing shown modals when clicking outside the modal.
+	</p>
+
+	<h2>Properties</h2>
+	<p>The following properties are available:</p>
+
+	<table class="table table-bordered table-striped">
+		<thead>
+			<tr>
+				<th style="width: 100px;">Name</th>
+				<th style="width: 50px;">Type</th>
+				<th style="width: 50px;">Default</th>
+				<th>Description</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td>backdrop</td>
+				<td>string</code></td>
+				<td>true</td>
+				<td>Includes a modal-backdrop element. Alternatively, specify <code>static</code> for a
+					backdrop which doesn't close the modal on click or 'none' if you don't want to have a
+					.modal-backdrop element.</td>
+			</tr>
+			<tr>
+				<td>focus</td>
+				<td>boolean</code></td>
+				<td>true</td>
+				<td>Puts the modal in focus if true.</td>
+			</tr>
+			<tr>
+				<td>keyboard</td>
+				<td>boolean</td>
+				<td>true</td>
+				<td>Closes the modal when escape key is pressed</td>
+			</tr>
+			<tr>
+				<td>opened</td>
+				<td>boolean</td>
+				<td>false</td>
+				<td>Shows the modal when initialized.</td>
+			</tr>
+			<tr>
+				<td>centered</td>
+				<td>boolean</td>
+				<td>false</td>
+				<td>Determines if the Modal is center or not.</td>
+			</tr>
+			<tr>
+				<td>scrollable</td>
+				<td>boolean</td>
+				<td>false</td>
+				<td>Determines if the Modal's body is scrollable or not.</td>
+			</tr>
+			<tr>
+				<td>sizeMode</td>
+				<td>string</td>
+				<td>''</td>
+				<td>Determines the size of the modal. Possible values are: 'xl', 'lg', 'sm', ''. Empty
+					string is the default size ( medium ).</td>
+			</tr>
+		</tbody>
+	</table>
+
+	<p>Proeprties can be set as attributes on the Tag of the HTML element or during the window.onload stage
+		via Javascript.</p>
+
+</body>
+</html>

@@ -1,0 +1,105 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Material Bootstrap Forms | https://www.htmlelements.com</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+	<link rel="stylesheet" type="text/css" href="../source/styles/smart.bootstrap.css" />
+	<link rel="stylesheet" type="text/css" href="styles.css" />
+	
+	<script type="text/javascript" src="../source/smart.element.js"></script>
+	<script type="text/javascript" src="../source/smart.bootstrap.js"></script>
+	<script src="index.js"></script>
+    <script src="/common/system.js"></script>
+    <script src="/common/transform.js"></script>
+    <script src="/common/babel-transform.js"></script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script src="/common/loader.js"></script>
+</head>
+<body class="smart viewport">
+
+	<h2>Sizing</h2>
+
+	<p>Set heights using classes like .form-component-lg and .form-component-sm.</p>
+
+	<div class="group">
+		<input class="form-component form-component-lg" type="text" placeholder=".form-component-lg">
+		<input class="form-component" type="text" placeholder="Default input">
+		<input class="form-component form-component-sm" type="text" placeholder=".form-component-sm">
+	</div>
+	
+	<div class="group">
+		<select class="form-component form-component-lg">
+			<option>Large select</option>
+		</select>
+		<select class="form-component">
+			<option>Default select</option>
+		</select>
+		<select class="form-component form-component-sm">
+			<option>Small select</option>
+		</select>
+	</div>
+	
+
+	<h2>Readonly plain text</h2>
+
+	<p>
+		If you want to have &lt;input readonly&gt; elements in your form styled as plain text, use the
+		.form-component-plaintext class to remove the default form field styling and preserve the correct
+		margin and padding.
+	</p>
+
+	<div class="group">
+		<form>
+			<div class="form-group row">
+				<label for="staticEmail" class="col-sm-2 col-form-label">Email</label>
+				<div class="col-sm-10">
+					<input type="text" readonly class="form-component-plaintext" id="staticEmail"
+						value="email@example.com">
+				</div>
+			</div>
+			<div class="form-group row">
+				<label for="inputPassword" class="col-sm-2 col-form-label">Password</label>
+				<div class="col-sm-10">
+					<input type="password" class="form-component" id="inputPassword" placeholder="Password">
+				</div>
+			</div>
+		</form>
+	</div>
+	
+	<div class="group">
+		<form class="form-inline">
+			<div class="form-group mb-2">
+				<label for="staticEmail2" class="sr-only">Email</label>
+				<input type="text" readonly class="form-component-plaintext" id="staticEmail2"
+					value="email@example.com">
+			</div>
+			<div class="form-group mx-sm-3 mb-2">
+				<label for="inputPassword2" class="sr-only">Password</label>
+				<input type="password" class="form-component" id="inputPassword2" placeholder="Password">
+			</div>
+			<button type="submit" class="button button-info mb-2">Confirm identity</button>
+		</form>
+	</div>
+
+
+	<h2>Range Inputs</h2>
+
+	<p>
+		Set horizontally scrollable range inputs using .form-component-range.
+	</p>
+
+	<div class="group">
+		<form>
+			<div class="form-group">
+				<label for="formComponentRange">Example Range input</label>
+				<input type="range" class="form-component-range" id="formComponentRange">
+			</div>
+		</form>
+	</div>
+	
+</body>
+</html>

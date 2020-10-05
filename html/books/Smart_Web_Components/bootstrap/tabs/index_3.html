@@ -1,0 +1,250 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Material Bootstrap Tabs | https://www.htmlelements.com</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+	<link rel="stylesheet" type="text/css" href="../source/styles/smart.bootstrap.css" />
+	<link rel="stylesheet" type="text/css" href="styles.css" />
+	
+	<script type="text/javascript" src="../source/smart.element.js"></script>
+	<script type="text/javascript" src="../source/smart.bootstrap.js"></script>
+	<script src="index.js"></script>
+    <script src="/common/system.js"></script>
+    <script src="/common/transform.js"></script>
+    <script src="/common/babel-transform.js"></script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script src="/common/loader.js"></script>
+</head>
+<body class="smart viewport">
+
+	<h2>Dynamic Tabs</h2>
+
+	<p>
+		Dynamic tabbed interfaces, as described in the WAI ARIA Authoring Practices, require role="tablist",
+		role="tab", role="tabpanel", and additional aria- attributes in order to convey their structure,
+		functionality and current state to users of assistive technologies (such as screen readers).
+
+		Note that dynamic tabbed interfaces should not contain dropdown menus, as this causes both usability
+		and accessibility issues. From a usability perspective, the fact that the currently displayed tab’s
+		trigger element is not immediately visible (as it’s inside the closed dropdown menu) can cause
+		confusion. From an accessibility point of view, there is currently no sensible way to map this sort
+		of construct to a standard WAI ARIA pattern, meaning that it cannot be easily made understandable to
+		users of assistive technologies.
+	</p>
+
+	<div class="group">
+		<bootstrap-tabs role="tablist">
+			<a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab"
+				aria-controls="home" aria-selected="true">Home</a>
+			<a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab"
+				aria-controls="profile" aria-selected="false">Profile</a>
+			<a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab"
+				aria-controls="contact" aria-selected="false">Contact</a>
+		</bootstrap-tabs>
+		<div class="tab-content" id="myTabContent">
+			<div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+				Raw denim you probably haven't heard of them jean shorts Austin. Nesciunt tofu stumptown
+				aliqua, retro synth master cleanse. Mustache cliche tempor, williamsburg carles vegan
+				helvetica. Reprehenderit butcher retro keffiyeh dreamcatcher synth.
+			</div>
+			<div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+				Food truck fixie locavore, accusamus mcsweeney's marfa nulla single-origin coffee squid.
+				Exercitation +1 labore velit, blog sartorial PBR leggings next level wes anderson
+				artisan four loko farm-to-table craft beer twee. Qui photo booth letterpress, commodo
+				enim craft beer mlkshk aliquip jean shorts ullamco ad vinyl cillum PBR. Homo nostrud
+				organic, assumenda labore aesthetic magna delectus mollit. Keytar helvetica VHS salvia
+				yr, vero magna velit sapiente labore stumptown. Vegan fanny pack odio cillum wes
+				anderson 8-bit, sustainable jean shorts beard ut DIY ethical culpa terry richardson
+				biodiesel. Art party scenester stumptown, tumblr butcher vero sint qui sapiente
+				accusamus tattooed echo park.
+			</div>
+			<div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
+				Etsy mixtape wayfarers, ethical wes anderson tofu before they sold out mcsweeney's
+				organic lomo retro fanny pack lo-fi farm-to-table readymade. Messenger bag gentrify
+				pitchfork tattooed craft beer, iphone skateboard locavore carles etsy salvia banksy
+				hoodie helvetica. DIY synth PBR banksy irony. Leggings gentrify squid 8-bit cred
+				pitchfork. Williamsburg banh mi whatever gluten-free, carles pitchfork biodiesel fixie
+				etsy retro mlkshk vice blog. Scenester cred you probably haven't heard of them, vinyl
+				craft beer blog stumptown. Pitchfork sustainable tofu synth chambray yr.
+			</div>
+		</div>
+
+	</div>
+
+
+	<p>Dynamic Tabs also works with pills:</p>
+
+	<div class="group">
+		<bootstrap-tabs role="tablist" tab-type="pills">
+			<a class="nav-link active" id="pills-home-tab" data-toggle="pill" href="#pills-home" role="tab"
+				aria-controls="pills-home" aria-selected="true">Home</a>
+			<a class="nav-link" id="pills-profile-tab" data-toggle="pill" href="#pills-profile" role="tab"
+				aria-controls="pills-profile" aria-selected="false">Profile</a>
+			<a class="nav-link" id="pills-contact-tab" data-toggle="pill" href="#pills-contact" role="tab"
+				aria-controls="pills-contact" aria-selected="false">Contact</a>
+		</bootstrap-tabs>
+		<div class="tab-content" id="pills-tabContent">
+			<div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab">
+				Raw denim you probably haven't heard of them jean shorts Austin. Nesciunt tofu stumptown
+				aliqua, retro synth master cleanse. Mustache cliche tempor, williamsburg carles vegan
+				helvetica. Reprehenderit butcher retro keffiyeh dreamcatcher synth.
+			</div>
+			<div class="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab">
+				Food truck fixie locavore, accusamus mcsweeney's marfa nulla single-origin coffee squid.
+				Exercitation +1 labore velit, blog sartorial PBR leggings next level wes anderson
+				artisan four loko farm-to-table craft beer twee. Qui photo booth letterpress, commodo
+				enim craft beer mlkshk aliquip jean shorts ullamco ad vinyl cillum PBR. Homo nostrud
+				organic, assumenda labore aesthetic magna delectus mollit. Keytar helvetica VHS salvia
+				yr, vero magna velit sapiente labore stumptown. Vegan fanny pack odio cillum wes
+				anderson 8-bit, sustainable jean shorts beard ut DIY ethical culpa terry richardson
+				biodiesel. Art party scenester stumptown, tumblr butcher vero sint qui sapiente
+				accusamus tattooed echo park.
+			</div>
+			<div class="tab-pane fade" id="pills-contact" role="tabpanel" aria-labelledby="pills-contact-tab">
+				Etsy mixtape wayfarers, ethical wes anderson tofu before they sold out mcsweeney's
+				organic lomo retro fanny pack lo-fi farm-to-table readymade. Messenger bag gentrify
+				pitchfork tattooed craft beer, iphone skateboard locavore carles etsy salvia banksy
+				hoodie helvetica. DIY synth PBR banksy irony. Leggings gentrify squid 8-bit cred
+				pitchfork. Williamsburg banh mi whatever gluten-free, carles pitchfork biodiesel fixie
+				etsy retro mlkshk vice blog. Scenester cred you probably haven't heard of them, vinyl
+				craft beer blog stumptown. Pitchfork sustainable tofu synth chambray yr.
+			</div>
+		</div>
+
+	</div>
+	</section>
+	<div class="smart">
+	<div class="group">
+			<bootstrap-tabs role="tablist">
+				<a class="nav-link active" id="home-tab" data-toggle="tab" href="#home2" role="tab"
+					aria-controls="home2" aria-selected="true">Home</a>
+				<a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile2" role="tab"
+					aria-controls="profile2" aria-selected="false">Profile</a>
+				<a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact2" role="tab"
+					aria-controls="contact2" aria-selected="false">Contact</a>
+			</bootstrap-tabs>
+			<div class="tab-content" id="myTabContent">
+				<div class="tab-pane fade show active" id="home2" role="tabpanel" aria-labelledby="home-tab">
+					Content 1
+				</div>
+				<div class="tab-pane fade" id="profile2" role="tabpanel" aria-labelledby="profile-tab">
+					Content 2
+				</div>
+				<div class="tab-pane fade" id="contact2" role="tabpanel" aria-labelledby="contact-tab">
+					Content 3
+				</div>
+			</div>
+		</div>
+		<div class="group">
+			<bootstrap-tabs style-mode="success" role="tablist">
+				<a class="nav-link active" id="home-tab" data-toggle="tab" href="#home3" role="tab"
+					aria-controls="home3" aria-selected="true">Home</a>
+				<a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile3" role="tab"
+					aria-controls="profile3" aria-selected="false">Profile</a>
+				<a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact3" role="tab"
+					aria-controls="contact3" aria-selected="false">Contact</a>
+			</bootstrap-tabs>
+			<div class="tab-content" id="myTabContent">
+				<div class="tab-pane fade show active" id="home3" role="tabpanel" aria-labelledby="home-tab">
+					Content 1
+				</div>
+				<div class="tab-pane fade" id="profile3" role="tabpanel" aria-labelledby="profile-tab">
+					Content 2
+				</div>
+				<div class="tab-pane fade" id="contact3" role="tabpanel" aria-labelledby="contact-tab">
+					Content 3
+				</div>
+			</div>
+		</div>	
+		<div class="group">
+			<bootstrap-tabs style-mode="info" role="tablist">
+				<a class="nav-link active" id="home-tab" data-toggle="tab" href="#home4" role="tab"
+					aria-controls="home2" aria-selected="true">Home</a>
+				<a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile4" role="tab"
+					aria-controls="profile2" aria-selected="false">Profile</a>
+				<a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact4" role="tab"
+					aria-controls="contact2" aria-selected="false">Contact</a>
+			</bootstrap-tabs>
+			<div class="tab-content" id="myTabContent">
+				<div class="tab-pane fade show active" id="home4" role="tabpanel" aria-labelledby="home-tab">
+					Content 1
+				</div>
+				<div class="tab-pane fade" id="profile4" role="tabpanel" aria-labelledby="profile-tab">
+					Content 2
+				</div>
+				<div class="tab-pane fade" id="contact4" role="tabpanel" aria-labelledby="contact-tab">
+					Content 3
+				</div>
+			</div>
+		</div>	
+		<div class="group">
+			<bootstrap-tabs style-mode="secondary" role="tablist">
+				<a class="nav-link active" id="home-tab" data-toggle="tab" href="#home5" role="tab"
+					aria-controls="home5" aria-selected="true">Home</a>
+				<a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile5" role="tab"
+					aria-controls="profile5" aria-selected="false">Profile</a>
+				<a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact5" role="tab"
+					aria-controls="contact5" aria-selected="false">Contact</a>
+			</bootstrap-tabs>
+			<div class="tab-content" id="myTabContent">
+				<div class="tab-pane fade show active" id="home5" role="tabpanel" aria-labelledby="home-tab">
+					Content 1
+				</div>
+				<div class="tab-pane fade" id="profile5" role="tabpanel" aria-labelledby="profile-tab">
+					Content 5
+				</div>
+				<div class="tab-pane fade" id="contact5" role="tabpanel" aria-labelledby="contact-tab">
+					Content 3
+				</div>
+			</div>
+		</div>					
+		<div class="group">
+			<bootstrap-tabs style-mode="error" role="tablist">
+				<a class="nav-link active" id="home-tab" data-toggle="tab" href="#home6" role="tab"
+					aria-controls="home6" aria-selected="true">Home</a>
+				<a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile6" role="tab"
+					aria-controls="profile6" aria-selected="false">Profile</a>
+				<a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact6" role="tab"
+					aria-controls="contact6" aria-selected="false">Contact</a>
+			</bootstrap-tabs>
+			<div class="tab-content" id="myTabContent">
+				<div class="tab-pane fade show active" id="home6" role="tabpanel" aria-labelledby="home-tab">
+					Content 1
+				</div>
+				<div class="tab-pane fade" id="profile6" role="tabpanel" aria-labelledby="profile-tab">
+					Content 2
+				</div>
+				<div class="tab-pane fade" id="contact6" role="tabpanel" aria-labelledby="contact-tab">
+					Content 3
+				</div>
+			</div>
+		</div>		
+		<div class="group">
+			<bootstrap-tabs style-mode="warning" role="tablist">
+				<a class="nav-link active" id="home-tab" data-toggle="tab" href="#home7" role="tab"
+					aria-controls="home7" aria-selected="true">Home</a>
+				<a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile7" role="tab"
+					aria-controls="profile7" aria-selected="false">Profile</a>
+				<a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact7" role="tab"
+					aria-controls="contact7" aria-selected="false">Contact</a>
+			</bootstrap-tabs>
+			<div class="tab-content" id="myTabContent">
+				<div class="tab-pane fade show active" id="home7" role="tabpanel" aria-labelledby="home-tab">
+					Content 1
+				</div>
+				<div class="tab-pane fade" id="profile7" role="tabpanel" aria-labelledby="profile-tab">
+					Content 2
+				</div>
+				<div class="tab-pane fade" id="contact7" role="tabpanel" aria-labelledby="contact-tab">
+					Content 3
+				</div>
+			</div>
+		</div>					
+	</div>		
+
+</body>
+</html>

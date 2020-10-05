@@ -1,0 +1,146 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Material Bootstrap Tabs | https://www.htmlelements.com</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+	<link rel="stylesheet" type="text/css" href="../source/styles/smart.bootstrap.css" />
+	<link rel="stylesheet" type="text/css" href="styles.css" />
+	
+	<script type="text/javascript" src="../source/smart.element.js"></script>
+	<script type="text/javascript" src="../source/smart.bootstrap.js"></script>
+	<script src="index.js"></script>
+    <script src="/common/system.js"></script>
+    <script src="/common/transform.js"></script>
+    <script src="/common/babel-transform.js"></script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script src="/common/loader.js"></script>
+</head>
+<body class="smart viewport">
+
+	<h3>Tabs</h3>
+
+	<p>Here's the default appearance of the Smart's core Tabs control. Setting the <b>tabType</b>
+		property to 'tabs' will also change the the element to it's default state.</p>
+
+	<div class="group">
+		<bootstrap-tabs>
+			<a class="active" href="#">Active</a>
+			<a href="#">Link</a>
+			<a href="#">Link</a>
+			<a class="disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
+		</bootstrap-tabs>
+	</div>
+	
+	
+
+	<h3>Pills</h3>
+
+	<p>Pills is the third appearance of the Tab control. Changing the <b>tabType</b> property to 'pills' in
+		order to change the appearance of the element.</p>
+
+	<div class="group">
+		<bootstrap-tabs tab-type="pills">
+			<a class="active" href="#">Active</a>
+			<a href="#">Link</a>
+			<a href="#">Link</a>
+			<a class="disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
+		</bootstrap-tabs>
+	</div>
+
+
+	<h2>Fill and justify</h2>
+
+	<p>
+		Force your Tab contents to extend the full available width one of two modifier classes. To
+		proportionately fill all available space with your .nav-items, set the <b>fill</b> property. Notice
+		that all
+		horizontal space is occupied, but not every nav item has the same width.
+	</p>
+
+	<div class="group">
+		<bootstrap-tabs tab-type="pills" fill>
+			<a class="active" href="#">Active</a>
+			<a href="#">Much longer nav link</a>
+			<a href="#">Link</a>
+			<a class="disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
+		</bootstrap-tabs>
+	</div>
+
+
+
+	<p>
+		For equal-width elements, set the <b>justified</b> property. All horizontal space will be occupied
+		by nav links,
+		but unlike the <b>fill</b> above, every nav item will be the same width.
+	</p>
+
+	<div class="group">
+		<bootstrap-tabs tab-type="pills" justified>
+			<a class="active" href="#">Active</a>
+			<a href="#">Much longer nav link</a>
+			<a href="#">Link</a>
+			<a class="disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
+		</bootstrap-tabs>
+	</div>
+
+
+	<h2>Regarding accessibility</h2>
+
+	<p>
+		If you’re using navs to provide a navigation bar, be sure to add a role="navigation" to the element.
+
+		Note that navigation bars, even if visually styled as tabs with the <b>tabType="tabs"</b> property,
+		should not be given role="tablist", role="tab" or role="tabpanel" attributes. These are
+		only appropriate for dynamic tabbed interfaces, as described in the WAI ARIA Authoring
+		Practices. See JavaScript behavior for dynamic tabbed interfaces in this section for an
+		example.
+	</p>
+
+	<h2>Using dropdowns</h2>
+
+	<p>
+		Tabs with dropdowns
+	</p>
+
+	<div class="group">
+		<bootstrap-tabs>
+			<a class="active" href="#">Active</a>
+			<bootstrap-drop-down label="Dropdown" label-type="a" style-mode="">
+				<a class="dropdown-item" href="#">Action</a>
+				<a class="dropdown-item" href="#">Another action</a>
+				<a class="dropdown-item" href="#">Something else here</a>
+				<div class="dropdown-divider"></div>
+				<a class="dropdown-item" href="#">Separated link</a>
+			</bootstrap-drop-down>
+			<a href="#">Link</a>
+			<a class="disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
+		</bootstrap-tabs>
+	</div>
+	
+
+	<p>
+		Pills with dropdowns
+	</p>
+
+	<div class="group">
+		<bootstrap-tabs tab-type="pills">
+			<a class="active" href="#">Active</a>
+			<bootstrap-drop-down label="Dropdown" label-type="a" style-mode="">
+				<a class="dropdown-item" href="#">Action</a>
+				<a class="dropdown-item" href="#">Another action</a>
+				<a class="dropdown-item" href="#">Something else here</a>
+				<div class="dropdown-divider"></div>
+				<a class="dropdown-item" href="#">Separated link</a>
+			</bootstrap-drop-down>
+			<a href="#">Link</a>
+			<a class="disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
+		</bootstrap-tabs>
+	</div>
+
+
+</body>
+</html>

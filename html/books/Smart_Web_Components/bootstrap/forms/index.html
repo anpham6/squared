@@ -1,0 +1,98 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Material Bootstrap Forms | https://www.htmlelements.com</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+	<link rel="stylesheet" type="text/css" href="../source/styles/smart.bootstrap.css" />
+	<link rel="stylesheet" type="text/css" href="styles.css" />
+	
+	<script type="text/javascript" src="../source/smart.element.js"></script>
+	<script type="text/javascript" src="../source/smart.bootstrap.js"></script>
+	<script src="index.js"></script>
+    <script src="/common/system.js"></script>
+    <script src="/common/transform.js"></script>
+    <script src="/common/babel-transform.js"></script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script src="/common/loader.js"></script>
+</head>
+<body class="smart viewport">
+   	<h2 id="forms">Material Bootstrap Forms</h2>
+	<p>
+		Examples and usage guidelines for form component styles, layout options, and custom components for
+		creating a wide variety of forms.
+	</p>
+
+	<h2>Overview</h2>
+
+
+	<p>Here’s a quick example to demonstrate Smart.Core’s form styles. Keep reading for documentation on
+		required classes, form layout, and more.</p>
+
+	<div class="group">
+		<form>
+			<div class="form-group">
+				<label for="exampleInputEmail1">Email address</label>
+				<input type="email" class="form-component" id="exampleInputEmail1"
+					aria-describedby="emailHelp" placeholder="Enter email">
+				<small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone
+					else.</small>
+			</div>
+			<div class="form-group">
+				<label for="exampleInputPassword1">Password</label>
+				<input type="password" class="form-component" id="exampleInputPassword1"
+					placeholder="Password">
+			</div>
+			<div class="form-group form-check">
+				<input type="checkbox" class="form-check-input" id="exampleCheck1">
+				<label class="form-check-label" for="exampleCheck1">Check me out</label>
+			</div>
+			<bootstrap-button type="submit" style-mode="primary">Submit</bootstrap-button>
+		</form>
+	</div>
+
+	<h2>Form components</h2>
+
+	<p>Textual form components—like &lt;input&gt;s, &lt;select&gt;s, and &lt;textarea&gt;s—are styled with the
+		.form-component class. Included are styles for general appearance, focus state, sizing, and more.
+	</p>
+
+	<div class="group">
+		<form>
+			<div class="form-group">
+				<label for="exampleFormComponentInput1">Email address</label>
+				<input type="email" class="form-component" id="exampleFormComponentInput1"
+					placeholder="name@example.com">
+			</div>
+			<div class="form-group">
+				<label for="exampleFormComponentSelect1">Example select</label>
+				<select class="form-component" id="exampleFormComponentSelect1">
+					<option>1</option>
+					<option>2</option>
+					<option>3</option>
+					<option>4</option>
+					<option>5</option>
+				</select>
+			</div>
+			<div class="form-group">
+				<label for="exampleFormComponentSelect2">Example multiple select</label>
+				<select multiple="" class="form-component" id="exampleFormComponentSelect2">
+					<option>1</option>
+					<option>2</option>
+					<option>3</option>
+					<option>4</option>
+					<option>5</option>
+				</select>
+			</div>
+			<div class="form-group">
+				<label for="exampleFormComponentTextarea1">Example textarea</label>
+				<textarea class="form-component" id="exampleFormComponentTextarea1" rows="3"></textarea>
+			</div>
+		</form>
+	</div>
+	
+</body>
+</html>

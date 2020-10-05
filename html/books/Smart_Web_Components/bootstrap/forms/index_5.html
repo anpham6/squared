@@ -1,0 +1,152 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Material Bootstrap Forms | https://www.htmlelements.com</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+	<link rel="stylesheet" type="text/css" href="../source/styles/smart.bootstrap.css" />
+	<link rel="stylesheet" type="text/css" href="styles.css" />
+	
+	<script type="text/javascript" src="../source/smart.element.js"></script>
+	<script type="text/javascript" src="../source/smart.bootstrap.js"></script>
+	<script src="index.js"></script>
+    <script src="/common/system.js"></script>
+    <script src="/common/transform.js"></script>
+    <script src="/common/babel-transform.js"></script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script src="/common/loader.js"></script>
+</head>
+<body class="smart viewport">
+
+	<h2>Inline forms</h2>
+
+	<p>
+		Use the .form-inline class to display a series of labels, form components, and buttons on a single
+		horizontal row. Form components within inline forms vary slightly from their default states.
+	</p>
+
+	<ul>
+		<li>Components are <code class="highlighter-rouge">display: flex</code>, collapsing any HTML white
+			space and allowing you to provide alignment component with spacing and flexbox utilities.</li>
+		<li>Components and input groups receive <code class="highlighter-rouge"></code>width: auto</code> to
+			override
+			the Material Bootstrap default <code class="highlighter-rouge">width: 100%</code>.</li>
+		<li>Components <strong>only appear inline in viewports that are at least 576px wide</strong> to
+			account for narrow viewports on mobile devices.</li>
+	</ul>
+
+	<p>
+		You may need to manually address the width and alignment of individual form components with spacing
+		utilities (as shown below). Lastly, be sure to always include a &lt;label&gt; with each form
+		component, even
+		if you need to hide it from non-screenreader visitors with .sr-only.
+	</p>
+
+	<div class="group">
+		<form class="form-inline">
+			<label class="sr-only" for="inlineFormInputName2">Name</label>
+			<input type="text" class="form-component mb-2 mr-sm-2" id="inlineFormInputName2"
+				placeholder="Jane Doe">
+
+			<label class="sr-only" for="inlineFormInputGroupUsername2">Username</label>
+			<div class="input-group mb-2 mr-sm-2">
+				<div class="input-group-prepend">
+					<div class="input-group-text">@</div>
+				</div>
+				<input type="text" class="form-component" id="inlineFormInputGroupUsername2"
+					placeholder="Username">
+			</div>
+
+			<div class="form-check mb-2 mr-sm-2">
+				<input class="form-check-input" type="checkbox" id="inlineFormCheck">
+				<label class="form-check-label" for="inlineFormCheck">
+					Remember me
+				</label>
+			</div>
+
+			<button type="submit" class="button button-primary mb-2">Submit</button>
+		</form>
+	</div>
+
+	<h2>Disabled forms</h2>
+
+	<p>
+		Add the disabled boolean attribute on an input to prevent user interactions and make it appear
+		lighter.
+	</p>
+
+	<figure class="highlight">
+		<pre
+			class="prettyprint">&lt;input class="form-component" id="disabledInput" type="text" placeholder="Disabled input here..." disabled&gt;</pre>
+	</figure>
+
+	<p>Add the disabled attribute to a &lt;fieldset&gt; to disable all the components within.</p>
+
+	<div class="group">
+		<form>
+			<fieldset disabled>
+				<div class="form-group">
+					<label for="disabledTextInput">Disabled input</label>
+					<input type="text" id="disabledTextInput" class="form-component"
+						placeholder="Disabled input">
+				</div>
+				<div class="form-group">
+					<label for="disabledSelect">Disabled select menu</label>
+					<select id="disabledSelect" class="form-component">
+						<option>Disabled select</option>
+					</select>
+				</div>
+				<div class="form-group">
+					<div class="form-check">
+						<input class="form-check-input" type="checkbox" id="disabledFieldsetCheck" disabled>
+						<label class="form-check-label" for="disabledFieldsetCheck">
+							Can't check this
+						</label>
+					</div>
+				</div>
+				<button type="submit" class="button">Submit</button>
+			</fieldset>
+		</form>
+	</div>
+
+
+	<h2>Validation</h2>
+
+	<p>
+		Provide valuable, actionable feedback to your users with HTML5 form validation–available in all our
+		supported browsers. Choose from the browser default validation feedback, or implement custom
+		messages with our built-in classes and starter JavaScript.
+	</p>
+
+	<h3>How it works</h3>
+
+	<p>Here’s how form validation works with Material Bootstrap:</p>
+
+	<ul>
+		<li>HTML form validation is applied via CSS’s two pseudo-classes, <code
+				class="highlighter-rouge">:invalid</code> and <code class="highlighter-rouge">:valid</code>.
+			It applies to <code class="highlighter-rouge">&lt;input&gt;</code>, <code
+				class="highlighter-rouge">&lt;select&gt;</code>, and <code
+				class="highlighter-rouge">&lt;textarea&gt;</code> elements.</li>
+		<li>Material Bootstrap scopes the <code class="highlighter-rouge">:invalid</code> and <code
+				class="highlighter-rouge">:valid</code> styles to parent <code
+				class="highlighter-rouge">.was-validated</code> class, usually applied to the <code
+				class="highlighter-rouge">&lt;form&gt;</code>. Otherwise, any required field without a value
+			shows up as invalid on page load. This way, you may choose when to activate them (typically
+			after form submission is attempted).</li>
+		<li>To reset the appearance of the form (for instance, in the case of dynamic form submissions using
+			AJAX), remove the <code class="highlighter-rouge">.was-validated</code> class from the <code
+				class="highlighter-rouge">&lt;form&gt;</code> again after submission.</li>
+		
+		</ul>
+
+	<p>
+		With that in mind, consider the following demos for our custom form validation styles, optional
+		server side classes, and browser defaults.
+	</p>
+
+</body>
+</html>

@@ -1,0 +1,75 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Material Bootstrap Inputs Group | https://www.htmlelements.com</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+	<link rel="stylesheet" type="text/css" href="../source/styles/smart.bootstrap.css" />
+	<link rel="stylesheet" type="text/css" href="styles.css" />
+	
+	<script type="text/javascript" src="../source/smart.element.js"></script>
+	<script type="text/javascript" src="../source/smart.bootstrap.js"></script>
+    <script src="/common/system.js"></script>
+    <script src="/common/transform.js"></script>
+    <script src="/common/babel-transform.js"></script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script src="/common/loader.js"></script>
+</head>
+<body class="smart viewport">
+   	<h2 id="inputGroups">Material Bootstrap Input Groups</h2><br />
+		<p>Easily extend form controls by adding text, buttons, or button groups on either side of textual
+			inputs, custom selects, and custom file inputs.</p>
+		</br>
+
+		<h2>Basic example</h2>
+		<p>
+			Place one add-on or button on either side of an input. You may also place one on both sides of an
+			input. Remember to place &lt;label&gt;s outside the input group.
+		</p>
+
+		<div class="group">
+			<bootstrap-input-group class="mb-3">
+				<span class="input-group-text" id="basic-addon1">@</span>
+				<input type="text" class="form-component" placeholder="Username" aria-label="Username"
+					aria-describedby="basic-addon1">
+			</bootstrap-input-group>
+			<bootstrap-input-group class="mb-3">
+				<input type="text" class="form-component" placeholder="Recipient's username"
+					aria-label="Recipient's username" aria-describedby="basic-addon2">
+				<span class="input-group-text" id="basic-addon2">@example.com</span>
+			</bootstrap-input-group>
+			<label for="basic-url">Your vanity URL</label>
+			<bootstrap-input-group class="mb-3">
+				<span class="input-group-text" id="basic-addon3">https://example.com/users/</span>
+			</bootstrap-input-group>
+			<bootstrap-input-group class="mb-3">
+				<span class="input-group-text">$</span>
+				<input type="text" class="form-component" aria-label="Amount (to the nearest dollar)">
+				<span class="input-group-text">.00</span>
+			</bootstrap-input-group>
+		
+		</div>
+		<bootstrap-input-group>
+				<span class="input-group-text">With textarea</span>
+				<textarea class="form-component" aria-label="With textarea"></textarea>
+			</bootstrap-input-group>
+
+		<h2>Wrapping</h2>
+		<p>
+			Input groups wrap by default via flex-wrap: wrap in order to accommodate custom form field
+			validation within an input group. You may disable this with the <b>noWrap</b> property.
+		</p>
+
+		<div class="group">
+			<bootstrap-input-group no-wrap>
+				<span class="input-group-text" id="basic-addon1">@</span>
+				<input type="text" class="form-component" placeholder="Username" aria-label="Username"
+					aria-describedby="basic-addon1">
+			</bootstrap-input-group>
+		</div>
+
+</body>
+</html>

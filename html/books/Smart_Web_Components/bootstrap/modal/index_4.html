@@ -1,0 +1,94 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Material Bootstrap Modal | https://www.htmlelements.com</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+	<link rel="stylesheet" type="text/css" href="../source/styles/smart.bootstrap.css" />
+	<link rel="stylesheet" type="text/css" href="styles.css" />
+	
+	<script type="text/javascript" src="../source/smart.element.js"></script>
+	<script type="text/javascript" src="../source/smart.bootstrap.js"></script>
+	<script src="index.js"></script>
+	<script src="/common/system.js"></script>
+    <script src="/common/transform.js"></script>
+    <script src="/common/babel-transform.js"></script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script src="/common/loader.js"></script>
+</head>
+<body class="smart viewport">
+
+	<h2>Methods</h2>
+
+	<h3>toggle</h3>
+	<p>Manually toggles the modal. If the modal is opened this method will close it and vice versa.</p>
+	<figure class="highlight">
+		<pre class="prettyprint">document.querySelector('bootstra-modal').toggle()</pre>
+	</figure>
+
+	<h3>show</h3>
+	<p>Manually opens the modal.</p>
+	<figure class="highlight">
+		<pre class="prettyprint">document.querySelector('bootstra-modal').show()</pre>
+	</figure>
+
+	<h3>hide</h3>
+	<p>Manually opens the modal.</p>
+	<figure class="highlight">
+		<pre class="prettyprint">document.querySelector('bootstra-modal').hide()</pre>
+	</figure>
+
+	<h3>handleUpdate</h3>
+	<p>Manually readjust the modal’s position if the height of a modal changes while it is open (i.e. in
+		case a scrollbar appears).</p>
+	<figure class="highlight">
+		<pre class="prettyprint">document.querySelector('bootstra-modal').handleUpdate()</pre>
+	</figure>
+
+	<h3>dispose</h3>
+	<p>Removes the element from the DOM.</p>
+	<figure class="highlight">
+		<pre class="prettyprint">document.querySelector('bootstra-modal').dispose()</pre>
+	</figure>
+
+	<h2>Events</h2>
+
+	<p>Smart's "bootstrap-modal" class exposes a few events for hooking into modal functionality. All modal
+		events
+		are fired at the modal itself (i.e. at the &lt;bootstrap-modal&gt;)</p>
+
+	<table class="table table-bordered table-striped">
+		<thead>
+			<tr>
+				<th style="width: 150px;">Event Type</th>
+				<th>Description</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td>show</td>
+				<td>This event fires immediately when the <code>show</code> instance method is called.</td>
+			</tr>
+			<tr>
+				<td>shown</td>
+				<td>This event is fired when the modal has been made visible to the user (will wait for CSS
+					transitions to complete).</td>
+			</tr>
+			<tr>
+				<td>hide</td>
+				<td>This event is fired immediately when the <code>hide</code> instance method has been
+					called.</td>
+			</tr>
+			<tr>
+				<td>hidden</td>
+				<td>This event is fired when the modal has finished being hidden from the user (will wait
+					for CSS transitions to complete).</td>
+			</tr>
+		</tbody>
+	</table>
+
+</body>
+</html>

@@ -1,0 +1,312 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Material Bootstrap Modal | https://www.htmlelements.com</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+	<link rel="stylesheet" type="text/css" href="../source/styles/smart.bootstrap.css" />
+	<link rel="stylesheet" type="text/css" href="styles.css" />
+	
+	<script type="text/javascript" src="../source/smart.element.js"></script>
+	<script type="text/javascript" src="../source/smart.bootstrap.js"></script>
+	<script src="index.js"></script>
+	<script src="/common/system.js"></script>
+    <script src="/common/transform.js"></script>
+    <script src="/common/babel-transform.js"></script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script src="/common/loader.js"></script>
+</head>
+<body class="smart viewport">
+   	<h2 id="modal">Material Bootstrap Modal</h2>
+	<h2 id="modal">Modal</h2>
+	<p>Use Smart's Material Bootstrap JavaScript modal to add dialogs to your site for lightboxes, user
+		notifications, or completely custom content.</p>
+
+	<h2>How it works</h2>
+	<p>Before getting started with Smart.Core’s modal component, be sure to read the following as our menu
+		options have recently changed.</p>
+	<ul>
+		<li>
+			Modals are built with HTML, CSS, and JavaScript. They’re positioned over everything else in the
+			document and remove scroll from the
+
+			body so that modal content scrolls instead.
+		</li>
+		<li>
+			Clicking on the modal “backdrop” will automatically close the modal.
+		</li>
+		<li>
+			Material Bootstrap only supports one modal window at a time. Nested modals aren’t supported as we believe
+			them to be poor user experiences.
+		</li>
+		<li>
+			Modals use position: fixed, which can sometimes be a bit particular about its rendering.
+			Whenever possible, place your modal HTML in a top-level position to avoid potential interference
+			from other elements.
+			You’ll likely run into issues when nesting a .modal within another fixed element.
+		</li>
+		<li>
+			Once again, due to position: fixed, there are some caveats with using modals on mobile devices.
+			See our browser support docs for details.
+		</li>
+		<li>
+			Due to how HTML5 defines its semantics, the autofocus HTML attribute has no effect in Material Bootstrap
+			modals. To achieve the same effect, use some custom JavaScript:
+		</li>
+	</ul>
+	<p>
+		Below is a static modal example (meaning its position and display have been overridden). Included
+		are the modal header, modal body (required for padding), and modal footer (optional). We ask that
+		you include modal headers with dismiss actions whenever possible, or provide another explicit
+		dismiss action.
+	</p>
+
+	<div class="group group-modal">
+		<bootstrap-modal>
+			<div class="modal-header">
+				<h5 class="modal-title">Modal title</h5>
+				<button class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				<p>Modal body text goes here.</p>
+			</div>
+			<div class="modal-footer">
+				<bootstrap-button style-mode="secondary" data-dismiss="modal">Close</bootstrap-button>
+				<bootstrap-button style-mode="primary">Save changes</bootstrap-button>
+			</div>
+		</bootstrap-modal>
+	</div>
+	
+
+	<h2>Live demo</h2>
+
+	<p>
+		Toggle a working modal demo by clicking the button below. It will slide down and fade in from the
+		top of the page.
+	</p>
+
+	<bootstrap-modal id="exampleModalLive" class="fade">
+		<div class="modal-header">
+			<h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+			<bootstrap-button  class="close" data-dismiss="modal" aria-label="Close">
+				<span aria-hidden="true">&times;</span>
+			</bootstrap-button>
+		</div>
+		<div class="modal-body">
+			<p>Modal body text goes here.</p>
+		</div>
+		<div class="modal-footer">
+			<bootstrap-button  style-mode="secondary" data-dismiss="modal">Close</bootstrap-button>
+			<bootstrap-button  style-mode="primary">Save changes</bootstrap-button>
+		</div>
+	</bootstrap-modal>
+	<div class="group">
+		<bootstrap-button  style-mode="primary" data-toggle="modal" data-target="#exampleModalLive">
+			Launch demo modal
+		</bootstrap-button>
+	</div>
+
+
+	<h2>Scrolling long content</h2>
+
+	<p>
+		When modals become too long for the user’s viewport or device, they scroll independent of the page
+		itself. By default all modals are with auto height.
+	</p>
+
+	<bootstrap-modal id="exampleModalLong" class="fade">
+		<div class="modal-header">
+			<h5 class="modal-title" id="exampleModalLongTitle">Modal title</h5>
+			<bootstrap-button  class="close" data-dismiss="modal" aria-label="Close">
+				<span aria-hidden="true">&times;</span>
+			</bootstrap-button>
+		</div>
+		<div class="modal-body">
+			<p>Cras mattis consectetur purus sit amet fermentum. Cras justo odio, dapibus ac facilisis in,
+				egestas eget quam. Morbi leo risus, porta ac consectetur ac, vestibulum at eros.</p>
+			<p>Praesent commodo cursus magna, vel scelerisque nisl consectetur et. Vivamus sagittis lacus
+				vel augue laoreet rutrum faucibus dolor auctor.</p>
+			<p>Aenean lacinia bibendum nulla sed consectetur. Praesent commodo cursus magna, vel scelerisque
+				nisl consectetur et. Donec sed odio dui. Donec ullamcorper nulla non metus auctor fringilla.
+			</p>
+			<p>Cras mattis consectetur purus sit amet fermentum. Cras justo odio, dapibus ac facilisis in,
+				egestas eget quam. Morbi leo risus, porta ac consectetur ac, vestibulum at eros.</p>
+			<p>Praesent commodo cursus magna, vel scelerisque nisl consectetur et. Vivamus sagittis lacus
+				vel augue laoreet rutrum faucibus dolor auctor.</p>
+			<p>Aenean lacinia bibendum nulla sed consectetur. Praesent commodo cursus magna, vel scelerisque
+				nisl consectetur et. Donec sed odio dui. Donec ullamcorper nulla non metus auctor fringilla.
+			</p>
+			<p>Cras mattis consectetur purus sit amet fermentum. Cras justo odio, dapibus ac facilisis in,
+				egestas eget quam. Morbi leo risus, porta ac consectetur ac, vestibulum at eros.</p>
+			<p>Praesent commodo cursus magna, vel scelerisque nisl consectetur et. Vivamus sagittis lacus
+				vel augue laoreet rutrum faucibus dolor auctor.</p>
+			<p>Aenean lacinia bibendum nulla sed consectetur. Praesent commodo cursus magna, vel scelerisque
+				nisl consectetur et. Donec sed odio dui. Donec ullamcorper nulla non metus auctor fringilla.
+			</p>
+			<p>Cras mattis consectetur purus sit amet fermentum. Cras justo odio, dapibus ac facilisis in,
+				egestas eget quam. Morbi leo risus, porta ac consectetur ac, vestibulum at eros.</p>
+			<p>Praesent commodo cursus magna, vel scelerisque nisl consectetur et. Vivamus sagittis lacus
+				vel augue laoreet rutrum faucibus dolor auctor.</p>
+			<p>Aenean lacinia bibendum nulla sed consectetur. Praesent commodo cursus magna, vel scelerisque
+				nisl consectetur et. Donec sed odio dui. Donec ullamcorper nulla non metus auctor fringilla.
+			</p>
+			<p>Cras mattis consectetur purus sit amet fermentum. Cras justo odio, dapibus ac facilisis in,
+				egestas eget quam. Morbi leo risus, porta ac consectetur ac, vestibulum at eros.</p>
+			<p>Praesent commodo cursus magna, vel scelerisque nisl consectetur et. Vivamus sagittis lacus
+				vel augue laoreet rutrum faucibus dolor auctor.</p>
+			<p>Aenean lacinia bibendum nulla sed consectetur. Praesent commodo cursus magna, vel scelerisque
+				nisl consectetur et. Donec sed odio dui. Donec ullamcorper nulla non metus auctor fringilla.
+			</p>
+			<p>Cras mattis consectetur purus sit amet fermentum. Cras justo odio, dapibus ac facilisis in,
+				egestas eget quam. Morbi leo risus, porta ac consectetur ac, vestibulum at eros.</p>
+			<p>Praesent commodo cursus magna, vel scelerisque nisl consectetur et. Vivamus sagittis lacus
+				vel augue laoreet rutrum faucibus dolor auctor.</p>
+			<p>Aenean lacinia bibendum nulla sed consectetur. Praesent commodo cursus magna, vel scelerisque
+				nisl consectetur et. Donec sed odio dui. Donec ullamcorper nulla non metus auctor fringilla.
+			</p>
+		</div>
+		<div class="modal-footer">
+			<bootstrap-button  style-mode="secondary" data-dismiss="modal">Close</bootstrap-button>
+			<bootstrap-button  style-mode="primary">Save changes</bootstrap-button>
+		</div>
+	</bootstrap-modal>
+	<div class="group">
+		<bootstrap-button  style-mode="primary" data-toggle="modal" data-target="#exampleModalLong">
+			Launch demo modal
+		</bootstrap-button>
+	</div>
+	
+
+	<p>
+		You can also create a scrollable modal that allows scroll the modal body by setting the
+		<b>scrollable</b> property:
+	</p>
+
+	<bootstrap-modal id="exampleModalScrollable" class="fade" scrollable>
+		<div class="modal-header">
+			<h5 class="modal-title" id="exampleModalLongTitle">Modal title</h5>
+			<bootstrap-button  class="close" data-dismiss="modal" aria-label="Close">
+				<span aria-hidden="true">&times;</span>
+			</bootstrap-button>
+		</div>
+		<div class="modal-body">
+			<p>Cras mattis consectetur purus sit amet fermentum. Cras justo odio, dapibus ac facilisis in,
+				egestas eget quam. Morbi leo risus, porta ac consectetur ac, vestibulum at eros.</p>
+			<p>Praesent commodo cursus magna, vel scelerisque nisl consectetur et. Vivamus sagittis lacus
+				vel augue laoreet rutrum faucibus dolor auctor.</p>
+			<p>Aenean lacinia bibendum nulla sed consectetur. Praesent commodo cursus magna, vel scelerisque
+				nisl consectetur et. Donec sed odio dui. Donec ullamcorper nulla non metus auctor fringilla.
+			</p>
+			<p>Cras mattis consectetur purus sit amet fermentum. Cras justo odio, dapibus ac facilisis in,
+				egestas eget quam. Morbi leo risus, porta ac consectetur ac, vestibulum at eros.</p>
+			<p>Praesent commodo cursus magna, vel scelerisque nisl consectetur et. Vivamus sagittis lacus
+				vel augue laoreet rutrum faucibus dolor auctor.</p>
+			<p>Aenean lacinia bibendum nulla sed consectetur. Praesent commodo cursus magna, vel scelerisque
+				nisl consectetur et. Donec sed odio dui. Donec ullamcorper nulla non metus auctor fringilla.
+			</p>
+			<p>Cras mattis consectetur purus sit amet fermentum. Cras justo odio, dapibus ac facilisis in,
+				egestas eget quam. Morbi leo risus, porta ac consectetur ac, vestibulum at eros.</p>
+			<p>Praesent commodo cursus magna, vel scelerisque nisl consectetur et. Vivamus sagittis lacus
+				vel augue laoreet rutrum faucibus dolor auctor.</p>
+			<p>Aenean lacinia bibendum nulla sed consectetur. Praesent commodo cursus magna, vel scelerisque
+				nisl consectetur et. Donec sed odio dui. Donec ullamcorper nulla non metus auctor fringilla.
+			</p>
+			<p>Cras mattis consectetur purus sit amet fermentum. Cras justo odio, dapibus ac facilisis in,
+				egestas eget quam. Morbi leo risus, porta ac consectetur ac, vestibulum at eros.</p>
+			<p>Praesent commodo cursus magna, vel scelerisque nisl consectetur et. Vivamus sagittis lacus
+				vel augue laoreet rutrum faucibus dolor auctor.</p>
+			<p>Aenean lacinia bibendum nulla sed consectetur. Praesent commodo cursus magna, vel scelerisque
+				nisl consectetur et. Donec sed odio dui. Donec ullamcorper nulla non metus auctor fringilla.
+			</p>
+			<p>Cras mattis consectetur purus sit amet fermentum. Cras justo odio, dapibus ac facilisis in,
+				egestas eget quam. Morbi leo risus, porta ac consectetur ac, vestibulum at eros.</p>
+			<p>Praesent commodo cursus magna, vel scelerisque nisl consectetur et. Vivamus sagittis lacus
+				vel augue laoreet rutrum faucibus dolor auctor.</p>
+			<p>Aenean lacinia bibendum nulla sed consectetur. Praesent commodo cursus magna, vel scelerisque
+				nisl consectetur et. Donec sed odio dui. Donec ullamcorper nulla non metus auctor fringilla.
+			</p>
+			<p>Cras mattis consectetur purus sit amet fermentum. Cras justo odio, dapibus ac facilisis in,
+				egestas eget quam. Morbi leo risus, porta ac consectetur ac, vestibulum at eros.</p>
+			<p>Praesent commodo cursus magna, vel scelerisque nisl consectetur et. Vivamus sagittis lacus
+				vel augue laoreet rutrum faucibus dolor auctor.</p>
+			<p>Aenean lacinia bibendum nulla sed consectetur. Praesent commodo cursus magna, vel scelerisque
+				nisl consectetur et. Donec sed odio dui. Donec ullamcorper nulla non metus auctor fringilla.
+			</p>
+		</div>
+		<div class="modal-footer">
+			<bootstrap-button  style-mode="secondary" data-dismiss="modal">Close</bootstrap-button>
+			<bootstrap-button  style-mode="primary">Save changes</bootstrap-button>
+		</div>
+	</bootstrap-modal>
+	<div class="group">
+		<bootstrap-button  style-mode="primary" data-toggle="modal"
+			data-target="#exampleModalScrollable">
+			Launch demo modal
+		</bootstrap-button>
+	</div>
+
+
+	<h2>Vertically centered</h2>
+
+	<p>
+		Add the <b>centered</b> property to vertically center the modal.
+	</p>
+
+	<bootstrap-modal id="exampleModalCenter" class="fade" centered>
+		<div class="modal-header">
+			<h5 class="modal-title">Modal title</h5>
+			<bootstrap-button  class="close" data-dismiss="modal" aria-label="Close">
+				<span aria-hidden="true">&times;</span>
+			</bootstrap-button>
+		</div>
+		<div class="modal-body">
+			<p>Cras mattis consectetur purus sit amet fermentum. Cras justo odio, dapibus ac facilisis in,
+				egestas eget quam. Morbi leo risus, porta ac consectetur ac, vestibulum at eros.</p>
+		</div>
+		<div class="modal-footer">
+			<bootstrap-button  style-mode="secondary" data-dismiss="modal">Close</bootstrap-button>
+			<bootstrap-button  style-mode="primary">Save changes</bootstrap-button>
+		</div>
+	</bootstrap-modal>
+	<bootstrap-modal id="exampleModalScrollableCenter" class="fade" centered scrollable>
+		<div class="modal-header">
+			<h5 class="modal-title">Modal title</h5>
+			<bootstrap-button  class="close" data-dismiss="modal" aria-label="Close">
+				<span aria-hidden="true">&times;</span>
+			</bootstrap-button>
+		</div>
+		<div class="modal-body">
+			<p>Cras mattis consectetur purus sit amet fermentum. Cras justo odio, dapibus ac facilisis in,
+				egestas eget quam. Morbi leo risus, porta ac consectetur ac, vestibulum at eros.</p>
+			<p>Praesent commodo cursus magna, vel scelerisque nisl consectetur et. Vivamus sagittis lacus
+				vel augue laoreet rutrum faucibus dolor auctor.</p>
+			<p>Aenean lacinia bibendum nulla sed consectetur. Praesent commodo cursus magna, vel scelerisque
+				nisl consectetur et. Donec sed odio dui. Donec ullamcorper nulla non metus auctor fringilla.
+			</p>
+			<p>Cras mattis consectetur purus sit amet fermentum. Cras justo odio, dapibus ac facilisis in,
+				egestas eget quam. Morbi leo risus, porta ac consectetur ac, vestibulum at eros.</p>
+			<p>Praesent commodo cursus magna, vel scelerisque nisl consectetur et. Vivamus sagittis lacus
+				vel augue laoreet rutrum faucibus dolor auctor.</p>
+		</div>
+		<div class="modal-footer">
+			<bootstrap-button  style-mode="secondary" data-dismiss="modal">Close</bootstrap-button>
+			<bootstrap-button  style-mode="primary">Save changes</bootstrap-button>
+		</div>
+	</bootstrap-modal>
+	<div class="group">
+		<bootstrap-button  style-mode="primary" data-toggle="modal" data-target="#exampleModalCenter">
+			Vertically centered modal
+		</bootstrap-button>
+		<bootstrap-button  style-mode="primary" data-toggle="modal"
+			data-target="#exampleModalScrollableCenter">
+			Vertically centered scrollable modal
+		</bootstrap-button>
+	</div>
+
+</body>
+</html>
