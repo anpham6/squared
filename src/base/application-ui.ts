@@ -1572,13 +1572,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             styleMap.content ||= getStyle(element, pseudoElt).getPropertyValue('content') || (pseudoElt === '::before' ? 'open-quote' : 'close-quote');
         }
         if (styleMap) {
-            styleMap.position ||= 'static';
-            styleMap.display ||= 'inline';
             let value = styleMap.content;
             if (value) {
+                const absolute = hasCoords(styleMap.position ||= 'static');
+                if (absolute && styleMap.opacity && parseFloat(styleMap.opacity) <= 0) {
+                    return;
+                }
                 const textContent = trimBoth(value, '"');
                 if (!isString(textContent)) {
-                    const absolute = hasCoords(styleMap.position);
                     if (pseudoElt === '::after') {
                         const checkPseudoAfter = (sibling: Element) => sibling.nodeName === '#text' && !/\s+$/.test(sibling.textContent!);
                         if ((absolute || textContent === '' || !checkPseudoAfter(element.lastChild as Element)) && !checkPseudoDimension(styleMap, true, absolute)) {
@@ -1779,6 +1780,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
                 if (content !== '' || value === '""') {
+                    styleMap.display ||= 'inline';
                     tagName ||= /^(inline|table)/.test(styleMap.display) ? 'span' : 'div';
                     const pseudoElement = document.createElement(tagName);
                     pseudoElement.className = '__squared.pseudo';
@@ -1795,10 +1797,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             const image = this.resourceHandler.getImage(content);
                             if (image) {
                                 if (image.width) {
-                                    styleMap.width ||= formatPX(image.width);
+                                    styleMap.width ||= image.width + 'px';
                                 }
                                 if (image.height) {
-                                    styleMap.height ||= formatPX(image.height);
+                                    styleMap.height ||= image.height + 'px';
                                 }
                             }
                         }

@@ -26,8 +26,8 @@ export const FILE = {
 export const CSS = {
     URL: /^\s*url\((.+)\)\s*$/,
     HEX: /^#[A-Fa-f\d]{3,8}$/,
-    RGBA: /rgba?\((\d+),\s+(\d+),\s+(\d+)(?:,\s+([\d.]+%?))?\)/,
-    HSLA: /hsla?\((\d+),\s+(\d+)%,\s+(\d+)%(?:,\s+([\d.]+%?))?\)/,
+    RGBA: /rgba?\(\s*(\d+),\s+(\d+),\s+(\d+)(?:,\s+([\d.]+%?)\s*)?\)/,
+    HSLA: /hsla?\(\s*(\d+),\s+(\d+)%,\s+(\d+)%(?:,\s+([\d.]+%?)\s*)?\)/,
     SELECTOR_G: new RegExp(`\\s*((?:${STRING.CSS_SELECTOR_ATTR}|${STRING.CSS_SELECTOR_PSEUDO_CLASS}|${STRING.CSS_SELECTOR_PSEUDO_ELEMENT}|${STRING.CSS_SELECTOR_LABEL})+|[>~+*])\\s*`, 'g'),
     SELECTOR_LABEL: new RegExp(STRING.CSS_SELECTOR_LABEL),
     SELECTOR_PSEUDO_ELEMENT: new RegExp(STRING.CSS_SELECTOR_PSEUDO_ELEMENT),

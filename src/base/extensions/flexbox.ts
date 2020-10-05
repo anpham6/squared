@@ -32,7 +32,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
     }
 
     public processNode(node: T) {
-        const [children, absolute] = partitionArray(node.children, (item: T) => item.pageFlow) as [T[], T[]];
+        const [children, absolute] = partitionArray(node.children, (item: T) => item.pageFlow && item.visible) as [T[], T[]];
         const mainData = createDataAttribute(node, children);
         const dataName = this.name;
         node.cssTryAll({ 'align-items': 'start', 'justify-items': 'start' }, () => {

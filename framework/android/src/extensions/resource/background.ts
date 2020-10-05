@@ -175,7 +175,7 @@ function getBorderStroke(border: BorderAttribute, direction = -1, hasInset?: boo
     if (isAlternatingBorder(border.style)) {
         const width = parseFloat(border.width);
         result = getBorderStyle(border, direction, isInset !== true);
-        result.width = isInset ? formatPX(Math.ceil(width / 2) * 2) : formatPX(hasInset ? Math.ceil(width / 2) : width);
+        result.width = isInset ? (Math.ceil(width / 2) * 2) + 'px' : (hasInset ? Math.ceil(width / 2) : width) + 'px';
     }
     else {
         result = getBorderStyle(border);
@@ -497,7 +497,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         };
         const setDrawableBackground = (node: T, value: string) => {
             if (value !== '') {
-                const drawable = `@drawable/${Resource.insertStoredAsset('drawables', node.containerName.toLowerCase() + '_' + node.controlId, value)}`;
+                const drawable = `@drawable/${Resource.insertStoredAsset('drawables', (node.containerName + '_' + node.controlId).toLowerCase(), value)}`;
                 if (!themeBackground) {
                     if (node.tagName === 'HTML') {
                         setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, drawable);

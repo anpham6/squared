@@ -1184,12 +1184,20 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         rendering.each(node => {
             if (node.rendering && node.visible && node.hasProcedure(NODE_PROCEDURE.CONSTRAINT)) {
                 if (node.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
-                    if (node.layoutConstraint && !node.layoutElement) {
-                        this.evaluateAnchors(node.renderChildren as T[]);
+                    if (node.layoutConstraint) {
+                        const pageFlow: Null<T[]> = !node.layoutElement ? [] : null;
+                        node.renderEach((item: T) =>{
+                            if (!item.pageFlow) {
+                                this.setPositionAbsolute(item, node);
+                            }
+                            else if (pageFlow) {
+                                pageFlow.push(item);
+                            }
+                        });
+                        if (pageFlow) {
+                            this.evaluateAnchors(pageFlow);
+                        }
                     }
-                }
-                else if (node.layoutRelative) {
-                    this.processRelativeHorizontal(node);
                 }
                 else if (node.layoutConstraint) {
                     const renderChildren = node.renderChildren as T[];
@@ -1201,32 +1209,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 pageFlow.push(item);
                             }
                             else {
-                                const constraint = item.constraint;
-                                if (item.outerWrapper === node) {
-                                    if (!constraint.horizontal) {
-                                        item.anchorParent('horizontal', 0);
-                                    }
-                                    if (!constraint.vertical) {
-                                        item.anchorParent('vertical', 0);
-                                    }
-                                }
-                                else {
-                                    if (item.leftTopAxis) {
-                                        if (!constraint.horizontal) {
-                                            item.getAnchorPosition(node, true);
-                                        }
-                                        if (!constraint.vertical) {
-                                            item.getAnchorPosition(node, false);
-                                        }
-                                    }
-                                    if (!constraint.horizontal) {
-                                        this.applyGuideline('horizontal', { target: item, parent: node });
-                                    }
-                                    if (!constraint.vertical) {
-                                        this.applyGuideline('vertical', { target: item, parent: node });
-                                    }
-                                    item.positioned = true;
-                                }
+                                this.setPositionAbsolute(item, node);
                             }
                         }
                     }
@@ -1250,6 +1233,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                         this.evaluateAnchors(pageFlow);
                     }
+                }
+                else if (node.layoutRelative) {
+                    this.processRelativeHorizontal(node);
                 }
             }
         });
@@ -1384,7 +1370,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         const data = ((element as unknown) as HTMLCanvasElement).toDataURL();
                         if (data) {
                             node.setControlType(controlName, containerType);
-                            src = 'canvas_' + convertWord(node.controlId, true);
+                            src = 'canvas_' + convertWord(node.controlId, true).toLowerCase();
                             resource.writeRawImage({ mimeType: 'image/png', filename: src + '.png', data, encoding: 'base64' });
                         }
                     }
@@ -1725,7 +1711,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
             case CONTAINER_TAGNAME.BUTTON:
                 if (!node.hasHeight) {
-                    node.android('minHeight', formatPX(Math.ceil(node.actualHeight)));
+                    node.android('minHeight', Math.ceil(node.actualHeight) + 'px');
                 }
                 node.mergeGravity('gravity', 'center_vertical');
                 setReadOnly();
@@ -3689,6 +3675,35 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     parent.constraint.guideline = guideline;
                 }
             }
+        }
+    }
+
+    protected setPositionAbsolute(target: T, parent: T) {
+        const constraint = target.constraint;
+        if (target.outerWrapper === parent) {
+            if (!constraint.horizontal) {
+                target.anchorParent('horizontal', 0);
+            }
+            if (!constraint.vertical) {
+                target.anchorParent('vertical', 0);
+            }
+        }
+        else {
+            if (target.leftTopAxis) {
+                if (!constraint.horizontal) {
+                    target.getAnchorPosition(parent, true);
+                }
+                if (!constraint.vertical) {
+                    target.getAnchorPosition(parent, false);
+                }
+            }
+            if (!constraint.horizontal) {
+                this.applyGuideline('horizontal', { target, parent });
+            }
+            if (!constraint.vertical) {
+                this.applyGuideline('vertical', { target, parent });
+            }
+            target.positioned = true;
         }
     }
 

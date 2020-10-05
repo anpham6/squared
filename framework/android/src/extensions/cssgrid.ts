@@ -996,8 +996,8 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                                 rowSpan,
                                 columnSpan,
                                 android: {
-                                    [horizontal ? node.localizeString(LAYOUT_STRING.MARGIN_RIGHT) : 'bottom']: gapSize && (k + l) < unitData.length ? `@dimen/${Resource.insertStoredAsset('dimens', `${node.controlId}_cssgrid_${horizontal ? 'column' : 'row'}_gap`, formatPX(gapSize))}` : '',
-                                    [horizontal ? 'bottom' : node.localizeString(LAYOUT_STRING.MARGIN_RIGHT)]: opposingMargin ? `@dimen/${Resource.insertStoredAsset('dimens', `${node.controlId}_cssgrid_${horizontal ? 'row' : 'column'}_gap`, formatPX(opposingMargin))}` : '',
+                                    [horizontal ? node.localizeString(LAYOUT_STRING.MARGIN_RIGHT) : 'bottom']: gapSize && (k + l) < unitData.length ? `@dimen/${Resource.insertStoredAsset('dimens', `${node.controlId.toLowerCase()}_cssgrid_${horizontal ? 'column' : 'row'}_gap`, formatPX(gapSize))}` : '',
+                                    [horizontal ? 'bottom' : node.localizeString(LAYOUT_STRING.MARGIN_RIGHT)]: opposingMargin ? `@dimen/${Resource.insertStoredAsset('dimens', `${node.controlId.toLowerCase()}_cssgrid_${horizontal ? 'row' : 'column'}_gap`, formatPX(opposingMargin))}` : '',
                                     layout_row,
                                     layout_column,
                                     layout_rowWeight,

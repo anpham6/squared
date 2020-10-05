@@ -125,13 +125,13 @@ function setLineHeight(node: T, lineHeight: number, inlineStyle: boolean, top: b
                 if (offset > 0) {
                     if (!node.inline && (inlineStyle || height > lineHeight) && (node.styleText || padding) && !(node.inputElement && !isLength(node.cssInitial('lineHeight'), true)) || parent) {
                         if (top) {
-                            const adjustment = Math.round(offset - (!padding ? node.paddingTop : 0) - (parent ? parent.paddingTop : 0));
+                            const adjustment = Math.round(offset - (!padding && node.pageFlow ? node.paddingTop : 0) - (parent ? parent.paddingTop : 0));
                             if (adjustment > 0) {
                                 (parent || node).setBox(BOX_STANDARD.PADDING_TOP, { adjustment });
                             }
                         }
                         if (bottom) {
-                            const adjustment = Math.round(offset - (!padding ? node.paddingBottom : 0) - (parent ? parent.paddingBottom : 0));
+                            const adjustment = Math.round(offset - (!padding && node.pageFlow ? node.paddingBottom : 0) - (parent ? parent.paddingBottom : 0));
                             if (adjustment > 0) {
                                 (parent || node).setBox(BOX_STANDARD.PADDING_BOTTOM, { adjustment });
                             }
@@ -156,12 +156,6 @@ function setLineHeight(node: T, lineHeight: number, inlineStyle: boolean, top: b
             if (node.textElement) {
                 setBoxPadding(getLineSpacingExtra(node, lineHeight));
             }
-            else if (height) {
-                const offset = (lineHeight / 2) - node.paddingTop;
-                if (offset > 0) {
-                    node.modifyBox(BOX_STANDARD.PADDING_TOP, offset);
-                }
-            }
             else if (node.inputElement) {
                 const textHeight = node.actualTextHeight({ tagName: 'span' });
                 if (!isNaN(textHeight)) {
@@ -178,6 +172,12 @@ function setLineHeight(node: T, lineHeight: number, inlineStyle: boolean, top: b
                             break;
                     }
                     setBoxPadding((lineHeight - textHeight * Math.max(rows, 1)) / 2, true);
+                }
+            }
+            else if (height) {
+                const offset = (lineHeight / 2) - node.paddingTop;
+                if (offset > 0) {
+                    node.modifyBox(BOX_STANDARD.PADDING_TOP, offset);
                 }
             }
             else {
@@ -829,7 +829,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         if (this.is(CONTAINER_NODE.LINE) && this.tagName !== 'HR' && this.hasPX('height', { initial: true })) {
                             value += this.borderTopWidth + this.borderBottomWidth;
                         }
-                        if (this.styleText && this.multiline && !this.overflowY && !this.hasPX('minHeight') && !actualParent.layoutElement) {
+                        if ((this.controlElement || this.styleText && this.multiline && !this.overflowY && !actualParent.layoutElement) && !this.hasPX('minHeight')) {
                             this.android('minHeight', formatPX(value));
                             layoutHeight = 'wrap_content';
                         }
@@ -1130,6 +1130,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     if (value !== 0) {
                         if (margin) {
                             switch (j) {
+                                case 0:
+                                    if (value < 0 && this.controlElement) {
+                                        value = 0;
+                                    }
+                                    break;
                                 case 1:
                                     if (this.inline) {
                                         const outer = this.documentParent.box.right;
@@ -1146,7 +1151,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     }
                                     break;
                                 case 2:
-                                    if (value < 0 && this.pageFlow && !this.blockStatic) {
+                                    if (value < 0 && (this.pageFlow && !this.blockStatic || this.controlElement)) {
                                         value = 0;
                                     }
                                     break;
@@ -1478,7 +1483,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 if (!this.svgElement) {
                     const opacity = this.valueAt('opacity');
                     if (opacity !== '' && opacity !== '1') {
-                        this.android('alpha', opacity);
+                        const value = clamp(parseFloat(opacity));
+                        if (value === 0) {
+                            this.android('visibility', !this.pageFlow ? 'gone' : 'invisible');
+                        }
+                        this.android('alpha', value.toString());
                     }
                 }
             }
@@ -1795,7 +1804,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 this.delete('app', attr);
                 return '';
             }
-            return this._namespaces['app']![attr] || '';
+            const app = this._namespaces['app'];
+            return app && app[attr] || '';
         }
 
         public formatted(value: string, overwrite = true) {
@@ -2208,7 +2218,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         public applyOptimizations() {
             const renderParent = this.renderParent!;
-            if (this.renderExclude || renderParent.layoutVertical && this.layoutFrame && !this.rendering && this.inlineHeight && this.getBoxSpacing().every((value, index) => value === 0 || index % 2 === 1)) {
+            if (this.renderExclude || renderParent.layoutLinear && renderParent.layoutVertical && this.layoutFrame && !this.rendering && this.inlineHeight && this.getBoxSpacing().every((value, index) => value === 0 || index % 2 === 1)) {
                 if (!this.alignSibling('topBottom') && !this.alignSibling('bottomTop') && !this.alignSibling('leftRight') && !this.alignSibling('rightLeft') && this.hide({ remove: true })) {
                     return false;
                 }
@@ -2396,6 +2406,18 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     this.android('adjustViewBounds', 'true');
                 }
             }
+            else if (this.inputElement) {
+                if (this.flexibleWidth && renderParent.inlineWidth) {
+                    this.android('minWidth', Math.ceil(this.bounds.width) + 'px');
+                    this.setLayoutWidth('wrap_content');
+                    this.delete('app', 'layout_constraintWidth*');
+                }
+                if (this.flexibleHeight && renderParent.inlineHeight) {
+                    this.android('minHeight', Math.ceil(this.bounds.height) + 'px');
+                    this.setLayoutWidth('wrap_content');
+                    this.delete('app', 'layout_constraintHeight*');
+                }
+            }
             else if (this.rendering) {
                 if (this.layoutLinear) {
                     if (this.layoutVertical) {
@@ -2581,7 +2603,16 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public getMatchConstraint(parent: Null<T> = this.renderParent) {
-            return parent ? parent.layoutConstraint && !parent.flexibleWidth && (!parent.inlineWidth || this.rendering) && !this.onlyChild && !(parent.documentRoot && this.blockStatic) && (this.alignParent('left') && this.alignParent('right') && !this.textElement && !this.inputElement && !this.controlElement || this.hasPX('minWidth') && (parent.inlineWidth || parent.layoutWidth === '' && !parent.blockStatic && !parent.hasPX('width')) || this.alignSibling('leftRight') || this.alignSibling('rightLeft')) ? '0px' : 'match_parent' : '';
+            if (parent && (parent.layoutWidth || parent.blockStatic || parent.hasWidth)) {
+                return parent.layoutConstraint && !parent.flexibleWidth && (!parent.inlineWidth || this.rendering) && !this.onlyChild && !(parent.documentRoot && this.blockStatic) && (
+                    this.alignSibling('leftRight') ||
+                    this.alignSibling('rightLeft') ||
+                    this.alignParent('left') && this.alignParent('right') && !this.textElement && !this.inputElement && !this.controlElement ||
+                    this.hasPX('minWidth') && parent.inlineWidth)
+                    ? '0px'
+                    : 'match_parent';
+            }
+            return '';
         }
 
         public getAnchorPosition(parent: T, horizontal: boolean, modifyAnchor = true) {
@@ -2894,7 +2925,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     if (this.styleElement) {
                         const value = this.elementId || getNamedItem(this.element as HTMLElement, 'name');
                         if (value !== '') {
-                            name = value.replace(/[^\w$\-_.]/g, '_').toLowerCase();
+                            name = value.replace(/[^\w$\-_.]/g, '_');
                             if (name === 'parent' || RESERVED_JAVA.has(name)) {
                                 name = '_' + name;
                             }

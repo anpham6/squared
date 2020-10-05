@@ -1055,7 +1055,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
     }
 
     public setFontStyle(node: T) {
-        if ((node.textElement || node.inlineText) && (!node.textEmpty || node.pseudoElement || node.visibleStyle.background) || node.inputElement) {
+        if ((node.textElement || node.inlineText) && (!node.textEmpty || node.pseudoElement || node.visibleStyle.background) || node.inputElement && !node.controlElement) {
             const color = parseColor(node.css('color'));
             let fontWeight = node.css('fontWeight');
             if (!isNumber(fontWeight)) {

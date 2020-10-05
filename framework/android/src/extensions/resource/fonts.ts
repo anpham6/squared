@@ -134,9 +134,11 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             const data = nameMap[tag];
             const sorted: StyleList<T>[] = [{}, {}, {}];
             const addFontItem = (node: T, index: number, attr: string, value: string) => {
-                const items = sorted[index] ||= {};
-                const name = FONT_STYLE[attr] + value + '"';
-                (items[name] ||= []).push(node);
+                if (value !== '') {
+                    const items = sorted[index] ||= {};
+                    const name = FONT_STYLE[attr] + value + '"';
+                    (items[name] ||= []).push(node);
+                }
             };
             cache.push(...data);
             for (let i = 0, length = data.length; i < length; ++i) {
@@ -208,17 +210,10 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 addFontItem(node, 0, 'fontFamily', fontFamily);
                 addFontItem(node, 1, 'fontSize', truncate(stored.fontSize, floatPrecision) + (convertPixels ? 'sp' : 'px'));
                 addFontItem(node, 2, 'color', Resource.addColor(stored.color));
-                if (fontWeight !== '') {
-                    addFontItem(node, 3, 'fontWeight', fontWeight);
-                }
-                if (fontStyle !== '') {
-                    addFontItem(node, 4, 'fontStyle', fontStyle);
-                }
+                addFontItem(node, 3, 'fontWeight', fontWeight);
+                addFontItem(node, 4, 'fontStyle', fontStyle);
                 if (backgroundColor) {
-                    const color = Resource.addColor(backgroundColor, node.inputElement);
-                    if (color !== '') {
-                        addFontItem(node, 5, 'backgroundColor', color);
-                    }
+                    addFontItem(node, 5, 'backgroundColor', Resource.addColor(backgroundColor, node.inputElement));
                 }
             }
             groupMap[tag] = sorted;

@@ -26,8 +26,8 @@ const REGEXP_SOURCESIZES = new RegExp(`\\s*(?:(?:\\(\\s*)?${PATTERN_SIZES}|(?:\\
 const REGEXP_KEYFRAMES = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
 const REGEXP_MEDIARULE = /(?:(not|only)?\s*(?:all|screen)\s+and\s+)?((?:\([^)]+\)(?:\s+and\s+)?)+),?\s*/g;
 const REGEXP_MEDIARULECONDITION = /\(([a-z-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?:\s+and\s+)?/g;
-const REGEXP_VAR = /var\((--[A-Za-z\d-]+)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)/;
-const REGEXP_CUSTOMPROPERTY = /^\s*var\(--.+\)$/;
+const REGEXP_VAR = /(.*)var\((--[\w-]+)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)(.*)/;
+const REGEXP_CUSTOMPROPERTY = /var\(--.+\)/;
 const REGEXP_IMGSRCSET = /^(.*?)(?:\s+([\d.]+)([xw]))?$/;
 const REGEXP_CALCOPERATION = /\s+([+-]\s+|\s*[*/])\s*/;
 const REGEXP_CALCUNIT = /\s*{(\d+)}\s*/;
@@ -2939,13 +2939,13 @@ export function parseVar(element: StyleElement, value: string) {
     const style = getStyle(element);
     let match: Null<RegExpMatchArray>;
     while (match = REGEXP_VAR.exec(value)) {
-        let customValue = style.getPropertyValue(match[1]).trim();
+        let customValue = style.getPropertyValue(match[2]).trim();
         const fallback = match[2];
         if (fallback && (customValue === '' || isLength(fallback, true) && !isLength(customValue, true) || isNumber(fallback) && !isNumber(customValue) || parseColor(fallback) && !parseColor(customValue))) {
             customValue = fallback;
         }
         if (customValue) {
-            value = value.replace(match[0], customValue).trim();
+            value = match[1] + value.replace(match[0], customValue).trim() + match[4];
         }
         else {
             return '';

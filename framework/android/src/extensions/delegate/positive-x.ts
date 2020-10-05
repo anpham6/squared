@@ -9,6 +9,7 @@ import LayoutUI = squared.base.LayoutUI;
 
 interface PositiveXData {
     children: View[];
+    container?: View;
     right?: boolean;
     bottom?: boolean;
 }
@@ -152,7 +153,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
             container = (this.controller as android.base.Controller<T>).createNodeWrapper(node, parent, {
                 alignmentType: NODE_ALIGNMENT.VERTICAL,
                 children,
-                resetMargin: !node.rootElement && !node.pageFlow || parent.layoutGrid,
+                resetMargin: node.every((item: T) => children.includes(item) || !item.visible) || !node.pageFlow && !node.rootElement || parent.layoutGrid,
                 cascade: true,
                 inheritDataset: true
             });
@@ -174,6 +175,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
             }
         }
         if (container) {
+            mainData.container = container;
             return {
                 parent: container,
                 renderAs: container,
@@ -252,6 +254,29 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                     wrapper.modifyBox(BOX_STANDARD.MARGIN_TOP, node.borderTopWidth);
                     wrapper.constraint.vertical = true;
                     item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1 });
+                }
+            }
+        }
+    }
+
+    public postOptimize(node: T) {
+        const container = (this.data.get(node) as Undef<PositiveXData>)?.container;
+        if (container) {
+
+            if (!container.constraint.horizontal) {
+                if (container.blockWidth || container.flexibleWidth) {
+                    container.anchorParent('horizontal', 0);
+                }
+                else {
+                    container.anchor('left', 'parent');
+                }
+            }
+            if (!container.constraint.vertical) {
+                if (container.blockHeight || container.flexibleHeight) {
+                    container.anchorParent('vertical', 0);
+                }
+                else {
+                    container.anchor('top', 'parent');
                 }
             }
         }

@@ -334,6 +334,6 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                 }
             }
         }
-        return result && result.length ? Resource.insertStoredAsset('arrays', `${controlId}_array`, result) : '';
+        return result && result.length ? Resource.insertStoredAsset('arrays', `${controlId.toLowerCase()}_array`, result) : '';
     }
 }

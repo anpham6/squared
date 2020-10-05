@@ -127,8 +127,7 @@ function adjustGrowRatio(parent: View, items: View[], dimension: DimensionAttr) 
     }
     if (horizontal && growShrinkType === 0) {
         for (let i = 0; i < length; ++i) {
-            const item = items[i];
-            if (item.find(child => child.multiline && child.ascend({ condition: above => above[hasDimension], including: parent }).length === 0, { cascade: true })) {
+            if (hasMultiline(parent, items[i])) {
                 for (let j = 0; j < length; ++j) {
                     setBoxPercentage(parent, items[j], dimension);
                 }
@@ -169,7 +168,7 @@ function getOuterFrameChild(item: Undef<View>) {
 }
 
 function setLayoutWeight(node: View, horizontal: boolean, dimension: string, attr: string, value: number) {
-    if (node[dimension] === 0) {
+    if (value > 0 && node[dimension] === 0) {
         node.app(attr, truncate(value, node.localSettings.floatPrecision));
         if (horizontal) {
             node.setLayoutWidth('0px');
@@ -181,6 +180,7 @@ function setLayoutWeight(node: View, horizontal: boolean, dimension: string, att
 }
 
 const setBoxPercentage = (parent: View, node: View, attr: DimensionAttr) => node.flexbox.basis = (node.bounds[attr] / parent.box[attr] * 100) + '%';
+const hasMultiline = (parent: View, node: View) => node.find(child => child.multiline && child.ascend({ condition: above => above.hasWidth, including: parent }).length === 0, { cascade: true });
 
 export default class <T extends View> extends squared.base.extensions.Flexbox<T> {
     public processNode(node: T, parent: T): ExtensionResult<T> {
@@ -376,19 +376,18 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     const segStart = seg[0];
                     const segEnd = seg[q - 1];
                     const opposing = seg === segmented;
-                    const justified = !opposing && seg.every(item => item.flexbox.grow === 0);
-                    const spreadInside = justified && (justifyContent === 'space-between' || justifyContent === 'space-around' && q > 1);
                     const layoutWeight: T[] = [];
                     let maxSize = 0,
                         growAvailable = 0,
                         percentWidth = 0,
                         parentEnd = true,
                         baseline: Null<T> = null,
-                        growAll: boolean;
+                        inlineWidth: Undef<boolean>,
+                        spreadInside: Undef<boolean>,
+                        growAll: Undef<boolean>;
                     segStart.anchor(LT, 'parent');
                     segEnd.anchor(RB, 'parent');
                     if (opposing) {
-                        growAll = false;
                         if (dimensionInverse) {
                             let chainStyle = 'spread',
                                 bias = 0;
@@ -412,8 +411,16 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         }
                     }
                     else {
-                        growAll = horizontal || dimensionInverse;
-                        growAvailable = 1 - adjustGrowRatio(node, seg, WHL);
+                        const setGrowAvailable = () => growAvailable = 1 - adjustGrowRatio(node, seg, WHL);
+                        inlineWidth = seg.every(item => item.flexbox.grow === 0);
+                        if (!inlineWidth || horizontal && seg.some(item => item.flexbox.basis !== 'auto' || item.hasPX('maxWidth') || item.autoMargin.horizontal) || !horizontal && dimensionInverse && seg.some(item => item.flexbox.basis !== 'auto' || item.hasPX('maxHeight') || item.autoMargin.vertical)) {
+                            growAll = horizontal && !seg.some(item => item.autoMargin.horizontal) || !horizontal && dimensionInverse && !seg.some(item => item.autoMargin.vertical);
+                            setGrowAvailable();
+                        }
+                        else if (horizontal && seg.some(item => hasMultiline(node, item))) {
+                            setGrowAvailable();
+                        }
+                        spreadInside = inlineWidth && (justifyContent === 'space-between' || justifyContent === 'space-around' && q > 1);
                         if (q > 1) {
                             let sizeCount = 0;
                             for (let k = 0; k < q; ++k) {
@@ -568,6 +575,9 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                 chain.anchor(TL, 'parent');
                                             }
                                             break;
+                                        case 'flex-end':
+                                            chain.anchorParent(orientationInverse, 1);
+                                            break;
                                         case 'space-evenly':
                                         case 'space-around':
                                             if (childContent) {
@@ -610,27 +620,30 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                 chain.anchorStyle(orientationInverse, wrapReverse ? 1 : 0);
                                             }
                                             if (chain[HWL] === 0) {
+                                                const belowSize = (chain.naturalElement ? (chain.data<BoxRectDimension>(this.name, 'boundsData') || chain.bounds)[HWL] : Infinity) < maxSize;
                                                 if (!horizontal && chain.blockStatic) {
-                                                    setLayoutWeightOpposing(chain, 'match_parent', horizontal);
+                                                    setLayoutWeightOpposing(chain, belowSize ? '0px' : 'match_parent', horizontal);
                                                 }
                                                 else if (isNaN(maxSize)) {
-                                                    if (!horizontal && !wrap && !chain.isEmpty() || dimension && alignContent === 'normal') {
-                                                        setLayoutWeightOpposing(chain, dimension ? '0px' : 'match_parent', horizontal);
-                                                    }
-                                                    else {
-                                                        setLayoutWeightOpposing(chain, 'wrap_content', horizontal);
-                                                    }
+                                                    setLayoutWeightOpposing(
+                                                        chain,
+                                                        !horizontal && !wrap && !chain.isEmpty() || dimension && alignContent === 'normal'
+                                                            ? dimension ? '0px' : 'match_parent'
+                                                            : 'wrap_content',
+                                                        horizontal
+                                                    );
                                                 }
                                                 else if (q === 1) {
-                                                    if (!horizontal) {
-                                                        setLayoutWeightOpposing(chain, dimension ? '0px' : 'match_parent', horizontal);
-                                                    }
-                                                    else {
-                                                        setLayoutWeightOpposing(chain, 'wrap_content', horizontal);
-                                                    }
+                                                    setLayoutWeightOpposing(
+                                                        chain,
+                                                        !horizontal
+                                                            ? dimension ? '0px' : 'match_parent'
+                                                            : node.flexbox.alignSelf === 'stretch' && node.actualParent!.flexdata.row && (node.hasHeight || !node.inlineHeight) ? '0px' : 'wrap_content',
+                                                        horizontal
+                                                    );
                                                 }
-                                                else if ((chain.naturalElement ? (chain.data<BoxRectDimension>(this.name, 'boundsData') || chain.bounds)[HWL] : Infinity) < maxSize) {
-                                                    setLayoutWeightOpposing(chain, chain.flexElement && chain.flexdata.row ? 'match_parent' : '0px', horizontal);
+                                                else if (belowSize) {
+                                                    setLayoutWeightOpposing(chain, !horizontal && chain.flexElement && chain.flexdata.row ? 'match_parent' : '0px', horizontal);
                                                     if (innerWrapped && !innerWrapped.autoMargin[orientation]) {
                                                         setLayoutWeightOpposing(innerWrapped as T, 'match_parent', horizontal);
                                                     }
@@ -650,9 +663,6 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 }
                             }
                             percentWidth = chain.setFlexDimension(WHL, percentWidth);
-                            if (!chain.innerMostWrapped.has('flexGrow')) {
-                                growAll = false;
-                            }
                             if (parentBottom > 0 && j === length - 1) {
                                 const offset = chain.linear.bottom - parentBottom;
                                 if (offset > 0) {
@@ -694,7 +704,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     }
                     if (horizontal || column) {
                         let centered: Undef<boolean>;
-                        if (justified) {
+                        if (inlineWidth) {
                             switch (justifyContent) {
                                 case 'normal':
                                     if (column) {

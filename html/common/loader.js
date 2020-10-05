@@ -70,46 +70,49 @@ document.addEventListener('DOMContentLoaded', () => {
         squared.settings.showErrorMessages = false;
     }
     const time = performance.now();
-    squared.parseDocument()
-        .then(() => {
-            if (copyTo) {
-                squared.copyTo(copyTo).then(response => {
-                    squared.lib.dom.createElement('div', {
-                        parent: document.body,
-                        attrs: {
-                            id: 'md5_complete',
-                            innerHTML: response.files.join('\n')
-                        },
-                        style: {
-                            whiteSpace: 'pre',
-                            display: 'none'
-                        }
+    setTimeout(function() {
+        squared.parseDocument()
+            .then(() => {
+                if (copyTo) {
+                    squared.copyTo(copyTo).then(response => {
+                        squared.lib.dom.createElement('div', {
+                            parent: document.body,
+                            attrs: {
+                                id: 'md5_complete',
+                                innerHTML: response.files.join('\n')
+                            },
+                            style: {
+                                whiteSpace: 'pre',
+                                display: 'none'
+                            }
+                        });
                     });
-                });
-            }
-            else {
-                console.log('SQ: ' + (performance.now() - time));
-                squared.settings.outputEmptyCopyDirectory = true;
-                squared.copyTo('C:/Users/An/git/flexbox', {
-                    assets: [
-                        {
-                            pathname: 'app/src/main/res/drawable',
-                            filename: 'ic_launcher_background.xml',
-                            uri: 'C:/Users/An/git/squared/html/common/images/ic_launcher_background.xml'
-                        },
-                        {
-                            pathname: 'app/src/main/res/drawable-v24',
-                            filename: 'ic_launcher_foreground.xml',
-                            uri: 'C:/Users/An/git/squared/html/common/images/ic_launcher_foreground.xml'
-                        }
-                    ]
-                })
-                .then(response => {
-                    console.log('CP: ' + (performance.now() - time))
-                    console.log(response);
-                });
-                console.log('NE: ' + (performance.now() - time));
-            }
-        })
-        .catch(err => console.log(err));
+                }
+                else {
+                    console.log('SQ: ' + (performance.now() - time));
+                    squared.settings.outputEmptyCopyDirectory = true;
+                    squared.copyTo('C:/Users/An/git/flexbox', {
+                        assets: [
+                            {
+                                pathname: 'app/src/main/res/drawable',
+                                filename: 'ic_launcher_background.xml',
+                                uri: 'C:/Users/An/git/squared/html/common/images/ic_launcher_background.xml'
+                            },
+                            {
+                                pathname: 'app/src/main/res/drawable-v24',
+                                filename: 'ic_launcher_foreground.xml',
+                                uri: 'C:/Users/An/git/squared/html/common/images/ic_launcher_foreground.xml'
+                            }
+                        ]
+                    })
+                    .then(response => {
+                        console.log('CP: ' + (performance.now() - time))
+                        console.log(response);
+                    });
+                    console.log('NE: ' + (performance.now() - time));
+                }
+            })
+            .catch(err => console.log(err));
+            
+    }, 1);
 });

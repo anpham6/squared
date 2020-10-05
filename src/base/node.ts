@@ -2510,10 +2510,26 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         let result = this._cache.blockStatic;
         if (result === undefined) {
             const pageFlow = this.pageFlow;
-            if (pageFlow && (this.block && !this.floating || this.inlineStatic && this.firstChild?.blockStatic || this.lineBreak)) {
-                result = true;
+            if (pageFlow) {
+                if (this.block && !this.floating || this.lineBreak) {
+                    result = true;
+                }
+                else {
+                    const actualParent = this.actualParent;
+                    if (actualParent && (actualParent.block && !actualParent.floating || actualParent.hasWidth)) {
+                        if (this.inlineStatic && this.firstChild?.blockStatic) {
+                            result = true;
+                        }
+                        else if (this.inline || this.display.startsWith('table-') || this.hasPX('maxWidth')) {
+                            result = false;
+                        }
+                    }
+                    else {
+                        result = false;
+                    }
+                }
             }
-            else if (!pageFlow || !this.inline && !this.display.startsWith('table-') && !this.hasPX('maxWidth')) {
+            if (result === undefined) {
                 const width = this.valueOf('width');
                 const minWidth = this.valueOf('minWidth');
                 let percent = 0;
@@ -2700,49 +2716,48 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         let result = this._cache.backgroundColor;
         if (result === undefined) {
             if (!this.plainText) {
+                const isTransparent = (value: string) => value === 'transparent' || value === 'rgba(0, 0, 0, 0)';
                 result = this.css('backgroundColor');
-                switch (result) {
-                    case 'transparent':
-                    case 'rgba(0, 0, 0, 0)':
-                        if (this.inputElement) {
-                            if (this.tagName !== 'BUTTON') {
-                                switch (this.toElementString('type')) {
-                                    case 'button':
-                                    case 'submit':
-                                    case 'reset':
-                                    case 'image':
-                                        break;
-                                    default:
-                                        result = '';
-                                        break;
-                                }
+                if (isTransparent(result)) {
+                    if (this.inputElement) {
+                        if (this.tagName !== 'BUTTON') {
+                            switch (this.toElementString('type')) {
+                                case 'button':
+                                case 'submit':
+                                case 'reset':
+                                case 'image':
+                                    break;
+                                default:
+                                    result = '';
+                                    break;
                             }
+                        }
+                    }
+                    else {
+                        result = '';
+                    }
+                }
+                if (result !== '' && this.styleElement && this.pageFlow && (!this.inputElement && this.css('opacity') === '1' || isTransparent(result))) {
+                    let parent = this.actualParent;
+                    while (parent) {
+                        const backgroundImage = parent.valueOf('backgroundImage');
+                        if (backgroundImage === '' || backgroundImage === 'none') {
+                            const color = parent.backgroundColor;
+                            if (color !== '' && !isTransparent(color)) {
+                                if (color === result && parent.css('opacity') === '1') {
+                                    result = '';
+                                }
+                                else if (isTransparent(result)) {
+                                    result = color;
+                                }
+                                break;
+                            }
+                            parent = parent.actualParent;
                         }
                         else {
-                            result = '';
+                            break;
                         }
-                        break;
-                    default:
-                        if (result !== '' && this.styleElement && this.pageFlow && !this.inputElement && this.css('opacity') === '1') {
-                            let parent = this.actualParent;
-                            while (parent) {
-                                const backgroundImage = parent.valueOf('backgroundImage');
-                                if (backgroundImage === '' || backgroundImage === 'none') {
-                                    const color = parent.backgroundColor;
-                                    if (color !== '') {
-                                        if (color === result && parent.css('opacity') === '1') {
-                                            result = '';
-                                        }
-                                        break;
-                                    }
-                                    parent = parent.actualParent;
-                                }
-                                else {
-                                    break;
-                                }
-                            }
-                        }
-                        break;
+                    }
                 }
             }
             return this._cache.backgroundColor = result || '';
