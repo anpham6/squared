@@ -42,7 +42,7 @@ export function truncateFraction(value: number) {
         const match = REGEXP_FRACTION.exec(convertDecimalNotation(value));
         if (match) {
             const trailing = match[2];
-            if (trailing === '') {
+            if (!trailing) {
                 return Math.round(value);
             }
             const leading = match[1];

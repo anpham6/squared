@@ -487,7 +487,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
     }
 
     set clipRegion(value) {
-        if (value !== '') {
+        if (value) {
             this._clipRegion.push(value);
         }
         else {

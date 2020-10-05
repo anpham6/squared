@@ -101,7 +101,7 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
         for (const item of colors) {
             const color = item[0];
             for (const unit of value.substring(item[1], item[2]).replace(/\s*,\s*$/, '').trim().split(/\s*,\s*/)) {
-                expanded += (expanded !== '' ? ', ' : '') + color + ' ' + unit;
+                expanded += (expanded ? ', ' : '') + color + ' ' + unit;
             }
         }
         value = expanded;
@@ -600,10 +600,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
         const ids = this.STORED.ids;
         const stored = ids.get(section);
         let result = name + (start >= 1 ? '_' + start : '');
-        if (!stored) {
-            ids.set(section, [result]);
-        }
-        else {
+        if (stored) {
             do {
                 if (!stored.includes(result)) {
                     stored.push(result);
@@ -614,6 +611,9 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                 }
             }
             while (true);
+        }
+        else {
+            ids.set(section, [result]);
         }
         return result;
     }
@@ -630,7 +630,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                     }
                 }
             }
-            if (result === '') {
+            if (!result) {
                 if (isNumber(name)) {
                     name = '__' + name;
                 }
@@ -659,7 +659,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
             switch (item.tagName) {
                 case 'OPTION': {
                     const value = item.text.trim() || item.value.trim();
-                    if (value !== '') {
+                    if (value) {
                         if (numberArray && !isNumber(value)) {
                             numberArray = false;
                         }
@@ -689,7 +689,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
         const getGradientPosition = (value: string) => isString(value) ? value.includes('at ') ? /(.+?)?\s*at (.+?)\s*$/.exec(value) : [value, value] as RegExpExecArray : null;
         const getAngle = (value: string, fallback = 0) => {
             value = value.trim();
-            if (value !== '') {
+            if (value) {
                 let degree = parseAngle(value, fallback);
                 if (!isNaN(degree)) {
                     if (degree < 0) {
@@ -1006,12 +1006,12 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
             if (visibleStyle.outline && setBorderStyle(node, boxStyle, 'outline', BORDER_OUTLINE)) {
                 borderWidth = true;
             }
-            if (backgroundColor === '' && !node.documentParent.visible && node.has('backgroundColor')) {
+            if (!backgroundColor && !node.documentParent.visible && node.has('backgroundColor')) {
                 backgroundColor = node.css('backgroundColor');
             }
             if (node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
                 const value = node.backgroundImage;
-                if (value !== '') {
+                if (value) {
                     backgroundImage = ResourceUI.parseBackgroundImage(node, value);
                 }
             }
@@ -1032,7 +1032,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                     const horizontal = node.actualWidth >= node.actualHeight;
                     const radius = borderRadius[0];
                     if (borderRadius.every(value => value === radius)) {
-                        borderRadius.length = radius === '0px' || radius === '' ? 0 : 1;
+                        borderRadius.length = !radius || radius === '0px' ? 0 : 1;
                     }
                     const length = borderRadius.length;
                     if (length) {
@@ -1104,23 +1104,23 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                             break;
                         }
                         case 'submit':
-                            if (value === '' && !node.visibleStyle.backgroundImage) {
+                            if (!value && !node.visibleStyle.backgroundImage) {
                                 value = isUserAgent(USER_AGENT.FIREFOX) ? 'Submit Query' : 'Submit';
                             }
                             break;
                         case 'reset':
-                            if (value === '' && !node.visibleStyle.backgroundImage) {
+                            if (!value && !node.visibleStyle.backgroundImage) {
                                 value = 'Reset';
                             }
                             break;
                         case 'time':
-                            if (value === '') {
+                            if (!value) {
                                 hint = '--:-- --';
                             }
                             break;
                         case 'date':
                         case 'datetime-local':
-                            if (value === '') {
+                            if (!value) {
                                 switch (new Intl.DateTimeFormat().resolvedOptions().locale) {
                                     case 'en-US':
                                         hint = 'mm/dd/yyyy';
@@ -1135,12 +1135,12 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                             }
                             break;
                         case 'week':
-                            if (value === '') {
+                            if (!value) {
                                 hint = 'Week: --, ----';
                             }
                             break;
                         case 'month':
-                            if (value === '') {
+                            if (!value) {
                                 hint = '--------- ----';
                             }
                             break;
@@ -1151,7 +1151,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                         case 'search':
                         case 'number':
                         case 'tel':
-                            if (value === '') {
+                            if (!value) {
                                 hint = element.placeholder;
                             }
                             break;
@@ -1236,7 +1236,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                     const preIndent = ResourceUI.checkPreIndent(node);
                     if (preIndent) {
                         const [indent, adjacent] = preIndent;
-                        if (indent !== '') {
+                        if (indent) {
                             adjacent.textContent = indent + adjacent.textContent;
                         }
                         value = value.replace(REGEXP_TRAILINGINDENT, '');
@@ -1343,7 +1343,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                     value = value.trim();
                 }
             }
-            if (value !== '') {
+            if (value) {
                 node.data(ResourceUI.KEY_NAME, 'valueString', value);
             }
         }

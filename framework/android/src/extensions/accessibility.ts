@@ -19,7 +19,7 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                     const sibling = cache.find(item => item.elementId === describedby);
                     if (sibling) {
                         const value = sibling.textContent.trim();
-                        if (value !== '') {
+                        if (value) {
                             node.data(Resource.KEY_NAME, 'titleString', value);
                         }
                     }

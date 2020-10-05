@@ -45,7 +45,7 @@ export function applyTemplate(tagName: string, template: StandardMap, children: 
                     innerText += applyTemplate(name, descend, [value], childDepth);
                 }
             }
-            if (innerText !== '') {
+            if (innerText) {
                 output += '>\n' +
                           innerText;
                 if (closed) {

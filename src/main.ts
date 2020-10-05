@@ -283,15 +283,15 @@ export function add(...values: ExtensionRequestObject[]) {
             }
         }
         if (squared.base && value instanceof squared.base.Extension) {
-            if (!extensionManager) {
-                addQueue.push(value);
-                extensionCache.push(value);
-            }
-            else {
+            if (extensionManager) {
                 if (!extensionManager.add(value)) {
                     addQueue.push(value);
                 }
                 extensionManager.cache.add(value);
+            }
+            else {
+                addQueue.push(value);
+                extensionCache.push(value);
             }
             if (options) {
                 apply(value, options);
@@ -382,12 +382,12 @@ export function apply(value: ExtensionRequest, options: FrameworkOptions) {
         };
         if (typeof value === 'string') {
             const ext = extensionManager && extensionManager.get(value, true) || addQueue.find(item => typeof item !== 'string' && item.name === value) as Undef<Extension>;
-            if (!ext) {
-                optionsQueue.set(value, mergeSettings(value));
-                return true;
+            if (ext) {
+                value = ext;
             }
             else {
-                value = ext;
+                optionsQueue.set(value, mergeSettings(value));
+                return true;
             }
         }
         if (squared.base && value instanceof squared.base.Extension) {

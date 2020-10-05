@@ -134,7 +134,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             const data = nameMap[tag];
             const sorted: StyleList<T>[] = [{}, {}, {}];
             const addFontItem = (node: T, index: number, attr: string, value: string) => {
-                if (value !== '') {
+                if (value) {
                     const items = sorted[index] ||= {};
                     const name = FONT_STYLE[attr] + value + '"';
                     (items[name] ||= []).push(node);
@@ -196,7 +196,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     if (fontStyle === 'normal' || fontStyle.startsWith('oblique')) {
                         fontStyle = '';
                     }
-                    if (actualFontWeight !== '') {
+                    if (actualFontWeight) {
                         fontWeight = actualFontWeight;
                     }
                     else if (fontWeight === '400' || node.api < BUILD_VERSION.OREO) {

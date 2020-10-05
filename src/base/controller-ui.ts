@@ -55,7 +55,7 @@ function setButtonStyle(styleMap: StringMap, applied: boolean, defaultColor: str
 function pushIndent(value: string, depth: number, char = '\t', indent?: string) {
     if (depth > 0) {
         indent ||= char.repeat(depth);
-        return joinArray(value.split('\n'), line => line !== '' ? indent + line : '', '\n') + '\n';
+        return joinArray(value.split('\n'), line => line ? indent + line : '', '\n') + '\n';
     }
     return value;
 }
@@ -426,10 +426,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     return true;
             }
         }
-        return (
-            !hasCoords(style.getPropertyValue('position')) && (display === 'block' || width > 0 && style.getPropertyValue('float') !== 'none' || style.getPropertyValue('clear') !== 'none') ||
-            iterateArray(element.children, (item: HTMLElement) => this.visibleElement(item, sessionId)) === Infinity
-        );
+        return !hasCoords(style.getPropertyValue('position')) && (display === 'block' || width > 0 && style.getPropertyValue('float') !== 'none' || style.getPropertyValue('clear') !== 'none') || iterateArray(element.children, (item: HTMLElement) => this.visibleElement(item, sessionId)) === Infinity;
     }
 
     public evaluateNonStatic(documentRoot: T, cache: NodeList<T>) {
@@ -757,7 +754,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         this.getBeforeOutsideTemplate(node, previous) + indent +
                         `<${controlName + (depth === 0 ? '{#0}' : '')}` +
                             (showAttributes ? !attributes ? node.extractAttributes(next) : pushIndent(attributes, next) : '') +
-                            (renderTemplates || beforeInside !== '' || afterInside !== ''
+                            (renderTemplates || beforeInside || afterInside
                                 ? '>\n' +
                                     beforeInside +
                                     (renderTemplates ? this.writeDocument(this.sortRenderPosition(node, renderTemplates as NodeTemplate<T>[]), next, showAttributes) : '') +

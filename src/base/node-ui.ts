@@ -648,7 +648,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 case 'boxStyle': {
                     if (this.naturalElement) {
                         const properties: string[] = [];
-                        if (this.backgroundImage === '') {
+                        if (!this.backgroundImage) {
                             properties.push(...CSS_PROPERTIES.background.value as string[]);
                             --properties.length;
                         }
@@ -1928,7 +1928,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get textAlignLast() {
         if (!this.inlineStatic) {
             const value = this.cssAscend('textAlignLast', { startSelf: true });
-            if (value === '' || value === 'auto') {
+            if (!value || value === 'auto') {
                 return '';
             }
             const rtl = this.dir === 'rtl';
@@ -1968,11 +1968,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             let inlineWidth = 0;
             for (let i = 0, length = naturalChildren.length; i < length; ++i) {
                 const item = naturalChildren[i] as T;
-                if (!item.inlineVertical) {
-                    return false;
+                if (item.inlineVertical) {
+                    inlineWidth += item.linear.width;
                 }
                 else {
-                    inlineWidth += item.linear.width;
+                    return false;
                 }
             }
             if (Math.floor(inlineWidth) > box.width) {
@@ -2040,7 +2040,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     set use(value) {
         const use = this.use;
-        this.dataset['use' + this.localSettings.systemName] = use !== '' ? use + ', ' + value : value;
+        this.dataset['use' + this.localSettings.systemName] = use ? use + ', ' + value : value;
     }
     get use() {
         const dataset = this.dataset;
@@ -2052,7 +2052,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         const result = this._cacheState.extensions;
         if (result === undefined) {
             const use = this.use;
-            return this._cacheState.extensions = use !== '' ? use.split(/\s*,\s*/) : [];
+            return this._cacheState.extensions = use ? use.split(/\s*,\s*/) : [];
         }
         return result;
     }

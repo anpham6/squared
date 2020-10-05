@@ -109,7 +109,7 @@ function calculatePosition(element: StyleElement, value: string, boundingBox?: N
                         }
                         if (isCalc(position)) {
                             const result = formatVar(calculateVar(element, position, { dimension, boundingBox }));
-                            if (result !== '') {
+                            if (result) {
                                 alignment[i] = result;
                             }
                             else {
@@ -2215,7 +2215,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                                                 return '';
                                             }
                                         }
-                                        calc += calc !== '' ? ', ' + rotate : rotate;
+                                        calc += calc ? ', ' + rotate : rotate;
                                     }
                                 }
                                 break;
@@ -2249,7 +2249,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                                 if (isColor(previous)) {
                                     const prefix = previous.split(CHAR_SPACE).pop()!;
                                     const result = calculateColor(element, prefix + component[j]);
-                                    if (result !== '') {
+                                    if (result) {
                                         component[j] = result.replace(prefix, '');
                                         continue;
                                     }
@@ -2274,7 +2274,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                     if (isColor(previous) && hasCalc(color[i])) {
                         const prefix = previous.split(CHAR_SPACE).pop()!;
                         const result = calculateColor(element, prefix + color[i]);
-                        if (result !== '') {
+                        if (result) {
                             color[i] = result;
                             color[i - 1] = previous.substring(0, previous.length - prefix.length);
                         }
@@ -2315,7 +2315,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
             const result: string[] = [];
             for (const position of value.split(CHAR_SEPARATOR)) {
                 const segment = calculatePosition(element, position, boundingBox);
-                if (segment !== '') {
+                if (segment) {
                     result.push(segment);
                 }
                 else {
@@ -2349,7 +2349,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                     else {
                         continue;
                     }
-                    if (result !== '') {
+                    if (result) {
                         border[i] = result;
                         border[i - 1] = previous.substring(0, previous.length - prefix.length);
                     }
@@ -2388,7 +2388,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                                             return '';
                                         }
                                     }
-                                    calc += calc !== '' ? ', ' + bezier : bezier;
+                                    calc += calc ? ', ' + bezier : bezier;
                                 }
                             }
                         }
@@ -2452,7 +2452,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                                 options.dimension = ['width', 'height'];
                             }
                             radius = calculateVarAsString(element, radius, options);
-                            if (radius !== '') {
+                            if (radius) {
                                 result.push(radius);
                             }
                             else {
@@ -2464,7 +2464,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                         }
                         if (hasCalc(position)) {
                             position = calculateVarAsString(element, position, { dimension: ['width', 'height'], boundingBox, parent: true });
-                            if (position !== '') {
+                            if (position) {
                                 result.push(position);
                             }
                             else {
@@ -2485,7 +2485,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                         for (let points of shape.split(CHAR_SEPARATOR)) {
                             if (hasCalc(points)) {
                                 points = calculateVarAsString(element, points, { dimension: ['width', 'height'], boundingBox, parent: true });
-                                if (points !== '') {
+                                if (points) {
                                     result.push(points);
                                 }
                                 else {
@@ -2502,7 +2502,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                     default:
                         return value;
                 }
-                if (shape !== '') {
+                if (shape) {
                     return `${prefix}(${shape})`;
                 }
             }
@@ -2512,7 +2512,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
             let [row, column] = value.trim().split(CHAR_DIVIDER);
             if (hasCalc(row)) {
                 const result = calculateStyle(element, 'gridTemplateRows', row, boundingBox);
-                if (result !== '') {
+                if (result) {
                     row = result;
                 }
                 else {
@@ -2521,7 +2521,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
             }
             if (hasCalc(column)) {
                 const result = calculateStyle(element, 'gridTemplateColumns', column, boundingBox);
-                if (result !== '') {
+                if (result) {
                     column = result;
                 }
                 else {
@@ -2539,7 +2539,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                     offset = url[0] + url[1];
                     if (hasCalc(offset)) {
                         offset = calculateStyle(element, 'offsetPath', offset, boundingBox);
-                        if (offset === '') {
+                        if (!offset) {
                             return '';
                         }
                     }
@@ -2547,7 +2547,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                         let distance = url.slice(2).join('');
                         if (hasCalc(offset)) {
                             distance = calculateStyle(element, REGEXP_LENGTH.test(distance) ? 'offsetDistance' : 'offsetRotate', distance, boundingBox);
-                            if (distance === '') {
+                            if (!distance) {
                                 return '';
                             }
                         }
@@ -2560,7 +2560,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
             }
             if (hasCalc(anchor)) {
                 const result = calculateStyle(element, 'offsetAnchor', anchor, boundingBox);
-                if (result !== '') {
+                if (result) {
                     anchor = result;
                 }
                 else {
@@ -2576,14 +2576,14 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                 if (hasCalc(slice)) {
                     slice = calculateStyle(element, 'borderImageSlice', slice, boundingBox);
                 }
-                if (slice !== '') {
+                if (slice) {
                     let width: Undef<string>,
                         outset: Undef<string>;
                     if (match[3]) {
                         [width, outset] = match[3].trim().split(CHAR_DIVIDER);
                         if (hasCalc(width)) {
                             const result = calculateStyle(element, 'borderImageWidth', width, boundingBox);
-                            if (result !== '') {
+                            if (result) {
                                 width = result;
                             }
                             else {
@@ -2592,7 +2592,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                         }
                         if (hasCalc(outset)) {
                             const result = calculateStyle(element, 'borderImageOutset', outset, boundingBox);
-                            if (result !== '') {
+                            if (result) {
                                 outset = result;
                             }
                             else {
@@ -2819,7 +2819,7 @@ export function parseKeyframes(rules: CSSRuleList) {
                 const keyframe: StringMap = {};
                 for (const property of match[2].split(/\s*;\s*/)) {
                     const [attr, value] = splitPair(property, ':');
-                    if (value !== '') {
+                    if (value) {
                         keyframe[attr.trim()] = value.trim();
                     }
                 }
@@ -2941,7 +2941,7 @@ export function parseVar(element: StyleElement, value: string) {
     while (match = REGEXP_VAR.exec(value)) {
         let customValue = style.getPropertyValue(match[2]).trim();
         const fallback = match[2];
-        if (fallback && (customValue === '' || isLength(fallback, true) && !isLength(customValue, true) || isNumber(fallback) && !isNumber(customValue) || parseColor(fallback) && !parseColor(customValue))) {
+        if (fallback && (!customValue || isLength(fallback, true) && !isLength(customValue, true) || isNumber(fallback) && !isNumber(customValue) || parseColor(fallback) && !parseColor(customValue))) {
             customValue = fallback;
         }
         if (customValue) {
@@ -2996,7 +2996,7 @@ export function calculateVarAsString(element: StyleElement, value: string, optio
     const result: string[] = [];
     for (let seg of separator ? value.split(separator) : [value]) {
         seg = seg.trim();
-        if (seg !== '') {
+        if (seg) {
             const calc = splitEnclosing(seg, 'calc');
             const length = calc.length;
             if (length) {
@@ -3028,7 +3028,7 @@ export function calculateVarAsString(element: StyleElement, value: string, optio
                         partial += output;
                         if (dimension) {
                             output = output.trim();
-                            if (output !== '' && (!checkUnit || unitType === CSS_UNIT.LENGTH && (isLength(output, true) || output === 'auto'))) {
+                            if (output && (!checkUnit || unitType === CSS_UNIT.LENGTH && (isLength(output, true) || output === 'auto'))) {
                                 ++j;
                             }
                         }
@@ -3155,7 +3155,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
             }
         });
     }
-    if (srcset !== '') {
+    if (srcset) {
         for (const value of srcset.trim().split(CHAR_SEPARATOR)) {
             const match = REGEXP_IMGSRCSET.exec(value);
             if (match) {
@@ -3311,7 +3311,7 @@ export function insertStyleSheetRule(value: string, index = 0, shadowRoot?: Shad
 
 export function calculate(value: string, options?: CalculateOptions) {
     value = value.trim();
-    if (value === '') {
+    if (!value) {
         return NaN;
     }
     let length = value.length;

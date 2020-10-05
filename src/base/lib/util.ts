@@ -19,13 +19,13 @@ export function appendSeparator(preceding = '', value = '', separator = '/') {
             value = value.replace(/\\/g, '/');
             break;
     }
-    return preceding + (preceding !== '' && value !== '' && !preceding.endsWith(separator) && !value.startsWith(separator) ? separator : '') + value;
+    return preceding + (preceding && value && !preceding.endsWith(separator) && !value.startsWith(separator) ? separator : '') + value;
 }
 
 export function randomUUID(separator = '-') {
     let result = '';
     for (const length of [8, 4, 4, 4, 12]) {
-        if (result !== '') {
+        if (result) {
             result += separator;
         }
         for (let i = 0; i < length; ++i) {

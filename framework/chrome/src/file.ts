@@ -59,7 +59,7 @@ function getFilePath(value: string, saveTo?: boolean): [Undef<string>, string, s
 
 function resolveAssetSource(element: HTMLVideoElement | HTMLAudioElement | HTMLObjectElement | HTMLEmbedElement | HTMLSourceElement | HTMLTrackElement, data: Map<HTMLElement, string>) {
     const value = resolvePath(element instanceof HTMLObjectElement ? element.data : element.src);
-    if (value !== '') {
+    if (value) {
         data.set(element, value);
     }
 }
@@ -221,7 +221,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     rootDir = path.substring(0, index + 1);
                 }
             }
-            if (filename === '') {
+            if (!filename) {
                 if (local && relocate) {
                     [moveTo, pathname, filename] = getFilePath(relocate, saveTo);
                 }
@@ -364,7 +364,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                         format = saveAs.format;
                         outerHTML = element.outerHTML;
                     }
-                    if (src !== '') {
+                    if (src) {
                         data = File.parseUri(resolvePath(src), { preserveCrossOrigin, saveAs: file, format });
                     }
                     else if (isString(file)) {
@@ -415,7 +415,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     outerHTML: Undef<string>;
                 if (element instanceof HTMLLinkElement) {
                     href = element.href.trim();
-                    if (href !== '') {
+                    if (href) {
                         switch (element.rel.trim()) {
                             case 'stylesheet':
                                 mimeType = 'text/css';
@@ -484,7 +484,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         const result: ChromeAsset[] = [];
         const processUri = (element: Null<HTMLElement>, uri: string, mimeType?: string) => {
             uri = uri.trim();
-            if (uri !== '') {
+            if (uri) {
                 let file: Undef<string>,
                     saveTo: Undef<boolean>;
                 if (element) {
@@ -557,7 +557,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                         const pathname = trimEnd(saveAs.pathname || '', '/').replace(/\\/g, '/');
                         data = processUri(
                             null,
-                            resolvePath(getFilePath(pathname + (pathname !== '' ? '/' : '') + filename)[1] + filename, location.href),
+                            resolvePath(getFilePath(pathname + (pathname ? '/' : '') + filename)[1] + filename, location.href),
                             mimeType
                         );
                         if (data) {

@@ -63,7 +63,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
             this.setAttribute('stroke-dashoffset');
             this.setAttribute('clip-rule');
             const clipPath = this.getAttribute('clip-path');
-            if (clipPath !== '' && clipPath !== 'none') {
+            if (clipPath && clipPath !== 'none') {
                 const url = extractURL(clipPath);
                 if (url) {
                     this.clipPath = url;
@@ -171,7 +171,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
         public setAttribute(attr: string) {
             const element = this.element;
             let value = this.getAttribute(attr);
-            if (value !== '') {
+            if (value) {
                 attr = convertCamelCase(attr);
                 if (hasCalc(value)) {
                     value = calculateStyle(element, attr, value) || getComputedStyle(element)[attr];
@@ -222,7 +222,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
 
         public getAttribute(attr: string) {
             let value = getAttribute(this.element, attr);
-            if (value === '') {
+            if (!value) {
                 if (this.patternParent) {
                     switch (attr) {
                         case 'fill-opacity':
@@ -235,7 +235,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                 let current = this.useParent || this.parent;
                 while (current) {
                     value = getAttribute(SvgBuild.isUse(current) ? current.useElement : current.element, attr);
-                    if (value !== '') {
+                    if (value) {
                         break;
                     }
                     current = current.parent;
@@ -281,9 +281,9 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
         }
         get strokeWidth() {
             const stroke = this.stroke;
-            if (stroke !== '' && stroke !== 'none') {
+            if (stroke && stroke !== 'none') {
                 const result = this._strokeWidth;
-                if (result !== '') {
+                if (result) {
                     return this.parent?.requireRefit ? truncate(this.parent.refitSize(parseFloat(result))) : result;
                 }
             }

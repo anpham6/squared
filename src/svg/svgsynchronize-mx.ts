@@ -865,12 +865,12 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                     for (let i = 0; i < length; ++i) {
                         const item = mergeable[i] as SvgAnimate;
                         if (excluded[i]) {
-                            if (!item.fillReplace) {
-                                item.setterType = true;
-                                insertSetter(item);
+                            if (item.fillReplace) {
+                                removeable.push(item);
                             }
                             else {
-                                removeable.push(item);
+                                item.setterType = true;
+                                insertSetter(item);
                             }
                         }
                         else if (!item.setterType) {

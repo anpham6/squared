@@ -139,23 +139,23 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                                     SvgAnimate.getSplitValue(rgbaA.b, rgbaB.b, percent)
                                 );
                                 const a = getHexCode(SvgAnimate.getSplitValue(rgbaA.a, rgbaB.a, percent));
-                                result += (result !== '' ? ' ' : '') + `#${rgb + (a !== 'FF' ? a : '')}`;
+                                result = `#${rgb + (a !== 'FF' ? a : '')}`;
                                 break;
                             }
                             case 'points':
                                 for (let j = 0; j < length; ++j) {
                                     const current = currentValue[j] as Point;
                                     const next = nextValue[j] as Point;
-                                    result += (result !== '' ? ' ' : '') + SvgAnimate.getSplitValue(current.x, next.x, percent) + ',' + SvgAnimate.getSplitValue(current.y, next.y, percent);
+                                    result += (j > 0 ? ' ' : '') + SvgAnimate.getSplitValue(current.x, next.x, percent) + ',' + SvgAnimate.getSplitValue(current.y, next.y, percent);
                                 }
                                 break;
                             default:
                                 for (let j = 0; j < length; ++j) {
-                                    result += (result !== '' ? ' ' : '') + SvgAnimate.getSplitValue(currentValue[j] as number, nextValue[j] as number, percent);
+                                    result += (j > 0 ? ' ' : '') + SvgAnimate.getSplitValue(currentValue[j] as number, nextValue[j] as number, percent);
                                 }
                                 break;
                         }
-                        if (result !== '') {
+                        if (result) {
                             splitTimes[i] = time;
                             splitValues[i] = result;
                         }
@@ -208,7 +208,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         if (animationElement) {
             const values = getNamedItem(animationElement, 'values');
             const keyTimes = this.duration !== -1 ? SvgAnimate.toFractionList(getNamedItem(animationElement, 'keyTimes')) : [];
-            if (values !== '') {
+            if (values) {
                 const valuesData = trimEnd(values, ';').split(/\s*;\s*/);
                 this.values = valuesData;
                 const length = valuesData.length;
@@ -227,7 +227,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 this.convertToValues(keyTimes);
             }
             const repeatDur = getNamedItem(animationElement, 'repeatDur');
-            if (repeatDur !== '' && repeatDur !== 'indefinite') {
+            if (repeatDur && repeatDur !== 'indefinite') {
                 const value = SvgAnimation.parseClockTime(repeatDur);
                 if (!isNaN(value) && value > 0) {
                     this._repeatDuration = value;
@@ -395,7 +395,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         if (!this._values) {
             const animationElement = this.animationElement;
             if (animationElement) {
-                if (this.to === '') {
+                if (!this.to) {
                     const by = getNamedItem(animationElement, 'by');
                     const byCoords = SvgBuild.parseCoordinates(by);
                     if (byCoords.length && (value ||= this.baseValue || '')) {
@@ -469,7 +469,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     set keySplines(value) {
         if (value && value.length) {
             const minSegment = this.keyTimes.length - 1;
-            if (value.length >= minSegment && !value.every(spline => spline === '' || spline === SvgAnimate.KEYSPLINE_NAME.linear)) {
+            if (value.length >= minSegment && !value.every(spline => !spline || spline === SvgAnimate.KEYSPLINE_NAME.linear)) {
                 const keySplines: string[] = [];
                 for (let i = 0; i < minSegment; ++i) {
                     const points = replaceMap(value[i].split(/\s+/), pt => parseFloat(pt));

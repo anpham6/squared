@@ -95,7 +95,7 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
                 if (offsetParent >= 0 && offsetChild >= 0) {
                     const height = target.bounds.height;
                     let resetChild: Undef<boolean>;
-                    if (!DOCTYPE_HTML && offsetParent === 0 && offsetChild > 0 && target.valueOf(marginName) === '') {
+                    if (!DOCTYPE_HTML && offsetParent === 0 && offsetChild > 0 && !target.valueOf(marginName)) {
                         resetChild = true;
                     }
                     else {
@@ -875,7 +875,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                     }
                     else if (!renderParent.layoutVertical && !outerWrapper.alignParent('left') && !node.textJustified) {
                         const documentId = outerWrapper.alignSibling('leftRight');
-                        if (documentId !== '') {
+                        if (documentId) {
                             const previousSibling = renderParent.renderChildren.find(item => item.documentId === documentId);
                             if (previousSibling && previousSibling.inlineVertical && previousSibling.bounds.width) {
                                 setSpacingOffset(outerWrapper, BOX_STANDARD.MARGIN_LEFT, previousSibling.actualRect('right'));

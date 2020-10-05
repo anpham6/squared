@@ -77,7 +77,7 @@ function parseDataSet(validator: ObjectMap<RegExp>, element: HTMLElement, option
 
 function getTitle(node: View, element: HTMLElement) {
     const title = element.title.trim();
-    if (title !== '') {
+    if (title) {
         return title;
     }
     else {
@@ -196,14 +196,14 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
                 if (!android.icon) {
                     const resource = this.resource as android.base.Resource<T>;
                     let src = resource.addImageSrc(node.backgroundImage, PREFIX_MENU);
-                    if (src !== '') {
+                    if (src) {
                         android.icon = `@drawable/${src}`;
                     }
                     else {
                         const image = node.find(item => item.imageElement);
                         if (image) {
                             src = resource.addImageSrc(image.element as HTMLImageElement, PREFIX_MENU);
-                            if (src !== '') {
+                            if (src) {
                                 android.icon = `@drawable/${src}`;
                             }
                         }
@@ -212,7 +212,7 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
                 node.each((item: T) => item.tagName !== 'NAV' && item.hide());
                 break;
         }
-        if (title !== '') {
+        if (title) {
             android.title = Resource.addString(title, '', this.application.extensionManager.valueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberAsResource'));
         }
         node.setControlType(controlName, CONTAINER_NODE.INLINE);

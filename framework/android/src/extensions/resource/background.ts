@@ -212,7 +212,7 @@ function getCornerRadius(corners: string[]) {
 function getBackgroundColor(value: Undef<string>) {
     if (value) {
         const color = getColorValue(value, false);
-        if (color !== '') {
+        if (color) {
             return { color };
         }
     }
@@ -381,7 +381,7 @@ function createLayerList(boxStyle: BoxStyle, images: UndefNull<BackgroundImageDa
 
 function getColorValue(value: ColorData | string, transparency = true) {
     const color = Resource.addColor(value, transparency);
-    return color !== '' ? `@color/${color}` : '';
+    return color ? `@color/${color}` : '';
 }
 
 function setBorderStyle(layerList: LayerList, borders: Undef<BorderAttribute>[], index: number, corners: Undef<StringMap>, indentWidth: number, indentOffset: string) {
@@ -496,7 +496,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             themeBackground = true;
         };
         const setDrawableBackground = (node: T, value: string) => {
-            if (value !== '') {
+            if (value) {
                 const drawable = `@drawable/${Resource.insertStoredAsset('drawables', (node.containerName + '_' + node.controlId).toLowerCase(), value)}`;
                 if (!themeBackground) {
                     if (node.tagName === 'HTML') {
@@ -505,7 +505,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                     else {
                         const innerWrapped = node.innerMostWrapped as T;
-                        if (innerWrapped.documentBody && (node.backgroundColor !== '' || node.visibleStyle.backgroundRepeatY)) {
+                        if (innerWrapped.documentBody && (node.backgroundColor || node.visibleStyle.backgroundRepeatY)) {
                             setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, drawable);
                             deleteBodyWrapper(innerWrapped, node);
                             return;
@@ -566,7 +566,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     const backgroundColor = stored.backgroundColor;
                     if (backgroundColor) {
                         const color = getColorValue(backgroundColor, node.inputElement);
-                        if (color !== '') {
+                        if (color) {
                             if (!themeBackground) {
                                 if (node.tagName === 'HTML') {
                                     setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, color);
@@ -819,7 +819,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         value = resolvePath(uri);
                                         const src = resource.addImageSet({ mdpi: value });
                                         images[length] = src;
-                                        if (src !== '') {
+                                        if (src) {
                                             imageDimensions[length] = resource.getImage(value)!;
                                             valid = true;
                                         }
@@ -871,7 +871,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 for (const image of boxImage.filter(item => item.visible && (item.imageElement || item.containerName === 'INPUT_IMAGE'))) {
                     const element = image.element as HTMLImageElement;
                     const src = resource.addImageSrc(element);
-                    if (src !== '') {
+                    if (src) {
                         const imageDimension = image.bounds;
                         images[length] = src;
                         backgroundRepeat[length] = 'no-repeat';
@@ -1081,7 +1081,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                         break;
                     default:
-                        if (size !== '') {
+                        if (size) {
                             size.split(' ').forEach((dimen, index) => {
                                 if (dimen === '100%') {
                                     gravityAlign = index === 0 ? 'fill_horizontal' : delimitString({ value: gravityAlign, delimiter: '|' }, 'fill_vertical');
@@ -1314,7 +1314,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         if (width === 0 && dimenWidth > boundsWidth) {
                             width = boundsWidth - (offsetX ? Math.min(position.left, 0) : 0);
                             let fill = true;
-                            if (tileModeY === 'repeat' && gravityX !== '') {
+                            if (gravityX && tileModeY === 'repeat') {
                                 switch (gravityX) {
                                     case 'start':
                                     case 'left':
@@ -1374,7 +1374,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         if (height === 0 && dimenHeight > boundsHeight) {
                             height = boundsHeight;
                             let fill = true;
-                            if (tileModeX === 'repeat' && gravityY !== '') {
+                            if (gravityY && tileModeX === 'repeat') {
                                 switch (gravityY) {
                                     case 'top':
                                         if (offsetY) {
@@ -1500,11 +1500,11 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                         gravityY = '';
                     }
-                    if (gravityX !== '' && !resizedWidth) {
+                    if (gravityX && !resizedWidth) {
                         gravityAlign = delimitString({ value: gravityAlign, delimiter: '|' }, gravityX);
                         gravityX = '';
                     }
-                    if (gravityY !== '' && !resizedHeight) {
+                    if (gravityY && !resizedHeight) {
                         gravityAlign = delimitString({ value: gravityAlign, delimiter: '|' }, gravityY);
                         gravityY = '';
                     }
@@ -1542,7 +1542,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             }
                         }])
                     );
-                    if (gradient !== '') {
+                    if (gradient) {
                         src = `@drawable/${gradient}`;
                         imageData.order = j++;
                         imageData.vectorGradient = true;
@@ -1577,7 +1577,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
                 const gravity = gravityX === 'center_horizontal' && gravityY === 'center_vertical' ? 'center' : delimitString({ value: gravityX, delimiter: '|' }, gravityY);
                 if (src) {
-                    if (bitmap && (!autoFit && (gravityAlign !== '' && gravity !== '' || tileModeX === 'repeat' || tileModeY === 'repeat' || documentBody) || unsizedWidth || unsizedHeight)) {
+                    if (bitmap && (!autoFit && (gravityAlign && gravity || tileModeX === 'repeat' || tileModeY === 'repeat' || documentBody) || unsizedWidth || unsizedHeight)) {
                         let tileMode = '';
                         if (tileModeX === 'disabled' && tileModeY === 'disabled') {
                             tileMode = 'disabled';

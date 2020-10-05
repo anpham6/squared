@@ -79,7 +79,7 @@ function getImageAssets(pathname: string, items: string[], convertExt: string, c
                             }
                         }
                     }
-                    if (mimeType !== '') {
+                    if (mimeType) {
                         mimeType += mimeTypeFrom;
                     }
                 }

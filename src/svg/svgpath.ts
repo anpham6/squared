@@ -275,9 +275,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                     }
                 }
             }
-            if (this.baseValue === '') {
-                this.baseValue = d;
-            }
+            this.baseValue ||= d;
         }
         else if (SVG.line(element)) {
             let points: SvgPoint[] = [
@@ -423,7 +421,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
     }
 
     public extendLength(data: SvgPathExtendData, precision?: number) {
-        if (this.value !== '') {
+        if (this.value) {
             switch (this.element.tagName) {
                 case 'path':
                 case 'line':

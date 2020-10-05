@@ -862,7 +862,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static parseCoordinates(value: string) {
         const result: number[] = [];
-        if (value !== '') {
+        if (value) {
             RE_DECIMAL.matcher(value);
             while (RE_DECIMAL.find()) {
                 const coord = parseFloat(RE_DECIMAL.group()!);

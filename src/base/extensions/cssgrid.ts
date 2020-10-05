@@ -337,7 +337,7 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
         };
         for (let index = 0; index < 4; ++index) {
             const value = gridTemplates[index];
-            if (value !== '' && value !== 'none' && value !== 'auto') {
+            if (value && value !== 'none' && value !== 'auto') {
                 const direction = index === 0 ? row : column;
                 const { name, repeat, unit, unitMin } = direction;
                 let i = 1,

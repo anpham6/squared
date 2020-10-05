@@ -17,10 +17,6 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                 const renderChildren = rendered[i].renderChildren;
                 const q = renderChildren.length;
                 if (q > 1) {
-                    const controlId = rendered[i].controlId;
-                    if (controlId === '') {
-                        continue;
-                    }
                     const attrMap: ObjectMap<number> = {};
                     let style = '';
                     for (let j = 0; j < q; ++j) {
@@ -33,7 +29,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                                 if (j === 0) {
                                     style = value;
                                 }
-                                else if (style === '' || value !== style) {
+                                else if (!style || value !== style) {
                                     break next;
                                 }
                                 found = true;
@@ -42,7 +38,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                                 attrMap[value] = (attrMap[value] || 0) + 1;
                             }
                         }
-                        if (!found && style !== '') {
+                        if (!found && style) {
                             break next;
                         }
                     }
@@ -55,6 +51,9 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                     const r = keys.length;
                     if (r > 1) {
                         style &&= style.substring(style.indexOf('/') + 1, style.length - 1);
+                        if (style) {
+                            style += '.';
+                        }
                         const items: StringValue[] = [];
                         const attrs: string[] = [];
                         for (let j = 0; j < r; ++j) {
@@ -64,11 +63,9 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                                 attrs.push(match[2]);
                             }
                         }
-                        const name = (style !== '' ? style + '.' : '') + capitalize(controlId);
-                        if (!styles.has(name)) {
-                            items.sort((a, b) => a.key < b.key ? -1 : 1);
-                            styles.set(name, { name, parent: '', items } as StyleAttribute);
-                        }
+                        const name = style + capitalize(rendered[i].controlId || 'unknown');
+                        items.sort((a, b) => a.key < b.key ? -1 : 1);
+                        styles.set(name, { name, parent: '', items } as StyleAttribute);
                         for (let j = 0; j < q; ++j) {
                             const item = renderChildren[j];
                             item.attr('_', 'style', `@style/${name}`);

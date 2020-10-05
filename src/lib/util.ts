@@ -499,10 +499,10 @@ export function delimitString(options: DelimitStringOptions, ...appending: strin
         return appending[0];
     }
     const delimiter = options.delimiter || ', ';
-    const values = value !== '' ? value.split(delimiter) : [];
+    const values = value ? value.split(delimiter) : [];
     for (let i = 0; i < length; ++i) {
         const append = appending[i];
-        if (append !== '') {
+        if (append) {
             if (not && values.includes(not[i])) {
                 continue;
             }
@@ -561,7 +561,7 @@ export function splitEnclosing(value: string, prefix?: string, separator = '', o
     const appendValues = (segment: string) => {
         for (let seg of segment.split(separator)) {
             seg = seg.trim();
-            if (seg !== '') {
+            if (seg) {
                 result.push(seg);
             }
         }
@@ -575,7 +575,7 @@ export function splitEnclosing(value: string, prefix?: string, separator = '', o
             let segment = value.substring(position, index);
             if (separator) {
                 segment = segment.trim();
-                if (segment !== '') {
+                if (segment) {
                     appendValues(segment);
                     if (!prefixed) {
                         const joined = lastItemOf(result);
@@ -629,7 +629,7 @@ export function splitEnclosing(value: string, prefix?: string, separator = '', o
         const excess = value.substring(position);
         if (separator) {
             const segment = excess.trim();
-            if (segment !== '') {
+            if (segment) {
                 appendValues(segment);
             }
         }
@@ -807,7 +807,7 @@ export function cloneObject<T>(data: T, options?: CloneObjectOptions<T>) {
 
 export function resolvePath(value: string, href?: string) {
     value = value.trim();
-    if (value !== '' && !FILE.PROTOCOL.test(value)) {
+    if (value && !FILE.PROTOCOL.test(value)) {
         const pathname = (href ? href.replace(location.origin, '') : location.pathname).replace(/\\/g, '/').split('/');
         --pathname.length;
         value = value.replace(/\\/g, '/');
@@ -1069,8 +1069,8 @@ export function joinArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T,
     let result = '';
     for (let i = 0, length = list.length; i < length; ++i) {
         const value = predicate(list[i], i, list);
-        if (value !== '') {
-            result += result !== '' ? char + value : value;
+        if (value) {
+            result += result ? char + value : value;
         }
     }
     return result;

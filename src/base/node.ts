@@ -76,7 +76,7 @@ function parseLineHeight(lineHeight: string, fontSize: number) {
 
 function isFontFixedWidth(node: T) {
     const [fontFirst, fontSecond] = splitPair(node.css('fontFamily'), ',', true);
-    return fontFirst === 'monospace' && !(fontSecond !== '' && fontSecond === 'monospace');
+    return fontFirst === 'monospace' && fontSecond !== 'monospace';
 }
 
 function getFlexValue(node: T, attr: string, fallback: number, parent?: Null<Node>): number {
@@ -113,7 +113,7 @@ function setDimension(node: T, styleMap: StringMap, attr: DimensionAttr) {
             case 'OBJECT':
             case 'EMBED': {
                 const size = getNamedItem(element, attr);
-                if (size !== '') {
+                if (size) {
                     result = isNumber(size) ? parseFloat(size) : node.parseUnit(size, options);
                     if (result) {
                         node.css(attr, isPercent(size) ? size : size + 'px');
@@ -155,7 +155,7 @@ function convertBorderWidth(node: T, dimension: DimensionAttr, border: string[])
                 return 0;
         }
         const width = node.css(border[0]);
-        if (width !== '') {
+        if (width) {
             const result = width.endsWith('px') ? parseFloat(width) : isLength(width, true) ? node.parseUnit(width, { dimension }) : parseFloat(node.style[border[0]]);
             if (result) {
                 return Math.max(Math.round(result), 1);
@@ -326,7 +326,7 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, last: boo
                     }
                     break;
                 case ':placeholder-shown':
-                    if (!((tagName === 'INPUT' || tagName === 'TEXTAREA') && child.toElementString('placeholder') !== '')) {
+                    if (!((tagName === 'INPUT' || tagName === 'TEXTAREA') && child.toElementString('placeholder'))) {
                         return false;
                     }
                     break;
@@ -434,7 +434,7 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, last: boo
                     }
                     break;
                 case ':target':
-                    if (location.hash === '' || !(location.hash === `#${child.elementId}` || tagName === 'A' && location.hash === `#${child.toElementString('name')}`)) {
+                    if (!location.hash || !(location.hash === `#${child.elementId}` || tagName === 'A' && location.hash === `#${child.toElementString('name')}`)) {
                         return false;
                     }
                     break;
@@ -607,10 +607,7 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, last: boo
             else {
                 value = attributes[attr.key];
             }
-            if (!value) {
-                return false;
-            }
-            else {
+            if (value) {
                 const valueAlt = attr.value;
                 if (valueAlt) {
                     if (attr.caseInsensitive) {
@@ -649,6 +646,9 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, last: boo
                         return false;
                     }
                 }
+            }
+            else {
+                return false;
             }
         }
     }
@@ -737,7 +737,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     for (const attrAlt of alias) {
                         if (!styleMap[attrAlt]) {
                             const valueAlt = checkStyleValue(element, attrAlt, value);
-                            if (valueAlt !== '') {
+                            if (valueAlt) {
                                 result[attrAlt] = valueAlt;
                             }
                         }
@@ -746,7 +746,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 }
             }
             value = checkStyleValue(element, attr, value);
-            if (value !== '') {
+            if (value) {
                 result[attr] = value;
             }
         }
@@ -826,14 +826,14 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     }
                     return true;
                 }
-                else if (!sessionId) {
-                    return false;
-                }
-                else {
+                else if (sessionId) {
                     elementData = getElementData(element, sessionId);
                     if (elementData) {
                         this._elementData = elementData;
                     }
+                }
+                else {
+                    return false;
                 }
             }
             else {
@@ -1271,7 +1271,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             value: string;
         while (parent) {
             value = parent.valueOf(attr, options);
-            if (value !== '' && value !== 'inherit') {
+            if (value && value !== 'inherit') {
                 return value;
             }
             parent = parent.actualParent;
@@ -1736,7 +1736,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                     case '~':
                                         --offset;
                                     case '>':
-                                        if (adjacent !== '' || selectors.length === 0) {
+                                        if (adjacent || selectors.length === 0) {
                                             break invalid;
                                         }
                                         adjacent = ch;
@@ -2737,13 +2737,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         result = '';
                     }
                 }
-                if (result !== '' && this.styleElement && this.pageFlow && (!this.inputElement && this.css('opacity') === '1' || isTransparent(result))) {
+                if (result && this.styleElement && this.pageFlow && (!this.inputElement && this.css('opacity') === '1' || isTransparent(result))) {
                     let parent = this.actualParent;
                     while (parent) {
                         const backgroundImage = parent.valueOf('backgroundImage');
-                        if (backgroundImage === '' || backgroundImage === 'none') {
+                        if (!backgroundImage || backgroundImage === 'none') {
                             const color = parent.backgroundColor;
-                            if (color !== '' && !isTransparent(color)) {
+                            if (color && !isTransparent(color)) {
                                 if (color === result && parent.css('opacity') === '1') {
                                     result = '';
                                 }
@@ -2857,19 +2857,29 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get wrapperOf() {
-        let node = this as T;
-        do {
-            switch (node.size()) {
-                case 0:
-                    return node === this ? null : node;
-                case 1:
-                    node = node.children[0];
+        let result = this._cacheState.wrapperOf;
+        if (result === undefined) {
+            let node = this as T;
+            do {
+                if (node.size()) {
+                    const children = node.children.filter(item => item.pageFlow);
+                    if (children.length === 1) {
+                        node = children[0];
+                    }
+                    else {
+                        result = null;
+                        break;
+                    }
+                }
+                else {
+                    result = node === this ? null : node;
                     break;
-                default:
-                    return null;
+                }
             }
+            while (true);
+            this._cacheState.wrapperOf = result;
         }
-        while (true);
+        return result;
     }
 
     get actualWidth() {
@@ -2889,7 +2899,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         break;
                 }
             }
-            else if (this.inlineStatic && this.valueOf('width') === '' || this.display === 'table-cell' || this.actualParent?.flexdata.row) {
+            else if (this.inlineStatic && !this.valueOf('width') || this.display === 'table-cell' || this.actualParent?.flexdata.row) {
                 result = this.bounds.width;
             }
             else {
@@ -2911,7 +2921,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     get actualHeight() {
         let result = this._cache.actualHeight;
         if (result === undefined) {
-            if (this.inlineStatic && this.valueOf('height') === '' || this.display === 'table-cell' || this.actualParent?.flexdata.column) {
+            if (this.inlineStatic && !this.valueOf('height') || this.display === 'table-cell' || this.actualParent?.flexdata.column) {
                 result = this.bounds.height;
             }
             else {
@@ -3076,7 +3086,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                     }
                                     else {
                                         const fontSize = parent.valueOf('fontSize');
-                                        if (fontSize !== '' && fontSize !== 'inherit') {
+                                        if (fontSize && fontSize !== 'inherit') {
                                             value = checkFontSizeValue(fontSize);
                                             if (isPercent(value)) {
                                                 emRatio *= parseFloat(value) / 100;
@@ -3142,11 +3152,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         let result = this._cacheState.dir;
         if (result === undefined) {
             result = this.naturalElement ? (this._element as HTMLElement).dir : '';
-            if (result === '') {
+            if (!result) {
                 let parent = this.actualParent;
                 while (parent) {
                     result = parent.dir;
-                    if (result !== '') {
+                    if (result) {
                         break;
                     }
                     parent = parent.actualParent;

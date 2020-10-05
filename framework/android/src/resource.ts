@@ -38,7 +38,7 @@ function formatObject(obj: ObjectMap<Undef<string | StringMap>>, numberAlias?: b
                     case 'srcCompat':
                         if (FILE.PROTOCOL.test(value)) {
                             const src = Resource.addImage({ mdpi: value });
-                            if (src !== '') {
+                            if (src) {
                                 obj[attr] = `@drawable/${src}`;
                             }
                         }
@@ -47,7 +47,7 @@ function formatObject(obj: ObjectMap<Undef<string | StringMap>>, numberAlias?: b
                         const colorData = parseColor(value);
                         if (colorData) {
                             const colorName = Resource.addColor(colorData);
-                            if (colorName !== '') {
+                            if (colorName) {
                                 obj[attr] = `@color/${colorName}`;
                             }
                         }
@@ -90,7 +90,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         const themes = STORED.themes;
         const filename = `${path}/${file}`;
         const storedFile = themes.get(filename) || new Map<string, ThemeAttribute>();
-        if (name === '' || name[0] === '.') {
+        if (!name || name[0] === '.') {
             found: {
                 for (const data of themes.values()) {
                     for (const style of data.values()) {
@@ -101,7 +101,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                     }
                 }
             }
-            if (appTheme === '') {
+            if (!appTheme) {
                 return false;
             }
         }

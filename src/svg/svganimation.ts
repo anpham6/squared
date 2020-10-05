@@ -105,7 +105,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
             this.setAttribute('to');
             this.setAttribute('fill', 'freeze');
             const dur = getNamedItem(animationElement, 'dur');
-            if (dur !== '' && dur !== 'indefinite') {
+            if (dur && dur !== 'indefinite') {
                 const value = SvgAnimation.parseClockTime(dur);
                 this.duration = !isNaN(value) && value > 0 ? value : 0;
             }
@@ -116,7 +116,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
         const animationElement = this.animationElement;
         if (animationElement) {
             const value = getNamedItem(animationElement, attr);
-            if (value !== '') {
+            if (value) {
                 if (isString(equality)) {
                     equality = equality.trim();
                     this[attr + capitalize(equality)] = value === equality;
@@ -165,7 +165,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
                             baseValue = getAttribute(element, value);
                             break;
                     }
-                    if (baseValue === '') {
+                    if (!baseValue) {
                         const animationElement = this.animationElement;
                         if (animationElement && getComputedStyle(element).animationPlayState === 'paused') {
                             const parentElement = animationElement.parentElement;

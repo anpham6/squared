@@ -267,7 +267,9 @@ function getOuterOpacity(target: SvgView) {
 
 function residualHandler(element: SVGGraphicsElement, transforms: SvgTransform[], rx = 1, ry = 1): [SvgTransform[][], SvgTransform[]] {
     return (
-        (SVG.circle(element) || SVG.ellipse(element)) && transforms.some(item => item.type === SVGTransform.SVG_TRANSFORM_ROTATE) && (rx !== ry || transforms.length > 1 && transforms.some(item => item.type === SVGTransform.SVG_TRANSFORM_SCALE && item.matrix.a !== item.matrix.d))
+        (SVG.circle(element) || SVG.ellipse(element)) &&
+        transforms.some(item => item.type === SVGTransform.SVG_TRANSFORM_ROTATE) &&
+        (rx !== ry || transforms.length > 1 && transforms.some(item => item.type === SVGTransform.SVG_TRANSFORM_SCALE && item.matrix.a !== item.matrix.d))
             ? groupTransforms(element, transforms)
             : [[], transforms]
     );
@@ -355,7 +357,7 @@ function groupTransforms(element: SVGGraphicsElement, transforms: SvgTransform[]
     return [[], transforms];
 }
 
-function getPropertyValue(values: string[] | (NumString)[][], index: number, propertyIndex: number, keyframes?: boolean, baseValue?: string) {
+function getPropertyValue(values: string[] | NumString[][], index: number, propertyIndex: number, keyframes?: boolean, baseValue?: string) {
     const property = values[index];
     let value: Undef<string>;
     if (property) {
@@ -464,7 +466,7 @@ function getTransformInitialValue(name: string): Undef<string> {
 
 function getColorValue<T>(value: string, asArray?: T) {
     let colorName = Resource.addColor(value);
-    if (colorName !== '') {
+    if (colorName) {
         colorName = `@color/${colorName}`;
         return (asArray ? [colorName] : colorName) as T extends boolean ? string[] : string;
     }
@@ -576,7 +578,7 @@ function insertTargetAnimation(data: AnimatedVectorTemplate[], name: string, tar
     const length = templateSet.length;
     if (length) {
         let modified: Undef<boolean>;
-        if (length > 1 && templateSet.every(item => item.ordering === '')) {
+        if (length > 1 && templateSet.every(item => !item.ordering)) {
             const setData: SetTemplate = {
                 set: [],
                 objectAnimator: []
@@ -590,7 +592,7 @@ function insertTargetAnimation(data: AnimatedVectorTemplate[], name: string, tar
         }
         while (targetSetTemplate.set.length === 1) {
             const setData = targetSetTemplate.set[0] as SetTemplate;
-            if ((!modified || setData.ordering === '') && setData.objectAnimator.length === 0) {
+            if ((!modified || !setData.ordering) && setData.objectAnimator.length === 0) {
                 targetSetTemplate = setData;
                 modified = true;
             }
@@ -769,10 +771,10 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 if (svg) {
                     const title = svg.getTitle();
                     const desc = svg.getDesc();
-                    if (title !== '') {
+                    if (title) {
                         node.android('tooltipText', Resource.addString(title, `svg_${node.controlId.toLowerCase()}_title`, true));
                     }
-                    if (desc !== '') {
+                    if (desc) {
                         node.android('contentDescription', Resource.addString(desc, `svg_${node.controlId.toLowerCase()}_desc`, true));
                     }
                 }
@@ -860,7 +862,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         const vectorData = this.parseVectorData(svg);
         const imageLength = imageData.length;
         let vectorName: Undef<string>;
-        if (vectorData !== '') {
+        if (vectorData) {
             const { width, height } = node.fitToScreen({ width: svg.width, height: svg.height });
             vectorName = Resource.insertStoredAsset(
                 'drawables',
@@ -1186,7 +1188,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                             beforeValues = getColorValue(item.baseValue, true);
                                                         }
                                                         for (let k = 0, r = values.length; k < r; ++k) {
-                                                            if (values[k] !== '') {
+                                                            if (values[k]) {
                                                                 values[k] = getColorValue(values[k]) || values[k - 1] || '';
                                                             }
                                                         }
@@ -1220,14 +1222,14 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                                 value = truncate(value, precision);
                                                             }
                                                             keyframe.push({
-                                                                interpolator: l && value !== '' && propertyName !== 'pivotX' && propertyName !== 'pivotY' ? getPathInterpolator(item.keySplines, l - 1) : '',
-                                                                fraction: keyTimes[l] === 0 && value === '' ? '' : truncate(keyTimes[l], floatPrecisionKeyTime),
+                                                                interpolator: l && value && propertyName !== 'pivotX' && propertyName !== 'pivotY' ? getPathInterpolator(item.keySplines, l - 1) : '',
+                                                                fraction: keyTimes[l] === 0 && !value ? '' : truncate(keyTimes[l], floatPrecisionKeyTime),
                                                                 value
                                                             });
                                                         }
                                                         propertyValuesHolder.push({ propertyName, keyframe });
                                                         if (!animatorMap.has(keyName)) {
-                                                            if (keyName !== '') {
+                                                            if (keyName) {
                                                                 animatorMap.set(keyName, propertyValuesHolder);
                                                             }
                                                             (i === 0 ? objectAnimator : customAnimator).push({ ...options, propertyValuesHolder });
@@ -1511,10 +1513,10 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                     }
                                     const name = getVectorName(item, 'stroke');
                                     const strokeData: TransformData = { name };
-                                    if (pathData !== '') {
+                                    if (pathData) {
                                         path.pathData = pathData;
                                     }
-                                    if (clipPathData !== '') {
+                                    if (clipPathData) {
                                         strokeData['clip-path'] = [{ pathData: clipPathData }];
                                     }
                                     for (let i = 0, q = strokeDash.length; i < q; ++i) {
@@ -1663,7 +1665,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                         attr = 'fillColor';
                         if (value !== 'none' && !result['aapt:attr']) {
                             const colorName = Resource.addColor(value);
-                            if (colorName !== '') {
+                            if (colorName) {
                                 value = `@color/${colorName}`;
                             }
                         }
@@ -1675,7 +1677,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                         attr = 'strokeColor';
                         if (value !== 'none') {
                             const colorName = Resource.addColor(value);
-                            if (colorName !== '') {
+                            if (colorName) {
                                 value = `@color/${colorName}`;
                             }
                         }

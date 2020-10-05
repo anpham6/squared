@@ -76,6 +76,7 @@ interface CacheState<T> {
     naturalChild?: boolean;
     actualParent?: Null<T>;
     absoluteParent?: Null<T>;
+    wrapperOf?: Null<T>;
     inlineText?: boolean;
     textContent?: string;
     textEmpty?: boolean;

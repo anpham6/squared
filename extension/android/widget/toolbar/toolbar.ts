@@ -72,13 +72,13 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
             if (item.tagName === 'IMG') {
                 if (dataset.navigationIcon) {
                     const src = resource.addImageSrc(item as HTMLImageElement, PREFIX_MENU);
-                    if (src !== '') {
+                    if (src) {
                         assignEmptyValue(app, 'navigationIcon', `@drawable/${src}`);
                     }
                 }
                 if (dataset.collapseIcon) {
                     const src = resource.addImageSrc(item as HTMLImageElement, PREFIX_MENU);
-                    if (src !== '') {
+                    if (src) {
                         assignEmptyValue(app, 'collapseIcon', `@drawable/${src}`);
                     }
                 }
@@ -212,7 +212,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
                 );
                 if (backgroundImage) {
                     const src = resource.addImageSrc(node.backgroundImage);
-                    if (src !== '') {
+                    if (src) {
                         const controller = this.controller as android.base.Controller<T>;
                         const backgroundImageOptions = createViewAttribute(options.backgroundImage);
                         let scaleType: string;
@@ -326,7 +326,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
         const appBar = node.data<T>(WIDGET_NAME.TOOLBAR, 'background');
         if (appBar) {
             const background = node.android('background');
-            if (background !== '') {
+            if (background) {
                 appBar.android('background', background);
                 node.delete('android', 'background');
             }

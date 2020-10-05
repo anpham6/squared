@@ -48,7 +48,7 @@ function parseAttribute(element: SVGElement, attr: string) {
 function convertRotate(value: string) {
     if (value.startsWith('reverse')) {
         const angle = splitPairEnd(value, ' ', true);
-        return `auto ${angle === '' ? '180' : isAngle(angle) ? 180 + parseAngle(angle, 0) : '0'}deg`;
+        return `auto ${angle ? isAngle(angle) ? 180 + parseAngle(angle, 0) : '0' : '180'}deg`;
     }
     return value;
 }
@@ -89,7 +89,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
             const result: SvgAnimation[] = [];
             let id = 0;
             const addAnimation = (item: SvgAnimation, delay: number, name = '') => {
-                if (name === '') {
+                if (!name) {
                     ++id;
                 }
                 item.delay = delay;
@@ -100,7 +100,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
             iterateArray(element.children, (item: SVGElement) => {
                 if (item instanceof SVGAnimationElement) {
                     const begin = getNamedItem(item, 'begin');
-                    const times = begin !== '' ? sortNumber(replaceMap(begin.split(';'), value => SvgAnimation.parseClockTime(value)).filter(value => !isNaN(value))) : [0];
+                    const times = begin ? sortNumber(replaceMap(begin.split(';'), value => SvgAnimation.parseClockTime(value)).filter(value => !isNaN(value))) : [0];
                     if (times.length === 0) {
                         return;
                     }
@@ -278,7 +278,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                         const offsetRotate = attrData['offset-rotate'];
                         if (attrData['offset-distance'] || !attrData['rotate']) {
                             let rotate = getAttribute(element, 'offset-rotate');
-                            if (rotate === '' || rotate === 'auto') {
+                            if (!rotate || rotate === 'auto') {
                                 rotate = 'auto 0deg';
                             }
                             sortAttribute(offsetRotate);
@@ -402,7 +402,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                     const value = values[j];
                                     if (j < r - 1) {
                                         const keySpline = keySplines[j];
-                                        if (value !== '' && keySpline.startsWith('step')) {
+                                        if (value && keySpline.startsWith('step')) {
                                             const stepData = SvgAnimate.fromStepTimingFunction(element, name, keySpline, keyTimes, values, j);
                                             if (stepData) {
                                                 const [stepTime, stepValue] = stepData;
@@ -476,7 +476,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                 let id = element.id.trim(),
                     value: Undef<string>,
                     tagName: Undef<string>;
-                if (id !== '') {
+                if (id) {
                     id = convertWord(id, true);
                     if (!CACHE_VIEWNAME.has(id)) {
                         value = id;

@@ -138,7 +138,7 @@ export default class FloatingActionButton<T extends View> extends squared.base.E
                     anchor = value;
                 }
             }
-            if (layoutGravity !== '') {
+            if (layoutGravity) {
                 node.app('layout_anchorGravity', layoutGravity);
                 node.delete('android', 'layout_gravity');
             }

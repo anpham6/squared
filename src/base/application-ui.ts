@@ -431,6 +431,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
             node.rootElement = true;
+            node.renderExclude = false;
             const preAlignment = new WeakMap<T, StringMap>();
             const direction = new WeakSet<HTMLElement>();
             const pseudoElements: T[] = [];
@@ -483,11 +484,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             });
             cache.each(item => {
-                if (!item.pseudoElt) {
-                    item.setBounds(!resetBounds && preAlignment.get(item) === undefined);
+                if (item.pseudoElt) {
+                    pseudoElements.push(item);
                 }
                 else {
-                    pseudoElements.push(item);
+                    item.setBounds(!resetBounds && preAlignment.get(item) === undefined);
                 }
             });
             if (pseudoElements.length) {
@@ -504,7 +505,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                         else {
                             id = parentElement.id.trim();
-                            if (id === '') {
+                            if (!id) {
                                 id = '__squared_' + Math.round(Math.random() * new Date().getTime());
                                 parentElement.id = id;
                             }
@@ -1072,7 +1073,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             }
                         }
                         if (nodeY.styleElement) {
-                            combined = nodeY.use !== '' ? ApplicationUI.prioritizeExtensions<T>(nodeY.use, extensionsTraverse) as ExtensionUI<T>[] : extensionsTraverse;
+                            combined = nodeY.use ? ApplicationUI.prioritizeExtensions<T>(nodeY.use, extensionsTraverse) as ExtensionUI<T>[] : extensionsTraverse;
                             for (let j = 0, r = combined.length; j < r; ++j) {
                                 const ext = combined[j];
                                 if (ext.is(nodeY)) {
@@ -1582,7 +1583,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (!isString(textContent)) {
                     if (pseudoElt === '::after') {
                         const checkPseudoAfter = (sibling: Element) => sibling.nodeName === '#text' && !/\s+$/.test(sibling.textContent!);
-                        if ((absolute || textContent === '' || !checkPseudoAfter(element.lastChild as Element)) && !checkPseudoDimension(styleMap, true, absolute)) {
+                        if ((absolute || !textContent || !checkPseudoAfter(element.lastChild as Element)) && !checkPseudoDimension(styleMap, true, absolute)) {
                             return;
                         }
                     }
@@ -1779,7 +1780,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         break;
                     }
                 }
-                if (content !== '' || value === '""') {
+                if (content || value === '""') {
                     styleMap.display ||= 'inline';
                     tagName ||= /^(inline|table)/.test(styleMap.display) ? 'span' : 'div';
                     const pseudoElement = document.createElement(tagName);
@@ -1791,7 +1792,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     else {
                         parentRoot.appendChild(pseudoElement);
                     }
-                    if (content !== '') {
+                    if (content) {
                         if (tagName === 'img') {
                             (pseudoElement as HTMLImageElement).src = content;
                             const image = this.resourceHandler.getImage(content);

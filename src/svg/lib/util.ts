@@ -552,7 +552,7 @@ export const TRANSFORM = {
     rotateOrigin(element: SVGElement, attr = 'transform'): SvgPoint[] {
         const value = getNamedItem(element, attr);
         const result: SvgPoint[] = [];
-        if (value !== '') {
+        if (value) {
             RE_ROTATE.matcher(value);
             while (RE_ROTATE.find()) {
                 const [angle, x, y] = RE_ROTATE.map(group => parseFloat(group) || 0, 1);
@@ -703,7 +703,7 @@ export function getParentAttribute(element: SVGElement, attr: string, computed?:
         value: string;
     do {
         value = getAttribute(current, attr, computed);
-        if (value !== '' && value !== 'inherit') {
+        if (value && value !== 'inherit') {
             break;
         }
         current = current.parentElement;
@@ -740,7 +740,7 @@ export function getTargetElement(element: Element, rootElement?: Null<Element>, 
     }
     else if (contentMap) {
         const [href, id] = splitPair(value, '#');
-        if (href !== '') {
+        if (href) {
             const content = contentMap[resolvePath(href)];
             if (content) {
                 document.body.insertAdjacentHTML('beforeend', content);

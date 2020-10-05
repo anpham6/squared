@@ -171,7 +171,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         td.css('height', formatPX(parseFloat(value)));
                     }
                 }
-                if (td.valueOf('verticalAlign') === '') {
+                if (!td.valueOf('verticalAlign')) {
                     td.css('verticalAlign', 'middle');
                 }
                 const visibleStyle = td.visibleStyle;
@@ -194,12 +194,12 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     }
                     else {
                         let value = getInheritedStyle(element, 'backgroundImage', /none/);
-                        if (value !== '') {
+                        if (value) {
                             td.css('backgroundImage', value, true);
                             visibleStyle.backgroundImage = true;
                         }
                         value = getInheritedStyle(element, 'backgroundColor', exclude);
-                        if (value !== '') {
+                        if (value) {
                             td.css('backgroundColor', value);
                             td.setCacheValue('backgroundColor', value);
                             visibleStyle.backgroundColor = true;
@@ -227,7 +227,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         break;
                     }
                     case 'TH':
-                        if (td.valueOf('textAlign') === '') {
+                        if (!td.valueOf('textAlign')) {
                             td.css('textAlign', 'center');
                         }
                         if (td.borderTopWidth === 0) {
@@ -242,7 +242,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 const reevaluate = !mapWidth[j] || mapWidth[j] === 'auto';
                 const width = td.bounds.width;
                 if (i === 0 || reevaluate || !mainData.layoutFixed) {
-                    if (columnWidth === '' || columnWidth === 'auto') {
+                    if (!columnWidth || columnWidth === 'auto') {
                         if (!mapWidth[j]) {
                             mapWidth[j] = columnWidth || '0px';
                             mapBounds[j] = 0;
@@ -381,7 +381,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     setBoundsWidth(caption as T);
                 }
             }
-            if (caption.valueOf('textAlign') === '') {
+            if (!caption.valueOf('textAlign')) {
                 caption.css('textAlign', 'center');
             }
             this.data.set(caption as T, { colSpan: columnCount } as TableCellSpanData);

@@ -87,7 +87,10 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                         }
                     }
                     let ordinal = convertListStyle(type, i);
-                    if (ordinal === '') {
+                    if (ordinal) {
+                        ordinal += '.';
+                    }
+                    else {
                         switch (type) {
                             case 'disc':
                                 ordinal = '●';
@@ -98,7 +101,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                             case 'none':
                                 if (!item.visibleStyle.backgroundRepeat) {
                                     const src = item.backgroundImage;
-                                    if (src !== '') {
+                                    if (src) {
                                         mainData.imageSrc = src;
                                         mainData.imagePosition = item.css('backgroundPosition');
                                         item.exclude({ resource: NODE_RESOURCE.IMAGE_SOURCE });
@@ -109,9 +112,6 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                                 ordinal = '○';
                                 break;
                         }
-                    }
-                    else {
-                        ordinal += '.';
                     }
                     mainData.ordinal = ordinal;
                 }

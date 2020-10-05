@@ -115,13 +115,13 @@ function setContentSpacing(mainData: ICssGridData<View>, data: CssGridDirectionD
                     for (let i = 0; i < itemCount; ++i) {
                         for (const item of new Set(flatArray<View>(rowData[i], Infinity))) {
                             const marginStart = (i > 0 && i <= marginExcess ? 1 : 0) + marginSize;
-                            if (!adjusted.has(item)) {
+                            if (adjusted.has(item)) {
+                                item.cssPX(dimension, offset / itemCount, true);
+                            }
+                            else {
                                 item.modifyBox(MARGIN_START, marginStart);
                                 item.modifyBox(MARGIN_END, marginSize);
                                 adjusted.add(item);
-                            }
-                            else {
-                                item.cssPX(dimension, offset / itemCount, true);
                             }
                         }
                     }
@@ -134,12 +134,12 @@ function setContentSpacing(mainData: ICssGridData<View>, data: CssGridDirectionD
                             for (const item of new Set(flatArray<View>(rowData[i], Infinity))) {
                                 if (i < itemCount - 1) {
                                     const marginEnd = marginSize + (i < marginExcess ? 1 : 0);
-                                    if (!adjusted.has(item)) {
-                                        item.modifyBox(MARGIN_END, marginEnd);
-                                        adjusted.add(item);
+                                    if (adjusted.has(item)) {
+                                        item.cssPX(dimension, marginEnd, true);
                                     }
                                     else {
-                                        item.cssPX(dimension, marginEnd, true);
+                                        item.modifyBox(MARGIN_END, marginEnd);
+                                        adjusted.add(item);
                                     }
                                 }
                                 else {

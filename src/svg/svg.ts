@@ -101,7 +101,7 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
         if (typeof value !== 'string') {
             value = extractURL(getParentAttribute(value, 'fill')) || '';
         }
-        if (value !== '') {
+        if (value) {
             const result = this.definitions.pattern.get(value);
             if (result) {
                 return result;
@@ -118,7 +118,7 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
             value = extractURL(getParentAttribute(value, 'fillPattern')) || '';
         }
         let result: Undef<SvgGradient>;
-        if (value !== '') {
+        if (value) {
             result = this.definitions.gradient.get(value);
             if (!result) {
                 const element = document.getElementById(value.substring(1));

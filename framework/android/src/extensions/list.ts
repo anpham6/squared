@@ -210,7 +210,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     ordinal.modifyBox(BOX_STANDARD.PADDING_LEFT, 2);
                     ordinal.cssTry('display', 'inline-block', function (this: T) { this.setBounds(); });
                     ordinal.saveAsInitial();
-                    if (gravity !== '') {
+                    if (gravity) {
                         ordinal.mergeGravity('gravity', node.localizeString(gravity));
                     }
                     if (top !== 0) {
@@ -288,7 +288,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
     }
 
     public postOptimize(node: T) {
-        if (node.companion?.android('baselineAlignedChildIndex') !== '' && (node.renderParent as T).layoutGrid) {
+        if (node.companion?.android('baselineAlignedChildIndex') && (node.renderParent as T).layoutGrid) {
             node.setBox(BOX_STANDARD.PADDING_TOP, { reset: 1 });
         }
     }

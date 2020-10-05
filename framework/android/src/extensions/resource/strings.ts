@@ -33,7 +33,7 @@ function getFontVariationStyle(value: string) {
 }
 
 function setTextValue(node: View, attr: string, name: string) {
-    if (name !== '') {
+    if (name) {
         node.android(attr, name, false);
     }
 }
@@ -50,7 +50,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
             if (node.hasResource(NODE_RESOURCE.VALUE_STRING)) {
                 if (node.styleElement) {
                     const title = node.data<string>(Resource.KEY_NAME, 'titleString') || node.toElementString('title');
-                    if (title !== '') {
+                    if (title) {
                         setTextValue(
                             node,
                             'tooltipText',
@@ -58,27 +58,25 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                         );
                     }
                 }
-                if (node.inputElement) {
-                    if (node.controlName === CONTAINER_TAGNAME.EDIT_LIST) {
-                        const list = (node.element as HTMLInputElement).list;
-                        if (list) {
-                            this.createOptionArray(list as HTMLSelectElement, node.controlId);
-                        }
+                if (node.controlName === CONTAINER_TAGNAME.EDIT_LIST) {
+                    const list = (node.element as HTMLInputElement).list;
+                    if (list) {
+                        this.createOptionArray(list as HTMLSelectElement, node.controlId);
                     }
-                    const hintString = node.data<string>(Resource.KEY_NAME, 'hintString');
-                    if (hintString) {
-                        setTextValue(
-                            node,
-                            'hint',
-                            Resource.addString(replaceCharacterData(hintString), `${node.controlId.toLowerCase()}_hint`, numberAsResource)
-                        );
-                    }
+                }
+                const hintString = node.data<string>(Resource.KEY_NAME, 'hintString');
+                if (hintString) {
+                    setTextValue(
+                        node,
+                        'hint',
+                        Resource.addString(replaceCharacterData(hintString), `${node.controlId.toLowerCase()}_hint`, numberAsResource)
+                    );
                 }
                 const tagName = node.tagName;
                 switch (tagName) {
                     case 'SELECT': {
                         const name = this.createOptionArray(node.element as HTMLSelectElement, node.controlId);
-                        if (name !== '') {
+                        if (name) {
                             node.android('entries', `@array/${name}`);
                         }
                         break;
@@ -297,10 +295,10 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                     fontFeature = delimitString({ value: fontFeature }, feature.trim());
                                 }
                             }
-                            if (fontVariation !== '') {
+                            if (fontVariation) {
                                 node.android('fontVariationSettings', fontVariation);
                             }
-                            if (fontFeature !== '') {
+                            if (fontFeature) {
                                 node.android('fontFeatureSettings', fontFeature);
                             }
                             setTextValue(
@@ -328,7 +326,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                 result = [];
                 for (let i = 0, length = resourceArray.length; i < length; ++i) {
                     const value = Resource.addString(replaceCharacterData(resourceArray[i]), '', numberAsResource);
-                    if (value !== '') {
+                    if (value) {
                         result.push(value);
                     }
                 }

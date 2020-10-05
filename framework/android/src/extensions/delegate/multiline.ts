@@ -41,7 +41,7 @@ function isTextElement(node: View) {
     if (wrapperOf) {
         node = wrapperOf as View;
     }
-    return node.textElement && !(node.tagName === 'LABEL' && node.toElementString('htmlFor') !== '');
+    return node.textElement && !(node.tagName === 'LABEL' && node.toElementString('htmlFor'));
 }
 
 const checkBreakable = (node: View, checkMargin?: boolean) => node.plainText || node.naturalChild && node.naturalElements.length === 0 && !node.floating && !node.innerAfter && !node.innerBefore && node.isUnstyled(checkMargin);
@@ -169,7 +169,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                 return true;
             }
         }
-        else if (node.textElement && node.firstLineStyle || node.multiline && node.textAlignLast !== '') {
+        else if (node.textElement && node.firstLineStyle || node.multiline && node.textAlignLast) {
             this.data.set(node, [[NaN, node]] as MultilineData<T>);
             return true;
         }

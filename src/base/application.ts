@@ -169,7 +169,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         const preloadItems: PreloadItem[] = [];
         let preloaded: Undef<HTMLImageElement[]>;
         const parseSrcSet = (value: string) => {
-            if (value !== '') {
+            if (value) {
                 for (const uri of value.split(',')) {
                     resource!.addImageData(resolvePath(splitPairStart(uri.trim(), ' ')));
                 }
@@ -621,7 +621,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                             }
                             else {
                                 const uri = resolvePath(match[3], styleSheetHref);
-                                if (uri !== '') {
+                                if (uri) {
                                     if (resource) {
                                         resource.addImageData(uri);
                                     }
@@ -820,7 +820,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                             break;
                         case CSSRule.IMPORT_RULE: {
                             const uri = resolvePath((rule as CSSImportRule).href, rule.parentStyleSheet?.href || location.href);
-                            if (uri !== '') {
+                            if (uri) {
                                 this.resourceHandler?.addRawData(uri, 'text/css', undefined, { encoding: 'utf8' });
                             }
                             this.applyStyleSheet((rule as CSSImportRule).styleSheet, sessionId, documentRoot, queryRoot);
@@ -903,7 +903,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     shadowElements.add(shadowRoot);
                     shadowRoot.querySelectorAll('link').forEach(element => {
                         const href = element.href.trim();
-                        if (href !== '') {
+                        if (href) {
                             const mimeType = element.rel.trim() === 'stylesheet' ? 'text/css' : element.type.trim() || parseMimeType(href);
                             if (mimeType === 'text/css') {
                                 (styleSheets ||= []).push(href);

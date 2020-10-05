@@ -11,12 +11,8 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
         const length = values.length;
         const result: number[][] = new Array(length);
         for (let i = 0; i < length; ++i) {
-            const value = values[i];
-            if (value === '') {
-                result[i] = [0, 0, 0];
-            }
-            else {
-                const seg = SvgBuild.parseCoordinates(value);
+            if (values[i]) {
+                const seg = SvgBuild.parseCoordinates(values[i]);
                 if (seg.length === 2) {
                     seg[2] = 0;
                 }
@@ -27,6 +23,9 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                     return null;
                 }
             }
+            else {
+                result[i] = [0, 0, 0];
+            }
         }
         return result;
     }
@@ -35,12 +34,8 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
         const length = values.length;
         const result: number[][] = new Array(length);
         for (let i = 0; i < length; ++i) {
-            const value = values[i];
-            if (value === '') {
-                result[i] = [1, 1, 0, 0];
-            }
-            else {
-                const seg = SvgBuild.parseCoordinates(value);
+            if (values[i]) {
+                const seg = SvgBuild.parseCoordinates(values[i]);
                 if (seg.length === 1) {
                     seg[1] = seg[0];
                 }
@@ -55,6 +50,9 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                     return null;
                 }
             }
+            else {
+                result[i] = [1, 1, 0, 0];
+            }
         }
         return result;
     }
@@ -63,12 +61,8 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
         const length = values.length;
         const result: number[][] = new Array(length);
         for (let i = 0; i < length; ++i) {
-            const value = values[i];
-            if (value === '') {
-                result[i] = [0, 0];
-            }
-            else {
-                const seg = SvgBuild.parseCoordinates(value);
+            if (values[i]) {
+                const seg = SvgBuild.parseCoordinates(values[i]);
                 if (seg.length === 1) {
                     seg[1] = 0;
                 }
@@ -79,6 +73,9 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                     return null;
                 }
             }
+            else {
+                result[i] = [0, 0];
+            }
         }
         return result;
     }
@@ -87,18 +84,17 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
         const length = values.length;
         const result: number[][] = new Array(length);
         for (let i = 0; i < length; ++i) {
-            const value = values[i];
-            if (value === '') {
-                result[i] = [0];
-            }
-            else {
-                const seg = SvgBuild.parseCoordinates(value);
+            if (values[i]) {
+                const seg = SvgBuild.parseCoordinates(values[i]);
                 if (seg.length === 1) {
                     result[i] = seg;
                 }
                 else {
                     return null;
                 }
+            }
+            else {
+                result[i] = [0];
             }
         }
         return result;

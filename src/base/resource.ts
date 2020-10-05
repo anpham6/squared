@@ -179,7 +179,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
     }
 
     public addImageData(uri: string, width = 0, height = 0) {
-        if (uri !== '' && (width && height || !this.getImage(uri))) {
+        if (uri && (width && height || !this.getImage(uri))) {
             Resource.ASSETS.image.set(uri, { width, height, uri });
         }
     }

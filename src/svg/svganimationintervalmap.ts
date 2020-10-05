@@ -94,12 +94,12 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                 for (let j = 0; j < values.length; ++j) {
                     const interval = values[j];
                     const animation = interval.animation;
-                    if (interval.value === '' || animation && interval.start && SvgBuild.isAnimate(animation) && animation.from === '') {
+                    if (!interval.value || animation && interval.start && SvgBuild.isAnimate(animation) && !animation.from) {
                         let value: Undef<string>;
                         for (const group of map[keyName].values()) {
                             for (let k = 0, s = group.length; k < s; ++k) {
                                 const previous = group[k];
-                                if (animation !== previous.animation && previous.value !== '' && (previous.time === -1 || previous.fillMode === FILL_MODE.FORWARDS || previous.fillMode === FILL_MODE.FREEZE)) {
+                                if (animation !== previous.animation && previous.value && (previous.time === -1 || previous.fillMode === FILL_MODE.FORWARDS || previous.fillMode === FILL_MODE.FREEZE)) {
                                     value = previous.value;
                                     break;
                                 }
@@ -108,7 +108,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                         if (value) {
                             interval.value = value;
                         }
-                        else if (interval.value === '') {
+                        else if (!interval.value) {
                             values.splice(j--, 1);
                         }
                     }
@@ -243,7 +243,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                 if (interval <= time) {
                     for (let i = 0, length = data.length; i < length; ++i) {
                         const previous = data[i];
-                        if (previous.value !== '' && (previous.time === -1 || previous.end && (previous.fillMode === FILL_MODE.FORWARDS || previous.fillMode === FILL_MODE.FREEZE)) || playing && previous.start && time !== interval) {
+                        if (previous.value && (previous.time === -1 || previous.end && (previous.fillMode === FILL_MODE.FORWARDS || previous.fillMode === FILL_MODE.FREEZE)) || playing && previous.start && time !== interval) {
                             value = previous.value;
                             break;
                         }

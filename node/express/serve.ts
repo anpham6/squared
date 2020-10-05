@@ -516,7 +516,7 @@ let Node: serve.INode,
                         else if (typeof options === 'string') {
                             if (this.modules?.eval_function) {
                                 options = options.trim();
-                                if (options !== '') {
+                                if (options) {
                                     const result = this.createTranspilerFunction(options);
                                     if (result) {
                                         return [module, result];
@@ -577,7 +577,7 @@ let Node: serve.INode,
                         try {
                             if (typeof options === 'function') {
                                 const result = options(require(module), value);
-                                if (typeof result === 'string' && result !== '') {
+                                if (result && typeof result === 'string') {
                                     if (j === length - 1) {
                                         return Promise.resolve(result);
                                     }
@@ -636,7 +636,7 @@ let Node: serve.INode,
                         try {
                             if (typeof options === 'function') {
                                 const result = options(require(module), value);
-                                if (typeof result === 'string' && result !== '') {
+                                if (result && typeof result === 'string') {
                                     if (j === length - 1) {
                                         return Promise.resolve(result);
                                     }
@@ -695,7 +695,7 @@ let Node: serve.INode,
                         try {
                             if (typeof options === 'function') {
                                 const result: Undef<string> = options(require(module), value);
-                                if (typeof result === 'string' && result !== '') {
+                                if (result && typeof result === 'string') {
                                     if (j === length - 1) {
                                         return Promise.resolve(result);
                                     }

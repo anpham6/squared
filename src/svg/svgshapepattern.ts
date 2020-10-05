@@ -91,7 +91,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                                 }
                                 patternPath.build({ ...options, transforms: item.transforms });
                                 patternPath.fillOpacity = (parseFloat(patternPath.fillOpacity) * parseFloat(fillOpacity)).toString();
-                                patternPath.clipPath = SvgBuild.drawRect(tileWidth, tileHeight, x, y, precision) + (patternPath.clipPath !== '' ? ';' + patternPath.clipPath : '');
+                                patternPath.clipPath = SvgBuild.drawRect(tileWidth, tileHeight, x, y, precision) + (patternPath.clipPath ? ';' + patternPath.clipPath : '');
                             }
                         }
                     });
@@ -101,7 +101,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                 while (remainingWidth > 0);
                 remainingHeight -= tileHeight;
             }
-            if (this.stroke !== '' && parseFloat(this.strokeWidth) > 0) {
+            if (this.stroke && parseFloat(this.strokeWidth) > 0) {
                 path.fill = '';
                 path.fillOpacity = '0';
                 path.stroke = this.stroke;
