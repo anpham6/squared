@@ -621,26 +621,26 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                 chain.anchor(wrapReverse ? TL : BR, 'parent');
                                             }
                                             break;
-                                        default: {
-                                            const getMinSize = () => {
-                                                let size = 0;
-                                                chain.cascade(item => {
-                                                    if (item.pageFlow) {
-                                                        if (item.hasPX(HWL, { percent: false })) {
-                                                            size = Math.max(size, item.bounds[HWL]);
-                                                        }
-                                                    }
-                                                    else {
-                                                        return false;
-                                                    }
-                                                });
-                                                return size;
-                                            };
+                                        default:
                                             chain.anchorParent(orientationInverse);
                                             if (!innerWrapped || !chain.innerMostWrapped.autoMargin[orientationInverse]) {
                                                 chain.anchorStyle(orientationInverse, wrapReverse ? 1 : 0);
                                             }
                                             if (chain[HWL] === 0) {
+                                                const getMinSize = () => {
+                                                    let size = 0;
+                                                    chain.cascade(item => {
+                                                        if (item.pageFlow) {
+                                                            if (item.hasPX(HWL, { percent: false })) {
+                                                                size = Math.max(size, item.bounds[HWL]);
+                                                            }
+                                                        }
+                                                        else {
+                                                            return false;
+                                                        }
+                                                    });
+                                                    return size;
+                                                };
                                                 if (maxSize > 0 && !chain.isEmpty() && getMinSize() >= maxSize) {
                                                     setLayoutWeightOpposing(chain, 'wrap_content', horizontal);
                                                     break;
@@ -686,7 +686,6 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                 }
                                             }
                                             break;
-                                        }
                                     }
                                     break;
                                 }

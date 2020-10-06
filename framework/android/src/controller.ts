@@ -532,6 +532,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 'PROGRESS',
                 'METER',
                 'HR',
+                'BR',
                 'IFRAME',
                 'VIDEO',
                 'AUDIO',
@@ -555,9 +556,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 'TEMPLATE',
                 'DATALIST',
                 'PARAM',
-                'TRACK'
+                'TRACK',
+                'WBR'
             ]),
-            excluded: new Set(['BR', 'WBR'])
+            excluded: new Set(['BR'])
         },
         deviations: {
             textMarginBoundarySize: 8,

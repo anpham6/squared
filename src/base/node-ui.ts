@@ -1443,7 +1443,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     case 'METER':
                     case 'HR':
                     case 'BR':
-                    case 'WBR':
                         result = false;
                         break;
                     default:

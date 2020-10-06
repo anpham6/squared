@@ -286,7 +286,6 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
     public postOptimize(node: T) {
         const container = (this.data.get(node) as Undef<PositiveXData>)?.container;
         if (container) {
-
             if (!container.constraint.horizontal) {
                 if (container.blockWidth || container.flexibleWidth) {
                     container.anchorParent('horizontal', 0);

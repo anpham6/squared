@@ -117,8 +117,11 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public includeElement(element: HTMLElement) {
-        const tagName = element.tagName;
-        return !(this._unsupportedTagName.has(tagName) || tagName === 'INPUT' && this._unsupportedTagName.has(tagName + ':' + (element as HTMLInputElement).type)) || element.contentEditable === 'true';
+        let tagName = element.tagName;
+        if (tagName === 'INPUT') {
+            tagName += ':' + (element as HTMLInputElement).type;
+        }
+        return !this._unsupportedTagName.has(tagName) || element.contentEditable === 'true';
     }
 
     public reset() {

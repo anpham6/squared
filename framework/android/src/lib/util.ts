@@ -187,10 +187,16 @@ export function replaceCharacterData(value: string, tab?: number) {
                 output += tab ? '&#160;'.repeat(tab) : ch;
                 break;
             case '\u0003':
-                output += ' ';
+                output += '&#3;';
                 break;
             case '\u00A0':
                 output += '&#160;';
+                break;
+            case '\u2000':
+                output += '&#8192;';
+                break;
+            case '\u2001':
+                output += '&#8193;';
                 break;
             case '\u2002':
                 output += '&#8194;';
@@ -198,11 +204,32 @@ export function replaceCharacterData(value: string, tab?: number) {
             case '\u2003':
                 output += '&#8195;';
                 break;
+            case '\u2004':
+                output += '&#8196;';
+                break;
+            case '\u2005':
+                output += '&#8197;';
+                break;
+            case '\u2006':
+                output += '&#8198;';
+                break;
+            case '\u2007':
+                output += '&#8199;';
+                break;
+            case '\u2008':
+                output += '&#8200;';
+                break;
             case '\u2009':
                 output += '&#8201;';
                 break;
-            case '\u200c':
+            case '\u200B':
+                output += '&#8203;';
+                break;
+            case '\u200C':
                 output += '&#8204;';
+                break;
+            case '\u200D':
+                output += '&#8205;';
                 break;
             default:
                 output += ch;
