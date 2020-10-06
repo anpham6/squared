@@ -3,3 +3,4 @@
 2 - raw
 4 - svg
 8 - cross-origin
+16 - web components
