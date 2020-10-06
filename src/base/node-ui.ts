@@ -1518,7 +1518,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         this._documentParent = value;
     }
     get documentParent() {
-        return (this._documentParent || this.absoluteParent || this.actualParent || this.parent || this) as NodeUI;
+        return (this._documentParent || this.absoluteParent || this.actualParent || this.parent || this) as T;
     }
 
     set containerName(value) {
@@ -1528,7 +1528,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         const result = this._cacheState.containerName;
         if (result === undefined) {
             const element = this.element;
-            return element ? this._cacheState.containerName = element.nodeName[0] === '#' ? 'PLAINTEXT' : (element.tagName === 'INPUT' ? 'INPUT_' + convertWord((element as HTMLInputElement).type, true) : element.tagName).toUpperCase() : '';
+            return element ? this._cacheState.containerName = element.nodeName[0] === '#' ? 'PLAINTEXT' : convertWord(element.tagName === 'INPUT' ? 'INPUT_' + (element as HTMLInputElement).type : element.tagName, true).toUpperCase() : '';
         }
         return result;
     }
@@ -1722,7 +1722,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get previousSibling() {
         const parent = this.actualParent;
         if (parent) {
-            const children = parent.naturalChildren as NodeUI[];
+            const children = parent.naturalChildren as T[];
             for (let i = children.length - 1, found: Undef<boolean>; i >= 0; --i) {
                 const node = children[i];
                 if (found) {
@@ -1741,7 +1741,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get nextSibling() {
         const parent = this.actualParent;
         if (parent) {
-            const children = parent.naturalChildren as NodeUI[];
+            const children = parent.naturalChildren as T[];
             for (let i = 0, length = children.length, found: Undef<boolean>; i < length; ++i) {
                 const node = children[i];
                 if (found) {
@@ -1757,14 +1757,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return null;
     }
 
-    get firstChild(): Null<NodeUI> {
-        return (this.naturalChildren as NodeUI[]).find(node => !node.excluded || node.lineBreak) || null;
+    get firstChild(): Null<T> {
+        return (this.naturalChildren as T[]).find(node => !node.excluded || node.lineBreak) || null;
     }
 
-    get lastChild(): Null<NodeUI> {
+    get lastChild(): Null<T> {
         const children = this.naturalChildren;
         for (let i = children.length - 1; i >= 0; --i) {
-            const node = children[i] as NodeUI;
+            const node = children[i] as T;
             if (!node.excluded || node.lineBreak) {
                 return node;
             }
@@ -1773,13 +1773,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get firstStaticChild() {
-        return (this.naturalChildren as NodeUI[]).find(node => node.flowElement) || null;
+        return (this.naturalChildren as T[]).find(node => node.flowElement) || null;
     }
 
     get lastStaticChild() {
         const children = this.naturalChildren;
         for (let i = children.length - 1; i >= 0; --i) {
-            const node = children[i] as NodeUI;
+            const node = children[i] as T;
             if (node.flowElement) {
                 return node;
             }
@@ -1788,7 +1788,19 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get onlyChild() {
-        return (this.renderParent?.renderChildren.length ?? this.parent?.size()) === 1 && !this.documentRoot;
+        if (!this.documentRoot) {
+            const children = this.renderParent?.renderChildren || this.parent?.children;
+            if (children) {
+                for (let i = 0, length = children.length; i < length; ++i) {
+                    const node = children[i] as T;
+                    if (node !== this && node.visible && !(!node.pageFlow && node.opacity === 0)) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
+        return false;
     }
 
     get rendering() {

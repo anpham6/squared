@@ -1,10 +1,10 @@
 a885d4d205dd953611d836e7fc1c75b8  ./app/src/main/res/drawable/table_gridlayout_1.xml
 a4284ce09c01a63d50b20828026501ab  ./app/src/main/res/drawable/td_textview_3.xml
 781cfc5f72acb0edd9c69ba96a1f8546  ./app/src/main/res/drawable/th_textview_1.xml
-510831230f08885623bb9ee0363d68f4  ./app/src/main/res/layout/activity_main.xml
-06f32636396d34d0069886c89669e5fb  ./app/src/main/res/layout/table_demo.xml
+043853ccf9513f74f551431fca5250f3  ./app/src/main/res/layout/activity_main.xml
+662747026e4f63cec0ecb5c3acbd9315  ./app/src/main/res/layout/table_demo.xml
 b3d148a803b5ebdb09db73d345e704d4  ./app/src/main/res/values/colors.xml
 592a5c9ef71c1c9d47a689d50c5a1366  ./app/src/main/res/values/dimens.xml
-5ef51cea71dd0cd59b2187ba4c32557c  ./app/src/main/res/values/strings.xml
+3886412f04f43017a5f0bf2490e83209  ./app/src/main/res/values/strings.xml
 8b7c7a44c49d2b6c51c98a42b68bc4a3  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml

@@ -26,7 +26,7 @@ const REGEXP_SOURCESIZES = new RegExp(`\\s*(?:(?:\\(\\s*)?${PATTERN_SIZES}|(?:\\
 const REGEXP_KEYFRAMES = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
 const REGEXP_MEDIARULE = /(?:(not|only)?\s*(?:all|screen)\s+and\s+)?((?:\([^)]+\)(?:\s+and\s+)?)+),?\s*/g;
 const REGEXP_MEDIARULECONDITION = /\(([a-z-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?:\s+and\s+)?/g;
-const REGEXP_VAR = /(.*)var\((--[\w-]+)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)(.*)/;
+const REGEXP_VAR = /\s*(.*)var\((--[\w-]+)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)(.*)/;
 const REGEXP_CUSTOMPROPERTY = /var\(--.+\)/;
 const REGEXP_IMGSRCSET = /^(.*?)(?:\s+([\d.]+)([xw]))?$/;
 const REGEXP_CALCOPERATION = /\s+([+-]\s+|\s*[*/])\s*/;
@@ -1714,6 +1714,7 @@ export function parseSelectorText(value: string) {
 }
 
 export function getSpecificity(value: string) {
+    CSS.SELECTOR_G.lastIndex = 0;
     let result = 0,
         match: Null<RegExpExecArray>;
     while (match = CSS.SELECTOR_G.exec(value)) {
@@ -1792,7 +1793,6 @@ export function getSpecificity(value: string) {
             segment = spliceString(segment, subMatch.index, label.length);
         }
     }
-    CSS.SELECTOR_G.lastIndex = 0;
     return result;
 }
 
@@ -2935,17 +2935,16 @@ export function checkMediaRule(value: string, fontSize?: number) {
     return false;
 }
 
-export function parseVar(element: StyleElement, value: string) {
-    const style = getStyle(element);
+export function parseVar(element: StyleElement, value: string, style?: CSSStyleDeclaration) {
     let match: Null<RegExpMatchArray>;
     while (match = REGEXP_VAR.exec(value)) {
-        let customValue = style.getPropertyValue(match[2]).trim();
-        const fallback = match[2];
+        let customValue = (style ||= getStyle(element)).getPropertyValue(match[2]).trim();
+        const fallback = match[3];
         if (fallback && (!customValue || isLength(fallback, true) && !isLength(customValue, true) || isNumber(fallback) && !isNumber(customValue) || parseColor(fallback) && !parseColor(customValue))) {
-            customValue = fallback;
+            customValue = fallback.trim();
         }
         if (customValue) {
-            value = match[1] + value.replace(match[0], customValue).trim() + match[4];
+            value = match[1] + customValue + match[4];
         }
         else {
             return '';
@@ -3065,8 +3064,8 @@ export function calculateVarAsString(element: StyleElement, value: string, optio
 }
 
 export function calculateVar(element: StyleElement, value: string, options: CalculateVarOptions = {}) {
-    const output = parseVar(element, value);
-    if (output) {
+    value = parseVar(element, value);
+    if (value) {
         const { precision, supportPercent, unitType } = options;
         const boundingSize = !unitType || unitType === CSS_UNIT.LENGTH;
         if (value.includes('%')) {
@@ -3131,7 +3130,7 @@ export function calculateVar(element: StyleElement, value: string, options: Calc
         if (boundingSize && options.fontSize === undefined && hasEm(value)) {
             options.fontSize = getFontSize(element);
         }
-        const result = calculate(output, options);
+        const result = calculate(value, options);
         if (precision !== undefined) {
             return precision === 0 ? Math.floor(result) : parseFloat(truncate(result, precision));
         }

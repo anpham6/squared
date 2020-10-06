@@ -2,11 +2,12 @@ import { BOX_STANDARD, NODE_RESOURCE } from '../lib/constant';
 
 import type NodeUI from '../node-ui';
 
+import Resource from '../resource';
 import ExtensionUI from '../extension-ui';
 
 const { formatPercent, formatPX, getStyle, isLength, isPercent } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
-const { isNumber, replaceMap, withinRange } = squared.lib.util;
+const { isNumber, replaceMap } = squared.lib.util;
 
 const enum LAYOUT_TABLE {
     NONE,
@@ -236,6 +237,9 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         if (td.borderBottomWidth === 0) {
                             setBorderStyle(td, 'borderBottom', node);
                         }
+                        if (td.textElement) {
+                            td.data(Resource.KEY_NAME, 'hintString', td.textContent.trim());
+                        }
                         break;
                 }
                 const columnWidth = td.valueOf('width');
@@ -308,23 +312,25 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     return value;
                 });
             }
-            if (!node.hasWidth) {
+            if (!hasWidth) {
                 mainData.expand = true;
             }
             percentAll = true;
         }
         else if (mapWidth.every(value => isLength(value))) {
             const width = mapWidth.reduce((a, b) => a + parseFloat(b), 0);
-            if (node.hasWidth) {
+            if (hasWidth) {
                 if (width < node.width) {
                     replaceMap(mapWidth, value => value !== '0px' ? ((parseFloat(value) / width) * 100) + '%' : value);
                 }
                 else if (width > node.width) {
                     node.css('width', 'auto');
                     if (!mainData.layoutFixed) {
-                        node.cascade((item: T) => {
-                            item.css('width', 'auto');
-                        });
+                        for (const tr of table) {
+                            for (const td of tr) {
+                                td.css('width', 'auto');
+                            }
+                        }
                     }
                 }
             }
@@ -347,21 +353,14 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         return LAYOUT_TABLE.VARIABLE;
                     }
                     else if (mapWidth[0] === 'auto') {
-                        if (node.hasWidth) {
-                            return LAYOUT_TABLE.VARIABLE;
-                        }
-                        else {
-                            const td = node.cascade(item => item.tagName === 'TD');
-                            return td.length > 0 && td.every(item => withinRange(item.bounds.width, td[0].bounds.width)) ? LAYOUT_TABLE.NONE : LAYOUT_TABLE.VARIABLE;
-                        }
+                        return hasWidth ? LAYOUT_TABLE.VARIABLE : table.some(tr => tr.find(td => td.multiline)) ? LAYOUT_TABLE.VARIABLE : LAYOUT_TABLE.NONE;
                     }
-                    else if (node.hasWidth) {
-
+                    else if (hasWidth) {
                         return LAYOUT_TABLE.FIXED;
                     }
                 }
                 if (mapWidth.every(value => value === 'auto' || isLength(value) && value !== '0px')) {
-                    if (!node.hasWidth) {
+                    if (!hasWidth) {
                         mainData.expand = true;
                     }
                     return LAYOUT_TABLE.STRETCH;

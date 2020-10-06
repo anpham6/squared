@@ -2,6 +2,7 @@ import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
 import NODE_TEMPLATE = squared.base.lib.constant.NODE_TEMPLATE;
 import PLATFORM = squared.lib.constant.PLATFORM;
+import USER_AGENT = squared.lib.constant.USER_AGENT;
 
 import { BUILD_VERSION, CONTAINER_NODE, CONTAINER_TAGNAME, CONTAINER_TAGNAME_X } from './lib/constant';
 
@@ -19,7 +20,7 @@ import { concatString, createViewAttribute, getDocumentId, getRootNs, replaceTab
 
 const { APP_SECTION, NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.constant;
 
-const { isPlatform } = squared.lib.client;
+const { isPlatform, isUserAgent } = squared.lib.client;
 const { parseColor } = squared.lib.color;
 const { formatPX, getSrcSet, hasCoords } = squared.lib.css;
 const { getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
@@ -837,14 +838,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             node.bounds.height === 0 &&
             node.naturalChild &&
             node.naturalElements.length === 0 &&
-            node.elementId === '' &&
+            !node.elementId &&
             node.marginTop === 0 &&
             node.marginRight === 0 &&
             node.marginBottom === 0 &&
             node.marginLeft === 0 &&
             !background &&
             !node.rootElement &&
-            node.use === '')
+            !node.use)
         {
             node.hide();
             layout.next = true;
@@ -856,7 +857,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     layout.containerType = CONTAINER_NODE.TEXT;
                     break;
                 default:
-                    if (node.textContent !== '' && (background || !node.pageFlow || node.pseudoElt === '::after')) {
+                    if (node.textContent && (background || !node.pageFlow || node.pseudoElt === '::after')) {
                         layout.containerType = CONTAINER_NODE.TEXT;
                         node.inlineText = true;
                     }
@@ -1544,6 +1545,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (node.overflowX) {
                     node.android('scrollHorizontally', 'true');
                 }
+                if (isUserAgent(USER_AGENT.FIREFOX) && node.positionRelative && node.top < 0) {
+                    node.modifyBox(BOX_STANDARD.PADDING_TOP, node.top);
+                }
                 break;
             }
             case 'LEGEND': {
@@ -1590,7 +1594,31 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 node.android('progressTint', `@color/${Resource.addColor(foregroundColor!)}`);
                 node.android('progressBackgroundTint', `@color/${Resource.addColor(backgroundColor!)}`);
-                node.attr('_', 'style', '@android:style/Widget.ProgressBar.Horizontal');
+                const animations = node.valueOf('animationName').split(/\s*,\s*/);
+                let circular = false;
+                if (animations.length) {
+                    const keyframesMap = this.application.getProcessing(node.sessionId)?.keyframesMap;
+                    if (keyframesMap) {
+                        for (const name of animations) {
+                            const keyframes = keyframesMap.get(name);
+                            if (keyframes) {
+                                for (const attr in keyframes) {
+                                    const data = keyframes[attr];
+                                    if (data.transform?.includes('rotate')) {
+                                        circular = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                if (!circular) {
+                    node.attr('_', 'style', '@android:style/Widget.ProgressBar.Horizontal');
+                }
+                else if (node.hasHeight) {
+                    node.resetBox(BOX_STANDARD.PADDING_TOP | BOX_STANDARD.PADDING_BOTTOM);
+                }
                 node.exclude({ resource: NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.FONT_STYLE });
                 break;
             }
@@ -1631,7 +1659,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (node.inline) {
                     setInlineBlock();
                 }
-                if (src !== '') {
+                if (src) {
                     this.application.resourceHandler[tagName === 'VIDEO' ? 'addVideo' : 'addAudio'](src, mimeType);
                     node.inlineText = false;
                     node.exclude({ resource: NODE_RESOURCE.FONT_STYLE });
@@ -1663,9 +1691,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     overflow += 'horizontal';
                 }
                 if (node.overflowY) {
-                    overflow += (overflow !== '' ? '|' : '') + 'vertical';
+                    overflow += (overflow ? '|' : '') + 'vertical';
                 }
-                if (overflow !== '') {
+                if (overflow) {
                     node.android('scrollbars', overflow);
                 }
                 if (node.has('letterSpacing')) {
@@ -1675,13 +1703,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     node.android('justificationMode', 'inter_word');
                 }
                 const textShadow = node.valueAt('textShadow');
-                if (textShadow !== '') {
+                if (textShadow) {
                     const match = /((?:rgb|hsl)a?\([^)]+\)|[a-z]{4,})?\s*(-?[\d.]+[a-z]+)\s+(-?[\d.]+[a-z]+)\s*([\d.]+[a-z]+)?/.exec(textShadow);
                     if (match) {
                         const colorData = parseColor(match[1] || node.css('color'));
                         if (colorData) {
                             const colorName = Resource.addColor(colorData);
-                            if (colorName !== '') {
+                            if (colorName) {
                                 const precision = node.localSettings.floatPrecision;
                                 node.android('shadowColor', `@color/${colorName}`);
                                 node.android('shadowDx', truncate(node.parseUnit(match[2]) * 2, precision));
@@ -1726,7 +1754,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     [node.previousSibling, node.nextSibling].some((sibling: T) => {
                         if (sibling && sibling.visible && sibling.pageFlow) {
                             const id = node.elementId;
-                            if (id !== '' && id === sibling.toElementString('htmlFor').trim()) {
+                            if (id && id === sibling.toElementString('htmlFor').trim()) {
                                 sibling.android('labelFor', node.documentId);
                                 return true;
                             }
@@ -1746,7 +1774,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 setReadOnly();
             case CONTAINER_TAGNAME.RANGE:
-                if (!node.hasPX('width')) {
+                if (!node.hasWidth) {
                     setBoundsWidth();
                 }
                 break;
@@ -1896,7 +1924,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 let current = node;
                 do {
                     const bottomTop = current.alignSibling('bottomTop');
-                    if (bottomTop !== '') {
+                    if (bottomTop) {
                         const next = nodes.find(item => item.documentId === bottomTop);
                         if (next && next.alignSibling('topBottom') === current.documentId) {
                             if (next.alignParent('bottom')) {
@@ -2350,7 +2378,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         for (const attr in firstLineStyle) {
                             if (!plainText) {
                                 const value = item.cssInitial(attr);
-                                if (value !== '') {
+                                if (value) {
                                     continue;
                                 }
                             }
@@ -2405,7 +2433,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                         let last = items[index],
                                             textRemainder = '',
                                             widthRemainder = 0;
-                                        if (k === 0 && index === r - 1 && q === 1 && i < length - 1 && !currentFloated && textAlignLast === '' && (i > 0 || textIndent >= 0 && !firstLineStyle)) {
+                                        if (k === 0 && index === r - 1 && q === 1 && i < length - 1 && !currentFloated && !textAlignLast && (i > 0 || textIndent >= 0 && !firstLineStyle)) {
                                             const nodes: T[] = [];
                                             invalid: {
                                                 for (let l = i + 1; l < length; ++l) {
@@ -2433,7 +2461,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                                     }
                                                 }
                                             }
-                                            if (textRemainder !== '') {
+                                            if (textRemainder) {
                                                 const s = nodes.length;
                                                 for (let l = 0; l < s; ++l) {
                                                     const sibling = nodes[l];
@@ -2704,7 +2732,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     }
                                 }
                             }
-                            const lastRowAligned = i === length - 1 && textAlignLast !== '' && textAlignLast !== 'justify';
+                            const lastRowAligned = i === length - 1 && textAlignLast && textAlignLast !== 'justify';
                             if (centerAligned || lastRowAligned) {
                                 const application = this.application;
                                 baseline = this.createNodeGroup(items[0], items, node, { containerType: CONTAINER_NODE.RELATIVE, alignmentType: NODE_ALIGNMENT.HORIZONTAL });
@@ -2833,7 +2861,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 else if (baseline.floating) {
                                     baseline.anchor(baseline.float as AnchorPositionAttr, 'true');
                                 }
-                                else if (textAlignLast !== '' && i === length - 1) {
+                                else if (textAlignLast && i === length - 1) {
                                     switch (textAlignLast) {
                                         case 'center':
                                             baseline.anchor('centerHorizontal', 'true');
@@ -3428,22 +3456,22 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         let LT: AnchorPositionAttr,
             RB: AnchorPositionAttr;
         if (horizontal) {
-            if (!opposing) {
-                LT = 'left';
-                RB = 'right';
-            }
-            else {
+            if (opposing) {
                 LT = 'right';
                 RB = 'left';
             }
+            else {
+                LT = 'left';
+                RB = 'right';
+            }
         }
-        else if (!opposing) {
-            LT = 'top';
-            RB = 'bottom';
-        }
-        else {
+        else if (opposing) {
             LT = 'bottom';
             RB = 'top';
+        }
+        else {
+            LT = 'top';
+            RB = 'bottom';
         }
         const linear = node.linear;
         const box = documentParent.box;

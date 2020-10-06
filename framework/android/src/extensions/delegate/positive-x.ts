@@ -201,20 +201,32 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                 const wrapper = item.outerMostWrapper as T;
                 if (item.hasPX('left')) {
                     if (!nested) {
-                        item.translateX(item.left);
-                        item.alignSibling('left', documentId);
+                        const left = item.left;
+                        if (left === 0 && !node.rightAligned && !node.centerAligned) {
+                            item.anchor('left', 'parent');
+                        }
+                        else {
+                            item.translateX(item.left);
+                            item.alignSibling('left', documentId);
+                        }
                         item.constraint.horizontal = true;
                     }
                     wrapper.modifyBox(BOX_STANDARD.MARGIN_LEFT, node.borderLeftWidth);
                 }
                 if (item.hasPX('right')) {
                     if (!nested) {
-                        item.translateX(-item.right);
-                        if (node.rootElement) {
+                        const right = item.right;
+                        if (right === 0 && !node.centerAligned) {
                             item.anchor('right', 'parent');
                         }
                         else {
-                            item.alignSibling('right', documentId);
+                            item.translateX(-right);
+                            if (node.rootElement) {
+                                item.anchor('right', 'parent');
+                            }
+                            else {
+                                item.alignSibling('right', documentId);
+                            }
                         }
                         item.constraint.horizontal = true;
                     }
@@ -229,20 +241,32 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                 }
                 if (item.hasPX('top')) {
                     if (!nested) {
-                        item.translateY(item.top);
-                        item.alignSibling('top', documentId);
+                        const top = item.top;
+                        if (top === 0 && !node.bottomAligned) {
+                            item.anchor('top', 'parent');
+                        }
+                        else {
+                            item.translateY(item.top);
+                            item.alignSibling('top', documentId);
+                        }
                         item.constraint.vertical = true;
                     }
                     wrapper.modifyBox(BOX_STANDARD.MARGIN_TOP, node.borderTopWidth);
                 }
                 if (item.hasPX('bottom')) {
                     if (!nested) {
-                        item.translateY(-item.bottom);
-                        if (node.rootElement) {
+                        const bottom = item.bottom;
+                        if (bottom === 0) {
                             item.anchor('bottom', 'parent');
                         }
                         else {
-                            item.alignSibling('bottom', documentId);
+                            item.translateY(-bottom);
+                            if (node.rootElement) {
+                                item.anchor('bottom', 'parent');
+                            }
+                            else {
+                                item.alignSibling('bottom', documentId);
+                            }
                         }
                         item.constraint.vertical = true;
                     }

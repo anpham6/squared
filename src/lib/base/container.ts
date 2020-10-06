@@ -259,7 +259,8 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
                     complete = true;
                     break;
                 }
-                if (!predicate || predicate(item, i, children) === true) {
+                let ignore: Undef<Void<boolean>>;
+                if (!predicate || (ignore = predicate(item, i, children)) === true) {
                     if (also) {
                         also.call(this, item);
                     }
@@ -269,7 +270,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
                         break;
                     }
                 }
-                if (item instanceof Container && !item.isEmpty()) {
+                if (ignore !== false && item instanceof Container && !item.isEmpty()) {
                     result.push(...recurse(item));
                     if (complete) {
                         break;

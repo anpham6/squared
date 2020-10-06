@@ -150,11 +150,11 @@ function getBaseline(nodes: View[]) {
 }
 
 function setLayoutWeightOpposing(item: View, value: string, horizontal: boolean) {
-    if (!horizontal) {
-        item.setLayoutWidth(value);
+    if (horizontal) {
+        item.setLayoutHeight(value);
     }
     else {
-        item.setLayoutHeight(value);
+        item.setLayoutWidth(value);
     }
 }
 
@@ -190,7 +190,8 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
             node.containerType = CONTAINER_NODE.CONSTRAINT;
             node.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
             node.addAlign(mainData.column ? NODE_ALIGNMENT.VERTICAL : NODE_ALIGNMENT.HORIZONTAL);
-            mainData.wrap = false;
+            node.flexdata.wrap = false;
+            mainData.singleRow = true;
             return {
                 include: true,
                 complete: true
@@ -272,7 +273,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
             const chainVertical: T[][] = [];
             const segmented: T[] = [];
             let marginBottom = 0;
-            if (wrap) {
+            if (!mainData.singleRow) {
                 node.each((item: T) => {
                     if (item.hasAlign(NODE_ALIGNMENT.SEGMENTED)) {
                         const pageFlow = item.renderChildren.filter(child => child.pageFlow) as T[];
@@ -422,13 +423,13 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         }
                         spreadInside = inlineWidth && (justifyContent === 'space-between' || justifyContent === 'space-around' && q > 1);
                         if (q > 1) {
-                            let sizeCount = 0;
+                            let sizeCount = 1,
+                                maxDimension = 0;
                             for (let k = 0; k < q; ++k) {
                                 const chain = seg[k];
                                 const value = (chain.data<BoxRectDimension>(this.name, 'boundsData') || chain.bounds)[HWL];
-                                if (sizeCount === 0) {
+                                if (k === 0) {
                                     maxSize = value;
-                                    ++sizeCount;
                                 }
                                 else if (value === maxSize) {
                                     ++sizeCount;
@@ -437,8 +438,14 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     maxSize = value;
                                     sizeCount = 1;
                                 }
+                                if (chain[HWL]) {
+                                    maxDimension = Math.max(maxDimension, value);
+                                }
                             }
-                            if (sizeCount === q) {
+                            if (maxDimension === maxSize) {
+                                maxSize = Infinity;
+                            }
+                            else if (sizeCount === q) {
                                 maxSize = NaN;
                             }
                             if (horizontal) {
@@ -615,11 +622,33 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                             }
                                             break;
                                         default: {
+                                            const getMinSize = () => {
+                                                let size = 0;
+                                                chain.cascade(item => {
+                                                    if (item.pageFlow) {
+                                                        if (item.hasPX(HWL, { percent: false })) {
+                                                            size = Math.max(size, item.bounds[HWL]);
+                                                        }
+                                                    }
+                                                    else {
+                                                        return false;
+                                                    }
+                                                });
+                                                return size;
+                                            };
                                             chain.anchorParent(orientationInverse);
                                             if (!innerWrapped || !chain.innerMostWrapped.autoMargin[orientationInverse]) {
                                                 chain.anchorStyle(orientationInverse, wrapReverse ? 1 : 0);
                                             }
                                             if (chain[HWL] === 0) {
+                                                if (maxSize > 0 && !chain.isEmpty() && getMinSize() >= maxSize) {
+                                                    setLayoutWeightOpposing(chain, 'wrap_content', horizontal);
+                                                    break;
+                                                }
+                                                else if (maxSize === Infinity) {
+                                                    setLayoutWeightOpposing(chain, '0px', horizontal);
+                                                    break;
+                                                }
                                                 const belowSize = (chain.naturalElement ? (chain.data<BoxRectDimension>(this.name, 'boundsData') || chain.bounds)[HWL] : Infinity) < maxSize;
                                                 if (!horizontal && chain.blockStatic) {
                                                     setLayoutWeightOpposing(chain, belowSize ? '0px' : 'match_parent', horizontal);
@@ -663,6 +692,9 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 }
                             }
                             percentWidth = chain.setFlexDimension(WHL, percentWidth);
+                            if (horizontal && wrap && !chain.layoutWidth && !chain[WHL]) {
+                                chain.setLayoutWidth('wrap_content');
+                            }
                             if (parentBottom > 0 && j === length - 1) {
                                 const offset = chain.linear.bottom - parentBottom;
                                 if (offset > 0) {

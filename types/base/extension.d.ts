@@ -43,6 +43,7 @@ interface FlexboxData<T> extends Required<FlexData> {
     rowCount: number;
     columnCount: number;
     children: T[];
+    singleRow?: boolean;
 }
 
 interface GridCellData<T> {

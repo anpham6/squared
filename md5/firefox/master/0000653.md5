@@ -1,8 +1,8 @@
-b878215c9a8322b2b80baf34a1732458  ./app/src/main/res/drawable/blockquote_framelayout_2.xml
+b878215c9a8322b2b80baf34a1732458  ./app/src/main/res/drawable/blockquote_linearlayout_2.xml
 586412464084a83fdf01ec6a31da92d9  ./app/src/main/res/drawable/div_linearlayout_1.xml
-79f27511ef72ba7ce5f9f700db03819e  ./app/src/main/res/layout/activity_main.xml
+a7aeb18fa1f35a12a1055abdb0445ece  ./app/src/main/res/layout/activity_main.xml
 c535013575d804dc09e37a3d8e0db225  ./app/src/main/res/values/colors.xml
-b51950590d59908e2bd2d332d32b40fb  ./app/src/main/res/values/dimens.xml
+ddba7b3ce10df853822548d199869a38  ./app/src/main/res/values/dimens.xml
 7237a78e790dd7b0a7cdea9e2523f95a  ./app/src/main/res/values/strings.xml
 f3abf34dc01b3ef9ac3c4c503027d68b  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml
