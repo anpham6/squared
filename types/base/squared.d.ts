@@ -534,6 +534,7 @@ declare module "base" {
         get flexdata(): FlexData;
         get flexbox(): FlexBox;
         get zIndex(): number;
+        get opacity(): number;
         get backgroundColor(): string;
         get backgroundImage(): string;
         get visibleStyle(): VisibleStyle;

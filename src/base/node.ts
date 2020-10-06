@@ -874,9 +874,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     public saveAsInitial() {
         this._initial = {
-            styleMap: { ...this._styleMap },
-            bounds: this._bounds,
-            children: !this.isEmpty() ? this.toArray() : undefined
+            styleMap: { ...this._styleMap }
         };
     }
 
@@ -1263,7 +1261,14 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     public cssInitial(attr: string, options?: CssInitialOptions) {
         const initial = this._initial;
-        return (initial && initial.styleMap || this._styleMap)[attr] || options && (options.modified && this._styleMap[attr] as string || options.computed && this.style[attr] as string) || '';
+        const dataMap = initial && initial.styleMap || this._styleMap;
+        if (options) {
+            const value = options.value;
+            if (value && initial) {
+                return dataMap[attr] = value;
+            }
+        }
+        return dataMap[attr] || options && (options.modified && this._styleMap[attr] as string || options.computed && this.style[attr] as string) || '';
     }
 
     public cssAscend(attr: string, options?: CssAscendOptions) {
@@ -2181,6 +2186,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return this.toInt('zIndex', 0);
     }
 
+    get opacity() {
+        const opacity = this.valueOf('opacity');
+        return opacity ? Math.max(0, Math.min(parseFloat(opacity), 1)) : 1;
+    }
+
     get textContent() {
         return this.naturalChild && !this.svgElement ? this._element!.textContent! : '';
     }
@@ -2737,14 +2747,14 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         result = '';
                     }
                 }
-                if (result && this.styleElement && this.pageFlow && (!this.inputElement && this.css('opacity') === '1' || isTransparent(result))) {
+                if (result && this.styleElement && this.pageFlow && (!this.inputElement && this.opacity === 1 || isTransparent(result))) {
                     let parent = this.actualParent;
                     while (parent) {
                         const backgroundImage = parent.valueOf('backgroundImage');
                         if (!backgroundImage || backgroundImage === 'none') {
                             const color = parent.backgroundColor;
                             if (color && !isTransparent(color)) {
-                                if (color === result && parent.css('opacity') === '1') {
+                                if (color === result && parent.opacity === 1) {
                                     result = '';
                                 }
                                 else if (isTransparent(result)) {

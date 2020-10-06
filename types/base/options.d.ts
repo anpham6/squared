@@ -94,6 +94,7 @@ interface CssInitialOptions {
     initial?: boolean;
     modified?: boolean;
     computed?: boolean;
+    value?: string;
 }
 
 interface CssAscendOptions extends CssInitialOptions {

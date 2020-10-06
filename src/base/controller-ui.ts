@@ -541,14 +541,14 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         }
                         node.resetBounds(true);
                     }
-                    let opacity = node.toFloat('opacity', 1),
+                    let opacity = node.opacity,
                         current = actualParent;
                     do {
-                        opacity *= current.toFloat('opacity', 1);
+                        opacity *= current.opacity;
                         current = current.actualParent as T;
                     }
                     while (current && current !== parent);
-                    node.css('opacity', opacity.toString());
+                    node.cssInitial('opacity', { value: opacity.toString() });
                     node.parent = parent;
                     altered.add(parent);
                 }
