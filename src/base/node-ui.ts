@@ -1082,13 +1082,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             node.setBox(region, options);
         }
         else {
-            const { reset, adjustment } = options;
-            const { boxReset, boxAdjustment } = this;
+            const reset = options.reset;
             if (reset !== undefined) {
-                boxReset[index] = reset;
+                this.boxReset[index] = reset;
             }
-            if (adjustment !== undefined) {
-                let value = adjustment;
+            let value = options.adjustment;
+            if (value !== undefined) {
+                const boxAdjustment = this.boxAdjustment;
                 if (options.max) {
                     boxAdjustment[index] = Math.max(value, boxAdjustment[index]);
                 }
@@ -1099,17 +1099,19 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     if (options.accumulate) {
                         value += boxAdjustment[index];
                     }
-                    if (options.negative === false && (boxReset[index] === 0 ? getSpacingOffset(this, index) : 0) + value <= 0) {
-                        value = 0;
-                        if (getSpacingOffset(this, index) >= 0 && value < 0) {
-                            boxReset[index] = 1;
+                    if (options.negative === false) {
+                        if ((!this._boxReset || this.boxReset[index] === 0 ? getSpacingOffset(this, index) : 0) + value <= 0) {
+                            if (value < 0 && getSpacingOffset(this, index) >= 0) {
+                                this.boxReset[index] = 1;
+                            }
+                            value = 0;
                         }
                     }
                     boxAdjustment[index] = value;
                 }
             }
             else if (reset === 1 && !this.naturalChild) {
-                boxAdjustment[index] = 0;
+                this.boxAdjustment[index] = 0;
             }
         }
     }
