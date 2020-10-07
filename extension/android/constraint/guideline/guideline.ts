@@ -123,9 +123,9 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
             });
         }
         else {
-            node.each((item: T) => {
-                if (!item.anchored) {
-                    controller.addGuideline({ target: item, parent: node });
+            node.each((target: T) => {
+                if (!target.anchored) {
+                    controller.addGuideline({ target, parent: node });
                 }
             });
         }

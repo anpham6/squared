@@ -21,137 +21,135 @@
 </head>
 <body class="smart viewport">
 
-		<h3>Custom styles</h3>
+	<h3>Custom styles</h3>
 
-		<p>
-			For custom Material Bootstrap form validation messages, you’ll need to add the novalidate boolean attribute
-			to your &lt;form&gt;. This disables the browser default feedback tooltips, but still provides access
-			to
-			the form validation APIs in JavaScript. Try to submit the form below; our JavaScript will
-			intercept the submit button and relay feedback to you. When attempting to submit, you’ll see the
-			:invalid and :valid styles applied to your form components.
-		</p>
+	<p>
+		For custom Material Bootstrap form validation messages, you’ll need to add the novalidate boolean attribute
+		to your &lt;form&gt;. This disables the browser default feedback tooltips, but still provides access
+		to
+		the form validation APIs in JavaScript. Try to submit the form below; our JavaScript will
+		intercept the submit button and relay feedback to you. When attempting to submit, you’ll see the
+		:invalid and :valid styles applied to your form components.
+	</p>
 
+	<div class="group">
+		<form class="needs-validation" novalidate>
+			<div class="form-row">
+				<div class="col-md-4 mb-3">
+					<label for="validationCustom01">First name</label>
+					<bootstrap-input type="text" id="validationCustom01" placeholder="First name"
+						value="Mark" required></bootstrap-input>
+					<div class="valid-feedback">
+						Looks good!
+					</div>
+				</div>
+				<div class="col-md-4 mb-3">
+					<label for="validationCustom02">Last name</label>
+					<bootstrap-input type="text" id="validationCustom02" placeholder="Last name"
+						value="Otto" required></bootstrap-input>
+					<div class="valid-feedback">
+						Looks good!
+					</div>
+				</div>
+				<div class="col-md-4 mb-3">
+					<label for="validationCustomUsername">Username</label>
+					<div class="input-group">
+						<div class="input-group-prepend">
+							<span class="input-group-text" id="inputGroupPrepend">@</span>
+						</div>
+						<bootstrap-input type="text" id="validationCustomUsername"
+							placeholder="Username" aria-describedby="inputGroupPrepend" required></bootstrap-input>
+
+						<div class="invalid-feedback">
+							Please choose a username.
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="form-row">
+				<div class="col-md-6 mb-3">
+					<label for="validationCustom03">City</label>
+					<bootstrap-input type="text" id="validationCustom03" placeholder="City"
+						required></bootstrap-input>
+					<div class="invalid-feedback">
+						Please provide a valid city.
+					</div>
+				</div>
+				<div class="col-md-3 mb-3">
+					<label for="validationCustom04">State</label>
+					<bootstrap-input type="text" id="validationCustom04" placeholder="State"
+						required></bootstrap-input>
+					<div class="invalid-feedback">
+						Please provide a valid state.
+					</div>
+				</div>
+				<div class="col-md-3 mb-3">
+					<label for="validationCustom05">Zip</label>
+					<bootstrap-input type="text" id="validationCustom05" placeholder="Zip"
+						required></bootstrap-input>
+					<div class="invalid-feedback">
+						Please provide a valid zip.
+					</div>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="form-check">
+					<bootstrap-check-box type="checkbox" value="" id="invalidCheck" required>Agree to terms and conditions</bootstrap-check-box>
+					<div class="invalid-feedback">
+						You must agree before submitting.
+					</div>
+				</div>
+			</div>
+			<button class="button button-success" type="submit">Submit form</button>
+		</form>
+	</div>
+
+
+
+	<h2>Custom forms</h2>
+
+	<p>
+		For even more customization and cross browser consistency, use our completely custom form elements
+		to replace the browser defaults. They’re built on top of semantic and accessible markup, so they’re
+		solid replacements for any default form component.
+	</p>
+
+	<h3>Checkboxes and radios</h3>
+
+	<p>
+		The "bootstrap-check-box" and "bootstrap-radio-button" tags display checkboxes and radiobuttons.
+	</p>
+
+	<h3>Checkboxes</h3>
+
+	<div class="group">
+			<bootstrap-check-box>Check me</bootstrap-check-box>
+	</div>
+
+	<p>The following code should set the checkbox input to inditerminate state</p>
+
+	<div class="group">
+		<bootstrap-check-box indeterminate>Check me</bootstrap-check-box>
+	</div>
+
+	<h3>Radios</h3>
+
+	<div class="group">
+		<bootstrap-radio-button>Radio 1</bootstrap-radio-button>
+		<bootstrap-radio-button>Radio 2</bootstrap-radio-button>
+	</div>
 	
 
-		<div class="group">
-			<form class="needs-validation" novalidate>
-				<div class="form-row">
-					<div class="col-md-4 mb-3">
-						<label for="validationCustom01">First name</label>
-						<bootstrap-input type="text" id="validationCustom01" placeholder="First name"
-							value="Mark" required></bootstrap-input>
-						<div class="valid-feedback">
-							Looks good!
-						</div>
-					</div>
-					<div class="col-md-4 mb-3">
-						<label for="validationCustom02">Last name</label>
-						<bootstrap-input type="text" id="validationCustom02" placeholder="Last name"
-							value="Otto" required></bootstrap-input>
-						<div class="valid-feedback">
-							Looks good!
-						</div>
-					</div>
-					<div class="col-md-4 mb-3">
-						<label for="validationCustomUsername">Username</label>
-						<div class="input-group">
-							<div class="input-group-prepend">
-								<span class="input-group-text" id="inputGroupPrepend">@</span>
-							</div>
-							<bootstrap-input type="text" id="validationCustomUsername"
-								placeholder="Username" aria-describedby="inputGroupPrepend" required></bootstrap-input>
+	<h3>Switches</h3>
 
-							<div class="invalid-feedback">
-								Please choose a username.
-							</div>
-						</div>
-					</div>
-				</div>
-				<div class="form-row">
-					<div class="col-md-6 mb-3">
-						<label for="validationCustom03">City</label>
-						<bootstrap-input type="text" id="validationCustom03" placeholder="City"
-							required></bootstrap-input>
-						<div class="invalid-feedback">
-							Please provide a valid city.
-						</div>
-					</div>
-					<div class="col-md-3 mb-3">
-						<label for="validationCustom04">State</label>
-						<bootstrap-input type="text" id="validationCustom04" placeholder="State"
-							required></bootstrap-input>
-						<div class="invalid-feedback">
-							Please provide a valid state.
-						</div>
-					</div>
-					<div class="col-md-3 mb-3">
-						<label for="validationCustom05">Zip</label>
-						<bootstrap-input type="text" id="validationCustom05" placeholder="Zip"
-							required></bootstrap-input>
-						<div class="invalid-feedback">
-							Please provide a valid zip.
-						</div>
-					</div>
-				</div>
-				<div class="form-group">
-					<div class="form-check">
-						<bootstrap-check-box type="checkbox" value="" id="invalidCheck" required>Agree to terms and conditions</bootstrap-check-box>
-						<div class="invalid-feedback">
-							You must agree before submitting.
-						</div>
-					</div>
-				</div>
-				<button class="button button-success" type="submit">Submit form</button>
-			</form>
-		</div>
+	<p>
+		The "bootstrap-switch-button" tag renders a custom switch.
+	</p>
 
-
-
-		<h2>Custom forms</h2>
-
-		<p>
-			For even more customization and cross browser consistency, use our completely custom form elements
-			to replace the browser defaults. They’re built on top of semantic and accessible markup, so they’re
-			solid replacements for any default form component.
-		</p>
-
-		<h3>Checkboxes and radios</h3>
-
-		<p>
-			The "bootstrap-check-box" and "bootstrap-radio-button" tags display checkboxes and radiobuttons.
-		</p>
-
-		<h3>Checkboxes</h3>
-
-		<div class="group">
-				<bootstrap-check-box>Check me</bootstrap-check-box>
-		</div>
-
-		<p>The following code should set the checkbox input to inditerminate state</p>
-
-		<div class="group">
-			<bootstrap-check-box indeterminate>Check me</bootstrap-check-box>
-		</div>
-
-		<h3>Radios</h3>
-
-		<div class="group">
-			<bootstrap-radio-button>Radio 1</bootstrap-radio-button>
-			<bootstrap-radio-button>Radio 2</bootstrap-radio-button>
-		</div>
-		
-
-		<h3>Switches</h3>
-
-		<p>
-			The "bootstrap-switch-button" tag renders a custom switch.
-		</p>
-
-		<div class="group">
-			<bootstrap-switch-button>Off</bootstrap-switch-button>
-			<bootstrap-switch-button checked>On</bootstrap-switch-button>
-		</div>
+	<div class="group">
+		<bootstrap-switch-button>Off</bootstrap-switch-button>
+		<bootstrap-switch-button checked>On</bootstrap-switch-button>
+	</div>
 
 </body>
 </html>

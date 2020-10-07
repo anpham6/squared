@@ -8,7 +8,7 @@ import View from '../view';
 import NodeUI = squared.base.NodeUI;
 import LayoutUI = squared.base.LayoutUI;
 
-import { ascendFlexibleWidth, ascendFlexibleHeight } from '../view-mx';
+import { ascendFlexibleHeight, ascendFlexibleWidth } from '../view-mx';
 
 interface FlexBasis {
     item: View;

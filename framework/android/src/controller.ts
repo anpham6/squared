@@ -3475,214 +3475,245 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             LT = 'top';
             RB = 'bottom';
         }
-        const linear = node.linear;
+        node.constraint[axis] = true;
         const box = documentParent.box;
-        if (!percent && !opposing) {
-            if (withinRange(linear[LT], box[LT])) {
-                node.anchor(LT, 'parent', true);
-                return;
-            }
-            if (!node.pageFlow && node.valueAt('position') !== 'fixed' && !parent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
-                const adjustBodyMargin = (item: T, position: string) => {
-                    if (item.leftTopAxis) {
-                        const absoluteParent = item.absoluteParent as T;
-                        if (absoluteParent.documentBody) {
+        const bounds = node.positionStatic ? node.bounds : node.linear;
+        let location: number,
+            attr: string;
+        if (percent) {
+            const position = Math.abs(bounds[LT] - box[LT]) / (horizontal ? box.width : box.height);
+            location = parseFloat(truncate(!opposing ? position : 1 - position, node.localSettings.floatPrecision));
+            attr = 'layout_constraintGuide_percent';
+        }
+        else {
+            if (!opposing) {
+                const { linear: linearA, bounds: boundsA } = node.innerMostWrapped;
+                if (withinRange(linearA[LT], box[LT])) {
+                    node.anchor(LT, 'parent', true);
+                    return;
+                }
+                if (!node.pageFlow && node.valueAt('position') !== 'fixed' && !parent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
+                    const adjustBodyMargin = (item: T, position: string) => {
+                        if (item.leftTopAxis) {
+                            const absoluteParent = item.absoluteParent as T;
+                            if (absoluteParent.documentBody) {
+                                switch (position) {
+                                    case 'top':
+                                        return absoluteParent.getBox(BOX_STANDARD.MARGIN_TOP)[0] === 0 ? absoluteParent.marginTop : 0;
+                                    case 'left':
+                                        return absoluteParent.marginLeft;
+                                }
+                            }
+                        }
+                        return 0;
+                    };
+                    const canAlignPosition = (item: T) => {
+                        if (!item.pageFlow) {
+                            if (horizontal) {
+                                if (item.has('right') && !item.has('left')) {
+                                    return !node.has('left') && !node.has('right');
+                                }
+                            }
+                            else if (item.has('bottom') && !item.has('top')) {
+                                return !node.has('top') && !node.has('bottom');
+                            }
+                        }
+                        return true;
+                    };
+                    const setAlignedWidth = (sibling: T, position: AnchorPositionAttr) => {
+                        if (node.actualParent !== sibling.actualParent) {
                             switch (position) {
                                 case 'top':
-                                    return absoluteParent.getBox(BOX_STANDARD.MARGIN_TOP)[0] === 0 ? absoluteParent.marginTop : 0;
+                                case 'bottom':
+                                case 'topBottom':
+                                case 'bottomTop':
+                                    node.alignedWithY = sibling;
+                                    break;
                                 case 'left':
-                                    return absoluteParent.marginLeft;
+                                case 'right':
+                                case 'leftRight':
+                                case 'rightLeft':
+                                    node.alignedWithX = sibling;
+                                    break;
                             }
                         }
-                    }
-                    return 0;
-                };
-                const canAlignPosition = (item: T) => {
-                    if (!item.pageFlow) {
-                        if (horizontal) {
-                            if (item.has('right') && !item.has('left')) {
-                                return !node.has('left') && !node.has('right');
+                    };
+                    const renderChildren = parent.renderChildren;
+                    const length = renderChildren.length;
+                    for (let i = 0; i < length; ++i) {
+                        const child = renderChildren[i] as T;
+                        if (child === node) {
+                            continue;
+                        }
+                        const item = child.innerMostWrapped as T;
+                        if ((item.pageFlow || child.constraint[axis]) && !(item.plainText || item.pseudoElement || item.rootElement || !canAlignPosition(item))) {
+                            const { linear: linearB, bounds: boundsB } = item;
+                            let offset = NaN,
+                                position: Undef<AnchorPositionAttr>;
+                            if (withinRange(boundsA[LT], boundsB[LT])) {
+                                position = LT;
                             }
-                        }
-                        else if (item.has('bottom') && !item.has('top')) {
-                            return !node.has('top') && !node.has('bottom');
-                        }
-                    }
-                    return true;
-                };
-                const setAlignedWidth = (sibling: T, position: AnchorPositionAttr) => {
-                    if (node.actualParent !== sibling.actualParent) {
-                        switch (position) {
-                            case 'top':
-                            case 'bottom':
-                            case 'topBottom':
-                            case 'bottomTop':
-                                node.alignedWithY = sibling;
-                                break;
-                            case 'left':
-                            case 'right':
-                            case 'leftRight':
-                            case 'rightLeft':
-                                node.alignedWithX = sibling;
-                                break;
-                        }
-                    }
-                };
-                const bounds = node.innerMostWrapped.bounds;
-                const renderChildren = parent.renderChildren;
-                const length = renderChildren.length;
-                for (let i = 0; i < length; ++i) {
-                    const item = renderChildren[i] as T;
-                    if (item === node || item.plainText || item.pseudoElement || item.rootElement || !canAlignPosition(item)) {
-                        continue;
-                    }
-                    const itemA = item.innerMostWrapped as T;
-                    if (itemA.pageFlow || item.constraint[axis]) {
-                        const { linear: linearA, bounds: boundsA } = itemA;
-                        let offset = NaN,
-                            position: Undef<AnchorPositionAttr>;
-                        if (withinRange(bounds[LT], boundsA[LT])) {
-                            position = LT;
-                        }
-                        else if (withinRange(linear[LT], linearA[LT])) {
-                            position = LT;
-                            offset = (horizontal ? bounds.left - boundsA.left : bounds.top - boundsA.top) + adjustBodyMargin(node, LT);
-                        }
-                        else if (withinRange(linear[LT], linearA[RB])) {
-                            if (horizontal) {
-                                if (!node.hasPX('left') && !node.hasPX('right') || !item.inlineStatic && item.hasPX('width', { percent: false, initial: true })) {
-                                    position = 'leftRight';
-                                    offset = bounds.left - boundsA.right;
+                            else if (withinRange(linearA[LT], linearB[LT])) {
+                                position = LT;
+                                offset = (horizontal ? boundsA.left - boundsB.left : boundsA.top - boundsB.top) + adjustBodyMargin(node, LT);
+                            }
+                            else if (withinRange(linearA[LT], linearB[RB])) {
+                                if (horizontal) {
+                                    if (!node.hasPX('left') && !node.hasPX('right') || !child.inlineStatic && child.hasPX('width', { percent: false, initial: true })) {
+                                        position = 'leftRight';
+                                        offset = boundsA.left - boundsB.right;
+                                    }
                                 }
-                            }
-                            else if (!node.hasPX('top') && !node.hasPX('bottom') || !item.inlineStatic && item.hasPX('height', { percent: false, initial: true })) {
-                                position = 'topBottom';
-                                if (node.top !== 0) {
-                                    offset = bounds.top - boundsA.bottom;
-                                }
-                            }
-                        }
-                        if (position) {
-                            if (horizontal) {
-                                if (!isNaN(offset)) {
-                                    node.setBox(BOX_STANDARD.MARGIN_LEFT, { reset: 1, adjustment: 0 });
-                                    if (offset !== 0) {
-                                        node.translateX(offset);
+                                else if (!node.hasPX('top') && !node.hasPX('bottom') || !child.inlineStatic && child.hasPX('height', { percent: false, initial: true })) {
+                                    position = 'topBottom';
+                                    if (node.top !== 0) {
+                                        offset = boundsA.top - boundsB.bottom;
                                     }
                                 }
                             }
-                            else if (!isNaN(offset)) {
-                                node.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: 0 });
-                                if (offset !== 0) {
-                                    node.translateY(offset);
+                            if (position) {
+                                if (horizontal) {
+                                    if (!isNaN(offset)) {
+                                        node.setBox(BOX_STANDARD.MARGIN_LEFT, { reset: 1, adjustment: 0 });
+                                        if (offset !== 0) {
+                                            node.translateX(offset);
+                                        }
+                                    }
                                 }
+                                else if (!isNaN(offset)) {
+                                    node.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: 0 });
+                                    if (offset !== 0) {
+                                        node.translateY(offset);
+                                    }
+                                }
+                                setAlignedWidth(child, position);
+                                node.anchor(position, child.documentId, true);
+                                node.constraint[axis] = true;
+                                return;
                             }
-                            setAlignedWidth(item, position);
-                            node.anchor(position, item.documentId, true);
-                            node.constraint[axis] = true;
-                            return;
                         }
                     }
-                }
-                const TL = horizontal ? 'top' : 'left';
-                const setAnchorOffset = (sibling: T, position: AnchorPositionAttr, adjustment: number) => {
-                    if (node.has('transform')) {
-                        const translate = parseTransform(node.valueAt('transform'), { accumulate: true, boundingBox: node.bounds, fontSize: node.fontSize }).filter(item => item.method === 'translate');
-                        if (translate.length) {
-                            adjustment -= translate[0].values[horizontal ? 0 : 1];
+                    const TL = horizontal ? 'top' : 'left';
+                    const setAnchorOffset = (sibling: T, position: AnchorPositionAttr, adjustment: number) => {
+                        if (node.has('transform')) {
+                            const translate = parseTransform(node.valueAt('transform'), { accumulate: true, boundingBox: node.bounds, fontSize: node.fontSize }).filter(item => item.method === 'translate');
+                            if (translate.length) {
+                                adjustment -= translate[0].values[horizontal ? 0 : 1];
+                            }
+                        }
+                        setAlignedWidth(sibling, position);
+                        node.anchor(position, sibling.documentId, true);
+                        node.setBox(horizontal ? BOX_STANDARD.MARGIN_LEFT : BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment });
+                        node.constraint[axis] = true;
+                    };
+                    let nearest: Undef<T>,
+                        adjacent: Undef<T>;
+                    for (let i = 0; i < length; ++i) {
+                        const item = renderChildren[i] as T;
+                        if (item === node || !item.constraint[axis]) {
+                            continue;
+                        }
+                        const wrapped = item.innerMostWrapped as T;
+                        if (wrapped.pageFlow || wrapped.rootElement || !canAlignPosition(wrapped)) {
+                            continue;
+                        }
+                        const boundsC = wrapped.bounds;
+                        if (withinRange(boundsA[TL], boundsC[TL])) {
+                            const offset = boundsA[LT] - boundsC[RB];
+                            if (offset >= 0) {
+                                setAnchorOffset(item, horizontal ? 'leftRight' : 'topBottom', offset);
+                                return;
+                            }
+                        }
+                        else if (boundsC[LT] <= boundsA[LT]) {
+                            if (boundsC[TL] <= boundsA[TL]) {
+                                nearest = wrapped;
+                            }
+                            else {
+                                adjacent = wrapped;
+                            }
                         }
                     }
-                    setAlignedWidth(sibling, position);
-                    node.anchor(position, sibling.documentId, true);
-                    node.setBox(horizontal ? BOX_STANDARD.MARGIN_LEFT : BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment });
-                    node.constraint[axis] = true;
-                };
-                let nearest: Undef<T>,
-                    adjacent: Undef<T>;
-                for (let i = 0; i < length; ++i) {
-                    const item = renderChildren[i] as T;
-                    if (item === node || item.pageFlow || item.rootElement || !item.constraint[axis] || !canAlignPosition(item)) {
-                        continue;
-                    }
-                    const wrapped = item.innerMostWrapped as T;
-                    const boundsA = wrapped.bounds;
-                    if (withinRange(bounds[TL], boundsA[TL])) {
-                        const offset = bounds[LT] - boundsA[RB];
+                    if (nearest ||= adjacent) {
+                        const offset = boundsA[LT] - nearest.bounds[LT] + adjustBodyMargin(node, LT);
                         if (offset >= 0) {
-                            setAnchorOffset(item, horizontal ? 'leftRight' : 'topBottom', offset);
+                            setAnchorOffset(nearest, LT, offset);
                             return;
                         }
                     }
-                    else if (boundsA[LT] <= bounds[LT]) {
-                        if (boundsA[TL] <= bounds[TL]) {
-                            nearest = wrapped;
-                        }
-                        else {
-                            adjacent = wrapped;
-                        }
-                    }
-                }
-                if (nearest ||= adjacent) {
-                    const offset = bounds[LT] - nearest.bounds[LT] + adjustBodyMargin(node, LT);
-                    if (offset >= 0) {
-                        setAnchorOffset(nearest, LT, offset);
-                        return;
-                    }
                 }
             }
-        }
-        const absoluteParent = node.absoluteParent as T;
-        const bounds = node.positionStatic ? node.bounds : linear;
-        let location = 0,
-            attr: string;
-        if (!node.leftTopAxis && documentParent.rootElement) {
-            const renderParent = node.renderParent;
-            if (documentParent.ascend({ condition: item => item === renderParent, attr: 'renderParent' }).length) {
-                location = horizontal ? documentParent[!opposing ? 'marginLeft' : 'marginRight'] : documentParent[!opposing ? 'marginTop' : 'marginBottom'];
+            location = 0;
+            if (!node.leftTopAxis && documentParent.rootElement) {
+                const renderParent = node.renderParent;
+                if (documentParent.ascend({ condition: item => item === renderParent, attr: 'renderParent' }).length) {
+                    location = horizontal ? documentParent[!opposing ? 'marginLeft' : 'marginRight'] : documentParent[!opposing ? 'marginTop' : 'marginBottom'];
+                }
             }
-        }
-        if (percent) {
-            const position = Math.abs(bounds[LT] - box[LT]) / (horizontal ? box.width : box.height);
-            attr = 'layout_constraintGuide_percent';
-            location += parseFloat(truncate(!opposing ? position : 1 - position, node.localSettings.floatPrecision));
-        }
-        else {
-            attr = 'layout_constraintGuide_begin';
             location += bounds[LT] - box[!opposing ? LT : RB];
-        }
-        if (!node.pageFlow) {
-            if (documentParent.outerWrapper && node.parent === documentParent.outerMostWrapper) {
-                location += documentParent[horizontal
-                    ? !opposing ? 'paddingLeft' : 'paddingRight'
-                    : !opposing ? 'paddingTop' : 'paddingBottom'
-                ];
+            if (!node.pageFlow) {
+                if (documentParent.outerWrapper && node.parent === documentParent.outerMostWrapper) {
+                    location += documentParent[horizontal
+                        ? !opposing ? 'paddingLeft' : 'paddingRight'
+                        : !opposing ? 'paddingTop' : 'paddingBottom'
+                    ];
+                }
+                else if (node.absoluteParent === node.documentParent) {
+                    const direction = horizontal
+                        ? !opposing ? BOX_STANDARD.PADDING_LEFT : BOX_STANDARD.PADDING_RIGHT
+                        : !opposing ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.PADDING_BOTTOM;
+                    location = documentParent.adjustAbsolutePaddingOffset(direction, location);
+                }
             }
-            else if (absoluteParent === node.documentParent) {
-                const direction = horizontal
-                    ? !opposing ? BOX_STANDARD.PADDING_LEFT : BOX_STANDARD.PADDING_RIGHT
-                    : !opposing ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.PADDING_BOTTOM;
-                location = documentParent.adjustAbsolutePaddingOffset(direction, location);
+            else if (node.inlineVertical) {
+                location += Math.min(0, node.verticalAlign);
             }
-        }
-        else if (node.inlineVertical) {
-            const offset = node.verticalAlign;
-            if (offset < 0) {
-                location += offset;
+            if (!horizontal && node.marginTop < 0) {
+                location -= node.marginTop;
+                node.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1 });
             }
+            if (location <= 0) {
+                node.anchor(LT, 'parent', true);
+                return;
+            }
+            else if (horizontal && location + bounds.width >= box.right && documentParent.hasPX('width') && !node.hasPX('right') || !horizontal && location + bounds.height >= box.bottom && documentParent.hasPX('height') && !node.hasPX('bottom')) {
+                node.anchor(RB, 'parent', true);
+                return;
+            }
+            else {
+                let valid: Undef<boolean>;
+                if (horizontal) {
+                    const rightAligned = node.hasPX('right');
+                    if (!rightAligned) {
+                        if (box.left + location === bounds.left) {
+                            valid = true;
+                        }
+                    }
+                    else if (rightAligned && box.right + location === bounds.right) {
+                        valid = true;
+                    }
+                }
+                else {
+                    const bottomAligned = node.hasPX('bottom');
+                    if (!bottomAligned) {
+                        if (box.top + location === bounds.top) {
+                            valid = true;
+                        }
+                    }
+                    else if (bottomAligned && box.bottom + location === bounds.bottom) {
+                        valid = true;
+                    }
+                }
+                if (valid) {
+                    node.anchor(LT, 'parent', true);
+                    node.setBox(horizontal ? BOX_STANDARD.MARGIN_LEFT : BOX_STANDARD.MARGIN_TOP, { adjustment: location });
+                    return;
+                }
+            }
+            attr = 'layout_constraintGuide_begin';
         }
-        if (!horizontal && node.marginTop < 0) {
-            location -= node.marginTop;
-            node.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1 });
-        }
-        node.constraint[axis] = true;
-        if (location <= 0) {
-            node.anchor(LT, 'parent', true);
-        }
-        else if (horizontal && location + bounds.width >= box.right && documentParent.hasPX('width') && !node.hasPX('right') || !horizontal && location + bounds.height >= box.bottom && documentParent.hasPX('height') && !node.hasPX('bottom')) {
-            node.anchor(RB, 'parent', true);
-        }
-        else {
-            const guideline = parent.constraint.guideline || {};
+        const guideline = parent.constraint.guideline || {};
+        if (!percent) {
             const anchors = guideline[axis]?.[attr]?.[LT] as Undef<StringMap>;
             if (anchors) {
                 for (const id in anchors) {
@@ -3693,23 +3724,23 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                 }
             }
-            const templateOptions: ViewAttribute = {
-                android: {
-                    orientation: horizontal ? 'vertical' : 'horizontal'
-                },
-                app: {
-                    [attr]: percent ? location.toString() : `@dimen/${Resource.insertStoredAsset('dimens', 'constraint_guideline_' + (!opposing ? LT : RB), formatPX(location))}`
-                }
-            };
-            this.addAfterOutsideTemplate(node, this.renderNodeStatic({ controlName: node.api < BUILD_VERSION.Q ? CONTAINER_TAGNAME.GUIDELINE : CONTAINER_TAGNAME_X.GUIDELINE }, templateOptions), false);
-            const documentId = templateOptions.documentId;
-            if (documentId) {
-                node.anchor(LT, documentId, true);
-                node.anchorDelete(RB);
-                if (location > 0) {
-                    assignEmptyValue(guideline as StandardMap, axis, attr, LT, documentId, location.toString());
-                    parent.constraint.guideline = guideline;
-                }
+        }
+        const templateOptions: ViewAttribute = {
+            android: {
+                orientation: horizontal ? 'vertical' : 'horizontal'
+            },
+            app: {
+                [attr]: percent ? location.toString() : `@dimen/${Resource.insertStoredAsset('dimens', 'constraint_guideline_' + (!opposing ? LT : RB), formatPX(location))}`
+            }
+        };
+        this.addAfterOutsideTemplate(node, this.renderNodeStatic({ controlName: node.api < BUILD_VERSION.Q ? CONTAINER_TAGNAME.GUIDELINE : CONTAINER_TAGNAME_X.GUIDELINE }, templateOptions), false);
+        const documentId = templateOptions.documentId;
+        if (documentId) {
+            node.anchor(LT, documentId, true);
+            node.anchorDelete(RB);
+            if (location > 0) {
+                assignEmptyValue(guideline as StandardMap, axis, attr, LT, documentId, location.toString());
+                parent.constraint.guideline = guideline;
             }
         }
     }
