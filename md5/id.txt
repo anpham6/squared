@@ -4,3 +4,4 @@
 4 - svg
 8 - cross-origin
 16 - web components
+32 - unstable
