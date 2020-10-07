@@ -349,6 +349,7 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     public setStyleMap(sessionId: string, documentRoot: DocumentRoot = document, queryRoot?: DocumentQueryRoot) {
         const styleSheets = documentRoot.styleSheets;
+        let errors: Undef<string[]>;
         for (let i = 0, length = styleSheets.length; i < length; ++i) {
             const styleSheet = styleSheets[i];
             let mediaText: Undef<string>;
@@ -358,8 +359,16 @@ export default abstract class Application<T extends Node> implements squared.bas
             catch {
             }
             if (!mediaText || checkMediaRule(mediaText)) {
-                this.applyStyleSheet(styleSheet, sessionId, documentRoot, queryRoot);
+                try {
+                    this.applyStyleSheet(styleSheet, sessionId, documentRoot, queryRoot);
+                }
+                catch (err) {
+                    (errors ||= []).push((err as Error).message);
+                }
             }
+        }
+        if (errors) {
+            (this.userSettings.showErrorMessages ? alert : console.log)(CSS_CANNOT_BE_PARSED + '\n\n' + errors.join('\n\n'));
         }
     }
 
@@ -855,7 +864,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
         }
         catch (err) {
-            (this.userSettings.showErrorMessages ? alert : console.log)(CSS_CANNOT_BE_PARSED + '\n\n' + item.href + '\n\n' + err);
+            throw new Error((item.href ? item.href + ' - ' : '') + err);
         }
     }
 
