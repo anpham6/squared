@@ -16,6 +16,7 @@ module.exports = {
         "no-console": "off",
         "@typescript-eslint/ban-types": "off",
         "@typescript-eslint/no-unsafe-call": "off",
-        "@typescript-eslint/no-unsafe-return": "off"
+        "@typescript-eslint/no-unsafe-return": "off",
+        "@typescript-eslint/restrict-template-expressions": "off"
     }
 };

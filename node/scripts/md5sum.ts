@@ -21,6 +21,7 @@ let browserName: "chromium"| "firefox" | "webkit" | undefined;
 let master: String;
 let snapshot: String;
 let executablePath: String;
+let modifiedDate: Date | undefined;
 let width = 1280;
 let height = 960;
 let flags = 1;
@@ -101,6 +102,11 @@ let extension = 'md5';
             case '--raw':
                 screenshot = true;
                 break;
+            case '-m':
+            case '--modified':
+                master = ARGV[i++];
+                modifiedDate = new Date(ARGV[i++]);
+                break;
             case '-t':
             case '--timeout': {
                 const t = parseFloat(ARGV[i++]);
@@ -131,114 +137,160 @@ const successMessage = (message: string, status: string) => console.log('\n\n' +
 const getStatus = (status: string) => chalk.yellow('[') + chalk.grey(status) + chalk.yellow(']');
 
 if (master) {
-    if (snapshot) {
-        const masterDir = path.resolve(__dirname, master);
-        const snapshotDir = path.resolve(__dirname, snapshot);
-        if (fs.existsSync(masterDir) && fs.existsSync(snapshotDir)) {
-            const errors: string[] = [];
-            const notFound: string[] = [];
-            const stderr = process.stderr;
-            for (const file of fs.readdirSync(masterDir)) {
-                if (!file.endsWith('.' + extension)) {
-                    continue;
-                }
-                const filename = path.basename(file);
-                const filepath = path.resolve(snapshotDir, path.basename(filename));
-                if (fs.existsSync(filepath)) {
-                    const masterpath = path.resolve(masterDir, filename);
-                    if (screenshot) {
-                        if (md5(fs.readFileSync(filepath)) !== md5(fs.readFileSync(masterpath))) {
-                            stderr.write(chalk.bgWhite.black('-'.repeat(100)) + '\n\n');
-                            stderr.write(chalk.yellow(masterpath) + '\n' + chalk.grey(filepath) + '\n\n');
-                            errors.push(filename);
+    const masterDir = path.resolve(__dirname, master);
+    if (fs.existsSync(masterDir)) {
+        if (modifiedDate) {
+            if (data && host) {
+                parse(fs.readFileSync(path.resolve(__dirname, data)), (err, csv: string[][]) => {
+                    if (!err) {
+                        let html = '<html><body><ol>',
+                            modified = 0;
+                        for (const row of csv) {
+                            const id = parseInt(row[0]);
+                            if (id > 0 && (flags & id) === id) {
+                                const filename = row[1];
+                                const file = path.resolve(masterDir, filename);
+                                if (fs.existsSync(file)) {
+                                    if (fs.statSync(file).mtime >= modifiedDate!) {
+                                        const href = host + row[2];
+                                        html += `<li><a href="${href}">${href}</a> (${filename})</li>`;
+                                        ++modified;
+                                        warnMessage(href, filename);
+                                    }
+                                }
+                                else {
+                                    warnMessage('MD5 not found', file);
+                                }
+                            }
+                        }
+                        html += '</ol></body></html>';
+                        if (modified) {
+                            const pathname = `temp${master!.substring(1)}.html`;
+                            fs.mkdirpSync(path.dirname(pathname));
+                            fs.writeFileSync(path.resolve(__dirname, pathname), html);
+                            successMessage(modified + ' modifications', host + '/' + pathname);
                         }
                         else {
-                            stderr.write(chalk.bgBlue.white('>'));
+                            successMessage('MD5 unmodified', master!);
                         }
                     }
                     else {
-                        const output = diff.diffChars(
-                            fs.readFileSync(masterpath).toString('utf-8'),
-                            fs.readFileSync(filepath).toString('utf-8')
-                        );
-                        if (output.length > 1) {
-                            if (rebase) {
-                                stderr.write(chalk.bgWhite.blue('<'));
-                                fs.copyFileSync(filepath, masterpath);
-                            }
-                            else {
-                                const pngpath = filepath.replace('.md5', '.png');
-                                stderr.write('\n\n' + chalk.bgWhite.black('-'.repeat(100)) + '\n\n');
-                                stderr.write(chalk.yellow(masterpath) + '\n' + chalk.grey(filepath) + '\n' + (fs.existsSync(pngpath) ? chalk.blue(pngpath) + '\n' : '') + '\n');
-                                for (const part of output) {
-                                    if (part.removed) {
-                                        stderr.write(chalk.yellow(part.value));
-                                    }
-                                    else if (!part.added) {
-                                        stderr.write(chalk.grey(part.value));
-                                    }
-                                }
-                                stderr.write('\n');
+                        failMessage("Unable to read CSV data file", data);
+                    }
+                });
+            }
+        }
+        else if (snapshot) {
+            const snapshotDir = path.resolve(__dirname, snapshot);
+            if (fs.existsSync(snapshotDir)) {
+                const errors: string[] = [];
+                const notFound: string[] = [];
+                const stderr = process.stderr;
+                for (const file of fs.readdirSync(masterDir)) {
+                    if (!file.endsWith('.' + extension)) {
+                        continue;
+                    }
+                    const filename = path.basename(file);
+                    const filepath = path.resolve(snapshotDir, path.basename(filename));
+                    if (fs.existsSync(filepath)) {
+                        const masterpath = path.resolve(masterDir, filename);
+                        if (screenshot) {
+                            if (md5(fs.readFileSync(filepath)) !== md5(fs.readFileSync(masterpath))) {
+                                stderr.write(chalk.bgWhite.black('-'.repeat(100)) + '\n\n');
+                                stderr.write(chalk.yellow(masterpath) + '\n' + chalk.grey(filepath) + '\n\n');
                                 errors.push(filename);
                             }
+                            else {
+                                stderr.write(chalk.bgBlue.white('>'));
+                            }
                         }
                         else {
-                            stderr.write(chalk.bgBlue.white('>'));
-                        }
-                    }
-                }
-                else {
-                    notFound.push(filename);
-                    stderr.write(chalk.bgBlue.black('?'));
-                }
-            }
-            if (errors.length || notFound.length) {
-                stderr.write('\n\n');
-                if (data && host) {
-                    parse(fs.readFileSync(path.resolve(__dirname, data)), (err, csv: string[][]) => {
-                        if (!err) {
-                            let html = '<html><body><ol>';
-                            for (const row of csv) {
-                                const filename = row[1];
-                                const url = row[2];
-                                if (errors.includes(filename)) {
-                                    const href = host + url;
-                                    html += `<li><a href="${href}">${href}</a> (${filename})</li>`;
-                                    warnMessage('MD5 not matched -> ' + href, filename);
+                            const output = diff.diffChars(
+                                fs.readFileSync(masterpath).toString('utf-8'),
+                                fs.readFileSync(filepath).toString('utf-8')
+                            );
+                            if (output.length > 1) {
+                                if (rebase) {
+                                    stderr.write(chalk.bgWhite.blue('<'));
+                                    fs.copyFileSync(filepath, masterpath);
                                 }
-                                else if (notFound.includes(filename)) {
-                                    warnMessage('MD5 not found', filename);
+                                else {
+                                    const pngpath = filepath.replace('.md5', '.png');
+                                    stderr.write('\n\n' + chalk.bgWhite.black('-'.repeat(100)) + '\n\n');
+                                    stderr.write(chalk.yellow(masterpath) + '\n' + chalk.grey(filepath) + '\n' + (fs.existsSync(pngpath) ? chalk.blue(pngpath) + '\n' : '') + '\n');
+                                    for (const part of output) {
+                                        if (part.removed) {
+                                            stderr.write(chalk.yellow(part.value));
+                                        }
+                                        else if (!part.added) {
+                                            stderr.write(chalk.grey(part.value));
+                                        }
+                                    }
+                                    stderr.write('\n');
+                                    errors.push(filename);
                                 }
                             }
-                            html += '</ol></body></html>';
-                            fs.writeFileSync(path.resolve(__dirname, snapshot!, 'errors.html'), html);
-                            failMessage((errors.length + notFound.length) + ' errors', host + snapshot!.replace(/^[.]/, '') + '/errors.html');
+                            else {
+                                stderr.write(chalk.bgBlue.white('>'));
+                            }
                         }
-                        else {
-                            failMessage("Unable to read CSV data file", data);
+                    }
+                    else {
+                        notFound.push(filename);
+                        stderr.write(chalk.bgBlue.black('?'));
+                    }
+                }
+                if (errors.length || notFound.length) {
+                    stderr.write('\n\n');
+                    if (data && host) {
+                        parse(fs.readFileSync(path.resolve(__dirname, data)), (err, csv: string[][]) => {
+                            if (!err) {
+                                let html = '<html><body><ol>';
+                                for (const row of csv) {
+                                    const filename = row[1];
+                                    const url = row[2];
+                                    if (errors.includes(filename)) {
+                                        const href = host + url;
+                                        html += `<li><a href="${href}">${href}</a> (${filename})</li>`;
+                                        warnMessage('MD5 not matched -> ' + href, filename);
+                                    }
+                                    else if (notFound.includes(filename)) {
+                                        warnMessage('MD5 not found', filename);
+                                    }
+                                }
+                                html += '</ol></body></html>';
+                                fs.writeFileSync(path.resolve(__dirname, snapshot!, 'errors.html'), html);
+                                failMessage((errors.length + notFound.length) + ' errors', host + snapshot!.replace(/^[.]/, '') + '/errors.html');
+                            }
+                            else {
+                                failMessage("Unable to read CSV data file", data);
+                            }
+                        });
+                    }
+                    else {
+                        for (const value of errors) {
+                            warnMessage('MD5 not matched', value);
                         }
-                    });
+                        for (const value of notFound) {
+                            warnMessage('MD5 not found', value);
+                        }
+                        failMessage((errors.length + notFound.length) + ' errors', snapshot);
+                    }
+                }
+                else if (rebase) {
+                    successMessage('MD5 rebase', snapshot + ' -> ' + master);
                 }
                 else {
-                    for (const value of errors) {
-                        warnMessage('MD5 not matched', value);
-                    }
-                    for (const value of notFound) {
-                        warnMessage('MD5 not found', value);
-                    }
-                    failMessage((errors.length + notFound.length) + ' errors', snapshot);
+                    successMessage('MD5 matched', master + ' -> ' + snapshot);
                 }
             }
-            else if (rebase) {
-                successMessage('MD5 rebase', snapshot + ' -> ' + master);
-            }
             else {
-                successMessage('MD5 matched', master + ' -> ' + snapshot);
+                failMessage('Path not found', snapshotDir);
             }
         }
-        else {
-            failMessage('Path not found', masterDir + ' | ' + snapshotDir);
-        }
+    }
+    else {
+        failMessage('Path not found', masterDir);
     }
 }
 else if (host && data && browserName && snapshot) {
