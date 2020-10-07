@@ -193,6 +193,7 @@ declare module "base" {
         renderNode(layout: ContentUI<T>): Undef<NodeTemplate<T>>;
         renderNodeGroup(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
         createNodeGroup(node: T, children: T[], parent?: T, options?: CreateNodeGroupUIOptions): T;
+        createNodeWrapper(node: T, parent: T, options?: CreateNodeWrapperUIOptions<T>): T;
         sortRenderPosition(parent: T, templates: NodeTemplate<T>[]): NodeTemplate<T>[];
         addBeforeOutsideTemplate(node: T, value: string, format?: boolean, index?: number): void;
         addBeforeInsideTemplate(node: T, value: string, format?: boolean, index?: number): void;

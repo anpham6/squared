@@ -1188,43 +1188,43 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             if (node.rendering && node.visible && node.hasProcedure(NODE_PROCEDURE.CONSTRAINT)) {
                 if (node.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
                     if (node.layoutConstraint) {
-                        const pageFlow: Null<T[]> = !node.layoutElement ? [] : null;
+                        const children: Null<T[]> = !node.layoutElement ? [] : null;
                         node.renderEach((item: T) =>{
                             if (!item.pageFlow) {
                                 this.setPositionAbsolute(item, node);
                             }
-                            else if (pageFlow) {
-                                pageFlow.push(item);
+                            else if (children) {
+                                children.push(item);
                             }
                         });
-                        if (pageFlow) {
-                            this.evaluateAnchors(pageFlow);
+                        if (children) {
+                            this.evaluateAnchors(children);
                         }
                     }
                 }
                 else if (node.layoutConstraint) {
                     const renderChildren = node.renderChildren as T[];
-                    const pageFlow: T[] = [];
+                    const children: T[] = [];
                     for (let i = 0, length = renderChildren.length; i < length; ++i) {
                         const item = renderChildren[i];
                         if (!item.positioned) {
                             if (item.pageFlow || item.autoPosition) {
-                                pageFlow.push(item);
+                                children.push(item);
                             }
                             else {
                                 this.setPositionAbsolute(item, node);
                             }
                         }
                     }
-                    if (pageFlow.length) {
+                    if (children.length) {
                         if (node.layoutHorizontal) {
-                            this.processConstraintHorizontal(node, pageFlow);
+                            this.processConstraintHorizontal(node, children);
                         }
-                        else if (pageFlow.length > 1) {
-                            this.processConstraintChain(node, pageFlow);
+                        else if (children.length > 1) {
+                            this.processConstraintChain(node, children);
                         }
                         else {
-                            const item = pageFlow[0];
+                            const item = children[0];
                             if (!item.constraint.horizontal) {
                                 setHorizontalAlignment(item);
                             }
@@ -1234,7 +1234,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                             item.setConstraintDimension(1);
                         }
-                        this.evaluateAnchors(pageFlow);
+                        this.evaluateAnchors(children);
                     }
                 }
                 else if (node.layoutRelative) {

@@ -69,6 +69,7 @@ interface CacheValueUI extends CacheValue {
 }
 
 interface CacheState<T> {
+    inlineText: boolean;
     htmlElement?: boolean;
     svgElement?: boolean;
     styleElement?: boolean;
@@ -77,7 +78,6 @@ interface CacheState<T> {
     actualParent?: Null<T>;
     absoluteParent?: Null<T>;
     wrapperOf?: Null<T>;
-    inlineText?: boolean;
     textContent?: string;
     textEmpty?: boolean;
     firstLineStyle?: Null<StringMap>;

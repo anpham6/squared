@@ -762,7 +762,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     protected _parent: Null<T> = null;
     protected _cache: CacheValue = {};
-    protected _cacheState: CacheState<T> = {};
+    protected _cacheState: CacheState<T> = { inlineText: false };
     protected _preferInitial = false;
     protected _bounds: Null<BoxRectDimension> = null;
     protected _box: Null<BoxRectDimension> = null;
@@ -1042,7 +1042,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             }
         }
         else {
-            this._cacheState = {};
+            this._cacheState = { inlineText: false };
             reset = true;
         }
         if (reset && !this._preferInitial && this.naturalChild) {
@@ -2467,29 +2467,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     set inlineText(value) {
-        switch (this.tagName) {
-            case 'IMG':
-            case 'INPUT':
-            case 'SELECT':
-            case 'TEXTAREA':
-            case 'svg':
-            case 'BR':
-            case 'HR':
-            case 'PROGRESS':
-            case 'METER':
-            case 'CANVAS':
-                this._cacheState.inlineText = false;
-                break;
-            case 'BUTTON':
-                this._cacheState.inlineText = this.textContent.trim() !== '';
-                break;
-            default:
-                this._cacheState.inlineText = value;
-                break;
-        }
+        this._cacheState.inlineText = value || this.tagName === 'BUTTON' && this.textContent.trim() !== '';
     }
     get inlineText() {
-        return !!this._cacheState.inlineText;
+        return this._cacheState.inlineText;
     }
 
     get block() {

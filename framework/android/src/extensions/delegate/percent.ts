@@ -59,7 +59,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
         const mainData = this.data.get(node) as PercentData;
         let container: Undef<T>;
         if (!parent.layoutConstraint || mainData.percentHeight) {
-            container = (this.controller as android.base.Controller<T>).createNodeWrapper(node, parent, { alignmentType: NODE_ALIGNMENT.VERTICAL, resetMargin: true });
+            container = this.controller.createNodeWrapper(node, parent, { alignmentType: NODE_ALIGNMENT.VERTICAL, resetMargin: true });
         }
         const target = container || parent;
         if (mainData.percentWidth) {

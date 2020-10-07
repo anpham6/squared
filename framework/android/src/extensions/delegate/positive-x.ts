@@ -150,7 +150,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
         const children = mainData.children as T[];
         let container: Undef<T>;
         if (children.length) {
-            container = (this.controller as android.base.Controller<T>).createNodeWrapper(node, parent, {
+            container = this.controller.createNodeWrapper(node, parent, {
                 alignmentType: NODE_ALIGNMENT.VERTICAL,
                 children,
                 resetMargin: node.every((item: T) => children.includes(item) || !item.visible) || !node.pageFlow && !node.rootElement || parent.layoutGrid,

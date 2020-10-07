@@ -30,13 +30,14 @@ function adjustGrowRatio(parent: View, items: View[], dimension: DimensionAttr) 
     for (let i = 0; i < length; ++i) {
         const item = items[i];
         if (percent) {
+            const autoMargin = item.innerMostWrapped.autoMargin;
             if (horizontal) {
-                if (item.innerMostWrapped.autoMargin.horizontal) {
+                if (autoMargin.horizontal) {
                     percent = false;
                     break;
                 }
             }
-            else if (item.innerMostWrapped.autoMargin.vertical) {
+            else if (autoMargin.vertical) {
                 percent = false;
                 break;
             }
@@ -106,9 +107,8 @@ function adjustGrowRatio(parent: View, items: View[], dimension: DimensionAttr) 
             }
         }
         if (growShrinkType) {
-            let q = groupBasis.length;
-            if (q > 1) {
-                for (let i = 0; i < q; ++i) {
+            if (groupBasis.length > 1) {
+                for (let i = 0, q = groupBasis.length; i < q; ++i) {
                     const data = groupBasis[i];
                     const { basis, item } = data;
                     if (item === maxBasis || basis === maxBasisUnit && (growShrinkType === 1 && maxRatio === data.shrink || growShrinkType === 2 && maxRatio === data.grow)) {
@@ -119,8 +119,7 @@ function adjustGrowRatio(parent: View, items: View[], dimension: DimensionAttr) 
                     }
                 }
             }
-            q = percentage.length;
-            for (let i = 0; i < q; ++i) {
+            for (let i = 0, q = percentage.length; i < q; ++i) {
                 setBoxPercentage(parent, percentage[i], dimension);
             }
         }
@@ -232,7 +231,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
             if (mainData) {
                 const index = mainData.children.findIndex(item => item === node);
                 if (index !== -1) {
-                    const container = (this.controller as android.base.Controller<T>).createNodeWrapper(node, parent);
+                    const container = this.controller.createNodeWrapper(node, parent);
                     container.cssApply({
                         marginTop: '0px',
                         marginRight: '0px',
@@ -276,15 +275,15 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
             if (!mainData.singleRow) {
                 node.each((item: T) => {
                     if (item.hasAlign(NODE_ALIGNMENT.SEGMENTED)) {
-                        const pageFlow = item.renderChildren.filter(child => child.pageFlow) as T[];
-                        if (pageFlow.length) {
+                        const segment = item.renderChildren.filter(child => child.pageFlow) as T[];
+                        if (children.length) {
                             if (row) {
                                 item.setLayoutWidth('match_parent');
-                                chainHorizontal.push(pageFlow);
+                                chainHorizontal.push(segment);
                             }
                             else {
                                 item.setLayoutHeight('match_parent');
-                                chainVertical.push(pageFlow);
+                                chainVertical.push(segment);
                             }
                             segmented.push(item);
                         }

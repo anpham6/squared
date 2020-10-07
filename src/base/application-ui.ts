@@ -1500,21 +1500,21 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             const { containerType: containerTypeParent, alignmentType: alignmentTypeParent } = controllerHandler.containerTypeVerticalMargin;
             const node = layout.node;
             for (let i = 0, length = Math.max(floatedRows.length, staticRows.length); i < length; ++i) {
-                const pageFlow = staticRows[i];
+                const children = staticRows[i];
                 const floating = floatedRows[i];
-                const blockCount = pageFlow.length;
+                const blockCount = children.length;
                 if (!floating && blockCount) {
                     const layoutType = controllerHandler.containerTypeVertical;
                     this.addLayout(new LayoutUI(
                         node,
-                        controllerHandler.createNodeGroup(pageFlow[0], pageFlow, node),
+                        controllerHandler.createNodeGroup(children[0], children, node),
                         layoutType.containerType,
                         layoutType.alignmentType | NODE_ALIGNMENT.SEGMENTED | NODE_ALIGNMENT.BLOCK,
-                        pageFlow
+                        children
                     ));
                 }
                 else {
-                    const children: T[] = [];
+                    const wrapper: T[] = [];
                     let alignmentFloat = 0,
                         subgroup: Undef<T>;
                     if (floating) {
@@ -1524,30 +1524,30 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             if (blockCount === 0 && floating.every(item => item.float === 'right')) {
                                 alignmentFloat |= NODE_ALIGNMENT.RIGHT;
                             }
-                            children.push(floatgroup);
+                            wrapper.push(floatgroup);
                         }
                         else {
-                            children.push(floating[0]);
+                            wrapper.push(floating[0]);
                         }
                     }
                     if (blockCount > 1 || floating) {
-                        subgroup = controllerHandler.createNodeGroup(pageFlow[0], pageFlow);
-                        children.push(subgroup);
+                        subgroup = controllerHandler.createNodeGroup(children[0], children);
+                        wrapper.push(subgroup);
                     }
                     else if (blockCount === 1) {
-                        children.push(pageFlow[0]);
+                        wrapper.push(children[0]);
                     }
-                    const wrapper = controllerHandler.createNodeGroup((floating || pageFlow)[0], children, node);
+                    const container = controllerHandler.createNodeGroup((floating || children)[0], wrapper, node);
                     this.addLayout(new LayoutUI(
                         node,
-                        wrapper,
+                        container,
                         containerTypeParent,
                         alignmentTypeParent | alignmentFloat,
-                        children
+                        wrapper
                     ));
-                    for (const item of children) {
+                    for (const item of wrapper) {
                         this.addLayout(new LayoutUI(
-                            wrapper,
+                            container,
                             item,
                             containerType,
                             alignmentType | NODE_ALIGNMENT.SEGMENTED | NODE_ALIGNMENT.BLOCK
@@ -1555,7 +1555,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                     if (blockCount && floating && subgroup) {
                         const [leftAbove, rightAbove] = partitionArray(floating, item => item.float !== 'right');
-                        this.setFloatPadding(node, subgroup, pageFlow, leftAbove, rightAbove);
+                        this.setFloatPadding(node, subgroup, children, leftAbove, rightAbove);
                     }
                 }
             }

@@ -534,60 +534,59 @@ const getLayoutDimension = (value: string) => value === 'space-between' ? 'match
 
 export default class CssGrid<T extends View> extends squared.base.extensions.CssGrid<T> {
     public processNode(node: T, parent: T): Void<ExtensionResult<T>> {
-        let container: Undef<T>,
-            renderAs: Undef<T>,
-            outputAs: Undef<NodeTemplate<T>>,
-            unsetContentBox: Undef<boolean>;
-        if (CssGrid.isJustified(node) || CssGrid.isAligned(node)) {
-            container = (this.controller as android.base.Controller<T>).createNodeWrapper(node, parent, { containerType: CONTAINER_NODE.CONSTRAINT, resource: NODE_RESOURCE.ASSET, resetContentBox: true });
-            container.inherit(node, 'styleMap', 'boxStyle');
-            node.resetBox(BOX_STANDARD.MARGIN, container);
-            node.resetBox(BOX_STANDARD.PADDING, container);
-            unsetContentBox = true;
-            if (CssGrid.isJustified(node)) {
-                node.setLayoutWidth(getLayoutDimension(node.valueAt('justifyContent')));
-            }
-            else if (node.hasPX('width', { percent: false })) {
-                node.setLayoutWidth('match_parent');
-            }
-            else {
-                container.setLayoutWidth(node.blockStatic ? 'match_parent' : 'wrap_content');
-            }
-            if (CssGrid.isAligned(node)) {
-                node.setLayoutHeight(getLayoutDimension(node.valueAt('alignContent')));
-            }
-            else if (node.hasPX('height', { percent: false })) {
-                node.setLayoutHeight('match_parent');
-            }
-            else {
-                container.setLayoutHeight('wrap_content');
-            }
-            renderAs = container;
-            outputAs = this.application.renderNode(
-                new LayoutUI(
-                    parent,
-                    container,
-                    CONTAINER_NODE.CONSTRAINT,
-                    NODE_ALIGNMENT.SINGLE
-                )
-            );
-        }
         super.processNode(node, parent);
         const mainData = this.data.get(node) as Undef<ICssGridData<T>>;
         if (mainData) {
+            let container: Undef<T>,
+                renderAs: Undef<T>,
+                outputAs: Undef<NodeTemplate<T>>,
+                unsetContentBox: Undef<boolean>;
+            if (CssGrid.isJustified(node) || CssGrid.isAligned(node)) {
+                container = this.controller.createNodeWrapper(node, parent, { containerType: CONTAINER_NODE.CONSTRAINT, resource: NODE_RESOURCE.ASSET, resetContentBox: true });
+                container.inherit(node, 'styleMap', 'boxStyle');
+                node.resetBox(BOX_STANDARD.MARGIN, container);
+                node.resetBox(BOX_STANDARD.PADDING, container);
+                unsetContentBox = true;
+                if (CssGrid.isJustified(node)) {
+                    node.setLayoutWidth(getLayoutDimension(node.valueAt('justifyContent')));
+                }
+                else if (node.hasPX('width', { percent: false })) {
+                    node.setLayoutWidth('match_parent');
+                }
+                else {
+                    container.setLayoutWidth(node.blockStatic ? 'match_parent' : 'wrap_content');
+                }
+                if (CssGrid.isAligned(node)) {
+                    node.setLayoutHeight(getLayoutDimension(node.valueAt('alignContent')));
+                }
+                else if (node.hasPX('height', { percent: false })) {
+                    node.setLayoutHeight('match_parent');
+                }
+                else {
+                    container.setLayoutHeight('wrap_content');
+                }
+                renderAs = container;
+                outputAs = this.application.renderNode(
+                    new LayoutUI(
+                        parent,
+                        container,
+                        CONTAINER_NODE.CONSTRAINT,
+                        NODE_ALIGNMENT.SINGLE
+                    )
+                );
+            }
             mainData.unsetContentBox = unsetContentBox;
             const { column, row } = mainData;
             const unit = column.unit;
-            const columnCount = column.length;
             const layout = LayoutUI.create({
                 parent: container || parent,
                 node,
                 containerType: CONTAINER_NODE.GRID,
                 alignmentType: NODE_ALIGNMENT.AUTO_LAYOUT,
                 rowCount: row.length,
-                columnCount
+                columnCount: column.length
             });
-            if (!node.hasWidth && !node.rootElement && mainData.rowSpanMultiple.length === 0 && unit.length === columnCount && unit.every(value => value.endsWith('fr')) && node.ascend({ condition: (item: T) => this.isFlexibleContainer(item), error: item => item.hasWidth }).length) {
+            if (mainData.rowSpanMultiple.length === 0 && unit.length === column.length && unit.every(value => value.endsWith('fr')) && !node.hasWidth && !node.rootElement && node.ascend({ condition: (item: T) => this.isFlexibleContainer(item), error: item => item.hasWidth }).length) {
                 const rowData = mainData.rowData;
                 const rowCount = rowData.length;
                 const constraintData: T[][] = new Array(rowCount);
@@ -1102,11 +1101,11 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 let valid = false;
                 for (let i = 0; i < columnSpan; ++i) {
                     const value = unit[columnStart + i];
-                    if (value.endsWith('fr') || isPercent(value)) {
-                        valid = true;
-                    }
-                    else if (value === 'auto') {
+                    if (value === 'auto') {
                         return false;
+                    }
+                    else if (value.endsWith('fr') || isPercent(value)) {
+                        valid = true;
                     }
                 }
                 return valid;

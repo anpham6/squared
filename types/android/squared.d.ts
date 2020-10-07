@@ -71,7 +71,6 @@ declare namespace base {
         addGuideline(options: GuidelineOptions<T>): void;
         addBarrier(nodes: T[], barrierDirection: string): string;
         evaluateAnchors(nodes: T[]): void;
-        createNodeWrapper(node: T, parent: T, options?: CreateNodeWrapperUIOptions<T>): T;
         get userSettings(): UserResourceSettingsUI;
         get screenDimension(): Dimension;
     }
