@@ -364,37 +364,6 @@ function constraintPercentHeight(node: T, percent = 1) {
     return percent;
 }
 
-function ascendFlexibleWidth(node: T) {
-    if (node.documentRoot && (node.hasWidth || node.blockStatic || node.blockWidth)) {
-        return true;
-    }
-    let parent = node.renderParent as Undef<T>,
-        i = 0;
-    while (parent) {
-        if (!parent.inlineWidth && (parent.hasWidth || parseInt(parent.layoutWidth) || parent.of(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.BLOCK) || parent.documentRoot && (parent.blockWidth || parent.blockStatic))) {
-            return true;
-        }
-        else if (parent.flexibleWidth) {
-            if (++i > 1) {
-                return false;
-            }
-        }
-        else if (parent.inlineWidth || parent.naturalElement && parent.inlineVertical) {
-            return false;
-        }
-        parent = parent.renderParent as Undef<T>;
-    }
-    return false;
-}
-
-function ascendFlexibleHeight(node: T) {
-    if (node.documentRoot && node.hasHeight) {
-        return true;
-    }
-    const parent = node.renderParent as Undef<T>;
-    return parent && (parent.hasHeight || parent.layoutConstraint && parent.blockHeight) || node.absoluteParent?.hasHeight;
-}
-
 function setLayoutDimension(node: T, value: string, horizontal: boolean, overwrite: boolean) {
     if (horizontal) {
         node.setLayoutWidth(value, overwrite);
@@ -483,6 +452,37 @@ function calculateBias(start: number, end: number, accuracy = 3) {
 }
 
 const hasFlexibleContainer = (renderParent: Null<T>) => !!renderParent && (renderParent.layoutConstraint || renderParent.layoutGrid);
+
+export function ascendFlexibleWidth(node: T) {
+    if (node.documentRoot && (node.hasWidth || node.blockStatic || node.blockWidth)) {
+        return true;
+    }
+    let parent = node.renderParent as Undef<T>,
+        i = 0;
+    while (parent) {
+        if (!parent.inlineWidth && (parent.hasWidth || parseInt(parent.layoutWidth) || parent.of(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.BLOCK) || parent.documentRoot && (parent.blockWidth || parent.blockStatic))) {
+            return true;
+        }
+        else if (parent.flexibleWidth) {
+            if (++i > 1) {
+                return false;
+            }
+        }
+        else if (parent.inlineWidth || parent.naturalElement && parent.inlineVertical) {
+            return false;
+        }
+        parent = parent.renderParent as Undef<T>;
+    }
+    return false;
+}
+
+export function ascendFlexibleHeight(node: T) {
+    if (node.documentRoot && node.hasHeight) {
+        return true;
+    }
+    const parent = node.renderParent as Undef<T>;
+    return parent && (parent.hasHeight || parent.layoutConstraint && parent.blockHeight) || node.absoluteParent?.hasHeight;
+}
 
 export default (Base: Constructor<squared.base.NodeUI>) => {
     return class View extends Base implements android.base.View {
@@ -2828,7 +2828,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public isUnstyled(checkMargin = true) {
-            return this.contentBoxWidth === 0 && this.contentBoxHeight === 0 && this.css('verticalAlign') === 'baseline' && (!checkMargin || !this.blockStatic && this.marginTop === 0 && this.marginBottom === 0) && !this.visibleStyle.background && !this.positionRelative && !this.hasWidth && !this.hasHeight && !this.has('maxWidth') && !this.has('maxHeight') && this.css('whiteSpace') !== 'nowrap';
+            return this.contentBoxWidth === 0 && this.contentBoxHeight === 0 && this.css('verticalAlign') === 'baseline' && !this.hasAlign(NODE_ALIGNMENT.WRAPPER) && (!checkMargin || !this.blockStatic && this.marginTop === 0 && this.marginBottom === 0) && !this.visibleStyle.background && !this.positionRelative && !this.hasWidth && !this.hasHeight && !this.has('maxWidth') && !this.has('maxHeight') && this.css('whiteSpace') !== 'nowrap';
         }
 
         public getHorizontalBias(rect: BoxRect = this.documentParent.box) {

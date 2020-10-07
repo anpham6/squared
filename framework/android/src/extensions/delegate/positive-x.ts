@@ -64,13 +64,10 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                 }
                 else {
                     const value = item.left;
-                    if ((value >= 0 || rootElement) && value < paddingLeft) {
-                        children.add(item);
-                    }
-                    else if (value < 0 && node.marginLeft > 0) {
-                        children.add(item);
-                    }
-                    else if (!item.hasPX('right') && checkMarginLeft(node, item)) {
+                    if ((value >= 0 || rootElement) && value < paddingLeft ||
+                        value < 0 && Math.ceil(item.linear.left) >= Math.ceil(node.linear.left) ||
+                        !item.hasPX('right') && checkMarginLeft(node, item))
+                    {
                         children.add(item);
                     }
                 }
@@ -82,13 +79,10 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                 }
                 else {
                     const value = item.right;
-                    if ((value >= 0 || rootElement) && value < paddingRight) {
-                        children.add(item);
-                    }
-                    else if (value < 0 && node.marginRight > 0) {
-                        children.add(item);
-                    }
-                    else if (checkMarginRight(node, item)) {
+                    if ((value >= 0 || rootElement) && value < paddingRight ||
+                        (value < 0 && Math.floor(item.linear.right) <= Math.ceil(node.linear.right)) ||
+                        checkMarginRight(node, item))
+                    {
                         children.add(item);
                     }
                 }
@@ -105,13 +99,10 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                 }
                 else {
                     const value = item.top;
-                    if ((value >= 0 || rootElement) && (value < paddingTop || aboveInvalid)) {
-                        children.add(item);
-                    }
-                    else if (value < 0 && node.marginTop > 0) {
-                        children.add(item);
-                    }
-                    else if (!item.hasPX('bottom') && checkMarginTop(node, item)) {
+                    if ((value >= 0 || rootElement) && (value < paddingTop || aboveInvalid) ||
+                        (value < 0 && Math.ceil(item.linear.top) >= Math.ceil(node.linear.top)) ||
+                        !item.hasPX('bottom') && checkMarginTop(node, item))
+                    {
                         children.add(item);
                     }
                 }
@@ -123,13 +114,10 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                 }
                 else {
                     const value = item.bottom;
-                    if ((value >= 0 || rootElement) && (value < paddingBottom || belowInvalid)) {
-                        children.add(item);
-                    }
-                    else if (value < 0 && node.marginBottom > 0) {
-                        children.add(item);
-                    }
-                    else if (checkMarginBottom(node, item)) {
+                    if ((value >= 0 || rootElement) && (value < paddingBottom || belowInvalid) ||
+                        (value < 0 && Math.floor(item.linear.bottom) <= Math.ceil(node.linear.bottom)) ||
+                        checkMarginBottom(node, item))
+                    {
                         children.add(item);
                     }
                 }

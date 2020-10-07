@@ -22,7 +22,7 @@ const { APP_SECTION, NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.constant
 
 const { isPlatform, isUserAgent } = squared.lib.client;
 const { parseColor } = squared.lib.color;
-const { formatPX, getSrcSet, hasCoords } = squared.lib.css;
+const { formatPX, getSrcSet, hasCoords, parseTransform } = squared.lib.css;
 const { getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
@@ -3586,6 +3586,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 const TL = horizontal ? 'top' : 'left';
                 const setAnchorOffset = (sibling: T, position: AnchorPositionAttr, adjustment: number) => {
+                    if (node.has('transform')) {
+                        const translate = parseTransform(node.valueAt('transform'), { accumulate: true, boundingBox: node.bounds, fontSize: node.fontSize }).filter(item => item.method === 'translate');
+                        if (translate.length) {
+                            adjustment -= translate[0].values[horizontal ? 0 : 1];
+                        }
+                    }
                     setAlignedWidth(sibling, position);
                     node.anchor(position, sibling.documentId, true);
                     node.setBox(horizontal ? BOX_STANDARD.MARGIN_LEFT : BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment });

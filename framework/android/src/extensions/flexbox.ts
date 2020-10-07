@@ -8,6 +8,8 @@ import View from '../view';
 import NodeUI = squared.base.NodeUI;
 import LayoutUI = squared.base.LayoutUI;
 
+import { ascendFlexibleWidth, ascendFlexibleHeight } from '../view-mx';
+
 interface FlexBasis {
     item: View;
     size: number;
@@ -18,12 +20,11 @@ interface FlexBasis {
 
 const { isLength } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { capitalize, iterateReverseArray, sameArray, withinRange } = squared.lib.util;
+const { capitalize, iterateReverseArray, sameArray } = squared.lib.util;
 
 function adjustGrowRatio(parent: View, items: View[], dimension: DimensionAttr) {
     const horizontal = dimension === 'width';
-    const hasDimension = horizontal ? 'hasWidth' : 'hasHeight';
-    let percent = parent[hasDimension] || horizontal && parent.blockStatic && withinRange(parent.parseUnit(parent.valueAt('maxWidth')), parent.box.width),
+    let percent = parent[horizontal ? 'hasWidth' : 'hasHeight'] || horizontal && ascendFlexibleWidth(parent) || !horizontal && ascendFlexibleHeight(parent),
         growShrinkType = 0,
         result = 0;
     const length = items.length;
@@ -102,7 +103,7 @@ function adjustGrowRatio(parent: View, items: View[], dimension: DimensionAttr) 
                 item.flexbox.basis = 'auto';
                 continue;
             }
-            if (alignSelf === 'auto' && (percent && !item[hasDimension] || growPercent)) {
+            if (alignSelf === 'auto' && (growPercent || percent && !item[horizontal ? 'hasWidth' : 'hasHeight'])) {
                 percentage.push(item);
             }
         }

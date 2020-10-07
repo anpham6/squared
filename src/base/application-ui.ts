@@ -17,7 +17,7 @@ type FileActionOptions = squared.FileActionOptions;
 
 const { FILE } = squared.lib.regex;
 
-const { formatPX, getStyle, hasCoords, insertStyleSheetRule, resolveURL } = squared.lib.css;
+const { formatPX, getStyle, hasCoords, isCalc, insertStyleSheetRule, resolveURL } = squared.lib.css;
 const { getNamedItem, removeElementsByClassName } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;
 const { capitalize, convertWord, flatArray, hasBit, isString, iterateArray, partitionArray, trimBoth, trimString } = squared.lib.util;
@@ -62,7 +62,7 @@ function checkPseudoDimension(styleMap: StringMap, after: boolean, absolute: boo
         case 'initial':
         case 'unset': {
             const { width, height } = styleMap;
-            if ((after || !width || !parseFloat(width)) && (!height || !parseFloat(height))) {
+            if ((after || !width || !parseFloat(width) && !isCalc(width)) && (!height || !parseFloat(height) && !isCalc(height))) {
                 for (const attr in styleMap) {
                     const value = styleMap[attr]!;
                     if (/(padding|Width|Height)/.test(attr) && parseFloat(value) || !absolute && attr.startsWith('margin') && parseFloat(value)) {
