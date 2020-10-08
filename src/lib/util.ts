@@ -713,16 +713,11 @@ export function isPlainObject<T = PlainObject>(value: any): value is T {
 
 export function isEmptyString(value: string) {
     for (let i = 0, length = value.length; i < length; ++i) {
-        switch (value.charCodeAt(i)) {
-            case 32:
-            case 9:
-            case 10:
-            case 11:
-            case 13:
-                continue;
-            default:
-                return false;
+        const n = value.charCodeAt(i);
+        if (n < 14 && n > 8 || n === 32) {
+            continue;
         }
+        return false;
     }
     return true;
 }
@@ -850,11 +845,11 @@ export function trimString(value: string, pattern: string) {
 }
 
 export function trimStart(value: string, pattern: string) {
-    return value.replace(new RegExp(`^(${pattern})+`), '');
+    return value.replace(new RegExp(`^(?:${pattern})+`), '');
 }
 
 export function trimEnd(value: string, pattern: string) {
-    return value.replace(new RegExp(`(${pattern})+$`), '');
+    return value.replace(new RegExp(`(?:${pattern})+$`), '');
 }
 
 export function fromLastIndexOf(value: string, ...char: string[]) {

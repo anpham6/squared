@@ -424,6 +424,7 @@ declare namespace lib {
         function localizeString(value: string, rtl: boolean, api: number): string;
         function concatString(list: (string | number)[], char?: string): string;
         function formatString(value: string, ...params: string[]): string;
+        function sanitizeString(value: string): string;
         function replaceCharacterData(value: string, tab?: number): string;
         function replaceTab(value: string, spaces?: number, preserve?: boolean): string;
         function getXmlNs(value: string): string;

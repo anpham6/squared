@@ -4,7 +4,7 @@ import type View from '../../view';
 
 import Resource from '../../resource';
 
-import { replaceCharacterData } from '../../lib/util';
+import { replaceCharacterData, sanitizeString } from '../../lib/util';
 
 const { NODE_RESOURCE } = squared.base.lib.constant;
 
@@ -46,6 +46,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
 
     public afterResources(sessionId: string) {
         const numberAsResource = this.options.numberAsResource;
+        const resource = this.resource!;
         this.application.getProcessingCache(sessionId).each(node => {
             if (node.hasResource(NODE_RESOURCE.VALUE_STRING)) {
                 if (node.styleElement) {
@@ -54,7 +55,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                         setTextValue(
                             node,
                             'tooltipText',
-                            Resource.addString(replaceCharacterData(title), `${node.controlId.toLowerCase()}_title`, numberAsResource)
+                            Resource.addString(replaceCharacterData(sanitizeString(resource.preFormatString(title))), `${node.controlId.toLowerCase()}_title`, numberAsResource)
                         );
                     }
                 }
@@ -69,7 +70,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                     setTextValue(
                         node,
                         'hint',
-                        Resource.addString(replaceCharacterData(hintString), `${node.controlId.toLowerCase()}_hint`, numberAsResource)
+                        Resource.addString(replaceCharacterData(sanitizeString(resource.preFormatString(hintString))), `${node.controlId.toLowerCase()}_hint`, numberAsResource)
                     );
                 }
                 const tagName = node.tagName;
@@ -84,7 +85,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                     case 'IFRAME': {
                         const valueString = node.data<string>(Resource.KEY_NAME, 'valueString');
                         if (valueString) {
-                            Resource.addString(replaceCharacterData(valueString));
+                            Resource.addString(replaceCharacterData(resource.preFormatString(valueString)), `${node.controlId.toLowerCase()}_iframe_src`);
                         }
                         break;
                     }
@@ -323,9 +324,10 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
         else {
             const resourceArray = stringArray || numberArray;
             if (resourceArray) {
+                const resource = this.resource!;
                 result = [];
                 for (let i = 0, length = resourceArray.length; i < length; ++i) {
-                    const value = Resource.addString(replaceCharacterData(resourceArray[i]), '', numberAsResource);
+                    const value = Resource.addString(replaceCharacterData(sanitizeString(resource.preFormatString(resourceArray[i]))), '', numberAsResource);
                     if (value) {
                         result.push(value);
                     }

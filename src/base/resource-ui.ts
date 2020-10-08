@@ -213,11 +213,8 @@ function setBorderStyle(node: NodeUI, boxStyle: BoxStyle, attr: string, border: 
     if (width > 0) {
         const style = node.css(border[1]) || 'solid';
         let color: Null<string | ColorData> = node.css(border[2]) || 'rgb(0, 0, 0)';
-        switch (color) {
-            case 'currentcolor':
-            case 'currentColor':
-                color = node.css('color');
-                break;
+        if (color.startsWith('current')) {
+            color = node.css('color');
         }
         if (width === 2 && (style === 'inset' || style === 'outset')) {
             width = 1;
@@ -286,7 +283,9 @@ const convertPercent = (value: string, dimension: number, options?: ParseUnitOpt
 const checkPreviousSibling = (node: Undef<NodeUI>) => !node || node.lineBreak || node.floating || node.plainText && CHAR_TRAILINGSPACE.test(node.textContent);
 
 export default class ResourceUI<T extends NodeUI> extends Resource<T> implements squared.base.ResourceUI<T> {
-    public static readonly STRING_SPACE = '&#160;';
+    public static STRING_SPACE = '&#160;';
+    public static STRING_NEWLINE = '&#10;';
+    public static STRING_WBR = '&#8203;';
     public static readonly STORED: ResourceStoredMap = {
         ids: new Map(),
         strings: new Map(),
@@ -1226,7 +1225,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
             trimming = true;
         }
         if (value) {
-            value = value.replace(/\u00A0/g, ResourceUI.STRING_SPACE);
+            value = this.preFormatString(value);
             switch (node.css('whiteSpace')) {
                 case 'pre':
                 case 'pre-wrap': {
@@ -1244,23 +1243,23 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                 }
                 case 'break-spaces':
                     value = value
-                        .replace(/\n/g, '\\n')
+                        .replace(/\n/g, ResourceUI.STRING_NEWLINE)
                         .replace(/\t/g, ResourceUI.STRING_SPACE.repeat(node.toInt('tabSize', 8)))
                         .replace(/\s/g, ResourceUI.STRING_SPACE);
                     trimming = false;
                     break;
                 case 'pre-line':
                     value = value
-                        .replace(/\n/g, '\\n')
+                        .replace(/\n/g, ResourceUI.STRING_NEWLINE)
                         .replace(/\s{2,}/g, ' ');
                     trimming = false;
                     break;
                 case 'nowrap':
+                    inlined = true;
+                default:
                     value = value
                         .replace(/\n+/g, ' ')
                         .replace(/\s{2,}/g, ' ');
-                    inlined = true;
-                default: {
                     if (node.onlyChild && node.htmlElement) {
                         value = value
                             .replace(CHAR_LEADINGSPACE, '')
@@ -1288,7 +1287,6 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                         }
                     }
                     break;
-                }
             }
         }
         else if (node.naturalChildren.length === 0 && !node.hasPX('height') && ResourceUI.isBackgroundVisible(node.data<BoxStyle>(ResourceUI.KEY_NAME, 'boxStyle')) && !isString(node.textContent)) {
@@ -1349,6 +1347,10 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
         }
     }
 
+    public preFormatString(value: string) {
+        return value.replace(/\u00A0/g, ResourceUI.STRING_SPACE);
+    }
+
     public removeExcludedFromText(node: T, element: Element) {
         const { preserveWhiteSpace, sessionId } = node;
         const styled = element.children.length > 0 || element.tagName === 'CODE';
@@ -1360,7 +1362,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                 if (child) {
                     if (styled && child.htmlElement) {
                         if (child.lineBreak) {
-                            value = value.replace(!preserveWhiteSpace ? new RegExp(`\\s*${item.outerHTML}\\s*`) : item.outerHTML, child.lineBreakTrailing && child.previousSibling?.inlineStatic ? '' : '\\n');
+                            value = value.replace(!preserveWhiteSpace ? new RegExp(`\\s*${item.outerHTML}\\s*`) : item.outerHTML, child.lineBreakTrailing && child.previousSibling?.inlineStatic ? '' : ResourceUI.STRING_NEWLINE);
                         }
                         else if (child.positioned) {
                             value = value.replace(item.outerHTML, '');
@@ -1381,7 +1383,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                     }
                 }
                 else if (item.nodeName[0] !== '#') {
-                    value = value.replace(item.outerHTML, item.tagName === 'WBR' ? '\u200B' : !hasCoords(getComputedStyle(item).getPropertyValue('position')) && isString(item.textContent!) ? ResourceUI.STRING_SPACE : '');
+                    value = value.replace(item.outerHTML, item.tagName === 'WBR' ? ResourceUI.STRING_WBR : !hasCoords(getComputedStyle(item).getPropertyValue('position')) && isString(item.textContent!) ? ResourceUI.STRING_SPACE : '');
                 }
                 if (!preserveWhiteSpace) {
                     if (index === 0) {
@@ -1399,7 +1401,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
         else if (!preserveWhiteSpace && CHAR_EMPTYSTRING.test(value)) {
             return node.blockStatic ? ResourceUI.STRING_SPACE : '';
         }
-        return value.replace(/&#(\d+);/g, (match, capture) => String.fromCharCode(parseInt(capture)));
+        return value;
     }
 
     get controllerSettings() {

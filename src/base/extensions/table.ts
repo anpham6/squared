@@ -238,7 +238,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             setBorderStyle(td, 'borderBottom', node);
                         }
                         if (td.textElement) {
-                            td.data(Resource.KEY_NAME, 'hintString', td.textContent.trim());
+                            td.data(Resource.KEY_NAME, 'hintString', td.textContent);
                         }
                         break;
                 }

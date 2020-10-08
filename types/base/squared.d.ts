@@ -244,7 +244,9 @@ declare module "base" {
     }
 
     class ResourceUI<T extends NodeUI> extends Resource<T> {
-        static readonly STRING_SPACE: string;
+        static STRING_SPACE: string;
+        static STRING_NEWLINE: string;
+        static STRING_WBR: string;
         static readonly STORED: ResourceStoredMap;
         static getBackgroundPosition(value: string, dimension: Dimension, options?: BackgroundPositionOptions): BoxRectPosition;
         static generateId(section: string, name: string, start?: number): string;
@@ -260,6 +262,7 @@ declare module "base" {
         setBoxStyle(node: T): void;
         setFontStyle(node: T): void;
         setValueString(node: T): void;
+        preFormatString(value: string): string
         removeExcludedFromText(node: T, element: Element): string;
         get controllerSettings(): ControllerSettingsUI;
         get mapOfStored(): ResourceStoredMap;

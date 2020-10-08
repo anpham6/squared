@@ -166,6 +166,10 @@ export function replaceTab(value: string, spaces = 4, preserve?: boolean) {
     return value;
 }
 
+export function sanitizeString(value: string) {
+    return value.trim().replace(/\n+/g, ' ').replace(/\s{2,}/g, ' ');
+}
+
 export function replaceCharacterData(value: string, tab?: number) {
     let output = '';
     for (let i = 0, length = value.length, ch: string; i < length; ++i) {
@@ -173,6 +177,9 @@ export function replaceCharacterData(value: string, tab?: number) {
         switch (ch) {
             case "'":
                 output += "\\'";
+                break;
+            case '@':
+                output += i === 0 || !output.trim() ? '\\@' : '@';
                 break;
             case '"':
                 output += '&quot;';
@@ -182,6 +189,9 @@ export function replaceCharacterData(value: string, tab?: number) {
                 break;
             case '>':
                 output += '&gt;';
+                break;
+            case '\\':
+                output += '\\\\';
                 break;
             case '\t':
                 output += tab ? '&#160;'.repeat(tab) : ch;
@@ -231,12 +241,29 @@ export function replaceCharacterData(value: string, tab?: number) {
             case '\u200D':
                 output += '&#8205;';
                 break;
+            case '&':
+                if (value[i + 5] === ';') {
+                    if (value.substring(i + 1, i + 5) === 'nbsp') {
+                        output += '&#160;';
+                        i += 5;
+                        break;
+                    }
+                }
+                else if (value[i + 4] === ';') {
+                    if (value.substring(i + 1, i + 4) === '#10') {
+                        output += '\\n';
+                        i += 4;
+                        break;
+                    }
+                }
+                output += '&';
+                break;
             default:
                 output += ch;
                 break;
         }
     }
-    return output.replace(/&nbsp;/g, '&#160;').replace(/&(?!#?[A-Za-z\d]{2,};)/g, '&amp;');
+    return output.replace(/&(?!#?[A-Za-z\d]{2,};)/g, '&amp;');
 }
 
 export function concatString(list: (string | number)[], char = '') {

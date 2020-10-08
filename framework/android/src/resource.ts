@@ -13,7 +13,7 @@ const { fromLastIndexOf, isNumber, isPlainObject, isString, resolvePath, splitPa
 
 const STORED = squared.base.ResourceUI.STORED;
 
-const REGEXP_STRINGNAME = /(\\[nt]|<\/?[A-Za-z]+>|&#?[A-Za-z\d]{2,};)/g;
+const REGEXP_STRINGNAME = /(?:\\n|<\/?[A-Za-z]+>|&#?[A-Za-z\d]+;)/g;
 const REGEXP_STRINGWORD = /[^A-Za-z\d]+/g;
 
 let CACHE_IMAGE: StringMap = {};
@@ -135,35 +135,28 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                         return `@string/${data[0]}`;
                     }
                 }
-                const partial =
-                    trimString(
-                        (name || (value.length > 64 ? value.substring(0, 64) : value))
-                            .replace(REGEXP_STRINGNAME, '_')
-                            .replace(REGEXP_STRINGWORD, '_'),
-                        '_'
-                    )
-                    .split(/_+/);
-                if (partial.length > 1) {
-                    if (partial.length > 4) {
-                        partial.length = 4;
+                if (!name) {
+                    const partial = trimString(value.replace(REGEXP_STRINGNAME, '_').replace(REGEXP_STRINGWORD, '_'), '_').split(/_+/);
+                    if (partial.length > 1) {
+                        if (partial.length > 4) {
+                            partial.length = 4;
+                        }
+                        name = concatString(partial, '_');
                     }
-                    name = concatString(partial, '_');
+                    else {
+                        name = partial[0];
+                    }
                 }
-                else {
-                    name = partial[0];
-                }
-                name = name.toLowerCase();
                 if (!name) {
                     name = '__symbol' + ++COUNTER_SYMBOL;
                 }
-                else if (numeric || /^\d/.test(name) || RESERVED_JAVA.has(name)) {
-                    name = '__' + name;
+                else {
+                    name = name.toLowerCase();
+                    if (numeric || /^\d/.test(name) || RESERVED_JAVA.has(name)) {
+                        name = '__' + name;
+                    }
                 }
-                if (strings.has(name)) {
-                    name = Resource.generateId('string', name);
-                }
-                strings.set(name, value);
-                return `@string/${name}`;
+                return `@string/${Resource.insertStoredAsset('strings', name, value)}`;
             }
         }
         return value;
