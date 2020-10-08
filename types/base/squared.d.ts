@@ -400,9 +400,9 @@ declare module "base" {
         documentRoot: boolean;
         shadowRoot: boolean;
         sessionId: string;
-        queryMap?: Node[][];
-        pseudoElt?: PseudoElt;
+        queryMap: Null<Node[][]>;
         shadowHost?: ShadowRoot;
+        pseudoElt?: PseudoElt;
         readonly id: number;
         init(parent: Node, depth: number, index?: number): void;
         syncWith(sessionId?: string, cache?: boolean): boolean;
@@ -586,8 +586,8 @@ declare module "base" {
         renderParent: Null<NodeUI>;
         renderExtension: Null<Extension<NodeUI>[]>;
         renderTemplates: Null<NodeTemplate<NodeUI>[]>;
+        renderedAs: Null<NodeTemplate<NodeUI>>;
         documentChildren?: NodeUI[];
-        renderedAs?: NodeTemplate<NodeUI>;
         outerWrapper?: NodeUI;
         innerBefore?: NodeUI;
         innerAfter?: NodeUI;

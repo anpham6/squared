@@ -25,11 +25,11 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
     public next?: boolean;
 
     private _floated: Null<Set<string>> = null;
-    private _initialized?: boolean;
-    private _itemCount?: number;
-    private _linearX?: boolean;
-    private _linearY?: boolean;
-    private _singleRow?: boolean;
+    private _initialized = false;
+    private _itemCount: Null<number> = null;
+    private _linearX: Null<boolean> = null;
+    private _linearY: Null<boolean> = null;
+    private _singleRow: Null<boolean> = null;
 
     constructor(
         public parent: T,
@@ -116,7 +116,7 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
 
     get singleRowAligned() {
         const result = this._singleRow;
-        if (result === undefined) {
+        if (result === null) {
             const children = this.children;
             const length = children.length;
             if (length > 1) {

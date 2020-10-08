@@ -1526,7 +1526,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                         if (animateData) {
                                             this._animateData.set(strokePath.name, {
                                                 element: animateData.element,
-                                                animate: animateData.animate.filter(animate => animate.id === undefined || animate.id === i)
+                                                animate: animateData.animate.filter(animate => animate.id === null || animate.id === i)
                                             });
                                         }
                                         strokePath.trimPathStart = truncate(dash.start, floatPrecision);

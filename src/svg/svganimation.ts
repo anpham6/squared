@@ -11,7 +11,7 @@ type SvgView = squared.svg.SvgView;
 
 const { getFontSize, hasEm, isLength, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
-const { capitalize, hasBit, isString } = squared.lib.util;
+const { capitalize, hasBit, hasValue, isString } = squared.lib.util;
 
 const REGEXP_TIME = /^(-)?(\d+(?:\.\d+)?)(ms|s|min|h)?$/;
 const REGGXP_TIMEDELIMITED = /^(-)?(?:(\d+):)?(?:([0-5][0-9]):)?([0-5][0-9])(?:\.(\d{1,3}))?$/;
@@ -68,9 +68,9 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     public fillMode = 0;
     public synchronizeState = 0;
     public paused = false;
+    public baseValue = '';
     public replaceValue?: string;
-    public id?: number;
-    public baseValue?: string;
+    public id: Null<number> = null;
     public companion?: NumberValue<SvgAnimation>;
     public readonly animationElement: Null<SVGAnimationElement> = null;
     public readonly instanceType = squared.svg.constant.INSTANCE_TYPE.SVG_ANIMATION;
@@ -82,7 +82,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
 
     private _attributeName = '';
     private _dataset: Null<SvgDataSet> = null;
-    private _group?: SvgAnimationGroup;
+    private _group: Null<SvgAnimationGroup> = null;
 
     constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimationElement) {
         if (element) {
@@ -149,7 +149,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     set attributeName(value) {
         if (value !== 'transform' && !this.baseValue) {
             let baseValue = this._dataset?.baseValue?.[value];
-            if (baseValue !== undefined) {
+            if (hasValue<string>(baseValue)) {
                 this.baseValue = baseValue.toString().trim();
             }
             else {

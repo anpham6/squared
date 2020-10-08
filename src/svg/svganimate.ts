@@ -193,8 +193,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
 
     protected _reverse = false;
     protected _alternate = false;
-    protected _values?: Null<string[]>;
-    protected _keyTimes?: Null<number[]>;
+    protected _values: Null<string[]> = null;
+    protected _keyTimes: Null<number[]> = null;
     protected _keySplines: Null<string[]> = null;
 
     private _iterationCount = 1;

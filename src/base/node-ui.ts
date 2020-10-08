@@ -424,29 +424,29 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public renderParent: Null<T> = null;
     public renderExtension: Null<ExtensionUI<T>[]> = null;
     public renderTemplates: Null<NodeTemplate<T>[]> = null;
+    public renderedAs: Null<NodeTemplate<T>> = null;
     public horizontalRowStart?: boolean;
     public horizontalRowEnd?: boolean;
     public outerWrapper?: T;
     public innerBefore?: T;
     public innerAfter?: T;
     public companion?: T;
-    public renderedAs?: NodeTemplate<T>;
     public documentChildren?: T[];
     public horizontalRows?: T[][];
 
     protected _preferInitial = true;
     protected _boxRegister: Null<T[]> = null;
+    protected _documentParent: Null<T> = null;
     protected _cache!: CacheValueUI;
     protected _cacheState!: CacheStateUI<T>;
     protected _boxReset?: number[];
     protected _boxAdjustment?: number[];
-    protected _documentParent?: T;
     protected abstract _namespaces: ObjectMap<StringMap>;
 
     private _locked: Null<ObjectMapNested<boolean>> = null;
+    private _siblingsLeading: Null<T[]> = null;
+    private _siblingsTrailing: Null<T[]> = null;
     private _renderAs?: T;
-    private _siblingsLeading?: T[];
-    private _siblingsTrailing?: T[];
     private _exclusions?: number[];
 
     public abstract setControlType(viewName: string, containerType?: number): void;
@@ -727,7 +727,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public inheritApply(module: string, data: StandardMap) {
         switch (module) {
             case 'initial':
-                this._initial = cloneObject<InitialData<T>>(data, { target: this._initial });
+                this._initial = this._initial ? cloneObject<InitialData<T>>(data, { target: this._initial }) : { ...data };
                 break;
             case 'textStyle':
                 this.cssApply(data);

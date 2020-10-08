@@ -719,7 +719,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             node.naturalChildren = children;
             node.naturalElements = elements;
-            node.shadowRoot = hostElement !== parentElement;
+            if (hostElement !== parentElement) {
+                node.shadowRoot = true;
+            }
             if (!inlineText) {
                 node.inlineText = false;
                 if (j > 0) {

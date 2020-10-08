@@ -561,7 +561,9 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
             node.naturalChildren = children;
             node.naturalElements = elements;
-            node.shadowRoot = hostElement !== parentElement;
+            if (hostElement !== parentElement) {
+                node.shadowRoot = true;
+            }
             if (j > 0) {
                 node.inlineText = inlineText && plainText;
                 node.retainAs(children);

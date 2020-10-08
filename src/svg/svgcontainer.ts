@@ -161,7 +161,7 @@ function setAspectRatio(parent: Undef<Svg | SvgUseSymbol>, group: SvgGroup, view
     }
 }
 
-function getViewport(container: SvgContainer): Undef<Svg> {
+function getViewport(container: SvgContainer): Null<Svg> {
     do {
         if (SvgBuild.asSvg(container) && container.documentRoot) {
             return container;
@@ -169,6 +169,7 @@ function getViewport(container: SvgContainer): Undef<Svg> {
         container = container.parent as SvgContainer;
     }
     while (container);
+    return null;
 }
 
 function getNearestViewBox(container: SvgContainer): Undef<Svg | SvgUseSymbol> {
@@ -185,7 +186,7 @@ const hasLength = (value: string) => REGEXP_LENGTHPERCENTAGE.test(value);
 
 export default class SvgContainer extends squared.lib.base.Container<SvgView> implements squared.svg.SvgContainer {
     public parent: Null<SvgContainer> = null;
-    public viewport?: Svg;
+    public viewport: Null<Svg> = null;
     public readonly instanceType = squared.svg.constant.INSTANCE_TYPE.SVG_CONTAINER;
     public readonly aspectRatio: SvgAspectRatio = {
         x: 0,
@@ -207,7 +208,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
         super();
     }
 
-    public add(item: SvgView, viewport?: Svg) {
+    public add(item: SvgView, viewport?: Null<Svg>) {
         item.parent = this;
         item.viewport = viewport || getViewport(this);
         return super.add(item);

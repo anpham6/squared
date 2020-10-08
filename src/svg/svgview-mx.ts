@@ -76,10 +76,10 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
     return class extends Base implements squared.svg.SvgView {
         public transformed: Null<SvgTransform[]> = null;
 
-        protected _transforms?: SvgTransform[];
-        protected _animations?: SvgAnimation[];
+        protected _transforms: Null<SvgTransform[]> = null;
+        protected _animations: Null<SvgAnimation[]> = null;
 
-        private _name?: string;
+        private _name: Null<string> = null;
 
         public getTransforms(element = this.element) {
             return SvgBuild.filterTransforms(TRANSFORM.parse(element) || SvgBuild.convertTransforms(element.transform.baseVal));
@@ -470,8 +470,8 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
             this._name = value;
         }
         get name() {
-            const result = this._name;
-            if (result === undefined) {
+            let result = this._name;
+            if (result === null) {
                 const element = this.element;
                 let id = element.id.trim(),
                     value: Undef<string>,
@@ -489,12 +489,13 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                 let index = CACHE_VIEWNAME.get(tagName) || 0;
                 if (value) {
                     CACHE_VIEWNAME.set(value, index);
-                    return this._name = value;
+                    result = value;
                 }
                 else {
                     CACHE_VIEWNAME.set(tagName, ++index);
-                    return this._name = tagName + '_' + index;
+                    result = tagName + '_' + index;
                 }
+                this._name = result;
             }
             return result;
         }

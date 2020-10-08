@@ -126,7 +126,7 @@ declare module "svg" {
 
     class SvgElement {
         parent: Null<SvgContainer>;
-        viewport?: Svg;
+        viewport: Null<Svg>;
         readonly element: SVGGraphicsElement;
         readonly instanceType: number;
         build(options?: SvgBuildOptions): void;
@@ -136,11 +136,11 @@ declare module "svg" {
 
     class SvgContainer extends squared.lib.base.Container<SvgView> implements SvgElement {
         parent: Null<SvgContainer>;
-        viewport?: Svg;
+        viewport: Null<Svg>;
         readonly element: SvgContainerElement;
         readonly instanceType: number;
         readonly aspectRatio: SvgAspectRatio;
-        add(item: SvgView, viewport?: Svg): this;
+        add(item: SvgView, viewport?: Null<Svg>): this;
         refitX(value: number): number;
         refitY(value: number): number;
         refitSize(value: number): number;
@@ -377,6 +377,7 @@ declare module "svg" {
         clipPath: string;
         clipRule: string;
         parent: Null<SvgContainer>;
+        viewport: Null<Svg>;
         transformed: Null<SvgTransform[]>;
         useParent?: SvgUse;
         patternParent?: SvgShapePattern;
@@ -498,7 +499,7 @@ declare module "svg" {
         strokeDashoffset: string;
         clipPath: string;
         clipRule: string;
-        drawRegion?: BoxRect;
+        drawRegion: Null<BoxRect>;
         transformed: Null<SvgTransform[]>;
         useParent?: SvgUse;
         patternParent?: SvgShapePattern;
@@ -549,9 +550,9 @@ declare module "svg" {
         fillMode: number;
         paused: boolean;
         synchronizeState: number;
+        baseValue: string;
         replaceValue?: string;
-        id?: number;
-        baseValue?: string;
+        id: Null<number>;
         companion?: NumberValue<SvgAnimation>;
         readonly element: Null<SVGGraphicsElement>;
         readonly animationElement: Null<SVGAnimationElement>;

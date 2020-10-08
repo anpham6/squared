@@ -17,7 +17,7 @@ const { getNamedItem } = squared.lib.dom;
 const getPercent = (value: string) => isPercent(value) ? parseFloat(value) / 100 : parseFloat(value);
 
 export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer))) implements squared.svg.SvgShapePattern {
-    public drawRegion?: BoxRect;
+    public drawRegion: Null<BoxRect> = null;
     public readonly instanceType = squared.svg.constant.INSTANCE_TYPE.SVG_SHAPE_PATTERN;
     public readonly patternUnits: number;
     public readonly patternContentUnits: number;

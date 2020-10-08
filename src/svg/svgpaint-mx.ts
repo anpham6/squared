@@ -23,25 +23,25 @@ const REGEXP_CACHE: ObjectMap<RegExp> = {
 
 export default <T extends Constructor<SvgElement>>(Base: T) => {
     return class extends Base implements squared.svg.SvgPaint {
-        public fill!: string;
-        public fillPattern!: string;
-        public fillOpacity!: string;
-        public fillRule!: string;
-        public stroke!: string;
-        public strokePattern!: string;
-        public strokeOpacity!: string;
-        public strokeLinecap!: string;
-        public strokeLinejoin!: string;
-        public strokeMiterlimit!: string;
-        public strokeDasharray!: string;
-        public strokeDashoffset!: string;
-        public color!: string;
-        public clipPath!: string;
-        public clipRule!: string;
+        public fill = '';
+        public fillPattern = '';
+        public fillOpacity = '';
+        public fillRule = '';
+        public stroke = '';
+        public strokePattern = '';
+        public strokeOpacity = '';
+        public strokeLinecap = '';
+        public strokeLinejoin = '';
+        public strokeMiterlimit = '';
+        public strokeDasharray = '';
+        public strokeDashoffset = '';
+        public color = '';
+        public clipPath = '';
+        public clipRule = '';
         public patternParent?: SvgShapePattern;
         public useParent?: SvgUse;
 
-        private _strokeWidth!: string;
+        private _strokeWidth = '';
 
         public setStroke() {
             this.setAttribute('stroke');
