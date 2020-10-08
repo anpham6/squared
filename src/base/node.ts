@@ -683,7 +683,7 @@ function ascendQuerySelector(node: T, selectors: QueryData[], index: number, nod
                         }
                         break;
                     }
-                    case '~': {
+                    case '~':
                         for (let l = 0, r = children.length; l < r; ++l) {
                             const sibling = children[l];
                             if (sibling === child) {
@@ -694,7 +694,6 @@ function ascendQuerySelector(node: T, selectors: QueryData[], index: number, nod
                             }
                         }
                         break;
-                    }
                 }
             }
         }
@@ -1846,11 +1845,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                     const label = subMatch[0];
                                     switch (label[0]) {
                                         case '#': {
-                                            const idValue = label.substring(1);
-                                            if (id && id !== idValue) {
+                                            const subId = label.substring(1);
+                                            if (id && id !== subId) {
                                                 break invalid;
                                             }
-                                            id = idValue;
+                                            id = subId;
                                             break;
                                         }
                                         case '.':

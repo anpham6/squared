@@ -26,7 +26,7 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                 }
                 switch (node.containerName) {
                     case 'INPUT_RADIO':
-                    case 'INPUT_CHECKBOX': {
+                    case 'INPUT_CHECKBOX':
                         if (!node.rightAligned && !node.centerAligned) {
                             const id = node.elementId;
                             [node.nextSibling, node.previousSibling].some((sibling: Null<T>) => {
@@ -57,7 +57,6 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                             });
                         }
                         break;
-                    }
                     case 'INPUT_IMAGE':
                         if (node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
                             node.data(Resource.KEY_NAME, 'boxImage', [node]);

@@ -16,6 +16,8 @@ const { appendSeparator, randomUUID } = squared.base.lib.util;
 
 const STRING_SERVERROOT = '__serverroot__';
 
+const REGEXP_ESCAPEPATH = /([.|/\\{}()?])/g;
+
 const RE_SRCSET = new Pattern(/\s*(.+?\.[^\s,]+)(\s+[\d.]+[wx]\s*)?,?/g);
 
 function parseFileAs(attr: string, value: Undef<string>): Undef<[string, Undef<string>, boolean]> {
@@ -66,7 +68,7 @@ function resolveAssetSource(element: HTMLVideoElement | HTMLAudioElement | HTMLO
 
 function convertFileMatch(value: string) {
     value = value
-        .replace(/([.|/\\{}()?])/g, (match, ...capture) => '\\' + capture[0])
+        .replace(REGEXP_ESCAPEPATH, (match, ...capture) => '\\' + capture[0])
         .replace(/\*/g, '.*?');
     return new RegExp(`${value}$`);
 }
@@ -343,10 +345,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                         switch (category) {
                             case 'html':
                             case 'js':
-                            case 'css': {
+                            case 'css':
                                 (transpileMap[category][module] ||= {})[name] = element.textContent!.trim();
                                 break;
-                            }
                         }
                     }
                 }

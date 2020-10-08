@@ -446,12 +446,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             case 'center':
                             case 'right':
                             case 'end':
-                            case 'justify': {
+                            case 'justify':
                                 data = { 'text-align': textAlign };
                                 element.style.setProperty('text-align', 'left');
                                 preAlignment.set(item, data);
                                 break;
-                            }
                         }
                     }
                     if (item.positionRelative) {

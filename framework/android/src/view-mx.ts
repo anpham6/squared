@@ -35,6 +35,9 @@ const OPTIONS_LINEHEIGHT: StringMap = {
     'white-space': 'nowrap'
 };
 
+const REGEXP_CONTROLID = /[^\w$\-_.]/g;
+const REGEXP_FORMATTED = /^(?:([a-z]+):)?(\w+)="((?:@\+?[a-z]+\/)?.+)"$/;
+
 function checkTextAlign(value: string, ignoreStart?: boolean) {
     switch (value) {
         case 'left':
@@ -1817,7 +1820,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public formatted(value: string, overwrite = true) {
-            const match = /^(?:([a-z]+):)?(\w+)="((?:@\+?[a-z]+\/)?.+)"$/.exec(value);
+            const match = REGEXP_FORMATTED.exec(value);
             if (match) {
                 this.attr(match[1] || '_', match[2], match[3], overwrite);
             }
@@ -2720,8 +2723,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             else {
                 const matchParent = this.css(dimension) === '100%' || this.css(horizontal ? 'minWidth' : 'minHeight') === '100%';
                 if (matchParent) {
-                    const offsetA = hasA && parent.adjustAbsolutePaddingOffset(paddingA, this[posA]);
-                    const offsetB = hasB && parent.adjustAbsolutePaddingOffset(paddingB, this[posB]);
+                    const offsetA = hasA && parent.getAbsolutePaddingOffset(paddingA, this[posA]);
+                    const offsetB = hasB && parent.getAbsolutePaddingOffset(paddingB, this[posB]);
                     if (modifyAnchor) {
                         this.anchorParent(orientation as OrientationAttr);
                         if (horizontal) {
@@ -2749,7 +2752,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 else {
                     let expand = 0;
                     if (hasA) {
-                        const value = parent.adjustAbsolutePaddingOffset(paddingA, this[posA]);
+                        const value = parent.getAbsolutePaddingOffset(paddingA, this[posA]);
                         if (modifyAnchor) {
                             this.anchor(posA, 'parent');
                             this.modifyBox(marginA, value);
@@ -2761,7 +2764,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                     if (hasB) {
                         if (!hasA || !hasDimension) {
-                            const value = parent.adjustAbsolutePaddingOffset(paddingB, this[posB]);
+                            const value = parent.getAbsolutePaddingOffset(paddingB, this[posB]);
                             if (modifyAnchor) {
                                 this.anchor(posB, 'parent');
                                 this.modifyBox(marginB, value);
@@ -2841,7 +2844,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return calculateBias(Math.max(0, this.actualRect('top', 'bounds') - top), Math.max(0, bottom - this.actualRect('bottom', 'bounds')), this.localSettings.floatPrecision);
         }
 
-        public adjustAbsolutePaddingOffset(region: number, value: number) {
+        public getAbsolutePaddingOffset(region: number, value: number) {
             if (value > 0) {
                 if (this.documentBody) {
                     switch (region) {
@@ -2964,9 +2967,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     if (this.styleElement) {
                         const value = this.elementId || getNamedItem(this.element as HTMLElement, 'name');
                         if (value) {
-                            name = value.replace(/[^\w$\-_.]/g, '_');
-                            if (name === 'parent' || RESERVED_JAVA.has(name)) {
-                                name = '_' + name;
+                            if (value === 'parent' || RESERVED_JAVA.has(value)) {
+                                name = '_' + value;
+                            }
+                            else {
+                                name = value.replace(REGEXP_CONTROLID, '_');
                             }
                         }
                     }

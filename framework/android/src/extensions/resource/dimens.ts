@@ -47,7 +47,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
         for (let i = 0, length = rendered.length; i < length; ++i) {
             const node = rendered[i];
             if (node.visible) {
-                const containerName = node.containerName.toLowerCase().replace(/-/g, '_');
+                const containerName = node.containerName.toLowerCase();
                 const group: GroupData = groups[containerName] ||= {};
                 createNamespaceData('android', node, group);
                 createNamespaceData('app', node, group);

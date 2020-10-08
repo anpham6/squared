@@ -275,11 +275,10 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 case 'svg':
                 case 'VIDEO':
                 case 'OBJECT':
-                case 'EMBED': {
+                case 'EMBED':
                     this.setElementDimension(element, styleMap, 'width', 'height');
                     this.setElementDimension(element, styleMap, 'height', 'width');
                     break;
-                }
             }
         }
     }
@@ -465,7 +464,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             parent = documentRoot;
                             break;
                         }
-                    case 'absolute': {
+                    case 'absolute':
                         if (node.autoPosition) {
                             if (!node.siblingsLeading.some(item => item.multiline || item.excluded && !item.blockStatic) && node.withinX(actualParent.box, { dimension: 'linear' }) && node.withinY(actualParent.box, { dimension: 'linear' })) {
                                 node.cssApply({ display: 'inline-block', verticalAlign: 'top' }, true, true);
@@ -516,7 +515,6 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             }
                         }
                         break;
-                    }
                 }
                 parent ||= documentRoot;
                 if (parent !== actualParent) {

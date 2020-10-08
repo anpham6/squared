@@ -2,6 +2,8 @@ import { BUILD_VERSION, LOCALIZE_MAP, XML_NAMESPACE } from './constant';
 
 const { capitalize, joinArray, isPlainObject } = squared.lib.util;
 
+const REGEXP_AMPERSAND = /&(?!#?[A-Za-z\d]{2,};)/g;
+
 export function applyTemplate(tagName: string, template: StandardMap, children: StandardMap[], depth?: number) {
     const tag: StandardMap = template[tagName];
     const nested = tag['>>'] === true;
@@ -263,7 +265,7 @@ export function replaceCharacterData(value: string, tab?: number) {
                 break;
         }
     }
-    return output.replace(/&(?!#?[A-Za-z\d]{2,};)/g, '&amp;');
+    return output.replace(REGEXP_AMPERSAND, '&amp;');
 }
 
 export function concatString(list: (string | number)[], char = '') {

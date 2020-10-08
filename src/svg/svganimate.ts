@@ -46,6 +46,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public static fromStepTimingFunction(element: SVGElement, attributeName: string, timingFunction: string, keyTimes: number[], values: string[], index: number): Null<[number[], string[]]> {
         const valueA = values[index];
         const valueB = values[index + 1];
+        const checkOptions = (value: string) => hasEm(value) ? { fontSize: getFontSize(element) } : undefined;
         let currentValue: Undef<any[]>,
             nextValue: Undef<any[]>;
         switch (attributeName) {
@@ -69,8 +70,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 currentValue = replaceMap(valueA.trim().split(/\s+/), value => parseFloat(value));
                 nextValue = replaceMap(valueB.trim().split(/\s+/), value => parseFloat(value));
                 break;
-            default: {
-                const checkOptions = (value: string) => hasEm(value) ? { fontSize: getFontSize(element) } : undefined;
+            default:
                 if (isNumber(valueA)) {
                     currentValue = [parseFloat(valueA)];
                 }
@@ -84,7 +84,6 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                     nextValue = [parseUnit(valueB, checkOptions(valueB))];
                 }
                 break;
-            }
         }
         if (currentValue && nextValue) {
             const length = currentValue.length;

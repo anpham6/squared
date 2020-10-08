@@ -3,14 +3,19 @@ import { FILE, STRING } from './regex';
 interface XMLTagData {
     tag: string;
     tagName: string;
-    value: string;
     closing: boolean;
+    didClose: boolean;
+    leadingSpace: string;
+    content: string;
+    trailingSpace: string;
 }
 
 const CACHE_CAMELCASE: StringMap = {};
 const CACHE_TRIMBOTH: ObjectMap<RegExp> = {};
 const CACHE_TRIMSTRING: ObjectMap<RegExp> = {};
 const REGEXP_DECIMAL = new RegExp(`^${STRING.DECIMAL}$`);
+const REGEXP_NONWORD = /[^\w]+/g;
+const REGEXP_NONWORDNUM = /[^A-Za-z\d]+/g;
 
 export function promisify<T>(fn: FunctionType<any>): FunctionType<Promise<T>> {
     return (...args: any[]) => {
@@ -349,71 +354,100 @@ export function fromMimeType(value: string) {
     }
 }
 
-export function formatXml(value: string, closeEmpty?: boolean, startIndent = -1, char = '\t') {
+export function formatXml(value: string, closeEmpty?: boolean, caseSensitive?: boolean, indentChar = '\t') {
     const lines: XMLTagData[] = [];
-    const pattern = /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g;
+    const pattern = /\s*(<(\/)?([A-Za-z\d-]+)([^>]*)>)(\s*)([^<]*)/g;
+    const patternContent = /^([\S\s]*?)(\s*)$/;
     let output = '',
-        indent = startIndent,
+        indent = -1,
         ignoreIndent: Undef<boolean>,
         match: Null<RegExpExecArray>;
     while (match = pattern.exec(value)) {
+        const tag = match[1];
+        const closing = match[2] === '/';
+        const content = patternContent.exec(match[6])!;
         lines.push({
-            tag: match[1],
-            closing: !!match[2],
-            tagName: match[3],
-            value: match[4]
+            tag,
+            closing,
+            tagName: caseSensitive ? match[3].toUpperCase() : match[3],
+            didClose: !closing && tag.endsWith('/>'),
+            leadingSpace: match[5],
+            content: content[1],
+            trailingSpace: content[2]
         });
     }
-    for (let i = 0, length = lines.length; i < length; ++i) {
+    const length = lines.length;
+    for (let i = 0; i < length; ++i) {
         const line = lines[i];
-        let previous = indent;
-        if (i > 0) {
-            let single: Undef<boolean>;
-            if (line.closing) {
-                --indent;
+        let previousIndent = indent,
+            single: Undef<boolean>,
+            willClose: Undef<boolean>;
+        if (line.closing) {
+            const previous = lines[i - 1];
+            if (!previous.closing && previous.tagName === previous.tagName && previous.leadingSpace.includes('\n')) {
+                output += indentChar.repeat(previousIndent);
             }
-            else {
-                const next = lines[i + 1];
-                single = next.closing && line.tagName === next.tagName;
-                if (!/\/>\n*$/.exec(line.tag)) {
-                    if (closeEmpty && !isString(line.value)) {
-                        if (next && next.closing && next.tagName === line.tagName) {
-                            line.tag = line.tag.replace(/\s*>$/, ' />');
-                            ++i;
+            --indent;
+        }
+        else {
+            const next = lines[i + 1] as Undef<XMLTagData>;
+            const tagName = line.tagName;
+            single = next && next.closing && tagName === next.tagName;
+            if (!line.didClose) {
+                for (let j = i + 1, k = 0; j < length; ++j) {
+                    const item = lines[j];
+                    if (tagName === item.tagName) {
+                        if (item.closing) {
+                            if (k-- === 0) {
+                                willClose = true;
+                                break;
+                            }
                         }
                         else {
-                            ++indent;
+                            ++k;
                         }
                     }
-                    else {
+                }
+                if (closeEmpty && !line.content) {
+                    if (single) {
+                        line.tag = line.tag.replace(/\s*>$/, ' />');
+                        ++i;
+                    }
+                    else if (willClose) {
                         ++indent;
                     }
                 }
-                ++previous;
-            }
-            const tags = line.tag.trim().split('\n');
-            for (let j = 0, q = tags.length; j < q; ++j) {
-                const partial = tags[j];
-                if (ignoreIndent) {
-                    output += partial;
-                    ignoreIndent = false;
-                }
-                else {
-                    const depth = previous + Math.min(j, 1);
-                    output += (depth > 0 ? char.repeat(depth) : '') + partial.trim();
-                }
-                if (single && q === 1) {
-                    ignoreIndent = true;
-                }
-                else {
-                    output += '\n';
+                else if (willClose) {
+                    ++indent;
                 }
             }
+            ++previousIndent;
         }
-        else {
-            output += (startIndent > 0 ? char.repeat(startIndent) : '') + line.tag + '\n';
+        const tags = line.tag.split('\n');
+        for (let j = 0, q = tags.length; j < q; ++j) {
+            const partial = tags[j];
+            if (ignoreIndent) {
+                output += partial;
+                ignoreIndent = false;
+            }
+            else {
+                const depth = previousIndent + Math.min(j, 1);
+                output += (depth > 0 ? indentChar.repeat(depth) : '') + partial.trim();
+            }
+            if (single && q === 1) {
+                ignoreIndent = true;
+            }
+            else {
+                output += '\n';
+            }
         }
-        output += line.value;
+        if (line.content) {
+            let leadingSpace = line.leadingSpace;
+            if (leadingSpace && leadingSpace.includes('\n')) {
+                leadingSpace = leadingSpace.replace(/^[^\n]+/, '');
+            }
+            output += (leadingSpace ? leadingSpace : '') + line.content + (leadingSpace || line.trailingSpace.includes('\n') ? '\n' : '');
+        }
     }
     return output;
 }
@@ -470,7 +504,7 @@ export function convertCamelCase(value: string, char = '-') {
 }
 
 export function convertWord(value: string, dash?: boolean) {
-    return value.replace(dash ? /[^A-Za-z\d]+/g : /[^\w]+/g, '_');
+    return value.replace(dash ? REGEXP_NONWORDNUM : REGEXP_NONWORD, '_');
 }
 
 export function convertInt(value: string, fallback = 0) {

@@ -139,7 +139,7 @@ declare namespace base {
         isUnstyled(checkMargin?: boolean): boolean;
         getHorizontalBias(rect?: BoxRect): number;
         getVerticalBias(rect?: BoxRect): number;
-        adjustAbsolutePaddingOffset(direction: number, value: number): number;
+        getAbsolutePaddingOffset(direction: number, value: number): number;
         hasFlex(direction: FlowDirectionAttr): boolean;
         valueAt(attr: string): string;
         set anchored(value);

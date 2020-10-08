@@ -10,7 +10,7 @@ const { CSS_PROPERTIES } = squared.lib.css;
 const { createElement, getRangeClientRect } = squared.lib.dom;
 const { equal } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
-const { cloneObject, convertWord, hasBit, hasKeys, isArray, isEmptyString, searchObject, withinRange } = squared.lib.util;
+const { cloneObject, hasBit, hasKeys, isArray, isEmptyString, searchObject, withinRange } = squared.lib.util;
 
 const CSS_SPACING = new Map<number, number>([
     [BOX_STANDARD.MARGIN_TOP, 0],
@@ -620,7 +620,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         this.inheritApply('initial', result);
                     }
                     break;
-                case 'alignment': {
+                case 'alignment':
                     this.cssCopy(node, 'position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex');
                     if (!this.positionStatic) {
                         const setPosition = (attr: string) => {
@@ -636,7 +636,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     Object.assign(this.autoMargin, node.autoMargin);
                     this.autoPosition = node.autoPosition;
                     break;
-                }
                 case 'styleMap':
                     this.cssCopyIfEmpty(node, ...Object.keys(node.unsafe<StringMap>('styleMap')!));
                     break;
@@ -1519,17 +1518,31 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         this._documentParent = value;
     }
     get documentParent() {
-        return (this._documentParent || this.absoluteParent || this.actualParent || this.parent || this) as T;
+        return this._documentParent ||= (this.absoluteParent || this.actualParent || this.parent || this) as T;
     }
 
     set containerName(value) {
         this._cacheState.containerName = value.toUpperCase();
     }
     get containerName() {
-        const result = this._cacheState.containerName;
+        let result = this._cacheState.containerName;
         if (result === undefined) {
             const element = this.element;
-            return element ? this._cacheState.containerName = element.nodeName[0] === '#' ? 'PLAINTEXT' : convertWord(element.tagName === 'INPUT' ? 'INPUT_' + (element as HTMLInputElement).type : element.tagName, true).toUpperCase() : '';
+            if (element) {
+                if (element.nodeName[0] === '#') {
+                    result = 'PLAINTEXT';
+                }
+                else {
+                    result = element.tagName.toUpperCase();
+                    if (result === 'INPUT') {
+                        result += '_' + (element as HTMLInputElement).type.toUpperCase();
+                    }
+                    if (result.includes('-')) {
+                        result = result.replace(/-/g, '_');
+                    }
+                }
+            }
+            return this._cacheState.containerName = result || 'UNKNOWN';
         }
         return result;
     }

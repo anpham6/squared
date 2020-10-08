@@ -57,11 +57,10 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
                 case 270:
                     size = width;
                     break;
-                default: {
+                default:
                     size = Math.abs(width * sin(angle - 180)) + Math.abs(height * cos(angle - 180));
                     horizontal = width >= height;
                     break;
-                }
             }
             break;
         }
@@ -893,7 +892,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
             case 'auto auto':
             case 'initial':
                 return null;
-            default: {
+            default:
                 value.split(' ').forEach((size, index) => {
                     if (size === 'auto') {
                         size = '100%';
@@ -908,7 +907,6 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                     }
                 });
                 break;
-            }
         }
         return width && height ? { width: Math.round(width), height: Math.round(height) } : null;
     }
@@ -1204,7 +1202,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                 case 'IFRAME':
                     value = element.src;
                     break;
-                default: {
+                default:
                     trimming = true;
                     if (node.plainText || node.pseudoElement || node.hasAlign(NODE_ALIGNMENT.INLINE) && node.textElement) {
                         value = trimming ? node.textContent.replace(/&/g, '&amp;') : node.textContent;
@@ -1214,7 +1212,6 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                         value = node.textEmpty ? ResourceUI.STRING_SPACE : node.tagName === 'BUTTON' ? node.textContent : this.removeExcludedFromText(node, element);
                     }
                     break;
-                }
             }
             if (hint) {
                 node.data(ResourceUI.KEY_NAME, 'hintString', hint);

@@ -79,11 +79,11 @@ export default class FloatingActionButton<T extends View> extends squared.base.E
             }
             else if (node.hasPX('left')) {
                 node.mergeGravity('layout_gravity', node.localizeString('left'));
-                node.modifyBox(BOX_STANDARD.MARGIN_LEFT, offsetParent.adjustAbsolutePaddingOffset(BOX_STANDARD.PADDING_LEFT, node.left));
+                node.modifyBox(BOX_STANDARD.MARGIN_LEFT, offsetParent.getAbsolutePaddingOffset(BOX_STANDARD.PADDING_LEFT, node.left));
             }
             else if (node.hasPX('right')) {
                 node.mergeGravity('layout_gravity', node.localizeString('right'));
-                node.modifyBox(BOX_STANDARD.MARGIN_RIGHT, offsetParent.adjustAbsolutePaddingOffset(BOX_STANDARD.PADDING_RIGHT, node.right));
+                node.modifyBox(BOX_STANDARD.MARGIN_RIGHT, offsetParent.getAbsolutePaddingOffset(BOX_STANDARD.PADDING_RIGHT, node.right));
             }
             if (node.autoMargin.topBottom) {
                 node.mergeGravity('layout_gravity', 'center_vertical');
@@ -91,11 +91,11 @@ export default class FloatingActionButton<T extends View> extends squared.base.E
             else if (node.hasPX('top')) {
                 node.app('layout_dodgeInsetEdges', 'top');
                 node.mergeGravity('layout_gravity', 'top');
-                node.modifyBox(BOX_STANDARD.MARGIN_TOP, offsetParent.adjustAbsolutePaddingOffset(BOX_STANDARD.PADDING_TOP, node.top));
+                node.modifyBox(BOX_STANDARD.MARGIN_TOP, offsetParent.getAbsolutePaddingOffset(BOX_STANDARD.PADDING_TOP, node.top));
             }
             else if (node.hasPX('bottom')) {
                 node.mergeGravity('layout_gravity', 'bottom');
-                node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, offsetParent.adjustAbsolutePaddingOffset(BOX_STANDARD.PADDING_BOTTOM, node.bottom));
+                node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, offsetParent.getAbsolutePaddingOffset(BOX_STANDARD.PADDING_BOTTOM, node.bottom));
             }
             node.positioned = true;
         }

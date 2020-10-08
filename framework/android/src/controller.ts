@@ -3662,7 +3662,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     const direction = horizontal
                         ? !opposing ? BOX_STANDARD.PADDING_LEFT : BOX_STANDARD.PADDING_RIGHT
                         : !opposing ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.PADDING_BOTTOM;
-                    location = documentParent.adjustAbsolutePaddingOffset(direction, location);
+                    location = documentParent.getAbsolutePaddingOffset(direction, location);
                 }
             }
             else if (node.inlineVertical) {
