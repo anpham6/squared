@@ -135,11 +135,8 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                                     top -= previous.top;
                                 }
                             }
-                            else if (bottom !== 0) {
-                                const getBox = item.getBox(BOX_STANDARD.MARGIN_TOP);
-                                if (getBox[0] === 1) {
-                                    bottom -= item.marginTop;
-                                }
+                            else if (bottom !== 0 && item.getBox(BOX_STANDARD.MARGIN_TOP)[0]) {
+                                bottom -= item.marginTop;
                             }
                         }
                         break;

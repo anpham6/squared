@@ -101,8 +101,8 @@ export default class Grid <T extends View> extends squared.base.extensions.Grid<
                 if (cellData) {
                     const parent = item.actualParent;
                     if (parent && !parent.visible) {
-                        const marginTop = parent.getBox(BOX_STANDARD.MARGIN_TOP)[0] === 0 ? parent.marginTop : 0;
-                        const marginBottom = parent.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] === 0 ? parent.marginBottom : 0;
+                        const marginTop = !parent.getBox(BOX_STANDARD.MARGIN_TOP)[0] ? parent.marginTop : 0;
+                        const marginBottom = !parent.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] ? parent.marginBottom : 0;
                         if (cellData.cellStart) {
                             paddingTop = marginTop + parent.paddingTop;
                         }

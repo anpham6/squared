@@ -137,7 +137,7 @@ function fillUnitEqually(unit: string[], length: number) {
 function getOpenCellIndex(iteration: number, length: number, available: Undef<number[]>) {
     if (available) {
         for (let i = 0, j = -1, k = 0; i < iteration; ++i) {
-            if (available[i] === 0) {
+            if (!available[i]) {
                 if (j === -1) {
                     j = i;
                 }
@@ -651,7 +651,7 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         }
                     }
                 }
-                if (placement[0] === 0 || placement[1] === 0 || placement[2] === 0 || placement[3] === 0) {
+                if (!placement[0] || !placement[1] || !placement[2] || !placement[3]) {
                     const setPlacement = (value: string, position: number, vertical: boolean, length: number) => {
                         if (isNumber(value)) {
                             const cellIndex = parseInt(value);
@@ -671,14 +671,14 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                 if (horizontal) {
                                     if (!vertical) {
                                         const end = previousPlacement[2];
-                                        if (end && placement[0] === 0) {
+                                        if (end && !placement[0]) {
                                             placement[0] = end;
                                         }
                                     }
                                 }
                                 else if (vertical) {
                                     const end = previousPlacement[3];
-                                    if (end && placement[1] === 0) {
+                                    if (end && !placement[1]) {
                                         placement[1] = end;
                                     }
                                 }
@@ -726,7 +726,7 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         colStart: Undef<string[]>;
                     for (let i = 0; i < 4; ++i) {
                         const value = positions[i];
-                        if (value !== 'auto' && placement[i] === 0) {
+                        if (value !== 'auto' && !placement[i]) {
                             const vertical = i % 2 === 0;
                             const direction = vertical ? row : column;
                             if (!setPlacement(value, i, vertical, Math.max(1, direction.unit.length))) {
@@ -763,10 +763,10 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     }
                 }
                 if (!previousPlacement) {
-                    if (placement[0] === 0) {
+                    if (!placement[0]) {
                         placement[0] = 1;
                     }
-                    if (placement[1] === 0) {
+                    if (!placement[1]) {
                         placement[1] = 1;
                     }
                 }
@@ -783,10 +783,10 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 else if (b && d === 0) {
                     placement[3] = a + columnSpan;
                 }
-                if (placement[2] === 0 && placement[0]) {
+                if (!placement[2] && placement[0]) {
                     placement[2] = placement[0] + rowSpan;
                 }
-                if (placement[3] === 0 && placement[1]) {
+                if (!placement[3] && placement[1]) {
                     placement[3] = placement[1] + columnSpan;
                 }
                 layout[index] = {
@@ -838,9 +838,9 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 ROW_SPAN = columnSpan;
                 COLUMN_SPAN = rowSpan;
             }
-            while (placement[0] === 0 || placement[1] === 0) {
+            while (!placement[0] || !placement[1]) {
                 const PLACEMENT = placement.slice(0);
-                if (PLACEMENT[rowA] === 0) {
+                if (!PLACEMENT[rowA]) {
                     for (let i = dense ? 0 : getOpenRowIndex(openCells), j = 0, k = -1, length = rowData.length; i < length; ++i) {
                         const l = getOpenCellIndex(ITERATION, COLUMN_SPAN, openCells[i]);
                         if (l !== -1) {
@@ -860,14 +860,14 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         }
                     }
                 }
-                if (PLACEMENT[rowA] === 0) {
+                if (!PLACEMENT[rowA]) {
                     placement[rowA] = rowData.length + 1;
-                    if (placement[colA] === 0) {
+                    if (!placement[colA]) {
                         placement[colA] = 1;
                     }
                 }
-                else if (PLACEMENT[colA] === 0) {
-                    if (PLACEMENT[rowB] === 0) {
+                else if (!PLACEMENT[colA]) {
+                    if (!PLACEMENT[rowB]) {
                         PLACEMENT[rowB] = PLACEMENT[rowA] + ROW_SPAN;
                     }
                     const available: [number, number][][] = [];
@@ -948,10 +948,10 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     }
                 }
             }
-            if (placement[rowB] === 0) {
+            if (!placement[rowB]) {
                 placement[rowB] = placement[rowA] + ROW_SPAN;
             }
-            if (placement[colB] === 0) {
+            if (!placement[colB]) {
                 placement[colB] = placement[colA] + COLUMN_SPAN;
             }
             if (setDataRows(item, placement)) {

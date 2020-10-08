@@ -102,118 +102,116 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
             });
         });
         const length = nextMapX.size;
-        if (length) {
-            const mapValues = Array.from(nextMapX).sort((a, b) => a[0] - b[0]).map(item => item[1]);
-            let columnLength = -1;
+        if (length === 0) {
+            return;
+        }
+        const mapValues = Array.from(nextMapX).sort((a, b) => a[0] - b[0]).map(item => item[1]);
+        let columnLength = -1;
+        for (let i = 0; i < length; ++i) {
+            if (i === 0) {
+                columnLength = length;
+            }
+            else if (columnLength !== mapValues[i].length) {
+                columnLength = -1;
+                break;
+            }
+        }
+        if (columnLength !== -1) {
+            columns = mapValues;
+        }
+        else {
+            columns = new Array(length);
+            const columnRight: number[] = new Array(length);
             for (let i = 0; i < length; ++i) {
+                const nextAxisX: T[] = mapValues[i];
+                const q = nextAxisX.length;
                 if (i === 0) {
-                    columnLength = length;
-                }
-                else if (columnLength !== mapValues[i].length) {
-                    columnLength = -1;
-                    break;
-                }
-            }
-            if (columnLength !== -1) {
-                columns = mapValues;
-            }
-            else {
-                columns = new Array(length);
-                const columnRight: number[] = new Array(length);
-                for (let i = 0; i < length; ++i) {
-                    const nextAxisX: T[] = mapValues[i];
-                    const q = nextAxisX.length;
-                    if (i === 0) {
-                        if (q === 0) {
-                            return;
-                        }
-                        columnRight[0] = 0;
+                    if (q === 0) {
+                        return;
                     }
-                    else {
-                        columnRight[i] = columnRight[i - 1];
-                    }
-                    for (let j = 0; j < q; ++j) {
-                        const nextX = nextAxisX[j];
-                        const { left, right } = nextX.linear;
-                        if (i === 0 || Math.ceil(left) >= Math.floor(columnRight[i - 1])) {
-                            const row = columns[i] ||= [];
-                            if (i === 0 || columns[0].length === q) {
-                                row[j] = nextX;
-                            }
-                            else {
-                                const index = getRowIndex(columns, nextX);
-                                if (index !== -1) {
-                                    row[index] = nextX;
-                                }
-                                else {
-                                    return;
-                                }
-                            }
+                    columnRight[0] = 0;
+                }
+                else {
+                    columnRight[i] = columnRight[i - 1];
+                }
+                for (let j = 0; j < q; ++j) {
+                    const nextX = nextAxisX[j];
+                    const { left, right } = nextX.linear;
+                    if (i === 0 || Math.ceil(left) >= Math.floor(columnRight[i - 1])) {
+                        const row = columns[i] ||= [];
+                        if (i === 0 || columns[0].length === q) {
+                            row[j] = nextX;
                         }
                         else {
-                            const columnLast = columns[columns.length - 1];
-                            if (columnLast) {
-                                let minLeft = Infinity,
-                                    maxRight = -Infinity;
-                                for (let k = 0, r = columnLast.length; k < r; ++k) {
-                                    const linear = columnLast[k].linear;
-                                    minLeft = Math.min(linear.left, minLeft);
-                                    maxRight = Math.max(linear.right, maxRight);
-                                }
-                                if (Math.floor(left) > Math.ceil(minLeft) && Math.floor(right) > Math.ceil(maxRight)) {
-                                    const index = getRowIndex(columns, nextX);
-                                    if (index !== -1) {
-                                        for (let k = columns.length - 1; k >= 0; --k) {
-                                            const row = columns[k];
-                                            if (row) {
-                                                if (!row[index]) {
-                                                    columnLast.length = 0;
-                                                }
-                                                break;
+                            const index = getRowIndex(columns, nextX);
+                            if (index !== -1) {
+                                row[index] = nextX;
+                            }
+                            else {
+                                return;
+                            }
+                        }
+                    }
+                    else {
+                        const columnLast = columns[columns.length - 1];
+                        if (columnLast) {
+                            let minLeft = Infinity,
+                                maxRight = -Infinity;
+                            for (let k = 0, r = columnLast.length; k < r; ++k) {
+                                const linear = columnLast[k].linear;
+                                minLeft = Math.min(linear.left, minLeft);
+                                maxRight = Math.max(linear.right, maxRight);
+                            }
+                            if (Math.floor(left) > Math.ceil(minLeft) && Math.floor(right) > Math.ceil(maxRight)) {
+                                const index = getRowIndex(columns, nextX);
+                                if (index !== -1) {
+                                    for (let k = columns.length - 1; k >= 0; --k) {
+                                        const row = columns[k];
+                                        if (row) {
+                                            if (!row[index]) {
+                                                columnLast.length = 0;
                                             }
+                                            break;
                                         }
                                     }
                                 }
                             }
                         }
-                        columnRight[i] = Math.max(right, columnRight[i]);
                     }
+                    columnRight[i] = Math.max(right, columnRight[i]);
                 }
-                for (let i = 0, j = -1, q = columnRight.length; i < q; ++i) {
-                    if (!columns[i]) {
-                        if (j === -1) {
-                            j = i - 1;
-                        }
-                        else if (i === q - 1) {
-                            columnRight[j] = columnRight[i];
-                        }
-                    }
-                    else if (j !== -1) {
-                        columnRight[j] = columnRight[i - 1];
-                        j = -1;
-                    }
-                }
-                for (let i = 0; i < columns.length; ++i) {
-                    if (columns[i]?.length) {
-                        columnEnd.push(columnRight[i]);
-                    }
-                    else {
-                        columns.splice(i--, 1);
-                    }
-                }
-                for (let l = 0, q = columns.reduce((a, b) => Math.max(a, b.length), 0); l < q; ++l) {
-                    for (let m = 0, r = columns.length; m < r; ++m) {
-                        const row = columns[m];
-                        if (!row[l]) {
-                            row[l] = { spacer: 1 } as Node;
-                        }
-                    }
-                }
-                columnEnd.push(node.box.right);
             }
-        }
-        else {
-            return;
+            for (let i = 0, j = -1, q = columnRight.length; i < q; ++i) {
+                if (!columns[i]) {
+                    if (j === -1) {
+                        j = i - 1;
+                    }
+                    else if (i === q - 1) {
+                        columnRight[j] = columnRight[i];
+                    }
+                }
+                else if (j !== -1) {
+                    columnRight[j] = columnRight[i - 1];
+                    j = -1;
+                }
+            }
+            for (let i = 0; i < columns.length; ++i) {
+                if (columns[i]?.length) {
+                    columnEnd.push(columnRight[i]);
+                }
+                else {
+                    columns.splice(i--, 1);
+                }
+            }
+            for (let l = 0, q = columns.reduce((a, b) => Math.max(a, b.length), 0); l < q; ++l) {
+                for (let m = 0, r = columns.length; m < r; ++m) {
+                    const row = columns[m];
+                    if (!row[l]) {
+                        row[l] = { spacer: 1 } as Node;
+                    }
+                }
+            }
+            columnEnd.push(node.box.right);
         }
         const columnCount = columns.length;
         if (columnCount > 1 && columns[0].length === node.size()) {

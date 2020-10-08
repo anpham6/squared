@@ -32,7 +32,7 @@ function setSpacingOffset(node: NodeUI, region: number, value: number, adjustmen
 }
 
 function adjustRegion(item: NodeUI, region: number, adjustment: number) {
-    if (item.getBox(region)[0] === 1) {
+    if (item.getBox(region)[0]) {
         const registered = item.registerBox(region);
         if (registered) {
             const [reset, value] = registered.getBox(region);
@@ -67,11 +67,11 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
             paddingName = 'paddingBottom';
             region = BOX_STANDARD.MARGIN_BOTTOM;
         }
-        if (node[borderWidth] === 0 && node.getBox(region)[0] === 0) {
+        if (node[borderWidth] === 0 && !node.getBox(region)[0]) {
             if (node[paddingName] === 0) {
                 let target = child,
                     targetParent: Undef<NodeUI[]>;
-                while (DOCTYPE_HTML && target[marginName] === 0 && target[borderWidth] === 0 && target[paddingName] === 0 && target.getBox(region)[0] === 0 && canResetChild(target)) {
+                while (DOCTYPE_HTML && target[marginName] === 0 && target[borderWidth] === 0 && target[paddingName] === 0 && !target.getBox(region)[0] && canResetChild(target)) {
                     if (direction) {
                         const endChild = target.firstStaticChild as NodeUI;
                         if (isBlockElement(endChild, direction)) {
@@ -117,7 +117,7 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
                                     registered.setBox(region, { reset: 1, adjustment: 0 });
                                 }
                             }
-                            else if (target.getBox(region)[0] === 0) {
+                            else if (!target.getBox(region)[0]) {
                                 if (outside) {
                                     resetChild = offsetChild > 0;
                                 }
@@ -427,7 +427,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                             inheritedBottom: Undef<boolean>;
                                         while (validAboveChild(inherit, true)) {
                                             let bottomChild = getBottomChild(inherit);
-                                            if (bottomChild && bottomChild.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] === 0) {
+                                            if (bottomChild && !bottomChild.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0]) {
                                                 let childBottom = bottomChild.marginBottom,
                                                     currentChild = bottomChild;
                                                 while (currentChild.bounds.height === 0 && !currentChild.pseudoElement) {
@@ -473,13 +473,13 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                     }
                                                 }
                                                 if (childBottom !== 0) {
-                                                    resetBox(bottomChild, BOX_STANDARD.MARGIN_BOTTOM, previous.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] === 0 ? previous : undefined);
+                                                    resetBox(bottomChild, BOX_STANDARD.MARGIN_BOTTOM, !previous.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] ? previous : undefined);
                                                 }
                                                 if (childBottom > marginBottom) {
                                                     marginBottom = childBottom;
                                                     inheritedBottom = true;
                                                 }
-                                                else if (childBottom === 0 && marginBottom === 0) {
+                                                else if (childBottom === 0) {
                                                     inherit = bottomChild as T;
                                                     continue;
                                                 }
@@ -489,7 +489,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                         inherit = current;
                                         while (validBelowChild(inherit, true)) {
                                             let topChild = inherit.firstStaticChild as T;
-                                            if (isBlockElement(topChild, true) && topChild.getBox(BOX_STANDARD.MARGIN_TOP)[0] === 0) {
+                                            if (isBlockElement(topChild, true) && !topChild.getBox(BOX_STANDARD.MARGIN_TOP)[0]) {
                                                 let childTop = topChild.marginTop,
                                                     currentChild = topChild;
                                                 while (currentChild.bounds.height === 0 && !currentChild.pseudoElement) {
@@ -535,13 +535,13 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                     }
                                                 }
                                                 if (childTop !== 0) {
-                                                    resetBox(topChild, BOX_STANDARD.MARGIN_TOP, current.getBox(BOX_STANDARD.MARGIN_TOP)[0] === 0 ? current : undefined);
+                                                    resetBox(topChild, BOX_STANDARD.MARGIN_TOP, !current.getBox(BOX_STANDARD.MARGIN_TOP)[0] ? current : undefined);
                                                 }
                                                 if (childTop > marginTop) {
                                                     marginTop = childTop;
                                                     inheritedTop = true;
                                                 }
-                                                else if (childTop === 0 && marginTop === 0) {
+                                                else if (childTop === 0) {
                                                     inherit = topChild;
                                                     continue;
                                                 }
@@ -678,11 +678,11 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                 }
                 else if (belowFloating && node.borderBottomWidth === 0 && node.paddingBottom === 0) {
                     const bottomChild = minMaxOf(belowFloating, sibling => sibling.linear.bottom, '>')[0]!;
-                    if (bottomChild.marginBottom >= node.marginBottom && bottomChild.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] === 0) {
-                        node.setCacheValue('marginBottom', bottomChild.marginBottom);
+                    if (bottomChild.marginBottom >= node.marginBottom && !bottomChild.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0]) {
+                        (node.registerBox(BOX_STANDARD.MARGIN_BOTTOM) || node).setCacheValue('marginBottom', bottomChild.marginBottom);
                     }
                     for (const sibling of belowFloating) {
-                        if (sibling.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] === 0) {
+                        if (!sibling.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0]) {
                             resetBox(sibling, BOX_STANDARD.MARGIN_BOTTOM);
                         }
                     }

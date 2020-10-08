@@ -202,9 +202,9 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     ordinal.cssApply({
                         minWidth: minWidth > 0 ? formatPX(minWidth) : '',
                         marginLeft: marginLeft > 0 ? formatPX(marginLeft) : '',
-                        paddingTop: paddingTop && node.getBox(BOX_STANDARD.PADDING_TOP)[0] === 0 && containerType !== CONTAINER_NODE.LINEAR ? formatPX(paddingTop) : '',
-                        paddingRight: paddingRight ? formatPX(paddingRight) : '',
-                        lineHeight: lineHeight ? formatPX(lineHeight) : ''
+                        paddingTop: paddingTop > 0 && containerType !== CONTAINER_NODE.LINEAR && !node.getBox(BOX_STANDARD.PADDING_TOP)[0] ? formatPX(paddingTop) : '',
+                        paddingRight: paddingRight > 0 ? formatPX(paddingRight) : '',
+                        lineHeight: lineHeight > 0 ? formatPX(lineHeight) : ''
                     });
                     ordinal.apply(options);
                     ordinal.modifyBox(BOX_STANDARD.PADDING_LEFT, 2);

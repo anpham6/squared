@@ -2658,38 +2658,35 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     result = getRangeClientRect(this._element as Element);
                 }
                 else if (!this.isEmpty()) {
+                    let top = Infinity,
+                        right = -Infinity,
+                        bottom = -Infinity,
+                        left = Infinity,
+                        numberOfLines = 0;
                     const children = this.naturalChildren;
-                    const length = children.length;
-                    if (length) {
-                        let top = Infinity,
-                            right = -Infinity,
-                            bottom = -Infinity,
-                            left = Infinity,
-                            numberOfLines = 0;
-                        for (let i = 0; i < length; ++i) {
-                            const node = children[i];
-                            if (node.textElement) {
-                                const rect = node.textBounds;
-                                if (rect) {
-                                    numberOfLines += rect.numberOfLines || (top === Infinity || rect.top >= bottom || Math.floor(rect.right - rect.left) > Math.ceil(rect.width) ? 1 : 0);
-                                    top = Math.min(rect.top, top);
-                                    right = Math.max(rect.right, right);
-                                    left = Math.min(rect.left, left);
-                                    bottom = Math.max(rect.bottom, bottom);
-                                }
+                    for (let i = 0, length = children.length; i < length; ++i) {
+                        const node = children[i];
+                        if (node.textElement) {
+                            const rect = node.textBounds;
+                            if (rect) {
+                                numberOfLines += rect.numberOfLines || (top === Infinity || rect.top >= bottom || Math.floor(rect.right - rect.left) > Math.ceil(rect.width) ? 1 : 0);
+                                top = Math.min(rect.top, top);
+                                right = Math.max(rect.right, right);
+                                left = Math.min(rect.left, left);
+                                bottom = Math.max(rect.bottom, bottom);
                             }
                         }
-                        if (numberOfLines) {
-                            result = {
-                                top,
-                                right,
-                                left,
-                                bottom,
-                                width: right - left,
-                                height: bottom - top,
-                                numberOfLines
-                            };
-                        }
+                    }
+                    if (numberOfLines) {
+                        result = {
+                            top,
+                            right,
+                            left,
+                            bottom,
+                            width: right - left,
+                            height: bottom - top,
+                            numberOfLines
+                        };
                     }
                 }
             }

@@ -274,12 +274,12 @@ function setConstraintPercent(node: T, value: number, horizontal: boolean, perce
         if (horizontal) {
             const width = parent.box.width;
             boxPercent = !parent.gridElement ? node.contentBoxWidth / width : 0;
-            marginPercent = (Math.max(node.getBox(BOX_STANDARD.MARGIN_LEFT)[0] === 0 ? node.marginLeft : 0, 0) + (node.getBox(BOX_STANDARD.MARGIN_RIGHT)[0] === 0 ? node.marginRight : 0)) / width;
+            marginPercent = (Math.max(!node.getBox(BOX_STANDARD.MARGIN_LEFT)[0] ? node.marginLeft : 0, 0) + (!node.getBox(BOX_STANDARD.MARGIN_RIGHT)[0] ? node.marginRight : 0)) / width;
         }
         else {
             const height = parent.box.height;
             boxPercent = !parent.gridElement ? node.contentBoxHeight / height : 0;
-            marginPercent = (Math.max(node.getBox(BOX_STANDARD.MARGIN_TOP)[0] === 0 ? node.marginTop : 0, 0) + (node.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] === 0 ? node.marginBottom : 0)) / height;
+            marginPercent = (Math.max(!node.getBox(BOX_STANDARD.MARGIN_TOP)[0] ? node.marginTop : 0, 0) + (!node.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] ? node.marginBottom : 0)) / height;
         }
         if (percent === 1 && value + marginPercent >= 1) {
             value = 1 - marginPercent;
@@ -2846,7 +2846,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 if (this.documentBody) {
                     switch (region) {
                         case BOX_STANDARD.PADDING_TOP:
-                            if (this.getBox(BOX_STANDARD.MARGIN_TOP)[0] === 0) {
+                            if (!this.getBox(BOX_STANDARD.MARGIN_TOP)[0]) {
                                 value -= this.marginTop;
                             }
                             break;
@@ -2854,7 +2854,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             value -= this.marginRight;
                             break;
                         case BOX_STANDARD.PADDING_BOTTOM:
-                            if (this.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] === 0) {
+                            if (!this.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0]) {
                                 value -= this.marginBottom;
                             }
                             break;
@@ -2863,7 +2863,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             break;
                     }
                 }
-                if (this.getBox(region)[0] === 0) {
+                if (!this.getBox(region)[0]) {
                     switch (region) {
                         case BOX_STANDARD.PADDING_TOP:
                             value += this.borderTopWidth - this.paddingTop;

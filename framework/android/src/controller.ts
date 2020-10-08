@@ -3499,7 +3499,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             if (absoluteParent.documentBody) {
                                 switch (position) {
                                     case 'top':
-                                        return absoluteParent.getBox(BOX_STANDARD.MARGIN_TOP)[0] === 0 ? absoluteParent.marginTop : 0;
+                                        return !absoluteParent.getBox(BOX_STANDARD.MARGIN_TOP)[0] ? absoluteParent.marginTop : 0;
                                     case 'left':
                                         return absoluteParent.marginLeft;
                                 }

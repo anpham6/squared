@@ -2998,46 +2998,44 @@ export function calculateVarAsString(element: StyleElement, value: string, optio
         if (seg) {
             const calc = splitEnclosing(seg, 'calc');
             const length = calc.length;
-            if (length) {
-                let partial = '';
-                for (let i = 0, j = 0; i < length; ++i) {
-                    let output = calc[i];
-                    if (isCalc(output)) {
-                        if (options) {
-                            if (orderedSize && orderedSize[j] !== undefined) {
-                                options.boundingSize = orderedSize[j++];
-                            }
-                            else if (dimension) {
-                                options.dimension = dimension[j++];
-                                delete options.boundingSize;
-                            }
-                            else if (orderedSize) {
-                                delete options.boundingSize;
-                            }
+            if (length === 0) {
+                return '';
+            }
+            let partial = '';
+            for (let i = 0, j = 0; i < length; ++i) {
+                let output = calc[i];
+                if (isCalc(output)) {
+                    if (options) {
+                        if (orderedSize && orderedSize[j] !== undefined) {
+                            options.boundingSize = orderedSize[j++];
                         }
-                        const k = calculateVar(element, output, options as CalculateVarOptions);
-                        if (!isNaN(k)) {
-                            partial += k + unit;
+                        else if (dimension) {
+                            options.dimension = dimension[j++];
+                            delete options.boundingSize;
                         }
-                        else {
-                            return '';
+                        else if (orderedSize) {
+                            delete options.boundingSize;
                         }
                     }
+                    const k = calculateVar(element, output, options as CalculateVarOptions);
+                    if (!isNaN(k)) {
+                        partial += k + unit;
+                    }
                     else {
-                        partial += output;
-                        if (dimension) {
-                            output = output.trim();
-                            if (output && (!checkUnit || unitType === CSS_UNIT.LENGTH && (isLength(output, true) || output === 'auto'))) {
-                                ++j;
-                            }
+                        return '';
+                    }
+                }
+                else {
+                    partial += output;
+                    if (dimension) {
+                        output = output.trim();
+                        if (output && (!checkUnit || unitType === CSS_UNIT.LENGTH && (isLength(output, true) || output === 'auto'))) {
+                            ++j;
                         }
                     }
                 }
-                result.push(partial);
             }
-            else {
-                return '';
-            }
+            result.push(partial);
         }
     }
     value = result.length === 1 ? result[0] : result.join(separator === ' ' ? ' ' : separator ? separator + ' ' : '');
