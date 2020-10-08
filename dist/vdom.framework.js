@@ -1,4 +1,4 @@
-/* vdom-framework 2.0.0
+/* vdom-framework 2.1.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -27,6 +27,7 @@
         builtInExtensions: [],
         createElementMap: true,
         createQuerySelectorMap: true,
+        pierceShadowRoot: false,
         showErrorMessages: false,
     };
 

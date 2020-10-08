@@ -1,4 +1,4 @@
-/* squared 2.0.1
+/* squared 2.1.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -19,11 +19,11 @@
         LENGTH_PERCENTAGE: `(${DECIMAL}(?:${UNIT_LENGTH}|%)?)`,
         UNIT_LENGTH,
         DATAURI: '(?:data:([^,]+),)?(.+?)',
-        CSS_SELECTOR_LABEL: '[\\.#]?[\\w\\-]+',
-        CSS_SELECTOR_PSEUDO_ELEMENT: '::[\\w\\-]+',
-        CSS_SELECTOR_PSEUDO_CLASS: ':[\\w\\-]+(?:\\(\\s*([^()]+)\\s*\\)|\\(\\s*([\\w\\-]+\\(.+?\\))\\s*\\))?',
+        CSS_SELECTOR_LABEL: '[\\.#]?[A-Za-z][\\w\\-]*',
+        CSS_SELECTOR_PSEUDO_ELEMENT: '::[A-Za-z\\-]+',
+        CSS_SELECTOR_PSEUDO_CLASS: ':[A-Za-z\\-]+(?:\\(\\s*([^)]+)\\s*\\))?',
         CSS_SELECTOR_ATTR:
-            '\\[((?:\\*\\|)?(?:\\w+\\\\:)?[\\w\\-]+)(?:([~^$*|])?=(?:"((?:[^"]|\\\\")+)"|\'((?:[^\']|\\\')+)\'|([^\\s\\]]+))\\s*(i)?)?\\]',
+            '\\[((?:\\*\\|)?(?:[A-Za-z\\-]+:)?[A-Za-z\\-]+)(?:([~^$*|])?=(?:"((?:[^"]|\\\\")+)"|\'((?:[^\']|\\\')+)\'|([^\\s\\]]+))\\s*(i)?)?\\]',
         CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,
         CSS_TIME: `(${DECIMAL})(s|ms)`,
         CSS_CALC: 'calc\\((.+)\\)',
@@ -36,8 +36,8 @@
     const CSS = {
         URL: /^\s*url\((.+)\)\s*$/,
         HEX: /^#[A-Fa-f\d]{3,8}$/,
-        RGBA: /rgba?\((\d+),\s+(\d+),\s+(\d+)(?:,\s+([\d.]+%?))?\)/,
-        HSLA: /hsla?\((\d+),\s+(\d+)%,\s+(\d+)%(?:,\s+([\d.]+%?))?\)/,
+        RGBA: /rgba?\(\s*(\d+),\s+(\d+),\s+(\d+)(?:,\s+([\d.]+%?)\s*)?\)/,
+        HSLA: /hsla?\(\s*(\d+),\s+(\d+)%,\s+(\d+)%(?:,\s+([\d.]+%?)\s*)?\)/,
         SELECTOR_G: new RegExp(
             `\\s*((?:${STRING.CSS_SELECTOR_ATTR}|${STRING.CSS_SELECTOR_PSEUDO_CLASS}|${STRING.CSS_SELECTOR_PSEUDO_ELEMENT}|${STRING.CSS_SELECTOR_LABEL})+|[>~+*])\\s*`,
             'g'
@@ -69,11 +69,11 @@
     });
 
     const CACHE_CAMELCASE = {};
-    const CACHE_HYPHENATED = {};
-    const CACHE_UNDERSCORE = {};
     const CACHE_TRIMBOTH = {};
     const CACHE_TRIMSTRING = {};
     const REGEXP_DECIMAL = new RegExp(`^${STRING.DECIMAL}$`);
+    const REGEXP_NONWORD = /[^\w]+/g;
+    const REGEXP_NONWORDNUM = /[^A-Za-z\d]+/g;
     function promisify(fn) {
         return (...args) => {
             return new Promise((resolve, reject) => {
@@ -407,65 +407,103 @@
                 return '';
         }
     }
-    function formatXml(value, closeEmpty, startIndent = -1, char = '\t') {
+    function formatXml(value, closeEmpty = true, caseSensitive, indentChar = '\t') {
+        const pattern = /\s*(<(\/)?(!?[A-Za-z\d-]+)([^>]*)>)(\s*)([^<]*)/g;
+        const patternContent = /^([\S\s]*?)(\s*)$/;
         const lines = [];
-        const pattern = /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g;
         let output = '',
-            indent = startIndent,
+            indent = -1,
             ignoreIndent,
             match;
         while ((match = pattern.exec(value))) {
+            const tag = match[1];
+            const closing = match[2] === '/';
+            const content = patternContent.exec(match[6]);
             lines.push({
-                tag: match[1],
-                closing: !!match[2],
-                tagName: match[3],
-                value: match[4],
+                tag,
+                closing,
+                tagName: caseSensitive ? match[3].toUpperCase() : match[3],
+                didClose: !closing && tag.endsWith('/>'),
+                leadingSpace: match[5],
+                content: content[1],
+                trailingSpace: content[2],
             });
         }
-        for (let i = 0, length = lines.length; i < length; ++i) {
+        const length = lines.length;
+        for (let i = 0; i < length; ++i) {
             const line = lines[i];
-            let previous = indent;
-            if (i > 0) {
-                let single;
-                if (line.closing) {
-                    --indent;
-                } else {
-                    const next = lines[i + 1];
-                    single = next.closing && line.tagName === next.tagName;
-                    if (!/\/>\n*$/.exec(line.tag)) {
-                        if (closeEmpty && !isString(line.value)) {
-                            if (next && next.closing && next.tagName === line.tagName) {
-                                line.tag = line.tag.replace(/\s*>$/, ' />');
-                                ++i;
+            let previousIndent = indent,
+                single,
+                willClose;
+            if (line.closing) {
+                const previous = lines[i - 1];
+                if (
+                    !previous.closing &&
+                    previous.tagName === previous.tagName &&
+                    previous.leadingSpace.includes('\n')
+                ) {
+                    output += indentChar.repeat(previousIndent);
+                }
+                --indent;
+            } else {
+                const next = lines[i + 1];
+                const tagName = line.tagName;
+                single = next && next.closing && tagName === next.tagName;
+                if (!line.didClose) {
+                    for (let j = i + 1, k = 0; j < length; ++j) {
+                        const item = lines[j];
+                        if (tagName === item.tagName) {
+                            if (item.closing) {
+                                if (k-- === 0) {
+                                    willClose = true;
+                                    break;
+                                }
                             } else {
-                                ++indent;
+                                ++k;
                             }
-                        } else {
-                            ++indent;
                         }
                     }
-                    ++previous;
-                }
-                const tags = line.tag.trim().split('\n');
-                for (let j = 0, q = tags.length; j < q; ++j) {
-                    const partial = tags[j];
-                    if (ignoreIndent) {
-                        output += partial;
-                        ignoreIndent = false;
-                    } else {
-                        const depth = previous + Math.min(j, 1);
-                        output += (depth > 0 ? char.repeat(depth) : '') + partial.trim();
-                    }
-                    if (single && q === 1) {
-                        ignoreIndent = true;
-                    } else {
-                        output += '\n';
+                    if (closeEmpty && !line.content && line.tag[1] !== '!') {
+                        if (single || !willClose) {
+                            line.tag = line.tag.replace(/\s*>$/, ' />');
+                            if (willClose) {
+                                ++i;
+                            }
+                        } else if (willClose) {
+                            ++indent;
+                        }
+                    } else if (willClose) {
+                        ++indent;
                     }
                 }
-            } else {
-                output += (startIndent > 0 ? char.repeat(startIndent) : '') + line.tag + '\n';
+                ++previousIndent;
             }
-            output += line.value;
+            const tags = line.tag.split('\n');
+            for (let j = 0, q = tags.length; j < q; ++j) {
+                const partial = tags[j];
+                if (ignoreIndent) {
+                    output += partial;
+                    ignoreIndent = false;
+                } else {
+                    const depth = previousIndent + Math.min(j, 1);
+                    output += (depth > 0 ? indentChar.repeat(depth) : '') + partial.trim();
+                }
+                if (single && q === 1) {
+                    ignoreIndent = true;
+                } else {
+                    output += '\n';
+                }
+            }
+            if (line.content) {
+                let leadingSpace = line.leadingSpace;
+                if (leadingSpace && leadingSpace.includes('\n')) {
+                    leadingSpace = leadingSpace.replace(/^[^\n]+/, '');
+                }
+                output +=
+                    (leadingSpace ? leadingSpace : '') +
+                    line.content +
+                    (leadingSpace || line.trailingSpace.includes('\n') ? '\n' : '');
+            }
         }
         return output;
     }
@@ -481,22 +519,6 @@
             : value[0].toUpperCase() + value.substring(1).toLowerCase();
     }
     function convertHyphenated(value, char = '-') {
-        switch (char) {
-            case '-': {
-                const cacheData = CACHE_HYPHENATED[value];
-                if (cacheData) {
-                    return cacheData;
-                }
-                break;
-            }
-            case '_': {
-                const cacheData = CACHE_UNDERSCORE[value];
-                if (cacheData) {
-                    return cacheData;
-                }
-                break;
-            }
-        }
         let result = value[0].toLowerCase(),
             lower = true;
         for (let i = 1, length = value.length; i < length; ++i) {
@@ -505,40 +527,35 @@
             result += lower && upper && ch !== char ? char + ch.toLowerCase() : ch;
             lower = !upper;
         }
-        switch (char) {
-            case '-':
-                CACHE_HYPHENATED[value] = result;
-                break;
-            case '_':
-                CACHE_UNDERSCORE[value] = result;
-                break;
-        }
         return result;
     }
     function convertCamelCase(value, char = '-') {
-        let i = value.indexOf(char);
-        if (i === -1) {
-            return value;
-        }
         const cacheData = CACHE_CAMELCASE[value];
         if (cacheData) {
             return cacheData;
         }
-        let result = value.substring(0, i),
-            previous = '';
+        let i = value.indexOf(char);
+        if (i === -1) {
+            return (CACHE_CAMELCASE[value] = value);
+        }
+        let result = value.substring(0, i++),
+            previous = true;
         const length = value.length;
         while (i < length) {
             const ch = value[i++];
-            if (ch !== char) {
-                result += previous === char ? ch.toUpperCase() : ch;
+            if (ch === char) {
+                previous = true;
+            } else if (previous) {
+                result += ch.toUpperCase();
+                previous = false;
+            } else {
+                result += ch;
             }
-            previous = ch;
         }
-        CACHE_CAMELCASE[value] = result;
-        return result;
+        return (CACHE_CAMELCASE[value] = result);
     }
     function convertWord(value, dash) {
-        return value.replace(dash ? /[^A-Za-z\d]+/g : /[^\w]+/g, '_');
+        return value.replace(dash ? REGEXP_NONWORDNUM : REGEXP_NONWORD, '_');
     }
     function convertInt(value, fallback = 0) {
         const result = parseInt(value);
@@ -548,6 +565,14 @@
         const result = parseFloat(value);
         return !isNaN(result) ? result : fallback;
     }
+    function convertBase64(value) {
+        let result = '';
+        const data = new Uint8Array(value);
+        for (let i = 0, length = data.byteLength; i < length; ++i) {
+            result += String.fromCharCode(data[i]);
+        }
+        return window.btoa(result);
+    }
     function delimitString(options, ...appending) {
         const { value, not, remove, sort } = options;
         const length = appending.length;
@@ -555,10 +580,10 @@
             return appending[0];
         }
         const delimiter = options.delimiter || ', ';
-        const values = value !== '' ? value.split(delimiter) : [];
+        const values = value ? value.split(delimiter) : [];
         for (let i = 0; i < length; ++i) {
             const append = appending[i];
-            if (append !== '') {
+            if (append) {
                 if (not && values.includes(not[i])) {
                     continue;
                 }
@@ -578,8 +603,8 @@
     function spliceString(value, index, length) {
         return index === 0 ? value.substring(length) : value.substring(0, index) + value.substring(index + length);
     }
-    function splitPair(value, char, trim) {
-        const index = value.indexOf(char);
+    function splitPair(value, char, trim, last) {
+        const index = !last ? value.indexOf(char) : value.lastIndexOf(char);
         if (index !== -1) {
             const start = value.substring(0, index);
             const end = value.substring(index + char.length);
@@ -587,13 +612,13 @@
         }
         return !trim ? [value, ''] : [value.trim(), ''];
     }
-    function splitPairStart(value, char, trim) {
-        const index = value.indexOf(char);
+    function splitPairStart(value, char, trim, last) {
+        const index = !last ? value.indexOf(char) : value.lastIndexOf(char);
         const result = index !== -1 ? value.substring(0, index) : value;
         return !trim ? result : result.trim();
     }
-    function splitPairEnd(value, char, trim) {
-        const index = value.indexOf(char);
+    function splitPairEnd(value, char, trim, last) {
+        const index = !last ? value.indexOf(char) : value.lastIndexOf(char);
         if (index !== -1) {
             const result = value.substring(index + char.length);
             return !trim ? result : result.trim();
@@ -611,7 +636,7 @@
         const appendValues = segment => {
             for (let seg of segment.split(separator)) {
                 seg = seg.trim();
-                if (seg !== '') {
+                if (seg) {
                     result.push(seg);
                 }
             }
@@ -625,7 +650,7 @@
                 let segment = value.substring(position, index);
                 if (separator) {
                     segment = segment.trim();
-                    if (segment !== '') {
+                    if (segment) {
                         appendValues(segment);
                         if (!prefixed) {
                             const joined = lastItemOf(result);
@@ -677,7 +702,7 @@
             const excess = value.substring(position);
             if (separator) {
                 const segment = excess.trim();
-                if (segment !== '') {
+                if (segment) {
                     appendValues(segment);
                 }
             } else {
@@ -688,6 +713,48 @@
     }
     function lastItemOf(value) {
         return value[value.length - 1];
+    }
+    function minMaxOf(list, predicate, operator) {
+        let result = list[0],
+            value = predicate(result, 0, list);
+        if (isNaN(value)) {
+            result = null;
+            value = operator[0] === '>' ? -Infinity : Infinity;
+        }
+        for (let i = 1, length = list.length; i < length; ++i) {
+            const item = list[i];
+            const itemValue = predicate(item, i, list);
+            if (isNaN(itemValue)) {
+                continue;
+            }
+            switch (operator) {
+                case '>':
+                    if (itemValue > value) {
+                        result = item;
+                        value = itemValue;
+                    }
+                    break;
+                case '<':
+                    if (itemValue < value) {
+                        result = item;
+                        value = itemValue;
+                    }
+                    break;
+                case '>=':
+                    if (itemValue >= value) {
+                        result = item;
+                        value = itemValue;
+                    }
+                    break;
+                case '<=':
+                    if (itemValue <= value) {
+                        result = item;
+                        value = itemValue;
+                    }
+                    break;
+            }
+        }
+        return [result, value];
     }
     function hasBit(value, offset) {
         return (value & offset) === offset;
@@ -709,16 +776,11 @@
     }
     function isEmptyString(value) {
         for (let i = 0, length = value.length; i < length; ++i) {
-            switch (value.charCodeAt(i)) {
-                case 32:
-                case 9:
-                case 10:
-                case 11:
-                case 13:
-                    continue;
-                default:
-                    return false;
+            const n = value.charCodeAt(i);
+            if ((n < 14 && n > 8) || n === 32) {
+                continue;
             }
+            return false;
         }
         return true;
     }
@@ -791,7 +853,7 @@
     }
     function resolvePath(value, href) {
         value = value.trim();
-        if (value !== '' && !FILE.PROTOCOL.test(value)) {
+        if (value && !FILE.PROTOCOL.test(value)) {
             const pathname = (href ? href.replace(location.origin, '') : location.pathname)
                 .replace(/\\/g, '/')
                 .split('/');
@@ -834,10 +896,10 @@
         return match ? match[1] : value;
     }
     function trimStart(value, pattern) {
-        return value.replace(new RegExp(`^(${pattern})+`), '');
+        return value.replace(new RegExp(`^(?:${pattern})+`), '');
     }
     function trimEnd(value, pattern) {
-        return value.replace(new RegExp(`(${pattern})+$`), '');
+        return value.replace(new RegExp(`(?:${pattern})+$`), '');
     }
     function fromLastIndexOf(value, ...char) {
         let i = 0;
@@ -955,20 +1017,19 @@
             if (valueA !== valueB && typeof valueA !== 'object' && typeof valueB !== 'object') {
                 if (ascending) {
                     return valueA < valueB ? -1 : 1;
-                } else {
-                    return valueA > valueB ? -1 : 1;
                 }
+                return valueA > valueB ? -1 : 1;
             }
             return 0;
         });
     }
     function flatArray(list, depth = 1, current = 0) {
-        let result = [];
+        const result = [];
         for (let i = 0, length = list.length; i < length; ++i) {
             const item = list[i];
             if (current < depth && Array.isArray(item)) {
                 if (item.length) {
-                    result = result.concat(flatArray(item, depth, current + 1));
+                    result.push(...flatArray(item, depth, current + 1));
                 }
             } else if (item !== undefined && item !== null) {
                 result.push(item);
@@ -993,21 +1054,16 @@
         return list;
     }
     function partitionArray(list, predicate) {
-        const length = list.length;
-        const valid = new Array(length);
-        const invalid = new Array(length);
-        let j = 0,
-            k = 0;
-        for (let i = 0; i < length; ++i) {
+        const valid = [];
+        const invalid = [];
+        for (let i = 0, length = list.length; i < length; ++i) {
             const item = list[i];
             if (predicate(item, i, list)) {
-                valid[j++] = item;
+                valid.push(item);
             } else {
-                invalid[k++] = item;
+                invalid.push(item);
             }
         }
-        valid.length = j;
-        invalid.length = k;
         return [valid, invalid];
     }
     function sameArray(list, predicate) {
@@ -1030,8 +1086,8 @@
         let result = '';
         for (let i = 0, length = list.length; i < length; ++i) {
             const value = predicate(list[i], i, list);
-            if (value !== '') {
-                result += result !== '' ? char + value : value;
+            if (value) {
+                result += result ? char + value : value;
             }
         }
         return result;
@@ -1083,6 +1139,7 @@
         convertWord: convertWord,
         convertInt: convertInt,
         convertFloat: convertFloat,
+        convertBase64: convertBase64,
         delimitString: delimitString,
         spliceString: spliceString,
         splitPair: splitPair,
@@ -1090,6 +1147,7 @@
         splitPairEnd: splitPairEnd,
         splitEnclosing: splitEnclosing,
         lastItemOf: lastItemOf,
+        minMaxOf: minMaxOf,
         hasBit: hasBit,
         isNumber: isNumber,
         isString: isString,
@@ -1212,7 +1270,7 @@
             const match = REGEXP_FRACTION.exec(convertDecimalNotation(value));
             if (match) {
                 const trailing = match[2];
-                if (trailing === '') {
+                if (!trailing) {
                     return Math.round(value);
                 }
                 const leading = match[1];
@@ -2634,7 +2692,6 @@
 
     const DOCUMENT_ELEMENT = document.documentElement;
     const DOCUMENT_FIXEDMAP = [9 / 13, 10 / 13, 12 / 13, 16 / 13, 20 / 13, 2, 3];
-    const DOCUMENT_FIXEDSIZE = 13;
     let DOCUMENT_FONTMAP;
     let DOCUMENT_FONTBASE;
     let DOCUMENT_FONTSIZE;
@@ -2652,13 +2709,13 @@
     const REGEXP_KEYFRAMES = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
     const REGEXP_MEDIARULE = /(?:(not|only)?\s*(?:all|screen)\s+and\s+)?((?:\([^)]+\)(?:\s+and\s+)?)+),?\s*/g;
     const REGEXP_MEDIARULECONDITION = /\(([a-z-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?:\s+and\s+)?/g;
-    const REGEXP_VAR = /var\((--[A-Za-z\d-]+)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)/;
-    const REGEXP_CUSTOMPROPERTY = /^\s*var\(--.+\)$/;
+    const REGEXP_VAR = /\s*(.*)var\((--[\w-]+)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)(.*)/;
+    const REGEXP_CUSTOMPROPERTY = /var\(--.+\)/;
     const REGEXP_IMGSRCSET = /^(.*?)(?:\s+([\d.]+)([xw]))?$/;
     const REGEXP_CALCOPERATION = /\s+([+-]\s+|\s*[*/])\s*/;
     const REGEXP_CALCUNIT = /\s*{(\d+)}\s*/;
     const REGEXP_TRANSFORM = /(\w+)\([^)]+\)/g;
-    const REGEXP_EMBASED = /\b-?[\d.]+(?:em|ch|ex)\b/;
+    const REGEXP_EMBASED = /\s*-?[\d.]+(?:em|ch|ex)\s*/;
     const CHAR_SPACE = /\s+/;
     const CHAR_SEPARATOR = /\s*,\s*/;
     const CHAR_DIVIDER = /\s*\/\s*/;
@@ -2735,11 +2792,10 @@
                             }
                             if (isCalc(position)) {
                                 const result = formatVar(calculateVar(element, position, { dimension, boundingBox }));
-                                if (result !== '') {
-                                    alignment[i] = result;
-                                } else {
+                                if (!result) {
                                     return '';
                                 }
+                                alignment[i] = result;
                             }
                             break;
                         }
@@ -2771,11 +2827,10 @@
                                             unitType: 2 /* PERCENT */,
                                             supportPercent: true,
                                         });
-                                        if (!isNaN(result)) {
-                                            component[j] = clamp(result, 0, 100) + '%';
-                                        } else {
+                                        if (isNaN(result)) {
                                             return '';
                                         }
+                                        component[j] = clamp(result, 0, 100) + '%';
                                     } else if (j === 3) {
                                         const percent = rgb.includes('%');
                                         let result = calculateVar(
@@ -2783,24 +2838,22 @@
                                             rgb,
                                             percent ? { unitType: 2 /* PERCENT */ } : { unitType: 32 /* DECIMAL */ }
                                         );
-                                        if (!isNaN(result)) {
-                                            if (percent) {
-                                                result /= 100;
-                                            }
-                                            component[j] = clamp(result).toString();
-                                        } else {
+                                        if (isNaN(result)) {
                                             return '';
                                         }
+                                        if (percent) {
+                                            result /= 100;
+                                        }
+                                        component[j] = clamp(result).toString();
                                     } else {
                                         const result = calculateVar(element, rgb, {
                                             unitType: 32 /* DECIMAL */,
                                             supportPercent: false,
                                         });
-                                        if (!isNaN(result)) {
-                                            component[j] = clamp(result, 0, 255).toString();
-                                        } else {
+                                        if (isNaN(result)) {
                                             return '';
                                         }
+                                        component[j] = clamp(result, 0, 255).toString();
                                     }
                                 }
                             }
@@ -2826,11 +2879,10 @@
                     seg,
                     px ? { dimension, boundingBox, min: 0, parent: false } : { unitType, min, supportPercent: false }
                 );
-                if (!isNaN(result)) {
-                    segments[i] = result + (px ? 'px' : '');
-                } else {
+                if (isNaN(result)) {
                     return '';
                 }
+                segments[i] = result + (px ? 'px' : '');
             }
         }
         return segments.join('').trim();
@@ -2938,7 +2990,6 @@
     const formatVar = value => (!isNaN(value) ? value + 'px' : '');
     const formatDecimal = value => (!isNaN(value) ? value.toString() : '');
     const trimEnclosing = value => value.substring(1, value.length - 1);
-    const trimSelector = value => (/^\*(\s+\*){0,2}$/.test(value) ? '*' : value.replace(/^(\*\s+){1,2}/, ''));
     const CSS_PROPERTIES = {
         alignContent: {
             trait: 8 /* CONTAIN */,
@@ -2994,7 +3045,7 @@
             value: 'running',
         },
         animationTimingFunction: {
-            trait: 0,
+            trait: 1 /* CALC */,
             value: 'ease',
         },
         backdropFilter: {
@@ -3244,7 +3295,7 @@
             value: 'top',
         },
         caretColor: {
-            trait: 1 /* CALC */ | 16 /* COLOR */ | 128 /* AUTO */,
+            trait: 1 /* CALC */ | 16 /* COLOR */,
             value: 'auto',
         },
         clear: {
@@ -3637,7 +3688,7 @@
             value: ['offsetPath', 'offsetDistance', 'offsetRotate', 'offsetAnchor'],
         },
         offsetPath: {
-            trait: 0,
+            trait: 1 /* CALC */,
             value: 'none',
         },
         offsetDistance: {
@@ -3733,16 +3784,19 @@
             value: '0',
         },
         pageBreakAfter: {
-            trait: 0,
+            trait: 4 /* LAYOUT */,
             value: 'auto',
+            alias: 'breakAfter',
         },
         pageBreakBefore: {
-            trait: 0,
+            trait: 4 /* LAYOUT */,
             value: 'auto',
+            alias: 'breakBefore',
         },
         pageBreakInside: {
-            trait: 0,
+            trait: 4 /* LAYOUT */,
             value: 'auto',
+            alias: 'breakInside',
         },
         perspective: {
             trait: 1 /* CALC */,
@@ -3813,19 +3867,19 @@
             value: ['scrollPaddingTop', 'scrollPaddingRight', 'scrollPaddingBottom', 'scrollPaddingLeft'],
         },
         scrollPaddingBottom: {
-            trait: 4 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'auto',
         },
         scrollPaddingLeft: {
-            trait: 4 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'auto',
         },
         scrollPaddingRight: {
-            trait: 4 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'auto',
         },
         scrollPaddingTop: {
-            trait: 4 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'auto',
         },
         scrollSnapAlign: {
@@ -3842,7 +3896,7 @@
         },
         shapeImageThreshold: {
             trait: 1 /* CALC */ | 4 /* LAYOUT */,
-            value: '0.0',
+            value: '0',
         },
         shapeMargin: {
             trait: 1 /* CALC */ | 4 /* LAYOUT */ | 256 /* UNIT */,
@@ -3853,7 +3907,7 @@
             value: 'none',
         },
         tabSize: {
-            trait: 4 /* LAYOUT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: '8',
         },
         tableLayout: {
@@ -4029,8 +4083,8 @@
                 fontSize: 'inherit',
                 lineHeight: 'inherit',
                 'setProperty': function () {},
-                'getPropertyValue': function (property) {
-                    return this[convertCamelCase(property)];
+                'getPropertyValue': function (p) {
+                    return this[convertCamelCase(p)];
                 },
             }),
             {
@@ -4149,7 +4203,7 @@
         }
     }
     function getRemSize(fixedWidth) {
-        return !fixedWidth ? DOCUMENT_FONTSIZE : DOCUMENT_FIXEDSIZE;
+        return !fixedWidth ? DOCUMENT_FONTSIZE : 13;
     }
     function getFontSize(element) {
         return parseFloat(
@@ -4159,8 +4213,8 @@
     function hasComputedStyle(element) {
         return element.nodeName[0] !== '#';
     }
-    function parseSelectorText(value, document) {
-        value = document ? value.trim() : trimSelector(value.trim());
+    function parseSelectorText(value) {
+        value = value.trim();
         if (value.includes(',')) {
             let normalized = value,
                 found,
@@ -4180,23 +4234,23 @@
                 while (true) {
                     const index = normalized.indexOf(',', position);
                     if (index !== -1) {
-                        const segment = value.substring(position, index).trim();
-                        result.push(position === 0 ? segment : trimSelector(segment));
+                        result.push(value.substring(position, index).trim());
                         position = index + 1;
                     } else {
                         if (position > 0) {
-                            result.push(trimSelector(value.substring(position).trim()));
+                            result.push(value.substring(position).trim());
                         }
                         break;
                     }
                 }
                 return result.length ? result : [value];
             }
-            return replaceMap(value.split(CHAR_SEPARATOR), selector => trimSelector(selector));
+            return value.split(CHAR_SEPARATOR);
         }
         return [value];
     }
     function getSpecificity(value) {
+        CSS.SELECTOR_G.lastIndex = 0;
         let result = 0,
             match;
         while ((match = CSS.SELECTOR_G.exec(value))) {
@@ -4231,15 +4285,16 @@
                 segment = spliceString(segment, subMatch.index, subMatch[0].length);
             }
             while ((subMatch = CSS.SELECTOR_PSEUDO_CLASS.exec(segment))) {
-                if (subMatch[0].startsWith(':not(')) {
-                    const attr = subMatch[1];
-                    if (attr) {
+                const pseudoClass = subMatch[0];
+                if (pseudoClass.startsWith(':not(')) {
+                    const negate = subMatch[1];
+                    if (negate) {
                         const lastIndex = CSS.SELECTOR_G.lastIndex;
-                        result += getSpecificity(attr);
+                        result += getSpecificity(negate);
                         CSS.SELECTOR_G.lastIndex = lastIndex;
                     }
                 } else {
-                    switch (match[2]) {
+                    switch (pseudoClass) {
                         case ':scope':
                         case ':root':
                             break;
@@ -4248,15 +4303,15 @@
                             break;
                     }
                 }
-                segment = spliceString(segment, subMatch.index, subMatch[0].length);
+                segment = spliceString(segment, subMatch.index, pseudoClass.length);
             }
             while ((subMatch = CSS.SELECTOR_PSEUDO_ELEMENT.exec(segment))) {
                 result += 1;
                 segment = spliceString(segment, subMatch.index, subMatch[0].length);
             }
             while ((subMatch = CSS.SELECTOR_LABEL.exec(segment))) {
-                const command = subMatch[0];
-                switch (command[0]) {
+                const label = subMatch[0];
+                switch (label[0]) {
                     case '#':
                         result += 100;
                         break;
@@ -4267,10 +4322,9 @@
                         result += 1;
                         break;
                 }
-                segment = spliceString(segment, subMatch.index, command.length);
+                segment = spliceString(segment, subMatch.index, label.length);
             }
         }
-        CSS.SELECTOR_G.lastIndex = 0;
         return result;
     }
     function checkWritingMode(attr, value) {
@@ -4627,6 +4681,7 @@
             case 'gridAutoRows':
             case 'gridTemplateRows':
                 return calculateGeneric(element, value, 16 /* INTEGER */, 1, boundingBox, 'height');
+            case 'order':
             case 'zIndex':
                 return formatDecimal(calculateVar(element, value, { unitType: 16 /* INTEGER */ }));
             case 'tabSize':
@@ -4756,23 +4811,21 @@
                                                     unitType: j === 3 ? 8 /* ANGLE */ : 32 /* DECIMAL */,
                                                     supportPercent: false,
                                                 });
-                                                if (!isNaN(result)) {
-                                                    rotate = result + (j === 3 ? 'deg' : '');
-                                                } else {
+                                                if (isNaN(result)) {
                                                     return '';
                                                 }
+                                                rotate = result + (j === 3 ? 'deg' : '');
                                             }
-                                            calc += calc !== '' ? ', ' + rotate : rotate;
+                                            calc += calc ? ', ' + rotate : rotate;
                                         }
                                     }
                                     break;
                                 }
                             }
-                            if (calc) {
-                                transform[i] = `(${calc})`;
-                            } else {
+                            if (!calc) {
                                 return '';
                             }
+                            transform[i] = `(${calc})`;
                         }
                     }
                     return transform.join('');
@@ -4795,7 +4848,7 @@
                                     if (isColor(previous)) {
                                         const prefix = previous.split(CHAR_SPACE).pop();
                                         const result = calculateColor(element, prefix + component[j]);
-                                        if (result !== '') {
+                                        if (result) {
                                             component[j] = result.replace(prefix, '');
                                             continue;
                                         }
@@ -4820,12 +4873,11 @@
                         if (isColor(previous) && hasCalc(color[i])) {
                             const prefix = previous.split(CHAR_SPACE).pop();
                             const result = calculateColor(element, prefix + color[i]);
-                            if (result !== '') {
-                                color[i] = result;
-                                color[i - 1] = previous.substring(0, previous.length - prefix.length);
-                            } else {
+                            if (!result) {
                                 return '';
                             }
+                            color[i] = result;
+                            color[i - 1] = previous.substring(0, previous.length - prefix.length);
                         }
                     }
                     return color.join('');
@@ -4868,11 +4920,10 @@
                 const result = [];
                 for (const position of value.split(CHAR_SEPARATOR)) {
                     const segment = calculatePosition(element, position, boundingBox);
-                    if (segment !== '') {
-                        result.push(segment);
-                    } else {
+                    if (!segment) {
                         return '';
                     }
+                    result.push(segment);
                 }
                 return result.join(', ');
             }
@@ -4901,12 +4952,11 @@
                         } else {
                             continue;
                         }
-                        if (result !== '') {
-                            border[i] = result;
-                            border[i - 1] = previous.substring(0, previous.length - prefix.length);
-                        } else {
+                        if (!result) {
                             return '';
                         }
+                        border[i] = result;
+                        border[i - 1] = previous.substring(0, previous.length - prefix.length);
                     }
                     return border.join('');
                 }
@@ -4943,23 +4993,21 @@
                                                       }
                                                     : undefined
                                             );
-                                            if (!isNaN(p)) {
-                                                bezier = p.toString();
-                                            } else {
+                                            if (isNaN(p)) {
                                                 return '';
                                             }
+                                            bezier = p.toString();
                                         }
-                                        calc += calc !== '' ? ', ' + bezier : bezier;
+                                        calc += calc ? ', ' + bezier : bezier;
                                     }
                                 }
                             } else if (prefix.endsWith('steps')) {
                                 calc = calculateVarAsString(element, seg, { unitType: 16 /* INTEGER */, min: 1 });
                             }
-                            if (calc) {
-                                timingFunction[i] = `(${calc})`;
-                            } else {
+                            if (!calc) {
                                 return '';
                             }
+                            timingFunction[i] = `(${calc})`;
                         }
                     }
                     return timingFunction.join('');
@@ -5002,22 +5050,20 @@
                                     if (radius.includes('%')) {
                                         const { width, height } =
                                             boundingBox || getContentBoxDimension(element.parentElement);
-                                        if (width && height) {
-                                            options.boundingSize = Math.min(width, height);
-                                        } else {
+                                        if (!width || !height) {
                                             return '';
                                         }
+                                        options.boundingSize = Math.min(width, height);
                                     }
                                 } else {
                                     options.dimension = ['width', 'height'];
                                 }
                                 radius = calculateVarAsString(element, radius, options);
-                                if (radius !== '') {
-                                    result.push(radius);
-                                } else {
+                                if (!radius) {
                                     return '';
                                 }
-                            } else if (radius) {
+                            }
+                            if (radius) {
                                 result.push(radius);
                             }
                             if (hasCalc(position)) {
@@ -5026,12 +5072,11 @@
                                     boundingBox,
                                     parent: true,
                                 });
-                                if (position !== '') {
-                                    result.push(position);
-                                } else {
+                                if (!position) {
                                     return '';
                                 }
-                            } else if (position) {
+                            }
+                            if (position) {
                                 result.push(position);
                             }
                             shape = result.join(' at ');
@@ -5053,14 +5098,11 @@
                                         boundingBox,
                                         parent: true,
                                     });
-                                    if (points !== '') {
-                                        result.push(points);
-                                    } else {
+                                    if (!points) {
                                         return '';
                                     }
-                                } else {
-                                    result.push(points);
                                 }
+                                result.push(points);
                             }
                             shape = result.join(', ');
                             break;
@@ -5068,7 +5110,7 @@
                         default:
                             return value;
                     }
-                    if (shape !== '') {
+                    if (shape) {
                         return `${prefix}(${shape})`;
                     }
                 }
@@ -5078,19 +5120,17 @@
                 let [row, column] = value.trim().split(CHAR_DIVIDER);
                 if (hasCalc(row)) {
                     const result = calculateStyle(element, 'gridTemplateRows', row, boundingBox);
-                    if (result !== '') {
-                        row = result;
-                    } else {
+                    if (!result) {
                         return '';
                     }
+                    row = result;
                 }
                 if (hasCalc(column)) {
                     const result = calculateStyle(element, 'gridTemplateColumns', column, boundingBox);
-                    if (result !== '') {
-                        column = result;
-                    } else {
+                    if (!result) {
                         return '';
                     }
+                    column = result;
                 }
                 return row + (column ? ` / ${column}` : '');
             }
@@ -5099,40 +5139,38 @@
                 if (hasCalc(offset)) {
                     const url = splitEnclosing(offset.trim());
                     const length = url.length;
-                    if (length >= 2) {
-                        offset = url[0] + url[1];
+                    if (length < 2) {
+                        return '';
+                    }
+                    offset = url[0] + url[1];
+                    if (hasCalc(offset)) {
+                        offset = calculateStyle(element, 'offsetPath', offset, boundingBox);
+                        if (!offset) {
+                            return '';
+                        }
+                    }
+                    if (length > 2) {
+                        let distance = url.slice(2).join('');
                         if (hasCalc(offset)) {
-                            offset = calculateStyle(element, 'offsetPath', offset, boundingBox);
-                            if (offset === '') {
+                            distance = calculateStyle(
+                                element,
+                                REGEXP_LENGTH.test(distance) ? 'offsetDistance' : 'offsetRotate',
+                                distance,
+                                boundingBox
+                            );
+                            if (!distance) {
                                 return '';
                             }
                         }
-                        if (length > 2) {
-                            let distance = url.slice(2).join('');
-                            if (hasCalc(offset)) {
-                                distance = calculateStyle(
-                                    element,
-                                    REGEXP_LENGTH.test(distance) ? 'offsetDistance' : 'offsetRotate',
-                                    distance,
-                                    boundingBox
-                                );
-                                if (distance === '') {
-                                    return '';
-                                }
-                            }
-                            offset += ' ' + distance;
-                        }
-                    } else {
-                        return '';
+                        offset += ' ' + distance;
                     }
                 }
                 if (hasCalc(anchor)) {
                     const result = calculateStyle(element, 'offsetAnchor', anchor, boundingBox);
-                    if (result !== '') {
-                        anchor = result;
-                    } else {
+                    if (!result) {
                         return '';
                     }
+                    anchor = result;
                 }
                 return offset + (anchor ? ` / ${anchor}` : '');
             }
@@ -5143,25 +5181,23 @@
                     if (hasCalc(slice)) {
                         slice = calculateStyle(element, 'borderImageSlice', slice, boundingBox);
                     }
-                    if (slice !== '') {
+                    if (slice) {
                         let width, outset;
                         if (match[3]) {
                             [width, outset] = match[3].trim().split(CHAR_DIVIDER);
                             if (hasCalc(width)) {
                                 const result = calculateStyle(element, 'borderImageWidth', width, boundingBox);
-                                if (result !== '') {
-                                    width = result;
-                                } else {
+                                if (!result) {
                                     return '';
                                 }
+                                width = result;
                             }
                             if (hasCalc(outset)) {
                                 const result = calculateStyle(element, 'borderImageOutset', outset, boundingBox);
-                                if (result !== '') {
-                                    outset = result;
-                                } else {
+                                if (!result) {
                                     return '';
                                 }
+                                outset = result;
                             }
                         }
                         return match[1] + ' ' + slice + (width ? ` / ${width}` : '') + (outset ? ` / ${outset}` : '');
@@ -5203,11 +5239,10 @@
                                 case 'url':
                                     continue;
                             }
-                            if (result) {
-                                filters[i] = `(${result})`;
-                            } else {
+                            if (!result) {
                                 return '';
                             }
+                            filters[i] = `(${result})`;
                         }
                     }
                     return filters.join('');
@@ -5215,20 +5250,21 @@
                 return value;
             }
             case 'background':
+            case 'mask':
             case 'gridTemplate':
                 return getStyle(element)[attr];
-            default:
+            default: {
                 if (
                     attr.endsWith('Color') ||
                     hasBit((_a = CSS_PROPERTIES[attr]) === null || _a === void 0 ? void 0 : _a.trait, 16 /* COLOR */)
                 ) {
                     return calculateColor(element, value.trim());
-                } else {
-                    const alias = checkWritingMode(attr, getStyle(element).writingMode);
-                    if (alias !== attr) {
-                        return calculateStyle(element, alias, value, boundingBox);
-                    }
                 }
+                const alias = checkWritingMode(attr, getStyle(element).writingMode);
+                if (alias !== attr) {
+                    return calculateStyle(element, alias, value, boundingBox);
+                }
+            }
         }
         return '';
     }
@@ -5321,10 +5357,10 @@
                 return value;
         }
     }
-    function getKeyframesRules() {
+    function getKeyframesRules(documentRoot = document) {
         const result = new Map();
         violation: {
-            const styleSheets = document.styleSheets;
+            const styleSheets = documentRoot.styleSheets;
             for (let i = 0, length = styleSheets.length; i < length; ++i) {
                 try {
                     const cssRules = styleSheets[i].cssRules;
@@ -5374,7 +5410,7 @@
                     const keyframe = {};
                     for (const property of match[2].split(/\s*;\s*/)) {
                         const [attr, value] = splitPair(property, ':');
-                        if (value !== '') {
+                        if (value) {
                             keyframe[attr.trim()] = value.trim();
                         }
                     }
@@ -5493,26 +5529,24 @@
         }
         return false;
     }
-    function parseVar(element, value) {
-        const style = getStyle(element);
+    function parseVar(element, value, style) {
         let match;
         while ((match = REGEXP_VAR.exec(value))) {
-            let customValue = style.getPropertyValue(match[1]).trim();
-            const fallback = match[2];
+            let customValue = (style || (style = getStyle(element))).getPropertyValue(match[2]).trim();
+            const fallback = match[3];
             if (
                 fallback &&
-                (customValue === '' ||
+                (!customValue ||
                     (isLength(fallback, true) && !isLength(customValue, true)) ||
                     (isNumber(fallback) && !isNumber(customValue)) ||
                     (parseColor(fallback) && !parseColor(customValue)))
             ) {
-                customValue = fallback;
+                customValue = fallback.trim();
             }
-            if (customValue) {
-                value = value.replace(match[0], customValue).trim();
-            } else {
+            if (!customValue) {
                 return '';
             }
+            value = match[1] + customValue + match[4];
         }
         return value;
     }
@@ -5553,48 +5587,46 @@
         const result = [];
         for (let seg of separator ? value.split(separator) : [value]) {
             seg = seg.trim();
-            if (seg !== '') {
+            if (seg) {
                 const calc = splitEnclosing(seg, 'calc');
                 const length = calc.length;
-                if (length) {
-                    let partial = '';
-                    for (let i = 0, j = 0; i < length; ++i) {
-                        let output = calc[i];
-                        if (isCalc(output)) {
-                            if (options) {
-                                if (orderedSize && orderedSize[j] !== undefined) {
-                                    options.boundingSize = orderedSize[j++];
-                                } else if (dimension) {
-                                    options.dimension = dimension[j++];
-                                    delete options.boundingSize;
-                                } else if (orderedSize) {
-                                    delete options.boundingSize;
-                                }
+                if (length === 0) {
+                    return '';
+                }
+                let partial = '';
+                for (let i = 0, j = 0; i < length; ++i) {
+                    let output = calc[i];
+                    if (isCalc(output)) {
+                        if (options) {
+                            if (orderedSize && orderedSize[j] !== undefined) {
+                                options.boundingSize = orderedSize[j++];
+                            } else if (dimension) {
+                                options.dimension = dimension[j++];
+                                delete options.boundingSize;
+                            } else if (orderedSize) {
+                                delete options.boundingSize;
                             }
-                            const k = calculateVar(element, output, options);
-                            if (!isNaN(k)) {
-                                partial += k + unit;
-                            } else {
-                                return '';
-                            }
-                        } else {
-                            partial += output;
-                            if (dimension) {
-                                output = output.trim();
-                                if (
-                                    output !== '' &&
-                                    (!checkUnit ||
-                                        (unitType === 1 /* LENGTH */ && (isLength(output, true) || output === 'auto')))
-                                ) {
-                                    ++j;
-                                }
+                        }
+                        const k = calculateVar(element, output, options);
+                        if (isNaN(k)) {
+                            return '';
+                        }
+                        partial += k + unit;
+                    } else {
+                        partial += output;
+                        if (dimension) {
+                            output = output.trim();
+                            if (
+                                output &&
+                                (!checkUnit ||
+                                    (unitType === 1 /* LENGTH */ && (isLength(output, true) || output === 'auto')))
+                            ) {
+                                ++j;
                             }
                         }
                     }
-                    result.push(partial);
-                } else {
-                    return '';
                 }
+                result.push(partial);
             }
         }
         value =
@@ -5612,16 +5644,15 @@
                 }
                 if (optional === segment) {
                     return '';
-                } else {
-                    value = value.replace(segment, optional);
                 }
+                value = value.replace(segment, optional);
             }
         }
         return value;
     }
     function calculateVar(element, value, options = {}) {
-        const output = parseVar(element, value);
-        if (output) {
+        value = parseVar(element, value);
+        if (value) {
             const { precision, supportPercent, unitType } = options;
             const boundingSize = !unitType || unitType === 1; /* LENGTH */
             if (value.includes('%')) {
@@ -5681,7 +5712,7 @@
             if (boundingSize && options.fontSize === undefined && hasEm(value)) {
                 options.fontSize = getFontSize(element);
             }
-            const result = calculate(output, options);
+            const result = calculate(value, options);
             if (precision !== undefined) {
                 return precision === 0 ? Math.floor(result) : parseFloat(truncate(result, precision));
             } else if (options.roundValue) {
@@ -5711,7 +5742,7 @@
                 }
             });
         }
-        if (srcset !== '') {
+        if (srcset) {
             for (const value of srcset.trim().split(CHAR_SEPARATOR)) {
                 const match = REGEXP_IMGSRCSET.exec(value);
                 if (match) {
@@ -5848,12 +5879,12 @@
             return resolvePath(url);
         }
     }
-    function insertStyleSheetRule(value, index = 0) {
+    function insertStyleSheetRule(value, index = 0, shadowRoot) {
         const style = document.createElement('style');
         if (isUserAgent(2 /* SAFARI */)) {
             style.appendChild(document.createTextNode(''));
         }
-        document.head.appendChild(style);
+        (shadowRoot || document.head).appendChild(style);
         const sheet = style.sheet;
         if (sheet && typeof sheet.insertRule === 'function') {
             try {
@@ -5866,17 +5897,16 @@
     }
     function calculate(value, options) {
         value = value.trim();
-        if (value === '') {
-            return NaN;
-        }
         let length = value.length;
-        if (value[0] !== '(' || value[length - 1] !== ')') {
+        if (length === 0) {
+            return NaN;
+        } else if (value[0] !== '(' || value[length - 1] !== ')') {
             value = `(${value})`;
             length += 2;
         }
-        let opened = 0;
         const opening = [];
         const closing = [];
+        let opened = 0;
         for (let i = 0; i < length; ++i) {
             switch (value[i]) {
                 case '(':
@@ -5891,14 +5921,14 @@
         if (opened === closing.length) {
             const equated = [];
             let index = 0;
-            while (true) {
+            do {
                 for (let i = 0; i < closing.length; ++i) {
                     let valid,
                         j = closing[i] - 1;
                     for (; j >= 0; j--) {
                         if (opening[j]) {
-                            valid = true;
                             opening[j] = false;
+                            valid = true;
                             break;
                         } else if (closing.includes(j)) {
                             break;
@@ -6073,34 +6103,31 @@
                             seg.splice(k, 2, seg[k] + seg[k + 1] * (evaluate[k] === '-' ? -1 : 1));
                             evaluate.splice(k--, 1);
                         }
-                        if (seg.length === 1) {
-                            if (closing.length === 1) {
-                                const result = seg[0];
-                                if ((min !== undefined && result < min) || (max !== undefined && result > max)) {
-                                    return NaN;
-                                }
-                                return truncateFraction(result);
-                            } else {
-                                equated[index] = seg[0];
-                                const hash = `{${index++}}`;
-                                const remaining = closing[i] + 1;
-                                value =
-                                    value.substring(0, j) +
-                                    hash +
-                                    ' '.repeat(remaining - (j + hash.length)) +
-                                    value.substring(remaining);
-                                closing.splice(i--, 1);
-                            }
-                        } else {
+                        if (seg.length !== 1) {
                             return NaN;
                         }
+                        if (closing.length === 1) {
+                            const result = seg[0];
+                            return (min !== undefined && result < min) || (max !== undefined && result > max)
+                                ? NaN
+                                : truncateFraction(result);
+                        }
+                        equated[index] = seg[0];
+                        const hash = `{${index++}}`;
+                        const remaining = closing[i] + 1;
+                        value =
+                            value.substring(0, j) +
+                            hash +
+                            ' '.repeat(remaining - (j + hash.length)) +
+                            value.substring(remaining);
+                        closing.splice(i--, 1);
                     }
                 }
-            }
+            } while (true);
         }
         return NaN;
     }
-    function parseUnit(value, options) {
+    function parseUnit(value, options = {}) {
         const match = REGEXP_LENGTH.exec(value);
         if (match) {
             let result = parseFloat(match[1]);
@@ -6110,14 +6137,12 @@
                 case 'ex':
                     result /= 2;
                 case 'em':
-                case 'ch': {
-                    const fontSize = options && options.fontSize;
-                    if (fontSize !== undefined) {
-                        return result * fontSize;
+                case 'ch':
+                    if (options.fontSize !== undefined) {
+                        return result * options.fontSize;
                     }
-                }
                 case 'rem':
-                    return result * (options && options.fixedWidth ? DOCUMENT_FIXEDSIZE : DOCUMENT_FONTSIZE);
+                    return result * (!options.fixedWidth ? DOCUMENT_FONTSIZE : 13);
                 case 'pc':
                     result *= 12;
                 case 'pt':
@@ -6131,25 +6156,21 @@
                 case 'in':
                     return result * getDeviceDPI();
                 case 'vw':
-                    return (
-                        (result *
-                            getInnerWidth(options === null || options === void 0 ? void 0 : options.screenDimension)) /
-                        100
-                    );
+                    return (result * getInnerWidth(options.screenDimension)) / 100;
                 case 'vh':
+                    return (result * getInnerHeight(options.screenDimension)) / 100;
+                case 'vmin':
                     return (
                         (result *
-                            getInnerHeight(options === null || options === void 0 ? void 0 : options.screenDimension)) /
+                            Math.min(getInnerWidth(options.screenDimension), getInnerHeight(options.screenDimension))) /
                         100
                     );
-                case 'vmin': {
-                    const screenDimension = options && options.screenDimension;
-                    return (result * Math.min(getInnerWidth(screenDimension), getInnerHeight(screenDimension))) / 100;
-                }
-                case 'vmax': {
-                    const screenDimension = options && options.screenDimension;
-                    return (result * Math.max(getInnerWidth(screenDimension), getInnerHeight(screenDimension))) / 100;
-                }
+                case 'vmax':
+                    return (
+                        (result *
+                            Math.max(getInnerWidth(options.screenDimension), getInnerHeight(options.screenDimension))) /
+                        100
+                    );
             }
         }
         return 0;
@@ -6590,6 +6611,14 @@
         }
         return bounds;
     }
+    function getParentElement(element) {
+        const parentElement = element.parentElement;
+        if (parentElement) {
+            return parentElement;
+        }
+        const parentNode = element.parentNode;
+        return parentNode && parentNode instanceof ShadowRoot ? parentNode.host : null;
+    }
     function removeElementsByClassName(className) {
         const elements = Array.from(document.getElementsByClassName(className));
         for (let i = 0, length = elements.length; i < length; ++i) {
@@ -6601,12 +6630,12 @@
         }
     }
     function getElementsBetweenSiblings(elementStart, elementEnd) {
-        const parentElement = elementEnd.parentElement;
+        const parentNode = elementEnd.parentNode;
         const result = [];
-        if (parentElement && (!elementStart || elementStart.parentElement === parentElement)) {
+        if (parentNode && (!elementStart || parentNode === elementStart.parentNode)) {
             let startIndex = elementStart ? -1 : 0,
                 endIndex = -1;
-            iterateArray(parentElement.childNodes, (element, index) => {
+            iterateArray(parentNode.childNodes, (element, index) => {
                 if (element === elementEnd) {
                     endIndex = index;
                     if (startIndex !== -1) {
@@ -6621,7 +6650,7 @@
             });
             if (startIndex !== -1 && endIndex !== -1) {
                 iterateArray(
-                    parentElement.childNodes,
+                    parentNode.childNodes,
                     element => {
                         const nodeName = element.nodeName;
                         if (nodeName[0] !== '#' || nodeName === '#text') {
@@ -6639,11 +6668,12 @@
         const { parent, attrs, style } = options;
         const element = document.createElement(tagName);
         if (style) {
+            const cssStyle = element.style;
             for (const attr in style) {
                 if (attr.includes('-')) {
-                    element.style.setProperty(attr, style[attr]);
-                } else {
-                    element.style[attr] = style[attr];
+                    cssStyle.setProperty(attr, style[attr]);
+                } else if (attr in cssStyle) {
+                    cssStyle[attr] = style[attr];
                 }
             }
         }
@@ -6680,6 +6710,7 @@
         withinViewport: withinViewport,
         assignRect: assignRect,
         getRangeClientRect: getRangeClientRect,
+        getParentElement: getParentElement,
         removeElementsByClassName: removeElementsByClassName,
         getElementsBetweenSiblings: getElementsBetweenSiblings,
         createElement: createElement,
@@ -6828,7 +6859,7 @@
             return this;
         }
         addAll(list) {
-            this.children = this.children.concat(Array.isArray(list) ? list : list.children);
+            this.children.push(...(Array.isArray(list) ? list : list.children));
             return this;
         }
         remove(item) {
@@ -6854,21 +6885,18 @@
             if (!Array.isArray(list)) {
                 list = list.children;
             }
-            const length = list.length;
-            const result = new Array(length);
+            const result = [];
             const children = this.children;
-            let k = 0;
-            for (let i = 0; i < length; ++i) {
+            for (let i = 0, length = list.length; i < length; ++i) {
                 const item = list[i];
                 for (let j = 0, q = children.length; j < q; ++j) {
                     if (children[j] === item) {
                         children.splice(j, 1);
-                        result[k++] = item;
+                        result.push(item);
                         break;
                     }
                 }
             }
-            result.length = k;
             return result;
         }
         retainAs(list) {
@@ -6926,7 +6954,7 @@
             }
             let complete;
             const recurse = container => {
-                let result = [];
+                const result = [];
                 const children = container.children;
                 for (let i = 0; i < children.length; ++i) {
                     const item = children[i];
@@ -6946,7 +6974,7 @@
                         }
                     }
                     if (cascade && item instanceof Container && !item.isEmpty()) {
-                        result = result.concat(recurse(item));
+                        result.push(...recurse(item));
                         if (complete) {
                             break;
                         }
@@ -7016,7 +7044,7 @@
             }
             let complete;
             const recurse = container => {
-                let result = [];
+                const result = [];
                 const children = container.children;
                 for (let i = 0, length = children.length; i < length; ++i) {
                     const item = children[i];
@@ -7024,7 +7052,8 @@
                         complete = true;
                         break;
                     }
-                    if (!predicate || predicate(item, i, children) === true) {
+                    let ignore;
+                    if (!predicate || (ignore = predicate(item, i, children)) === true) {
                         if (also) {
                             also.call(this, item);
                         }
@@ -7034,8 +7063,8 @@
                             break;
                         }
                     }
-                    if (item instanceof Container && !item.isEmpty()) {
-                        result = result.concat(recurse(item));
+                    if (ignore !== false && item instanceof Container && !item.isEmpty()) {
+                        result.push(...recurse(item));
                         if (complete) {
                             break;
                         }
@@ -7228,12 +7257,12 @@
         }
     }
 
-    const extensionCache = [];
-    const addQueue = [];
-    const removeQueue = [];
     const optionsQueue = new Map();
     const prototypeMap = new Map();
     const settings = {};
+    let extensionCache = [];
+    let addQueue = [];
+    let removeQueue = [];
     let main = null;
     let framework = null;
     let extensionManager = null;
@@ -7268,7 +7297,7 @@
                 for (const item of extensionCache) {
                     extensionManager.cache.add(item);
                 }
-                extensionCache.length = 0;
+                extensionCache = [];
             }
             if (addQueue.length) {
                 for (const item of addQueue) {
@@ -7277,7 +7306,7 @@
                         extensionCheck = true;
                     }
                 }
-                addQueue.length = 0;
+                addQueue = [];
             }
             if (optionsQueue.size) {
                 for (const data of optionsQueue) {
@@ -7294,7 +7323,7 @@
                         extensionCheck = true;
                     }
                 }
-                removeQueue.length = 0;
+                removeQueue = [];
             }
             if (extensionCheck) {
                 const errors = extensionManager.checkDependencies();
@@ -7466,14 +7495,14 @@
                 }
             }
             if (squared.base && value instanceof squared.base.Extension) {
-                if (!extensionManager) {
-                    addQueue.push(value);
-                    extensionCache.push(value);
-                } else {
+                if (extensionManager) {
                     if (!extensionManager.add(value)) {
                         addQueue.push(value);
                     }
                     extensionManager.cache.add(value);
+                } else {
+                    addQueue.push(value);
+                    extensionCache.push(value);
                 }
                 if (options) {
                     apply(value, options);
@@ -7519,16 +7548,15 @@
         if (extensionManager) {
             if (values.length === 1) {
                 return findExtension(values[0]);
-            } else {
-                const result = [];
-                for (const value of values) {
-                    const item = findExtension(value);
-                    if (item) {
-                        result.push(item);
-                    }
-                }
-                return result;
             }
+            const result = [];
+            for (const value of values) {
+                const item = findExtension(value);
+                if (item) {
+                    result.push(item);
+                }
+            }
+            return result;
         }
     }
     function apply(value, options) {
@@ -7556,11 +7584,11 @@
                 const ext =
                     (extensionManager && extensionManager.get(value, true)) ||
                     addQueue.find(item => typeof item !== 'string' && item.name === value);
-                if (!ext) {
+                if (ext) {
+                    value = ext;
+                } else {
                     optionsQueue.set(value, mergeSettings(value));
                     return true;
-                } else {
-                    value = ext;
                 }
             }
             if (squared.base && value instanceof squared.base.Extension) {

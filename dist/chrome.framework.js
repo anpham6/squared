@@ -1,4 +1,4 @@
-/* chrome-framework 2.0.0
+/* chrome-framework 2.1.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -108,12 +108,14 @@
         iterateReverseArray,
         parseMimeType,
         resolvePath,
+        splitPair,
         splitPairStart,
         trimEnd,
     } = squared.lib.util;
     const { appendSeparator, randomUUID } = squared.base.lib.util;
     const STRING_SERVERROOT = '__serverroot__';
-    const RE_SRCSET = new Pattern(/[\s\n]*(.+?\.[^\s,]+)(\s+[\d.]+[wx]\s*)?,?/g);
+    const REGEXP_ESCAPEPATH = /([.|/\\{}()?])/g;
+    const RE_SRCSET = new Pattern(/\s*(.+?\.[^\s,]+)(\s+[\d.]+[wx]\s*)?,?/g);
     function parseFileAs(attr, value) {
         if (value) {
             const match = new RegExp(`${attr}:\\s*((?:[^"]|\\\\")+)`).exec(value.replace(/\\/g, '/'));
@@ -142,7 +144,7 @@
         } else if (value.startsWith('./')) {
             value = value.substring(2);
         }
-        const result = splitLastIndexOf(value, '/');
+        const result = splitPair(value, '/', false, true);
         if (saveTo) {
             const extension = getFileExt(result[1]);
             result[1] = randomUUID() + (extension ? '.' + extension : '');
@@ -151,12 +153,12 @@
     }
     function resolveAssetSource(element, data) {
         const value = resolvePath(element instanceof HTMLObjectElement ? element.data : element.src);
-        if (value !== '') {
+        if (value) {
             data.set(element, value);
         }
     }
     function convertFileMatch(value) {
-        value = value.replace(/([.|/\\{}()?])/g, (match, ...capture) => '\\' + capture[0]).replace(/\*/g, '.*?');
+        value = value.replace(REGEXP_ESCAPEPATH, (match, ...capture) => '\\' + capture[0]).replace(/\*/g, '.*?');
         return new RegExp(`${value}$`);
     }
     function getExtensions(element) {
@@ -234,16 +236,6 @@
         }
         return 0;
     }
-    function splitLastIndexOf(value, ...char) {
-        let i = 0;
-        while (i < char.length) {
-            const index = value.lastIndexOf(char[i++]);
-            if (index !== -1) {
-                return [value.substring(0, index), value.substring(index + 1)];
-            }
-        }
-        return ['', value];
-    }
     const getFileExt = value => (value.includes('.') ? fromLastIndexOf(value, '.').toLowerCase() : '');
     const getDirectory = (path, start) => path.substring(start, path.lastIndexOf('/'));
     class File extends squared.base.File {
@@ -294,7 +286,7 @@
                         pathname = convertWord(host) + (port ? '/' + port.substring(1) : '') + '/';
                     }
                 } else {
-                    prefix = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
+                    prefix = splitPairStart(location.pathname, '/', false, true) + '/';
                     let length = path.length;
                     if (length) {
                         let index = 0;
@@ -309,7 +301,7 @@
                         rootDir = path.substring(0, index + 1);
                     }
                 }
-                if (filename === '') {
+                if (!filename) {
                     if (local && relocate) {
                         [moveTo, pathname, filename] = getFilePath(relocate, saveTo);
                     } else if (path && path !== '/') {
@@ -419,12 +411,11 @@
                             switch (category) {
                                 case 'html':
                                 case 'js':
-                                case 'css': {
+                                case 'css':
                                     ((_a = transpileMap[category])[module] || (_a[module] = {}))[
                                         name
                                     ] = element.textContent.trim();
                                     break;
-                                }
                             }
                         }
                     }
@@ -441,7 +432,7 @@
                             format = saveAs.format;
                             outerHTML = element.outerHTML;
                         }
-                        if (src !== '') {
+                        if (src) {
                             data = File.parseUri(resolvePath(src), { preserveCrossOrigin, saveAs: file, format });
                         } else if (isString(file)) {
                             if (!outerHTML) {
@@ -490,7 +481,7 @@
                         outerHTML;
                     if (element instanceof HTMLLinkElement) {
                         href = element.href.trim();
-                        if (href !== '') {
+                        if (href) {
                             switch (element.rel.trim()) {
                                 case 'stylesheet':
                                     mimeType = 'text/css';
@@ -570,7 +561,7 @@
             const result = [];
             const processUri = (element, uri, mimeType) => {
                 uri = uri.trim();
-                if (uri !== '') {
+                if (uri) {
                     let file, saveTo;
                     if (element) {
                         const fileAs = parseFileAs('saveTo', element.dataset.chromeFile);
@@ -642,7 +633,7 @@
                             data = processUri(
                                 null,
                                 resolvePath(
-                                    getFilePath(pathname + (pathname !== '' ? '/' : '') + filename)[1] + filename,
+                                    getFilePath(pathname + (pathname ? '/' : '') + filename)[1] + filename,
                                     location.href
                                 ),
                                 mimeType
@@ -761,15 +752,16 @@
                 }
             }
             const [scriptAssets, transpileMap] = this.getScriptAssets(options);
-            options.assets = assets
-                .concat(scriptAssets)
-                .concat(this.getImageAssets(options))
-                .concat(this.getVideoAssets(options))
-                .concat(this.getAudioAssets(options))
-                .concat(this.getRawAssets('object', options))
-                .concat(this.getRawAssets('embed', options))
-                .concat(this.getFontAssets(options))
-                .concat(options.assets || []);
+            assets.push(
+                ...scriptAssets,
+                ...this.getImageAssets(options),
+                ...this.getVideoAssets(options),
+                ...this.getAudioAssets(options),
+                ...this.getRawAssets('object', options),
+                ...this.getRawAssets('embed', options),
+                ...this.getFontAssets(options)
+            );
+            options.assets = assets;
             options.transpileMap = transpileMap;
             return options;
         }
@@ -1075,9 +1067,11 @@
         builtInExtensions: [],
         preloadImages: false,
         preloadFonts: false,
+        preloadCustomElements: false,
         excludePlainText: true,
         createElementMap: true,
         createQuerySelectorMap: true,
+        pierceShadowRoot: false,
         showErrorMessages: false,
         outputFileExclusions: [],
         outputEmptyCopyDirectory: false,
@@ -1092,7 +1086,7 @@
     function createAssetsOptions(assets, options, directory, filename) {
         if (isPlainObject$1(options)) {
             if (options.assets) {
-                assets = assets.concat(options.assets);
+                assets.push(...options.assets);
             }
         } else {
             options = {};
@@ -1125,179 +1119,143 @@
         system: {
             copyHtmlPage(directory, options) {
                 if (isString$1(directory)) {
-                    return (
-                        (file === null || file === void 0
-                            ? void 0
-                            : file.copying(createAssetsOptions(file.getHtmlPage(options), options, directory))) ||
-                        reject$1(FRAMEWORK_NOT_INSTALLED)
-                    );
+                    return file
+                        ? file.copying(createAssetsOptions(file.getHtmlPage(options), options, directory))
+                        : reject$1(FRAMEWORK_NOT_INSTALLED);
                 }
                 return reject$1(DIRECTORY_NOT_PROVIDED);
             },
             copyScriptAssets(directory, options) {
                 if (isString$1(directory)) {
-                    return (
-                        (file === null || file === void 0
-                            ? void 0
-                            : file.copying(
-                                  createAssetsOptions(file.getScriptAssets(options)[0], options, directory)
-                              )) || reject$1(FRAMEWORK_NOT_INSTALLED)
-                    );
+                    return file
+                        ? file.copying(createAssetsOptions(file.getScriptAssets(options)[0], options, directory))
+                        : reject$1(FRAMEWORK_NOT_INSTALLED);
                 }
                 return reject$1(DIRECTORY_NOT_PROVIDED);
             },
             copyLinkAssets(directory, options) {
                 if (isString$1(directory)) {
-                    return (
-                        (file === null || file === void 0
-                            ? void 0
-                            : file.copying(createAssetsOptions(file.getLinkAssets(options), options, directory))) ||
-                        reject$1(FRAMEWORK_NOT_INSTALLED)
-                    );
+                    return file
+                        ? file.copying(createAssetsOptions(file.getLinkAssets(options), options, directory))
+                        : reject$1(FRAMEWORK_NOT_INSTALLED);
                 }
                 return reject$1(DIRECTORY_NOT_PROVIDED);
             },
             copyImageAssets(directory, options) {
                 if (isString$1(directory)) {
-                    return (
-                        (file === null || file === void 0
-                            ? void 0
-                            : file.copying(createAssetsOptions(file.getImageAssets(options), options, directory))) ||
-                        reject$1(FRAMEWORK_NOT_INSTALLED)
-                    );
+                    return file
+                        ? file.copying(createAssetsOptions(file.getImageAssets(options), options, directory))
+                        : reject$1(FRAMEWORK_NOT_INSTALLED);
                 }
                 return reject$1(DIRECTORY_NOT_PROVIDED);
             },
             copyVideoAssets(directory, options) {
                 if (isString$1(directory)) {
-                    return (
-                        (file === null || file === void 0
-                            ? void 0
-                            : file.copying(createAssetsOptions(file.getVideoAssets(options), options, directory))) ||
-                        reject$1(FRAMEWORK_NOT_INSTALLED)
-                    );
+                    return file
+                        ? file.copying(createAssetsOptions(file.getVideoAssets(options), options, directory))
+                        : reject$1(FRAMEWORK_NOT_INSTALLED);
                 }
                 return reject$1(DIRECTORY_NOT_PROVIDED);
             },
             copyAudioAssets(directory, options) {
                 if (isString$1(directory)) {
-                    return (
-                        (file === null || file === void 0
-                            ? void 0
-                            : file.copying(createAssetsOptions(file.getAudioAssets(options), options, directory))) ||
-                        reject$1(FRAMEWORK_NOT_INSTALLED)
-                    );
+                    return file
+                        ? file.copying(createAssetsOptions(file.getAudioAssets(options), options, directory))
+                        : reject$1(FRAMEWORK_NOT_INSTALLED);
                 }
                 return reject$1(DIRECTORY_NOT_PROVIDED);
             },
             copyFontAssets(directory, options) {
                 if (isString$1(directory)) {
-                    return (
-                        (file === null || file === void 0
-                            ? void 0
-                            : file.copying(createAssetsOptions(file.getFontAssets(options), options, directory))) ||
-                        reject$1(FRAMEWORK_NOT_INSTALLED)
-                    );
+                    return file
+                        ? file.copying(createAssetsOptions(file.getFontAssets(options), options, directory))
+                        : reject$1(FRAMEWORK_NOT_INSTALLED);
                 }
                 return reject$1(DIRECTORY_NOT_PROVIDED);
             },
             saveHtmlPage(filename, options) {
-                return (
-                    (file === null || file === void 0
-                        ? void 0
-                        : file.archiving(
-                              createAssetsOptions(
-                                  file.getHtmlPage(options),
-                                  options,
-                                  undefined,
-                                  checkFileName(filename) + '-html'
-                              )
-                          )) || reject$1(FRAMEWORK_NOT_INSTALLED)
-                );
+                return file
+                    ? file.archiving(
+                          createAssetsOptions(
+                              file.getHtmlPage(options),
+                              options,
+                              undefined,
+                              checkFileName(filename) + '-html'
+                          )
+                      )
+                    : reject$1(FRAMEWORK_NOT_INSTALLED);
             },
             saveScriptAssets(filename, options) {
-                return (
-                    (file === null || file === void 0
-                        ? void 0
-                        : file.archiving(
-                              createAssetsOptions(
-                                  file.getScriptAssets(options)[0],
-                                  options,
-                                  undefined,
-                                  checkFileName(filename) + '-script'
-                              )
-                          )) || reject$1(FRAMEWORK_NOT_INSTALLED)
-                );
+                return file
+                    ? file.archiving(
+                          createAssetsOptions(
+                              file.getScriptAssets(options)[0],
+                              options,
+                              undefined,
+                              checkFileName(filename) + '-script'
+                          )
+                      )
+                    : reject$1(FRAMEWORK_NOT_INSTALLED);
             },
             saveLinkAssets(filename, options) {
-                return (
-                    (file === null || file === void 0
-                        ? void 0
-                        : file.archiving(
-                              createAssetsOptions(
-                                  file.getLinkAssets(options),
-                                  options,
-                                  undefined,
-                                  checkFileName(filename) + '-link'
-                              )
-                          )) || reject$1(FRAMEWORK_NOT_INSTALLED)
-                );
+                return file
+                    ? file.archiving(
+                          createAssetsOptions(
+                              file.getLinkAssets(options),
+                              options,
+                              undefined,
+                              checkFileName(filename) + '-link'
+                          )
+                      )
+                    : reject$1(FRAMEWORK_NOT_INSTALLED);
             },
             saveImageAssets(filename, options) {
-                return (
-                    (file === null || file === void 0
-                        ? void 0
-                        : file.archiving(
-                              createAssetsOptions(
-                                  file.getImageAssets(options),
-                                  options,
-                                  undefined,
-                                  checkFileName(filename) + '-image'
-                              )
-                          )) || reject$1(FRAMEWORK_NOT_INSTALLED)
-                );
+                return file
+                    ? file.archiving(
+                          createAssetsOptions(
+                              file.getImageAssets(options),
+                              options,
+                              undefined,
+                              checkFileName(filename) + '-image'
+                          )
+                      )
+                    : reject$1(FRAMEWORK_NOT_INSTALLED);
             },
             saveVideoAssets(filename, options) {
-                return (
-                    (file === null || file === void 0
-                        ? void 0
-                        : file.archiving(
-                              createAssetsOptions(
-                                  file.getVideoAssets(options),
-                                  options,
-                                  undefined,
-                                  checkFileName(filename) + '-video'
-                              )
-                          )) || reject$1(FRAMEWORK_NOT_INSTALLED)
-                );
+                return file
+                    ? file.archiving(
+                          createAssetsOptions(
+                              file.getVideoAssets(options),
+                              options,
+                              undefined,
+                              checkFileName(filename) + '-video'
+                          )
+                      )
+                    : reject$1(FRAMEWORK_NOT_INSTALLED);
             },
             saveAudioAssets(filename, options) {
-                return (
-                    (file === null || file === void 0
-                        ? void 0
-                        : file.archiving(
-                              createAssetsOptions(
-                                  file.getAudioAssets(options),
-                                  options,
-                                  undefined,
-                                  checkFileName(filename) + '-audio'
-                              )
-                          )) || reject$1(FRAMEWORK_NOT_INSTALLED)
-                );
+                return file
+                    ? file.archiving(
+                          createAssetsOptions(
+                              file.getAudioAssets(options),
+                              options,
+                              undefined,
+                              checkFileName(filename) + '-audio'
+                          )
+                      )
+                    : reject$1(FRAMEWORK_NOT_INSTALLED);
             },
             saveFontAssets(filename, options) {
-                return (
-                    (file === null || file === void 0
-                        ? void 0
-                        : file.archiving(
-                              createAssetsOptions(
-                                  file.getFontAssets(options),
-                                  options,
-                                  undefined,
-                                  checkFileName(filename) + '-font'
-                              )
-                          )) || reject$1(FRAMEWORK_NOT_INSTALLED)
-                );
+                return file
+                    ? file.archiving(
+                          createAssetsOptions(
+                              file.getFontAssets(options),
+                              options,
+                              undefined,
+                              checkFileName(filename) + '-font'
+                          )
+                      )
+                    : reject$1(FRAMEWORK_NOT_INSTALLED);
             },
         },
         create() {

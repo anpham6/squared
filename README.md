@@ -1,4 +1,4 @@
-# squared 2.0
+# squared 2.1
 
 ## Installation (global js variable: squared)
 
@@ -55,7 +55,7 @@ Library files are in the /dist folder. A minimum of *two* files are required to 
 4. framework (e.g. android | chrome | vdom | vdom-lite)
 5. extensions (e.g. android.widget) - *optional*
 
-Usable combinations: 1-2-4 + 1-2-4-5 + 1-2-3-4-5 + 1-3 + 1-vdom-lite
+Usable combinations: 1-2-4 + 1-2-4-5 + 1-2-3-4-5 + 1-vdom-lite
 
 File bundles for common combinations are available in the /dist/bundles folder.
 

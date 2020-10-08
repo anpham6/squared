@@ -1,4 +1,4 @@
-/* vdom-lite-framework 2.0.1
+/* vdom-lite-framework 2.1.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -30,6 +30,7 @@
 
     const { CSS_CANNOT_BE_PARSED, DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, reject } = squared.lib.error;
     const { FILE, STRING } = squared.lib.regex;
+    const { isUserAgent } = squared.lib.client;
     const {
         CSS_PROPERTIES,
         checkMediaRule,
@@ -39,7 +40,6 @@
         parseKeyframes,
         parseSelectorText,
     } = squared.lib.css;
-    const { isUserAgent } = squared.lib.client;
     const { getElementCache, newSessionInit, resetSessionAll, setElementCache } = squared.lib.session;
     const {
         capitalize,
@@ -59,6 +59,7 @@
     const REGEXP_FONTWEIGHT = /\s*font-weight:\s*(\d+)\s*;/;
     const REGEXP_FONTURL = /\s*(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*format\("?([\w-]+)"?\))?\s*/;
     const REGEXP_DATAURI = new RegExp(`url\\("?(${STRING.DATAURI})"?\\),?\\s*`, 'g');
+    const REGEXP_CSSHOST = /^:(host|host-context)\(\s*([^)]+)\s*\)/;
     const CSS_SHORTHANDNONE = getPropertiesAsTraits(2 /* SHORTHAND */ | 64 /* NONE */);
     class Application {
         constructor(
@@ -144,7 +145,7 @@
             return (
                 ((_a = this.fileHandler) === null || _a === void 0
                     ? void 0
-                    : _a.saveAs(filename || this._resourceHandler.userSettings.outputArchiveName, options)) ||
+                    : _a.saveAs(filename || this.resourceHandler.userSettings.outputArchiveName, options)) ||
                 reject(OPERATION_NOT_SUPPORTED)
             );
         }
@@ -170,40 +171,45 @@
             );
         }
         reset() {
+            var _a;
             this._nextId = 0;
             this.elementMap = new WeakMap();
             resetSessionAll();
             this.session.active.clear();
-            this._controllerHandler.reset();
-            if (this._resourceHandler) {
-                this._resourceHandler.reset();
-            }
+            this.controllerHandler.reset();
+            (_a = this.resourceHandler) === null || _a === void 0 ? void 0 : _a.reset();
             for (const ext of this.extensions) {
                 ext.reset();
             }
             this.closed = false;
         }
         parseDocument(...elements) {
-            const [processing, rootElements] = this.createSessionThread(elements);
+            const resource = this.resourceHandler;
+            let preloadImages,
+                preloadFonts,
+                preloadCustomElements = true;
+            if (resource) {
+                ({ preloadImages, preloadFonts, preloadCustomElements } = resource.userSettings);
+            }
+            const [rootElements, processing, shadowElements, styleSheets] = this.createSessionThread(
+                elements,
+                this.userSettings.pierceShadowRoot && preloadCustomElements
+            );
             if (rootElements.size === 0) {
                 return reject(DOCUMENT_ROOT_NOT_FOUND);
             }
-            const resource = this._resourceHandler;
             const documentRoot = rootElements.values().next().value;
             const preloadItems = [];
-            let preloaded, preloadImages, preloadFonts;
-            if (resource) {
-                ({ preloadImages, preloadFonts } = resource.userSettings);
-            }
+            let preloaded;
             const parseSrcSet = value => {
-                if (value !== '') {
+                if (value) {
                     for (const uri of value.split(',')) {
                         resource.addImageData(resolvePath(splitPairStart(uri.trim(), ' ')));
                     }
                 }
             };
             if (resource) {
-                for (const element of rootElements) {
+                for (const element of shadowElements) {
                     element.querySelectorAll('picture > source').forEach(source => parseSrcSet(source.srcset));
                     element.querySelectorAll('video').forEach(source => resource.addImageData(source.poster));
                     element
@@ -282,7 +288,7 @@
                 }
             }
             if (resource) {
-                for (const element of rootElements) {
+                for (const element of shadowElements) {
                     element.querySelectorAll('img').forEach(image => {
                         parseSrcSet(image.srcset);
                         if (!preloadImages) {
@@ -297,17 +303,37 @@
                     });
                 }
             }
+            if (styleSheets) {
+                preloadItems.push(...styleSheets);
+            }
             if (preloadItems.length) {
                 processing.initializing = true;
                 return Promise.all(
                     preloadItems.map(item => {
                         return new Promise((success, error) => {
                             if (typeof item === 'string') {
-                                if (FILE.SVG.test(item)) {
-                                    fetch(item).then(async result => success(await result.text()));
-                                } else {
-                                    fetch(item).then(async result => success(await result.arrayBuffer()));
-                                }
+                                fetch(item).then(async result => {
+                                    const mimeType = result.headers.get('content-type') || '';
+                                    if (
+                                        mimeType.startsWith('text/css') ||
+                                        (styleSheets && styleSheets.includes(item))
+                                    ) {
+                                        success({ mimeType: 'text/css', encoding: 'utf8', data: await result.text() });
+                                    } else if (mimeType.startsWith('image/svg+xml') || FILE.SVG.test(item)) {
+                                        success({
+                                            mimeType: 'image/svg+xml',
+                                            encoding: 'utf8',
+                                            data: await result.text(),
+                                        });
+                                    } else {
+                                        success({
+                                            mimeType:
+                                                result.headers.get('content-type') ||
+                                                'font/' + (splitPair(item, '.', false, true)[1].toLowerCase() || 'ttf'),
+                                            data: await result.arrayBuffer(),
+                                        });
+                                    }
+                                });
                             } else {
                                 item.addEventListener('load', () => success(item));
                                 item.addEventListener('error', () => error(item));
@@ -316,22 +342,17 @@
                     })
                 )
                     .then(result => {
-                        for (let i = 0, length = result.length; i < length; ++i) {
-                            const value = result[i];
-                            const uri = preloadItems[i];
-                            if (typeof uri === 'string') {
-                                if (typeof value === 'string') {
-                                    if (FILE.SVG.test(uri)) {
-                                        resource.addRawData(uri, 'image/svg+xml', value, { encoding: 'utf8' });
-                                    }
-                                }
+                        for (let i = 0, length = preloadItems.length; i < length; ++i) {
+                            const item = preloadItems[i];
+                            if (typeof item === 'string') {
+                                resource.addRawData(item, '', '', result[i]);
                             } else {
-                                resource.addImage(value);
+                                resource.addImage(item);
                             }
                         }
                         return this.resumeSessionThread(
-                            processing,
                             rootElements,
+                            processing,
                             elements.length,
                             documentRoot,
                             preloaded
@@ -351,8 +372,8 @@
                         }
                         return !message || !this.userSettings.showErrorMessages || confirm(`FAIL: ${message}`)
                             ? this.resumeSessionThread(
-                                  processing,
                                   rootElements,
+                                  processing,
                                   elements.length,
                                   documentRoot,
                                   preloaded
@@ -360,10 +381,10 @@
                             : Promise.reject(new Error(message));
                     });
             }
-            return Promise.resolve(this.resumeSessionThread(processing, rootElements, elements.length));
+            return Promise.resolve(this.resumeSessionThread(rootElements, processing, elements.length));
         }
         parseDocumentSync(...elements) {
-            const sessionData = this.createSessionThread(elements);
+            const sessionData = this.createSessionThread(elements, false);
             return this.resumeSessionThread(sessionData[0], sessionData[1], elements.length);
         }
         createCache(documentRoot, sessionId) {
@@ -373,8 +394,9 @@
             }
             return node;
         }
-        setStyleMap(sessionId, processing) {
-            const styleSheets = document.styleSheets;
+        setStyleMap(sessionId, documentRoot = document, queryRoot) {
+            const styleSheets = documentRoot.styleSheets;
+            let errors;
             for (let i = 0, length = styleSheets.length; i < length; ++i) {
                 const styleSheet = styleSheets[i];
                 let mediaText;
@@ -382,9 +404,36 @@
                     mediaText = styleSheet.media.mediaText;
                 } catch (_a) {}
                 if (!mediaText || checkMediaRule(mediaText)) {
-                    this.applyStyleSheet(styleSheet, sessionId, processing);
+                    try {
+                        this.applyStyleSheet(styleSheet, sessionId, documentRoot, queryRoot);
+                    } catch (err) {
+                        (errors || (errors = [])).push(err.message);
+                    }
                 }
             }
+            if (errors) {
+                (this.userSettings.showErrorMessages ? alert : console.log)(
+                    CSS_CANNOT_BE_PARSED + '\n\n' + errors.join('\n\n')
+                );
+            }
+        }
+        replaceShadowRootSlots(shadowRoot) {
+            shadowRoot.host.querySelectorAll('[slot]').forEach(hostChild => {
+                const slot = shadowRoot.querySelector(`slot[name=${hostChild.slot}`);
+                if (slot) {
+                    const parentSlot = slot.parentElement;
+                    if (parentSlot) {
+                        const childNodes = parentSlot.childNodes;
+                        for (let k = 0, q = childNodes.length; k < q; ++k) {
+                            const item = childNodes[k];
+                            if (item === slot) {
+                                parentSlot.insertBefore(hostChild.cloneNode(true), item);
+                                parentSlot.removeChild(item);
+                            }
+                        }
+                    }
+                }
+            });
         }
         setExtensions(namespaces = this.userSettings.builtInExtensions) {
             const { builtInExtensions, extensions } = this;
@@ -431,12 +480,10 @@
             const processing = this.getProcessing(sessionId);
             const extensions = processing.extensions.filter(item => !!item.beforeInsertNode);
             const node = this.cascadeParentNode(
-                processing.cache,
-                processing.excluded,
+                processing,
                 rootElement,
                 sessionId,
                 0,
-                processing.rootElements,
                 extensions.length ? extensions : null
             );
             if (node) {
@@ -456,7 +503,6 @@
                         const elements = new Array(length);
                         const parent = new this.Node(id--, sessionId, currentElement, [previousNode]);
                         this._afterInsertNode(parent);
-                        let j = 0;
                         for (let i = 0; i < length; ++i) {
                             const element = children[i];
                             let child;
@@ -466,13 +512,10 @@
                                 child = new this.Node(id--, sessionId, element);
                                 this._afterInsertNode(child);
                             }
-                            if (child) {
-                                child.init(parent, depth + 1, j);
-                                child.actualParent = parent;
-                                elements[j++] = child;
-                            }
+                            child.init(parent, depth + 1, i);
+                            child.actualParent = parent;
+                            elements[i] = child;
                         }
-                        elements.length = j;
                         parent.naturalChildren = elements;
                         parent.naturalElements = elements;
                         if (currentElement === document.documentElement) {
@@ -488,9 +531,10 @@
             }
             return node;
         }
-        cascadeParentNode(cache, excluded, parentElement, sessionId, depth, rootElements, extensions) {
+        cascadeParentNode(processing, parentElement, sessionId, depth, extensions, shadowParent) {
             const node = this.insertNode(parentElement, sessionId);
             if (node) {
+                const cache = processing.cache;
                 if (depth === 0) {
                     cache.add(node);
                 }
@@ -498,14 +542,15 @@
                     return node;
                 }
                 const childDepth = depth + 1;
-                const childNodes = parentElement.childNodes;
+                const hostElement = parentElement.shadowRoot || parentElement;
+                const childNodes = hostElement.childNodes;
                 const length = childNodes.length;
-                const children = new Array(length);
-                const elements = new Array(parentElement.childElementCount);
+                const children = [];
+                const elements = [];
+                const pierceShadowRoot = this.userSettings.pierceShadowRoot;
                 let inlineText = true,
                     plainText = false,
-                    j = 0,
-                    k = 0;
+                    j = 0;
                 for (let i = 0; i < length; ++i) {
                     const element = childNodes[i];
                     let child;
@@ -524,38 +569,47 @@
                                 item.beforeInsertNode(element, sessionId)
                             );
                         }
-                        child =
-                            element.childNodes.length === 0
-                                ? this.insertNode(element, sessionId)
-                                : this.cascadeParentNode(
-                                      cache,
-                                      excluded,
-                                      element,
-                                      sessionId,
-                                      childDepth,
-                                      rootElements,
-                                      extensions
-                                  );
+                        let shadowRoot;
+                        if (pierceShadowRoot) {
+                            shadowRoot = element.shadowRoot;
+                            if (shadowRoot) {
+                                this.setStyleMap(sessionId, shadowRoot);
+                            }
+                        }
+                        child = (shadowRoot || element).childNodes.length
+                            ? this.cascadeParentNode(
+                                  processing,
+                                  element,
+                                  sessionId,
+                                  childDepth,
+                                  extensions,
+                                  shadowRoot || shadowParent
+                              )
+                            : this.insertNode(element, sessionId);
                         if (child) {
-                            elements[k++] = child;
+                            elements.push(child);
                             inlineText = false;
                         }
                     } else {
                         child = this.insertNode(element, sessionId);
                         if (child) {
-                            excluded.add(child);
+                            processing.excluded.add(child);
                         }
                     }
                     if (child) {
-                        child.init(node, childDepth, j);
+                        child.init(node, childDepth, j++);
                         child.actualParent = node;
-                        children[j++] = child;
+                        if (shadowParent) {
+                            child.shadowHost = shadowParent;
+                        }
+                        children.push(child);
                     }
                 }
-                children.length = j;
-                elements.length = k;
                 node.naturalChildren = children;
                 node.naturalElements = elements;
+                if (hostElement !== parentElement) {
+                    node.shadowRoot = true;
+                }
                 if (j > 0) {
                     node.inlineText = inlineText && plainText;
                     node.retainAs(children);
@@ -565,8 +619,8 @@
                         cache.add(children[0]);
                     }
                 }
-                if (k > 0 && this.userSettings.createQuerySelectorMap) {
-                    node.queryMap = this.createQueryMap(elements, k);
+                if (elements.length && this.userSettings.createQuerySelectorMap) {
+                    node.queryMap = this.createQueryMap(elements);
                 }
             }
             return node;
@@ -578,30 +632,35 @@
                     (node.preserveWhiteSpace && (node.tagName !== 'PRE' || node.element.childElementCount === 0)))
             );
         }
-        createQueryMap(elements, length) {
-            var _a;
+        createQueryMap(elements) {
             const result = [elements];
-            for (let i = 0; i < length; ++i) {
+            for (let i = 0, length = elements.length; i < length; ++i) {
                 const childMap = elements[i].queryMap;
                 if (childMap) {
-                    for (let j = 0, k = 1, q = childMap.length; j < q; ++j) {
-                        result[k] =
-                            ((_a = result[k++]) === null || _a === void 0 ? void 0 : _a.concat(childMap[j])) ||
-                            childMap[j];
+                    for (let j = 0, k = 1, q = childMap.length; j < q; ++j, ++k) {
+                        const items = result[k];
+                        if (items) {
+                            items.push(...childMap[j]);
+                        } else if (q === 1) {
+                            result[k] = childMap[j];
+                        } else {
+                            result[k] = childMap[j].slice(0);
+                        }
                     }
                 }
             }
             return result;
         }
-        applyStyleRule(item, sessionId) {
-            var _a, _b, _c, _d, _e, _f, _g, _h;
-            const resource = this._resourceHandler;
+        applyStyleRule(item, sessionId, documentRoot, queryRoot) {
+            var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+            const resource = this.resourceHandler;
             const styleSheetHref =
                 ((_a = item.parentStyleSheet) === null || _a === void 0 ? void 0 : _a.href) || location.href;
             const cssText = item.cssText;
             switch (item.type) {
                 case CSSRule.STYLE_RULE: {
-                    const unusedStyles = this.session.unusedStyles;
+                    const hostElement = documentRoot.host;
+                    const unusedStyles = !hostElement && this.session.unusedStyles;
                     const baseMap = {};
                     const important = {};
                     const cssStyle = item.style;
@@ -617,7 +676,7 @@
                                     }
                                 } else {
                                     const uri = resolvePath(match[3], styleSheetHref);
-                                    if (uri !== '') {
+                                    if (uri) {
                                         if (resource) {
                                             resource.addImageData(uri);
                                         }
@@ -632,9 +691,9 @@
                         }
                     };
                     const hasExactValue = (attr, value) =>
-                        new RegExp(`\\b${attr}[\\s\\n]*:[\\s\\n]*(?:${value})[\\s\\n]*;?`).test(cssText);
+                        new RegExp(`\\s*${attr}\\s*:\\s*${value}\\s*;?`).test(cssText);
                     const hasPartialValue = (attr, value) =>
-                        new RegExp(`\\b${attr}[\\s\\n]*:[^;]*?${value}[^;]*;?`).test(cssText);
+                        new RegExp(`\\s*${attr}\\s*:[^;]*?${value}[^;]*;?`).test(cssText);
                     const items = Array.from(cssStyle);
                     for (let i = 0, length = items.length; i < length; ++i) {
                         const attr = items[i];
@@ -644,29 +703,29 @@
                         const baseAttr = convertCamelCase(attr);
                         let value = cssStyle[attr];
                         switch (value) {
-                            case 'initial': {
+                            case 'initial':
                                 if (isUserAgent(2 /* SAFARI */) && baseAttr.startsWith('background')) {
                                     break;
                                 }
-                                const property = CSS_PROPERTIES[baseAttr];
-                                if (property && property.value === 'auto') {
+                                if (
+                                    ((_b = CSS_PROPERTIES[baseAttr]) === null || _b === void 0 ? void 0 : _b.value) ===
+                                    'auto'
+                                ) {
                                     value = 'auto';
                                     break;
                                 }
-                            }
                             case 'normal':
-                                valid: {
-                                    if (!hasExactValue(attr, value)) {
+                                if (!hasExactValue(attr, value)) {
+                                    required: {
                                         for (const name in CSS_SHORTHANDNONE) {
                                             const css = CSS_SHORTHANDNONE[name];
                                             if (css.value.includes(baseAttr)) {
-                                                const cssName = css.name;
                                                 if (
-                                                    hasExactValue(cssName, 'none|initial') ||
-                                                    (value === 'initial' && hasPartialValue(cssName, 'initial')) ||
-                                                    (css.valueOfNone && hasExactValue(cssName, css.valueOfNone))
+                                                    hasExactValue(css.name, 'none|initial') ||
+                                                    (value === 'initial' && hasPartialValue(css.name, 'initial')) ||
+                                                    (css.valueOfNone && hasExactValue(css.name, css.valueOfNone))
                                                 ) {
-                                                    break valid;
+                                                    break required;
                                                 }
                                                 break;
                                             }
@@ -681,7 +740,7 @@
                     let match;
                     while ((match = REGEXP_IMPORTANT.exec(cssText))) {
                         const attr = convertCamelCase(match[1]);
-                        const value = (_b = CSS_PROPERTIES[attr]) === null || _b === void 0 ? void 0 : _b.value;
+                        const value = (_c = CSS_PROPERTIES[attr]) === null || _c === void 0 ? void 0 : _c.value;
                         if (Array.isArray(value)) {
                             for (let i = 0, length = value.length; i < length; ++i) {
                                 important[value[i]] = true;
@@ -694,19 +753,54 @@
                     parseImageUrl('backgroundImage');
                     parseImageUrl('listStyleImage');
                     parseImageUrl('content');
-                    for (const selectorText of parseSelectorText(item.selectorText, true)) {
+                    for (const selectorText of parseSelectorText(item.selectorText)) {
                         const specificity = getSpecificity(selectorText);
                         const [selector, target] = splitPair(selectorText, '::');
                         const targetElt = target ? '::' + target : '';
-                        const elements = document.querySelectorAll(selector || '*');
-                        const q = elements.length;
-                        if (q === 0) {
+                        let elements;
+                        if (selector.startsWith(':host')) {
+                            if (!hostElement) {
+                                continue;
+                            }
+                            let valid = false;
+                            if (selector === ':host') {
+                                valid = true;
+                            } else {
+                                const matchHost = REGEXP_CSSHOST.exec(selector);
+                                if (matchHost) {
+                                    if (matchHost[2] === '*') {
+                                        valid = true;
+                                    } else {
+                                        const result = document.querySelectorAll(
+                                            matchHost[1] === 'host'
+                                                ? hostElement.tagName + matchHost[2]
+                                                : matchHost[2] + ' ' + hostElement.tagName
+                                        );
+                                        for (let i = 0, length = result.length; i < length; ++i) {
+                                            if (result[i] === hostElement) {
+                                                valid = true;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            if (valid) {
+                                elements = [hostElement];
+                            } else {
+                                continue;
+                            }
+                        } else {
+                            elements = (queryRoot || documentRoot).querySelectorAll(selector || '*');
+                        }
+                        const length = elements.length;
+                        if (length === 0) {
                             if (unusedStyles) {
                                 unusedStyles.add(selectorText);
                             }
                             continue;
                         }
-                        for (let i = 0; i < q; ++i) {
+                        for (let i = 0; i < length; ++i) {
                             const element = elements[i];
                             const attrStyle = 'styleMap' + targetElt;
                             const attrSpecificity = 'styleSpecificity' + targetElt;
@@ -735,38 +829,38 @@
                     }
                     break;
                 }
-                case CSSRule.FONT_FACE_RULE: {
+                case CSSRule.FONT_FACE_RULE:
                     if (resource) {
-                        const attr = (_c = REGEXP_FONTFACE.exec(cssText)) === null || _c === void 0 ? void 0 : _c[1];
+                        const attr = (_d = REGEXP_FONTFACE.exec(cssText)) === null || _d === void 0 ? void 0 : _d[1];
                         if (attr) {
                             const src =
-                                (_d = REGEXP_FONTSRC.exec(attr)) === null || _d === void 0 ? void 0 : _d[1].trim();
+                                (_e = REGEXP_FONTSRC.exec(attr)) === null || _e === void 0 ? void 0 : _e[1].trim();
                             let fontFamily =
-                                (_e = REGEXP_FONTFAMILY.exec(attr)) === null || _e === void 0 ? void 0 : _e[1].trim();
+                                (_f = REGEXP_FONTFAMILY.exec(attr)) === null || _f === void 0 ? void 0 : _f[1].trim();
                             if (src && fontFamily) {
                                 fontFamily = trimBoth(fontFamily, '"');
                                 const fontStyle =
-                                    ((_f = REGEXP_FONTSTYLE.exec(attr)) === null || _f === void 0
+                                    ((_g = REGEXP_FONTSTYLE.exec(attr)) === null || _g === void 0
                                         ? void 0
-                                        : _f[1].toLowerCase()) || 'normal';
+                                        : _g[1].toLowerCase()) || 'normal';
                                 const fontWeight = parseInt(
-                                    ((_g = REGEXP_FONTWEIGHT.exec(attr)) === null || _g === void 0 ? void 0 : _g[1]) ||
+                                    ((_h = REGEXP_FONTWEIGHT.exec(attr)) === null || _h === void 0 ? void 0 : _h[1]) ||
                                         '400'
                                 );
                                 for (const value of src.split(',')) {
-                                    const urlMatch = REGEXP_FONTURL.exec(value);
-                                    if (urlMatch) {
+                                    const match = REGEXP_FONTURL.exec(value);
+                                    if (match) {
                                         const data = {
                                             fontFamily,
                                             fontWeight,
                                             fontStyle,
                                             srcFormat:
-                                                ((_h = urlMatch[4]) === null || _h === void 0
+                                                ((_j = match[4]) === null || _j === void 0
                                                     ? void 0
-                                                    : _h.toLowerCase().trim()) || 'truetype',
+                                                    : _j.toLowerCase().trim()) || 'truetype',
                                         };
-                                        const url = (urlMatch[2] || urlMatch[3]).trim();
-                                        if (urlMatch[1] === 'url') {
+                                        const url = (match[2] || match[3]).trim();
+                                        if (match[1] === 'url') {
                                             data.srcUrl = resolvePath(url, styleSheetHref);
                                         } else {
                                             data.srcLocal = url;
@@ -778,14 +872,14 @@
                         }
                     }
                     break;
-                }
                 case CSSRule.SUPPORTS_RULE:
-                    this.applyCSSRuleList(item.cssRules, sessionId);
+                    this.applyCSSRuleList(item.cssRules, sessionId, documentRoot);
                     break;
             }
         }
-        applyStyleSheet(item, sessionId, processing) {
-            var _a;
+        applyStyleSheet(item, sessionId, documentRoot, queryRoot) {
+            var _a, _b;
+            var _c;
             try {
                 const cssRules = item.cssRules;
                 if (cssRules) {
@@ -802,38 +896,38 @@
                         switch (rule.type) {
                             case CSSRule.STYLE_RULE:
                             case CSSRule.FONT_FACE_RULE:
-                                this.applyStyleRule(rule, sessionId);
+                                this.applyStyleRule(rule, sessionId, documentRoot, queryRoot);
                                 break;
-                            case CSSRule.IMPORT_RULE:
-                                if (this._resourceHandler) {
-                                    const uri = resolvePath(
-                                        rule.href,
-                                        ((_a = rule.parentStyleSheet) === null || _a === void 0 ? void 0 : _a.href) ||
-                                            location.href
-                                    );
-                                    if (uri !== '') {
-                                        this._resourceHandler.addRawData(uri, 'text/css', undefined, {
-                                            encoding: 'utf8',
-                                        });
-                                    }
+                            case CSSRule.IMPORT_RULE: {
+                                const uri = resolvePath(
+                                    rule.href,
+                                    ((_a = rule.parentStyleSheet) === null || _a === void 0 ? void 0 : _a.href) ||
+                                        location.href
+                                );
+                                if (uri) {
+                                    (_b = this.resourceHandler) === null || _b === void 0
+                                        ? void 0
+                                        : _b.addRawData(uri, 'text/css', undefined, { encoding: 'utf8' });
                                 }
-                                this.applyStyleSheet(rule.styleSheet, sessionId, processing);
+                                this.applyStyleSheet(rule.styleSheet, sessionId, documentRoot, queryRoot);
                                 break;
+                            }
                             case CSSRule.MEDIA_RULE:
                                 if (checkMediaRule(rule.conditionText || parseConditionText('media', rule.cssText))) {
-                                    this.applyCSSRuleList(rule.cssRules, sessionId);
+                                    this.applyCSSRuleList(rule.cssRules, sessionId, documentRoot, queryRoot);
                                 }
                                 break;
                             case CSSRule.SUPPORTS_RULE:
                                 if (CSS.supports(rule.conditionText || parseConditionText('supports', rule.cssText))) {
-                                    this.applyCSSRuleList(rule.cssRules, sessionId);
+                                    this.applyCSSRuleList(rule.cssRules, sessionId, documentRoot, queryRoot);
                                 }
                                 break;
                             case CSSRule.KEYFRAMES_RULE: {
                                 const value = parseKeyframes(rule.cssRules);
                                 if (value) {
                                     const keyframesMap =
-                                        processing.keyframesMap || (processing.keyframesMap = new Map());
+                                        (_c = this.getProcessing(sessionId)).keyframesMap ||
+                                        (_c.keyframesMap = new Map());
                                     const name = rule.name;
                                     const keyframe = keyframesMap.get(name);
                                     if (keyframe) {
@@ -847,19 +941,65 @@
                     }
                 }
             } catch (err) {
-                (this.userSettings.showErrorMessages
-                    ? alert
-                    : console.log)(CSS_CANNOT_BE_PARSED + '\n\n' + item.href + '\n\n' + err);
+                throw new Error((item.href ? item.href + ' - ' : '') + err);
             }
         }
-        applyCSSRuleList(rules, sessionId) {
+        applyCSSRuleList(rules, sessionId, documentRoot, queryRoot) {
             for (let i = 0, length = rules.length; i < length; ++i) {
-                this.applyStyleRule(rules[i], sessionId);
+                this.applyStyleRule(rules[i], sessionId, documentRoot, queryRoot);
             }
         }
-        createSessionThread(elements) {
-            const sessionId = this._controllerHandler.generateSessionId;
+        createSessionThread(elements, pierceShadowRoot) {
             const rootElements = new Set();
+            const length = elements.length;
+            if (length === 0) {
+                rootElements.add(this.mainElement);
+            } else {
+                for (let i = 0; i < length; ++i) {
+                    let element = elements[i];
+                    if (typeof element === 'string') {
+                        element = document.getElementById(element);
+                    }
+                    if (element) {
+                        rootElements.add(element);
+                    }
+                }
+                if (rootElements.size === 0) {
+                    return [rootElements];
+                }
+            }
+            let shadowElements, styleSheets;
+            if (pierceShadowRoot) {
+                let shadowRootItems;
+                for (const element of rootElements) {
+                    element.querySelectorAll('*').forEach(child => {
+                        const shadowRoot = child.shadowRoot;
+                        if (shadowRoot) {
+                            (shadowRootItems || (shadowRootItems = new Set())).add(shadowRoot);
+                        }
+                    });
+                }
+                if (shadowRootItems) {
+                    shadowElements = new Set(rootElements);
+                    for (const shadowRoot of shadowRootItems) {
+                        shadowElements.add(shadowRoot);
+                        shadowRoot.querySelectorAll('link').forEach(element => {
+                            const href = element.href.trim();
+                            if (href) {
+                                const mimeType =
+                                    element.rel.trim() === 'stylesheet'
+                                        ? 'text/css'
+                                        : element.type.trim() || parseMimeType(href);
+                                if (mimeType === 'text/css') {
+                                    (styleSheets || (styleSheets = [])).push(href);
+                                }
+                            }
+                        });
+                    }
+                }
+            }
+            const controller = this.controllerHandler;
+            const sessionId = controller.generateSessionId;
             const extensions = this.extensionsAll;
             const processing = {
                 sessionId,
@@ -875,26 +1015,16 @@
                 processing.afterInsertNode = afterInsertNode;
             }
             this.session.active.set(sessionId, processing);
-            this._controllerHandler.init();
-            this.setStyleMap(sessionId, processing);
-            const length = elements.length;
-            if (length === 0) {
-                rootElements.add(this.mainElement);
+            controller.init();
+            const queryRoot = rootElements.size === 1 && rootElements.values().next().value.parentElement;
+            if (queryRoot && queryRoot !== document.documentElement) {
+                this.setStyleMap(sessionId, document, queryRoot);
             } else {
-                for (let i = 0; i < length; ++i) {
-                    let element = elements[i];
-                    if (typeof element === 'string') {
-                        element = document.getElementById(element);
-                    }
-                    if (!element || element.nodeName[0] === '#') {
-                        continue;
-                    }
-                    rootElements.add(element);
-                }
+                this.setStyleMap(sessionId);
             }
-            return [processing, rootElements];
+            return [rootElements, processing, shadowElements || rootElements, styleSheets];
         }
-        resumeSessionThread(processing, rootElements, multipleRequest, documentRoot, preloaded) {
+        resumeSessionThread(rootElements, processing, multipleRequest, documentRoot, preloaded) {
             processing.initializing = false;
             const { sessionId, extensions } = processing;
             const styleElement = insertStyleSheetRule('html > body { overflow: hidden !important; }');
@@ -910,16 +1040,14 @@
             for (let i = 0; i < length; ++i) {
                 extensions[i].beforeParseDocument(sessionId);
             }
-            const success = new Array(rootElements.size);
-            let j = 0;
+            const success = [];
             for (const element of rootElements) {
                 const node = this.createCache(element, sessionId);
                 if (node) {
                     this.afterCreateCache(node);
-                    success[j++] = node;
+                    success.push(node);
                 }
             }
-            success.length = j;
             for (let i = 0; i < length; ++i) {
                 extensions[i].afterParseDocument(sessionId);
             }
@@ -946,7 +1074,8 @@
             return this._resourceHandler;
         }
         get fileHandler() {
-            return this._resourceHandler ? this._resourceHandler.fileHandler : null;
+            var _a;
+            return ((_a = this.resourceHandler) === null || _a === void 0 ? void 0 : _a.fileHandler) || null;
         }
         get extensionManager() {
             return this._extensionManager;
@@ -960,11 +1089,11 @@
                 const processing = active.values().next().value;
                 return [processing.extensions, processing.cache.children];
             }
-            let extensions = [],
+            const extensions = [],
                 children = [];
             for (const processing of active.values()) {
-                extensions = extensions.concat(processing.extensions);
-                children = children.concat(processing.cache.children);
+                extensions.push(...processing.extensions);
+                children.push(...processing.cache.children);
             }
             return [Array.from(new Set(extensions)), children];
         }
@@ -1042,7 +1171,7 @@
         parseSelectorText: parseSelectorText$1,
         parseUnit,
     } = squared.lib.css;
-    const { assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
+    const { assignRect, getNamedItem, getParentElement, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
     const {
         getElementAsNode,
         getElementCache: getElementCache$1,
@@ -1119,9 +1248,7 @@
     }
     function isFontFixedWidth(node) {
         const [fontFirst, fontSecond] = splitPair$1(node.css('fontFamily'), ',', true);
-        return (
-            fontFirst.toLowerCase() === 'monospace' && !(fontSecond !== '' && fontSecond.toLowerCase() === 'monospace')
-        );
+        return fontFirst === 'monospace' && fontSecond !== 'monospace';
     }
     function getFlexValue(node, attr, fallback, parent) {
         const value = (parent || node).css(attr);
@@ -1165,7 +1292,7 @@
                 case 'OBJECT':
                 case 'EMBED': {
                     const size = getNamedItem(element, attr);
-                    if (size !== '') {
+                    if (size) {
                         result = isNumber(size) ? parseFloat(size) : node.parseUnit(size, options);
                         if (result) {
                             node.css(attr, isPercent(size) ? size : size + 'px');
@@ -1204,24 +1331,12 @@
                     return 0;
             }
             const width = node.css(border[0]);
-            if (width !== '') {
-                let result;
-                switch (width) {
-                    case 'thin':
-                        result = 1;
-                        break;
-                    case 'medium':
-                        result = 3;
-                        break;
-                    case 'thick':
-                        result = 5;
-                        break;
-                    default:
-                        result = isLength(width, true)
-                            ? node.parseUnit(width, { dimension })
-                            : convertFloat(node.style[border[0]]);
-                        break;
-                }
+            if (width) {
+                const result = width.endsWith('px')
+                    ? parseFloat(width)
+                    : isLength(width, true)
+                    ? node.parseUnit(width, { dimension })
+                    : parseFloat(node.style[border[0]]);
                 if (result) {
                     return Math.max(Math.round(result), 1);
                 }
@@ -1407,10 +1522,7 @@
                         break;
                     case ':placeholder-shown':
                         if (
-                            !(
-                                (tagName === 'INPUT' || tagName === 'TEXTAREA') &&
-                                child.toElementString('placeholder') !== ''
-                            )
+                            !((tagName === 'INPUT' || tagName === 'TEXTAREA') && child.toElementString('placeholder'))
                         ) {
                             return false;
                         }
@@ -1527,9 +1639,8 @@
                         }
                         break;
                     case ':target':
-                        if (location.hash === '') {
-                            return false;
-                        } else if (
+                        if (
+                            !location.hash ||
                             !(
                                 location.hash === `#${child.elementId}` ||
                                 (tagName === 'A' && location.hash === `#${child.toElementString('name')}`)
@@ -1544,10 +1655,11 @@
                         }
                         break;
                     case ':root':
-                        if (!last && node.tagName !== 'HTML') {
+                        if (!last || adjacent === '>') {
                             return false;
                         }
                         break;
+                    case ':defined':
                     case ':link':
                     case ':visited':
                     case ':any-link':
@@ -1636,18 +1748,15 @@
                                         }
                                     }
                                 }
-                                continue;
+                                break;
                             }
                         } else if (child.attributes['lang']) {
-                            match = /^:lang\((.+)\)$/.exec(pseudo);
-                            if (
-                                match &&
-                                child.attributes['lang'].trim().toLowerCase() === match[1].trim().toLowerCase()
-                            ) {
-                                continue;
+                            match = /^:lang\(\s*(.+)\s*\)$/.exec(pseudo);
+                            if (match && child.attributes['lang'].trim().toLowerCase() === match[1].toLowerCase()) {
+                                break;
                             }
                         }
-                        return false;
+                        return !selector.fromNot ? false : true;
                     }
                 }
             }
@@ -1655,7 +1764,7 @@
         if (notList) {
             for (let i = 0, length = notList.length; i < length; ++i) {
                 const not = notList[i];
-                const notData = {};
+                const notData = { fromNot: true };
                 switch (not[0]) {
                     case '.':
                         notData.classList = [not];
@@ -1668,35 +1777,23 @@
                         break;
                     case '[': {
                         const match = SELECTOR_ATTR.exec(not);
-                        if (match) {
-                            const caseInsensitive = match[6] === 'i';
-                            let value = match[3] || match[4] || match[5] || '';
-                            if (caseInsensitive) {
-                                value = value.toLowerCase();
-                            }
-                            notData.attrList = [
-                                {
-                                    key: match[1],
-                                    symbol: match[2],
-                                    value,
-                                    caseInsensitive,
-                                },
-                            ];
-                            SELECTOR_ATTR.lastIndex = 0;
-                        } else {
-                            continue;
-                        }
+                        const caseInsensitive = match[6] === 'i';
+                        const value = match[3] || match[4] || match[5];
+                        notData.attrList = [
+                            {
+                                key: match[1],
+                                symbol: match[2],
+                                value: caseInsensitive && value ? value.toLowerCase() : value,
+                                caseInsensitive,
+                            },
+                        ];
                         break;
                     }
                     default:
-                        if (/^[a-z\d+#.-]+$/i.test(not)) {
-                            notData.tagName = not;
-                        } else {
-                            return false;
-                        }
+                        notData.tagName = not.toUpperCase();
                         break;
                 }
-                if (validateQuerySelector(node, child, notData, last)) {
+                if (validateQuerySelector(node, child, notData, false)) {
                     return false;
                 }
             }
@@ -1725,9 +1822,7 @@
                 } else {
                     value = attributes[attr.key];
                 }
-                if (!value) {
-                    return false;
-                } else {
+                if (value) {
                     const valueAlt = attr.value;
                     if (valueAlt) {
                         if (attr.caseInsensitive) {
@@ -1765,16 +1860,18 @@
                             return false;
                         }
                     }
+                } else {
+                    return false;
                 }
             }
         }
         return true;
     }
-    function ascendQuerySelector(node, selectors, i, j, nodes, adjacent) {
+    function ascendQuerySelector(node, selectors, index, nodes, adjacent) {
         const depth = node.depth;
-        const selector = selectors[j];
+        const selector = selectors[index];
         const length = selectors.length;
-        const last = j === length - 1;
+        const last = index === length - 1;
         const next = [];
         for (let k = 0, q = nodes.length; k < q; ++k) {
             const child = nodes[k];
@@ -1797,7 +1894,7 @@
                             }
                             break;
                         }
-                        case '~': {
+                        case '~':
                             for (let l = 0, r = children.length; l < r; ++l) {
                                 const sibling = children[l];
                                 if (sibling === child) {
@@ -1807,10 +1904,9 @@
                                 }
                             }
                             break;
-                        }
                     }
                 }
-            } else if (child.depth - depth >= length - j) {
+            } else if (child.depth - depth >= length - index) {
                 let parent = child.actualParent;
                 while (parent) {
                     if (validateQuerySelector(node, parent, selector, last)) {
@@ -1820,11 +1916,17 @@
                 }
             }
         }
-        if (next.length === 0) {
-            return false;
-        }
-        return ++j === length ? true : ascendQuerySelector(node, selectors, i, j, next, selector.adjacent);
+        return (
+            next.length > 0 &&
+            (++index === length ? true : ascendQuerySelector(node, selectors, index, next, selector.adjacent))
+        );
     }
+    const trimSelector = value =>
+        value[0] !== '*' || value.includes(':root')
+            ? value
+            : /^\*(\s+\*){0,2}$/.test(value)
+            ? '*'
+            : value.replace(/^(\*\s+){1,2}/, '');
     const aboveRange = (a, b, offset = 1) => a + offset > b;
     const belowRange = (a, b, offset = 1) => a - offset < b;
     const sortById = (a, b) => a.id - b.id;
@@ -1840,16 +1942,23 @@
             this.id = id;
             this.sessionId = sessionId;
             this.documentRoot = false;
+            this.shadowRoot = false;
             this.depth = -1;
+            this.queryMap = null;
             this._parent = null;
             this._cache = {};
-            this._cacheState = {};
+            this._cacheState = { inlineText: false };
             this._preferInitial = false;
             this._bounds = null;
             this._box = null;
             this._linear = null;
+            this._initial = null;
+            this._cssStyle = null;
+            this._naturalChildren = null;
+            this._naturalElements = null;
             this._childIndex = Infinity;
             this._element = null;
+            this._style = null;
             if (element) {
                 this._element = element;
                 if (sessionId !== '0') {
@@ -1883,7 +1992,7 @@
                         for (const attrAlt of alias) {
                             if (!styleMap[attrAlt]) {
                                 const valueAlt = checkStyleValue(element, attrAlt, value);
-                                if (valueAlt !== '') {
+                                if (valueAlt) {
                                     result[attrAlt] = valueAlt;
                                 }
                             }
@@ -1892,7 +2001,7 @@
                     }
                 }
                 value = checkStyleValue(element, attr, value);
-                if (value !== '') {
+                if (value) {
                     result[attr] = value;
                 }
             }
@@ -1916,13 +2025,13 @@
                             this._cache = {};
                         }
                         return true;
-                    } else if (!sessionId) {
-                        return false;
-                    } else {
+                    } else if (sessionId) {
                         elementData = getElementData(element, sessionId);
                         if (elementData) {
                             this._elementData = elementData;
                         }
+                    } else {
+                        return false;
                     }
                 } else {
                     elementData = this._elementData;
@@ -1960,8 +2069,6 @@
         saveAsInitial() {
             this._initial = {
                 styleMap: Object.assign({}, this._styleMap),
-                bounds: this._bounds,
-                children: !this.isEmpty() ? this.toArray() : undefined,
             };
         }
         data(name, attr, value, overwrite = true) {
@@ -2116,7 +2223,7 @@
                     }
                 }
             } else {
-                this._cacheState = {};
+                this._cacheState = { inlineText: false };
                 reset = true;
             }
             if (reset && !this._preferInitial && this.naturalChild) {
@@ -2163,7 +2270,7 @@
             }
             let invalid;
             const recurse = parent => {
-                let result = [];
+                const result = [];
                 const children = parent.naturalElements;
                 for (let i = 0, length = children.length; i < length; ++i) {
                     const item = children[i];
@@ -2187,7 +2294,7 @@
                         }
                     }
                     if (item instanceof Node && !item.isEmpty()) {
-                        result = result.concat(recurse(item));
+                        result.push(...recurse(item));
                         if (invalid) {
                             break;
                         }
@@ -2314,8 +2421,15 @@
         }
         cssInitial(attr, options) {
             const initial = this._initial;
+            const dataMap = (initial && initial.styleMap) || this._styleMap;
+            if (options) {
+                const value = options.value;
+                if (value && initial) {
+                    return (dataMap[attr] = value);
+                }
+            }
             return (
-                ((initial && initial.styleMap) || this._styleMap)[attr] ||
+                dataMap[attr] ||
                 (options && ((options.modified && this._styleMap[attr]) || (options.computed && this.style[attr]))) ||
                 ''
             );
@@ -2325,7 +2439,7 @@
                 value;
             while (parent) {
                 value = parent.valueOf(attr, options);
-                if (value !== '' && value !== 'inherit') {
+                if (value && value !== 'inherit') {
                     return value;
                 }
                 parent = parent.actualParent;
@@ -2511,29 +2625,28 @@
             if (this.naturalElement) {
                 if (attr) {
                     return getStyle(this._element, name)[attr];
-                } else {
-                    const styleMap = this._elementData['styleMap' + name];
-                    if (styleMap) {
-                        switch (name) {
-                            case '::first-letter':
-                            case '::first-line':
-                                switch (this.display) {
-                                    case 'block':
-                                    case 'inline-block':
-                                    case 'list-item':
-                                    case 'table-cell':
-                                        break;
-                                    default:
-                                        return;
-                                }
-                            case '::before':
-                            case '::after':
-                                return Node.sanitizeCss(
-                                    this._element,
-                                    styleMap,
-                                    styleMap.writingMode || this.valueOf('writingMode')
-                                );
-                        }
+                }
+                const styleMap = this._elementData['styleMap' + name];
+                if (styleMap) {
+                    switch (name) {
+                        case '::first-letter':
+                        case '::first-line':
+                            switch (this.display) {
+                                case 'block':
+                                case 'inline-block':
+                                case 'list-item':
+                                case 'table-cell':
+                                    break;
+                                default:
+                                    return;
+                            }
+                        case '::before':
+                        case '::after':
+                            return Node.sanitizeCss(
+                                this._element,
+                                styleMap,
+                                styleMap.writingMode || this.valueOf('writingMode')
+                            );
                     }
                 }
             }
@@ -2580,7 +2693,7 @@
         }
         parseUnit(value, options) {
             var _a;
-            if (value === '') {
+            if (!value) {
                 return 0;
             } else if (value.endsWith('px')) {
                 return parseFloat(value);
@@ -2746,16 +2859,23 @@
             const queryMap = customMap || this.queryMap;
             let result = [];
             if (queryMap && resultCount !== 0) {
+                const depthCount = queryMap.length;
                 const queries = parseSelectorText$1(value);
                 for (let i = 0, length = queries.length; i < length; ++i) {
-                    const query = queries[i];
-                    const selectors = [];
-                    let offset = -1;
-                    if (query === '*') {
-                        selectors.push({ all: true });
-                        ++offset;
-                    } else {
-                        invalid: {
+                    invalid: {
+                        const query = trimSelector(queries[i]);
+                        switch (query) {
+                            case ':root':
+                            case ':scope':
+                                continue;
+                        }
+                        const selectors = [];
+                        let offset = -1;
+                        if (query === '*') {
+                            selectors.push({ all: true });
+                            ++offset;
+                        } else {
+                            SELECTOR_G.lastIndex = 0;
                             let adjacent = '',
                                 segment,
                                 all,
@@ -2770,8 +2890,7 @@
                                         case '~':
                                             --offset;
                                         case '>':
-                                            if (adjacent !== '' || selectors.length === 0) {
-                                                selectors.length = 0;
+                                            if (adjacent || selectors.length === 0) {
                                                 break invalid;
                                             }
                                             adjacent = ch;
@@ -2782,14 +2901,12 @@
                                     }
                                 } else if (segment.startsWith('*|*')) {
                                     if (segment.length > 3) {
-                                        selectors.length = 0;
                                         break invalid;
                                     }
                                     all = true;
                                 } else if (segment.startsWith('*|')) {
                                     segment = segment.substring(2);
                                 } else if (segment.startsWith('::')) {
-                                    selectors.length = 0;
                                     break invalid;
                                 }
                                 if (all) {
@@ -2810,7 +2927,6 @@
                                                     break;
                                                 }
                                             default:
-                                                selectors.length = 0;
                                                 break invalid;
                                         }
                                         const caseInsensitive = subMatch[6] === 'i';
@@ -2828,16 +2944,38 @@
                                         segment = spliceString(segment, subMatch.index, subMatch[0].length);
                                     }
                                     if (segment.includes('::')) {
-                                        selectors.length = 0;
                                         break invalid;
                                     }
                                     while ((subMatch = SELECTOR_PSEUDO_CLASS.exec(segment))) {
                                         const pseudoClass = subMatch[0];
                                         if (pseudoClass.startsWith(':not(')) {
-                                            if (subMatch[1]) {
-                                                (notList || (notList = [])).push(subMatch[1]);
+                                            const negate = subMatch[1];
+                                            switch (negate[0]) {
+                                                case '.':
+                                                case ':':
+                                                    if (negate.split(/[.:]/).length > 1) {
+                                                        break invalid;
+                                                    }
+                                                    break;
+                                                case '[':
+                                                    if (!SELECTOR_ATTR.test(negate)) {
+                                                        break invalid;
+                                                    }
+                                                    break;
+                                                default:
+                                                    if (!/^#?[a-z][a-z\d_-]+$/i.test(negate)) {
+                                                        break invalid;
+                                                    }
+                                                    break;
                                             }
+                                            (notList || (notList = [])).push(negate);
                                         } else {
+                                            switch (pseudoClass) {
+                                                case ':root':
+                                                case ':scope':
+                                                    --offset;
+                                                    break;
+                                            }
                                             (pseudoList || (pseudoList = [])).push(pseudoClass);
                                         }
                                         segment = spliceString(segment, subMatch.index, pseudoClass.length);
@@ -2845,13 +2983,21 @@
                                     while ((subMatch = SELECTOR_LABEL.exec(segment))) {
                                         const label = subMatch[0];
                                         switch (label[0]) {
-                                            case '#':
-                                                id = label.substring(1);
+                                            case '#': {
+                                                const subId = label.substring(1);
+                                                if (id && id !== subId) {
+                                                    break invalid;
+                                                }
+                                                id = subId;
                                                 break;
+                                            }
                                             case '.':
                                                 (classList || (classList = [])).push(label.substring(1));
                                                 break;
                                             default:
+                                                if (id || classList || tagName) {
+                                                    break invalid;
+                                                }
                                                 tagName = label.toUpperCase();
                                                 break;
                                         }
@@ -2871,75 +3017,72 @@
                                 adjacent = '';
                             }
                         }
-                        SELECTOR_G.lastIndex = 0;
-                    }
-                    if (customMap) {
-                        offset = 0;
-                    }
-                    const q = queryMap.length;
-                    let r = selectors.length;
-                    if (r && offset !== -1 && offset < q) {
-                        const dataEnd = selectors.pop();
-                        --r;
-                        const lastEnd = r === 0;
-                        const currentCount = result.length;
-                        let pending;
-                        if (dataEnd.all && q - offset === 1) {
-                            pending = queryMap[offset];
-                        } else {
-                            pending = [];
-                            for (let j = offset; j < q; ++j) {
-                                const children = queryMap[j];
-                                if (dataEnd.all) {
-                                    pending = pending.concat(children);
-                                } else {
-                                    for (let k = 0, s = children.length; k < s; ++k) {
-                                        const node = children[k];
-                                        if (
-                                            (currentCount === 0 || !result.includes(node)) &&
-                                            validateQuerySelector(this, node, dataEnd, lastEnd)
-                                        ) {
-                                            pending.push(node);
+                        if (customMap) {
+                            offset = 0;
+                        }
+                        let r = selectors.length;
+                        if (r && offset !== -1 && offset < depthCount) {
+                            const dataEnd = selectors.pop();
+                            const lastEnd = --r === 0;
+                            const currentCount = result.length;
+                            let pending;
+                            if (dataEnd.all && depthCount - offset === 1) {
+                                pending = queryMap[offset];
+                            } else {
+                                pending = [];
+                                for (let j = offset; j < depthCount; ++j) {
+                                    const children = queryMap[j];
+                                    if (dataEnd.all) {
+                                        pending.push(...children);
+                                    } else {
+                                        for (let k = 0, s = children.length; k < s; ++k) {
+                                            const node = children[k];
+                                            if (
+                                                (currentCount === 0 || !result.includes(node)) &&
+                                                validateQuerySelector(this, node, dataEnd, lastEnd)
+                                            ) {
+                                                pending.push(node);
+                                            }
                                         }
                                     }
                                 }
                             }
-                        }
-                        const s = pending.length;
-                        if (r && (dataEnd.adjacent || resultCount !== -Infinity)) {
-                            if (r > 1) {
-                                selectors.reverse();
-                            }
-                            let count = currentCount;
-                            for (let j = 0; j < s; ++j) {
-                                const node = pending[j];
-                                if (
-                                    (currentCount === 0 || !result.includes(node)) &&
-                                    ascendQuerySelector(this, selectors, i, 0, [node], dataEnd.adjacent)
-                                ) {
-                                    result.push(node);
-                                    if (++count === resultCount) {
-                                        return result.sort(sortById);
+                            const s = pending.length;
+                            if (!lastEnd && (dataEnd.adjacent || resultCount !== -Infinity)) {
+                                if (r > 1) {
+                                    selectors.reverse();
+                                }
+                                let count = currentCount;
+                                for (let j = 0; j < s; ++j) {
+                                    const node = pending[j];
+                                    if (
+                                        (currentCount === 0 || !result.includes(node)) &&
+                                        ascendQuerySelector(this, selectors, 0, [node], dataEnd.adjacent)
+                                    ) {
+                                        result.push(node);
+                                        if (++count === resultCount) {
+                                            return result.sort(sortById);
+                                        }
                                     }
                                 }
-                            }
-                        } else if (currentCount === 0) {
-                            if (i === queries.length - 1 || (resultCount > 0 && resultCount <= s)) {
-                                if (resultCount > 0 && s > resultCount) {
-                                    pending.length = resultCount;
+                            } else if (currentCount === 0) {
+                                if (i === queries.length - 1 || (resultCount > 0 && resultCount <= s)) {
+                                    if (resultCount > 0 && s > resultCount) {
+                                        pending.length = resultCount;
+                                    }
+                                    return pending.sort(sortById);
+                                } else {
+                                    result = pending;
                                 }
-                                return pending.sort(sortById);
                             } else {
-                                result = pending;
-                            }
-                        } else {
-                            let count = currentCount;
-                            for (let j = 0; j < s; ++j) {
-                                const node = pending[j];
-                                if (currentCount === 0 || !result.includes(node)) {
-                                    result.push(node);
-                                    if (resultCount > 0 && ++count === resultCount) {
-                                        return result.sort(sortById);
+                                let count = currentCount;
+                                for (let j = 0; j < s; ++j) {
+                                    const node = pending[j];
+                                    if (currentCount === 0 || !result.includes(node)) {
+                                        result.push(node);
+                                        if (resultCount > 0 && ++count === resultCount) {
+                                            return result.sort(sortById);
+                                        }
                                     }
                                 }
                             }
@@ -3041,6 +3184,12 @@
                 ? this.cssInitial(attr, options)
                 : this._styleMap[attr] || (options && options.computed && this.style[attr]) || '';
         }
+        get naturalChild() {
+            return true;
+        }
+        get pseudoElement() {
+            return false;
+        }
         set parent(value) {
             if (value) {
                 const parent = this._parent;
@@ -3098,9 +3247,6 @@
             const result = this._cacheState.styleElement;
             return result === undefined ? (this._cacheState.styleElement = !!this._element && !this.plainText) : result;
         }
-        get naturalChild() {
-            return true;
-        }
         get naturalElement() {
             const result = this._cacheState.naturalElement;
             return result === undefined
@@ -3110,14 +3256,11 @@
         get parentElement() {
             var _a;
             return this._element
-                ? this._element.parentElement
+                ? getParentElement(this._element)
                 : ((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.element) || null;
         }
         get textElement() {
             return this.plainText || (this.inlineText && this.tagName !== 'BUTTON');
-        }
-        get pseudoElement() {
-            return false;
         }
         get imageElement() {
             return this.tagName === 'IMG';
@@ -3165,6 +3308,10 @@
         }
         get zIndex() {
             return this.toInt('zIndex', 0);
+        }
+        get opacity() {
+            const opacity = this.valueOf('opacity');
+            return opacity ? Math.max(0, Math.min(parseFloat(opacity), 1)) : 1;
         }
         get textContent() {
             return this.naturalChild && !this.svgElement ? this._element.textContent : '';
@@ -3222,7 +3369,7 @@
             return this._box;
         }
         get flexdata() {
-            const result = this._cache.flexdata;
+            let result = this._cache.flexdata;
             if (result === undefined) {
                 if (this.flexElement) {
                     const { flexWrap, flexDirection, alignContent, justifyContent } = this.cssAsObject(
@@ -3232,7 +3379,7 @@
                         'justifyContent'
                     );
                     const row = flexDirection.startsWith('row');
-                    return (this._cache.flexdata = {
+                    result = {
                         row,
                         column: !row,
                         reverse: flexDirection.endsWith('reverse'),
@@ -3240,31 +3387,31 @@
                         wrapReverse: flexWrap === 'wrap-reverse',
                         alignContent,
                         justifyContent,
-                    });
+                    };
                 }
-                return (this._cache.flexdata = {});
+                return (this._cache.flexdata = result || {});
             }
             return result;
         }
         get flexbox() {
             var _a;
-            const result = this._cache.flexbox;
+            let result = this._cache.flexbox;
             if (result === undefined) {
                 if (
-                    this.styleElement &&
+                    this.naturalChild &&
                     ((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.flexElement)
                 ) {
                     const [alignSelf, justifySelf, basis] = this.cssAsTuple('alignSelf', 'justifySelf', 'flexBasis');
-                    return (this._cache.flexbox = {
+                    result = {
                         alignSelf: alignSelf === 'auto' ? this.cssParent('alignItems') : alignSelf,
                         justifySelf: justifySelf === 'auto' ? this.cssParent('justifyItems') : justifySelf,
                         basis,
                         grow: getFlexValue(this, 'flexGrow', 0),
                         shrink: getFlexValue(this, 'flexShrink', 1),
                         order: this.toInt('order', 0),
-                    });
+                    };
                 }
-                return (this._cache.flexbox = {});
+                return (this._cache.flexbox = result || {});
             }
             return result;
         }
@@ -3481,30 +3628,10 @@
                 : result;
         }
         set inlineText(value) {
-            switch (this.tagName) {
-                case 'IMG':
-                case 'INPUT':
-                case 'SELECT':
-                case 'TEXTAREA':
-                case 'svg':
-                case 'BR':
-                case 'HR':
-                case 'PROGRESS':
-                case 'METER':
-                case 'CANVAS':
-                    this._cacheState.inlineText = false;
-                    break;
-                case 'BUTTON':
-                    this._cacheState.inlineText = this.textContent.trim() !== '';
-                    break;
-                default:
-                    this._cacheState.inlineText = value;
-                    break;
-            }
+            this._cacheState.inlineText = value || (this.tagName === 'BUTTON' && this.textContent.trim() !== '');
         }
         get inlineText() {
-            var _a;
-            return (_a = this._cacheState.inlineText) !== null && _a !== void 0 ? _a : false;
+            return this._cacheState.inlineText;
         }
         get block() {
             let result = this._cache.block;
@@ -3530,15 +3657,30 @@
             return result;
         }
         get blockStatic() {
-            const result = this._cache.blockStatic;
+            var _a;
+            let result = this._cache.blockStatic;
             if (result === undefined) {
                 const pageFlow = this.pageFlow;
-                if (pageFlow && ((this.block && !this.floating) || this.lineBreak)) {
-                    return (this._cache.blockStatic = true);
-                } else if (
-                    !pageFlow ||
-                    (!this.inline && !this.display.startsWith('table-') && !this.hasPX('maxWidth'))
-                ) {
+                if (pageFlow) {
+                    if ((this.block && !this.floating) || this.lineBreak) {
+                        result = true;
+                    } else {
+                        const actualParent = this.actualParent;
+                        if (actualParent && ((actualParent.block && !actualParent.floating) || actualParent.hasWidth)) {
+                            if (
+                                this.inlineStatic &&
+                                ((_a = this.firstChild) === null || _a === void 0 ? void 0 : _a.blockStatic)
+                            ) {
+                                result = true;
+                            } else if (this.inline || this.display.startsWith('table-') || this.hasPX('maxWidth')) {
+                                result = false;
+                            }
+                        } else {
+                            result = false;
+                        }
+                    }
+                }
+                if (result === undefined) {
                     const width = this.valueOf('width');
                     const minWidth = this.valueOf('minWidth');
                     let percent = 0;
@@ -3551,14 +3693,14 @@
                     if (percent) {
                         const marginLeft = this.valueOf('marginLeft');
                         const marginRight = this.valueOf('marginRight');
-                        return (this._cache.blockStatic =
+                        result =
                             percent +
                                 (isPercent(marginLeft) ? Math.max(0, parseFloat(marginLeft)) : 0) +
                                 (isPercent(marginRight) ? parseFloat(marginRight) : 0) >=
-                            100);
+                            100;
                     }
                 }
-                return (this._cache.blockStatic = false);
+                return (this._cache.blockStatic = !!result);
             }
             return result;
         }
@@ -3599,7 +3741,7 @@
                 : result;
         }
         get autoMargin() {
-            const result = this._cache.autoMargin;
+            let result = this._cache.autoMargin;
             if (result === undefined) {
                 if (!this.pageFlow || this.blockStatic || this.display === 'table') {
                     const styleMap = this._styleMap;
@@ -3607,7 +3749,7 @@
                     const right = styleMap.marginRight === 'auto' && (this.pageFlow || this.hasPX('left'));
                     const top = styleMap.marginTop === 'auto' && (this.pageFlow || this.hasPX('bottom'));
                     const bottom = styleMap.marginBottom === 'auto' && (this.pageFlow || this.hasPX('top'));
-                    return (this._cache.autoMargin = {
+                    result = {
                         horizontal: left || right,
                         left: left && !right,
                         right: !left && right,
@@ -3616,23 +3758,23 @@
                         top: top && !bottom,
                         bottom: !top && bottom,
                         topBottom: top && bottom,
-                    });
+                    };
                 }
-                return (this._cache.autoMargin = {});
+                return (this._cache.autoMargin = result || {});
             }
             return result;
         }
         get baseline() {
-            const result = this._cache.baseline;
+            let result = this._cache.baseline;
             if (result === undefined) {
                 if (this.pageFlow && !this.floating && !this.tableElement) {
                     const display = this.display;
                     if (display.startsWith('inline') || display === 'list-item') {
                         const value = this.css('verticalAlign');
-                        return (this._cache.baseline = value === 'baseline' || !isNaN(parseFloat(value)));
+                        result = value === 'baseline' || !isNaN(parseFloat(value));
                     }
                 }
-                return (this._cache.baseline = false);
+                return (this._cache.baseline = !!result);
             }
             return result;
         }
@@ -3683,54 +3825,51 @@
             this._textBounds = value;
         }
         get textBounds() {
-            const result = this._textBounds;
+            let result = this._textBounds;
             if (result === undefined) {
                 if (this.naturalChild) {
                     if (this.textElement) {
-                        return (this._textBounds = getRangeClientRect(this._element));
+                        result = getRangeClientRect(this._element);
                     } else if (!this.isEmpty()) {
+                        let top = Infinity,
+                            right = -Infinity,
+                            bottom = -Infinity,
+                            left = Infinity,
+                            numberOfLines = 0;
                         const children = this.naturalChildren;
-                        const length = children.length;
-                        if (length) {
-                            let top = Infinity,
-                                right = -Infinity,
-                                bottom = -Infinity,
-                                left = Infinity,
-                                numberOfLines = 0;
-                            for (let i = 0; i < length; ++i) {
-                                const node = children[i];
-                                if (node.textElement) {
-                                    const rect = node.textBounds;
-                                    if (rect) {
-                                        numberOfLines +=
-                                            rect.numberOfLines ||
-                                            (top === Infinity ||
-                                            rect.top >= bottom ||
-                                            Math.floor(rect.right - rect.left) > Math.ceil(rect.width)
-                                                ? 1
-                                                : 0);
-                                        top = Math.min(rect.top, top);
-                                        right = Math.max(rect.right, right);
-                                        left = Math.min(rect.left, left);
-                                        bottom = Math.max(rect.bottom, bottom);
-                                    }
+                        for (let i = 0, length = children.length; i < length; ++i) {
+                            const node = children[i];
+                            if (node.textElement) {
+                                const rect = node.textBounds;
+                                if (rect) {
+                                    numberOfLines +=
+                                        rect.numberOfLines ||
+                                        (top === Infinity ||
+                                        rect.top >= bottom ||
+                                        Math.floor(rect.right - rect.left) > Math.ceil(rect.width)
+                                            ? 1
+                                            : 0);
+                                    top = Math.min(rect.top, top);
+                                    right = Math.max(rect.right, right);
+                                    left = Math.min(rect.left, left);
+                                    bottom = Math.max(rect.bottom, bottom);
                                 }
                             }
-                            if (numberOfLines) {
-                                return (this._textBounds = {
-                                    top,
-                                    right,
-                                    left,
-                                    bottom,
-                                    width: right - left,
-                                    height: bottom - top,
-                                    numberOfLines,
-                                });
-                            }
+                        }
+                        if (numberOfLines) {
+                            result = {
+                                top,
+                                right,
+                                left,
+                                bottom,
+                                width: right - left,
+                                height: bottom - top,
+                                numberOfLines,
+                            };
                         }
                     }
                 }
-                return (this._textBounds = null);
+                return (this._textBounds = result || null);
             }
             return result;
         }
@@ -3754,53 +3893,50 @@
             let result = this._cache.backgroundColor;
             if (result === undefined) {
                 if (!this.plainText) {
+                    const isTransparent = value => value === 'transparent' || value === 'rgba(0, 0, 0, 0)';
                     result = this.css('backgroundColor');
-                    switch (result) {
-                        case 'transparent':
-                        case 'rgba(0, 0, 0, 0)':
-                            if (this.inputElement) {
-                                if (this.tagName !== 'BUTTON') {
-                                    switch (this.toElementString('type')) {
-                                        case 'button':
-                                        case 'submit':
-                                        case 'reset':
-                                        case 'image':
-                                            break;
-                                        default:
-                                            result = '';
-                                            break;
-                                    }
-                                }
-                            } else {
-                                result = '';
-                            }
-                            break;
-                        default:
-                            if (
-                                result !== '' &&
-                                this.styleElement &&
-                                this.pageFlow &&
-                                !this.inputElement &&
-                                this.css('opacity') === '1'
-                            ) {
-                                let parent = this.actualParent;
-                                while (parent) {
-                                    const backgroundImage = parent.valueOf('backgroundImage');
-                                    if (backgroundImage === '' || backgroundImage === 'none') {
-                                        const color = parent.backgroundColor;
-                                        if (color !== '') {
-                                            if (color === result && parent.css('opacity') === '1') {
-                                                result = '';
-                                            }
-                                            break;
-                                        }
-                                        parent = parent.actualParent;
-                                    } else {
+                    if (isTransparent(result)) {
+                        if (this.inputElement) {
+                            if (this.tagName !== 'BUTTON') {
+                                switch (this.toElementString('type')) {
+                                    case 'button':
+                                    case 'submit':
+                                    case 'reset':
+                                    case 'image':
                                         break;
-                                    }
+                                    default:
+                                        result = '';
+                                        break;
                                 }
                             }
-                            break;
+                        } else {
+                            result = '';
+                        }
+                    }
+                    if (
+                        result &&
+                        this.styleElement &&
+                        this.pageFlow &&
+                        ((!this.inputElement && this.opacity === 1) || isTransparent(result))
+                    ) {
+                        let parent = this.actualParent;
+                        while (parent) {
+                            const backgroundImage = parent.valueOf('backgroundImage');
+                            if (!backgroundImage || backgroundImage === 'none') {
+                                const color = parent.backgroundColor;
+                                if (color && !isTransparent(color)) {
+                                    if (color === result && parent.opacity === 1) {
+                                        result = '';
+                                    } else if (isTransparent(result)) {
+                                        result = color;
+                                    }
+                                    break;
+                                }
+                                parent = parent.actualParent;
+                            } else {
+                                break;
+                            }
+                        }
                     }
                 }
                 return (this._cache.backgroundColor = result || '');
@@ -3844,7 +3980,7 @@
             return result;
         }
         get visibleStyle() {
-            const result = this._cache.visibleStyle;
+            let result = this._cache.visibleStyle;
             if (result === undefined) {
                 if (!this.plainText) {
                     const borderWidth =
@@ -3865,7 +4001,7 @@
                                     repeatX === 'repeat' || repeatX === 'repeat-y' || repeatY === 'repeat');
                         }
                     }
-                    return (this._cache.visibleStyle = {
+                    result = {
                         background: borderWidth || backgroundImage || backgroundColor,
                         borderWidth,
                         backgroundImage,
@@ -3874,9 +4010,9 @@
                         backgroundRepeatX,
                         backgroundRepeatY,
                         outline: this.outlineWidth > 0,
-                    });
+                    };
                 }
-                return (this._cache.visibleStyle = {});
+                return (this._cache.visibleStyle = result || {});
             }
             return result;
         }
@@ -3897,28 +4033,36 @@
             this._cacheState.actualParent = value;
         }
         get actualParent() {
-            var _a;
             const result = this._cacheState.actualParent;
             if (result === undefined) {
-                const parentElement = (_a = this.element) === null || _a === void 0 ? void 0 : _a.parentElement;
+                const element = this.element;
+                const parentElement = element && getParentElement(element);
                 return (this._cacheState.actualParent =
                     (parentElement && getElementAsNode(parentElement, this.sessionId)) || this.parent);
             }
             return result;
         }
         get wrapperOf() {
-            let node = this;
-            do {
-                switch (node.size()) {
-                    case 0:
-                        return node === this ? null : node;
-                    case 1:
-                        node = node.children[0];
+            let result = this._cacheState.wrapperOf;
+            if (result === undefined) {
+                let node = this;
+                do {
+                    if (node.size()) {
+                        const children = node.children.filter(item => item.pageFlow);
+                        if (children.length === 1) {
+                            node = children[0];
+                        } else {
+                            result = null;
+                            break;
+                        }
+                    } else {
+                        result = node === this ? null : node;
                         break;
-                    default:
-                        return null;
-                }
-            } while (true);
+                    }
+                } while (true);
+                this._cacheState.wrapperOf = result;
+            }
+            return result;
         }
         get actualWidth() {
             var _a;
@@ -3938,7 +4082,7 @@
                             break;
                     }
                 } else if (
-                    (this.inlineStatic && this.valueOf('width') === '') ||
+                    (this.inlineStatic && !this.valueOf('width')) ||
                     this.display === 'table-cell' ||
                     ((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.flexdata.row)
                 ) {
@@ -3962,7 +4106,7 @@
             let result = this._cache.actualHeight;
             if (result === undefined) {
                 if (
-                    (this.inlineStatic && this.valueOf('height') === '') ||
+                    (this.inlineStatic && !this.valueOf('height')) ||
                     this.display === 'table-cell' ||
                     ((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.flexdata.column)
                 ) {
@@ -4006,10 +4150,10 @@
             );
         }
         get firstChild() {
-            return this.naturalElements[0] || null;
+            return this.naturalChildren[0] || null;
         }
         get lastChild() {
-            const children = this.naturalElements;
+            const children = this.naturalChildren;
             return children[children.length - 1] || null;
         }
         get previousSibling() {
@@ -4077,16 +4221,16 @@
             return null;
         }
         get preserveWhiteSpace() {
-            const result = this._cache.preserveWhiteSpace;
+            let result = this._cache.preserveWhiteSpace;
             if (result === undefined) {
                 switch (this.css('whiteSpace')) {
                     case 'pre':
                     case 'pre-wrap':
                     case 'break-spaces':
-                        return (this._cache.preserveWhiteSpace = true);
-                    default:
-                        return (this._cache.preserveWhiteSpace = false);
+                        result = true;
+                        break;
                 }
+                return (this._cache.preserveWhiteSpace = !!result);
             }
             return result;
         }
@@ -4097,54 +4241,61 @@
                 if (this.naturalChild) {
                     if (this.styleElement) {
                         const fixedWidth = isFontFixedWidth(this);
-                        let value = checkFontSizeValue(this.valueOf('fontSize'), fixedWidth),
-                            emRatio = 1;
-                        if (REGEXP_EM.test(value)) {
-                            emRatio *= parseFloat(value);
-                            value = 'inherit';
-                        }
-                        if (value === 'inherit') {
-                            let parent = this.actualParent;
-                            if (parent) {
-                                do {
-                                    if (parent.tagName === 'HTML') {
-                                        value = '1rem';
-                                        break;
-                                    } else {
-                                        const fontSize = parent.valueOf('fontSize');
-                                        if (fontSize !== '' && fontSize !== 'inherit') {
-                                            value = checkFontSizeValue(fontSize);
-                                            if (isPercent(value)) {
-                                                emRatio *= parseFloat(value) / 100;
-                                            } else if (REGEXP_EM.test(value)) {
-                                                emRatio *= parseFloat(value);
-                                            } else {
-                                                break;
-                                            }
-                                        }
-                                        parent = parent.actualParent;
-                                    }
-                                } while (parent);
-                            } else {
-                                value = '1rem';
-                            }
-                        }
-                        if (value === '1rem') {
-                            result = getRemSize(fixedWidth);
-                        } else if (value.endsWith('px')) {
+                        let value = checkFontSizeValue(this.valueOf('fontSize'), fixedWidth);
+                        if (value.endsWith('px')) {
                             result = parseFloat(value);
                         } else if (isPercent(value)) {
                             const parent = this.actualParent;
-                            result = parent ? (parseFloat(value) / 100) * parent.fontSize : getRemSize();
+                            if (parent) {
+                                result = (parseFloat(value) / 100) * parent.fontSize;
+                                if (fixedWidth && !isFontFixedWidth(parent)) {
+                                    result *= 13 / getRemSize();
+                                }
+                            } else {
+                                result = getRemSize(fixedWidth);
+                            }
                         } else {
-                            result = parseUnit(value, fixedWidth ? { fixedWidth: true } : undefined);
+                            let emRatio = 1;
+                            if (REGEXP_EM.test(value)) {
+                                emRatio = parseFloat(value);
+                                value = 'inherit';
+                            }
+                            if (value === 'inherit') {
+                                let parent = this.actualParent;
+                                if (parent) {
+                                    do {
+                                        if (parent.tagName === 'HTML') {
+                                            value = '1rem';
+                                            break;
+                                        } else {
+                                            const fontSize = parent.valueOf('fontSize');
+                                            if (fontSize && fontSize !== 'inherit') {
+                                                value = checkFontSizeValue(fontSize);
+                                                if (isPercent(value)) {
+                                                    emRatio *= parseFloat(value) / 100;
+                                                } else if (REGEXP_EM.test(value)) {
+                                                    emRatio *= parseFloat(value);
+                                                } else {
+                                                    break;
+                                                }
+                                            }
+                                            parent = parent.actualParent;
+                                        }
+                                    } while (parent);
+                                } else {
+                                    value = '1rem';
+                                }
+                            }
+                            result =
+                                (value.endsWith('rem')
+                                    ? parseFloat(value) * getRemSize(fixedWidth)
+                                    : parseUnit(value, { fixedWidth })) * emRatio;
                         }
-                        result *= emRatio;
                     } else {
-                        result = this.plainText ? this.actualParent.fontSize : getRemSize();
+                        result = this.actualParent.fontSize;
                     }
                 } else {
-                    const options = isFontFixedWidth(this) ? { fixedWidth: true } : undefined;
+                    const options = { fixedWidth: isFontFixedWidth(this) };
                     result =
                         parseUnit(this.css('fontSize'), options) ||
                         ((_b =
@@ -4164,7 +4315,7 @@
                 (this._style = this.styleElement
                     ? !this.pseudoElt
                         ? getStyle(this._element)
-                        : getStyle(this._element.parentElement, this.pseudoElt)
+                        : getStyle(getParentElement(this._element), this.pseudoElt)
                     : PROXY_INLINESTYLE)
             );
         }
@@ -4190,11 +4341,11 @@
             let result = this._cacheState.dir;
             if (result === undefined) {
                 result = this.naturalElement ? this._element.dir : '';
-                if (result === '') {
+                if (!result) {
                     let parent = this.actualParent;
                     while (parent) {
                         result = parent.dir;
-                        if (result !== '') {
+                        if (result) {
                             break;
                         }
                         parent = parent.actualParent;
@@ -4217,6 +4368,7 @@
         builtInExtensions: [],
         createElementMap: true,
         createQuerySelectorMap: true,
+        pierceShadowRoot: false,
         showErrorMessages: false,
     };
 

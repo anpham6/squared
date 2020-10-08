@@ -1,4 +1,4 @@
-/* android.widget.toolbar 2.0.1
+/* android.widget.toolbar 2.1.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -74,13 +74,13 @@ this.android.widget.toolbar = (function () {
                 if (item.tagName === 'IMG') {
                     if (dataset.navigationIcon) {
                         const src = resource.addImageSrc(item, PREFIX_MENU);
-                        if (src !== '') {
+                        if (src) {
                             assignEmptyValue(app, 'navigationIcon', `@drawable/${src}`);
                         }
                     }
                     if (dataset.collapseIcon) {
                         const src = resource.addImageSrc(item, PREFIX_MENU);
-                        if (src !== '') {
+                        if (src) {
                             assignEmptyValue(app, 'collapseIcon', `@drawable/${src}`);
                         }
                     }
@@ -221,7 +221,7 @@ this.android.widget.toolbar = (function () {
                     });
                     if (backgroundImage) {
                         const src = resource.addImageSrc(node.backgroundImage);
-                        if (src !== '') {
+                        if (src) {
                             const controller = this.controller;
                             const backgroundImageOptions = createViewAttribute(options.backgroundImage);
                             let scaleType;
@@ -293,12 +293,11 @@ this.android.widget.toolbar = (function () {
                     outputAs,
                     include: true,
                 };
-            } else {
-                return {
-                    output,
-                    include: true,
-                };
             }
+            return {
+                output,
+                include: true,
+            };
         }
         processChild(node) {
             if (node.imageElement && (node.dataset.navigationIcon || node.dataset.collapseIcon)) {
@@ -344,7 +343,7 @@ this.android.widget.toolbar = (function () {
             const appBar = node.data('android.widget.toolbar' /* TOOLBAR */, 'background');
             if (appBar) {
                 const background = node.android('background');
-                if (background !== '') {
+                if (background) {
                     appBar.android('background', background);
                     node.delete('android', 'background');
                 }

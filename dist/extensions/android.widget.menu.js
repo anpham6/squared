@@ -1,4 +1,4 @@
-/* android.widget.menu 2.0.1
+/* android.widget.menu 2.1.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -65,13 +65,12 @@ this.android.widget.menu = (function () {
     }
     function getTitle(node, element) {
         const title = element.title.trim();
-        if (title !== '') {
+        if (title) {
             return title;
-        } else {
-            for (const child of node.naturalChildren) {
-                if (child.textElement && !child.textEmpty) {
-                    return child.textContent.trim();
-                }
+        }
+        for (const child of node.naturalChildren) {
+            if (child.textElement && !child.textEmpty) {
+                return child.textContent.trim();
             }
         }
         return '';
@@ -174,13 +173,13 @@ this.android.widget.menu = (function () {
                     if (!android.icon) {
                         const resource = this.resource;
                         let src = resource.addImageSrc(node.backgroundImage, PREFIX_MENU);
-                        if (src !== '') {
+                        if (src) {
                             android.icon = `@drawable/${src}`;
                         } else {
                             const image = node.find(item => item.imageElement);
                             if (image) {
                                 src = resource.addImageSrc(image.element, PREFIX_MENU);
-                                if (src !== '') {
+                                if (src) {
                                     android.icon = `@drawable/${src}`;
                                 }
                             }
@@ -189,7 +188,7 @@ this.android.widget.menu = (function () {
                     node.each(item => item.tagName !== 'NAV' && item.hide());
                     break;
             }
-            if (title !== '') {
+            if (title) {
                 android.title = Resource.addString(
                     title,
                     '',

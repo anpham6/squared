@@ -1,4 +1,4 @@
-/* android.widget.floatingactionbutton 2.0.1
+/* android.widget.floatingactionbutton 2.1.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -80,13 +80,13 @@ this.android.widget.floatingactionbutton = (function () {
                     node.mergeGravity('layout_gravity', node.localizeString('left'));
                     node.modifyBox(
                         8 /* MARGIN_LEFT */,
-                        offsetParent.adjustAbsolutePaddingOffset(128 /* PADDING_LEFT */, node.left)
+                        offsetParent.getAbsolutePaddingOffset(128 /* PADDING_LEFT */, node.left)
                     );
                 } else if (node.hasPX('right')) {
                     node.mergeGravity('layout_gravity', node.localizeString('right'));
                     node.modifyBox(
                         2 /* MARGIN_RIGHT */,
-                        offsetParent.adjustAbsolutePaddingOffset(32 /* PADDING_RIGHT */, node.right)
+                        offsetParent.getAbsolutePaddingOffset(32 /* PADDING_RIGHT */, node.right)
                     );
                 }
                 if (node.autoMargin.topBottom) {
@@ -96,13 +96,13 @@ this.android.widget.floatingactionbutton = (function () {
                     node.mergeGravity('layout_gravity', 'top');
                     node.modifyBox(
                         1 /* MARGIN_TOP */,
-                        offsetParent.adjustAbsolutePaddingOffset(16 /* PADDING_TOP */, node.top)
+                        offsetParent.getAbsolutePaddingOffset(16 /* PADDING_TOP */, node.top)
                     );
                 } else if (node.hasPX('bottom')) {
                     node.mergeGravity('layout_gravity', 'bottom');
                     node.modifyBox(
                         4 /* MARGIN_BOTTOM */,
-                        offsetParent.adjustAbsolutePaddingOffset(64 /* PADDING_BOTTOM */, node.bottom)
+                        offsetParent.getAbsolutePaddingOffset(64 /* PADDING_BOTTOM */, node.bottom)
                     );
                 }
                 node.positioned = true;
@@ -143,7 +143,7 @@ this.android.widget.floatingactionbutton = (function () {
                         anchor = value;
                     }
                 }
-                if (layoutGravity !== '') {
+                if (layoutGravity) {
                     node.app('layout_anchorGravity', layoutGravity);
                     node.delete('android', 'layout_gravity');
                 }

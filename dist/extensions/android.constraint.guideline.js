@@ -1,4 +1,4 @@
-/* android.constraint.guideline 2.0.0
+/* android.constraint.guideline 2.1.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -103,9 +103,9 @@ this.android.constraint.guideline = (function () {
                     }
                 });
             } else {
-                node.each(item => {
-                    if (!item.anchored) {
-                        controller.addGuideline({ target: item, parent: node });
+                node.each(target => {
+                    if (!target.anchored) {
+                        controller.addGuideline({ target, parent: node });
                     }
                 });
             }

@@ -1,4 +1,4 @@
-/* squared.svg 2.0.1
+/* squared.svg 2.1.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -582,7 +582,7 @@
         rotateOrigin(element, attr = 'transform') {
             const value = getNamedItem(element, attr);
             const result = [];
-            if (value !== '') {
+            if (value) {
                 RE_ROTATE.matcher(value);
                 while (RE_ROTATE.find()) {
                     const [angle, x, y] = RE_ROTATE.map(group => parseFloat(group) || 0, 1);
@@ -643,15 +643,17 @@
             case 'animationIterationCount':
             case 'offsetDistance':
             case 'offsetRotate':
+            case 'mask':
                 return calculateCssStyle(element, attr, value);
             case 'fill':
             case 'stroke':
+            case 'stopColor':
             case 'floodColor':
             case 'lightingColor':
-            case 'stopColor':
                 return calculateCssStyle(element, 'fontColor', value);
             case 'fillOpacity':
             case 'strokeOpacity':
+            case 'stopOpacity':
             case 'floodOpacity':
                 return calculateCssStyle(element, 'opacity', value);
             case 'strokeMiterlimit': {
@@ -749,7 +751,7 @@
             value;
         do {
             value = getAttribute(current, attr, computed);
-            if (value !== '' && value !== 'inherit') {
+            if (value && value !== 'inherit') {
                 break;
             }
             current = current.parentElement;
@@ -783,7 +785,7 @@
             }
         } else if (contentMap) {
             const [href, id] = splitPair(value, '#');
-            if (href !== '') {
+            if (href) {
                 const content = contentMap[resolvePath(href)];
                 if (content) {
                     document.body.insertAdjacentHTML('beforeend', content);
@@ -1124,9 +1126,9 @@
             const totalLength = Math.ceil(element.getTotalLength());
             const result = [];
             if (totalLength) {
-                let keyPoints = [],
-                    rotatingPoints = [],
-                    rotateFixed = 0,
+                const keyPoints = [];
+                const rotatingPoints = [];
+                let rotateFixed = 0,
                     rotateInitial = 0,
                     rotatePrevious = 0,
                     overflow = 0,
@@ -1142,8 +1144,8 @@
                             case 'H':
                             case 'V':
                             case 'Z':
-                                keyPoints = keyPoints.concat(item.value);
-                                rotatingPoints = rotatingPoints.concat(new Array(item.value.length).fill(false));
+                                keyPoints.push(...item.value);
+                                rotatingPoints.push(...new Array(item.value.length).fill(false));
                                 break;
                             case 'C':
                             case 'S':
@@ -1642,9 +1644,9 @@
             return { x: (result.left + result.right) / 2, y: (result.top + result.bottom) / 2 };
         }
         static boxRectOf(values) {
-            let points = [];
+            const points = [];
             for (let i = 0, length = values.length; i < length; ++i) {
-                points = points.concat(SvgBuild.toPathPoints(SvgBuild.toPathCommands(values[i])));
+                points.push(...SvgBuild.toPathPoints(SvgBuild.toPathCommands(values[i])));
             }
             return this.minMaxOf(points, true);
         }
@@ -1656,7 +1658,7 @@
         }
         static parseCoordinates(value) {
             const result = [];
-            if (value !== '') {
+            if (value) {
                 RE_DECIMAL.matcher(value);
                 while (RE_DECIMAL.find()) {
                     const coord = parseFloat(RE_DECIMAL.group());
@@ -1807,7 +1809,7 @@
         parseUnit: parseUnit$1,
     } = squared.lib.css;
     const { getNamedItem: getNamedItem$3 } = squared.lib.dom;
-    const { capitalize, hasBit: hasBit$1, isString } = squared.lib.util;
+    const { capitalize, hasBit: hasBit$1, hasValue, isString } = squared.lib.util;
     const REGEXP_TIME = /^(-)?(\d+(?:\.\d+)?)(ms|s|min|h)?$/;
     const REGGXP_TIMEDELIMITED = /^(-)?(?:(\d+):)?(?:([0-5][0-9]):)?([0-5][0-9])(?:\.(\d{1,3}))?$/;
     function setFillMode(mode, value) {
@@ -1826,6 +1828,8 @@
             this.fillMode = 0;
             this.synchronizeState = 0;
             this.paused = false;
+            this.id = null;
+            this.baseValue = '';
             this.animationElement = null;
             this.instanceType = 8 /* SVG_ANIMATION */;
             this._to = '';
@@ -1834,6 +1838,7 @@
             this._parent = null;
             this._attributeName = '';
             this._dataset = null;
+            this._group = null;
             if (element) {
                 const dataset = element.dataset;
                 for (const name in dataset) {
@@ -1852,7 +1857,7 @@
                 this.setAttribute('to');
                 this.setAttribute('fill', 'freeze');
                 const dur = getNamedItem$3(animationElement, 'dur');
-                if (dur !== '' && dur !== 'indefinite') {
+                if (dur && dur !== 'indefinite') {
                     const value = SvgAnimation.parseClockTime(dur);
                     this.duration = !isNaN(value) && value > 0 ? value : 0;
                 }
@@ -1895,7 +1900,7 @@
             const animationElement = this.animationElement;
             if (animationElement) {
                 const value = getNamedItem$3(animationElement, attr);
-                if (value !== '') {
+                if (value) {
                     if (isString(equality)) {
                         equality = equality.trim();
                         this[attr + capitalize(equality)] = value === equality;
@@ -1928,7 +1933,7 @@
                     _b === void 0
                         ? void 0
                         : _b[value];
-                if (baseValue !== undefined) {
+                if (hasValue(baseValue)) {
                     this.baseValue = baseValue.toString().trim();
                 } else {
                     const element = this.element;
@@ -1943,7 +1948,7 @@
                                 baseValue = getAttribute(element, value);
                                 break;
                         }
-                        if (baseValue === '') {
+                        if (!baseValue) {
                             const animationElement = this.animationElement;
                             if (animationElement && getComputedStyle(element).animationPlayState === 'paused') {
                                 const parentElement = animationElement.parentElement;
@@ -2067,6 +2072,8 @@
             this.instanceType = 32776 /* SVG_ANIMATE */;
             this._reverse = false;
             this._alternate = false;
+            this._values = null;
+            this._keyTimes = null;
             this._keySplines = null;
             this._iterationCount = 1;
             this._from = '';
@@ -2077,7 +2084,7 @@
                 const values = getNamedItem$4(animationElement, 'values');
                 const keyTimes =
                     this.duration !== -1 ? SvgAnimate.toFractionList(getNamedItem$4(animationElement, 'keyTimes')) : [];
-                if (values !== '') {
+                if (values) {
                     const valuesData = trimEnd(values, ';').split(/\s*;\s*/);
                     this.values = valuesData;
                     const length = valuesData.length;
@@ -2094,7 +2101,7 @@
                     this.convertToValues(keyTimes);
                 }
                 const repeatDur = getNamedItem$4(animationElement, 'repeatDur');
-                if (repeatDur !== '' && repeatDur !== 'indefinite') {
+                if (repeatDur && repeatDur !== 'indefinite') {
                     const value = SvgAnimation.parseClockTime(repeatDur);
                     if (!isNaN(value) && value > 0) {
                         this._repeatDuration = value;
@@ -2125,6 +2132,7 @@
         static fromStepTimingFunction(element, attributeName, timingFunction, keyTimes, values, index) {
             const valueA = values[index];
             const valueB = values[index + 1];
+            const checkOptions = value => (hasEm$2(value) ? { fontSize: getFontSize$2(element) } : undefined);
             let currentValue, nextValue;
             switch (attributeName) {
                 case 'fill':
@@ -2147,8 +2155,7 @@
                     currentValue = replaceMap(valueA.trim().split(/\s+/), value => parseFloat(value));
                     nextValue = replaceMap(valueB.trim().split(/\s+/), value => parseFloat(value));
                     break;
-                default: {
-                    const checkOptions = value => (hasEm$2(value) ? { fontSize: getFontSize$2(element) } : undefined);
+                default:
                     if (isNumber(valueA)) {
                         currentValue = [parseFloat(valueA)];
                     } else if (isLength$2(valueA)) {
@@ -2160,7 +2167,6 @@
                         nextValue = [parseUnit$2(valueB, checkOptions(valueB))];
                     }
                     break;
-                }
             }
             if (currentValue && nextValue) {
                 const length = currentValue.length;
@@ -2217,7 +2223,7 @@
                                         SvgAnimate.getSplitValue(rgbaA.b, rgbaB.b, percent)
                                     );
                                     const a = getHexCode(SvgAnimate.getSplitValue(rgbaA.a, rgbaB.a, percent));
-                                    result += (result !== '' ? ' ' : '') + `#${rgb + (a !== 'FF' ? a : '')}`;
+                                    result = `#${rgb + (a !== 'FF' ? a : '')}`;
                                     break;
                                 }
                                 case 'points':
@@ -2225,7 +2231,7 @@
                                         const current = currentValue[j];
                                         const next = nextValue[j];
                                         result +=
-                                            (result !== '' ? ' ' : '') +
+                                            (j > 0 ? ' ' : '') +
                                             SvgAnimate.getSplitValue(current.x, next.x, percent) +
                                             ',' +
                                             SvgAnimate.getSplitValue(current.y, next.y, percent);
@@ -2234,12 +2240,12 @@
                                 default:
                                     for (let j = 0; j < length; ++j) {
                                         result +=
-                                            (result !== '' ? ' ' : '') +
+                                            (j > 0 ? ' ' : '') +
                                             SvgAnimate.getSplitValue(currentValue[j], nextValue[j], percent);
                                     }
                                     break;
                             }
-                            if (result !== '') {
+                            if (result) {
                                 splitTimes[i] = time;
                                 splitValues[i] = result;
                             } else {
@@ -2274,7 +2280,7 @@
                         const keyTimesBase = this.keyTimes;
                         if (keyTimesBase[0] === 0 && keyTimesBase.length === 2) {
                             const valuesBase = this.values;
-                            let keyTimes = [],
+                            const keyTimes = [],
                                 values = [];
                             for (let i = 0, length = keyTimesBase.length - 1; i < length; ++i) {
                                 const result = SvgAnimate.fromStepTimingFunction(
@@ -2286,8 +2292,8 @@
                                     i
                                 );
                                 if (result) {
-                                    keyTimes = keyTimes.concat(result[0]);
-                                    values = values.concat(result[1]);
+                                    keyTimes.push(...result[0]);
+                                    values.push(...result[1]);
                                 }
                             }
                             keyTimes.push(keyTimesBase.pop());
@@ -2421,7 +2427,7 @@
             if (!this._values) {
                 const animationElement = this.animationElement;
                 if (animationElement) {
-                    if (this.to === '') {
+                    if (!this.to) {
                         const by = getNamedItem$4(animationElement, 'by');
                         const byCoords = SvgBuild.parseCoordinates(by);
                         if (byCoords.length && (value || (value = this.baseValue || ''))) {
@@ -2495,7 +2501,7 @@
                 const minSegment = this.keyTimes.length - 1;
                 if (
                     value.length >= minSegment &&
-                    !value.every(spline => spline === '' || spline === SvgAnimate.KEYSPLINE_NAME.linear)
+                    !value.every(spline => !spline || spline === SvgAnimate.KEYSPLINE_NAME.linear)
                 ) {
                     const keySplines = [];
                     for (let i = 0; i < minSegment; ++i) {
@@ -2641,11 +2647,8 @@
             const length = values.length;
             const result = new Array(length);
             for (let i = 0; i < length; ++i) {
-                const value = values[i];
-                if (value === '') {
-                    result[i] = [0, 0, 0];
-                } else {
-                    const seg = SvgBuild.parseCoordinates(value);
+                if (values[i]) {
+                    const seg = SvgBuild.parseCoordinates(values[i]);
                     if (seg.length === 2) {
                         seg[2] = 0;
                     }
@@ -2654,6 +2657,8 @@
                     } else {
                         return null;
                     }
+                } else {
+                    result[i] = [0, 0, 0];
                 }
             }
             return result;
@@ -2662,11 +2667,8 @@
             const length = values.length;
             const result = new Array(length);
             for (let i = 0; i < length; ++i) {
-                const value = values[i];
-                if (value === '') {
-                    result[i] = [1, 1, 0, 0];
-                } else {
-                    const seg = SvgBuild.parseCoordinates(value);
+                if (values[i]) {
+                    const seg = SvgBuild.parseCoordinates(values[i]);
                     if (seg.length === 1) {
                         seg[1] = seg[0];
                     }
@@ -2679,6 +2681,8 @@
                     } else {
                         return null;
                     }
+                } else {
+                    result[i] = [1, 1, 0, 0];
                 }
             }
             return result;
@@ -2687,11 +2691,8 @@
             const length = values.length;
             const result = new Array(length);
             for (let i = 0; i < length; ++i) {
-                const value = values[i];
-                if (value === '') {
-                    result[i] = [0, 0];
-                } else {
-                    const seg = SvgBuild.parseCoordinates(value);
+                if (values[i]) {
+                    const seg = SvgBuild.parseCoordinates(values[i]);
                     if (seg.length === 1) {
                         seg[1] = 0;
                     }
@@ -2700,6 +2701,8 @@
                     } else {
                         return null;
                     }
+                } else {
+                    result[i] = [0, 0];
                 }
             }
             return result;
@@ -2708,16 +2711,15 @@
             const length = values.length;
             const result = new Array(length);
             for (let i = 0; i < length; ++i) {
-                const value = values[i];
-                if (value === '') {
-                    result[i] = [0];
-                } else {
-                    const seg = SvgBuild.parseCoordinates(value);
+                if (values[i]) {
+                    const seg = SvgBuild.parseCoordinates(values[i]);
                     if (seg.length === 1) {
                         result[i] = seg;
                     } else {
                         return null;
                     }
+                } else {
+                    result[i] = [0];
                 }
             }
             return result;
@@ -2982,8 +2984,8 @@
                         const interval = values[j];
                         const animation = interval.animation;
                         if (
-                            interval.value === '' ||
-                            (animation && interval.start && SvgBuild.isAnimate(animation) && animation.from === '')
+                            !interval.value ||
+                            (animation && interval.start && SvgBuild.isAnimate(animation) && !animation.from)
                         ) {
                             let value;
                             for (const group of map[keyName].values()) {
@@ -2991,7 +2993,7 @@
                                     const previous = group[k];
                                     if (
                                         animation !== previous.animation &&
-                                        previous.value !== '' &&
+                                        previous.value &&
                                         (previous.time === -1 ||
                                             previous.fillMode === 2 /* FORWARDS */ ||
                                             previous.fillMode === 1) /* FREEZE */
@@ -3003,7 +3005,7 @@
                             }
                             if (value) {
                                 interval.value = value;
-                            } else if (interval.value === '') {
+                            } else if (!interval.value) {
                                 values.splice(j--, 1);
                             }
                         }
@@ -3160,7 +3162,7 @@
                         for (let i = 0, length = data.length; i < length; ++i) {
                             const previous = data[i];
                             if (
-                                (previous.value !== '' &&
+                                (previous.value &&
                                     (previous.time === -1 ||
                                         (previous.end &&
                                             (previous.fillMode === 2 /* FORWARDS */ ||
@@ -3240,7 +3242,7 @@
     const {
         hasBit: hasBit$2,
         hasKeys,
-        hasValue,
+        hasValue: hasValue$1,
         isEqual,
         isNumber: isNumber$1,
         joinArray,
@@ -4155,11 +4157,11 @@
                         for (let i = 0; i < length; ++i) {
                             const item = mergeable[i];
                             if (excluded[i]) {
-                                if (!item.fillReplace) {
+                                if (item.fillReplace) {
+                                    removeable.push(item);
+                                } else {
                                     item.setterType = true;
                                     insertSetter(item);
-                                } else {
-                                    removeable.push(item);
                                 }
                             } else if (!item.setterType) {
                                 staggered.push(item);
@@ -4237,14 +4239,14 @@
                                         value = this.getBaseValue(attr);
                                     }
                                 }
-                                if (hasValue(value)) {
+                                if (hasValue$1(value)) {
                                     baseValueMap[attr] = value;
                                 }
                             }
                             const setterData = setterAttributeMap[attr] || [];
-                            const incomplete = [];
                             const groupDelay = [];
                             const groupData = [];
+                            let incomplete = [];
                             for (const [delay, data] of groupName[attr].entries()) {
                                 groupDelay.push(delay);
                                 groupData.push(data);
@@ -4377,7 +4379,7 @@
                                             setterData,
                                             set => set.group.id < item.group.id || set.delay < time
                                         );
-                                        incomplete.length = 0;
+                                        incomplete = [];
                                         for (let i = 0, length = groupData.length; i < length; ++i) {
                                             const group = groupData[i];
                                             for (let j = 0, q = group.length; j < q; ++j) {
@@ -4984,8 +4986,7 @@
                                                     break attributeEnd;
                                                 }
                                             } else {
-                                                incomplete.length = 0;
-                                                incomplete.push(item);
+                                                incomplete = [item];
                                                 continue;
                                             }
                                         }
@@ -5805,11 +5806,11 @@
                     this.path = path[1];
                 }
                 const distance = getAttribute(element, 'offset-distance');
-                if (distance !== '') {
+                if (distance) {
                     this.distance = distance;
                 }
                 const rotate = getAttribute(element, 'offset-rotate');
-                if (rotate !== '' && rotate !== 'auto') {
+                if (rotate && rotate !== 'auto') {
                     this.rotate = rotate;
                 }
             }
@@ -6117,20 +6118,18 @@
             if (value !== this._alternate && (iterationCount === -1 || iterationCount > 1)) {
                 const { keyTimes, keyPoints } = this.reverseKeyPoints();
                 if (keyTimes && keyPoints) {
-                    let keyTimesBase = super.keyTimes,
-                        keyPointsBase = this.keyPoints;
+                    const keyTimesBase = super.keyTimes.slice(0);
+                    const keyPointsBase = this.keyPoints.slice(0);
                     const length = keyTimesBase.length;
                     if (iterationCount === -1) {
                         for (let i = 0; i < length; ++i) {
                             keyTimesBase[i] /= 2;
                             keyTimes[i] = 0.5 + keyTimes[i] / 2;
                         }
-                        keyTimesBase = keyTimesBase.concat(keyTimes);
-                        keyPointsBase = keyPointsBase.concat(keyPoints);
+                        keyTimesBase.push(...keyTimes);
+                        keyPointsBase.push(...keyPoints);
                         this.duration *= 2;
                     } else {
-                        const keyTimesStatic = keyTimesBase.slice(0);
-                        const keyPointsStatic = keyPointsBase.slice(0);
                         for (let i = 0; i < iterationCount; ++i) {
                             if (i === 0) {
                                 for (let j = 0; j < length; ++j) {
@@ -6138,14 +6137,14 @@
                                 }
                             } else {
                                 const baseTime = i * (1 / iterationCount);
-                                const keyTimesAppend = i % 2 === 0 ? keyTimesStatic.slice(0) : keyTimes.slice(0);
+                                const keyTimesAppend = i % 2 === 0 ? super.keyTimes.slice(0) : keyTimes.slice(0);
                                 for (let j = 0; j < length; ++j) {
                                     keyTimesAppend[j] = truncateFraction$2(
                                         baseTime + keyTimesAppend[j] / iterationCount
                                     );
                                 }
-                                keyTimesBase = keyTimesBase.concat(keyTimesAppend);
-                                keyPointsBase = keyPointsBase.concat(i % 2 === 0 ? keyPointsStatic : keyPoints);
+                                keyTimesBase.push(...keyTimesAppend);
+                                keyPointsBase.push(...(i % 2 === 0 ? this.keyPoints.slice(0) : keyPoints));
                             }
                         }
                         this.duration = this.duration * iterationCount;
@@ -6231,11 +6230,9 @@
         return value.split(/\s*,\s*/);
     }
     function convertRotate(value) {
-        if (value === 'reverse') {
-            return 'auto 180deg';
-        } else if (/^reverse\s+/.test(value)) {
-            const angle = splitPairEnd(value, ' ');
-            return `auto ${isAngle$1(angle) ? 180 + parseAngle$2(angle, 0) : '0'}deg`;
+        if (value.startsWith('reverse')) {
+            const angle = splitPairEnd(value, ' ', true);
+            return `auto ${angle ? (isAngle$1(angle) ? 180 + parseAngle$2(angle, 0) : '0') : '180'}deg`;
         }
         return value;
     }
@@ -6269,6 +6266,9 @@
             constructor() {
                 super(...arguments);
                 this.transformed = null;
+                this._transforms = null;
+                this._animations = null;
+                this._name = null;
             }
             getTransforms(element = this.element) {
                 return SvgBuild.filterTransforms(
@@ -6280,7 +6280,7 @@
                 const result = [];
                 let id = 0;
                 const addAnimation = (item, delay, name = '') => {
-                    if (name === '') {
+                    if (!name) {
                         ++id;
                     }
                     item.delay = delay;
@@ -6292,14 +6292,13 @@
                     var _a;
                     if (item instanceof SVGAnimationElement) {
                         const begin = getNamedItem$7(item, 'begin');
-                        const times =
-                            begin !== ''
-                                ? sortNumber$3(
-                                      replaceMap$3(begin.split(';'), value =>
-                                          SvgAnimation.parseClockTime(value)
-                                      ).filter(value => !isNaN(value))
+                        const times = begin
+                            ? sortNumber$3(
+                                  replaceMap$3(begin.split(';'), value => SvgAnimation.parseClockTime(value)).filter(
+                                      value => !isNaN(value)
                                   )
-                                : [0];
+                              )
+                            : [0];
                         if (times.length === 0) {
                             return;
                         }
@@ -6348,12 +6347,12 @@
                 const groupName = [];
                 const groupOrdering = [];
                 for (const name in ANIMATION_DEFAULT) {
-                    let values = parseAttribute(element, name);
+                    const values = parseAttribute(element, name);
                     if (values.length === 0) {
                         values.push(ANIMATION_DEFAULT[name]);
                     }
                     while (values.length < length) {
-                        values = values.concat(values.slice(0));
+                        values.push(...values.slice(0));
                     }
                     values.length = length;
                     cssData[name] = values;
@@ -6481,7 +6480,7 @@
                             const offsetRotate = attrData['offset-rotate'];
                             if (attrData['offset-distance'] || !attrData['rotate']) {
                                 let rotate = getAttribute(element, 'offset-rotate');
-                                if (rotate === '' || rotate === 'auto') {
+                                if (!rotate || rotate === 'auto') {
                                     rotate = 'auto 0deg';
                                 }
                                 sortAttribute(offsetRotate);
@@ -6613,7 +6612,7 @@
                                         const value = values[j];
                                         if (j < r - 1) {
                                             const keySpline = keySplines[j];
-                                            if (value !== '' && keySpline.startsWith('step')) {
+                                            if (value && keySpline.startsWith('step')) {
                                                 const stepData = SvgAnimate.fromStepTimingFunction(
                                                     element,
                                                     name,
@@ -6692,13 +6691,13 @@
                 this._name = value;
             }
             get name() {
-                const result = this._name;
-                if (result === undefined) {
+                let result = this._name;
+                if (result === null) {
                     const element = this.element;
                     let id = element.id.trim(),
                         value,
                         tagName;
-                    if (id !== '') {
+                    if (id) {
                         id = convertWord(id, true);
                         if (!CACHE_VIEWNAME.has(id)) {
                             value = id;
@@ -6710,11 +6709,12 @@
                     let index = CACHE_VIEWNAME.get(tagName) || 0;
                     if (value) {
                         CACHE_VIEWNAME.set(value, index);
-                        return (this._name = value);
+                        result = value;
                     } else {
                         CACHE_VIEWNAME.set(tagName, ++index);
-                        return (this._name = tagName + '_' + index);
+                        result = tagName + '_' + index;
                     }
+                    this._name = result;
                 }
                 return result;
             }
@@ -6747,6 +6747,13 @@
     }
     var SvgViewRect$MX = Base => {
         return class extends Base {
+            constructor() {
+                super(...arguments);
+                this._x = null;
+                this._y = null;
+                this._width = null;
+                this._height = null;
+            }
             setRect() {
                 const parent = this.parent;
                 let { x, y, width, height } = this;
@@ -6795,9 +6802,7 @@
             }
             get width() {
                 const result = this._width;
-                if (result !== undefined) {
-                    return result;
-                } else {
+                if (result === null) {
                     const element = this.getRectElement();
                     return element
                         ? hasUnsupportedAccess(element)
@@ -6805,15 +6810,14 @@
                             : element.width.baseVal.value
                         : 0;
                 }
+                return result;
             }
             set height(value) {
                 this._height = value;
             }
             get height() {
                 const result = this._height;
-                if (result !== undefined) {
-                    return result;
-                } else {
+                if (result === null) {
                     const element = this.getRectElement();
                     return element
                         ? hasUnsupportedAccess(element)
@@ -6821,6 +6825,7 @@
                             : element.height.baseVal.value
                         : 0;
                 }
+                return result;
             }
         };
     };
@@ -6967,6 +6972,7 @@
             }
             container = container.parent;
         } while (container);
+        return null;
     }
     function getNearestViewBox$1(container) {
         do {
@@ -6982,6 +6988,7 @@
             super();
             this.element = element;
             this.parent = null;
+            this.viewport = null;
             this.instanceType = 2 /* SVG_CONTAINER */;
             this.aspectRatio = {
                 x: 0,
@@ -7272,10 +7279,10 @@
             return result;
         }
         set clipRegion(value) {
-            if (value !== '') {
+            if (value) {
                 this._clipRegion.push(value);
             } else {
-                this._clipRegion.length = 0;
+                this._clipRegion = [];
             }
         }
         get clipRegion() {
@@ -7390,7 +7397,7 @@
             if (typeof value !== 'string') {
                 value = extractURL(getParentAttribute(value, 'fill')) || '';
             }
-            if (value !== '') {
+            if (value) {
                 const result = this.definitions.pattern.get(value);
                 if (result) {
                     return result;
@@ -7406,7 +7413,7 @@
                 value = extractURL(getParentAttribute(value, 'fillPattern')) || '';
             }
             let result;
-            if (value !== '') {
+            if (value) {
                 result = this.definitions.gradient.get(value);
                 if (!result) {
                     const element = document.getElementById(value.substring(1));
@@ -7482,6 +7489,7 @@
         constructor(element) {
             this.element = element;
             this.parent = null;
+            this.viewport = null;
             this.instanceType = 4 /* SVG_ELEMENT */;
         }
         build(options) {}
@@ -7522,6 +7530,25 @@
     };
     var SvgPaint$MX = Base => {
         return class extends Base {
+            constructor() {
+                super(...arguments);
+                this.fill = '';
+                this.fillPattern = '';
+                this.fillOpacity = '';
+                this.fillRule = '';
+                this.stroke = '';
+                this.strokePattern = '';
+                this.strokeOpacity = '';
+                this.strokeLinecap = '';
+                this.strokeLinejoin = '';
+                this.strokeMiterlimit = '';
+                this.strokeDasharray = '';
+                this.strokeDashoffset = '';
+                this.color = '';
+                this.clipPath = '';
+                this.clipRule = '';
+                this._strokeWidth = '';
+            }
             setStroke() {
                 this.setAttribute('stroke');
                 this.setAttribute('stroke-width');
@@ -7541,7 +7568,7 @@
                 this.setAttribute('stroke-dashoffset');
                 this.setAttribute('clip-rule');
                 const clipPath = this.getAttribute('clip-path');
-                if (clipPath !== '' && clipPath !== 'none') {
+                if (clipPath && clipPath !== 'none') {
                     const url = extractURL$1(clipPath);
                     if (url) {
                         this.clipPath = url;
@@ -7645,7 +7672,7 @@
             setAttribute(attr) {
                 const element = this.element;
                 let value = this.getAttribute(attr);
-                if (value !== '') {
+                if (value) {
                     attr = convertCamelCase$2(attr);
                     if (hasCalc$1(value)) {
                         value = calculateStyle(element, attr, value) || getComputedStyle(element)[attr];
@@ -7700,7 +7727,7 @@
             }
             getAttribute(attr) {
                 let value = getAttribute(this.element, attr);
-                if (value === '') {
+                if (!value) {
                     if (this.patternParent) {
                         switch (attr) {
                             case 'fill-opacity':
@@ -7713,7 +7740,7 @@
                     let current = this.useParent || this.parent;
                     while (current) {
                         value = getAttribute(SvgBuild.isUse(current) ? current.useElement : current.element, attr);
-                        if (value !== '') {
+                        if (value) {
                             break;
                         }
                         current = current.parent;
@@ -7761,9 +7788,9 @@
             get strokeWidth() {
                 var _a;
                 const stroke = this.stroke;
-                if (stroke !== '' && stroke !== 'none') {
+                if (stroke && stroke !== 'none') {
                     const result = this._strokeWidth;
-                    if (result !== '') {
+                    if (result) {
                         return ((_a = this.parent) === null || _a === void 0 ? void 0 : _a.requireRefit)
                             ? truncate$1(this.parent.refitSize(parseFloat(result)))
                             : result;
@@ -8210,9 +8237,7 @@
                         }
                     }
                 }
-                if (this.baseValue === '') {
-                    this.baseValue = d;
-                }
+                this.baseValue || (this.baseValue = d);
             } else if (SVG.line(element)) {
                 let points = [
                     { x: this.getBaseValue('x1'), y: this.getBaseValue('y1') },
@@ -8348,7 +8373,7 @@
             return d;
         }
         extendLength(data, precision) {
-            if (this.value !== '') {
+            if (this.value) {
                 switch (this.element.tagName) {
                     case 'path':
                     case 'line':
@@ -8627,9 +8652,8 @@
                                 }
                             }
                         };
-                        let extracted = [],
-                            initialized,
-                            modified;
+                        const extracted = [];
+                        let initialized, modified;
                         if (sorted.length > 1) {
                             for (let i = 0; i < sorted.length; ++i) {
                                 const item = sorted[i];
@@ -8725,7 +8749,7 @@
                                                 group[j].replaceValue = getFromToValue(replaceValue[j]);
                                             }
                                         }
-                                        extracted = extracted.concat(group);
+                                        extracted.push(...group);
                                         modified = true;
                                         continue;
                                     }
@@ -9084,6 +9108,7 @@
             super(element);
             this.element = element;
             this.patternElement = patternElement;
+            this.drawRegion = null;
             this.instanceType = 514 /* SVG_SHAPE_PATTERN */;
             this.patternUnits =
                 getNamedItem$a(this.patternElement, 'patternUnits') === 'userSpaceOnUse'
@@ -9159,7 +9184,7 @@
                                     ).toString();
                                     patternPath.clipPath =
                                         SvgBuild.drawRect(tileWidth, tileHeight, x, y, precision) +
-                                        (patternPath.clipPath !== '' ? ';' + patternPath.clipPath : '');
+                                        (patternPath.clipPath ? ';' + patternPath.clipPath : '');
                                 }
                             }
                         });
@@ -9168,7 +9193,7 @@
                     } while (remainingWidth > 0);
                     remainingHeight -= tileHeight;
                 }
-                if (this.stroke !== '' && parseFloat(this.strokeWidth) > 0) {
+                if (this.stroke && parseFloat(this.strokeWidth) > 0) {
                     path.fill = '';
                     path.fillOpacity = '0';
                     path.stroke = this.stroke;
@@ -9248,7 +9273,7 @@
                                 break;
                         }
                     }
-                    this._transforms = this._transforms.concat(SvgBuild.filterTransforms(transforms));
+                    this._transforms.push(...SvgBuild.filterTransforms(transforms));
                 }
             }
             return this._transforms;
