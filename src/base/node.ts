@@ -1467,25 +1467,23 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             if (attr) {
                 return getStyle(this._element!, name)[attr] as Undef<string>;
             }
-            else {
-                const styleMap = this._elementData!['styleMap' + name] as Undef<StringMap>;
-                if (styleMap) {
-                    switch (name) {
-                        case '::first-letter':
-                        case '::first-line':
-                            switch (this.display) {
-                                case 'block':
-                                case 'inline-block':
-                                case 'list-item':
-                                case 'table-cell':
-                                    break;
-                                default:
-                                    return;
-                            }
-                        case '::before':
-                        case '::after':
-                            return Node.sanitizeCss(this._element as HTMLElement, styleMap, styleMap.writingMode || this.valueOf('writingMode'));
-                    }
+            const styleMap = this._elementData!['styleMap' + name] as Undef<StringMap>;
+            if (styleMap) {
+                switch (name) {
+                    case '::first-letter':
+                    case '::first-line':
+                        switch (this.display) {
+                            case 'block':
+                            case 'inline-block':
+                            case 'list-item':
+                            case 'table-cell':
+                                break;
+                            default:
+                                return;
+                        }
+                    case '::before':
+                    case '::after':
+                        return Node.sanitizeCss(this._element as HTMLElement, styleMap, styleMap.writingMode || this.valueOf('writingMode'));
                 }
             }
         }

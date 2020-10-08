@@ -69,12 +69,10 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                 if (!a[method as NodeIntersectXY](b.bounds, options)) {
                     return linearA[align] - linearB[align];
                 }
-                else {
-                    const posA = linearA[sort];
-                    const posB = linearB[sort];
-                    if (!withinRange(posA, posB)) {
-                        return posA - posB;
-                    }
+                const posA = linearA[sort];
+                const posB = linearB[sort];
+                if (!withinRange(posA, posB)) {
+                    return posA - posB;
                 }
                 return 0;
             });

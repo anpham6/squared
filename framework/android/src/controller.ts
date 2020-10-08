@@ -1132,30 +1132,29 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     public checkConstraintHorizontal(layout: LayoutUI<T>) {
         if (layout.size() > 1 && layout.singleRowAligned) {
             switch (layout.floated?.size) {
-                case 1:
+                case 1: {
                     if (hasCleared(layout, this.application.clearMap)) {
                         return false;
                     }
-                    else {
-                        let left: Undef<boolean>,
-                            right: Undef<boolean>;
-                        for (const node of layout) {
-                            const { float, autoMargin } = node;
-                            if (float === 'left' || autoMargin.right) {
-                                if (right) {
-                                    return false;
-                                }
-                                left = true;
+                    let left: Undef<boolean>,
+                        right: Undef<boolean>;
+                    for (const node of layout) {
+                        const { float, autoMargin } = node;
+                        if (float === 'left' || autoMargin.right) {
+                            if (right) {
+                                return false;
                             }
-                            if (float === 'right' || autoMargin.left) {
-                                if (left) {
-                                    return false;
-                                }
-                                right = true;
+                            left = true;
+                        }
+                        if (float === 'right' || autoMargin.left) {
+                            if (left) {
+                                return false;
                             }
+                            right = true;
                         }
                     }
                     break;
+                }
                 case 2:
                     return false;
             }

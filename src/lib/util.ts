@@ -354,10 +354,10 @@ export function fromMimeType(value: string) {
     }
 }
 
-export function formatXml(value: string, closeEmpty?: boolean, caseSensitive?: boolean, indentChar = '\t') {
-    const lines: XMLTagData[] = [];
-    const pattern = /\s*(<(\/)?([A-Za-z\d-]+)([^>]*)>)(\s*)([^<]*)/g;
+export function formatXml(value: string, closeEmpty = true, caseSensitive?: boolean, indentChar = '\t') {
+    const pattern = /\s*(<(\/)?(!?[A-Za-z\d-]+)([^>]*)>)(\s*)([^<]*)/g;
     const patternContent = /^([\S\s]*?)(\s*)$/;
+    const lines: XMLTagData[] = [];
     let output = '',
         indent = -1,
         ignoreIndent: Undef<boolean>,
@@ -408,10 +408,12 @@ export function formatXml(value: string, closeEmpty?: boolean, caseSensitive?: b
                         }
                     }
                 }
-                if (closeEmpty && !line.content) {
-                    if (single) {
+                if (closeEmpty && !line.content && line.tag[1] !== '!') {
+                    if (single || !willClose) {
                         line.tag = line.tag.replace(/\s*>$/, ' />');
-                        ++i;
+                        if (willClose) {
+                            ++i;
+                        }
                     }
                     else if (willClose) {
                         ++indent;
@@ -1020,9 +1022,7 @@ export function sortByArray<T = unknown>(list: T[], ...attrs: (string | boolean)
             if (ascending) {
                 return valueA < valueB ? -1 : 1;
             }
-            else {
-                return valueA > valueB ? -1 : 1;
-            }
+            return valueA > valueB ? -1 : 1;
         }
         return 0;
     });

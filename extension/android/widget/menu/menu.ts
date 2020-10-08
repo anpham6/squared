@@ -80,11 +80,9 @@ function getTitle(node: View, element: HTMLElement) {
     if (title) {
         return title;
     }
-    else {
-        for (const child of node.naturalChildren as View[]) {
-            if (child.textElement && !child.textEmpty) {
-                return child.textContent.trim();
-            }
+    for (const child of node.naturalChildren as View[]) {
+        if (child.textElement && !child.textEmpty) {
+            return child.textContent.trim();
         }
     }
     return '';

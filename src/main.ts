@@ -342,16 +342,14 @@ export function get(...values: string[]) {
         if (values.length === 1) {
             return findExtension(values[0]);
         }
-        else {
-            const result: Extension[] = [];
-            for (const value of values) {
-                const item = findExtension(value);
-                if (item) {
-                    result.push(item);
-                }
+        const result: Extension[] = [];
+        for (const value of values) {
+            const item = findExtension(value);
+            if (item) {
+                result.push(item);
             }
-            return result;
         }
+        return result;
     }
 }
 

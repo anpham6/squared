@@ -550,9 +550,9 @@ declare module "svg" {
         fillMode: number;
         paused: boolean;
         synchronizeState: number;
+        id: Null<number>;
         baseValue: string;
         replaceValue?: string;
-        id: Null<number>;
         companion?: NumberValue<SvgAnimation>;
         readonly element: Null<SVGGraphicsElement>;
         readonly animationElement: Null<SVGAnimationElement>;

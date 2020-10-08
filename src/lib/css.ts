@@ -9,7 +9,6 @@ import { convertCamelCase, convertFloat, convertHyphenated, hasBit, isNumber, is
 
 const DOCUMENT_ELEMENT = document.documentElement;
 const DOCUMENT_FIXEDMAP = [9/13, 10/13, 12/13, 16/13, 20/13, 2, 3];
-const DOCUMENT_FIXEDSIZE = 13;
 let DOCUMENT_FONTMAP!: number[];
 let DOCUMENT_FONTBASE!: number;
 let DOCUMENT_FONTSIZE!: number;
@@ -109,12 +108,10 @@ function calculatePosition(element: StyleElement, value: string, boundingBox?: N
                         }
                         if (isCalc(position)) {
                             const result = formatVar(calculateVar(element, position, { dimension, boundingBox }));
-                            if (result) {
-                                alignment[i] = result;
-                            }
-                            else {
+                            if (!result) {
                                 return '';
                             }
+                            alignment[i] = result;
                         }
                         break;
                     }
@@ -144,34 +141,28 @@ function calculateColor(element: StyleElement, value: string) {
                             if (isCalc(rgb)) {
                                 if (hsl && (j === 1 || j === 2)) {
                                     const result = calculateVar(element, rgb, { unitType: CSS_UNIT.PERCENT, supportPercent: true });
-                                    if (!isNaN(result)) {
-                                        component[j] = clamp(result, 0, 100) + '%';
-                                    }
-                                    else {
+                                    if (isNaN(result)) {
                                         return '';
                                     }
+                                    component[j] = clamp(result, 0, 100) + '%';
                                 }
                                 else if (j === 3) {
                                     const percent = rgb.includes('%');
                                     let result = calculateVar(element, rgb, percent ? { unitType: CSS_UNIT.PERCENT } : { unitType: CSS_UNIT.DECIMAL });
-                                    if (!isNaN(result)) {
-                                        if (percent) {
-                                            result /= 100;
-                                        }
-                                        component[j] = clamp(result).toString();
-                                    }
-                                    else {
+                                    if (isNaN(result)) {
                                         return '';
                                     }
+                                    if (percent) {
+                                        result /= 100;
+                                    }
+                                    component[j] = clamp(result).toString();
                                 }
                                 else {
                                     const result = calculateVar(element, rgb, { unitType: CSS_UNIT.DECIMAL, supportPercent: false });
-                                    if (!isNaN(result)) {
-                                        component[j] = clamp(result, 0, 255).toString();
-                                    }
-                                    else {
+                                    if (isNaN(result)) {
                                         return '';
                                     }
+                                    component[j] = clamp(result, 0, 255).toString();
                                 }
                             }
                         }
@@ -194,12 +185,10 @@ function calculateGeneric(element: StyleElement, value: string, unitType: number
         if (isCalc(seg)) {
             const px = REGEXP_LENGTH.test(seg);
             const result = calculateVar(element, seg, px ? { dimension, boundingBox, min: 0, parent: false } : { unitType, min, supportPercent: false });
-            if (!isNaN(result)) {
-                segments[i] = result + (px ? 'px' : '');
-            }
-            else {
+            if (isNaN(result)) {
                 return '';
             }
+            segments[i] = result + (px ? 'px' : '');
         }
     }
     return segments.join('').trim();
@@ -1667,7 +1656,7 @@ export function updateDocumentFont() {
 }
 
 export function getRemSize(fixedWidth?: boolean) {
-    return !fixedWidth ? DOCUMENT_FONTSIZE : DOCUMENT_FIXEDSIZE;
+    return !fixedWidth ? DOCUMENT_FONTSIZE : 13;
 }
 
 export function getFontSize(element: Element) {
@@ -2208,12 +2197,10 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                                         let rotate = component[j];
                                         if (isCalc(rotate)) {
                                             const result = calculateVar(element, rotate, { unitType: j === 3 ? CSS_UNIT.ANGLE : CSS_UNIT.DECIMAL, supportPercent: false });
-                                            if (!isNaN(result)) {
-                                                rotate = result + (j === 3 ? 'deg' : '');
-                                            }
-                                            else {
+                                            if (isNaN(result)) {
                                                 return '';
                                             }
+                                            rotate = result + (j === 3 ? 'deg' : '');
                                         }
                                         calc += calc ? ', ' + rotate : rotate;
                                     }
@@ -2221,12 +2208,10 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                                 break;
                             }
                         }
-                        if (calc) {
-                            transform[i] = `(${calc})`;
-                        }
-                        else {
+                        if (!calc) {
                             return '';
                         }
+                        transform[i] = `(${calc})`;
                     }
                 }
                 return transform.join('');
@@ -2274,13 +2259,11 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                     if (isColor(previous) && hasCalc(color[i])) {
                         const prefix = previous.split(CHAR_SPACE).pop()!;
                         const result = calculateColor(element, prefix + color[i]);
-                        if (result) {
-                            color[i] = result;
-                            color[i - 1] = previous.substring(0, previous.length - prefix.length);
-                        }
-                        else {
+                        if (!result) {
                             return '';
                         }
+                        color[i] = result;
+                        color[i - 1] = previous.substring(0, previous.length - prefix.length);
                     }
                 }
                 return color.join('');
@@ -2315,12 +2298,10 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
             const result: string[] = [];
             for (const position of value.split(CHAR_SEPARATOR)) {
                 const segment = calculatePosition(element, position, boundingBox);
-                if (segment) {
-                    result.push(segment);
-                }
-                else {
+                if (!segment) {
                     return '';
                 }
+                result.push(segment);
             }
             return result.join(', ');
         }
@@ -2349,13 +2330,11 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                     else {
                         continue;
                     }
-                    if (result) {
-                        border[i] = result;
-                        border[i - 1] = previous.substring(0, previous.length - prefix.length);
-                    }
-                    else {
+                    if (!result) {
                         return '';
                     }
+                    border[i] = result;
+                    border[i - 1] = previous.substring(0, previous.length - prefix.length);
                 }
                 return border.join('');
             }
@@ -2381,12 +2360,10 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                                     let bezier = cubic[j];
                                     if (isCalc(bezier)) {
                                         const p = calculateVar(element, bezier, j % 2 === 0 ? { unitType: CSS_UNIT.DECIMAL, supportPercent: false, min: 0, max: 1 } : undefined);
-                                        if (!isNaN(p)) {
-                                            bezier = p.toString();
-                                        }
-                                        else {
+                                        if (isNaN(p)) {
                                             return '';
                                         }
+                                        bezier = p.toString();
                                     }
                                     calc += calc ? ', ' + bezier : bezier;
                                 }
@@ -2395,12 +2372,10 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                         else if (prefix.endsWith('steps')) {
                             calc = calculateVarAsString(element, seg, { unitType: CSS_UNIT.INTEGER, min: 1 });
                         }
-                        if (calc) {
-                            timingFunction[i] = `(${calc})`;
-                        }
-                        else {
+                        if (!calc) {
                             return '';
                         }
+                        timingFunction[i] = `(${calc})`;
                     }
                 }
                 return timingFunction.join('');
@@ -2440,38 +2415,30 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                             if (prefix === 'circle') {
                                 if (radius.includes('%')) {
                                     const { width, height } = boundingBox || getContentBoxDimension(element.parentElement);
-                                    if (width && height) {
-                                        options.boundingSize = Math.min(width, height);
-                                    }
-                                    else {
+                                    if (!width || !height) {
                                         return '';
                                     }
+                                    options.boundingSize = Math.min(width, height);
                                 }
                             }
                             else {
                                 options.dimension = ['width', 'height'];
                             }
                             radius = calculateVarAsString(element, radius, options);
-                            if (radius) {
-                                result.push(radius);
-                            }
-                            else {
+                            if (!radius) {
                                 return '';
                             }
                         }
-                        else if (radius) {
+                        if (radius) {
                             result.push(radius);
                         }
                         if (hasCalc(position)) {
                             position = calculateVarAsString(element, position, { dimension: ['width', 'height'], boundingBox, parent: true });
-                            if (position) {
-                                result.push(position);
-                            }
-                            else {
+                            if (!position) {
                                 return '';
                             }
                         }
-                        else if (position) {
+                        if (position) {
                             result.push(position);
                         }
                         shape = result.join(' at ');
@@ -2485,16 +2452,11 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                         for (let points of shape.split(CHAR_SEPARATOR)) {
                             if (hasCalc(points)) {
                                 points = calculateVarAsString(element, points, { dimension: ['width', 'height'], boundingBox, parent: true });
-                                if (points) {
-                                    result.push(points);
-                                }
-                                else {
+                                if (!points) {
                                     return '';
                                 }
                             }
-                            else {
-                                result.push(points);
-                            }
+                            result.push(points);
                         }
                         shape = result.join(', ');
                         break;
@@ -2512,21 +2474,17 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
             let [row, column] = value.trim().split(CHAR_DIVIDER);
             if (hasCalc(row)) {
                 const result = calculateStyle(element, 'gridTemplateRows', row, boundingBox);
-                if (result) {
-                    row = result;
-                }
-                else {
+                if (!result) {
                     return '';
                 }
+                row = result;
             }
             if (hasCalc(column)) {
                 const result = calculateStyle(element, 'gridTemplateColumns', column, boundingBox);
-                if (result) {
-                    column = result;
-                }
-                else {
+                if (!result) {
                     return '';
                 }
+                column = result;
             }
             return row + (column ? ` / ${column}` : '');
         }
@@ -2535,37 +2493,34 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
             if (hasCalc(offset)) {
                 const url = splitEnclosing(offset.trim());
                 const length = url.length;
-                if (length >= 2) {
-                    offset = url[0] + url[1];
+                if (length < 2) {
+                    return '';
+                }
+                offset = url[0] + url[1];
+                if (hasCalc(offset)) {
+                    offset = calculateStyle(element, 'offsetPath', offset, boundingBox);
+                    if (!offset) {
+                        return '';
+                    }
+                }
+                if (length > 2) {
+                    let distance = url.slice(2).join('');
                     if (hasCalc(offset)) {
-                        offset = calculateStyle(element, 'offsetPath', offset, boundingBox);
-                        if (!offset) {
+                        distance = calculateStyle(element, REGEXP_LENGTH.test(distance) ? 'offsetDistance' : 'offsetRotate', distance, boundingBox);
+                        if (!distance) {
                             return '';
                         }
                     }
-                    if (length > 2) {
-                        let distance = url.slice(2).join('');
-                        if (hasCalc(offset)) {
-                            distance = calculateStyle(element, REGEXP_LENGTH.test(distance) ? 'offsetDistance' : 'offsetRotate', distance, boundingBox);
-                            if (!distance) {
-                                return '';
-                            }
-                        }
-                        offset += ' ' + distance;
-                    }
+                    offset += ' ' + distance;
                 }
-                else {
-                    return '';
-                }
+
             }
             if (hasCalc(anchor)) {
                 const result = calculateStyle(element, 'offsetAnchor', anchor, boundingBox);
-                if (result) {
-                    anchor = result;
-                }
-                else {
+                if (!result) {
                     return '';
                 }
+                anchor = result;
             }
             return offset + (anchor ? ` / ${anchor}` : '');
         }
@@ -2583,21 +2538,17 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                         [width, outset] = match[3].trim().split(CHAR_DIVIDER);
                         if (hasCalc(width)) {
                             const result = calculateStyle(element, 'borderImageWidth', width, boundingBox);
-                            if (result) {
-                                width = result;
-                            }
-                            else {
+                            if (!result) {
                                 return '';
                             }
+                            width = result;
                         }
                         if (hasCalc(outset)) {
                             const result = calculateStyle(element, 'borderImageOutset', outset, boundingBox);
-                            if (result) {
-                                outset = result;
-                            }
-                            else {
+                            if (!result) {
                                 return '';
                             }
+                            outset = result;
                         }
                     }
                     return match[1] + ' ' + slice + (width ? ` / ${width}` : '') + (outset ? ` / ${outset}` : '');
@@ -2639,12 +2590,10 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                             case 'url':
                                 continue;
                         }
-                        if (result) {
-                            filters[i] = `(${result})`;
-                        }
-                        else {
+                        if (!result) {
                             return '';
                         }
+                        filters[i] = `(${result})`;
                     }
                 }
                 return filters.join('');
@@ -2655,16 +2604,15 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
         case 'mask':
         case 'gridTemplate':
             return getStyle(element)[attr];
-        default:
+        default: {
             if (attr.endsWith('Color') || hasBit(CSS_PROPERTIES[attr]?.trait, CSS_TRAITS.COLOR)) {
                 return calculateColor(element, value.trim());
             }
-            else {
-                const alias = checkWritingMode(attr, getStyle(element).writingMode);
-                if (alias !== attr) {
-                    return calculateStyle(element, alias as string, value, boundingBox);
-                }
+            const alias = checkWritingMode(attr, getStyle(element).writingMode);
+            if (alias !== attr) {
+                return calculateStyle(element, alias as string, value, boundingBox);
             }
+        }
     }
     return '';
 }
@@ -2943,12 +2891,10 @@ export function parseVar(element: StyleElement, value: string, style?: CSSStyleD
         if (fallback && (!customValue || isLength(fallback, true) && !isLength(customValue, true) || isNumber(fallback) && !isNumber(customValue) || parseColor(fallback) && !parseColor(customValue))) {
             customValue = fallback.trim();
         }
-        if (customValue) {
-            value = match[1] + customValue + match[4];
-        }
-        else {
+        if (!customValue) {
             return '';
         }
+        value = match[1] + customValue + match[4];
     }
     return value;
 }
@@ -3018,12 +2964,10 @@ export function calculateVarAsString(element: StyleElement, value: string, optio
                         }
                     }
                     const k = calculateVar(element, output, options as CalculateVarOptions);
-                    if (!isNaN(k)) {
-                        partial += k + unit;
-                    }
-                    else {
+                    if (isNaN(k)) {
                         return '';
                     }
+                    partial += k + unit;
                 }
                 else {
                     partial += output;
@@ -3053,9 +2997,7 @@ export function calculateVarAsString(element: StyleElement, value: string, optio
             if (optional === segment) {
                 return '';
             }
-            else {
-                value = value.replace(segment, optional);
-            }
+            value = value.replace(segment, optional);
         }
     }
     return value;
@@ -3308,17 +3250,17 @@ export function insertStyleSheetRule(value: string, index = 0, shadowRoot?: Shad
 
 export function calculate(value: string, options?: CalculateOptions) {
     value = value.trim();
-    if (!value) {
+    let length = value.length;
+    if (length === 0) {
         return NaN;
     }
-    let length = value.length;
-    if (value[0] !== '(' || value[length - 1] !== ')') {
+    else if (value[0] !== '(' || value[length - 1] !== ')') {
         value = `(${value})`;
         length += 2;
     }
-    let opened = 0;
     const opening: boolean[] = [];
     const closing: number[] = [];
+    let opened = 0;
     for (let i = 0; i < length; ++i) {
         switch (value[i]) {
             case '(':
@@ -3333,14 +3275,14 @@ export function calculate(value: string, options?: CalculateOptions) {
     if (opened === closing.length) {
         const equated: number[] = [];
         let index = 0;
-        while (true) {
+        do {
             for (let i = 0; i < closing.length; ++i) {
                 let valid: Undef<boolean>,
                     j = closing[i] - 1;
                 for ( ; j >= 0; j--) {
                     if (opening[j]) {
-                        valid = true;
                         opening[j] = false;
+                        valid = true;
                         break;
                     }
                     else if (closing.includes(j)) {
@@ -3529,28 +3471,22 @@ export function calculate(value: string, options?: CalculateOptions) {
                         seg.splice(k, 2, seg[k] + seg[k + 1] * (evaluate[k] === '-' ? -1 : 1));
                         evaluate.splice(k--, 1);
                     }
-                    if (seg.length === 1) {
-                        if (closing.length === 1) {
-                            const result = seg[0];
-                            if (min !== undefined && result < min || max !== undefined && result > max) {
-                                return NaN;
-                            }
-                            return truncateFraction(result);
-                        }
-                        else {
-                            equated[index] = seg[0];
-                            const hash = `{${index++}}`;
-                            const remaining = closing[i] + 1;
-                            value = value.substring(0, j) + hash + ' '.repeat(remaining - (j + hash.length)) + value.substring(remaining);
-                            closing.splice(i--, 1);
-                        }
-                    }
-                    else {
+                    if (seg.length !== 1) {
                         return NaN;
                     }
+                    if (closing.length === 1) {
+                        const result = seg[0];
+                        return min !== undefined && result < min || max !== undefined && result > max ? NaN : truncateFraction(result);
+                    }
+                    equated[index] = seg[0];
+                    const hash = `{${index++}}`;
+                    const remaining = closing[i] + 1;
+                    value = value.substring(0, j) + hash + ' '.repeat(remaining - (j + hash.length)) + value.substring(remaining);
+                    closing.splice(i--, 1);
                 }
             }
         }
+        while (true);
     }
     return NaN;
 }
@@ -3570,7 +3506,7 @@ export function parseUnit(value: string, options: ParseUnitOptions = {}) {
                     return result * options.fontSize;
                 }
             case 'rem':
-                return result * (options.fixedWidth ? DOCUMENT_FIXEDSIZE : DOCUMENT_FONTSIZE);
+                return result * (!options.fixedWidth ? DOCUMENT_FONTSIZE : 13);
             case 'pc':
                 result *= 12;
             case 'pt':

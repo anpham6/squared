@@ -1784,10 +1784,8 @@ class FileManager implements serve.IFileManager {
                 if (file.bundleIndex === 0) {
                     return false;
                 }
-                else {
-                    appending[filepath].push(file);
-                    return true;
-                }
+                appending[filepath].push(file);
+                return true;
             }
             else if (!content) {
                 if (completed.includes(filepath)) {
@@ -1844,21 +1842,19 @@ class FileManager implements serve.IFileManager {
                         if (Compress.getFileSize(filepath)) {
                             return this.appendContent(queue, value);
                         }
-                        else {
-                            const content = await this.appendContent(queue, value, true);
-                            if (content) {
-                                try {
-                                    fs.writeFileSync(filepath, content, 'utf8');
-                                    queue.bundleIndex = Infinity;
-                                    bundleMain = queue;
-                                }
-                                catch (err) {
-                                    queue.excluded = true;
-                                    Node.writeFail(filepath, err);
-                                }
+                        const content = await this.appendContent(queue, value, true);
+                        if (content) {
+                            try {
+                                fs.writeFileSync(filepath, content, 'utf8');
+                                queue.bundleIndex = Infinity;
+                                bundleMain = queue;
                             }
-                            return Promise.resolve();
+                            catch (err) {
+                                queue.excluded = true;
+                                Node.writeFail(filepath, err);
+                            }
                         }
+                        return Promise.resolve();
                     };
                     const resumeQueue = () => processQueue(queue, filepath, !bundleMain || bundleMain.excluded ? !file.excluded && file || queue : bundleMain);
                     if (queue.content) {

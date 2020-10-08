@@ -408,27 +408,26 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         if (width && height) {
             return style.getPropertyValue('visibility') === 'visible' || !hasCoords(style.getPropertyValue('position'));
         }
-        else {
-            let parent = element.parentElement;
-            while (parent) {
-                switch (parent.tagName) {
-                    case 'DETAILS':
-                        return false;
-                    case 'SUMMARY':
-                        return true;
-                    default:
-                        parent = parent.parentElement;
-                        break;
-                }
-            }
-            switch (element.tagName) {
-                case 'IMG':
-                    return display !== 'none';
-                case 'SLOT':
+        let parent = element.parentElement;
+        while (parent) {
+            switch (parent.tagName) {
+                case 'DETAILS':
+                    return false;
+                case 'SUMMARY':
                     return true;
+                default:
+                    parent = parent.parentElement;
+                    break;
             }
         }
-        return !hasCoords(style.getPropertyValue('position')) && (display === 'block' || width > 0 && style.getPropertyValue('float') !== 'none' || style.getPropertyValue('clear') !== 'none') || iterateArray(element.children, (item: HTMLElement) => this.visibleElement(item, sessionId)) === Infinity;
+        switch (element.tagName) {
+            case 'IMG':
+                return display !== 'none';
+            case 'SLOT':
+                return true;
+            default:
+                return !hasCoords(style.getPropertyValue('position')) && (display === 'block' || width > 0 && style.getPropertyValue('float') !== 'none' || style.getPropertyValue('clear') !== 'none') || iterateArray(element.children, (item: HTMLElement) => this.visibleElement(item, sessionId)) === Infinity;
+        }
     }
 
     public evaluateNonStatic(documentRoot: T, cache: NodeList<T>) {
@@ -717,19 +716,17 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             if (depth !== 0) {
                 return depth;
             }
-            else {
-                const parentA = a.documentParent;
-                const parentB = b.documentParent;
-                if (parentA !== parentB) {
-                    depth = parentA.depth - parentB.depth;
-                    if (depth !== 0) {
-                        return depth;
-                    }
-                    else if (parentA.actualParent === parentB.actualParent) {
-                        return parentA.childIndex - parentB.childIndex;
-                    }
-                    return parentA.id - parentB.id;
+            const parentA = a.documentParent;
+            const parentB = b.documentParent;
+            if (parentA !== parentB) {
+                depth = parentA.depth - parentB.depth;
+                if (depth !== 0) {
+                    return depth;
                 }
+                else if (parentA.actualParent === parentB.actualParent) {
+                    return parentA.childIndex - parentB.childIndex;
+                }
+                return parentA.id - parentB.id;
             }
             return 0;
         });

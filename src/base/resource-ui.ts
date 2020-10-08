@@ -468,48 +468,47 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                             result.horizontal = position;
                             ++horizontal;
                             break;
-                        case 'center':
+                        case 'center': {
                             if (length === 4) {
                                 return false;
                             }
-                            else {
-                                let centerHorizontal = true;
-                                if (nextPosition === undefined) {
-                                    if (horizontal) {
-                                        result.vertical = position;
-                                        centerHorizontal = false;
-                                    }
-                                    else {
-                                        result.horizontal = position;
-                                    }
+                            let centerHorizontal = true;
+                            if (nextPosition === undefined) {
+                                if (horizontal) {
+                                    result.vertical = position;
+                                    centerHorizontal = false;
                                 }
                                 else {
-                                    switch (nextPosition) {
-                                        case 'left':
-                                        case 'right':
-                                            result.vertical = position;
-                                            centerHorizontal = false;
-                                            break;
-                                        case 'top':
-                                        case 'bottom':
-                                            result.horizontal = position;
-                                            break;
-                                        default:
-                                            return false;
-                                    }
-                                }
-                                if (centerHorizontal) {
-                                    result.left = width / 2;
-                                    result.leftAsPercent = 0.5;
-                                    setImageOffset(position, true, 'left', 'leftAsPercent');
-                                }
-                                else {
-                                    result.top = height / 2;
-                                    result.topAsPercent = 0.5;
-                                    setImageOffset(position, false, 'top', 'topAsPercent');
+                                    result.horizontal = position;
                                 }
                             }
+                            else {
+                                switch (nextPosition) {
+                                    case 'left':
+                                    case 'right':
+                                        result.vertical = position;
+                                        centerHorizontal = false;
+                                        break;
+                                    case 'top':
+                                    case 'bottom':
+                                        result.horizontal = position;
+                                        break;
+                                    default:
+                                        return false;
+                                }
+                            }
+                            if (centerHorizontal) {
+                                result.left = width / 2;
+                                result.leftAsPercent = 0.5;
+                                setImageOffset(position, true, 'left', 'leftAsPercent');
+                            }
+                            else {
+                                result.top = height / 2;
+                                result.topAsPercent = 0.5;
+                                setImageOffset(position, false, 'top', 'topAsPercent');
+                            }
                             break;
+                        }
                         case 'top':
                         case 'bottom':
                             result.vertical = position;

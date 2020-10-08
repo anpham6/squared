@@ -502,10 +502,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             if (!overwrite && obj[attr]) {
                 return obj[attr]!;
             }
-            else {
-                obj[attr] = value;
-                return value;
-            }
+            obj[attr] = value;
+            return value;
         }
         return obj[attr] || '';
     }
@@ -902,6 +900,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             const checkBlockDimension = (previous: T) => this.blockDimension && Math.ceil(this.bounds.top) >= previous.bounds.bottom && (this.blockVertical || previous.blockVertical || this.percentWidth > 0 || previous.percentWidth > 0);
             if (isArray(siblings)) {
                 const previous = siblings[siblings.length - 1];
+                const getPercentWidth = (node: T) => node.inlineDimension && !node.hasPX('maxWidth') ? node.percentWidth : -Infinity;
                 if (cleared) {
                     if (cleared.size && (cleared.has(this) || this.siblingsLeading.some(item => item.excluded && cleared.has(item)))) {
                         return NODE_TRAVERSE.FLOAT_CLEAR;
@@ -979,9 +978,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                     if (top < Math.floor(maxBottom)) {
                                         return horizontal ? NODE_TRAVERSE.HORIZONTAL : NODE_TRAVERSE.FLOAT_BLOCK;
                                     }
-                                    else {
-                                        return horizontal ? NODE_TRAVERSE.FLOAT_BLOCK : NODE_TRAVERSE.HORIZONTAL;
-                                    }
+                                    return horizontal ? NODE_TRAVERSE.FLOAT_BLOCK : NODE_TRAVERSE.HORIZONTAL;
                                 }
                                 else if (!horizontal) {
                                     return NODE_TRAVERSE.FLOAT_BLOCK;
@@ -993,12 +990,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 if (checkBlockDimension(previous)) {
                     return NODE_TRAVERSE.INLINE_WRAP;
                 }
-                else {
-                    const getPercentWidth = (node: T) => node.inlineDimension && !node.hasPX('maxWidth') ? node.percentWidth : -Infinity;
-                    const percentWidth = getPercentWidth(this);
-                    if (percentWidth > 0 && siblings.reduce((a, b) => a + getPercentWidth(b), percentWidth) > 1) {
-                        return NODE_TRAVERSE.PERCENT_WRAP;
-                    }
+                const percentWidth = getPercentWidth(this);
+                if (percentWidth > 0 && siblings.reduce((a, b) => a + getPercentWidth(b), percentWidth) > 1) {
+                    return NODE_TRAVERSE.PERCENT_WRAP;
                 }
             }
             const blockStatic = this.blockStatic || this.display === 'table';
@@ -1194,10 +1188,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 if (current.hasPX('width', { percent: false }) || !current.pageFlow) {
                     return value;
                 }
-                else {
-                    offsetLeft += Math.max(current.marginLeft, 0) + current.borderLeftWidth + current.paddingLeft;
-                    offsetRight += current.paddingRight + current.borderRightWidth + current.marginRight;
-                }
+                offsetLeft += Math.max(current.marginLeft, 0) + current.borderLeftWidth + current.paddingLeft;
+                offsetRight += current.paddingRight + current.borderRightWidth + current.marginRight;
                 current = current.actualParent;
             }
             const screenWidth = this.localSettings.screenDimension.width - offsetLeft - offsetRight;
