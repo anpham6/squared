@@ -1,4 +1,4 @@
-/* squared.svg 2.1.0
+/* squared.svg 2.1.1
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -54,7 +54,11 @@
     }
     function getStyleValue(element, attr) {
         const styleMap = getElementCache(element, 'styleMap');
-        return (styleMap && styleMap[convertCamelCase(attr)]) || '';
+        return styleMap && styleMap[convertCamelCase(attr)];
+    }
+    function getDataValue(element, attr) {
+        const attrStyle = convertCamelCase(attr);
+        return getDataSetValue(element, attr) || element.style[attrStyle] || getStyleValue(element, attrStyle);
     }
     const getViewportArea = (viewBox, min) =>
         min ? Math.min(viewBox.width, viewBox.height) : hypotenuse(viewBox.width, viewBox.height);
@@ -391,8 +395,8 @@
                 method: { x, y },
             };
         },
-        parse(element, value) {
-            if (value || (value = element.style.getPropertyValue('transform'))) {
+        parse(element, value = getDataValue(element, 'transform')) {
+            if (value && value !== 'none') {
                 const result = [];
                 RE_PARSE.matcher(value);
                 while (RE_PARSE.find()) {
@@ -499,8 +503,8 @@
             }
             return null;
         },
-        matrix(element, value) {
-            const match = REGEXP_TRANSFORM.MATRIX.exec(value || getAttribute(element, 'transform'));
+        matrix(element, value = getAttribute(element, 'transform')) {
+            const match = REGEXP_TRANSFORM.MATRIX.exec(value);
             if (match) {
                 switch (match[1]) {
                     case 'matrix':
@@ -738,8 +742,7 @@
     }
     function getAttribute(element, attr, computed) {
         return (
-            getStyleValue(element, convertCamelCase(attr)) ||
-            getDataSetValue(element, attr) ||
+            getDataValue(element, attr) ||
             getNamedItem(element, attr) ||
             ((computed || Array.from(element.style).includes(attr)) &&
                 getComputedStyle(element).getPropertyValue(attr)) ||
@@ -1503,32 +1506,32 @@
                     y2 = 0;
                 if (origin) {
                     const { x, y } = origin;
-                    const method = item.method;
+                    const { x: mX, y: mY } = item.method;
                     switch (item.type) {
                         case SVGTransform.SVG_TRANSFORM_SCALE:
-                            if (method.x) {
+                            if (mX) {
                                 x2 = x * (1 - m.a);
                             }
-                            if (method.y) {
+                            if (mY) {
                                 y2 = y * (1 - m.d);
                             }
                             break;
                         case SVGTransform.SVG_TRANSFORM_SKEWX:
-                            if (method.y) {
+                            if (mX || mY) {
                                 y1 -= y;
                             }
                             break;
                         case SVGTransform.SVG_TRANSFORM_SKEWY:
-                            if (method.x) {
+                            if (mX || mY) {
                                 x1 -= x;
                             }
                             break;
                         case SVGTransform.SVG_TRANSFORM_ROTATE:
-                            if (method.x) {
+                            if (mX) {
                                 x1 -= x;
                                 x2 = x + offsetAngleY(item.angle, x);
                             }
-                            if (method.y) {
+                            if (mY) {
                                 y1 -= y;
                                 y2 = y + offsetAngleY(item.angle, y);
                             }

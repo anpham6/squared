@@ -1,4 +1,4 @@
-/* squared.base 2.1.0
+/* squared.base 2.1.1
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -6634,8 +6634,7 @@
                             item.outerHTML,
                             item.tagName === 'WBR'
                                 ? ResourceUI.STRING_WBR
-                                : !hasCoords(getComputedStyle(item).getPropertyValue('position')) &&
-                                  isString(item.textContent)
+                                : !hasCoords(getComputedStyle(item).position) && isString(item.textContent)
                                 ? ResourceUI.STRING_SPACE
                                 : ''
                         );
@@ -10457,7 +10456,7 @@
                 }
                 styleMap.content ||
                     (styleMap.content =
-                        getStyle$1(element, pseudoElt).getPropertyValue('content') ||
+                        getStyle$1(element, pseudoElt).content ||
                         (pseudoElt === '::before' ? 'open-quote' : 'close-quote'));
             }
             if (styleMap) {
@@ -10490,7 +10489,7 @@
                                     const style = getStyle$1(child);
                                     if (hasCoords$1(styleMap.position)) {
                                         continue;
-                                    } else if (style.getPropertyValue('float') !== 'none') {
+                                    } else if (style.float !== 'none') {
                                         return;
                                     }
                                     break;
@@ -10503,7 +10502,7 @@
                     } else if (value === 'inherit') {
                         let current = element;
                         do {
-                            value = getStyle$1(current).getPropertyValue('content');
+                            value = getStyle$1(current).content;
                             if (value !== 'inherit') {
                                 break;
                             }
@@ -10570,9 +10569,7 @@
                                             ((_a = getCounterIncrementValue(element, counterName, 0)) !== null &&
                                             _a !== void 0
                                                 ? _a
-                                                : 1) +
-                                            (getCounterValue(style.getPropertyValue('counter-reset'), counterName, 0) ||
-                                                0);
+                                                : 1) + (getCounterValue(style.counterReset, counterName, 0) || 0);
                                         const subcounter = [];
                                         let current = element,
                                             counter = initialValue,
@@ -10587,10 +10584,8 @@
                                         };
                                         const cascadeCounterSibling = sibling => {
                                             if (
-                                                getCounterValue(
-                                                    getStyle$1(sibling).getPropertyValue('counter-reset'),
-                                                    counterName
-                                                ) === undefined
+                                                getCounterValue(getStyle$1(sibling).counterReset, counterName) ===
+                                                undefined
                                             ) {
                                                 iterateArray$2(sibling.children, item => {
                                                     if (item.className !== '__squared.pseudo') {
@@ -10600,14 +10595,14 @@
                                                         }
                                                         const childStyle = getStyle$1(item);
                                                         increment = getCounterValue(
-                                                            childStyle.getPropertyValue('counter-increment'),
+                                                            childStyle.counterIncrement,
                                                             counterName
                                                         );
                                                         if (increment) {
                                                             incrementCounter(increment, false);
                                                         }
                                                         increment = getCounterValue(
-                                                            childStyle.getPropertyValue('counter-reset'),
+                                                            childStyle.counterReset,
                                                             counterName
                                                         );
                                                         if (increment !== undefined) {
@@ -10641,14 +10636,14 @@
                                                 }
                                                 const currentStyle = getStyle$1(current);
                                                 const counterIncrement = getCounterValue(
-                                                    currentStyle.getPropertyValue('counter-increment'),
+                                                    currentStyle.counterIncrement,
                                                     counterName
                                                 );
                                                 if (counterIncrement) {
                                                     incrementCounter(counterIncrement, false);
                                                 }
                                                 const counterReset = getCounterValue(
-                                                    currentStyle.getPropertyValue('counter-reset'),
+                                                    currentStyle.counterReset,
                                                     counterName
                                                 );
                                                 if (counterReset !== undefined) {
@@ -11242,7 +11237,7 @@
             let style, width, height, display;
             if (!pseudoElt) {
                 style = getStyle$2(element);
-                display = style.getPropertyValue('display');
+                display = style.display;
                 if (display !== 'none') {
                     const bounds = element.getBoundingClientRect();
                     if (!withinViewport(bounds)) {
@@ -11256,7 +11251,7 @@
             } else {
                 const parentElement = getParentElement$1(element);
                 style = parentElement ? getStyle$2(parentElement, pseudoElt) : getStyle$2(element);
-                display = style.getPropertyValue('display');
+                display = style.display;
                 if (display === 'none') {
                     return false;
                 }
@@ -11264,10 +11259,7 @@
                 height = 1;
             }
             if (width && height) {
-                return (
-                    style.getPropertyValue('visibility') === 'visible' ||
-                    !hasCoords$2(style.getPropertyValue('position'))
-                );
+                return style.visibility === 'visible' || !hasCoords$2(style.position);
             }
             let parent = element.parentElement;
             while (parent) {
@@ -11288,10 +11280,8 @@
                     return true;
                 default:
                     return (
-                        (!hasCoords$2(style.getPropertyValue('position')) &&
-                            (display === 'block' ||
-                                (width > 0 && style.getPropertyValue('float') !== 'none') ||
-                                style.getPropertyValue('clear') !== 'none')) ||
+                        (!hasCoords$2(style.position) &&
+                            (display === 'block' || (width > 0 && style.float !== 'none') || style.clear !== 'none')) ||
                         iterateArray$3(element.children, item => this.visibleElement(item, sessionId)) === Infinity
                     );
             }

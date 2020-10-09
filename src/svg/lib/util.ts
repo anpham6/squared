@@ -42,7 +42,12 @@ function getDataSetValue(element: SVGElement, attr: string) {
 
 function getStyleValue(element: Element, attr: string) {
     const styleMap = getElementCache<StringMap>(element, 'styleMap');
-    return styleMap && styleMap[convertCamelCase(attr)] || '';
+    return styleMap && styleMap[convertCamelCase(attr)];
+}
+
+function getDataValue(element: SVGElement, attr: string) {
+    const attrStyle = convertCamelCase(attr);
+    return getDataSetValue(element, attr) || element.style[attrStyle] as Undef<string> || getStyleValue(element, attrStyle);
 }
 
 const getViewportArea = (viewBox: DOMRect, min?: boolean) => min ? Math.min(viewBox.width, viewBox.height) : hypotenuse(viewBox.width, viewBox.height);
@@ -383,8 +388,8 @@ export const TRANSFORM = {
             method: { x, y }
         };
     },
-    parse(element: SVGElement, value?: string): Null<SvgTransform[]> {
-        if (value ||= element.style.getPropertyValue('transform')) {
+    parse(element: SVGElement, value = getDataValue(element, 'transform')): Null<SvgTransform[]> {
+        if (value && value !== 'none') {
             const result: SvgTransform[] = [];
             RE_PARSE.matcher(value);
             while (RE_PARSE.find()) {
@@ -467,8 +472,8 @@ export const TRANSFORM = {
         }
         return null;
     },
-    matrix(element: SVGElement, value?: string): Null<SvgMatrix> {
-        const match = REGEXP_TRANSFORM.MATRIX.exec(value || getAttribute(element, 'transform'));
+    matrix(element: SVGElement, value: string = getAttribute(element, 'transform')): Null<SvgMatrix> {
+        const match = REGEXP_TRANSFORM.MATRIX.exec(value);
         if (match) {
             switch (match[1]) {
                 case 'matrix':
@@ -689,13 +694,7 @@ export function calculateStyle(element: SVGGraphicsElement, attr: string, value:
 }
 
 export function getAttribute(element: SVGElement, attr: string, computed?: boolean) {
-    return (
-        getStyleValue(element, convertCamelCase(attr)) ||
-        getDataSetValue(element, attr) ||
-        getNamedItem(element, attr) ||
-        (computed || Array.from(element.style).includes(attr)) && getComputedStyle(element).getPropertyValue(attr) ||
-        ''
-    );
+    return getDataValue(element, attr) || getNamedItem(element, attr) || (computed || Array.from(element.style).includes(attr)) && getComputedStyle(element).getPropertyValue(attr) || '';
 }
 
 export function getParentAttribute(element: SVGElement, attr: string, computed?: boolean) {

@@ -227,19 +227,19 @@ function getWritingMode(value?: string) {
 
 function getContentBoxWidth(style: CSSStyleDeclaration) {
     return (
-        (hasBorderStyle(style.getPropertyValue('border-left-style')) ? parseFloat(style.getPropertyValue('border-left-width')) : 0) +
-        parseFloat(style.getPropertyValue('padding-left')) +
-        parseFloat(style.getPropertyValue('padding-right')) +
-        (hasBorderStyle(style.getPropertyValue('border-right-style')) ? parseFloat(style.getPropertyValue('border-right-width')) : 0)
+        (hasBorderStyle(style.borderLeftStyle) ? parseFloat(style.borderLeftWidth) : 0) +
+        parseFloat(style.paddingLeft) +
+        parseFloat(style.paddingRight) +
+        (hasBorderStyle(style.borderRightStyle) ? parseFloat(style.borderRightWidth) : 0)
     );
 }
 
 function getContentBoxHeight(style: CSSStyleDeclaration) {
     return (
-        (hasBorderStyle(style.getPropertyValue('border-top-style')) ? parseFloat(style.getPropertyValue('border-top-width')) : 0) +
-        parseFloat(style.getPropertyValue('padding-top')) +
-        parseFloat(style.getPropertyValue('padding-bottom')) +
-        (hasBorderStyle(style.getPropertyValue('border-bottom-style')) ? parseFloat(style.getPropertyValue('border-bottom-width')) : 0)
+        (hasBorderStyle(style.borderTopStyle) ? parseFloat(style.borderTopWidth) : 0) +
+        parseFloat(style.paddingTop) +
+        parseFloat(style.paddingBottom) +
+        (hasBorderStyle(style.borderBottomStyle) ? parseFloat(style.borderBottomWidth) : 0)
     );
 }
 
@@ -689,7 +689,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'medium'
     },
     columnSpan: {
-        trait: 0,
+        trait: CSS_TRAITS.LAYOUT,
         value: 'none'
     },
     columnWidth: {
@@ -704,7 +704,7 @@ export const CSS_PROPERTIES: CssProperties = {
         ]
     },
     content: {
-        trait: 0,
+        trait: CSS_TRAITS.LAYOUT,
         value: 'normal'
     },
     counterIncrement: {
@@ -1353,11 +1353,11 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'auto'
     },
     textAlign: {
-        trait: 0,
+        trait: CSS_TRAITS.CONTAIN,
         value: 'start'
     },
     textAlignLast: {
-        trait: 0,
+        trait: CSS_TRAITS.CONTAIN,
         value: 'auto'
     },
     textDecoration: {
@@ -1408,7 +1408,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: '0'
     },
     textJustify: {
-        trait: 0,
+        trait: CSS_TRAITS.CONTAIN,
         value: 'auto'
     },
     textOverflow: {
@@ -1660,7 +1660,7 @@ export function getRemSize(fixedWidth?: boolean) {
 }
 
 export function getFontSize(element: Element) {
-    return parseFloat(getStyle(element.nodeName[0] === '#' ? element.parentElement! : element).getPropertyValue('font-size'));
+    return parseFloat(getStyle(element.nodeName[0] === '#' ? element.parentElement! : element).fontSize);
 }
 
 export function hasComputedStyle(element: Element): element is HTMLElement {
@@ -2393,9 +2393,6 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                 const prefix = path[0].trim();
                 let shape = trimEnclosing(path[1].trim());
                 switch (prefix) {
-                    case 'url':
-                    case 'path':
-                        return !hasCalc(path[1]) ? value : '';
                     case 'linear-gradient':
                     case 'radial-gradient':
                     case 'conic-gradient':
@@ -2407,11 +2404,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                         const result: string[] = [];
                         let [radius, position] = shape.split(/\s+at\s+/);
                         if (hasCalc(radius)) {
-                            const options: CalculateVarAsStringOptions = {
-                                boundingBox,
-                                min: 0,
-                                parent: true
-                            };
+                            const options: CalculateVarAsStringOptions = { boundingBox, min: 0, parent: true };
                             if (prefix === 'circle') {
                                 if (radius.includes('%')) {
                                     const { width, height } = boundingBox || getContentBoxDimension(element.parentElement);
@@ -2462,7 +2455,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                         break;
                     }
                     default:
-                        return value;
+                        return !hasCalc(path[1]) ? value : '';
                 }
                 if (shape) {
                     return `${prefix}(${shape})`;

@@ -694,32 +694,32 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 y2 = 0;
             if (origin) {
                 const { x, y } = origin;
-                const method = item.method;
+                const { x: mX, y: mY } = item.method;
                 switch (item.type) {
                     case SVGTransform.SVG_TRANSFORM_SCALE:
-                        if (method.x) {
+                        if (mX) {
                             x2 = x * (1 - m.a);
                         }
-                        if (method.y) {
+                        if (mY) {
                             y2 = y * (1 - m.d);
                         }
                         break;
                     case SVGTransform.SVG_TRANSFORM_SKEWX:
-                        if (method.y) {
+                        if (mX || mY) {
                             y1 -= y;
                         }
                         break;
                     case SVGTransform.SVG_TRANSFORM_SKEWY:
-                        if (method.x) {
+                        if (mX || mY) {
                             x1 -= x;
                         }
                         break;
                     case SVGTransform.SVG_TRANSFORM_ROTATE:
-                        if (method.x) {
+                        if (mX) {
                             x1 -= x;
                             x2 = x + offsetAngleY(item.angle, x);
                         }
-                        if (method.y) {
+                        if (mY) {
                             y1 -= y;
                             y2 = y + offsetAngleY(item.angle, y);
                         }

@@ -15,6 +15,14 @@
         rect {
             fill-opacity: calc(var(--fillOpacity) + 0.1);
         }
+        .a {
+            transform: rotate(20deg) scale(2, 1.5) skewX(20deg) translate(10px, 20px);
+            transform-origin: 50%;
+        }
+        .b {
+            transform: scale(2, 1.5) rotate(10deg) skewY(20deg) translate(10px, 20px);
+            transform-origin: 0% 75%;
+        }
     </style>
     <script src="/common/system.js"></script>
     <script src="/common/transform.js"></script>
@@ -30,8 +38,8 @@
     <div id="squared_ui" style="width: 300px;">
         <svg viewBox="0 0 200 200">
             <line x1="0" y1="80" x2="100" y2="20" stroke="green" />
-            <line x1="0" y1="80" x2="100" y2="20" stroke="red" transform="rotate(20) scale(2, 1.5) skewX(20) translate(10, 20)" />
-            <line x1="0" y1="80" x2="100" y2="20" stroke="blue" transform="scale(2, 1.5) rotate(10, 5, 5) skewY(20) translate(10, 20)" />
+            <line class="a" x1="0" y1="80" x2="100" y2="20" stroke="red" />
+            <line class="b" x1="0" y1="80" x2="100" y2="20" stroke="blue" />
             <rect x="10" y="10" width="30" height="20" fill="green" />
             <rect x="10" y="10" width="30" height="20" fill="red" transform="rotate(20) scale(2, 1.5) skewX(20) translate(10, 20)" />
             <rect x="10" y="10" width="30" height="20" fill="blue" transform="scale(2, 1.5) rotate(10, 5, 5) skewY(20) translate(10, 20)" />

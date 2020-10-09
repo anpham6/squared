@@ -382,7 +382,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             display: string;
         if (!pseudoElt) {
             style = getStyle(element);
-            display = style.getPropertyValue('display');
+            display = style.display;
             if (display !== 'none') {
                 const bounds = element.getBoundingClientRect();
                 if (!withinViewport(bounds)) {
@@ -398,7 +398,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         else {
             const parentElement = getParentElement(element);
             style = parentElement ? getStyle(parentElement, pseudoElt) : getStyle(element);
-            display = style.getPropertyValue('display');
+            display = style.display;
             if (display === 'none') {
                 return false;
             }
@@ -406,7 +406,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             height = 1;
         }
         if (width && height) {
-            return style.getPropertyValue('visibility') === 'visible' || !hasCoords(style.getPropertyValue('position'));
+            return style.visibility === 'visible' || !hasCoords(style.position);
         }
         let parent = element.parentElement;
         while (parent) {
@@ -426,7 +426,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             case 'SLOT':
                 return true;
             default:
-                return !hasCoords(style.getPropertyValue('position')) && (display === 'block' || width > 0 && style.getPropertyValue('float') !== 'none' || style.getPropertyValue('clear') !== 'none') || iterateArray(element.children, (item: HTMLElement) => this.visibleElement(item, sessionId)) === Infinity;
+                return !hasCoords(style.position) && (display === 'block' || width > 0 && style.float !== 'none' || style.clear !== 'none') || iterateArray(element.children, (item: HTMLElement) => this.visibleElement(item, sessionId)) === Infinity;
         }
     }
 

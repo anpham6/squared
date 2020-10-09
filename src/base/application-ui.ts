@@ -1571,7 +1571,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 styleMap = {};
                 setElementCache(element, 'styleMap' + pseudoElt, styleMap, sessionId);
             }
-            styleMap.content ||= getStyle(element, pseudoElt).getPropertyValue('content') || (pseudoElt === '::before' ? 'open-quote' : 'close-quote');
+            styleMap.content ||= getStyle(element, pseudoElt).content || (pseudoElt === '::before' ? 'open-quote' : 'close-quote');
         }
         if (styleMap) {
             let value = styleMap.content;
@@ -1602,7 +1602,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 if (hasCoords(styleMap.position)) {
                                     continue;
                                 }
-                                else if (style.getPropertyValue('float') !== 'none') {
+                                else if (style.float !== 'none') {
                                     return;
                                 }
                                 break;
@@ -1616,7 +1616,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 else if (value === 'inherit') {
                     let current: Null<HTMLElement> = element;
                     do {
-                        value = getStyle(current).getPropertyValue('content');
+                        value = getStyle(current).content;
                         if (value !== 'inherit') {
                             break;
                         }
@@ -1675,7 +1675,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         counterName = match[6];
                                         styleName = match[8] || 'decimal';
                                     }
-                                    const initialValue = (getCounterIncrementValue(element, counterName, 0) ?? 1) + (getCounterValue(style.getPropertyValue('counter-reset'), counterName, 0) || 0);
+                                    const initialValue = (getCounterIncrementValue(element, counterName, 0) ?? 1) + (getCounterValue(style.counterReset, counterName, 0) || 0);
                                     const subcounter: number[] = [];
                                     let current: Null<HTMLElement> = element,
                                         counter = initialValue,
@@ -1690,7 +1690,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         }
                                     };
                                     const cascadeCounterSibling = (sibling: Element) => {
-                                        if (getCounterValue(getStyle(sibling).getPropertyValue('counter-reset'), counterName) === undefined) {
+                                        if (getCounterValue(getStyle(sibling).counterReset, counterName) === undefined) {
                                             iterateArray(sibling.children, (item: HTMLElement) => {
                                                 if (item.className !== '__squared.pseudo') {
                                                     let increment = getCounterIncrementValue(item, counterName);
@@ -1698,11 +1698,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                         incrementCounter(increment, true);
                                                     }
                                                     const childStyle = getStyle(item);
-                                                    increment = getCounterValue(childStyle.getPropertyValue('counter-increment'), counterName);
+                                                    increment = getCounterValue(childStyle.counterIncrement, counterName);
                                                     if (increment) {
                                                         incrementCounter(increment, false);
                                                     }
-                                                    increment = getCounterValue(childStyle.getPropertyValue('counter-reset'), counterName);
+                                                    increment = getCounterValue(childStyle.counterReset, counterName);
                                                     if (increment !== undefined) {
                                                         return true;
                                                     }
@@ -1735,11 +1735,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                 incrementCounter(pesudoIncrement, true);
                                             }
                                             const currentStyle = getStyle(current);
-                                            const counterIncrement = getCounterValue(currentStyle.getPropertyValue('counter-increment'), counterName);
+                                            const counterIncrement = getCounterValue(currentStyle.counterIncrement, counterName);
                                             if (counterIncrement) {
                                                 incrementCounter(counterIncrement, false);
                                             }
-                                            const counterReset = getCounterValue(currentStyle.getPropertyValue('counter-reset'), counterName);
+                                            const counterReset = getCounterValue(currentStyle.counterReset, counterName);
                                             if (counterReset !== undefined) {
                                                 if (!lastResetElement) {
                                                     counter += counterReset;

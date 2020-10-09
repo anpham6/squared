@@ -43,8 +43,8 @@ export function getRangeClientRect(element: Element) {
     if (element.childElementCount) {
         iterateArray(element.children, (item: HTMLElement) => {
             const style = getStyle(item);
-            if (style.getPropertyValue('visibility') !== 'visible' && hasCoords(style.getPropertyValue('position'))) {
-                const display = style.getPropertyValue('display');
+            if (style.visibility !== 'visible' && hasCoords(style.position)) {
+                const display = style.display;
                 if (display !== 'none') {
                     item.style.display = 'none';
                     (hidden ||= []).push([item, display]);

@@ -352,14 +352,14 @@ function causesLineBreak(element: Element) {
     }
     else if (element.nodeName[0] !== '#') {
         const style = getComputedStyle(element);
-        const hasWidth = () => (style.getPropertyValue('width') === '100%' || style.getPropertyValue('min-width') === '100%') && (style.getPropertyValue('max-width') === 'none' || style.getPropertyValue('max-width') === '100%');
-        if (!hasCoords(style.getPropertyValue('position'))) {
-            const display = style.getPropertyValue('display');
+        const hasWidth = () => (style.width === '100%' || style.minWidth === '100%') && (style.maxWidth === 'none' || style.maxWidth === '100%');
+        if (!hasCoords(style.position)) {
+            const display = style.display;
             switch (display) {
                 case 'block':
                 case 'flex':
                 case 'grid':
-                    return style.getPropertyValue('float') === 'none' || hasWidth();
+                    return style.float === 'none' || hasWidth();
                 default:
                     return (display.startsWith('inline-') || display === 'table') && hasWidth();
             }

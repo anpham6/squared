@@ -1,4 +1,4 @@
-/* squared 2.1.0
+/* squared 2.1.1
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -2917,26 +2917,18 @@
     }
     function getContentBoxWidth(style) {
         return (
-            (hasBorderStyle(style.getPropertyValue('border-left-style'))
-                ? parseFloat(style.getPropertyValue('border-left-width'))
-                : 0) +
-            parseFloat(style.getPropertyValue('padding-left')) +
-            parseFloat(style.getPropertyValue('padding-right')) +
-            (hasBorderStyle(style.getPropertyValue('border-right-style'))
-                ? parseFloat(style.getPropertyValue('border-right-width'))
-                : 0)
+            (hasBorderStyle(style.borderLeftStyle) ? parseFloat(style.borderLeftWidth) : 0) +
+            parseFloat(style.paddingLeft) +
+            parseFloat(style.paddingRight) +
+            (hasBorderStyle(style.borderRightStyle) ? parseFloat(style.borderRightWidth) : 0)
         );
     }
     function getContentBoxHeight(style) {
         return (
-            (hasBorderStyle(style.getPropertyValue('border-top-style'))
-                ? parseFloat(style.getPropertyValue('border-top-width'))
-                : 0) +
-            parseFloat(style.getPropertyValue('padding-top')) +
-            parseFloat(style.getPropertyValue('padding-bottom')) +
-            (hasBorderStyle(style.getPropertyValue('border-bottom-style'))
-                ? parseFloat(style.getPropertyValue('border-bottom-width'))
-                : 0)
+            (hasBorderStyle(style.borderTopStyle) ? parseFloat(style.borderTopWidth) : 0) +
+            parseFloat(style.paddingTop) +
+            parseFloat(style.paddingBottom) +
+            (hasBorderStyle(style.borderBottomStyle) ? parseFloat(style.borderBottomWidth) : 0)
         );
     }
     function checkCalculateNumber(operand, operator) {
@@ -3343,7 +3335,7 @@
             value: 'medium',
         },
         columnSpan: {
-            trait: 0,
+            trait: 4 /* LAYOUT */,
             value: 'none',
         },
         columnWidth: {
@@ -3355,7 +3347,7 @@
             value: ['columnCount', 'columnWidth'],
         },
         content: {
-            trait: 0,
+            trait: 4 /* LAYOUT */,
             value: 'normal',
         },
         counterIncrement: {
@@ -3915,11 +3907,11 @@
             value: 'auto',
         },
         textAlign: {
-            trait: 0,
+            trait: 8 /* CONTAIN */,
             value: 'start',
         },
         textAlignLast: {
-            trait: 0,
+            trait: 8 /* CONTAIN */,
             value: 'auto',
         },
         textDecoration: {
@@ -3963,7 +3955,7 @@
             value: '0',
         },
         textJustify: {
-            trait: 0,
+            trait: 8 /* CONTAIN */,
             value: 'auto',
         },
         textOverflow: {
@@ -4206,9 +4198,7 @@
         return !fixedWidth ? DOCUMENT_FONTSIZE : 13;
     }
     function getFontSize(element) {
-        return parseFloat(
-            getStyle(element.nodeName[0] === '#' ? element.parentElement : element).getPropertyValue('font-size')
-        );
+        return parseFloat(getStyle(element.nodeName[0] === '#' ? element.parentElement : element).fontSize);
     }
     function hasComputedStyle(element) {
         return element.nodeName[0] !== '#';
@@ -5027,9 +5017,6 @@
                     const prefix = path[0].trim();
                     let shape = trimEnclosing(path[1].trim());
                     switch (prefix) {
-                        case 'url':
-                        case 'path':
-                            return !hasCalc(path[1]) ? value : '';
                         case 'linear-gradient':
                         case 'radial-gradient':
                         case 'conic-gradient':
@@ -5041,11 +5028,7 @@
                             const result = [];
                             let [radius, position] = shape.split(/\s+at\s+/);
                             if (hasCalc(radius)) {
-                                const options = {
-                                    boundingBox,
-                                    min: 0,
-                                    parent: true,
-                                };
+                                const options = { boundingBox, min: 0, parent: true };
                                 if (prefix === 'circle') {
                                     if (radius.includes('%')) {
                                         const { width, height } =
@@ -5108,7 +5091,7 @@
                             break;
                         }
                         default:
-                            return value;
+                            return !hasCalc(path[1]) ? value : '';
                     }
                     if (shape) {
                         return `${prefix}(${shape})`;
@@ -6548,11 +6531,8 @@
         if (element.childElementCount) {
             iterateArray(element.children, item => {
                 const style = getStyle(item);
-                if (
-                    style.getPropertyValue('visibility') !== 'visible' &&
-                    hasCoords(style.getPropertyValue('position'))
-                ) {
-                    const display = style.getPropertyValue('display');
+                if (style.visibility !== 'visible' && hasCoords(style.position)) {
+                    const display = style.display;
                     if (display !== 'none') {
                         item.style.display = 'none';
                         (hidden || (hidden = [])).push([item, display]);
