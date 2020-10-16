@@ -711,6 +711,57 @@ function ascendQuerySelector(node: T, selectors: QueryData[], index: number, nod
     return next.length > 0 && (++index === length ? true : ascendQuerySelector(node, selectors, index, next, selector.adjacent));
 }
 
+function getMinMax(node: T, min: boolean, attr: string, options?: MinMaxOptions) {
+    let self: Undef<boolean>,
+        last: Undef<boolean>,
+        wrapperOf: Undef<boolean>,
+        initial: Undef<boolean>;
+    if (options) {
+        ({ self, last, wrapperOf, initial } = options);
+    }
+    let result: Undef<T>,
+        current = min ? Infinity : -Infinity;
+    node.each(item => {
+        if (wrapperOf) {
+            const child = item.wrapperOf;
+            if (child) {
+                item = child;
+            }
+        }
+        const value = parseFloat(self ? item[attr] as string : initial ? item.cssInitial(attr, options) : item.css(attr));
+        if (!isNaN(value)) {
+            if (min) {
+                if (last) {
+                    if (value <= current) {
+                        result = item;
+                        current = value;
+                    }
+                }
+                else if (value < current) {
+                    result = item;
+                    current = value;
+                }
+            }
+            else if (last) {
+                if (value >= current) {
+                    result = item;
+                    current = value;
+                }
+            }
+            else if (value > current) {
+                result = item;
+                current = value;
+            }
+        }
+    });
+    return result || node;
+}
+
+function getBoundsSize(node: T, options?: NodeParseUnitOptions) {
+    const bounds: BoxRectDimension = (!options || options.parent !== false) && node.absoluteParent?.box || node.bounds;
+    return bounds[options && options.dimension || 'width'];
+}
+
 const trimSelector = (value: string) => value[0] !== '*' || value.includes(':root') ? value : /^\*(\s+\*){0,2}$/.test(value) ? '*' : value.replace(/^(\*\s+){1,2}/, '');
 const aboveRange = (a: number, b: number, offset = 1) => a + offset > b;
 const belowRange = (a: number, b: number, offset = 1) => a - offset < b;
@@ -1220,20 +1271,35 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public css(attr: string, value?: string, cache = true): string {
-        if (value && this.styleElement) {
-            const previousValue = this.style[attr] as Undef<string>;
-            if (previousValue !== undefined) {
-                this.style[attr] = value;
-                if (previousValue !== this.style[attr]) {
-                    this._styleMap[attr] = value;
-                    if (cache) {
-                        this.unsetCache(attr);
-                    }
-                    return value;
+        if (this.styleElement) {
+            if (value === '') {
+                this.style[attr] = 'initial';
+                const property = CSS_PROPERTIES[attr] as Undef<CssPropertyData>;
+                if (property && typeof property.value === 'string') {
+                    this._styleMap[attr] = property.valueOfNone || (property.value + (hasBit(property.trait, CSS_TRAITS.UNIT) ? 'px' : ''));
                 }
-                return previousValue;
+                else {
+                    delete this._styleMap[attr];
+                }
+                if (cache) {
+                    this.unsetCache(attr);
+                }
             }
-            return '';
+            else if (value) {
+                const current = this.style[attr] as Undef<string>;
+                if (current !== undefined) {
+                    this.style[attr] = value;
+                    if (current !== this.style[attr]) {
+                        this._styleMap[attr] = value;
+                        if (cache) {
+                            this.unsetCache(attr);
+                        }
+                        return value;
+                    }
+                    return current;
+                }
+                return '';
+            }
         }
         return this._styleMap[attr] as string || this.style[attr] as string || '';
     }
@@ -1534,8 +1600,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             return parseFloat(value);
         }
         else if (isPercent(value)) {
-            const bounds: BoxRectDimension = (!options || options.parent !== false) && this.absoluteParent?.box || this.bounds;
-            return (parseFloat(value) / 100) * bounds[options && options.dimension || 'width'];
+            return (parseFloat(value) / 100) * getBoundsSize(this, options);
         }
         if (!options) {
             options = { fontSize: this.fontSize };
@@ -1549,20 +1614,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     public convertUnit(value: string, unit: string, options?: NodeConvertUnitOptions) {
         let result = this.parseUnit(value, options);
         if (unit === 'percent' || unit === '%') {
-            let parent: Undef<boolean>,
-                dimension: Undef<DimensionAttr>,
-                precision: Undef<number>;
-            if (options) {
-                ({ parent, dimension, precision } = options);
-            }
-            const bounds: BoxRectDimension = (parent === undefined || parent !== false) && this.absoluteParent?.box || this.bounds;
-            result /= bounds[dimension || 'width'];
-            if (precision !== undefined) {
-                result = parseFloat(truncate(result, precision));
-            }
-            return result + '%';
+            result *= 100 / getBoundsSize(this, options);
+            return (options && options.precision !== undefined ? truncate(result, options.precision) : result) + '%';
         }
-        return result !== 0 ? convertUnit(result, unit) : '0' + unit;
+        return result !== 0 ? convertUnit(result, unit, options) : '0' + unit;
     }
 
     public has(attr: string, options?: HasOptions) {
@@ -1651,71 +1706,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public min(attr: string, options?: MinMaxOptions) {
-        let self: Undef<boolean>,
-            last: Undef<boolean>,
-            wrapperOf: Undef<boolean>,
-            initial: Undef<boolean>;
-        if (options) {
-            ({ self, last, wrapperOf, initial } = options);
-        }
-        let result: Undef<T>,
-            min = Infinity;
-        this.each(item => {
-            if (wrapperOf) {
-                const child = item.wrapperOf;
-                if (child) {
-                    item = child;
-                }
-            }
-            const value = parseFloat(self ? item[attr] as string : initial ? item.cssInitial(attr, options) : item.css(attr));
-            if (!isNaN(value)) {
-                if (last) {
-                    if (value <= min) {
-                        result = item;
-                        min = value;
-                    }
-                }
-                else if (value < min) {
-                    result = item;
-                    min = value;
-                }
-            }
-        });
-        return result || this;
+        return getMinMax(this, true, attr, options);
     }
 
     public max(attr: string, options?: MinMaxOptions) {
-        let self: Undef<boolean>,
-            last: Undef<boolean>,
-            wrapperOf: Undef<boolean>,
-            initial: Undef<boolean>;
-        if (options) {
-            ({ self, last, wrapperOf, initial } = options);
-        }
-        let result: Undef<T>,
-            max = -Infinity;
-        this.each(item => {
-            if (wrapperOf) {
-                const child = item.wrapperOf;
-                if (child) {
-                    item = child;
-                }
-            }
-            const value = parseFloat(self ? item[attr] as string : initial ? item.cssInitial(attr, options) : item.css(attr));
-            if (!isNaN(value)) {
-                if (last) {
-                    if (value >= max) {
-                        result = item;
-                        max = value;
-                    }
-                }
-                else if (value > max) {
-                    result = item;
-                    max = value;
-                }
-            }
-        });
-        return result || this;
+        return getMinMax(this, false, attr, options);
     }
 
     public querySelector(value: string) {

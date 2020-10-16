@@ -498,7 +498,7 @@ export const CSS_PROPERTIES: CssProperties = {
         valueOfNone: 'none 100% / 1 / 0 stretch'
     },
     borderImageOutset: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
+        trait: CSS_TRAITS.CALC,
         value: '0'
     },
     borderImageRepeat: {
@@ -514,7 +514,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'none'
     },
     borderImageWidth: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
+        trait: CSS_TRAITS.CALC,
         value: '1'
     },
     borderLeft: {
@@ -568,7 +568,8 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     borderSpacing: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
-        value: '0'
+        value: '0',
+        valueOfNone: '0px 0px'
     },
     borderStyle: {
         trait: CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE,
@@ -3535,13 +3536,13 @@ export function parseUnit(value: string, options?: ParseUnitOptions) {
 
 export function convertUnit(value: number, unit: string, options?: ConvertUnitOptions) {
     let result = parseUnit('1' + unit, options);
-    if (options) {
-        const precision = options.precision;
-        if (precision !== undefined) {
-            result = parseFloat(truncate(value, precision));
+    if (result !== 0) {
+        result = value / result;
+        if (options && options.precision !== undefined) {
+            return truncate(result, options.precision) + unit;
         }
     }
-    return (result !== 0 ? value / result : '0') + unit;
+    return result + unit;
 }
 
 export function parseTransform(value: string, options?: TransformOptions) {
