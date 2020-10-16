@@ -75,6 +75,10 @@ interface ParseUnitOptions {
     screenDimension?: Null<Dimension>;
 }
 
+interface ConvertUnitOptions extends ParseUnitOptions {
+    precision?: number;
+}
+
 interface CloneObjectOptions<T> {
     target?: PlainObject | T[];
     deep?: boolean;

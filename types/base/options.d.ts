@@ -126,6 +126,8 @@ interface NodeParseUnitOptions extends ParseUnitOptions {
     parent?: boolean;
 }
 
+interface NodeConvertUnitOptions extends NodeParseUnitOptions, ConvertUnitOptions {}
+
 interface TextHeightOptions {
     tagName?: string;
     width?: string;

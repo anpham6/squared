@@ -148,6 +148,7 @@ declare module "lib" {
         function resolveURL(value: string): Undef<string>;
         function insertStyleSheetRule(value: string, index?: number, shadowRoot?: ShadowRoot): HTMLStyleElement;
         function parseUnit(value: string, options?: ParseUnitOptions): number;
+        function convertUnit(value: number, unit: string, options?: ConvertUnitOptions): string;
         function parseTransform(value: string, options?: TransformOptions): TransformData[];
         function parseAngle(value: string, fallback?: number): number;
         function convertAngle(value: string, unit?: string, fallback?: number): number;

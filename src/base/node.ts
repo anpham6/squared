@@ -8,8 +8,9 @@ const { CSS, FILE } = squared.lib.regex;
 const { SELECTOR_ATTR, SELECTOR_G, SELECTOR_LABEL, SELECTOR_PSEUDO_CLASS } = CSS;
 
 const { isUserAgent } = squared.lib.client;
-const { CSS_PROPERTIES, PROXY_INLINESTYLE, checkFontSizeValue, checkStyleValue, checkWritingMode, formatPX, getRemSize, getStyle, isAngle, isLength, isPercent, isTime, parseSelectorText, parseUnit } = squared.lib.css;
+const { CSS_PROPERTIES, PROXY_INLINESTYLE, checkFontSizeValue, checkStyleValue, checkWritingMode, convertUnit, formatPX, getRemSize, getStyle, isAngle, isLength, isPercent, isTime, parseSelectorText, parseUnit } = squared.lib.css;
 const { assignRect, getNamedItem, getParentElement, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
+const { truncate } = squared.lib.math;
 const { getElementAsNode, getElementCache, getElementData, setElementCache } = squared.lib.session;
 const { convertCamelCase, convertFloat, convertInt, hasBit, hasValue, isNumber, isObject, iterateArray, iterateReverseArray, spliceString, splitPair } = squared.lib.util;
 
@@ -1545,6 +1546,25 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return parseUnit(value, options);
     }
 
+    public convertUnit(value: string, unit: string, options?: NodeConvertUnitOptions) {
+        let result = this.parseUnit(value, options);
+        if (unit === 'percent' || unit === '%') {
+            let parent: Undef<boolean>,
+                dimension: Undef<DimensionAttr>,
+                precision: Undef<number>;
+            if (options) {
+                ({ parent, dimension, precision } = options);
+            }
+            const bounds: BoxRectDimension = (parent === undefined || parent !== false) && this.absoluteParent?.box || this.bounds;
+            result /= bounds[dimension || 'width'];
+            if (precision !== undefined) {
+                result = parseFloat(truncate(result, precision));
+            }
+            return result + '%';
+        }
+        return result !== 0 ? convertUnit(result, unit) : '0' + unit;
+    }
+
     public has(attr: string, options?: HasOptions) {
         const value = options && options.initial ? this.cssInitial(attr, options) : this._styleMap[attr];
         if (value) {
@@ -1555,7 +1575,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 ({ not, type, ignoreDefault } = options);
             }
             if (ignoreDefault !== true) {
-                const data = CSS_PROPERTIES[attr];
+                const data = CSS_PROPERTIES[attr] as Undef<CssPropertyData>;
                 if (data && (value === data.value || hasBit(data.trait, CSS_TRAITS.UNIT) && parseFloat(value) === parseFloat(data.value as string))) {
                     return false;
                 }
@@ -1575,7 +1595,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             if (type) {
                 return (
                     hasBit(type, CSS_UNIT.LENGTH) && isLength(value) ||
-                    hasBit(type, CSS_UNIT.PERCENT) && isPercent(value) ||
+                    hasBit(type, CSS_UNIT.PERCENT) && isPercent(value, true) ||
                     hasBit(type, CSS_UNIT.TIME) && isTime(value) ||
                     hasBit(type, CSS_UNIT.ANGLE) && isAngle(value)
                 );

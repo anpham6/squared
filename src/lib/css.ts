@@ -1,6 +1,6 @@
-import { CSS_TRAITS, CSS_UNIT, USER_AGENT } from './constant';
+import { CSS_TRAITS, CSS_UNIT, PLATFORM, USER_AGENT } from './constant';
 
-import { getDeviceDPI, isUserAgent } from './client';
+import { getDeviceDPI, isPlatform, isUserAgent } from './client';
 import { parseColor } from './color';
 import { clamp, truncate, truncateFraction } from './math';
 import { CSS, STRING, TRANSFORM } from './regex';
@@ -283,11 +283,19 @@ function getContentBoxDimension(element: Null<StyleElement>) {
     return { width: 0, height: 0 };
 }
 
+function getInnerDimension(horizontal: boolean, options?: ParseUnitOptions) {
+    if (options) {
+        const screenDimension = options.screenDimension;
+        if (screenDimension) {
+            return horizontal ? screenDimension.width : screenDimension.height;
+        }
+    }
+    return horizontal ? window.innerWidth : window.innerHeight;
+}
+
 const hasBorderStyle = (value: string) => value !== 'none' && value !== 'hidden';
 const calculateLength = (element: StyleElement, value: string) => formatVar(calculateVar(element, value, { min: 0, supportPercent: false }));
 const fromFontNamedValue = (index: number, fixedWidth?: boolean) => (!fixedWidth ? DOCUMENT_FONTMAP[index] : DOCUMENT_FIXEDMAP[index]).toPrecision(8) + 'rem';
-const getInnerWidth = (dimension: UndefNull<Dimension>) => dimension && dimension.width || window.innerWidth;
-const getInnerHeight = (dimension: UndefNull<Dimension>) => dimension && dimension.height || window.innerHeight;
 const isColor = (value: string) => /(rgb|hsl)a?/.test(value);
 const formatVar = (value: number) => !isNaN(value) ? value + 'px' : '';
 const formatDecimal = (value: number) => !isNaN(value) ? value.toString() : '';
@@ -759,11 +767,11 @@ export const CSS_PROPERTIES: CssProperties = {
         ]
     },
     flexGrow: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.UNIT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
         value: '0'
     },
     flexShrink: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.UNIT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
         value: '1'
     },
     flexWrap: {
@@ -788,7 +796,7 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     fontFamily: {
         trait: CSS_TRAITS.LAYOUT,
-        value: ''
+        value: isPlatform(PLATFORM.MAC) ? 'Helvetica' : 'Arial'
     },
     fontFeatureSettings: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
@@ -1108,11 +1116,11 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'auto'
     },
     opacity: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
+        trait: CSS_TRAITS.CALC,
         value: '1'
     },
     order: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT | CSS_TRAITS.UNIT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
         value: '0'
     },
     outline: {
@@ -3484,7 +3492,7 @@ export function calculate(value: string, options?: CalculateOptions) {
     return NaN;
 }
 
-export function parseUnit(value: string, options: ParseUnitOptions = {}) {
+export function parseUnit(value: string, options?: ParseUnitOptions) {
     const match = REGEXP_LENGTH.exec(value);
     if (match) {
         let result = parseFloat(match[1]);
@@ -3495,11 +3503,11 @@ export function parseUnit(value: string, options: ParseUnitOptions = {}) {
                 result /= 2;
             case 'em':
             case 'ch':
-                if (options.fontSize !== undefined) {
+                if (options && options.fontSize !== undefined) {
                     return result * options.fontSize;
                 }
             case 'rem':
-                return result * (!options.fixedWidth ? DOCUMENT_FONTSIZE : 13);
+                return result * (options && options.fixedWidth ? 13 : DOCUMENT_FONTSIZE);
             case 'pc':
                 result *= 12;
             case 'pt':
@@ -3513,16 +3521,27 @@ export function parseUnit(value: string, options: ParseUnitOptions = {}) {
             case 'in':
                 return result * getDeviceDPI();
             case 'vw':
-                return result * getInnerWidth(options.screenDimension) / 100;
+                return result * getInnerDimension(true, options) / 100;
             case 'vh':
-                return result * getInnerHeight(options.screenDimension) / 100;
+                return result * getInnerDimension(false, options) / 100;
             case 'vmin':
-                return result * Math.min(getInnerWidth(options.screenDimension), getInnerHeight(options.screenDimension)) / 100;
+                return result * Math.min(getInnerDimension(true, options), getInnerDimension(false, options)) / 100;
             case 'vmax':
-                return result * Math.max(getInnerWidth(options.screenDimension), getInnerHeight(options.screenDimension)) / 100;
+                return result * Math.max(getInnerDimension(true, options), getInnerDimension(false, options)) / 100;
         }
     }
     return 0;
+}
+
+export function convertUnit(value: number, unit: string, options?: ConvertUnitOptions) {
+    let result = parseUnit('1' + unit, options);
+    if (options) {
+        const precision = options.precision;
+        if (precision !== undefined) {
+            result = parseFloat(truncate(value, precision));
+        }
+    }
+    return (result !== 0 ? value / result : '0') + unit;
 }
 
 export function parseTransform(value: string, options?: TransformOptions) {
