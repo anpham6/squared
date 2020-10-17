@@ -153,6 +153,7 @@ declare module "lib" {
         function parseAngle(value: string, fallback?: number): number;
         function convertAngle(value: string, unit?: string, fallback?: number): number;
         function parseTime(value: string): number;
+        function parseResolution(value: string): number;
         function formatPX(value: number): string;
         function formatPercent(value: NumString, round?: boolean): string;
         function isLength(value: string, percent?: boolean): boolean;
@@ -228,6 +229,7 @@ declare module "lib" {
             CSS_SELECTOR_ATTR: string;
             CSS_ANGLE: string;
             CSS_TIME: string;
+            CSS_RESOLUTION: string;
             CSS_CALC: string;
         };
         const FILE: {

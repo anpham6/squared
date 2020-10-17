@@ -1,6 +1,6 @@
 {
   "name": "squared",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "Virtual DOM and CSS framework for parsing usable browser data.",
   "main": "dist/squared.js",
   "types": "types/index.d.ts",

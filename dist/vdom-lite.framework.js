@@ -1,4 +1,4 @@
-/* vdom-lite-framework 2.1.0
+/* vdom-lite-framework 2.1.2
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -1161,6 +1161,7 @@
         checkFontSizeValue,
         checkStyleValue,
         checkWritingMode,
+        convertUnit,
         formatPX,
         getRemSize,
         getStyle,
@@ -1172,6 +1173,7 @@
         parseUnit,
     } = squared.lib.css;
     const { assignRect, getNamedItem, getParentElement, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
+    const { truncate } = squared.lib.math;
     const {
         getElementAsNode,
         getElementCache: getElementCache$1,
@@ -1921,6 +1923,53 @@
             (++index === length ? true : ascendQuerySelector(node, selectors, index, next, selector.adjacent))
         );
     }
+    function getMinMax(node, min, attr, options) {
+        let self, last, wrapperOf, initial;
+        if (options) {
+            ({ self, last, wrapperOf, initial } = options);
+        }
+        let result,
+            current = min ? Infinity : -Infinity;
+        node.each(item => {
+            if (wrapperOf) {
+                const child = item.wrapperOf;
+                if (child) {
+                    item = child;
+                }
+            }
+            const value = parseFloat(self ? item[attr] : initial ? item.cssInitial(attr, options) : item.css(attr));
+            if (!isNaN(value)) {
+                if (min) {
+                    if (last) {
+                        if (value <= current) {
+                            result = item;
+                            current = value;
+                        }
+                    } else if (value < current) {
+                        result = item;
+                        current = value;
+                    }
+                } else if (last) {
+                    if (value >= current) {
+                        result = item;
+                        current = value;
+                    }
+                } else if (value > current) {
+                    result = item;
+                    current = value;
+                }
+            }
+        });
+        return result || node;
+    }
+    function getBoundsSize(node, options) {
+        var _a;
+        const bounds =
+            ((!options || options.parent !== false) &&
+                ((_a = node.absoluteParent) === null || _a === void 0 ? void 0 : _a.box)) ||
+            node.bounds;
+        return bounds[(options && options.dimension) || 'width'];
+    }
     const trimSelector = value =>
         value[0] !== '*' || value.includes(':root')
             ? value
@@ -2383,20 +2432,35 @@
             return false;
         }
         css(attr, value, cache = true) {
-            if (value && this.styleElement) {
-                const previousValue = this.style[attr];
-                if (previousValue !== undefined) {
-                    this.style[attr] = value;
-                    if (previousValue !== this.style[attr]) {
-                        this._styleMap[attr] = value;
-                        if (cache) {
-                            this.unsetCache(attr);
-                        }
-                        return value;
+            if (this.styleElement) {
+                if (value === '') {
+                    this.style[attr] = 'initial';
+                    const property = CSS_PROPERTIES$1[attr];
+                    if (property && typeof property.value === 'string') {
+                        this._styleMap[attr] =
+                            property.valueOfNone ||
+                            property.value + (hasBit(property.trait, 256 /* UNIT */) ? 'px' : '');
+                    } else {
+                        delete this._styleMap[attr];
                     }
-                    return previousValue;
+                    if (cache) {
+                        this.unsetCache(attr);
+                    }
+                } else if (value) {
+                    const current = this.style[attr];
+                    if (current !== undefined) {
+                        this.style[attr] = value;
+                        if (current !== this.style[attr]) {
+                            this._styleMap[attr] = value;
+                            if (cache) {
+                                this.unsetCache(attr);
+                            }
+                            return value;
+                        }
+                        return current;
+                    }
+                    return '';
                 }
-                return '';
             }
             return this._styleMap[attr] || this.style[attr] || '';
         }
@@ -2692,17 +2756,12 @@
             return fallback;
         }
         parseUnit(value, options) {
-            var _a;
             if (!value) {
                 return 0;
             } else if (value.endsWith('px')) {
                 return parseFloat(value);
             } else if (isPercent(value)) {
-                const bounds =
-                    ((!options || options.parent !== false) &&
-                        ((_a = this.absoluteParent) === null || _a === void 0 ? void 0 : _a.box)) ||
-                    this.bounds;
-                return (parseFloat(value) / 100) * bounds[(options && options.dimension) || 'width'];
+                return (parseFloat(value) / 100) * getBoundsSize(this, options);
             }
             if (!options) {
                 options = { fontSize: this.fontSize };
@@ -2710,6 +2769,16 @@
                 options.fontSize = this.fontSize;
             }
             return parseUnit(value, options);
+        }
+        convertUnit(value, unit, options) {
+            let result = this.parseUnit(value, options);
+            if (unit === 'percent' || unit === '%') {
+                result *= 100 / getBoundsSize(this, options);
+                return (
+                    (options && options.precision !== undefined ? truncate(result, options.precision) : result) + '%'
+                );
+            }
+            return result !== 0 ? convertUnit(result, unit, options) : '0' + unit;
         }
         has(attr, options) {
             const value = options && options.initial ? this.cssInitial(attr, options) : this._styleMap[attr];
@@ -2742,7 +2811,7 @@
                 if (type) {
                     return (
                         (hasBit(type, 1 /* LENGTH */) && isLength(value)) ||
-                        (hasBit(type, 2 /* PERCENT */) && isPercent(value)) ||
+                        (hasBit(type, 2 /* PERCENT */) && isPercent(value, true)) ||
                         (hasBit(type, 4 /* TIME */) && isTime(value)) ||
                         (hasBit(type, 8 /* ANGLE */) && isAngle(value))
                     );
@@ -2795,62 +2864,10 @@
             this._linear = null;
         }
         min(attr, options) {
-            let self, last, wrapperOf, initial;
-            if (options) {
-                ({ self, last, wrapperOf, initial } = options);
-            }
-            let result,
-                min = Infinity;
-            this.each(item => {
-                if (wrapperOf) {
-                    const child = item.wrapperOf;
-                    if (child) {
-                        item = child;
-                    }
-                }
-                const value = parseFloat(self ? item[attr] : initial ? item.cssInitial(attr, options) : item.css(attr));
-                if (!isNaN(value)) {
-                    if (last) {
-                        if (value <= min) {
-                            result = item;
-                            min = value;
-                        }
-                    } else if (value < min) {
-                        result = item;
-                        min = value;
-                    }
-                }
-            });
-            return result || this;
+            return getMinMax(this, true, attr, options);
         }
         max(attr, options) {
-            let self, last, wrapperOf, initial;
-            if (options) {
-                ({ self, last, wrapperOf, initial } = options);
-            }
-            let result,
-                max = -Infinity;
-            this.each(item => {
-                if (wrapperOf) {
-                    const child = item.wrapperOf;
-                    if (child) {
-                        item = child;
-                    }
-                }
-                const value = parseFloat(self ? item[attr] : initial ? item.cssInitial(attr, options) : item.css(attr));
-                if (!isNaN(value)) {
-                    if (last) {
-                        if (value >= max) {
-                            result = item;
-                            max = value;
-                        }
-                    } else if (value > max) {
-                        result = item;
-                        max = value;
-                    }
-                }
-            });
-            return result || this;
+            return getMinMax(this, false, attr, options);
         }
         querySelector(value) {
             return this.querySelectorAll(value, undefined, 1)[0] || null;

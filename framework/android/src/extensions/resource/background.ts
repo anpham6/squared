@@ -735,6 +735,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             const backgroundPosition: BoxRectPosition[] = [];
             const backgroundPositionX = data.backgroundPositionX.split(CHAR_SEPARATOR);
             const backgroundPositionY = data.backgroundPositionY.split(CHAR_SEPARATOR);
+            const withinBorderWidth = (width: number) => width === boundsWidth || width === (boundsWidth - node.borderLeftWidth - node.borderRightWidth);
+            const withinBorderHeight = (height: number) => height === boundsHeight || height === (boundsHeight - node.borderTopWidth - node.borderBottomWidth);
             let backgroundRepeat = data.backgroundRepeat.split(CHAR_SEPARATOR),
                 backgroundSize = data.backgroundSize.split(CHAR_SEPARATOR),
                 length = 0;
@@ -1089,13 +1091,13 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 else if (dimen !== 'auto') {
                                     if (index === 0) {
                                         const unit = node.parseWidth(dimen, false);
-                                        if (tileModeX !== 'repeat' || unit === boundsWidth || !bitmap) {
+                                        if (tileModeX !== 'repeat' || withinBorderWidth(unit) || !bitmap) {
                                             width = unit;
                                         }
                                     }
                                     else {
                                         const unit = node.parseHeight(dimen, false);
-                                        if (tileModeY !== 'repeat' || unit === boundsHeight || !bitmap) {
+                                        if (tileModeY !== 'repeat' || withinBorderHeight(unit) || !bitmap) {
                                             height = unit;
                                         }
                                     }
@@ -1253,7 +1255,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             if (width && !height) {
                                 height = getImageHeight();
                             }
-                            if (width === boundsWidth && height === boundsHeight) {
+                            if (width && height && withinBorderWidth(width) && withinBorderHeight(height)) {
                                 tileModeX = '';
                                 tileModeY = '';
                             }

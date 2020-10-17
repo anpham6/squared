@@ -19,6 +19,7 @@ const REGEXP_LENGTHPERCENTAGE = new RegExp(`^${STRING.LENGTH_PERCENTAGE}$`);
 const REGEXP_PERCENT = new RegExp(`^${STRING.PERCENT}$`);
 const REGEXP_ANGLE = new RegExp(`^${STRING.CSS_ANGLE}$`);
 const REGEXP_TIME = new RegExp(`^${STRING.CSS_TIME}$`);
+const REGEXP_RESOLUTION = new RegExp(`^${STRING.CSS_RESOLUTION}$`);
 const REGEXP_CALC = new RegExp(`^${STRING.CSS_CALC}$`);
 const REGEXP_CALCWITHIN = new RegExp(STRING.CSS_CALC);
 const REGEXP_SOURCESIZES = new RegExp(`\\s*(?:(?:\\(\\s*)?${PATTERN_SIZES}|(?:\\(\\s*))?\\s*(and|or|not)?\\s*(?:${PATTERN_SIZES}(?:\\s*\\))?)?\\s*(.+)`);
@@ -2831,19 +2832,7 @@ export function checkMediaRule(value: string, fontSize?: number) {
                         case 'resolution':
                         case 'min-resolution':
                         case 'max-resolution':
-                            if (rule) {
-                                let resolution = parseFloat(rule);
-                                if (rule.endsWith('dpcm')) {
-                                    resolution *= 2.54;
-                                }
-                                else if (rule.endsWith('dppx')) {
-                                    resolution *= 96;
-                                }
-                                valid = compareRange(operation, getDeviceDPI(), resolution);
-                            }
-                            else {
-                                valid = false;
-                            }
+                            valid = !!rule && compareRange(operation, window.devicePixelRatio, Math.max(0, parseResolution(rule)));
                             break;
                         case 'grid':
                             valid = rule === '0';
@@ -3365,7 +3354,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                                                 if (!checkCalculateNumber(operand, operator)) {
                                                     return NaN;
                                                 }
-                                                seg.push(parseTime(partial));
+                                                seg.push(parseTime(partial) * 1000);
                                                 found = true;
                                             }
                                             else {
@@ -3791,12 +3780,28 @@ export function convertAngle(value: string, unit = 'deg', fallback = NaN) {
 export function parseTime(value: string) {
     const match = REGEXP_TIME.exec(value);
     if (match) {
-        switch (match[2]) {
-            case 'ms':
-                return parseInt(match[1]);
-            case 's':
-                return parseFloat(match[1]) * 1000;
+        let result = parseFloat(match[1]);
+        if (match[2] === 'ms') {
+            result /= 1000;
         }
+        return result;
+    }
+    return 0;
+}
+
+export function parseResolution(value: string) {
+    const match = REGEXP_RESOLUTION.exec(value);
+    if (match) {
+        let result = parseFloat(match[1]);
+        switch (match[2]) {
+            case 'dpcm':
+                result *= 2.54 / 96;
+                break;
+            case 'dpi':
+                result /= 96;
+                break;
+        }
+        return result;
     }
     return 0;
 }

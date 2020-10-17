@@ -14,6 +14,7 @@ export const STRING = {
     CSS_SELECTOR_ATTR: '\\[((?:\\*\\|)?(?:[A-Za-z\\-]+:)?[A-Za-z\\-]+)(?:([~^$*|])?=(?:"((?:[^"]|\\\\")+)"|\'((?:[^\']|\\\')+)\'|([^\\s\\]]+))\\s*(i)?)?\\]',
     CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,
     CSS_TIME: `(${DECIMAL})(s|ms)`,
+    CSS_RESOLUTION: `(${DECIMAL})(dpi|dpcm|dppx)`,
     CSS_CALC: 'calc\\((.+)\\)'
 };
 

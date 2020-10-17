@@ -1,4 +1,4 @@
-/* android-framework 2.1.1
+/* android-framework 2.1.2
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -15455,6 +15455,10 @@ var android = (function () {
                 const backgroundPosition = [];
                 const backgroundPositionX = data.backgroundPositionX.split(CHAR_SEPARATOR);
                 const backgroundPositionY = data.backgroundPositionY.split(CHAR_SEPARATOR);
+                const withinBorderWidth = width =>
+                    width === boundsWidth || width === boundsWidth - node.borderLeftWidth - node.borderRightWidth;
+                const withinBorderHeight = height =>
+                    height === boundsHeight || height === boundsHeight - node.borderTopWidth - node.borderBottomWidth;
                 let backgroundRepeat = data.backgroundRepeat.split(CHAR_SEPARATOR),
                     backgroundSize = data.backgroundSize.split(CHAR_SEPARATOR),
                     length = 0;
@@ -15820,12 +15824,12 @@ var android = (function () {
                                     } else if (dimen !== 'auto') {
                                         if (index === 0) {
                                             const unit = node.parseWidth(dimen, false);
-                                            if (tileModeX !== 'repeat' || unit === boundsWidth || !bitmap) {
+                                            if (tileModeX !== 'repeat' || withinBorderWidth(unit) || !bitmap) {
                                                 width = unit;
                                             }
                                         } else {
                                             const unit = node.parseHeight(dimen, false);
-                                            if (tileModeY !== 'repeat' || unit === boundsHeight || !bitmap) {
+                                            if (tileModeY !== 'repeat' || withinBorderHeight(unit) || !bitmap) {
                                                 height = unit;
                                             }
                                         }
@@ -15976,7 +15980,7 @@ var android = (function () {
                                 if (width && !height) {
                                     height = getImageHeight();
                                 }
-                                if (width === boundsWidth && height === boundsHeight) {
+                                if (width && height && withinBorderWidth(width) && withinBorderHeight(height)) {
                                     tileModeX = '';
                                     tileModeY = '';
                                 }

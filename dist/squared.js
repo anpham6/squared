@@ -1,4 +1,4 @@
-/* squared 2.1.1
+/* squared 2.1.2
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -26,6 +26,7 @@
             '\\[((?:\\*\\|)?(?:[A-Za-z\\-]+:)?[A-Za-z\\-]+)(?:([~^$*|])?=(?:"((?:[^"]|\\\\")+)"|\'((?:[^\']|\\\')+)\'|([^\\s\\]]+))\\s*(i)?)?\\]',
         CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,
         CSS_TIME: `(${DECIMAL})(s|ms)`,
+        CSS_RESOLUTION: `(${DECIMAL})(dpi|dpcm|dppx)`,
         CSS_CALC: 'calc\\((.+)\\)',
     };
     const FILE = {
@@ -2701,6 +2702,7 @@
     const REGEXP_PERCENT = new RegExp(`^${STRING.PERCENT}$`);
     const REGEXP_ANGLE = new RegExp(`^${STRING.CSS_ANGLE}$`);
     const REGEXP_TIME = new RegExp(`^${STRING.CSS_TIME}$`);
+    const REGEXP_RESOLUTION = new RegExp(`^${STRING.CSS_RESOLUTION}$`);
     const REGEXP_CALC = new RegExp(`^${STRING.CSS_CALC}$`);
     const REGEXP_CALCWITHIN = new RegExp(STRING.CSS_CALC);
     const REGEXP_SOURCESIZES = new RegExp(
@@ -2971,13 +2973,20 @@
         }
         return { width: 0, height: 0 };
     }
+    function getInnerDimension(horizontal, options) {
+        if (options) {
+            const screenDimension = options.screenDimension;
+            if (screenDimension) {
+                return horizontal ? screenDimension.width : screenDimension.height;
+            }
+        }
+        return horizontal ? window.innerWidth : window.innerHeight;
+    }
     const hasBorderStyle = value => value !== 'none' && value !== 'hidden';
     const calculateLength = (element, value) =>
         formatVar(calculateVar(element, value, { min: 0, supportPercent: false }));
     const fromFontNamedValue = (index, fixedWidth) =>
         (!fixedWidth ? DOCUMENT_FONTMAP[index] : DOCUMENT_FIXEDMAP[index]).toPrecision(8) + 'rem';
-    const getInnerWidth = dimension => (dimension && dimension.width) || window.innerWidth;
-    const getInnerHeight = dimension => (dimension && dimension.height) || window.innerHeight;
     const isColor = value => /(rgb|hsl)a?/.test(value);
     const formatVar = value => (!isNaN(value) ? value + 'px' : '');
     const formatDecimal = value => (!isNaN(value) ? value.toString() : '');
@@ -3167,7 +3176,7 @@
             valueOfNone: 'none 100% / 1 / 0 stretch',
         },
         borderImageOutset: {
-            trait: 1 /* CALC */ | 256 /* UNIT */,
+            trait: 1 /* CALC */,
             value: '0',
         },
         borderImageRepeat: {
@@ -3183,7 +3192,7 @@
             value: 'none',
         },
         borderImageWidth: {
-            trait: 1 /* CALC */ | 256 /* UNIT */,
+            trait: 1 /* CALC */,
             value: '1',
         },
         borderLeft: {
@@ -3225,6 +3234,7 @@
         borderSpacing: {
             trait: 1 /* CALC */ | 256 /* UNIT */,
             value: '0',
+            valueOfNone: '0px 0px',
         },
         borderStyle: {
             trait: 2 /* SHORTHAND */ | 64 /* NONE */,
@@ -3395,11 +3405,11 @@
             value: ['flexDirection', 'flexWrap'],
         },
         flexGrow: {
-            trait: 1 /* CALC */ | 4 /* LAYOUT */ | 256 /* UNIT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: '0',
         },
         flexShrink: {
-            trait: 1 /* CALC */ | 4 /* LAYOUT */ | 256 /* UNIT */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: '1',
         },
         flexWrap: {
@@ -3416,7 +3426,7 @@
         },
         fontFamily: {
             trait: 4 /* LAYOUT */,
-            value: '',
+            value: isPlatform(2 /* MAC */) ? 'Helvetica' : 'Arial',
         },
         fontFeatureSettings: {
             trait: 1 /* CALC */ | 4 /* LAYOUT */,
@@ -3696,11 +3706,11 @@
             value: 'auto',
         },
         opacity: {
-            trait: 1 /* CALC */ | 256 /* UNIT */,
+            trait: 1 /* CALC */,
             value: '1',
         },
         order: {
-            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */ | 256 /* UNIT */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */,
             value: '0',
         },
         outline: {
@@ -5461,17 +5471,13 @@
                             case 'resolution':
                             case 'min-resolution':
                             case 'max-resolution':
-                                if (rule) {
-                                    let resolution = parseFloat(rule);
-                                    if (rule.endsWith('dpcm')) {
-                                        resolution *= 2.54;
-                                    } else if (rule.endsWith('dppx')) {
-                                        resolution *= 96;
-                                    }
-                                    valid = compareRange(operation, getDeviceDPI(), resolution);
-                                } else {
-                                    valid = false;
-                                }
+                                valid =
+                                    !!rule &&
+                                    compareRange(
+                                        operation,
+                                        window.devicePixelRatio,
+                                        Math.max(0, parseResolution(rule))
+                                    );
                                 break;
                             case 'grid':
                                 valid = rule === '0';
@@ -5981,7 +5987,7 @@
                                                     if (!checkCalculateNumber(operand, operator)) {
                                                         return NaN;
                                                     }
-                                                    seg.push(parseTime(partial));
+                                                    seg.push(parseTime(partial) * 1000);
                                                     found = true;
                                                 } else {
                                                     return NaN;
@@ -6110,7 +6116,7 @@
         }
         return NaN;
     }
-    function parseUnit(value, options = {}) {
+    function parseUnit(value, options) {
         const match = REGEXP_LENGTH.exec(value);
         if (match) {
             let result = parseFloat(match[1]);
@@ -6121,11 +6127,11 @@
                     result /= 2;
                 case 'em':
                 case 'ch':
-                    if (options.fontSize !== undefined) {
+                    if (options && options.fontSize !== undefined) {
                         return result * options.fontSize;
                     }
                 case 'rem':
-                    return result * (!options.fixedWidth ? DOCUMENT_FONTSIZE : 13);
+                    return result * (options && options.fixedWidth ? 13 : DOCUMENT_FONTSIZE);
                 case 'pc':
                     result *= 12;
                 case 'pt':
@@ -6139,24 +6145,30 @@
                 case 'in':
                     return result * getDeviceDPI();
                 case 'vw':
-                    return (result * getInnerWidth(options.screenDimension)) / 100;
+                    return (result * getInnerDimension(true, options)) / 100;
                 case 'vh':
-                    return (result * getInnerHeight(options.screenDimension)) / 100;
+                    return (result * getInnerDimension(false, options)) / 100;
                 case 'vmin':
                     return (
-                        (result *
-                            Math.min(getInnerWidth(options.screenDimension), getInnerHeight(options.screenDimension))) /
-                        100
+                        (result * Math.min(getInnerDimension(true, options), getInnerDimension(false, options))) / 100
                     );
                 case 'vmax':
                     return (
-                        (result *
-                            Math.max(getInnerWidth(options.screenDimension), getInnerHeight(options.screenDimension))) /
-                        100
+                        (result * Math.max(getInnerDimension(true, options), getInnerDimension(false, options))) / 100
                     );
             }
         }
         return 0;
+    }
+    function convertUnit(value, unit, options) {
+        let result = parseUnit('1' + unit, options);
+        if (result !== 0) {
+            result = value / result;
+            if (options && options.precision !== undefined) {
+                return truncate(result, options.precision) + unit;
+            }
+        }
+        return result + unit;
     }
     function parseTransform(value, options) {
         var _a, _b, _c, _d;
@@ -6396,12 +6408,27 @@
     function parseTime(value) {
         const match = REGEXP_TIME.exec(value);
         if (match) {
-            switch (match[2]) {
-                case 'ms':
-                    return parseInt(match[1]);
-                case 's':
-                    return parseFloat(match[1]) * 1000;
+            let result = parseFloat(match[1]);
+            if (match[2] === 'ms') {
+                result /= 1000;
             }
+            return result;
+        }
+        return 0;
+    }
+    function parseResolution(value) {
+        const match = REGEXP_RESOLUTION.exec(value);
+        if (match) {
+            let result = parseFloat(match[1]);
+            switch (match[2]) {
+                case 'dpcm':
+                    result *= 2.54 / 96;
+                    break;
+                case 'dpi':
+                    result /= 96;
+                    break;
+            }
+            return result;
         }
         return 0;
     }
@@ -6475,10 +6502,12 @@
         insertStyleSheetRule: insertStyleSheetRule,
         calculate: calculate,
         parseUnit: parseUnit,
+        convertUnit: convertUnit,
         parseTransform: parseTransform,
         parseAngle: parseAngle,
         convertAngle: convertAngle,
         parseTime: parseTime,
+        parseResolution: parseResolution,
         formatPX: formatPX,
         formatPercent: formatPercent,
         isLength: isLength,
