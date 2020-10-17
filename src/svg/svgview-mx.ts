@@ -30,7 +30,7 @@ const ANIMATION_DEFAULT = {
     'animation-timing-function': 'ease'
 };
 
-const RE_TIMINGFUNCTION = new Pattern(`(ease|ease-(?:in|out|in-out)|linear|step-(?:start|end)|steps\\(\\d+,\\s+(?:start|end|jump-(?:start|end|both|none))\\)|cubic-bezier\\(${PATTERN_CUBICBEZIER}\\)),?\\s*`);
+const RE_TIMINGFUNCTION = new Pattern(`(ease|ease-(?:in|out|in-out)|linear|step-(?:start|end)|steps\\(\\d+,\\s*(?:start|end|jump-(?:start|end|both|none))\\)|cubic-bezier\\(${PATTERN_CUBICBEZIER}\\)),?\\s*`);
 
 function parseAttribute(element: SVGElement, attr: string) {
     const value = getAttribute(element, attr);

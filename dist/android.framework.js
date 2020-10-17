@@ -1,4 +1,4 @@
-/* android-framework 2.1.2
+/* android-framework 2.1.3
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -4112,7 +4112,7 @@ var android = (function () {
                     for (let i = 0, length = transforms.length; i < length; ++i) {
                         const item = transforms[i];
                         const [x, y, z] = item.values;
-                        switch (item.method) {
+                        switch (item.group) {
                             case 'rotate':
                                 if (x === y) {
                                     this.android('rotation', x.toString());
@@ -4818,7 +4818,7 @@ var android = (function () {
                         } else if (!this.pageFlow) {
                             result =
                                 (this.isEmpty() && (excludeHorizontal(this) || excludeVertical(this))) ||
-                                /^rect\(0[a-zQ]*,\s+0[a-zQ]*,\s+0[a-zQ]*,\s+0[a-zQ]*\)$/.test(this.valueAt('clip'));
+                                /^rect\(0[a-zQ]*,\s*0[a-zQ]*,\s*0[a-zQ]*,\s*0[a-zQ]*\)$/.test(this.valueAt('clip'));
                         } else {
                             const parent = this.renderParent || this.parent;
                             if (parent.hasAlign(2 /* AUTO_LAYOUT */)) {
@@ -8793,7 +8793,7 @@ var android = (function () {
                                     accumulate: true,
                                     boundingBox: node.bounds,
                                     fontSize: node.fontSize,
-                                }).filter(item => item.method === 'translate');
+                                }).filter(item => item.group === 'translate');
                                 if (translate.length) {
                                     adjustment -= translate[0].values[horizontal ? 0 : 1];
                                 }

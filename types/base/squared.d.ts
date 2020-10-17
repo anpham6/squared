@@ -436,7 +436,7 @@ declare module "base" {
         cssCopyIfEmpty(node: Node, ...attrs: string[]): void;
         cssPseudoElement(name: PseudoElt, attr?: string): Undef<StringMap | string>;
         parseUnit(value: string, options?: NodeParseUnitOptions): number;
-        convertUnit(value: string, unit: string, options?: NodeConvertUnitOptions): string;
+        convertUnit(value: NumString, unit: string, options?: NodeConvertUnitOptions): string;
         has(attr: string, options?: HasOptions): boolean;
         hasPX(attr: string, options?: HasPXOptions): boolean;
         toInt(attr: string, fallback?: number, initial?: boolean): number;

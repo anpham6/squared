@@ -96,7 +96,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                         timingFunction = 'steps(1, end)';
                         break;
                 }
-                const match = /steps\((\d+)(?:,\s+(start|end|jump-(?:start|end|both|none)))?\)/.exec(timingFunction);
+                const match = /steps\((\d+)(?:,\s*(start|end|jump-(?:start|end|both|none)))?\)/.exec(timingFunction);
                 if (match) {
                     const keyTimeTotal = keyTimes[index + 1] - keyTimes[index];
                     const stepSize = parseInt(match[1]);

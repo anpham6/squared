@@ -5,7 +5,7 @@ import { parseColor } from './color';
 import { clamp, truncate, truncateFraction } from './math';
 import { CSS, STRING, TRANSFORM } from './regex';
 import { getElementCache, setElementCache } from './session';
-import { convertCamelCase, convertFloat, convertHyphenated, hasBit, isNumber, isString, iterateArray, replaceMap, resolvePath, spliceString, splitEnclosing, splitPair, trimBoth } from './util';
+import { convertCamelCase, convertFloat, convertHyphenated, hasBit, isNumber, isString, iterateArray, resolvePath, spliceString, splitEnclosing, splitPair, trimBoth } from './util';
 
 const DOCUMENT_ELEMENT = document.documentElement;
 const DOCUMENT_FIXEDMAP = [9/13, 10/13, 12/13, 16/13, 20/13, 2, 3];
@@ -56,7 +56,7 @@ function compareRange(operation: string, unit: number, range: number) {
 
 function calculatePosition(element: StyleElement, value: string, boundingBox?: Null<Dimension>) {
     const alignment: string[] = [];
-    for (const seg of replaceMap(splitEnclosing(value.trim(), 'calc'), item => item.trim())) {
+    for (const seg of splitEnclosing(value.trim(), 'calc').map(item => item.trim())) {
         if (seg.includes(' ') && !isCalc(seg)) {
             alignment.push(...seg.split(CHAR_SPACE));
         }
@@ -3523,9 +3523,12 @@ export function parseUnit(value: string, options?: ParseUnitOptions) {
     return 0;
 }
 
-export function convertUnit(value: number, unit: string, options?: ConvertUnitOptions) {
+export function convertUnit(value: NumString, unit: string, options?: ConvertUnitOptions) {
     let result = parseUnit('1' + unit, options);
     if (result !== 0) {
+        if (typeof value === 'string') {
+            value = parseUnit(value, options);
+        }
         result = value / result;
         if (options && options.precision !== undefined) {
             return truncate(result, options.precision) + unit;
@@ -3549,43 +3552,23 @@ export function parseTransform(value: string, options?: TransformOptions) {
             const translate = TRANSFORM.TRANSLATE.exec(match[0]);
             if (translate) {
                 const tX = translate[2];
-                const tY = translate[3];
-                if (accumulate) {
-                    let x = 0,
-                        y = 0,
-                        z = 0;
-                    switch (method) {
-                        case 'translate':
-                            if (isPercent(tX)) {
-                                if (boundingBox) {
-                                    x = parseFloat(tX) / 100 * boundingBox.width;
-                                }
+                let x = 0,
+                    y = 0,
+                    z = 0,
+                    group = 'translate';
+                switch (method) {
+                    case 'translate':
+                    case 'translate3d': {
+                        if (isPercent(tX)) {
+                            if (boundingBox) {
+                                x = parseFloat(tX) / 100 * boundingBox.width;
                             }
-                            else {
-                                x = parseUnit(tX, { fontSize });
-                            }
-                            if (tY) {
-                                if (isPercent(tY)) {
-                                    if (boundingBox) {
-                                        y = parseFloat(tY) / 100 * boundingBox.height;
-                                    }
-                                }
-                                else {
-                                    y = parseUnit(tY, { fontSize });
-                                }
-                            }
-                            break;
-                        case 'translateX':
-                            if (isPercent(tX)) {
-                                if (boundingBox) {
-                                    x = parseFloat(tX) / 100 * boundingBox.width;
-                                }
-                            }
-                            else {
-                                x = parseUnit(tX, { fontSize });
-                            }
-                            break;
-                        case 'translateY':
+                        }
+                        else {
+                            x = parseUnit(tX, { fontSize });
+                        }
+                        const tY = translate[3];
+                        if (tY) {
                             if (isPercent(tY)) {
                                 if (boundingBox) {
                                     y = parseFloat(tY) / 100 * boundingBox.height;
@@ -3594,159 +3577,203 @@ export function parseTransform(value: string, options?: TransformOptions) {
                             else {
                                 y = parseUnit(tY, { fontSize });
                             }
-                            break;
-                        case 'translateZ':
-                            z = parseUnit(tX, { fontSize });
-                            break;
+                        }
+                        if (method === 'translate3d') {
+                            const tZ = translate[4];
+                            if (tZ && !isPercent(tZ)) {
+                                z = parseUnit(tZ, { fontSize });
+                                group += '3d';
+                            }
+                            else {
+                                continue;
+                            }
+                        }
+                        break;
                     }
-                    const values = result.find(item => item.method === 'translate')?.values;
+                    case 'translateX':
+                        if (isPercent(tX)) {
+                            if (boundingBox) {
+                                x = parseFloat(tX) / 100 * boundingBox.width;
+                            }
+                        }
+                        else {
+                            x = parseUnit(tX, { fontSize });
+                        }
+                        break;
+                    case 'translateY':
+                        if (isPercent(tX)) {
+                            if (boundingBox) {
+                                y = parseFloat(tX) / 100 * boundingBox.height;
+                            }
+                        }
+                        else {
+                            y = parseUnit(tX, { fontSize });
+                        }
+                        break;
+                    case 'translateZ':
+                        z = parseUnit(tX, { fontSize });
+                        break;
+                }
+                if (accumulate) {
+                    const values = result.find(item => item.group === group)?.values;
                     if (values) {
                         values[0] += x;
                         values[1] += y;
                         values[2] += z;
-                    }
-                    else {
-                        result.push({ method: 'translate', values: [x, y, z] });
+                        continue;
                     }
                 }
-                else {
-                    const values: number[] = [parseUnit(tX, { fontSize })];
-                    if (method === 'translate' && tY) {
-                        values.push(parseUnit(tY, { fontSize }));
-                    }
-                    result.push({ method, values });
-                }
+                result.push({ group, method, values: [x, y, z] });
             }
         }
         else if (method.startsWith('rotate')) {
             const rotate = TRANSFORM.ROTATE.exec(match[0]);
             if (rotate) {
-                const angle = convertAngle(rotate[2], rotate[3]);
+                const angle = convertAngle(rotate[5], rotate[6]);
                 if (!isNaN(angle)) {
+                    let x = 0,
+                        y = 0,
+                        z = 0,
+                        group = 'rotate';
+                    switch (method) {
+                        case 'rotate':
+                            x = angle;
+                            y = angle;
+                            break;
+                        case 'rotateX':
+                            x = angle;
+                            break;
+                        case 'rotateY':
+                            y = angle;
+                            break;
+                        case 'rotateZ':
+                            z = angle;
+                            break;
+                        case 'rotate3d':
+                            x = parseFloat(rotate[2]);
+                            y = parseFloat(rotate[3]);
+                            z = parseFloat(rotate[4]);
+                            if (isNaN(x) || isNaN(y) || isNaN(z)) {
+                                continue;
+                            }
+                            group += '3d';
+                            break;
+                    }
                     if (accumulate) {
-                        let x = 0,
-                            y = 0,
-                            z = 0;
-                        switch (method) {
-                            case 'rotate':
-                                x = angle;
-                                y = angle;
-                                break;
-                            case 'rotateX':
-                                x = angle;
-                                break;
-                            case 'rotateY':
-                                y = angle;
-                                break;
-                            case 'rotateZ':
-                                z = angle;
-                                break;
-                        }
-                        const values = result.find(item => item.method === 'rotate')?.values;
-                        if (values) {
+                        const data = result.find(item => item.group === group);
+                        if (data) {
+                            const values = data.values;
                             values[0] += x;
                             values[1] += y;
                             values[2] += z;
-                        }
-                        else {
-                            result.push({ method: 'rotate', values: [x, y, z] });
+                            if (data.angle !== undefined) {
+                                data.angle += angle;
+                            }
+                            continue;
                         }
                     }
-                    else {
-                        result.push({ method, values: [angle] });
-                    }
+                    result.push({ group, method, values: [x, y, z], angle: method === 'rotate3d' ? angle : undefined });
                 }
             }
         }
         else if (method.startsWith('scale')) {
             const scale = TRANSFORM.SCALE.exec(match[0]);
             if (scale) {
+                let x = 1,
+                    y = 1,
+                    z = 1,
+                    group = 'scale';
+                switch (method) {
+                    case 'scale':
+                    case 'scale3d':
+                        x = parseFloat(scale[2]);
+                        y = scale[3] ? parseFloat(scale[3]) : x;
+                        if (method === 'scale3d') {
+                            if (scale[4]) {
+                                z = parseFloat(scale[4]);
+                                group += '3d';
+                            }
+                            else {
+                                continue;
+                            }
+                        }
+                        break;
+                    case 'scaleX':
+                        x = parseFloat(scale[2]);
+                        break;
+                    case 'scaleY':
+                        y = parseFloat(scale[2]);
+                        break;
+                    case 'scaleZ':
+                        z = parseFloat(scale[2]);
+                        break;
+                }
                 if (accumulate) {
-                    let x = 1,
-                        y = 1,
-                        z = 1;
-                    switch (method) {
-                        case 'scale':
-                            x = parseFloat(scale[2]);
-                            y = scale[3] ? parseFloat(scale[3]) : x;
-                            break;
-                        case 'scaleX':
-                            x = parseFloat(scale[2]);
-                            break;
-                        case 'scaleY':
-                            y = parseFloat(scale[2]);
-                            break;
-                        case 'scaleZ':
-                            z = parseFloat(scale[2]);
-                            break;
-                    }
-                    const values = result.find(item => item.method === 'scale')?.values;
+                    const values = result.find(item => item.group === group)?.values;
                     if (values) {
                         values[0] *= x;
                         values[1] *= y;
                         values[2] *= z;
-                    }
-                    else {
-                        result.push({ method: 'scale', values: [x, y, z] });
+                        continue;
                     }
                 }
-                else {
-                    const values: number[] = [parseFloat(scale[2])];
-                    if (method === 'scale' && scale[3]) {
-                        values.push(parseFloat(scale[3]));
-                    }
-                    result.push({ method, values });
-                }
+                result.push({ group, method, values: [x, y, z] });
             }
         }
         else if (method.startsWith('skew')) {
             const skew = TRANSFORM.SKEW.exec(match[0]);
             if (skew) {
-                let angle = convertAngle(skew[2], skew[3]);
+                const angle = convertAngle(skew[2], skew[3]);
                 if (!isNaN(angle)) {
+                    let x = 0,
+                        y = 0;
+                    switch (method) {
+                        case 'skew':
+                            x = angle;
+                            if (skew[4] && skew[5]) {
+                                y = convertAngle(skew[4], skew[5], 0);
+                            }
+                            break;
+                        case 'skewX':
+                            x = angle;
+                            break;
+                        case 'skewY':
+                            y = angle;
+                            break;
+                    }
                     if (accumulate) {
-                        let x = 0,
-                            y = 0;
-                        switch (method) {
-                            case 'skew':
-                                x = angle;
-                                if (skew[4] && skew[5]) {
-                                    y = convertAngle(skew[4], skew[5], 0);
-                                }
-                                break;
-                            case 'skewX':
-                                x = angle;
-                                break;
-                            case 'skewY':
-                                y = angle;
-                                break;
-                        }
-                        const values = result.find(item => item.method === 'skew')?.values;
+                        const values = result.find(item => item.group === 'skew')?.values;
                         if (values) {
                             values[0] += x;
                             values[1] += y;
-                        }
-                        else {
-                            result.push({ method: 'skew', values: [x, y] });
+                            continue;
                         }
                     }
-                    else {
-                        const values: number[] = [angle];
-                        if (method === 'skew' && skew[4] && skew[5]) {
-                            angle = convertAngle(skew[4], skew[5]);
-                            if (!isNaN(angle)) {
-                                values.push(angle);
-                            }
-                        }
-                        result.push({ method, values});
-                    }
+                    result.push({ group: 'skew', method, values: [x, y] });
                 }
             }
         }
-        else if (method.startsWith('matrix') && !accumulate) {
-            const matrix = TRANSFORM.MATRIX.exec(match[0]);
-            if (matrix) {
-                result.push({ method, values: replaceMap(matrix.slice(2, 8), item => parseFloat(item)) });
+        else if (method.startsWith('matrix')) {
+            const subMatch = TRANSFORM.MATRIX.exec(match[0]);
+            if (subMatch) {
+                let length: number;
+                if (method === 'matrix') {
+                    if (subMatch[8]) {
+                        continue;
+                    }
+                    length = 6;
+                }
+                else {
+                    if (!subMatch[17]) {
+                        continue;
+                    }
+                    length = 16;
+                }
+                const values = new Array(length);
+                for (let i = 0; i < length; ++i) {
+                    values[i] = parseFloat(subMatch[i + 2]);
+                }
+                result.push({ group: method, method, values });
             }
         }
     }

@@ -1,4 +1,4 @@
-/* squared.base 2.1.2
+/* squared.base 2.1.3
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -3091,14 +3091,14 @@
             return parseUnit(value, options);
         }
         convertUnit(value, unit, options) {
-            let result = this.parseUnit(value, options);
+            let result = typeof value === 'string' ? this.parseUnit(value, options) : value;
             if (unit === 'percent' || unit === '%') {
                 result *= 100 / getBoundsSize(this, options);
                 return (
                     (options && options.precision !== undefined ? truncate(result, options.precision) : result) + '%'
                 );
             }
-            return result !== 0 ? convertUnit(result, unit, options) : '0' + unit;
+            return convertUnit(result, unit, options);
         }
         has(attr, options) {
             const value = options && options.initial ? this.cssInitial(attr, options) : this._styleMap[attr];
@@ -5214,7 +5214,7 @@
     const BORDER_LEFT$1 = CSS_PROPERTIES$2.borderLeft.value;
     const BORDER_OUTLINE$1 = CSS_PROPERTIES$2.outline.value;
     const PATTERN_COLOR =
-        '((?:rgb|hsl)a?\\(\\d+,\\s+\\d+%?,\\s+\\d+%?(?:,\\s+[\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]{3,})';
+        '((?:rgb|hsl)a?\\(\\d+,\\s*\\d+%?,\\s*\\d+%?(?:,\\s*[\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]{3,})';
     const PATTERN_COLORLENGTH = `${STRING$2.LENGTH_PERCENTAGE}|${STRING$2.CSS_ANGLE}|(?:${STRING$2.CSS_CALC}(?=,)|${STRING$2.CSS_CALC})`;
     const PATTERN_COLORSTOP = `${PATTERN_COLOR}(?:\\s*(${PATTERN_COLORLENGTH})\\s*,?\\s*)*\\s*,?\\s*`;
     const REGEXP_BACKGROUNDIMAGE = new RegExp(
@@ -8903,7 +8903,7 @@
         trimBoth: trimBoth$1,
         trimString,
     } = squared.lib.util;
-    const REGEXP_PSEUDOCOUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s+([a-z-]+))?\)|(counters)\(([^,]+),\s+"([^"]*)"(?:,\s+([a-z-]+))?\)|"([^"]+)")\s*/g;
+    const REGEXP_PSEUDOCOUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s*([a-z-]+))?\)|(counters)\(([^,]+),\s*"([^"]*)"(?:,\s*([a-z-]+))?\)|"([^"]+)")\s*/g;
     const REGEXP_PSEUDOCOUNTERVALUE = /\b([^\-\d][^\-\d]?[^\s]*)\s+(-?\d+)\b/g;
     const REGEXP_PSEUDOQUOTE = /("(?:[^"]|\\")+"|[^\s]+)\s+("(?:[^"]|\\")+"|[^\s]+)(?:\s+("(?:[^"]|\\")+"|[^\s]+)\s+("(?:[^"]|\\")+"|[^\s]+))?/;
     function getFloatAlignmentType(nodes) {
@@ -12069,12 +12069,12 @@
         withinRange: withinRange$1,
     } = squared.lib.util;
     const PATTERN_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
-    const PATTERN_MINMAX = 'minmax\\(\\s*([^,]+),\\s+([^)]+)\\s*\\)';
+    const PATTERN_MINMAX = 'minmax\\(\\s*([^,]+),\\s*([^)]+)\\s*\\)';
     const PATTERN_FIT_CONTENT = 'fit-content\\(\\s*([\\d.]+[a-z%]+)\\s*\\)';
     const PATTERN_NAMED = '\\[([\\w\\s\\-]+)\\]';
     const REGEXP_UNIT = new RegExp(`^${PATTERN_UNIT}$`);
     const REGEXP_NAMED = new RegExp(
-        `\\s*(repeat\\(\\s*(auto-fit|auto-fill|\\d+),\\s+(.+)\\)|${PATTERN_NAMED}|${PATTERN_MINMAX}|${PATTERN_FIT_CONTENT}|${PATTERN_UNIT}\\s*)\\s*`,
+        `\\s*(repeat\\(\\s*(auto-fit|auto-fill|\\d+),\\s*(.+)\\)|${PATTERN_NAMED}|${PATTERN_MINMAX}|${PATTERN_FIT_CONTENT}|${PATTERN_UNIT}\\s*)\\s*`,
         'g'
     );
     const REGEXP_REPEAT = new RegExp(

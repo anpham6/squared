@@ -25,7 +25,7 @@ const BORDER_BOTTOM = CSS_PROPERTIES.borderBottom.value as string[];
 const BORDER_LEFT = CSS_PROPERTIES.borderLeft.value as string[];
 const BORDER_OUTLINE = CSS_PROPERTIES.outline.value as string[];
 
-const PATTERN_COLOR = '((?:rgb|hsl)a?\\(\\d+,\\s+\\d+%?,\\s+\\d+%?(?:,\\s+[\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]{3,})';
+const PATTERN_COLOR = '((?:rgb|hsl)a?\\(\\d+,\\s*\\d+%?,\\s*\\d+%?(?:,\\s*[\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]{3,})';
 const PATTERN_COLORLENGTH = `${STRING.LENGTH_PERCENTAGE}|${STRING.CSS_ANGLE}|(?:${STRING.CSS_CALC}(?=,)|${STRING.CSS_CALC})`;
 const PATTERN_COLORSTOP = `${PATTERN_COLOR}(?:\\s*(${PATTERN_COLORLENGTH})\\s*,?\\s*)*\\s*,?\\s*`;
 const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\([^)]+\\)|(repeating-)?(linear|radial|conic)-gradient\\(((?:to\\s+[a-z\\s]+|(?:from\\s+)?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*(?:(?:-?[\\d.]+(?:[a-z%]+)?\\s*)+)?(?:at\\s+[\\w %]+)?)?),?\\s*((?:${PATTERN_COLORSTOP})+)\\))`, 'g');

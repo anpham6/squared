@@ -148,7 +148,7 @@ declare module "lib" {
         function resolveURL(value: string): Undef<string>;
         function insertStyleSheetRule(value: string, index?: number, shadowRoot?: ShadowRoot): HTMLStyleElement;
         function parseUnit(value: string, options?: ParseUnitOptions): number;
-        function convertUnit(value: number, unit: string, options?: ConvertUnitOptions): string;
+        function convertUnit(value: NumString, unit: string, options?: ConvertUnitOptions): string;
         function parseTransform(value: string, options?: TransformOptions): TransformData[];
         function parseAngle(value: string, fallback?: number): number;
         function convertAngle(value: string, unit?: string, fallback?: number): number;
@@ -234,10 +234,11 @@ declare module "lib" {
         };
         const FILE: {
             NAME: RegExp;
-            SVG: RegExp;
             PROTOCOL: RegExp;
+            SVG: RegExp;
         };
         const CSS: {
+            URL: RegExp;
             HEX: RegExp;
             RGBA: RegExp;
             HSLA: RegExp;
@@ -253,6 +254,7 @@ declare module "lib" {
             SKEW: RegExp;
             SCALE: RegExp;
             TRANSLATE: RegExp;
+            PERSPECTIVE: RegExp;
         };
     }
 

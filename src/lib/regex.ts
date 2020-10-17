@@ -27,8 +27,8 @@ export const FILE = {
 export const CSS = {
     URL: /^\s*url\((.+)\)\s*$/,
     HEX: /^#[A-Fa-f\d]{3,8}$/,
-    RGBA: /rgba?\(\s*(\d+),\s+(\d+),\s+(\d+)(?:,\s+([\d.]+%?)\s*)?\)/,
-    HSLA: /hsla?\(\s*(\d+),\s+(\d+)%,\s+(\d+)%(?:,\s+([\d.]+%?)\s*)?\)/,
+    RGBA: /rgba?\(\s*(\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+%?)\s*)?\)/,
+    HSLA: /hsla?\(\s*(\d+),\s*(\d+)%,\s*(\d+)%(?:,\s*([\d.]+%?)\s*)?\)/,
     SELECTOR_G: new RegExp(`\\s*((?:${STRING.CSS_SELECTOR_ATTR}|${STRING.CSS_SELECTOR_PSEUDO_CLASS}|${STRING.CSS_SELECTOR_PSEUDO_ELEMENT}|${STRING.CSS_SELECTOR_LABEL})+|[>~+*])\\s*`, 'g'),
     SELECTOR_LABEL: new RegExp(STRING.CSS_SELECTOR_LABEL),
     SELECTOR_PSEUDO_ELEMENT: new RegExp(STRING.CSS_SELECTOR_PSEUDO_ELEMENT),
@@ -37,10 +37,10 @@ export const CSS = {
 };
 
 export const TRANSFORM = {
-    MATRIX: new RegExp(`(matrix(?:3d)?)\\((${DECIMAL}),\\s+(${DECIMAL}),\\s+(${DECIMAL}),\\s+(${DECIMAL}),\\s+(${DECIMAL}),\\s+(${DECIMAL})(?:,\\s+(${DECIMAL}))?(?:,\\s+(${DECIMAL}))?(?:,\\s+(${DECIMAL}))?(?:,\\s+(${DECIMAL}))?(?:,\\s+(${DECIMAL}))?(?:,\\s+(${DECIMAL}))?(?:,\\s+(${DECIMAL}))?(?:,\\s+(${DECIMAL}))?(?:,\\s+(${DECIMAL}))?(?:,\\s+(${DECIMAL}))?\\)`),
-    ROTATE: new RegExp(`(rotate[XYZ]?)\\(${STRING.CSS_ANGLE}\\)`),
-    SKEW: new RegExp(`(skew[XY]?)\\(${STRING.CSS_ANGLE}(?:,\\s+${STRING.CSS_ANGLE})?\\)`),
-    SCALE: new RegExp(`(scale[XYZ]?)\\((${DECIMAL})(?:,\\s+(${DECIMAL}))?\\)`),
-    TRANSLATE: new RegExp(`(translate[XYZ]?)\\(${STRING.LENGTH_PERCENTAGE}(?:,\\s+${STRING.LENGTH_PERCENTAGE})?\\)`),
-    PERSPECTIVE: new RegExp(`(perspective)\\(${STRING.LENGTH_PERCENTAGE}\\)`)
+    MATRIX: new RegExp(`(matrix|matrix3d)\\(\\s*(${DECIMAL})${`,\\s*(${DECIMAL})`.repeat(5)}(?:${`,\\s*(${DECIMAL})`.repeat(10)})?\\s*\\)`),
+    ROTATE: new RegExp(`(rotate(?:[XYZ]|3d)?)\\(\\s*(?:(${DECIMAL}),\\s*(${DECIMAL}),\\s*(${DECIMAL}),\\s*)?${STRING.CSS_ANGLE}\\s*\\)`),
+    SCALE: new RegExp(`(scale(?:[XYZ]|3d)?)\\(\\s*(${DECIMAL})(?:,\\s*(${DECIMAL}))?(?:,\\s*(${DECIMAL}))?\\s*\\)`),
+    TRANSLATE: new RegExp(`(translate(?:[XYZ]|3d)?)\\(\\s*${STRING.LENGTH_PERCENTAGE}(?:,\\s*${STRING.LENGTH_PERCENTAGE})?(?:,\\s*${STRING.LENGTH_PERCENTAGE})?\\s*\\)`),
+    SKEW: new RegExp(`(skew[XY]?)\\(\\s*${STRING.CSS_ANGLE}(?:,\\s*${STRING.CSS_ANGLE})?\\s*\\)`),
+    PERSPECTIVE: new RegExp(`(perspective)\\(\\s*${STRING.LENGTH_PERCENTAGE}\\s*\\)`)
 };

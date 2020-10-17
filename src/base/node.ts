@@ -1611,13 +1611,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return parseUnit(value, options);
     }
 
-    public convertUnit(value: string, unit: string, options?: NodeConvertUnitOptions) {
-        let result = this.parseUnit(value, options);
+    public convertUnit(value: NumString, unit: string, options?: NodeConvertUnitOptions) {
+        let result = typeof value === 'string' ? this.parseUnit(value, options) : value;
         if (unit === 'percent' || unit === '%') {
             result *= 100 / getBoundsSize(this, options);
             return (options && options.precision !== undefined ? truncate(result, options.precision) : result) + '%';
         }
-        return result !== 0 ? convertUnit(result, unit, options) : '0' + unit;
+        return convertUnit(result, unit, options);
     }
 
     public has(attr: string, options?: HasOptions) {

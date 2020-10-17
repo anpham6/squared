@@ -2344,7 +2344,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 for (let i = 0, length = transforms.length; i < length; ++i) {
                     const item = transforms[i];
                     const [x, y, z] = item.values;
-                    switch (item.method) {
+                    switch (item.group) {
                         case 'rotate':
                             if (x === y) {
                                 this.android('rotation', x.toString());
@@ -3018,7 +3018,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         result = this.bounds.height === 0;
                     }
                     else if (!this.pageFlow) {
-                        result = this.isEmpty() && (excludeHorizontal(this) || excludeVertical(this)) || /^rect\(0[a-zQ]*,\s+0[a-zQ]*,\s+0[a-zQ]*,\s+0[a-zQ]*\)$/.test(this.valueAt('clip'));
+                        result = this.isEmpty() && (excludeHorizontal(this) || excludeVertical(this)) || /^rect\(0[a-zQ]*,\s*0[a-zQ]*,\s*0[a-zQ]*,\s*0[a-zQ]*\)$/.test(this.valueAt('clip'));
                     }
                     else {
                         const parent = this.renderParent || this.parent as T;

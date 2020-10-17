@@ -3595,7 +3595,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     const TL = horizontal ? 'top' : 'left';
                     const setAnchorOffset = (sibling: T, position: AnchorPositionAttr, adjustment: number) => {
                         if (node.has('transform')) {
-                            const translate = parseTransform(node.valueAt('transform'), { accumulate: true, boundingBox: node.bounds, fontSize: node.fontSize }).filter(item => item.method === 'translate');
+                            const translate = parseTransform(node.valueAt('transform'), { accumulate: true, boundingBox: node.bounds, fontSize: node.fontSize }).filter(item => item.group === 'translate');
                             if (translate.length) {
                                 adjustment -= translate[0].values[horizontal ? 0 : 1];
                             }

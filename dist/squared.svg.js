@@ -1,4 +1,4 @@
-/* squared.svg 2.1.2
+/* squared.svg 2.1.3
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -401,95 +401,107 @@
                 RE_PARSE.matcher(value);
                 while (RE_PARSE.find()) {
                     const [transform, method] = RE_PARSE.groups();
-                    const isX = method.endsWith('X');
-                    const isY = !isX && method.endsWith('Y');
-                    if (method.startsWith('translate')) {
-                        const translate = REGEXP_TRANSFORM.TRANSLATE.exec(transform);
-                        if (translate) {
-                            const arg1 = parseUnit(translate[2], createParseUnitOptions(element, translate[2]));
-                            const arg2 =
-                                !isX && translate[3]
-                                    ? parseUnit(translate[3], createParseUnitOptions(element, translate[3]))
-                                    : 0;
-                            const x = isY ? 0 : arg1;
-                            const y = isY ? arg1 : arg2;
-                            result.push(
-                                TRANSFORM.create(SVGTransform.SVG_TRANSFORM_TRANSLATE, MATRIX.translate(x, y), 0)
-                            );
-                        }
-                    } else if (method.startsWith('rotate')) {
-                        const rotate = REGEXP_TRANSFORM.ROTATE.exec(transform);
-                        if (rotate) {
-                            const angle = convertAngle(rotate[2], rotate[3]);
-                            if (!isNaN(angle)) {
-                                const matrix = MATRIX.rotate(angle);
-                                if (isX) {
-                                    matrix.a = 1;
-                                    matrix.b = 0;
-                                    matrix.c = 0;
-                                } else if (isY) {
-                                    matrix.b = 0;
-                                    matrix.c = 0;
-                                    matrix.d = 1;
-                                }
-                                result.push(
-                                    TRANSFORM.create(SVGTransform.SVG_TRANSFORM_ROTATE, matrix, angle, !isX, !isY)
-                                );
-                            }
-                        }
-                    } else if (method.startsWith('scale')) {
-                        const scale = REGEXP_TRANSFORM.SCALE.exec(transform);
-                        if (scale) {
-                            const x = isY ? 1 : parseFloat(scale[2]);
-                            const y = isX
-                                ? 1
-                                : isY
-                                ? parseFloat(scale[2])
-                                : !isX && scale[3]
-                                ? parseFloat(scale[3])
-                                : x;
-                            result.push(
-                                TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SCALE, MATRIX.scale(x, y), 0, !isY, !isX)
-                            );
-                        }
-                    } else if (method.startsWith('skew')) {
-                        const skew = REGEXP_TRANSFORM.SKEW.exec(transform);
-                        if (skew) {
-                            const angle = convertAngle(skew[2], skew[3], 0);
-                            const x = isY ? 0 : angle;
-                            const y = isY ? angle : skew[4] && skew[5] ? convertAngle(skew[4], skew[5], 0) : 0;
-                            const matrix = MATRIX.skew(x, y);
-                            if (isX) {
-                                result.push(TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SKEWX, matrix, x, true, false));
-                            } else if (isY) {
-                                result.push(TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SKEWY, matrix, y, false, true));
-                            } else {
-                                result.push(
-                                    TRANSFORM.create(
-                                        SVGTransform.SVG_TRANSFORM_SKEWX,
-                                        Object.assign(Object.assign({}, matrix), { b: 0 }),
-                                        x,
-                                        true,
-                                        false
-                                    )
-                                );
-                                if (y !== 0) {
-                                    result.push(
-                                        TRANSFORM.create(
-                                            SVGTransform.SVG_TRANSFORM_SKEWY,
-                                            Object.assign(Object.assign({}, matrix), { c: 0 }),
-                                            y,
-                                            false,
-                                            true
-                                        )
-                                    );
-                                }
-                            }
-                        }
-                    } else if (method.startsWith('matrix')) {
+                    if (method.startsWith('matrix')) {
                         const matrix = TRANSFORM.matrix(element, transform);
                         if (matrix) {
                             result.push(TRANSFORM.create(SVGTransform.SVG_TRANSFORM_MATRIX, matrix));
+                        }
+                    } else if (!method.endsWith('3d')) {
+                        const isX = method.endsWith('X');
+                        const isY = !isX && method.endsWith('Y');
+                        if (method.startsWith('translate')) {
+                            const translate = REGEXP_TRANSFORM.TRANSLATE.exec(transform);
+                            if (translate) {
+                                const arg1 = parseUnit(translate[2], createParseUnitOptions(element, translate[2]));
+                                const arg2 =
+                                    !isX && translate[3]
+                                        ? parseUnit(translate[3], createParseUnitOptions(element, translate[3]))
+                                        : 0;
+                                const x = isY ? 0 : arg1;
+                                const y = isY ? arg1 : arg2;
+                                result.push(
+                                    TRANSFORM.create(SVGTransform.SVG_TRANSFORM_TRANSLATE, MATRIX.translate(x, y), 0)
+                                );
+                            }
+                        } else if (method.startsWith('rotate')) {
+                            const rotate = REGEXP_TRANSFORM.ROTATE.exec(transform);
+                            if (rotate) {
+                                const angle = convertAngle(rotate[5], rotate[6]);
+                                if (!isNaN(angle)) {
+                                    const matrix = MATRIX.rotate(angle);
+                                    if (isX) {
+                                        matrix.a = 1;
+                                        matrix.b = 0;
+                                        matrix.c = 0;
+                                    } else if (isY) {
+                                        matrix.b = 0;
+                                        matrix.c = 0;
+                                        matrix.d = 1;
+                                    }
+                                    result.push(
+                                        TRANSFORM.create(SVGTransform.SVG_TRANSFORM_ROTATE, matrix, angle, !isX, !isY)
+                                    );
+                                }
+                            }
+                        } else if (method.startsWith('scale')) {
+                            const scale = REGEXP_TRANSFORM.SCALE.exec(transform);
+                            if (scale) {
+                                const x = isY ? 1 : parseFloat(scale[2]);
+                                const y = isX
+                                    ? 1
+                                    : isY
+                                    ? parseFloat(scale[2])
+                                    : !isX && scale[3]
+                                    ? parseFloat(scale[3])
+                                    : x;
+                                result.push(
+                                    TRANSFORM.create(
+                                        SVGTransform.SVG_TRANSFORM_SCALE,
+                                        MATRIX.scale(x, y),
+                                        0,
+                                        !isY,
+                                        !isX
+                                    )
+                                );
+                            }
+                        } else if (method.startsWith('skew')) {
+                            const skew = REGEXP_TRANSFORM.SKEW.exec(transform);
+                            if (skew) {
+                                const angle = convertAngle(skew[2], skew[3], 0);
+                                const x = isY ? 0 : angle;
+                                const y = isY ? angle : skew[4] && skew[5] ? convertAngle(skew[4], skew[5], 0) : 0;
+                                const matrix = MATRIX.skew(x, y);
+                                if (isX) {
+                                    result.push(
+                                        TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SKEWX, matrix, x, true, false)
+                                    );
+                                } else if (isY) {
+                                    result.push(
+                                        TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SKEWY, matrix, y, false, true)
+                                    );
+                                } else {
+                                    result.push(
+                                        TRANSFORM.create(
+                                            SVGTransform.SVG_TRANSFORM_SKEWX,
+                                            Object.assign(Object.assign({}, matrix), { b: 0 }),
+                                            x,
+                                            true,
+                                            false
+                                        )
+                                    );
+                                    if (y !== 0) {
+                                        result.push(
+                                            TRANSFORM.create(
+                                                SVGTransform.SVG_TRANSFORM_SKEWY,
+                                                Object.assign(Object.assign({}, matrix), { c: 0 }),
+                                                y,
+                                                false,
+                                                true
+                                            )
+                                        );
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -2182,7 +2194,7 @@
                             timingFunction = 'steps(1, end)';
                             break;
                     }
-                    const match = /steps\((\d+)(?:,\s+(start|end|jump-(?:start|end|both|none)))?\)/.exec(
+                    const match = /steps\((\d+)(?:,\s*(start|end|jump-(?:start|end|both|none)))?\)/.exec(
                         timingFunction
                     );
                     if (match) {
@@ -2635,7 +2647,6 @@
     };
 
     const { getNamedItem: getNamedItem$5 } = squared.lib.dom;
-    const { replaceMap: replaceMap$1 } = squared.lib.util;
     class SvgAnimateTransform extends SvgAnimate {
         constructor(element, animationElement) {
             super(element, animationElement);
@@ -2849,7 +2860,7 @@
                     return;
             }
             if (values) {
-                this.values = replaceMap$1(values, array => array.join(' '));
+                this.values = values.map(array => array.join(' '));
             }
             this.baseValue = TRANSFORM.typeAsValue(this.type);
         }
@@ -3251,7 +3262,7 @@
         joinArray,
         lastItemOf: lastItemOf$1,
         plainMap: plainMap$1,
-        replaceMap: replaceMap$2,
+        replaceMap: replaceMap$1,
         spliceArray,
         sortNumber: sortNumber$2,
     } = squared.lib.util;
@@ -3479,9 +3490,9 @@
         switch (item.attributeName) {
             case 'transform':
                 if (item.additiveSum && typeof baseValue === 'string') {
-                    const baseArray = replaceMap$2(baseValue.split(' '), value => parseFloat(value));
+                    const baseArray = replaceMap$1(baseValue.split(' '), value => parseFloat(value));
                     const valuesArray = plainMap$1(values, value =>
-                        replaceMap$2(value.trim().split(' '), pt => parseFloat(pt))
+                        replaceMap$1(value.trim().split(' '), pt => parseFloat(pt))
                     );
                     const length = baseArray.length;
                     if (valuesArray.every(value => value.length === length)) {
@@ -3535,8 +3546,8 @@
                     (fraction - previousFraction) / (nextFraction - previousFraction)
                 );
             } else if (typeof previousValue === 'string' && typeof nextValue === 'string') {
-                const previousArray = replaceMap$2(previousValue.split(' '), value => parseFloat(value));
-                const nextArray = replaceMap$2(nextValue.split(' '), value => parseFloat(value));
+                const previousArray = replaceMap$1(previousValue.split(' '), value => parseFloat(value));
+                const nextArray = replaceMap$1(nextValue.split(' '), value => parseFloat(value));
                 const length = previousArray.length;
                 if (length === nextArray.length) {
                     let result = '';
@@ -5711,7 +5722,7 @@
                                                 if (pathData) {
                                                     object = new SvgAnimate();
                                                     object.attributeName = 'd';
-                                                    object.values = replaceMap$2(pathData, item =>
+                                                    object.values = replaceMap$1(pathData, item =>
                                                         item.value.toString()
                                                     );
                                                 } else {
@@ -6204,7 +6215,7 @@
         convertCamelCase: convertCamelCase$1,
         convertWord,
         iterateArray: iterateArray$1,
-        replaceMap: replaceMap$3,
+        replaceMap: replaceMap$2,
         sortNumber: sortNumber$3,
         splitPairEnd,
     } = squared.lib.util;
@@ -6218,7 +6229,7 @@
         'animation-timing-function': 'ease',
     };
     const RE_TIMINGFUNCTION = new Pattern$2(
-        `(ease|ease-(?:in|out|in-out)|linear|step-(?:start|end)|steps\\(\\d+,\\s+(?:start|end|jump-(?:start|end|both|none))\\)|cubic-bezier\\(${PATTERN_CUBICBEZIER}\\)),?\\s*`
+        `(ease|ease-(?:in|out|in-out)|linear|step-(?:start|end)|steps\\(\\d+,\\s*(?:start|end|jump-(?:start|end|both|none))\\)|cubic-bezier\\(${PATTERN_CUBICBEZIER}\\)),?\\s*`
     );
     function parseAttribute(element, attr) {
         const value = getAttribute(element, attr);
@@ -6297,7 +6308,7 @@
                         const begin = getNamedItem$7(item, 'begin');
                         const times = begin
                             ? sortNumber$3(
-                                  replaceMap$3(begin.split(';'), value => SvgAnimation.parseClockTime(value)).filter(
+                                  replaceMap$2(begin.split(';'), value => SvgAnimation.parseClockTime(value)).filter(
                                       value => !isNaN(value)
                                   )
                               )

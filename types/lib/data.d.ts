@@ -22,8 +22,10 @@ interface FontFaceData {
 }
 
 interface TransformData {
+    group: string;
     method: string;
     values: number[];
+    angle?: number;
 }
 
 interface ElementData {

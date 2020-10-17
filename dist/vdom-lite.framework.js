@@ -1,4 +1,4 @@
-/* vdom-lite-framework 2.1.2
+/* vdom-lite-framework 2.1.3
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -2771,14 +2771,14 @@
             return parseUnit(value, options);
         }
         convertUnit(value, unit, options) {
-            let result = this.parseUnit(value, options);
+            let result = typeof value === 'string' ? this.parseUnit(value, options) : value;
             if (unit === 'percent' || unit === '%') {
                 result *= 100 / getBoundsSize(this, options);
                 return (
                     (options && options.precision !== undefined ? truncate(result, options.precision) : result) + '%'
                 );
             }
-            return result !== 0 ? convertUnit(result, unit, options) : '0' + unit;
+            return convertUnit(result, unit, options);
         }
         has(attr, options) {
             const value = options && options.initial ? this.cssInitial(attr, options) : this._styleMap[attr];
