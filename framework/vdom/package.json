@@ -6,10 +6,7 @@
     "type": "git",
     "url": "git+https://github.com/anpham6/squared.git"
   },
-  "author": {
-    "name": "An Pham",
-    "email": "anpham6@gmail.com"
-  },
+  "author": "An Pham <anpham6@gmail.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/anpham6/squared/issues"

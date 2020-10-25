@@ -519,11 +519,8 @@ export default class File<T extends View> extends squared.base.File<T> implement
                         item.filename = userSettings.outputMainFileName;
                         first = false;
                     }
-                    else {
-                        const filename = item.filename;
-                        if (!filename.endsWith('.xml')) {
-                            item.filename = `${filename}.xml`;
-                        }
+                    else if (!item.filename.endsWith('.xml')) {
+                        item.filename += '.xml';
                     }
                 }
             }

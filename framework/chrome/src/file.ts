@@ -33,7 +33,10 @@ function parseFileAs(attr: string, value: Undef<string>): Undef<[string, Undef<s
 function getFilePath(value: string, saveTo?: boolean): [Undef<string>, string, string] {
     let moveTo: Undef<string>;
     value = value.replace(/\\/g, '/');
-    if (value[0] === '/') {
+    if (!value.includes('/')) {
+        return [moveTo, '', value];
+    }
+    else if (value[0] === '/') {
         moveTo = STRING_SERVERROOT;
     }
     else if (value.startsWith('../')) {
@@ -309,12 +312,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             if (name) {
                 data.filename = name;
             }
-            else {
-                const filename = data.filename;
-                if (!FILE.NAME.test(filename)) {
-                    data.pathname = appendSeparator(data.pathname, filename);
-                    data.filename = 'index.html';
-                }
+            else if (!FILE.NAME.test(data.filename)) {
+                data.filename = 'index.html';
             }
             if (this.validFile(data)) {
                 data.requestMain = true;
@@ -414,20 +413,17 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     format: Undef<string>,
                     preserve: Undef<boolean>,
                     outerHTML: Undef<string>;
-                if (element instanceof HTMLLinkElement) {
-                    href = element.href.trim();
-                    if (href) {
-                        switch (element.rel.trim()) {
-                            case 'stylesheet':
-                                mimeType = 'text/css';
-                                break;
-                            case 'icon':
-                                mimeType = 'image/x-icon';
-                                break;
-                            default:
-                                mimeType = element.type.trim() || parseMimeType(href);
-                                break;
-                        }
+                if (element instanceof HTMLLinkElement && (href = element.href.trim())) {
+                    switch (element.rel.trim()) {
+                        case 'stylesheet':
+                            mimeType = 'text/css';
+                            break;
+                        case 'icon':
+                            mimeType = 'image/x-icon';
+                            break;
+                        default:
+                            mimeType = element.type.trim() || parseMimeType(href);
+                            break;
                     }
                 }
                 if (!isString(file) && saveAs && saveAs.filename && (mimeType === 'text/css' || element instanceof HTMLStyleElement)) {
@@ -484,8 +480,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         }
         const result: ChromeAsset[] = [];
         const processUri = (element: Null<HTMLElement>, uri: string, mimeType?: string) => {
-            uri = uri.trim();
-            if (uri) {
+            if (uri = uri.trim()) {
                 let file: Undef<string>,
                     saveTo: Undef<boolean>;
                 if (element) {
