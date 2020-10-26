@@ -85,34 +85,34 @@ FileManager.loadSettings(settings);
         .argv as functions.Arguments;
 
     if (argv.accessAll) {
-        Node.enableReadDisk();
-        Node.enableWriteDisk();
-        Node.enableReadUNC();
-        Node.enableWriteUNC();
+        Node.enableDiskRead();
+        Node.enableDiskWrite();
+        Node.enableUNCRead();
+        Node.enableUNCWrite();
     }
     else {
         if (argv.accessDisk) {
-            Node.enableReadDisk();
-            Node.enableWriteDisk();
+            Node.enableDiskRead();
+            Node.enableDiskWrite();
         }
         else {
             if (argv.diskRead) {
-                Node.enableReadDisk();
+                Node.enableDiskRead();
             }
             if (argv.diskWrite) {
-                Node.enableWriteDisk();
+                Node.enableDiskWrite();
             }
         }
         if (argv.accessUnc) {
-            Node.enableReadUNC();
-            Node.enableWriteUNC();
+            Node.enableUNCRead();
+            Node.enableUNCWrite();
         }
         else {
             if (argv.uncRead) {
-                Node.enableReadUNC();
+                Node.enableUNCRead();
             }
             if (argv.uncWrite) {
-                Node.enableWriteUNC();
+                Node.enableUNCWrite();
             }
         }
     }

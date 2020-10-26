@@ -685,8 +685,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
         const images: (string | Gradient)[] = [];
         const getGradientPosition = (value: string) => isString(value) ? value.includes('at ') ? /(.+?)?\s*at (.+?)\s*$/.exec(value) : [value, value] as RegExpExecArray : null;
         const getAngle = (value: string, fallback = 0) => {
-            value = value.trim();
-            if (value) {
+            if (value = value.trim()) {
                 let degree = parseAngle(value, fallback);
                 if (!isNaN(degree)) {
                     if (degree < 0) {

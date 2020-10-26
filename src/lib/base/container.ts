@@ -155,8 +155,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
             count = Infinity;
         }
         let complete: Undef<boolean>;
-        const recurse = (container: Container<T>) => {
-            const result: T[] = [];
+        const recurse = (container: Container<T>, result: T[]) => {
             const children = container.children;
             for (let i = 0; i < children.length; ++i) {
                 const item = children[i];
@@ -176,7 +175,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
                     }
                 }
                 if (cascade && item instanceof Container && !item.isEmpty()) {
-                    result.push(...recurse(item));
+                    recurse(item, result);
                     if (complete) {
                         break;
                     }
@@ -184,7 +183,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
             }
             return result;
         };
-        return recurse(this);
+        return recurse(this, []);
     }
 
     public find(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>) {
@@ -250,8 +249,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
             count = Infinity;
         }
         let complete: Undef<boolean>;
-        const recurse = (container: Container<T>) => {
-            const result: T[] = [];
+        const recurse = (container: Container<T>, result: T[]) => {
             const children = container.children;
             for (let i = 0, length = children.length; i < length; ++i) {
                 const item = children[i];
@@ -271,7 +269,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
                     }
                 }
                 if (ignore !== false && item instanceof Container && !item.isEmpty()) {
-                    result.push(...recurse(item));
+                    recurse(item, result);
                     if (complete) {
                         break;
                     }
@@ -279,7 +277,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
             }
             return result;
         };
-        return recurse(this);
+        return recurse(this, []);
     }
 
     public sortBy(...attrs: (string | boolean)[]) {

@@ -596,8 +596,7 @@ export function splitEnclosing(value: string, prefix?: string, separator = '', o
     const result: string[] = [];
     const appendValues = (segment: string) => {
         for (let seg of segment.split(separator)) {
-            seg = seg.trim();
-            if (seg) {
+            if (seg = seg.trim()) {
                 result.push(seg);
             }
         }
@@ -837,8 +836,7 @@ export function cloneObject<T>(data: T, options?: CloneObjectOptions<T>) {
 }
 
 export function resolvePath(value: string, href?: string) {
-    value = value.trim();
-    if (value && !FILE.PROTOCOL.test(value)) {
+    if ((value = value.trim()) && !FILE.PROTOCOL.test(value)) {
         const pathname = (href ? href.replace(location.origin, '') : location.pathname).replace(/\\/g, '/').split('/');
         --pathname.length;
         value = value.replace(/\\/g, '/');

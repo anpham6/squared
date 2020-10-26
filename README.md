@@ -546,12 +546,12 @@ const options = {
 };
 ```
 
-You can use these commands individually on any element where the image is the primary output display. Image resizing only works with individual elements or assets and not globally with extensions.
+You can use these commands individually on any element where the image is the primary output display. Image resizing only works with individual elements or assets and not globally with extensions. Encoding images inline with base64 are also available using the "::base64" commmand as the third argument.
 
 ```xml
 <!-- NOTE (saveTo): img | video | audio | source | track | object | embed -->
 
-<img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour1.jpg" data-chrome-file="saveTo:../images/harbour::png@(10000,75000)(800x600#contain)" />
+<img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour1.jpg" data-chrome-file="saveTo:../images/harbour::png@(10000,75000)(800x600#contain)::base64" />
 ```
 
 You can also add most of the "file" commands programatically (except "exclude") with JavaScript before saving or copying the assets. Multiple transformations can be achieved using the ":" separator.
@@ -876,6 +876,7 @@ const options = {
         html: { filename: 'index.html', format: 'beautify' }
         script: { pathname: '../js', filename: 'bundle.js', format: 'es5+es5-minify' },
         link: { pathname: 'css', filename: 'bundle.css', preserve: true },
+        image: { format: 'base64' },
         base64: { format: 'png' }
     }
 };

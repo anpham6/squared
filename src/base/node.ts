@@ -1153,8 +1153,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             ({ condition, error, every, including, excluding } = options);
         }
         let invalid: Undef<boolean>;
-        const recurse = (parent: T) => {
-            const result: T[] = [];
+        const recurse = (parent: T, result: T[]) => {
             const children = parent.naturalElements;
             for (let i = 0, length = children.length; i < length; ++i) {
                 const item = children[i];
@@ -1165,7 +1164,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 if (condition) {
                     if (condition(item)) {
                         result.push(item);
-                        if (!every || item === including) {
+                        if (!every) {
                             invalid = true;
                             break;
                         }
@@ -1173,13 +1172,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 }
                 else {
                     result.push(item);
-                    if (item === including) {
-                        invalid = true;
-                        break;
-                    }
+                }
+                if (item === including) {
+                    invalid = true;
+                    break;
                 }
                 if (item instanceof Node && !item.isEmpty()) {
-                    result.push(...recurse(item));
+                    recurse(item, result);
                     if (invalid) {
                         break;
                     }
@@ -1187,7 +1186,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             }
             return result;
         };
-        return recurse(this);
+        return recurse(this, []);
     }
 
     public intersectX(rect: BoxRectDimension, options?: CoordsXYOptions) {

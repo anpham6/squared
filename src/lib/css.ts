@@ -31,7 +31,7 @@ const REGEXP_CUSTOMPROPERTY = /var\(--.+\)/;
 const REGEXP_IMGSRCSET = /^(.*?)(?:\s+([\d.]+)([xw]))?$/;
 const REGEXP_CALCOPERATION = /\s+([+-]\s+|\s*[*/])\s*/;
 const REGEXP_CALCUNIT = /\s*{(\d+)}\s*/;
-const REGEXP_TRANSFORM = /(\w+)\([^)]+\)/g;
+const REGEXP_TRANSFORM = /([a-z]+(?:[XYZ]|3d)?)\([^)]+\)/g;
 const REGEXP_EMBASED = /\s*-?[\d.]+(?:em|ch|ex)\s*/;
 const CHAR_SPACE = /\s+/;
 const CHAR_SEPARATOR = /\s*,\s*/;
@@ -2931,8 +2931,7 @@ export function calculateVarAsString(element: StyleElement, value: string, optio
     }
     const result: string[] = [];
     for (let seg of separator ? value.split(separator) : [value]) {
-        seg = seg.trim();
-        if (seg) {
+        if (seg = seg.trim()) {
             const calc = splitEnclosing(seg, 'calc');
             const length = calc.length;
             if (length === 0) {
@@ -2963,8 +2962,7 @@ export function calculateVarAsString(element: StyleElement, value: string, optio
                 else {
                     partial += output;
                     if (dimension) {
-                        output = output.trim();
-                        if (output && (!checkUnit || unitType === CSS_UNIT.LENGTH && (isLength(output, true) || output === 'auto'))) {
+                        if ((output = output.trim()) && (!checkUnit || unitType === CSS_UNIT.LENGTH && (isLength(output, true) || output === 'auto'))) {
                             ++j;
                         }
                     }
@@ -3240,8 +3238,7 @@ export function insertStyleSheetRule(value: string, index = 0, shadowRoot?: Shad
 }
 
 export function calculate(value: string, options?: CalculateOptions) {
-    value = value.trim();
-    let length = value.length;
+    let length = (value = value.trim()).length;
     if (length === 0) {
         return NaN;
     }
@@ -3754,26 +3751,49 @@ export function parseTransform(value: string, options?: TransformOptions) {
             }
         }
         else if (method.startsWith('matrix')) {
-            const subMatch = TRANSFORM.MATRIX.exec(match[0]);
-            if (subMatch) {
+            const matrix = TRANSFORM.MATRIX.exec(match[0]);
+            if (matrix) {
                 let length: number;
                 if (method === 'matrix') {
-                    if (subMatch[8]) {
+                    if (matrix[8]) {
                         continue;
                     }
                     length = 6;
                 }
                 else {
-                    if (!subMatch[17]) {
+                    if (!matrix[17]) {
                         continue;
                     }
                     length = 16;
                 }
                 const values = new Array(length);
                 for (let i = 0; i < length; ++i) {
-                    values[i] = parseFloat(subMatch[i + 2]);
+                    values[i] = parseFloat(matrix[i + 2]);
                 }
                 result.push({ group: method, method, values });
+            }
+        }
+        else if (method === 'perspective') {
+            const perspective = TRANSFORM.PERSPECTIVE.exec(match[0]);
+            if (perspective) {
+                const pX = perspective[2];
+                let x = 0;
+                if (isPercent(pX)) {
+                    if (boundingBox) {
+                        x = parseFloat(pX) / 100 * boundingBox.width;
+                    }
+                }
+                else {
+                    x = parseUnit(pX, { fontSize });
+                }
+                if (accumulate) {
+                    const values = result.find(item => item.group === 'perspective')?.values;
+                    if (values) {
+                        values[0] = x;
+                        continue;
+                    }
+                }
+                result.push({ group: 'perspective', method, values: [x] });
             }
         }
     }

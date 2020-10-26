@@ -30,8 +30,7 @@ function setFillMode(this: SvgAnimation, mode: boolean, value: number) {
 
 export default class SvgAnimation implements squared.svg.SvgAnimation {
     public static parseClockTime(value: string) {
-        value = value.trim();
-        let match = REGEXP_TIME.exec(value);
+        let match = REGEXP_TIME.exec(value = value.trim());
         if (match) {
             let time = parseFloat(match[2]) * (match[1] ? -1 : 1);
             switch (match[3]) {

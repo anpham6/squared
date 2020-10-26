@@ -13,7 +13,13 @@ interface FileUniversalAttribute extends PlainObject {
 interface FileActionAttribute extends PlainObject {
     name?: string;
     rel?: string;
-    saveAs?: { html?: SaveAsOptions; script?: SaveAsOptions; link?: SaveAsOptions; base64?: SaveAsOptions };
+    saveAs?: {
+        html?: SaveAsOptions;
+        script?: SaveAsOptions;
+        link?: SaveAsOptions;
+        image?: SaveAsOptions;
+        base64?: SaveAsOptions;
+    };
     preserveCrossOrigin?: boolean;
 }
 
