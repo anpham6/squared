@@ -13,20 +13,14 @@ import chalk = require('chalk');
 import functions = require('@squared-functions/file-manager');
 
 const FileManager = functions['default'] as functions.FileManagerConstructor;
-const settings = require('./squared.settings.json') as functions.Settings;
 
 const app = express();
-app.use(body_parser.json({ limit: settings.request_post_limit || '250mb' }));
 app.use(body_parser.urlencoded({ extended: true }));
 
 const Node = FileManager.moduleNode();
 const Compress = FileManager.moduleCompress();
 
-FileManager.loadSettings(settings);
-
 {
-    let { NODE_ENV: ENV, PORT } = process.env;
-
     const argv = yargs
         .usage('$0 [args]')
         .option('access-all', {
@@ -84,37 +78,55 @@ FileManager.loadSettings(settings);
         .epilogue('For more information and source: https://github.com/anpham6/squared')
         .argv as functions.Arguments;
 
+    let { NODE_ENV: ENV, PORT } = process.env,
+        settings: functions.Settings,
+        ignorePermissions = false;
     if (argv.accessAll) {
         Node.enableDiskRead();
         Node.enableDiskWrite();
         Node.enableUNCRead();
         Node.enableUNCWrite();
+        ignorePermissions = true;
     }
     else {
         if (argv.accessDisk) {
             Node.enableDiskRead();
             Node.enableDiskWrite();
+            ignorePermissions = true;
         }
         else {
             if (argv.diskRead) {
                 Node.enableDiskRead();
+                ignorePermissions = true;
             }
             if (argv.diskWrite) {
                 Node.enableDiskWrite();
+                ignorePermissions = true;
             }
         }
         if (argv.accessUnc) {
             Node.enableUNCRead();
             Node.enableUNCWrite();
+            ignorePermissions = true;
         }
         else {
             if (argv.uncRead) {
                 Node.enableUNCRead();
+                ignorePermissions = true;
             }
             if (argv.uncWrite) {
                 Node.enableUNCWrite();
+                ignorePermissions = true;
             }
         }
+    }
+
+    try {
+        settings = require('./squared.settings.json');
+        FileManager.loadSettings(settings, ignorePermissions);
+    }
+    catch {
+        settings = {};
     }
 
     if (settings.routing) {
@@ -151,13 +163,8 @@ FileManager.loadSettings(settings);
     }
     else {
         ENV ||= 'development';
-        app.use(body_parser.json({ limit: '250mb' }));
         app.use('/', express.static(path.join(__dirname, 'html')));
         app.use('/dist', express.static(path.join(__dirname, 'dist')));
-        if (ENV === 'development') {
-            app.use('/common', express.static(path.join(__dirname, 'html/common')));
-            app.use('/demos', express.static(path.join(__dirname, 'html/demos')));
-        }
         console.log(`${chalk.bold.bgGrey.blackBright('FAIL')}: Routing not defined.`);
     }
 
@@ -185,6 +192,7 @@ FileManager.loadSettings(settings);
     const port = parseInt(PORT!);
     PORT = port >= 0 ? port.toString() : '3000';
 
+    app.use(body_parser.json({ limit: settings.request_post_limit || '250mb' }));
     app.listen(PORT, () => console.log(`\n${chalk[ENV!.startsWith('prod') ? 'green' : 'yellow'](ENV!.toUpperCase())}: Express server listening on port ${chalk.bold(PORT)}\n`));
 }
 
