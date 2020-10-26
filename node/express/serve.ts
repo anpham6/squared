@@ -189,24 +189,20 @@ FileManager.loadSettings(settings);
 }
 
 app.post('/api/assets/copy', (req, res) => {
-    const dirname = path.normalize(req.query.to as string);
+    const query = req.query;
+    const dirname = path.normalize(query.to as string);
     if (dirname && FileManager.checkPermissions(res, dirname)) {
         try {
-            const manager = new FileManager(dirname, req.body as functions.ExpressAsset[], function(this: functions.IFileManager, filepath?: string) {
-                if (this.delayed !== Infinity) {
-                    if (filepath) {
-                        this.add(filepath);
-                    }
-                    if (this.removeAsyncTask() && this.cleared) {
-                        this.delayed = Infinity;
-                        this.finalizeAssets(req.query.release === '1').then(() => res.json({ success: this.files.size > 0, files: Array.from(this.files) } as functions.ResultOfFileAction));
-                    }
+            const manager = new FileManager(
+                dirname,
+                req.body as functions.ExpressAsset[],
+                function(this: functions.IFileManager) {
+                    res.json({ success: this.files.size > 0, files: Array.from(this.files) } as functions.ResultOfFileAction);
                 }
-            });
-            manager.processAssets(req.query.empty === '1');
-            if (manager.delayed <= 0) {
-                manager.completeAsyncTask();
-            }
+            );
+            manager.emptyDirectory = query.empty === '1';
+            manager.productionRelease = query.release === '1';
+            manager.processAssets();
         }
         catch (system) {
             res.json({ application: 'FILE: Unknown', system });
@@ -215,7 +211,8 @@ app.post('/api/assets/copy', (req, res) => {
 });
 
 app.post('/api/assets/archive', (req, res) => {
-    const copy_to = req.query.to && path.normalize(req.query.to as string);
+    const query = req.query;
+    const copy_to = query.to && path.normalize(query.to as string);
     const dirname = path.join(__dirname, 'temp' + path.sep + uuid.v4());
     let dirname_zip: string;
     try {
@@ -232,14 +229,14 @@ app.post('/api/assets/archive', (req, res) => {
         res.json({ application: `DIRECTORY: ${dirname}`, system });
         return;
     }
-    let append_to = req.query.append_to as string,
+    let append_to = query.append_to as string,
         zipname = '',
         format: archiver.Format,
         formatGzip: Undef<boolean>;
     if (path.isAbsolute(append_to)) {
         append_to = path.normalize(append_to);
     }
-    switch (req.query.format) {
+    switch (query.format) {
         case 'gz':
         case 'tgz':
             formatGzip = true;
@@ -251,22 +248,18 @@ app.post('/api/assets/archive', (req, res) => {
             break;
     }
     const resumeThread = (unzip_to?: string) => {
-        const archive = archiver(format, { zlib: { level: Compress.gzip_level } });
-        const manager = new FileManager(dirname, req.body as functions.ExpressAsset[], function(this: functions.IFileManager, filepath?: string) {
-            if (this.delayed !== Infinity) {
-                if (filepath) {
-                    this.add(filepath);
-                }
-                if (this.removeAsyncTask() && this.cleared) {
-                    this.delayed = Infinity;
-                    this.finalizeAssets(req.query.release === '1').then(() => {
-                        archive.directory(dirname, false);
-                        archive.finalize();
-                    });
-                }
+        const archive = archiver(format, { zlib: { level: Compress.gzipLevel } });
+        const manager = new FileManager(
+            dirname,
+            req.body as functions.ExpressAsset[],
+            () => {
+                archive.directory(dirname, false);
+                archive.finalize();
             }
-        });
-        zipname = path.join(dirname_zip, (req.query.filename || zipname || uuid.v4()) + '.' + format);
+        );
+        manager.emptyDirectory = query.empty === '1';
+        manager.productionRelease = query.release === '1';
+        zipname = path.join(dirname_zip, (query.filename || zipname || uuid.v4()) + '.' + format);
         const output = fs.createWriteStream(zipname);
         output.on('close', () => {
             const success = manager.files.size > 0;
@@ -277,7 +270,7 @@ app.post('/api/assets/archive', (req, res) => {
                 bytes: archive.pointer()
             };
             if (formatGzip && success) {
-                const gz = req.query.format === 'tgz' ? zipname.replace(/tar$/, 'tgz') : `${zipname}.gz`;
+                const gz = query.format === 'tgz' ? zipname.replace(/tar$/, 'tgz') : `${zipname}.gz`;
                 Compress.createWriteStreamAsGzip(zipname, gz)
                     .on('finish', () => {
                         response.zipname = gz;
@@ -301,10 +294,7 @@ app.post('/api/assets/archive', (req, res) => {
             if (unzip_to) {
                 archive.directory(unzip_to, false);
             }
-            manager.processAssets(false);
-            if (manager.delayed <= 0) {
-                manager.completeAsyncTask();
-            }
+            manager.processAssets();
         }
         catch (system) {
             res.json({ application: 'FILE: Unknown', system });
