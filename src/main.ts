@@ -177,6 +177,15 @@ export function setHostname(value: string) {
     }
 }
 
+export function setAPIEndpoint(name: string, value: string) {
+    if (main) {
+        const fileHandler = main.fileHandler;
+        if (fileHandler) {
+            fileHandler.setAPIEndpoint(name, value);
+        }
+    }
+}
+
 export function setFramework(value: Framework, options?: FrameworkOptions) {
     const reloading = framework !== null;
     let userSettings: Undef<PlainObject>,

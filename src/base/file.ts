@@ -32,6 +32,11 @@ export default abstract class File<T extends Node> implements squared.base.File<
     public assets: RawAsset[] = [];
 
     private _hostname = '';
+    private _endpoints = {
+        ASSETS_COPY: '/api/assets/copy',
+        ASSETS_ARCHIVE: '/api/assets/archive',
+        BROWSER_DOWNLOAD: '/api/browser/download?filepath='
+    };
 
     public abstract copyTo(directory: string, options?: FileCopyingOptions): FileActionResult;
     public abstract appendTo(pathname: string, options?: FileArchivingOptions): FileActionResult;
@@ -73,12 +78,11 @@ export default abstract class File<T extends Node> implements squared.base.File<
     }
 
     public copying(options: FileCopyingOptions) {
-        if (this.hasHttpProtocol() && options.directory) {
+        if (this.hasHttpProtocol()) {
             const body = this.createRequestBody(options.assets, options);
-            if (body) {
+            if (body && options.directory) {
                 return fetch(
-                    this.hostname +
-                    '/api/assets/copy' +
+                    this.hostname + this._endpoints.ASSETS_COPY +
                     '?to=' + encodeURIComponent(options.directory.trim()) +
                     '&empty=' + (this.userSettings.outputEmptyCopyDirectory ? '1' : '0') +
                     this.getCopyQueryParameters(options), {
@@ -108,12 +112,11 @@ export default abstract class File<T extends Node> implements squared.base.File<
     }
 
     public archiving(options: FileArchivingOptions) {
-        if (this.hasHttpProtocol() && options.filename) {
+        if (this.hasHttpProtocol()) {
             const body = this.createRequestBody(options.assets, options);
-            if (body) {
+            if (body && options.filename) {
                 return fetch(
-                    this.hostname +
-                    '/api/assets/archive' +
+                    this.hostname + this._endpoints.ASSETS_ARCHIVE +
                     '?filename=' + encodeURIComponent(options.filename.trim()) +
                     '&format=' + (options.format || this.userSettings.outputArchiveFormat).trim().toLowerCase() +
                     '&to=' + encodeURIComponent((options.copyTo || '').trim()) +
@@ -132,7 +135,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
                         }
                         const zipname = result.zipname;
                         if (zipname) {
-                            fetch('/api/browser/download?filepath=' + encodeURIComponent(zipname))
+                            fetch(this.hostname + this._endpoints.BROWSER_DOWNLOAD + encodeURIComponent(zipname))
                                 .then(async download => File.downloadFile(await download.blob(), fromLastIndexOf(zipname, '/', '\\')));
                         }
                         else if (result.system) {
@@ -147,6 +150,10 @@ export default abstract class File<T extends Node> implements squared.base.File<
             (this.userSettings.showErrorMessages ? alert : console.log)(SERVER_REQUIRED);
         }
         return Promise.resolve();
+    }
+
+    public setAPIEndpoint(name: string, value: string) {
+        this._endpoints[name] = value;
     }
 
     protected createRequestBody(assets: Undef<FileAsset[]>, options: FileCopyingOptions | FileArchivingOptions) {

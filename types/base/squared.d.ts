@@ -350,6 +350,7 @@ declare module "base" {
         getDataMap(options: squared.FileActionOptions): Void<StandardMap>;
         getCopyQueryParameters(options: FileCopyingOptions): string;
         getArchiveQueryParameters(options: FileArchivingOptions): string;
+        setAPIEndpoint(name: string, value: string): void;
         get userSettings(): UserResourceSettings;
         set hostname(value);
         get hostname(): string;

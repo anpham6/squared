@@ -19,6 +19,7 @@ export type ExtensionRequestObject = ExtensionRequest | [ExtensionRequest, Plain
 
 export const settings: StandardMap;
 export function setHostname(value: string): void;
+export function setAPIEndpoint(name: string, value: string): void;
 export function setFramework(value: PlainObject, options?: FrameworkOptions): void;
 export function add(...values: ExtensionRequestObject[]): number;
 export function remove(...values: ExtensionRequest[]): number;
