@@ -11,12 +11,12 @@ export function appendSeparator(preceding = '', value = '', separator = '/') {
     value = value.trim();
     switch (separator) {
         case '\\':
-            preceding = preceding.replace(/\//g, '\\');
-            value = value.replace(/\//g, '\\');
+            preceding &&= preceding.replace(/\//g, '\\');
+            value &&= value.replace(/\//g, '\\');
             break;
         case '/':
-            preceding = preceding.replace(/\\/g, '/');
-            value = value.replace(/\\/g, '/');
+            preceding &&= preceding.replace(/\\/g, '/');
+            value &&= value.replace(/\\/g, '/');
             break;
     }
     return preceding + (preceding && value && !preceding.endsWith(separator) && !value.startsWith(separator) ? separator : '') + value;

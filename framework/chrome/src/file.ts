@@ -21,7 +21,7 @@ const RE_SRCSET = new Pattern(/\s*(.+?\.[^\s,]+)(\s+[\d.]+[wx]\s*)?,?/g);
 
 function parseFileAs(attr: string, value: Undef<string>, format = 'preserve'): Undef<[string, Undef<string>, boolean]> {
     if (value) {
-        const match = new RegExp(`${attr}:\\s*((?:[^"]|\\\\")+)`).exec(value.replace(/\\/g, '/'));
+        const match = new RegExp(`${attr}:\\s*((?:[^"]|\\\\")+)`).exec(normalizePath(value));
         if (match) {
             const segments = match[1].split('::').map(item => item.trim());
             return [segments[0], segments[1] || undefined, segments[2] === format];
@@ -31,7 +31,7 @@ function parseFileAs(attr: string, value: Undef<string>, format = 'preserve'): U
 
 function getFilePath(value: string, saveTo?: boolean): [Undef<string>, string, string] {
     let moveTo: Undef<string>;
-    value = value.replace(/\\/g, '/');
+    value = normalizePath(value);
     if (!value.includes('/')) {
         return [moveTo, '', value];
     }
@@ -140,6 +140,7 @@ function sortBundle(a: ChromeAsset, b: ChromeAsset) {
 
 const getFileExt = (value: string) => value.includes('.') ? fromLastIndexOf(value, '.').toLowerCase() : '';
 const getDirectory = (path: string, start: number) => path.substring(start, path.lastIndexOf('/'));
+const normalizePath = (value: string) => value.replace(/\\/g, '/');
 
 export default class File<T extends squared.base.Node> extends squared.base.File<T> implements chrome.base.File<T> {
     public static parseUri(uri: string, options?: UriOptions): Null<ChromeAsset> {
@@ -154,7 +155,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             relocate: Undef<string>;
         const local = value.startsWith(trimEnd(location.origin, '/'));
         if (saveAs) {
-            saveAs = trimEnd(saveAs.replace(/\\/g, '/'), '/');
+            saveAs = trimEnd(normalizePath(saveAs), '/');
             if (saveTo) {
                 relocate = saveAs;
             }
@@ -238,7 +239,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 uri,
                 rootDir,
                 moveTo,
-                pathname: pathname.replace(/\\/g, '/'),
+                pathname: normalizePath(pathname),
                 filename,
                 mimeType: extension && parseMimeType(extension),
                 format,
@@ -527,56 +528,53 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             if (rawData.pathname) {
                 continue;
             }
-            else {
-                const { base64, filename } = rawData;
-                let mimeType = rawData.mimeType,
-                    data: Undef<ChromeAsset>;
-                if (base64) {
-                    if (saveAsBase64) {
-                        if (mimeType && mimeType.startsWith('image/')) {
-                            switch (saveAsBase64.format) {
-                                case 'png':
-                                case 'jpeg':
-                                case 'bmp':
-                                case 'gif':
-                                case 'tiff':
-                                    mimeType = '@' + saveAsBase64.format + ':' + mimeType;
-                                    break;
-                            }
-                        }
-                        const pathname = trimEnd(saveAsBase64.pathname || '', '/').replace(/\\/g, '/');
-                        data = processUri(
-                            null,
-                            resolvePath(getFilePath(pathname + (pathname ? '/' : '') + filename)[1] + filename, location.href),
-                            mimeType
-                        );
-                        if (data) {
-                            data.base64 = base64;
-                            continue;
+            const { base64, filename } = rawData;
+            let mimeType = rawData.mimeType,
+                data: Undef<ChromeAsset>;
+            if (base64) {
+                if (saveAsBase64) {
+                    if (mimeType && mimeType.startsWith('image/')) {
+                        switch (saveAsBase64.format) {
+                            case 'png':
+                            case 'jpeg':
+                            case 'bmp':
+                            case 'gif':
+                            case 'tiff':
+                                mimeType = '@' + saveAsBase64.format + ':' + mimeType;
+                                break;
                         }
                     }
-                    data = {
-                        pathname: '__generated__/base64',
-                        filename,
-                        mimeType,
-                        base64
-                    };
+                    data = processUri(
+                        null,
+                        resolvePath(getFilePath(appendSeparator(saveAsBase64.pathname, filename))[1] + '/' + filename, location.href),
+                        mimeType
+                    );
+                    if (data) {
+                        data.base64 = base64;
+                        continue;
+                    }
                 }
-                else if (mimeType && rawData.content) {
-                    data = {
-                        pathname: `__generated__/${mimeType.split('/').pop()!}`,
-                        filename,
-                        content: rawData.content
-                    };
-                }
-                else {
-                    continue;
-                }
-                if (this.validFile(data)) {
-                    data.mimeType = mimeType;
-                    this.processExtensions(data, []);
-                    result.push(data);
-                }
+                data = {
+                    pathname: '__generated__/base64',
+                    filename,
+                    mimeType,
+                    base64
+                };
+            }
+            else if (mimeType && rawData.content) {
+                data = {
+                    pathname: `__generated__/${mimeType.split('/').pop()!}`,
+                    filename,
+                    content: rawData.content
+                };
+            }
+            else {
+                continue;
+            }
+            if (this.validFile(data)) {
+                data.mimeType = mimeType;
+                this.processExtensions(data, []);
+                result.push(data);
             }
         }
         return result;

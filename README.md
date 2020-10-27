@@ -515,10 +515,23 @@ Image conversion can be achieved using the mimeType property in a RequestAsset o
 * gif
 * tiff
 
-node-express has only read support for GIF and TIFF. Opacity can be applied only to PNG and GIF.
+node-express has only read support for GIF and TIFF. Opacity can be applied only to PNG and GIF. squared-apache does not support alignment or background color.
 
-```xml
-format[@%]?(minSize(0),maxSize(*))?(width(n)xheight(n)#?cover|contain|scale)?{...rotate(n)}?|opacity|?:image/{format}
+```javascript
+// All commands are optional except "format". Outer groupings and inner brackets are required.
+
++ <format-to>
+
+- @|%
+- ( minSize(n,0) , maxSize(n,*) )
+- ( width(n|auto) x height(n|auto) [bilinear|bicubic|hermite|bezier]? ^(cover|contain|scale)?[left|center|right|top|middle|bottom]? #background-color? )
+- { ...rotate(n) #background-color? }
+- | opacity |
+
++ :image/<format-form>
+```
+```javascript
+png(50000,*)(800x600[bezier]^contain[right|bottom]#FFFFFF){45,135,215,315#FFFFFF}|0.5|:image/jpeg
 ```
 
 @ - replace  
@@ -545,24 +558,6 @@ const options = {
         }
     ]
 };
-```
-
-You can use these commands individually on any element where the image is the primary output display. Image resizing only works with individual elements or assets and not globally with extensions. Encoding images inline with base64 are also available using the "::base64" commmand as the third argument.
-
-```xml
-<!-- NOTE (saveTo): img | video | audio | source | track | object | embed -->
-
-<img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour1.jpg" data-chrome-file="saveTo:../images/harbour::png@(10000,75000)(800x600#contain)::base64" />
-```
-
-You can also add most of the "file" commands programatically (except "exclude") with JavaScript before saving or copying the assets. Multiple transformations can be achieved using the ":" separator.
-
-```javascript
-document.querySelectorAll('img').forEach(element => {
-    element.dataset.chromeFile = 'saveTo:images/resized::png%(100000,*)(800x600){90,180,270}|0.5|:jpeg(600x400){45,135,225}';
-});
-
-squared.save();
 ```
 
 ### UI: Excluding Procedures / Applied Attributes (framework: android)
@@ -907,6 +902,26 @@ You can exclude unnecessary processing files using the dataset attribute in &lt;
 ```
 
 The file action commands (save | saveAs | copyTo | appendTo) should only be used one at a time in the Chrome framework. Calling multiple consecutively may conflict if you do not use async/await.
+
+### CHROME: saveTo command / Image resizing
+
+You can use images commands with saveTo on any element when the image is the primary display output. Encoding with base64 is also available using the "::base64" commmand as the third argument.
+
+```xml
+<!-- NOTE (saveTo): img | video | audio | source | track | object | embed -->
+
+<img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour1.jpg" data-chrome-file="saveTo:../images/harbour::png@(10000,75000)(800x600[bezier]^contain[right|bottom])::base64" />
+```
+
+You can also add most of the "file" commands programatically (except "exclude") with JavaScript before saving or copying the assets. Multiple transformations can be achieved using the ":" separator.
+
+```javascript
+document.querySelectorAll('img').forEach(element => {
+    element.dataset.chromeFile = 'saveTo:images/resized::png%(100000,*)(800x600){90,180,270}|0.5|:jpeg(600x400){45,135,225#FFFFFF}';
+});
+
+squared.save();
+```
 
 ### CHROME: Extension configuration
 
