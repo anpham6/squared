@@ -11,7 +11,7 @@ import type ResourceSvg from './svg';
 
 import Resource from '../../resource';
 
-import { applyTemplate } from '../../lib/util';
+import { applyTemplate, parseColor } from '../../lib/util';
 
 interface PositionAttribute {
     top?: string;
@@ -63,12 +63,34 @@ interface LayerData {
 
 const { NODE_RESOURCE } = squared.base.lib.constant;
 
-const { reduceRGBA } = squared.lib.color;
+const { formatRGBA } = squared.lib.color;
 const { extractURL, formatPercent, formatPX } = squared.lib.css;
 const { truncate } = squared.lib.math;
 const { delimitString, isEqual, plainMap, resolvePath, spliceArray, splitPair, splitPairStart } = squared.lib.util;
 
 const CHAR_SEPARATOR = /\s*,\s*/;
+
+function reduceRGBA(value: RGBA, percent: number) {
+    let { r, g, b } = value;
+    if (r === 0 && g === 0 && b === 0) {
+        r = 255;
+        g = 255;
+        b = 255;
+        if (percent > 0) {
+            percent *= -1;
+        }
+    }
+    const base = percent < 0 ? 0 : 255;
+    percent = Math.abs(percent);
+    return parseColor(
+        formatRGBA({
+            r: (r + Math.round((base - r) * percent)) % 255,
+            g: (g + Math.round((base - g) * percent)) % 255,
+            b: (b + Math.round((base - b) * percent)) % 255,
+            a: value.a
+        })
+    ) as ColorData;
+}
 
 function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = false) {
     const { style, color } = border;
@@ -159,7 +181,7 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
                 }
             }
             if (percent !== 1) {
-                const reduced = reduceRGBA(rgba, percent, color.valueAsRGBA);
+                const reduced = reduceRGBA(rgba, percent);
                 if (reduced) {
                     return createStrokeColor(reduced);
                 }
@@ -209,7 +231,7 @@ function getCornerRadius(corners: string[]) {
     }
 }
 
-function getBackgroundColor(value: Undef<string>) {
+function getBackgroundColor(value: Undef<ColorData>) {
     if (value) {
         const color = getColorValue(value, false);
         if (color) {
@@ -278,8 +300,8 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_VERSION.LATEST
             const center = (gradient as ConicGradient).center;
             result.type = 'sweep';
             if (positioning) {
-                result.centerX = (center.left * 2).toString();
-                result.centerY = (center.top * 2).toString();
+                result.centerX = center.left.toString();
+                result.centerY = center.top.toString();
             }
             else {
                 result.centerX = formatPercent(center.leftAsPercent);

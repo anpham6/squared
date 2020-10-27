@@ -1,12 +1,12 @@
-5f25b7f76a12193c787292f80f1d065d  ./app/src/main/res/drawable/div_squared_ui.xml
+cd28c9a9a067ec608d2f80d8b6c890fd  ./app/src/main/res/drawable/div_squared_ui.xml
 06e98039a06227f33209bb12d5dea518  ./app/src/main/res/drawable/framelayout_1_gradient_1.xml
 2826fbd3bc687443983081dfd11e265d  ./app/src/main/res/drawable/icons8_chrome.png
 e8dd8e5053371fdf9029e42d7f09b6ab  ./app/src/main/res/drawable/icons8_google_docs.png
 a9a34fe658385bf8349c02b202b93fae  ./app/src/main/res/drawable/icons8_google_news.png
 431703114e8596b163bf0d4724d1767e  ./app/src/main/res/drawable/icons8_google_play.png
 9f629800021984be3852e6bbd4c01cb1  ./app/src/main/res/drawable/icons8_google_plus.png
-77a366d9772a4f49d7825bb60d3f4570  ./app/src/main/res/drawable/squared_ui_gradient_1.xml
-a89a5afb736f5b0d03cce17f3877e235  ./app/src/main/res/drawable/table_gridlayout_1.xml
+edf314c7494d1f6c58fc06d22d77700c  ./app/src/main/res/drawable/squared_ui_gradient_1.xml
+667f05da2308b9624aca569246de5398  ./app/src/main/res/drawable/table_gridlayout_1.xml
 9085ea9a3e6567fce681f7d3b49e79ac  ./app/src/main/res/drawable/td_framelayout_1.xml
 f55c94c2c9aa7d8d4f50c985b1da7bcf  ./app/src/main/res/drawable/td_textview_1.xml
 8e3e4e11d90194ef0f2a87bf978aded7  ./app/src/main/res/drawable/td_textview_2.xml
@@ -24,7 +24,7 @@ fe574b46fffb46aa504ff11896cc09de  ./app/src/main/res/layout/activity_main.xml
 87361914178a6ff47e7ee604f747083d  ./app/src/main/res/layout/gradient_content.xml
 e558d7cd33db2b088c4108d1f806e2ca  ./app/src/main/res/layout/gradient_nested.xml
 ca533d9e5ea7bcac86b12e4b0d56501c  ./app/src/main/res/layout/gradient_single.xml
-092af8a1cb82ff863c2f2b2996149058  ./app/src/main/res/values/colors.xml
+1a404001a5d223f49034571ffa122d77  ./app/src/main/res/values/colors.xml
 1c15a457faf0c7c1970fee1d7ed3c7d6  ./app/src/main/res/values/dimens.xml
 0c0ac3848531f11c60726eb84076935d  ./app/src/main/res/values/strings.xml
 a691675bd698cb837ef14bb5a750285a  ./app/src/main/res/values/styles.xml

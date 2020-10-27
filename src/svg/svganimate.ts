@@ -3,7 +3,7 @@ import SvgBuild from './svgbuild';
 
 import { PATTERN_CUBICBEZIER } from './lib/util';
 
-const { getHexCode, parseColor } = squared.lib.color;
+const { convertHex, parseColor } = squared.lib.color;
 const { getFontSize, hasEm, isLength, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { isNumber, lastItemOf, replaceMap, sortNumber, trimEnd } = squared.lib.util;
@@ -52,11 +52,11 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         switch (attributeName) {
             case 'fill':
             case 'stroke': {
-                const colorStart = parseColor(valueA);
-                const colorEnd = parseColor(valueB);
-                if (colorStart && colorEnd) {
-                    currentValue = [colorStart];
-                    nextValue = [colorEnd];
+                const start = parseColor(valueA);
+                const end = parseColor(valueB);
+                if (start && end) {
+                    currentValue = [start];
+                    nextValue = [end];
                 }
                 break;
             }
@@ -132,13 +132,12 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                             case 'stroke': {
                                 const rgbaA = (currentValue[0] as ColorData).rgba;
                                 const rgbaB = (nextValue[0] as ColorData).rgba;
-                                const rgb = getHexCode(
-                                    SvgAnimate.getSplitValue(rgbaA.r, rgbaB.r, percent),
-                                    SvgAnimate.getSplitValue(rgbaA.g, rgbaB.g, percent),
-                                    SvgAnimate.getSplitValue(rgbaA.b, rgbaB.b, percent)
-                                );
-                                const a = getHexCode(SvgAnimate.getSplitValue(rgbaA.a, rgbaB.a, percent));
-                                result = `#${rgb + (a !== 'FF' ? a : '')}`;
+                                result = convertHex({
+                                    r: SvgAnimate.getSplitValue(rgbaA.r, rgbaB.r, percent),
+                                    g: SvgAnimate.getSplitValue(rgbaA.g, rgbaB.g, percent),
+                                    b: SvgAnimate.getSplitValue(rgbaA.b, rgbaB.b, percent),
+                                    a: SvgAnimate.getSplitValue(rgbaA.a, rgbaB.a, percent)
+                                });
                                 break;
                             }
                             case 'points':

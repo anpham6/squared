@@ -939,7 +939,6 @@ chrome.extension.options = { // internal representation
 squared.apply('chrome.convert.png', {
     settings: {
         largerThan: 10000,
-        replaceWith: false,
         whenSmaller: true
     }
 });

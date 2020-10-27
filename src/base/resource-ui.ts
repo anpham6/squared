@@ -106,7 +106,7 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
         value = expanded;
     }
     while (match = REGEXP_COLORSTOP.exec(value)) {
-        const color = parseColor(match[1], 1, true);
+        const color = parseColor(match[1]);
         if (color) {
             let offset = -1;
             if (gradient.type === 'conic') {
@@ -218,7 +218,7 @@ function setBorderStyle(node: NodeUI, boxStyle: BoxStyle, attr: string, border: 
         if (width === 2 && (style === 'inset' || style === 'outset')) {
             width = 1;
         }
-        color = parseColor(color, 1, true);
+        color = parseColor(color);
         if (color) {
             boxStyle[attr] = {
                 width: formatPX(width),
@@ -1011,7 +1011,10 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                 }
             }
             if (backgroundColor || backgroundImage || borderWidth) {
-                boxStyle.backgroundColor = parseColor(backgroundColor, 1, node.inputElement)?.valueAsRGBA || '';
+                const color = parseColor(backgroundColor);
+                if (color && (!color.transparent || node.inputElement)) {
+                    boxStyle.backgroundColor = color;
+                }
                 boxStyle.backgroundImage = backgroundImage;
                 Object.assign(boxStyle, node.cssAsObject('backgroundSize', 'backgroundRepeat', 'backgroundPositionX', 'backgroundPositionY'));
                 if (setBackgroundOffset(node, boxStyle, 'backgroundClip')) {
@@ -1051,7 +1054,6 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
 
     public setFontStyle(node: T) {
         if ((node.textElement || node.inlineText) && (!node.textEmpty || node.pseudoElement || node.visibleStyle.background) || node.inputElement && !node.controlElement) {
-            const color = parseColor(node.css('color'));
             let fontWeight = node.css('fontWeight');
             if (!isNumber(fontWeight)) {
                 switch (fontWeight) {
@@ -1074,7 +1076,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                 fontStyle: node.css('fontStyle'),
                 fontSize: node.fontSize,
                 fontWeight,
-                color: color ? color.valueAsRGBA : ''
+                color: parseColor(node.css('color'))
             } as FontAttribute);
         }
     }
@@ -1155,7 +1157,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                             break;
                         case 'color': {
                             const borderColor = this.controllerSettings.style.inputColorBorderColor;
-                            const backgroundColor = (parseColor(value) as ColorData || parseColor('rgb(0, 0, 0)')).valueAsRGBA;
+                            const backgroundColor = (parseColor(value) || parseColor('black')!).valueAsRGBA;
                             const { width, height } = node.actualDimension;
                             const backgroundSize = `${width - 10}px ${height - 10}px, ${width - 8}px ${height - 8}px`;
                             const backgroundRepeat = 'no-repeat, no-repeat';

@@ -80,8 +80,8 @@ interface FontAttribute {
     fontStyle: string;
     fontSize: number;
     fontWeight: string;
-    color: string;
-    backgroundColor?: string;
+    color: Null<ColorData>;
+    backgroundColor?: ColorData;
 }
 
 interface BoxBorder {
@@ -96,7 +96,7 @@ interface BoxStyle extends Partial<BoxBorder> {
     backgroundRepeat: string;
     backgroundPositionX: string;
     backgroundPositionY: string;
-    backgroundColor?: string;
+    backgroundColor?: ColorData;
     backgroundClip?: BoxRect;
     backgroundOrigin?: BoxRect;
     borderRadius?: string[];
@@ -143,17 +143,15 @@ interface ImageSrcSet {
 }
 
 interface ColorData extends StringValue {
+    rgba: RGBA;
+    hsla: HSLA;
     valueAsRGBA: string;
     valueAsARGB: string;
-    rgba: RGBA;
-    hsl: HSL;
+    rgbaAsString: string;
+    hslaAsString: string;
     opacity: number;
     transparent: boolean;
-}
-
-interface ColorResult extends StringValue {
-    rgb: RGB;
-    hsl: HSL;
+    nearest: ColorData;
 }
 
 interface ColorStop {

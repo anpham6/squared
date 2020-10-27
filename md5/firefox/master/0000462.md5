@@ -14,8 +14,8 @@ d8387609c569a498a4a0ad562357427f  ./app/src/main/res/drawable/featured4.jpg
 455d28756d9681e6da11fa1ac0565108  ./app/src/main/res/drawable/featured7.jpg
 acd27f5966ee6e7de954c2b705ea1acc  ./app/src/main/res/drawable/featured8.jpg
 7eb3d117fcaddb0d446bc1689fe3ef65  ./app/src/main/res/drawable/featured9.jpg
-04631354d43ddf6ebe96abdf6365d18b  ./app/src/main/res/drawable/h3_textview_4.xml
-ea45e90ee6a7e9dcacda7f0bd4a27434  ./app/src/main/res/drawable/img_imageview_16.xml
+d15a657cdccd4dc26d18488656f36ad0  ./app/src/main/res/drawable/h3_textview_4.xml
+08fbe4e6f0202f6890070700e58c3e6a  ./app/src/main/res/drawable/img_imageview_16.xml
 23c68e0ffeabecf1fc3d6cbb7d0aba6e  ./app/src/main/res/drawable/li_textview_1.xml
 9e97a49c6f11693968db28ae55f9caaf  ./app/src/main/res/drawable/li_textview_7.xml
 04532a3577f095b91b068bf54bed94e9  ./app/src/main/res/drawable/promoted1.jpg
@@ -23,8 +23,8 @@ ea45e90ee6a7e9dcacda7f0bd4a27434  ./app/src/main/res/drawable/img_imageview_16.x
 81eb08fe2e2425411c9e0c1120134385  ./app/src/main/res/drawable/rightarrow.png
 f4f3a2466b3500203e976e0fcfb26b7d  ./app/src/main/res/drawable/span_textview_25.xml
 e63466f7ca20a29f527e28b5a73ffc98  ./app/src/main/res/layout/activity_main.xml
-c12a88d9a7a51f661177dfe0ee4b89b3  ./app/src/main/res/values/colors.xml
+322e6ee406c98886ddc5a28a26bd006c  ./app/src/main/res/values/colors.xml
 93c1d1f24afabd91f6317a8c79b58e4e  ./app/src/main/res/values/dimens.xml
 5154cc65850dbece9697f91e714906d6  ./app/src/main/res/values/strings.xml
-02b811a0f19f9b197ab488ccf79ba05a  ./app/src/main/res/values/styles.xml
+eb37ab1e1c72cfc3e1bfa7989c6b22f7  ./app/src/main/res/values/styles.xml
 ae0eb98fe5acb14c4dc397e34f0f9684  ./app/src/main/res/values/themes.xml

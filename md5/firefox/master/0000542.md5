@@ -3,10 +3,10 @@ c5f6d3e07dd8789e844f23c2a8a96d73  ./app/src/main/res/drawable/dotted.gif
 eb4d14602b873fe3256e3727782f2914  ./app/src/main/res/drawable/gradient3.gif
 3e8b9a57eea51c57465a794a10e4e1e3  ./app/src/main/res/drawable/span_textview_1.xml
 bb33c6616e70ae905c2965e9698f91b8  ./app/src/main/res/drawable/span_textview_10.xml
-b6175bb5a225a2256ddd404059a5e7e8  ./app/src/main/res/drawable/span_textview_11.xml
+c5625ac25141058d27662ae11e2ced2a  ./app/src/main/res/drawable/span_textview_11.xml
 d8c51eb5feae1a7f6dd96b1da05fdb58  ./app/src/main/res/drawable/span_textview_12.xml
 019190766aab8569668c4ecd50e800e4  ./app/src/main/res/drawable/span_textview_2.xml
-87b4f49fde1e193f0cb686f9c3cb7423  ./app/src/main/res/drawable/span_textview_3.xml
+38832cad7b144a099d100ac4fd76342b  ./app/src/main/res/drawable/span_textview_3.xml
 ae542ee816ddd6250a32971a8daa90be  ./app/src/main/res/drawable/span_textview_4.xml
 1406883ec472c2c7451e2eda95167906  ./app/src/main/res/drawable/span_textview_5.xml
 ea8f047fd24eff017abc3cd2b05fd7ef  ./app/src/main/res/drawable/span_textview_6.xml
@@ -17,7 +17,7 @@ b9f4b1653a74450c7bab1f097f42fcac  ./app/src/main/res/drawable/span_textview_8.xm
 1cd10172cb6764170edde34b585335b8  ./app/src/main/res/drawable/wavy_green.gif
 029b289d2b0f9e5adb05ce299920d57f  ./app/src/main/res/drawable/wavy_red3.gif
 ebac499c03a984283bdda581f9461be0  ./app/src/main/res/layout/activity_main.xml
-1b6534a9c110d6e6b49d16953e57305d  ./app/src/main/res/values/colors.xml
+acee7ee83a09dc639c13afad23626991  ./app/src/main/res/values/colors.xml
 d95b34a6917aa1babd3a9337d4c969ee  ./app/src/main/res/values/dimens.xml
 0449abe58853d4e6a0b9f996527c6612  ./app/src/main/res/values/strings.xml
 8bb7440e15fb8fb05796a574e706cdb3  ./app/src/main/res/values/styles.xml

@@ -9,9 +9,8 @@ type View = android.base.View;
 const { NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.constant;
 const { CONTAINER_NODE, SUPPORT_TAGNAME, SUPPORT_TAGNAME_X } = android.lib.constant;
 
-const { parseColor } = squared.lib.color;
 const { assignEmptyValue } = squared.lib.util;
-const { createViewAttribute } = android.lib.util;
+const { createViewAttribute, parseColor } = android.lib.util;
 
 const Resource = android.base.Resource;
 

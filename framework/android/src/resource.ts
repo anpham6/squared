@@ -3,11 +3,10 @@ import { RESERVED_JAVA } from './lib/constant';
 import type Application from './application';
 import type View from './view';
 
-import { concatString } from './lib/util';
+import { concatString, parseColor } from './lib/util';
 
 const { FILE } = squared.lib.regex;
 
-const { findColorShade, parseColor } = squared.lib.color;
 const { extractURL, getSrcSet } = squared.lib.css;
 const { fromLastIndexOf, isNumber, isPlainObject, isString, resolvePath, splitPairStart, trimString } = squared.lib.util;
 
@@ -200,12 +199,13 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
             if (colorName) {
                 return colorName;
             }
-            const shade = findColorShade(color.value);
-            if (shade) {
-                colorName = keyName === shade.value ? shade.key : Resource.generateId('color', shade.key);
-                STORED.colors.set(keyName, colorName);
-                return colorName;
+            if (color.key) {
+                STORED.colors.set(keyName, color.key);
+                return color.key;
             }
+            colorName = Resource.generateId('color', color.nearest.key);
+            STORED.colors.set(keyName, colorName);
+            return colorName;
         }
         return '';
     }

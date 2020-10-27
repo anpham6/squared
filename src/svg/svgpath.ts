@@ -303,6 +303,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             else {
                 d = this.baseValue;
             }
+            this.fill = '';
         }
         else if (SVG.circle(element) || SVG.ellipse(element)) {
             const x = this.getBaseValue<number>('cx')!;
@@ -417,6 +418,12 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         }
         this.value = d;
         this.setPaint([d], precision);
+        switch (element.tagName) {
+            case 'line':
+            case 'polyline':
+                this.fill = '';
+                break;
+        }
         return d;
     }
 

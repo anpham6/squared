@@ -209,7 +209,9 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 });
                 addFontItem(node, 0, 'fontFamily', fontFamily);
                 addFontItem(node, 1, 'fontSize', truncate(stored.fontSize, floatPrecision) + (convertPixels ? 'sp' : 'px'));
-                addFontItem(node, 2, 'color', Resource.addColor(stored.color));
+                if (stored.color) {
+                    addFontItem(node, 2, 'color', Resource.addColor(stored.color));
+                }
                 addFontItem(node, 3, 'fontWeight', fontWeight);
                 addFontItem(node, 4, 'fontStyle', fontStyle);
                 if (backgroundColor) {

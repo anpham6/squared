@@ -11,21 +11,19 @@ interface RGB {
     r: number;
     g: number;
     b: number;
+    a?: number;
 }
 
 interface HSL {
     h: number;
     s: number;
     l: number;
+    a?: number;
 }
 
-interface RGBA extends RGB {
-    a: number;
-}
+interface RGBA extends Required<RGB> {}
 
-interface HSLA extends HSL {
-    a: number;
-}
+interface HSLA extends Required<HSL> {}
 
 interface Point {
     x: number;

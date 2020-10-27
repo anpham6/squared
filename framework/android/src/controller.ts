@@ -16,12 +16,11 @@ import ContentUI = squared.base.ContentUI;
 import LayoutUI = squared.base.LayoutUI;
 import NodeUI = squared.base.NodeUI;
 
-import { concatString, createViewAttribute, getDocumentId, getRootNs, replaceTab } from './lib/util';
+import { concatString, createViewAttribute, getDocumentId, getRootNs, parseColor, replaceTab } from './lib/util';
 
 const { APP_SECTION, NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.constant;
 
 const { isPlatform, isUserAgent } = squared.lib.client;
-const { parseColor } = squared.lib.color;
 const { formatPX, getSrcSet, hasCoords, parseTransform } = squared.lib.css;
 const { getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;

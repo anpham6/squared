@@ -1,11 +1,11 @@
 524405d95e8f6dccc6c7dd7b79bbbcdc  ./app/src/main/res/drawable/email.png
-9687d80b662f8a316dcb92a3a82dde5a  ./app/src/main/res/drawable/input_text_email.xml
-b4fbbbc7dae5ecd07c82b9a6be9e4a1f  ./app/src/main/res/drawable/input_text_twitter.xml
-7318e3eb2e2e971523529eae4410e6ce  ./app/src/main/res/drawable/input_text_web.xml
+8709c4d8f87c85448ace520aab02813d  ./app/src/main/res/drawable/input_text_email.xml
+6fcbc8d2d57b6c0689c696a3c481a026  ./app/src/main/res/drawable/input_text_twitter.xml
+d77e7a18dc2a915473feab3e4717a332  ./app/src/main/res/drawable/input_text_web.xml
 2d26e8a53203ccf24e6c86a32e5415a8  ./app/src/main/res/drawable/twitter.png
 604eda63c56f8e52825525984fe0a44b  ./app/src/main/res/drawable/web.png
 a9298893ef591f195bd3afb29039be15  ./app/src/main/res/layout/activity_main.xml
-629dd10c1d6c918852bc195077b55514  ./app/src/main/res/values/colors.xml
+74f3799e38d47f075cd641ef2e0c6d65  ./app/src/main/res/values/colors.xml
 cdd3da3beefb9ddad31f0484c439c1ff  ./app/src/main/res/values/dimens.xml
 96bb312f9ecc291325557a1443e56a1a  ./app/src/main/res/values/strings.xml
 d222c993ba49454cf7a1d4e6868a693d  ./app/src/main/res/values/styles.xml

@@ -1,8 +1,25 @@
 import { BUILD_VERSION, LOCALIZE_MAP, XML_NAMESPACE } from './constant';
 
+const { parseColor: __parseColor } = squared.lib.color;
 const { capitalize, joinArray, isPlainObject } = squared.lib.util;
 
+const CACHE_COLORDATA: ObjectMap<ColorData> = {};
 const REGEXP_AMPERSAND = /&(?!#?[A-Za-z\d]{2,};)/g;
+
+export function parseColor(value: string, opacity = 1, transparency?: boolean) {
+    if (value && (value !== 'transparent' || transparency)) {
+        let result: Null<ColorData> = CACHE_COLORDATA[value];
+        if (result) {
+            return result;
+        }
+        result = __parseColor(value, opacity);
+        if (result && (result.opacity > 0 || transparency)) {
+            CACHE_COLORDATA[result.opacity === 1 ? value : result.valueAsRGBA] = result;
+            return result;
+        }
+    }
+    return null;
+}
 
 export function applyTemplate(tagName: string, template: StandardMap, children: StandardMap[], depth?: number) {
     const tag: StandardMap = template[tagName];

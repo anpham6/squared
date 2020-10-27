@@ -68,13 +68,10 @@ declare module "lib" {
     }
 
     namespace color {
-        function findColorName(value: string): Undef<ColorResult>;
-        function findColorShade(value: string): Undef<ColorResult>;
-        function parseColor(value: string, opacity?: number, transparency?: boolean): Null<ColorData>;
+        function parseColor(value: string, opacity?: number): Null<ColorData>;
         function parseRGBA(value: string): Null<RGBA>;
-        function reduceRGBA(value: RGBA, percent: number, cacheName?: string): ColorData;
-        function getHexCode(...values: number[]): string;
-        function convertHex(value: RGBA): string;
+        function getHex(value: number): string;
+        function convertHex(value: RGBA, ignoreAlpha?: boolean): string;
         function convertHSLA(value: RGBA): HSLA;
         function convertRGBA(value: HSLA): RGBA;
         function formatRGBA(value: RGBA): string;

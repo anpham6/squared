@@ -1,9 +1,9 @@
 b43b1921a4631828860819642e7297ff  ./app/src/main/res/font/ptsans.xml
 d09fd91913615db5962946c14784615d  ./app/src/main/res/font/ptsans_italic.ttf
 ea07051acc2841b432ff721444ce155e  ./app/src/main/res/font/ptsans_normal.ttf
-63f0164c80856d9d4926591d7d588d69  ./app/src/main/res/layout/activity_main.xml
-93aebd05cb3c4c80717048ec88d2921e  ./app/src/main/res/values/colors.xml
-1ea9ac766e7f83e79ba049ea289388d1  ./app/src/main/res/values/dimens.xml
-9e59f3f28582505df74fa1e9a2763432  ./app/src/main/res/values/strings.xml
+a73bca3b832d3b9824947cf81a55cbfb  ./app/src/main/res/layout/activity_main.xml
+078ef888936ed31bb350e625a9fb656d  ./app/src/main/res/values/colors.xml
+bfa71afca4f682570fab4f1682585e7d  ./app/src/main/res/values/dimens.xml
+6f8148336d2c56af8689f0eaa8bcc1ed  ./app/src/main/res/values/strings.xml
 148c5dcd40b103db78d3a85888e89e70  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml
