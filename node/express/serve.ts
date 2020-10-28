@@ -1,3 +1,5 @@
+import type { Arguments, ExpressAsset, IFileManager, Settings, squared } from '@squared-functions/types';
+
 import path = require('path');
 import fs = require('fs-extra');
 import yargs = require('yargs');
@@ -10,9 +12,9 @@ import archiver = require('archiver');
 import _7z = require('7zip-min');
 import chalk = require('chalk');
 
-import functions = require('@squared-functions/file-manager');
+import FileManager = require('@squared-functions/file-manager');
 
-const FileManager = functions['default'] as functions.FileManagerConstructor;
+type ResultOfFileAction = squared.base.ResultOfFileAction;
 
 const app = express();
 app.use(body_parser.urlencoded({ extended: true }));
@@ -76,10 +78,10 @@ const Compress = FileManager.moduleCompress();
             nargs: 1
         })
         .epilogue('For more information and source: https://github.com/anpham6/squared')
-        .argv as functions.Arguments;
+        .argv as Arguments;
 
     let { NODE_ENV: ENV, PORT } = process.env,
-        settings: functions.Settings,
+        settings: Settings,
         ignorePermissions = false;
     if (argv.accessAll) {
         Node.enableDiskRead();
@@ -203,9 +205,9 @@ app.post('/api/assets/copy', (req, res) => {
         try {
             const manager = new FileManager(
                 dirname,
-                req.body as functions.ExpressAsset[],
-                function(this: functions.IFileManager) {
-                    res.json({ success: this.files.size > 0, files: Array.from(this.files) } as functions.ResultOfFileAction);
+                req.body as ExpressAsset[],
+                function(this: IFileManager) {
+                    res.json({ success: this.files.size > 0, files: Array.from(this.files) } as ResultOfFileAction);
                 }
             );
             manager.emptyDirectory = query.empty === '1';
@@ -259,7 +261,7 @@ app.post('/api/assets/archive', (req, res) => {
         const archive = archiver(format, { zlib: { level: Compress.gzipLevel } });
         const manager = new FileManager(
             dirname,
-            req.body as functions.ExpressAsset[],
+            req.body as ExpressAsset[],
             () => {
                 archive.directory(dirname, false);
                 archive.finalize();
@@ -271,7 +273,7 @@ app.post('/api/assets/archive', (req, res) => {
         const output = fs.createWriteStream(zipname);
         output.on('close', () => {
             const success = manager.files.size > 0;
-            const response: functions.ResultOfFileAction = {
+            const response: ResultOfFileAction = {
                 success,
                 zipname,
                 files: Array.from(manager.files),

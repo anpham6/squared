@@ -303,7 +303,6 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             else {
                 d = this.baseValue;
             }
-            this.fill = '';
         }
         else if (SVG.circle(element) || SVG.ellipse(element)) {
             const x = this.getBaseValue<number>('cx')!;

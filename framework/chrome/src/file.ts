@@ -154,26 +154,31 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         let value = trimEnd(uri, '/'),
             relocate: Undef<string>;
         const local = value.startsWith(trimEnd(location.origin, '/'));
-        if (saveAs) {
-            saveAs = trimEnd(normalizePath(saveAs), '/');
-            if (saveTo) {
-                relocate = saveAs;
-            }
-            else {
-                const data = parseFileAs('saveAs', saveAs);
-                if (data) {
-                    [relocate, format, preserve] = data;
-                }
-                else {
+        if (saveAs !== '~') {
+            if (saveAs) {
+                saveAs = trimEnd(normalizePath(saveAs), '/');
+                if (saveTo) {
                     relocate = saveAs;
                 }
+                else {
+                    const data = parseFileAs('saveAs', saveAs);
+                    if (data) {
+                        [relocate, format, preserve] = data;
+                    }
+                    else {
+                        relocate = saveAs;
+                    }
+                }
+                if (local && relocate && relocate !== '~') {
+                    value = resolvePath(relocate, location.href);
+                }
             }
-            if (local && relocate) {
-                value = resolvePath(relocate, location.href);
+            if (!local && !relocate && options && options.preserveCrossOrigin) {
+                return null;
             }
-        }
-        if (!local && !relocate && options && options.preserveCrossOrigin) {
-            return null;
+            if (relocate === '~') {
+                relocate = '';
+            }
         }
         const match = FILE.PROTOCOL.exec(value);
         if (match) {

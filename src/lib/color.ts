@@ -286,9 +286,10 @@ const convertOpacity = (value: string) => parseFloat(value) / (value.includes('%
 const clampOpacity = (value: number) => clamp(value) * 255;
 
 export function parseColor(value: string, opacity = 1) {
-    let rgba: Null<RGBA>;
+    let key: Undef<string>,
+        rgba: Null<RGBA>;
     if (value[0] === '#') {
-        rgba = parseRGBA(value);
+        rgba = parseRGBA(value = value.toLowerCase());
         if (value.length !== 7) {
             value = '';
         }
@@ -303,6 +304,9 @@ export function parseColor(value: string, opacity = 1) {
             value = color.value;
             if (opacity < 1) {
                 rgba.a = clampOpacity(opacity);
+            }
+            else {
+                key = color.key;
             }
         }
         else {
@@ -333,11 +337,11 @@ export function parseColor(value: string, opacity = 1) {
             }
         }
     }
-    return rgba ? new Color('', value, rgba) as ColorData : null;
+    return rgba ? new Color(key, value, rgba) as ColorData : null;
 }
 
 export function parseRGBA(value: string) {
-    if (CSS.HEX.test(value = value.toLowerCase())) {
+    if (CSS.HEX.test(value)) {
         if (value[0] !== '#') {
             value = '#' + value;
         }

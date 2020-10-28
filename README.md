@@ -525,13 +525,15 @@ node-express has only read support for GIF and TIFF. Opacity can be applied only
 - @|%
 - ( minSize(n,0) , maxSize(n,*) )
 - ( width(n|auto) x height(n|auto) [bilinear|bicubic|hermite|bezier]? ^(cover|contain|scale)?[left|center|right|top|middle|bottom]? #background-color? )
+- ( left(+|-n) , top(+|-n) | cropWidth(n) x cropHeight(n) )
 - { ...rotate(n) #background-color? }
-- | opacity |
+- | opacity(d) |
 
 + :image/<format-form>
 ```
+
 ```javascript
-png(50000,*)(800x600[bezier]^contain[right|bottom]#FFFFFF){45,135,215,315#FFFFFF}|0.5|:image/jpeg
+png(50000,*)(800x600[bezier]^contain[right|bottom]#FFFFFF)(-50,50|200x200){45,135,215,315#FFFFFF}|0.5|:image/jpeg
 ```
 
 @ - replace  
@@ -905,6 +907,10 @@ The file action commands (save | saveAs | copyTo | appendTo) should only be used
 
 ### CHROME: saveTo command / Image resizing
 
+```xml
+saveTo: directory (~same) :: transformations? (image) :: base64? (image)
+```
+
 You can use images commands with saveTo on any element when the image is the primary display output. Encoding with base64 is also available using the "::base64" commmand as the third argument.
 
 ```xml
@@ -917,7 +923,7 @@ You can also add most of the "file" commands programatically (except "exclude") 
 
 ```javascript
 document.querySelectorAll('img').forEach(element => {
-    element.dataset.chromeFile = 'saveTo:images/resized::png%(100000,*)(800x600){90,180,270}|0.5|:jpeg(600x400){45,135,225#FFFFFF}';
+    element.dataset.chromeFile = 'saveTo:~::png%(100000,*)(800x600){90,180,270}|0.5|:jpeg(600x400){45,135,225#FFFFFF}';
 });
 
 squared.save();
