@@ -1,4 +1,4 @@
-const getSizeRange = (options: CompressOptions) => '(' + Math.max(options.largerThan, 0) + ',' + (options.smallerThan < Infinity ? options.smallerThan : '*') + ')';
+const getSizeRange = (options: CompressOptions) => '(' + Math.max(options.minSize, 0) + ',' + (options.maxSize < Infinity ? options.maxSize : '*') + ')';
 
 export default abstract class Extension<T extends squared.base.Node> extends squared.base.Extension<T> implements chrome.base.Extension<T> {
     public static getCompressOptions(options: CompressOptions) {

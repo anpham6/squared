@@ -5,8 +5,8 @@ const { findSet } = squared.lib.util;
 export default class Gif<T extends squared.base.Node> extends Extension<T> {
     public readonly options: ConvertOptions = {
         mimeTypes: new Set(['image/png', 'image/jpeg', 'image/bmp', 'image/tiff']),
-        largerThan: 0,
-        smallerThan: Infinity,
+        minSize: 0,
+        maxSize: Infinity,
         whenSmaller: false,
         replaceWith: true,
         opacity: 1

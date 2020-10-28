@@ -3,8 +3,8 @@ import Extension from '../../extension';
 export default class Gzip<T extends squared.base.Node> extends Extension<T> {
     public readonly options: CompressOptions = {
         mimeTypes: new Set(['text/css', 'text/javascript', 'text/plain', 'text/csv', 'text/vtt', 'application/json', 'application/javascript', 'application/ld+json', 'application/xml']),
-        largerThan: 0,
-        smallerThan: Infinity,
+        minSize: 0,
+        maxSize: Infinity,
         whenSmaller: true,
         level: 9
     };

@@ -8,8 +8,8 @@ interface IFileArchivingOptions extends squared.base.FileArchivingOptions, IFile
 
 interface CompressOptions {
     mimeTypes: MIMEOrAll;
-    largerThan: number;
-    smallerThan: number;
+    minSize: number;
+    maxSize: number;
     whenSmaller: boolean;
     level?: number;
 }

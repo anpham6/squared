@@ -936,15 +936,15 @@ Most extensions have a few settings which can be configured. Compression and qua
 ```javascript
 chrome.extension.options = { // internal representation
     mimeTypes: ['image/jpeg', 'image/bmp', 'image/gif', 'image/tiff'],
-    largerThan: 0,
-    smallerThan: Infinity,
+    minSize: 0,
+    maxSize: Infinity,
     whenSmaller: false,
     replaceWith: true // convert
 };
 
 squared.apply('chrome.convert.png', {
     settings: {
-        largerThan: 10000,
+        minSize: 10000,
         whenSmaller: true
     }
 });
