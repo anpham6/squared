@@ -1,3 +1,5 @@
+import LAYOUT_TABLE = squared.lib.internal.LAYOUT_TABLE;
+
 import { BOX_STANDARD, NODE_RESOURCE } from '../lib/constant';
 
 import type NodeUI from '../node-ui';
@@ -8,14 +10,6 @@ import ExtensionUI from '../extension-ui';
 const { formatPercent, formatPX, getStyle, isLength, isPercent } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { isNumber, replaceMap } = squared.lib.util;
-
-const enum LAYOUT_TABLE {
-    NONE,
-    STRETCH,
-    FIXED,
-    VARIABLE,
-    COMPRESS
-}
 
 function setAutoWidth(node: NodeUI, td: NodeUI, data: StandardMap) {
     data.percent = Math.round(td.bounds.width / node.box.width * 100) + '%';

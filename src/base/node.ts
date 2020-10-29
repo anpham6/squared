@@ -1,6 +1,7 @@
 import CSS_TRAITS = squared.lib.constant.CSS_TRAITS;
 import CSS_UNIT = squared.lib.constant.CSS_UNIT;
 import USER_AGENT = squared.lib.constant.USER_AGENT;
+import STYLE_STATE = squared.lib.internal.STYLE_STATE;
 
 type T = Node;
 
@@ -13,12 +14,6 @@ const { assignRect, getNamedItem, getParentElement, getRangeClientRect, newBoxRe
 const { truncate } = squared.lib.math;
 const { getElementAsNode, getElementCache, getElementData, setElementCache } = squared.lib.session;
 const { convertCamelCase, convertFloat, convertInt, hasBit, hasValue, isNumber, isObject, iterateArray, iterateReverseArray, spliceString, splitPair } = squared.lib.util;
-
-const enum STYLE_CACHE {
-    FAIL,
-    READY,
-    CHANGED
-}
 
 const TEXT_STYLE = [
     'fontFamily',
@@ -58,11 +53,11 @@ function setStyleCache(element: HTMLElement, attr: string, value: string, style:
                 }
             }
             setElementCache(element, attr, value !== 'auto' ? current : '', sessionId);
-            return STYLE_CACHE.CHANGED;
+            return STYLE_STATE.CHANGED;
         }
-        return STYLE_CACHE.FAIL;
+        return STYLE_STATE.FAIL;
     }
-    return STYLE_CACHE.READY;
+    return STYLE_STATE.READY;
 }
 
 function parseLineHeight(lineHeight: string, fontSize: number) {
@@ -1450,12 +1445,12 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             for (const attr in values) {
                 const value = values[attr]!;
                 switch (setStyleCache(element, attr, value, style, this._styleMap, sessionId)) {
-                    case STYLE_CACHE.FAIL:
+                    case STYLE_STATE.FAIL:
                         this.cssFinally(result);
                         return false;
-                    case STYLE_CACHE.READY:
+                    case STYLE_STATE.READY:
                         continue;
-                    case STYLE_CACHE.CHANGED:
+                    case STYLE_STATE.CHANGED:
                         result[attr] = value;
                         break;
                 }

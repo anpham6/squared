@@ -94,7 +94,7 @@ The primary function "parseDocument" can be called on multiple elements and mult
 
 #### Example: vdom / chrome
 
-VDOM is a minimal framework for those who prefer a universal HTMLElement that can perform internally cached selector queries. The "lite" version is about half the bundle size and is recommended for most browser applications. Chrome framework offers the same features as VDOM but can also bundle assets using HTML syntax and Express server. It is adequate for most applications and gives you the ability to see your application first and to build it last.
+VDOM is a minimal framework (45kb gzipped) for those who prefer a universal HTMLElement that can perform internally cached selector queries. The "lite" version is about half the bundle size and is recommended for most browser applications. Chrome framework offers the same features as VDOM but can also bundle assets using HTML syntax and Express server. It is adequate for most applications and gives you the ability to see your application first and to build it last.
 
 ```javascript
 <script src="/dist/squared.min.js"></script>
@@ -243,7 +243,7 @@ squared.settings = {
 };
 ```
 
-### All: Local Storage
+### ALL: Local Storage
 
 Custom named user settings per framework can be saved to local storage and reloaded across all pages in the same domain. Extensions are configured using the same procedure.
 
@@ -515,7 +515,7 @@ Image conversion can be achieved using the mimeType property in a RequestAsset o
 * gif
 * tiff
 
-node-express has only read support for GIF and TIFF. Opacity can be applied only to PNG and GIF. squared-apache does not support alignment or background color.
+node-express has only read support for GIF and TIFF. Opacity can be applied only to PNG and BMP. squared-apache does not support alignment or background color.
 
 ```javascript
 // All commands are optional except "format". Outer groupings and inner brackets are required.
@@ -895,24 +895,6 @@ squared.saveAs('index', { // default is false
 }); 
 ```
 
-You can exclude unnecessary processing files using the dataset attribute in &lt;script|link|style&gt; tags.
-
-```xml
-<script data-chrome-file="exclude" src="/dist/squared.js"></script>
-<script data-chrome-file="exclude" src="/dist/squared.base.js"></script>
-<script data-chrome-file="exclude" src="/dist/chrome.framework.js"></script>
-<script data-chrome-file="exclude">
-    squared.setFramework(chrome);
-    squared.save();
-</script>
-```
-
-You can similarly prevent an asset from being downloaded or transformed using the "ignore" command.
-
-```xml
-<iframe src="https://www.google.com/maps" data-chrome-file="ignore" />
-```
-
 The file action commands (save | saveAs | copyTo | appendTo) should only be used one at a time in the Chrome framework. Calling multiple consecutively may conflict if you do not use async/await.
 
 ### CHROME: saveTo command / Image resizing
@@ -939,6 +921,24 @@ document.querySelectorAll('img').forEach(element => {
     /* "saveTo:~::~::base64" */
     element.dataset.chromeFile = "saveTo:~::png%(100000,*)(800x600){90,180,270}|0.5|:jpeg(600x400){45,135,225#FFFFFF}";
 });
+```
+
+You can exclude unnecessary processing files using the dataset attribute in &lt;script|link|style&gt; tags.
+
+```xml
+<script data-chrome-file="exclude" src="/dist/squared.js"></script>
+<script data-chrome-file="exclude" src="/dist/squared.base.js"></script>
+<script data-chrome-file="exclude" src="/dist/chrome.framework.js"></script>
+<script data-chrome-file="exclude">
+    squared.setFramework(chrome);
+    squared.save();
+</script>
+```
+
+You can similarly prevent an asset from being downloaded or transformed using the "ignore" command.
+
+```xml
+<iframe src="https://www.google.com/maps" data-chrome-file="ignore" />
 ```
 
 ### CHROME: Extension configuration

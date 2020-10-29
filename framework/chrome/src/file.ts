@@ -493,12 +493,6 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 this.processImageUri(element, resolvePath(RE_SRCSET.group(1)!), result, format, transforms, preserveCrossOrigin);
             }
         });
-        document.querySelectorAll('object, embed').forEach((element: HTMLObjectElement & HTMLEmbedElement) => {
-            const src = element.data || element.src;
-            if (src && (element.type.startsWith('image/') || parseMimeType(src).startsWith('image/'))) {
-                this.processImageUri(element, src, result, format, transforms, preserveCrossOrigin);
-            }
-        });
         for (const uri of ASSETS.image.keys()) {
             this.processImageUri(null, uri, result, format, transforms, preserveCrossOrigin);
         }
@@ -625,23 +619,25 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         const format = saveAsImage && saveAsImage.format;
         document.querySelectorAll(tagName).forEach(element => {
             const items = new Map<HTMLElement, string>();
-            switch (element.tagName) {
+            const tagName = element.tagName;
+            let type = '';
+            switch (tagName) {
                 case 'VIDEO':
                 case 'AUDIO':
                     element.querySelectorAll('source, track').forEach((source: HTMLSourceElement | HTMLTrackElement) => resolveAssetSource(source, items));
                 case 'OBJECT':
                 case 'EMBED':
+                    type = (element as HTMLObjectElement | HTMLEmbedElement).type;
                 case 'IFRAME': {
                     const file = element.dataset.chromeFile;
-                    if (file && file.startsWith('saveTo')) {
+                    if (tagName !== 'IFRAME' || file && file.startsWith('saveTo')) {
                         const src = (element instanceof HTMLObjectElement ? element.data : element.src).trim();
-                        const mimeType = parseMimeType(src);
-                        if (mimeType.startsWith('image/')) {
+                        if (type.startsWith('image/') || parseMimeType(src).startsWith('image/')) {
                             this.processImageUri(element, src, result, format, transforms, preserveCrossOrigin);
                             return;
                         }
                     }
-                    else if (element.tagName === 'IFRAME') {
+                    else if (tagName === 'IFRAME') {
                         return;
                     }
                 }
@@ -690,6 +686,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         );
         options.assets = assets;
         options.transpileMap = transpileMap;
+        console.log(assets);
         return options;
     }
 

@@ -398,6 +398,6 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
     }
 
     public beforeParseDocument() {
-        this.enabled = (this.application as android.base.Application<T>).userSettings.fontMeasureWrap === true;
+        this.enabled = (this.application as android.base.Application<T>).userSettings.fontMeasureWrap;
     }
 }

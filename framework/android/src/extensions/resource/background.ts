@@ -726,7 +726,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             const { width: boundsWidth, height: boundsHeight } = bounds;
             const documentBody = node.innerMostWrapped.documentBody;
             const result: BackgroundImageData[] = [];
-            const svg: boolean[] = [];
+            const svg: Undef<true>[] = [];
             const images: (string | GradientTemplate)[] = [];
             const imageDimensions: Null<Dimension>[] = [];
             const backgroundPosition: BoxRectPosition[] = [];

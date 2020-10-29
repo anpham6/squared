@@ -296,81 +296,79 @@ if (master) {
 else if (host && data && browserName && snapshot) {
     try {
         const timeStart = Date.now();
-        parse(fs.readFileSync(path.resolve(__dirname, data)), (error, csv: string[][]) => {
+        parse(fs.readFileSync(path.resolve(__dirname, data)), async (error, csv: string[][]) => {
             if (error) {
                 throw error;
             }
             else {
-                (async () => {
+                try {
+                    const items: PageRequest[] = [];
+                    const failed: PageRequest[] = [];
+                    const browser = await playwright[browserName!].launch({ executablePath });
+                    const context = await browser.newContext({ viewport: { width, height } });
+                    const tempDir = path.resolve(__dirname, snapshot!);
                     try {
-                        const items: PageRequest[] = [];
-                        const failed: PageRequest[] = [];
-                        const browser = await playwright[browserName!].launch({ executablePath });
-                        const context = await browser.newContext({ viewport: { width, height } });
-                        const tempDir = path.resolve(__dirname, snapshot!);
-                        try {
-                            fs.emptyDirSync(tempDir);
-                        }
-                        catch (err) {
-                            failMessage(tempDir, err);
-                        }
-                        console.log(`${chalk.blue('VERSION')}: ${browserName![0].toUpperCase() + browserName!.substring(1)} ${chalk.bold(browser.version())}\n`);
-                        for (const row of csv) {
-                            const [flag, filename, url] = row;
-                            const id = parseInt(flag);
-                            if (id > 0 && (flags & id) === id) {
-                                const name = filename.substring(0, filename.lastIndexOf('.'));
-                                const filepath = path.resolve(__dirname, snapshot!, name);
-                                const href = host + url;
-                                let page: playwright.Page | undefined;
-                                try {
-                                    page = await context.newPage();
-                                    await page.goto(href + '?copyTo=' + encodeURIComponent(filepath));
-                                    if (screenshot) {
-                                        await page.screenshot({ path: filepath + '.png' });
-                                    }
-                                    await page.waitForSelector('#md5_complete', { state: 'attached', timeout });
-                                    const files = (await page.$eval('#md5_complete', element => element.innerHTML)).split('\n').sort();
-                                    items.push({ name, filepath, files });
-                                    console.log(chalk.yellow('OK') + ': ' + href);
-                                }
-                                catch (err) {
-                                    failed.push({ name, filepath });
-                                    failMessage(href, err);
-                                }
-                                if (page) {
-                                    await page.close();
-                                }
-                            }
-                        }
-                        const stderr = process.stderr;
-                        const pathname = path.resolve(__dirname, snapshot!);
-                        fs.mkdirpSync(pathname);
-                        console.log('');
-                        for (const item of items) {
-                            const files = await readdirp.promise(item.filepath);
-                            files.sort((a, b) => a.path < b.path ? -1 : 1);
-                            let output = '';
-                            for (const file of files) {
-                                output += md5(fs.readFileSync(file.fullPath)) + '  ./' + file.path.replace(/\\/g, '/') + '\n';
-                            }
-                            fs.writeFileSync(path.resolve(pathname, item.name + '.md5'), output);
-                            stderr.write(chalk.bgBlue.bold(item.files!.length !== files.length ? chalk.black('!') : chalk.white('>')));
-                        }
-                        const message = '+' + chalk.green(items.length.toString()) + ' -' + chalk.red(failed.length.toString());
-                        if (failed.length === 0) {
-                            successMessage(message, formatTime(timeStart));
-                        }
-                        else {
-                            console.log('');
-                            failMessage(message, formatTime(timeStart));
-                        }
-                        process.exit();
+                        fs.emptyDirSync(tempDir);
                     }
                     catch (err) {
-                        failMessage('Unknown', err);
+                        failMessage(tempDir, err);
                     }
-                })();
+                    console.log(`${chalk.blue('VERSION')}: ${browserName![0].toUpperCase() + browserName!.substring(1)} ${chalk.bold(browser.version())}\n`);
+                    for (const row of csv) {
+                        const [flag, filename, url] = row;
+                        const id = parseInt(flag);
+                        if (id > 0 && (flags & id) === id) {
+                            const name = filename.substring(0, filename.lastIndexOf('.'));
+                            const filepath = path.resolve(__dirname, snapshot!, name);
+                            const href = host + url;
+                            let page: playwright.Page | undefined;
+                            try {
+                                page = await context.newPage();
+                                await page.goto(href + '?copyTo=' + encodeURIComponent(filepath));
+                                if (screenshot) {
+                                    await page.screenshot({ path: filepath + '.png' });
+                                }
+                                await page.waitForSelector('#md5_complete', { state: 'attached', timeout });
+                                const files = (await page.$eval('#md5_complete', element => element.innerHTML)).split('\n').sort();
+                                items.push({ name, filepath, files });
+                                console.log(chalk.yellow('OK') + ': ' + href);
+                            }
+                            catch (err) {
+                                failed.push({ name, filepath });
+                                failMessage(href, err);
+                            }
+                            if (page) {
+                                await page.close();
+                            }
+                        }
+                    }
+                    const stderr = process.stderr;
+                    const pathname = path.resolve(__dirname, snapshot!);
+                    fs.mkdirpSync(pathname);
+                    console.log('');
+                    for (const item of items) {
+                        const files = await readdirp.promise(item.filepath);
+                        files.sort((a, b) => a.path < b.path ? -1 : 1);
+                        let output = '';
+                        for (const file of files) {
+                            output += md5(fs.readFileSync(file.fullPath)) + '  ./' + file.path.replace(/\\/g, '/') + '\n';
+                        }
+                        fs.writeFileSync(path.resolve(pathname, item.name + '.md5'), output);
+                        stderr.write(chalk.bgBlue.bold(item.files!.length !== files.length ? chalk.black('!') : chalk.white('>')));
+                    }
+                    const message = '+' + chalk.green(items.length.toString()) + ' -' + chalk.red(failed.length.toString());
+                    if (failed.length === 0) {
+                        successMessage(message, formatTime(timeStart));
+                    }
+                    else {
+                        console.log('');
+                        failMessage(message, formatTime(timeStart));
+                    }
+                    process.exit();
+                }
+                catch (err) {
+                    failMessage('Unknown', err);
+                }
             }
         });
     }

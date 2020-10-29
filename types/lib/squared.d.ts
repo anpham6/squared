@@ -118,6 +118,21 @@ declare module "lib" {
         }
     }
 
+    namespace internal {
+        const enum LAYOUT_TABLE {
+            NONE,
+            STRETCH,
+            FIXED,
+            VARIABLE,
+            COMPRESS
+        }
+        const enum STYLE_STATE {
+            FAIL,
+            READY,
+            CHANGED
+        }
+    }
+
     namespace css {
         const PROXY_INLINESTYLE: Readonly<CSSStyleDeclaration>;
         const CSS_PROPERTIES: CssProperties;

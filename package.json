@@ -90,24 +90,22 @@
     "url": "git+https://github.com/anpham6/squared.git"
   },
   "keywords": [
-    "android",
-    "chrome",
     "vdom",
     "html",
     "css",
     "svg",
     "javascript",
-    "typescript",
+    "chrome",
     "firefox",
     "safari",
-    "squared-apache",
+    "android",
     "squared-functions"
   ],
   "author": "An Pham <anpham6@gmail.com>",
   "license": "MIT",
   "homepage": "https://github.com/anpham6/squared#readme",
   "dependencies": {
-    "@squared-functions/file-manager": "^0.3.0",
+    "@squared-functions/file-manager": "^0.3.1",
     "7zip-min": "^1.2.0",
     "archiver": "^5.0.2",
     "chalk": "^4.1.0",
