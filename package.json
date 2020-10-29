@@ -72,7 +72,6 @@
     "dev-vdom-lite": "npm run dev-base && npm run dev-vdom-lite-framework",
     "dev-express": "cd ./node/express && tsc --inlineSourceMap -outDir ../../",
     "dev-scripts": "cd ./node/scripts && tsc --inlineSourceMap -outDir ../../",
-    "dev-all": "npm run dev && rollup -c ./config/rollup.config.dev-base.js && rollup -c ./framework/android/rollup.config.dev.js && rollup -c ./framework/chrome/rollup.config.dev.js && rollup -c ./framework/vdom/rollup.config.dev.js && rollup -c ./framework/vdom-lite/rollup.config.dev.js",
     "prod": "tsc -p ./config/tsconfig.prod.json && rollup -c ./config/rollup.config.js",
     "prod-android": "tsc -p ./config/tsconfig.android.json && rollup -c ./framework/android/rollup.config.js",
     "prod-chrome": "tsc -p ./config/tsconfig.chrome.json && rollup -c ./framework/chrome/rollup.config.js",

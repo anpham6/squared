@@ -14,3 +14,15 @@ interface FormattableContent {
     format?: string;
     preserve?: boolean;
 }
+
+interface PathData {
+    pathname?: string;
+    filename?: string;
+}
+
+interface TransformCommand extends PathData {
+    id: string;
+    command?: string;
+    compress?: boolean;
+    base64?: boolean;
+}

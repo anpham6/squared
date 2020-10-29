@@ -876,7 +876,11 @@ const options = {
         link: { pathname: 'css', filename: 'bundle.css', preserve: true },
         image: { format: 'base64' },
         base64: { format: 'png' }
-    }
+    },
+    transforms: [
+        { id: 'image1', pathname: '../images/harbour', filename: 'image1.png' command: 'png@(10000,75000)(800x600[bezier]^contain[right|bottom])', compress: true },
+        { id: 'image2', base64: true }
+    ]
 };
 ```
 
@@ -914,7 +918,7 @@ The file action commands (save | saveAs | copyTo | appendTo) should only be used
 ### CHROME: saveTo command / Image resizing
 
 ```xml
-saveTo: directory (~same) :: transformations? (~image) :: base64? (image)
+saveTo: directory (~same) :: transformations? (~image) :: compress?|base64? (image)
 ```
 
 You can use images commands with saveTo on any element when the image is the primary display output. Encoding with base64 is also available using the "::base64" commmand as the third argument.
@@ -922,18 +926,19 @@ You can use images commands with saveTo on any element when the image is the pri
 ```xml
 <!-- NOTE (saveTo): img | video | audio | source | track | object | embed | iframe -->
 
-<img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour1.jpg" data-chrome-file="saveTo:../images/harbour::png@(10000,75000)(800x600[bezier]^contain[right|bottom])::base64" />
-
+<img
+    id="image1"
+    src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour1.jpg"
+    data-chrome-file="saveTo:../images/harbour::png@(10000,75000)(800x600[bezier]^contain[right|bottom])::compress|base64" />
 ```
 
 You can also add most of the "file" commands programatically (except "exclude") with JavaScript before saving or copying the assets. Multiple transformations can be achieved using the ":" separator.
 
 ```javascript
 document.querySelectorAll('img').forEach(element => {
-    element.dataset.chromeFile = "saveTo:~::png%(100000,*)(800x600){90,180,270}|0.5|:jpeg(600x400){45,135,225#FFFFFF}";  /* "saveTo:~::~::base64" */
+    /* "saveTo:~::~::base64" */
+    element.dataset.chromeFile = "saveTo:~::png%(100000,*)(800x600){90,180,270}|0.5|:jpeg(600x400){45,135,225#FFFFFF}";
 });
-
-squared.save();
 ```
 
 ### CHROME: Extension configuration

@@ -20,9 +20,7 @@ interface ConvertOptions extends CompressOptions {
     opacity?: number;
 }
 
-interface SaveAsOptions {
-    pathname?: string;
-    filename?: string;
+interface SaveAsOptions extends PathData {
     format?: string;
     preserve?: boolean;
 }
@@ -33,4 +31,5 @@ interface UriOptions {
     format?: string;
     preserve?: boolean;
     preserveCrossOrigin?: boolean;
+    transform?: TransformCommand;
 }
