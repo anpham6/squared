@@ -787,7 +787,7 @@ You can also define your own optimizations in squared.settings.json:
 * [npm i html-minifier-terser](https://github.com/DanielRuf/html-minifier-terser)
 * [npm i html-minifier](https://github.com/kangax/html-minifier)
 
-These particular plugins can be configured using a plain object literal. These packages have to manually be installed [<b>npm run install-chrome</b>] since it is only relevant to the Chrome framework. Transpiling with Babel is also configurable with a .babelrc file in the base folder for any presets and additional settings. Other non-builtin minifiers can similarly be applied and chained by defining a custom string-based synchronous function.
+These particular plugins can be configured using a plain object literal. Manual installation is required when using any of these packages [<b>npm run install-chrome</b>]. Transpiling with Babel is also configurable with a .babelrc file in the base folder for any presets and additional settings. Other non-builtin minifiers can similarly be applied and chained by defining a custom string-based synchronous function.
 
 ```xml
 chrome -> html | js | css -> npm package name -> custom name
@@ -838,10 +838,10 @@ function (context, value) {
 }
 ```
 
-The same concept can also be used locally anywhere in the HTML page using a &lt;script&gt; tag with the type attribute set to "text/template". The script template will be removed from the final output.
+The same concept can be used locally anywhere in the HTML page using a &lt;script&gt; tag with the type attribute set to "text/template". The script template will be completely removed from the final output.
 
 ```javascript
-// "es5-example" is a custom name and cannot be chained (chrome -> eval_text_template: true)
+// "es5-example" is a custom name (chrome -> eval_text_template: true)
 
 <script type="text/template" data-chrome-template="js::@babel/core::es5-example">
     function (context, value) {
@@ -861,12 +861,12 @@ JS and CSS files can be bundled together with the "saveAs" or "exportAs" action.
         background-color: #fafafa;
     }
 </style>
-<script data-chrome-file="saveAs:js/bundle1.js" src="/dist/squared.js"></script>
-<script data-chrome-file="saveAs:js/bundle1.js" src="/dist/squared.base.js"></script>
+<script data-chrome-file="saveAs:js/bundle1.js::minify" src="/dist/squared.js"></script>
+<script data-chrome-file="saveAs:js/bundle1.js::minify" src="/dist/squared.base.js"></script>
 <script data-chrome-file="saveAs:js/bundle2.js" src="/dist/chrome.framework.js"></script>
 ```
 
-The entire page can similarly be included using the "saveAs" attribute in options. Extension plugins will be applied to any qualified assets.
+The entire page can similarly be transformed as a group using the "saveAs" attribute in options. Extension plugins will still be applied to any qualified assets.
 
 ```javascript
 const options = {
@@ -914,7 +914,7 @@ The file action commands (save | saveAs | copyTo | appendTo) should only be used
 ### CHROME: saveTo command / Image resizing
 
 ```xml
-saveTo: directory (~same) :: transformations? (image) :: base64? (image)
+saveTo: directory (~same) :: transformations? (~image) :: base64? (image)
 ```
 
 You can use images commands with saveTo on any element when the image is the primary display output. Encoding with base64 is also available using the "::base64" commmand as the third argument.
@@ -923,13 +923,14 @@ You can use images commands with saveTo on any element when the image is the pri
 <!-- NOTE (saveTo): img | video | audio | source | track | object | embed | iframe -->
 
 <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour1.jpg" data-chrome-file="saveTo:../images/harbour::png@(10000,75000)(800x600[bezier]^contain[right|bottom])::base64" />
+
 ```
 
 You can also add most of the "file" commands programatically (except "exclude") with JavaScript before saving or copying the assets. Multiple transformations can be achieved using the ":" separator.
 
 ```javascript
 document.querySelectorAll('img').forEach(element => {
-    element.dataset.chromeFile = 'saveTo:~::png%(100000,*)(800x600){90,180,270}|0.5|:jpeg(600x400){45,135,225#FFFFFF}';
+    element.dataset.chromeFile = "saveTo:~::png%(100000,*)(800x600){90,180,270}|0.5|:jpeg(600x400){45,135,225#FFFFFF}";  /* "saveTo:~::~::base64" */
 });
 
 squared.save();

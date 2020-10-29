@@ -25,6 +25,38 @@ class Color implements ColorData {
         this.key = key || this.rgba.a === 255 && COLOR_HEX[this.value] || '';
     }
 
+    lighten(percent: number) {
+        const base = percent < 0 ? 0 : 255;
+        const x = (y: number) => clamp((y + Math.round((base - y) * Math.abs(percent))) % 255, 0, 255);
+        let { r, g, b } = this.rgba;
+        if (percent > 0) {
+            if (r < 255) {
+                r = x(r);
+            }
+            if (g < 255) {
+                g = x(g);
+            }
+            if (b < 255) {
+                b = x(b);
+            }
+        }
+        else if (percent < 0) {
+            if (r > 0) {
+                r = x(r);
+            }
+            if (g > 0) {
+                g = x(g);
+            }
+            if (b > 0) {
+                b = x(b);
+            }
+        }
+        return new Color('', '', { r, g, b, a: this.rgba.a });
+    }
+    darken(percent: number) {
+        return this.lighten(-percent);
+    }
+
     set value(value: string) {
         const color = parseColor(value);
         if (color) {
@@ -50,6 +82,10 @@ class Color implements ColorData {
     }
     get hslaAsString() {
         return formatHSLA(this.hsla);
+    }
+    get grayscale() {
+        const rgba = this.rgba;
+        return rgba.r === rgba.g && rgba.g === rgba.b;
     }
     get opacity() {
         return this.rgba.a / 255;
@@ -226,6 +262,7 @@ const COLOR_CSS3 = new Map<string, unknown>([
     ['darkslateblue', '#483d8b'],
     ['mediumslateblue', '#7b68ee'],
     ['mediumpurple', '#9370db'],
+    ['rebeccapurple', '#663399'],
     ['blueviolet', '#8a2be2'],
     ['indigo', '#4b0082'],
     ['darkorchid', '#9932cc'],
@@ -273,13 +310,13 @@ function hue2rgb(t: number, p: number, q: number) {
     return p;
 }
 
-function hex6(value: string, a = 255) {
+function hex6(value: string, a = 255): RGBA {
     return {
         r: parseInt(value[1] + value[2], 16),
         g: parseInt(value[3] + value[4], 16),
         b: parseInt(value[5] + value[6], 16),
         a
-    } as RGBA;
+    };
 }
 
 const convertOpacity = (value: string) => parseFloat(value) / (value.includes('%') ? 100 : 1);
@@ -294,7 +331,7 @@ export function parseColor(value: string, opacity = 1) {
             value = '';
         }
     }
-    else if (value === 'transparent') {
+    else if (value === 'transparent' || value === 'rgba(0, 0, 0, 0)') {
         return new Color();
     }
     else {

@@ -11,8 +11,6 @@ interface XMLTagData {
 }
 
 const CACHE_CAMELCASE: StringMap = {};
-const CACHE_TRIMBOTH: ObjectMap<RegExp> = {};
-const CACHE_TRIMSTRING: ObjectMap<RegExp> = {};
 const REGEXP_DECIMAL = new RegExp(`^${STRING.DECIMAL}$`);
 const REGEXP_NONWORD = /[^\w]+/g;
 const REGEXP_NONWORDNUM = /[^A-Za-z\d]+/g;
@@ -673,12 +671,12 @@ export function resolvePath(value: string, href?: string) {
 }
 
 export function trimBoth(value: string, pattern: string) {
-    const match = (CACHE_TRIMBOTH[pattern] ||= new RegExp(`^(${pattern})+([\\s\\S]*?)\\1$`)).exec(value);
+    const match = new RegExp(`^(${pattern})+([\\s\\S]*?)\\1$`).exec(value);
     return match ? match[2] : value;
 }
 
 export function trimString(value: string, pattern: string) {
-    const match = (CACHE_TRIMSTRING[pattern] ||= new RegExp(`^(?:${pattern})*([\\s\\S]*?)(?:${pattern})*$`)).exec(value);
+    const match = new RegExp(`^(?:${pattern})*([\\s\\S]*?)(?:${pattern})*$`).exec(value);
     return match ? match[1] : value;
 }
 

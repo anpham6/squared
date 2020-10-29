@@ -23,7 +23,7 @@ function parseFileAs(attr: string, value: Undef<string>, format = 'preserve'): U
         const match = new RegExp(`${attr}:\\s*((?:[^"]|\\\\")+)`).exec(normalizePath(value));
         if (match) {
             const segments = match[1].split('::').map(item => item.trim());
-            return [segments[0], segments[1] || undefined, segments[2] === format];
+            return [segments[0], segments[1], segments[2] === format];
         }
     }
 }
@@ -116,7 +116,7 @@ function createBundleAsset(bundles: ChromeAsset[], element: HTMLElement, saveTo:
                 content,
                 format,
                 preserve
-            } as ChromeAsset;
+            };
         }
     }
     return null;
@@ -642,13 +642,13 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 }
             }
             resolveAssetSource(element, items);
-            for (const data of items) {
-                const file = data[0].dataset.chromeFile;
+            for (const [item, uri] of items) {
+                const file = item.dataset.chromeFile;
                 if (!excludeFile(file)) {
                     const saveAs = parseFileAs('saveTo', file)?.[0];
-                    const asset = File.parseUri(data[1], { preserveCrossOrigin, saveAs, saveTo: !!saveAs });
+                    const asset = File.parseUri(uri, { preserveCrossOrigin, saveAs, saveTo: !!saveAs });
                     if (this.validFile(asset)) {
-                        this.processExtensions(asset, getExtensions(data[0]));
+                        this.processExtensions(asset, getExtensions(item));
                         result.push(asset);
                     }
                 }
@@ -725,11 +725,13 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 if (file && element) {
                     data.outerHTML = element.outerHTML;
                 }
-                if (mimeType) {
-                    data.mimeType = file && data.mimeType ? mimeType + ':' + data.mimeType : mimeType;
-                }
-                else if (format && format !== 'base64' && data.mimeType) {
-                    data.mimeType = format + ':' + data.mimeType;
+                if (mimeType !== '~') {
+                    if (mimeType) {
+                        data.mimeType = file && data.mimeType ? mimeType + ':' + data.mimeType : mimeType;
+                    }
+                    else if (format && format !== 'base64') {
+                        data.mimeType &&= format + ':' + data.mimeType;
+                    }
                 }
                 if (data.mimeType && (base64 || format === 'base64')) {
                     data.format = 'base64';

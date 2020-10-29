@@ -31,7 +31,7 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
         return false;
     }
 
-    public processNode(node: T, parent: T) {
+    public processNode(node: T, parent: T): ExtensionResult<T> {
         const { maxWidth, maxHeight } = this.data.get(node) as MaxWidthHeightData;
         const container = this.controller.createNodeWrapper(node, parent, { containerType: CONTAINER_NODE.CONSTRAINT, alignmentType: NODE_ALIGNMENT.BLOCK | NODE_ALIGNMENT.VERTICAL, resetMargin: true });
         if (maxWidth) {
@@ -70,6 +70,6 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
                     NODE_ALIGNMENT.SINGLE
                 )
             )
-        } as ExtensionResult<T>;
+        };
     }
 }

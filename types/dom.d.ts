@@ -149,9 +149,12 @@ interface ColorData extends StringValue {
     valueAsARGB: string;
     rgbaAsString: string;
     hslaAsString: string;
+    grayscale: boolean;
     opacity: number;
     transparent: boolean;
     nearest: ColorData;
+    lighten(percent: number): ColorData;
+    darken(percent: number): ColorData;
 }
 
 interface ColorStop {

@@ -11,7 +11,7 @@ import type ResourceSvg from './svg';
 
 import Resource from '../../resource';
 
-import { applyTemplate, parseColor } from '../../lib/util';
+import { applyTemplate } from '../../lib/util';
 
 interface PositionAttribute {
     top?: string;
@@ -63,34 +63,11 @@ interface LayerData {
 
 const { NODE_RESOURCE } = squared.base.lib.constant;
 
-const { formatRGBA } = squared.lib.color;
 const { extractURL, formatPercent, formatPX } = squared.lib.css;
 const { truncate } = squared.lib.math;
 const { delimitString, isEqual, plainMap, resolvePath, spliceArray, splitPair, splitPairStart } = squared.lib.util;
 
 const CHAR_SEPARATOR = /\s*,\s*/;
-
-function reduceRGBA(value: RGBA, percent: number) {
-    let { r, g, b } = value;
-    if (r === 0 && g === 0 && b === 0) {
-        r = 255;
-        g = 255;
-        b = 255;
-        if (percent > 0) {
-            percent *= -1;
-        }
-    }
-    const base = percent < 0 ? 0 : 255;
-    percent = Math.abs(percent);
-    return parseColor(
-        formatRGBA({
-            r: (r + Math.round((base - r) * percent)) % 255,
-            g: (g + Math.round((base - g) * percent)) % 255,
-            b: (b + Math.round((base - b) * percent)) % 255,
-            a: value.a
-        })
-    ) as ColorData;
-}
 
 function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = false) {
     const { style, color } = border;
@@ -130,30 +107,27 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
         case 'outset':
         case 'groove':
         case 'ridge': {
-            const rgba = color.rgba;
-            let percent = 1;
+            let percent = 0;
             if (width === 1) {
                 if (style === 'inset' || style === 'outset') {
                     percent = 0.5;
                 }
             }
             else {
-                const grayScale = rgba.r === rgba.g && rgba.g === rgba.b;
-                let offset = 0;
-                if (style === 'ridge') {
-                    halfSize = !halfSize;
-                    offset += 0.25;
-                }
-                else if (style === 'groove') {
-                    offset += 0.25;
-                }
-                else if (grayScale) {
-                    if (style === 'inset') {
-                        halfSize = !halfSize;
-                    }
-                }
-                else if (style === 'outset') {
-                    halfSize = !halfSize;
+                const grayscale = color.grayscale;
+                switch (style) {
+                    case 'ridge':
+                    case 'outset':
+                        if (!grayscale) {
+                            halfSize = !halfSize;
+                        }
+                        break;
+                    case 'groove':
+                    case 'inset':
+                        if (grayscale) {
+                            halfSize = !halfSize;
+                        }
+                        break;
                 }
                 if (halfSize) {
                     switch (direction) {
@@ -161,8 +135,7 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
                         case 3:
                             direction = 1;
                             break;
-                        case 1:
-                        case 2:
+                        default:
                             direction = 0;
                             break;
                     }
@@ -170,18 +143,20 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
                 switch (direction) {
                     case 0:
                     case 3:
-                        if (grayScale) {
-                            percent = 0.5 + offset;
+                        if (grayscale) {
+                            percent = 0.5;
                         }
                         break;
-                    case 1:
-                    case 2:
-                        percent = grayScale ? 0.75 + offset : -0.75;
+                    default:
+                        percent = grayscale ? 0.75 : -0.75;
                         break;
                 }
+                if (grayscale && color.hsla.l > 50) {
+                    percent *= -1;
+                }
             }
-            if (percent !== 1) {
-                const reduced = reduceRGBA(rgba, percent);
+            if (percent) {
+                const reduced = color.lighten(percent);
                 if (reduced) {
                     return createStrokeColor(reduced);
                 }

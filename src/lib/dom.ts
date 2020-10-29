@@ -192,7 +192,6 @@ export function getTextMetrics(value: string, fontSize: number, fontFamily?: str
         context.font = fontSize + 'px' + (fontFamily ? ' ' + fontFamily : '');
         return context.measureText(value);
     }
-    return { width: 0 } as TextMetrics;
 }
 
 export function getNamedItem(element: Element, attr: string) {

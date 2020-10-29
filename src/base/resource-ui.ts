@@ -260,7 +260,7 @@ function hasEndingSpace(element: HTMLElement) {
     return value.charCodeAt(value.length - 1) === 32;
 }
 
-function newBoxRectPosition(orientation = ['left', 'top']) {
+function newBoxRectPosition(orientation = ['left', 'top']): BoxRectPosition {
     return {
         static: true,
         top: 0,
@@ -274,7 +274,7 @@ function newBoxRectPosition(orientation = ['left', 'top']) {
         horizontal: 'left',
         vertical: 'top',
         orientation
-    } as BoxRectPosition;
+    };
 }
 
 const convertLength = (value: string, dimension: number, options?: ParseUnitOptions) => isPercent(value) ? Math.round((parseFloat(value) || 0) / 100 * dimension) : parseUnit(value, options);
@@ -878,9 +878,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
         }
     }
 
-    public static getBackgroundSize(node: NodeUI, value: string): Null<Dimension> {
-        let width = 0,
-            height = 0;
+    public static getBackgroundSize(node: NodeUI, value: string, dimension?: Dimension): Null<Dimension> {
         switch (value) {
             case '':
             case 'cover':
@@ -890,23 +888,31 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
             case 'auto auto':
             case 'initial':
                 return null;
-            default:
+            default: {
+                let width = NaN,
+                    height = NaN;
                 value.split(' ').forEach((size, index) => {
-                    if (size === 'auto') {
+                    if (size === 'auto' && !dimension) {
                         size = '100%';
                     }
-                    switch (index) {
-                        case 0:
-                            width = node.parseWidth(size, false);
-                            break;
-                        case 1:
-                            height = node.parseHeight(size, false);
-                            break;
+                    if (index === 0) {
+                        width = node.parseWidth(size, false);
+                    }
+                    else {
+                        height = node.parseHeight(size, false);
                     }
                 });
-                break;
+                if (dimension) {
+                    if (isNaN(width) && height) {
+                        width = dimension.width * height / dimension.height;
+                    }
+                    if (isNaN(height) && width) {
+                        height = dimension.height * width / dimension.width;
+                    }
+                }
+                return width && height ? { width: Math.round(width), height: Math.round(height) } : null;
+            }
         }
-        return width && height ? { width: Math.round(width), height: Math.round(height) } : null;
     }
 
     public static hasLineBreak(node: NodeUI, lineBreak?: boolean, trim?: boolean) {

@@ -127,9 +127,9 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                 valueString = `<strike>${valueString}</strike>`;
                             }
                             if (textIndent > 0) {
-                                const width = getTextMetrics(' ', node.fontSize, node.css('fontFamily')).width;
-                                if (width) {
-                                    valueString = Resource.STRING_SPACE.repeat(Math.max(Math.floor(textIndent / width), 1)) + valueString;
+                                const metrics = getTextMetrics(' ', node.fontSize, node.css('fontFamily'));
+                                if (metrics) {
+                                    valueString = Resource.STRING_SPACE.repeat(Math.max(Math.floor(textIndent / metrics.width), 1)) + valueString;
                                 }
                             }
                             let fontVariation = getFontVariationStyle(node.css('fontStyle')),

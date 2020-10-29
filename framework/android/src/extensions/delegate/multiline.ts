@@ -265,7 +265,8 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                         container.setCacheValue('fontSize', fontSize);
                         container.setCacheValue('lineHeight', lineHeight);
                         container.cssApply(cssData);
-                        const textBounds = { ...boxRect, width: getTextMetrics(value, fontSize, fontFamily).width + (value.length * adjustment) } as BoxRectDimension;
+                        const metrics = getTextMetrics(value, fontSize, fontFamily);
+                        const textBounds = { ...boxRect, width: (metrics ? metrics.width : 0) + (value.length * adjustment) } as BoxRectDimension;
                         container.textBounds = textBounds;
                         container.unsafe('bounds', textBounds);
                         container.setControlType(CONTAINER_TAGNAME.TEXT, CONTAINER_NODE.TEXT);

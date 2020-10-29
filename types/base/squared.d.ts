@@ -254,7 +254,7 @@ declare module "base" {
         static getOptionArray(element: HTMLSelectElement | HTMLOptGroupElement, showDisabled?: boolean): Undef<string[]>[];
         static isBackgroundVisible(object: Undef<BoxStyle>): boolean;
         static parseBackgroundImage(node: NodeUI, value: string): Undef<string | Gradient>[];
-        static getBackgroundSize<U extends NodeUI>(node: U, value: string, screenDimension?: Null<Dimension>): Null<Dimension>;
+        static getBackgroundSize<U extends NodeUI>(node: U, value: string, dimension?: Dimension): Null<Dimension>;
         static hasLineBreak<U extends NodeUI>(node: U, lineBreak?: boolean, trim?: boolean): boolean;
         static checkPreIndent(node: NodeUI): Undef<[string, NodeUI]>;
         finalize(layouts: FileAsset[]): void;
