@@ -885,7 +885,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     'android:drawable': getDrawableSrc(vectorName),
                     target: []
                 }];
-                for (const [name, group] of animateData.entries()) {
+                for (const [name, group] of animateData) {
                     const sequentialMap = new Map<string, SvgAnimate[]>();
                     const transformMap = new Map<string, SvgAnimateTransform[]>();
                     const togetherData: SvgAnimation[] = [];
@@ -975,7 +975,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     if (togetherData.length) {
                         togetherTargets.push(togetherData);
                     }
-                    for (const [keyName, item] of sequentialMap.entries()) {
+                    for (const [keyName, item] of sequentialMap) {
                         if (keyName.startsWith('sequentially_companion')) {
                             togetherTargets.push(item);
                         }
@@ -1408,7 +1408,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     }
                     insertTargetAnimation(data, name, targetSetTemplate, templateName, imageLength);
                 }
-                for (const [name, target] of this._animateTarget.entries()) {
+                for (const [name, target] of this._animateTarget) {
                     const animate = target.animate;
                     let objectAnimator: Undef<PropertyValue[]>;
                     for (let i = 0, length = animate.length; i < length; ++i) {

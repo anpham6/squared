@@ -1031,7 +1031,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             invalid.push(item);
                         }
                     }
-                    for (const [adjacent, children] of map.entries()) {
+                    for (const [adjacent, children] of map) {
                         children.sort(sortTemplateStandard);
                         const index = result.findIndex(item => item.node.innerMostWrapped === adjacent);
                         if (index !== -1) {

@@ -249,7 +249,7 @@ const COLOR_CSS3 = new Map<string, unknown>([
     ['lightpink', '#ffb6c1']
 ]);
 
-for (const [key, value] of COLOR_CSS3.entries()) {
+for (const [key, value] of COLOR_CSS3) {
     COLOR_HEX[value as string] = key;
     COLOR_CSS3.set(key, Object.freeze(new Color(key, value as string)));
 }

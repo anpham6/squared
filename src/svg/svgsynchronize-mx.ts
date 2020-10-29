@@ -35,7 +35,7 @@ function insertAdjacentSplitValue(map: TimelineIndex, attr: string, time: number
         previousValue: Undef<AnimateValue>,
         previous: Undef<NumberValue<AnimateValue>>,
         next: Undef<NumberValue<AnimateValue>>;
-    for (const [key, value] of map.entries()) {
+    for (const [key, value] of map) {
         if (time === key) {
             previous = { key, value };
             break;
@@ -955,7 +955,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                         const groupDelay: number[] = [];
                         const groupData: SvgAnimate[][] = [];
                         let incomplete: SvgAnimate[] = [];
-                        for (const [delay, data] of groupName[attr].entries()) {
+                        for (const [delay, data] of groupName[attr]) {
                             groupDelay.push(delay);
                             groupData.push(data);
                         }
@@ -1888,7 +1888,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                     }
                     if (repeatingResult || infiniteResult) {
                         removeAnimations(animationsBase, staggered);
-                        const timeRange = Array.from(animateTimeRangeMap.entries());
+                        const timeRange = Array.from(animateTimeRangeMap);
                         const synchronizedName = joinArray(staggered, item => SvgBuild.isAnimateTransform(item) ? TRANSFORM.typeAsName(item.type) : item.attributeName, '-');
                         const parent = this.parent;
                         for (const result of [repeatingResult, infiniteResult]) {
@@ -1901,7 +1901,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                     if (transforming) {
                                         const transformMap: KeyTimeMap[] = [];
                                         if (repeating) {
-                                            const entries = Array.from(result.entries());
+                                            const entries = Array.from(result);
                                             let type = timeRange[0][1];
                                             for (let i = 0, j = 0, k = 0, length = timeRange.length; i < length; ++i) {
                                                 const next = i < length - 1 ? timeRange[i + 1][1] : -1;
@@ -1925,7 +1925,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         }
                                         else if (infiniteMap['transform']) {
                                             const map = new Map<number, Map<number, AnimateValue>>();
-                                            for (const [time, item] of result.entries()) {
+                                            for (const [time, item] of result) {
                                                 map.set(time, new Map([[infiniteMap['transform'].type, item.values().next().value as string]]));
                                             }
                                             transformMap.push(map);
@@ -1935,7 +1935,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         }
                                         let previousEndTime = 0;
                                         for (let i = 0, length = transformMap.length; i < length; ++i) {
-                                            const entries = Array.from(transformMap[i].entries());
+                                            const entries = Array.from(transformMap[i]);
                                             const items = entries[0];
                                             let delay = items[0];
                                             const value = items[1];
@@ -1982,7 +1982,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         }
                                     }
                                     else {
-                                        const entries = Array.from(result.entries());
+                                        const entries = Array.from(result);
                                         const delay = repeatingAsInfinite !== -1 ? repeatingAsInfinite : 0;
                                         let object: Undef<SvgAnimate>;
                                         for (let i = 0, q = entries.length; i < q; ++i) {
@@ -2008,7 +2008,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         else {
                                             const animate = new SvgAnimateTransform();
                                             animate.type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
-                                            for (const [keyTime, data] of result.entries()) {
+                                            for (const [keyTime, data] of result) {
                                                 const x = data.get('x') as number || 0;
                                                 const y = data.get('y') as number || 0;
                                                 animate.keyTimes.push(keyTime);
@@ -2023,7 +2023,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                     }
                                 }
                                 else if (isFromToFormat(transforming, keyTimeMode)) {
-                                    const entries = Array.from(result.entries());
+                                    const entries = Array.from(result);
                                     for (let i = 0, length = entries.length - 1; i < length; ++i) {
                                         const [keyTimeFrom, dataFrom] = entries[i];
                                         const [keyTimeTo, dataTo] = entries[i + 1];

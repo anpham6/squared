@@ -27,7 +27,9 @@ interface ItemValue {
     innerText: string;
 }
 
-const { convertBase64, fromLastIndexOf, fromMimeType, parseMimeType, plainMap, splitPairStart } = squared.lib.util;
+const { convertBase64, fromLastIndexOf, parseMimeType, plainMap, splitPairStart } = squared.lib.util;
+
+const { fromMimeType } = squared.base.lib.util;
 
 const STORED = Resource.STORED;
 
@@ -192,7 +194,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     public resourceStringToXml(options?: FileUniversalOptions): string[] {
-        const items = Array.from(STORED.strings.entries()).sort((a, b) => a.toString().toLowerCase() >= b.toString().toLowerCase() ? 1 : -1);
+        const items = Array.from(STORED.strings).sort((a, b) => a.toString().toLowerCase() >= b.toString().toLowerCase() ? 1 : -1);
         const length = items.length;
         let j: number,
             itemArray: ItemValue[];
@@ -225,7 +227,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
     public resourceStringArrayToXml(options?: FileUniversalOptions): string[] {
         const length = STORED.arrays.size;
         if (length) {
-            const items = Array.from(STORED.arrays.entries()).sort();
+            const items = Array.from(STORED.arrays).sort();
             const itemArray: { name: string; item: { innerText: string }[] }[] = new Array(length);
             for (let i = 0; i < length; ++i) {
                 const item = items[i];
@@ -248,7 +250,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             const xmlns = XML_NAMESPACE[targetAPI < BUILD_VERSION.OREO ? 'app' : 'android'];
             const directory = getOutputDirectory(outputDirectory);
             const pathname = this.directory.font;
-            const items = Array.from(STORED.fonts.entries()).sort();
+            const items = Array.from(STORED.fonts).sort();
             const result: string[] = new Array(length * 3);
             for (let i = 0, j = 0; i < length; ++i) {
                 const [name, font] = items[i];
@@ -297,7 +299,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
     public resourceColorToXml(options?: FileUniversalOptions): string[] {
         const length = STORED.colors.size;
         if (length) {
-            const items = Array.from(STORED.colors.entries()).sort();
+            const items = Array.from(STORED.colors).sort();
             const itemArray: ItemValue[] = new Array(length);
             for (let i = 0; i < length; ++i) {
                 const item = items[i];
@@ -376,7 +378,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         const length = STORED.dimens.size;
         if (length) {
             const convertPixels = this.userSettings.convertPixels === 'dp';
-            const items = Array.from(STORED.dimens.entries()).sort();
+            const items = Array.from(STORED.dimens).sort();
             const itemArray: ItemValue[] = new Array(length);
             for (let i = 0; i < length; ++i) {
                 const item = items[i];

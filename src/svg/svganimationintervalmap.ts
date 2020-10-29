@@ -120,14 +120,14 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
             }
         }
         for (const keyName in map) {
-            for (const [timeA, dataA] of map[keyName].entries()) {
+            for (const [timeA, dataA] of map[keyName]) {
                 for (let i = 0, q = dataA.length; i < q; ++i) {
                     const itemA = dataA[i];
                     const animationA = itemA.animation;
                     if (animationA) {
                         if (itemA.fillMode === FILL_MODE.FREEZE) {
                             const previous: SvgAnimation[] = [];
-                            for (const [timeB, dataB] of map[keyName].entries()) {
+                            for (const [timeB, dataB] of map[keyName]) {
                                 if (timeB < timeA) {
                                     for (let j = 0, r = dataB.length; j < r; ++j) {
                                         const itemB = dataB[j];
@@ -175,7 +175,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                                 }
                             }
                             const previous: SvgAnimation[] = [];
-                            for (const [timeB, dataB] of map[keyName].entries()) {
+                            for (const [timeB, dataB] of map[keyName]) {
                                 if (!forwarded && timeB < timeA) {
                                     for (let j = 0, r = dataB.length; j < r; ++j) {
                                         const itemB = dataB[j];
@@ -212,7 +212,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
         }
         for (const keyName in map) {
             const data = map[keyName];
-            for (const [time, entry] of data.entries()) {
+            for (const [time, entry] of data) {
                 if (entry.length === 0) {
                     data.delete(time);
                 }
@@ -239,7 +239,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
         const map = this.map[attr];
         if (map) {
             let value: Undef<string>;
-            for (const [interval, data] of map.entries()) {
+            for (const [interval, data] of map) {
                 if (interval <= time) {
                     for (let i = 0, length = data.length; i < length; ++i) {
                         const previous = data[i];
@@ -261,7 +261,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
         const map = this.map[attr];
         if (map) {
             let state = 0;
-            for (const [interval, entry] of map.entries()) {
+            for (const [interval, entry] of map) {
                 if (interval <= time) {
                     for (let i = 0, length = entry.length; i < length; ++i) {
                         const previous = entry[i];

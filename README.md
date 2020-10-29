@@ -903,6 +903,12 @@ You can exclude unnecessary processing files using the dataset attribute in &lt;
 </script>
 ```
 
+You can similarly prevent an asset from being downloaded or transformed using the "ignore" command.
+
+```xml
+<iframe src="https://www.google.com/maps" data-chrome-file="ignore" />
+```
+
 The file action commands (save | saveAs | copyTo | appendTo) should only be used one at a time in the Chrome framework. Calling multiple consecutively may conflict if you do not use async/await.
 
 ### CHROME: saveTo command / Image resizing
@@ -914,7 +920,7 @@ saveTo: directory (~same) :: transformations? (image) :: base64? (image)
 You can use images commands with saveTo on any element when the image is the primary display output. Encoding with base64 is also available using the "::base64" commmand as the third argument.
 
 ```xml
-<!-- NOTE (saveTo): img | video | audio | source | track | object | embed -->
+<!-- NOTE (saveTo): img | video | audio | source | track | object | embed | iframe -->
 
 <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour1.jpg" data-chrome-file="saveTo:../images/harbour::png@(10000,75000)(800x600[bezier]^contain[right|bottom])::base64" />
 ```

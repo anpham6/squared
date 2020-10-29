@@ -173,7 +173,7 @@
                     squared.setFramework(chrome, {
                         builtInExtensions: ['chrome.convert.png', 'chrome.compress.gzip']
                     });
-                    squared.apply('chrome.convert.png', {
+                    /*squared.apply('chrome.convert.png', {
                         settings: {
                             largerThan: 35000,
                             smallerThan: 75000,
@@ -185,9 +185,11 @@
                         settings: {
                             largerThan: 35000
                         }
+                    });*/
+                    squared.copyTo('C:/Users/An/Downloads/chrome').then(result => {
+                        console.log(result);
                     });
-                    squared.copyTo('C:/Users/An/Downloads/chrome');
-                    squared.saveAs('bundle', {
+                    /*squared.saveAs('bundle', {
                         exclusions: {
                             pathname: ['/common'],
                             filename: ['harbour1.jpg'],
@@ -204,7 +206,7 @@
                     });
                     squared.saveAs('bundle2', { preserveCrossOrigin: true });
                     squared.saveAs('bundle3', { productionRelease: true });
-                    squared.saveAs('bundle4', { productionRelease: true, preserveCrossOrigin: true });
+                    squared.saveAs('bundle4', { productionRelease: true, preserveCrossOrigin: true });*/
                 });
             });
         });
@@ -233,7 +235,7 @@
                 <header>
                     <h2>Harbour Cranes</h2>
                 </header>
-                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour2.jpg" alt="Bristol harbour" data-chrome-file="saveTo:~::jpeg@(500x500[bezier]^contain[right|bottom])(-50,100|200x200){45,135,225,315#FFFFFF}">
+                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour2.jpg" alt="Bristol harbour" data-chrome-file="saveTo:~::jpeg@(500x500[bezier]^contain[right|bottom])(-50,100|200x200){225#FFFFFF}">
                 <div class="body">
                 <p>We also have giant cranes, and historic boats. It is best if the balloons avoid these.</p>
                 </div>
@@ -242,7 +244,7 @@
                 <header>
                     <h2>Striped Balloon</h2>
                 </header>
-                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/coloured-balloon.jpg" alt="Coloured balloon" data-chrome-file="saveTo:../images/harbour::png@(25000,*)(800x600[bezier]^contain[right|top]){45,135,215,315}|0.5|">
+                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/coloured-balloon.jpg" alt="Coloured balloon" data-chrome-file="saveTo:../images/harbour::png@(25000,*)(800x600[bezier]^contain[right|top]){315}|0.5|">
                 <div class="body">
                 <p>I like the nice standard balloons. Stripy. Solid looking basket.</p>
                 </div>
@@ -251,7 +253,7 @@
                 <header>
                     <h2>Fortnum &amp; Mason</h2>
                 </header>
-                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/champagne-balloons.jpg" alt="Fortnum and Mason balloon">
+                <object data="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/champagne-balloons.jpg" width="500"></object>
                 <div class="body">
                     <p>This one uses the correct Pantone colour for Fortnum and Mason.</p>
                 </div>
@@ -260,7 +262,7 @@
                 <header>
                     <h2>Funfair Problems</h2>
                 </header>
-                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/funfair-balloons.jpg" alt="Funfair">
+                <embed src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/funfair-balloons.jpg" width="200" data-chrome-file="saveTo:../images/harbour::png@(100x200^contain[right|middle]){45#FFFFFF}|0.5|" />
                 <div class="body">
                     <p>Here we have balloons getting tangled up with a funfair.</p>
                 </div>
