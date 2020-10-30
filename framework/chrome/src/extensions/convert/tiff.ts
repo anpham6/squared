@@ -14,7 +14,7 @@ export default class Tiff<T extends squared.base.Node> extends Extension<T> {
     public processFile(data: ChromeAsset, override?: boolean) {
         const mimeType = data.mimeType;
         if (mimeType && (override || findSet(this.options.mimeTypes, value => mimeType.endsWith(value)))) {
-            data.commands = Extension.getConvertOptions('tiff', this.options);
+            data.commands ||= [Extension.getConvertOptions('tiff', this.options)];
             return true;
         }
         return false;

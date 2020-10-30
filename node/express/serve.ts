@@ -10,6 +10,7 @@ import request = require('request');
 import uuid = require('uuid');
 import archiver = require('archiver');
 import _7z = require('7zip-min');
+import yaml = require('js-yaml');
 import chalk = require('chalk');
 
 import FileManager = require('@squared-functions/file-manager');
@@ -384,7 +385,48 @@ app.get('/api/browser/download', (req, res) => {
             }
         });
     }
-    else {
-        res.json(null);
+});
+
+app.get('/api/loader/json', (req, res) => {
+    const filepath = req.query.filepath as string;
+    if (filepath) {
+        const loadContent = (value: string) => {
+            let result: Undef<string | object>;
+            switch (path.extname(filepath).toLowerCase()) {
+                case '.json':
+                case '.js':
+                    result = JSON.parse(value);
+                    break;
+                case '.yaml':
+                case '.yml':
+                    result = yaml.safeLoad(value);
+                    break;
+            }
+            if (typeof result === 'object') {
+                res.json(result);
+            }
+        };
+        if (Node.isFileURI(filepath)) {
+            request(filepath, (err, response) => {
+                if (!err) {
+                    loadContent(response.body);
+                }
+            });
+        }
+        else if (fs.existsSync(filepath)) {
+            if (Node.isFileUNC(filepath)) {
+                if (!Node.canReadUNC()) {
+                    return;
+                }
+            }
+            else if (!Node.canReadDisk()) {
+                return;
+            }
+            fs.readFile(filepath, (err, response) => {
+                if (!err) {
+                    loadContent(response.toString('utf8'));
+                }
+            });
+        }
     }
 });

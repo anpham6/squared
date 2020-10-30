@@ -35,7 +35,8 @@ export default abstract class File<T extends Node> implements squared.base.File<
     private _endpoints = {
         ASSETS_COPY: '/api/assets/copy',
         ASSETS_ARCHIVE: '/api/assets/archive',
-        BROWSER_DOWNLOAD: '/api/browser/download?filepath='
+        BROWSER_DOWNLOAD: '/api/browser/download?filepath=',
+        LOADER_JSON: '/api/loader/json?filepath='
     };
 
     public abstract copyTo(directory: string, options?: FileCopyingOptions): FileActionResult;
@@ -75,6 +76,17 @@ export default abstract class File<T extends Node> implements squared.base.File<
 
     public reset() {
         this.assets = [];
+    }
+
+    public loadJSON<U = unknown>(value: string) {
+        if (this.hasHttpProtocol()) {
+            return fetch(this.hostname + this._endpoints.LOADER_JSON + encodeURIComponent(value), {
+                method: 'GET',
+                headers: new Headers({ 'Accept': 'application/json, text/plain', 'Content-Type': 'application/json' })
+            })
+            .then(response => (response.json() as unknown) as U);
+        }
+        return Promise.resolve();
     }
 
     public copying(options: FileCopyingOptions) {

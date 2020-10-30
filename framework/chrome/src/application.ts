@@ -40,7 +40,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         return this.processAssets('appendTo', pathname, options);
     }
 
-    private processAssets(module: "saveAs" | "copyTo" | "appendTo", pathname: string, options?: IFileArchivingOptions) {
+    private async processAssets(module: "saveAs" | "copyTo" | "appendTo", pathname: string, options?: IFileArchivingOptions) {
         options = !isPlainObject(options) ? {} : { ...options };
         options.saveAsWebPage = true;
         this.reset();
@@ -52,6 +52,18 @@ export default class Application<T extends squared.base.Node> extends squared.ba
             const unusedStyles = Array.from(this.session.unusedStyles!);
             if (unusedStyles.length) {
                 options.unusedStyles = options.unusedStyles ? Array.from(new Set(options.unusedStyles.concat(unusedStyles))) : unusedStyles;
+            }
+        }
+        const assetMap = new Map<Element, StandardMap>();
+        options.assetMap = assetMap;
+        if (options.configUri) {
+            const data = await this.fileHandler!.loadJSON<StandardMap[]>(options.configUri);
+            if (data) {
+                for (const item of data) {
+                    if (typeof item.selector === 'string') {
+                        document.querySelectorAll(item.selector).forEach(element => assetMap.set(element, item));
+                    }
+                }
             }
         }
         return this.fileHandler![module](pathname, options);

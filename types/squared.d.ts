@@ -12,6 +12,7 @@ export interface FileActionOptions extends PlainObject {
     assets?: FileAsset[];
     exclusions?: Exclusions;
     callback?: CallbackResult;
+    configUri?: string;
 }
 
 export type ExtensionRequest = squared.base.Extension<Node> | string;

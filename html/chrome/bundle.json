@@ -1,0 +1,100 @@
+[
+    {
+      "selector": "html",
+      "type": "html",
+      "filename": "index.html",
+      "process": [
+        "beautify"
+      ]
+    },
+    {
+      "selector": "head > link:nth-of-type(1)",
+      "type": "css",
+      "process": [
+        "beautify"
+      ]
+    },
+    {
+      "selector": "head > style:nth-of-type(1)",
+      "type": "css",
+      "process": [
+        "minify",
+        "preserve"
+      ]
+    },
+    {
+      "selector": "head > style:nth-of-type(2)",
+      "type": "css",
+      "process": [
+        "minify"
+      ],
+      "preserve": true
+    },
+    {
+      "selector": "head > script:nth-of-type(1)",
+      "type": "js",
+      "process": [
+        "beautify"
+      ]
+    },
+    {
+      "selector": "head > script:nth-of-type(2), head > script:nth-of-type(3)",
+      "type": "js",
+      "process": [
+        "minify"
+      ]
+    },
+    {
+      "selector": "head > script:nth-of-type(4)",
+      "type": "js",
+      "process": [
+        "es5-script",
+        "minify"
+      ]
+    },
+    {
+      "selector": "head > script:nth-of-type(5)",
+      "type": "js",
+      "template": {
+        "module": "@babel/core",
+        "identifier": "es5-script"
+      }
+    },
+    {
+      "selector": ".card:nth-of-type(1) img",
+      "type": "image",
+      "saveTo": "../images/harbour",
+      "commands": [
+        "png(10000,75000)(100x200^cover){90,180,270#FFFFFF}",
+        "jpeg(300x100^contain){90,180,270#FFFFFF}"
+      ]
+    },
+    {
+      "selector": ".card:nth-of-type(2) img",
+      "type": "image",
+      "commands": [
+        "jpeg@(500x500[bezier]^contain[right|bottom])(-50,100|200x200){225#FFFFFF}"
+      ]
+    },
+    {
+      "selector": ".card:nth-of-type(3) img",
+      "type": "image",
+      "saveTo": "../images/harbour",
+      "commands": [
+        "png@(25000,*)(800x600[bezier]^contain[right|top]){315}|0.5|"
+      ]
+    },
+    {
+      "selector": "object",
+      "type": "image",
+      "base64": true
+    },
+    {
+      "selector": "embed",
+      "type": "image",
+      "saveTo": "../images/harbour",
+      "commands": [
+        "png@(100x200^contain[right|middle]){45#FFFFFF}|0.5|"
+      ]
+    }
+  ]

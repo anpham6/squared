@@ -16,7 +16,7 @@ interface LayoutAsset extends TextAsset {
 }
 
 interface FileAsset extends TextAsset {
-    commands?: string;
+    commands?: string[];
     base64?: string;
     compress?: CompressFormat[];
 }

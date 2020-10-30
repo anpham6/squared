@@ -1,4 +1,5 @@
 interface IFileActionOptions extends squared.FileActionOptions, FileActionAttribute, FileUniversalAttribute {
+    assetMap?: Map<Element, AssetCommand>;
     transpileMap?: TranspileMap;
 }
 
@@ -32,4 +33,5 @@ interface UriOptions {
     preserve?: boolean;
     preserveCrossOrigin?: boolean;
     transform?: TransformCommand;
+    fromConfig?: boolean;
 }

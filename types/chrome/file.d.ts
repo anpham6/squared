@@ -9,6 +9,12 @@ interface ChromeAsset extends RequestAsset {
     outerHTML?: string;
 }
 
+interface OutputAction {
+    preserve?: boolean;
+    compress?: boolean;
+    base64?: boolean;
+}
+
 interface FormattableContent {
     value: string;
     format?: string;
@@ -20,9 +26,24 @@ interface PathData {
     filename?: string;
 }
 
-interface TransformCommand extends PathData {
+interface FileCommand extends PathData, OutputAction {
+    commands?: string[];
+}
+
+interface TransformCommand extends FileCommand {
     id: string;
-    commands?: string;
-    compress?: boolean;
-    base64?: boolean;
+}
+
+interface AssetCommand extends FileCommand, StandardMap {
+    selector?: string;
+    type?: string;
+    saveTo?: string;
+    process?: string[];
+    commands?: string[];
+    ignore?: boolean;
+    template?: {
+        module?: string;
+        identifier?: string;
+        value?: string;
+    };
 }
