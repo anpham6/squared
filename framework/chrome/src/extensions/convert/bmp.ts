@@ -13,8 +13,8 @@ export default class Bmp<T extends squared.base.Node> extends Extension<T> {
 
     public processFile(data: ChromeAsset, override?: boolean) {
         const mimeType = data.mimeType;
-        if (mimeType && !/bmp[(%@:]/.test(mimeType) && (override || findSet(this.options.mimeTypes, value => mimeType.endsWith(value)))) {
-            data.mimeType = Extension.getConvertOptions('bmp', this.options) + mimeType;
+        if (mimeType && (override || findSet(this.options.mimeTypes, value => mimeType.endsWith(value)))) {
+            data.commands ||= Extension.getConvertOptions('bmp', this.options);
             return true;
         }
         return false;

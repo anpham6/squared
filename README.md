@@ -520,7 +520,7 @@ node-express has only read support for GIF and TIFF. Opacity can be applied only
 ```javascript
 // All commands are optional except "format". Outer groupings and inner brackets are required.
 
-+ <format-to>
++ <format>
 
 - @|%
 - ( minSize(n,0) , maxSize(n,*) )
@@ -528,18 +528,18 @@ node-express has only read support for GIF and TIFF. Opacity can be applied only
 - ( left(+|-n) , top(+|-n) | cropWidth(n) x cropHeight(n) )
 - { ...rotate(n) #background-color? }
 - | opacity(d) |
-
-+ :image/<format-form>
-```
-
-```javascript
-png(50000,*)(800x600[bezier]^contain[right|bottom]#FFFFFF)(-50,50|200x200){45,135,215,315#FFFFFF}|0.5|:image/jpeg
 ```
 
 @ - replace  
 % - smaller
 
-Placing an @ symbol (png@:image/jpeg) before the mime type will remove the original file from the package. The % symbol (png%:image/jpeg) will choose the smaller of the two files. You can also use these commands with the setting "convertImages" in the Android framework.
+Placing an @ symbol (png@) after the format will remove the original file from the package. Using the % symbol (png%) instead will choose the smaller of the two files. You can also use these commands with the setting "convertImages" in the Android framework.
+
+```javascript
+// Multiple transformations per asset use the ':' as the separator.
+
+png(50000,*)(800x600[bezier]^contain[right|bottom]#FFFFFF)(-50,50|200x200){45,135,215,315#FFFFFF}|0.5|
+```
 
 ```javascript
 // NOTE: squared-apache uses TinyPNG <https://tinypng.com/developers> for resizing and refitting (contain|cover|scale) and supports only PNG and JPEG.
@@ -549,13 +549,15 @@ const options = {
         {
             pathname: 'images',
             filename: 'pencil.png',
-            mimeType: 'jpeg:image/png',
+            mimeType: 'image/png',
+            commands: 'jpeg',
             uri: 'http://localhost:3000/common/images/pencil.png'
         },
         {
             pathname: 'images',
             filename: 'pencil.png',
-            mimeType: 'bmp@(50000,100000):image/png',
+            mimeType: 'image/png',
+            commands: 'bmp@(50000,100000)',
             uri: 'http://localhost:3000/common/images/pencil.png'
         }
     ]
@@ -878,7 +880,7 @@ const options = {
         base64: { format: 'png' }
     },
     transforms: [
-        { id: 'image1', pathname: '../images/harbour', filename: 'image1.png' command: 'png@(10000,75000)(800x600[bezier]^contain[right|bottom])', compress: true },
+        { id: 'image1', pathname: '../images/harbour', filename: 'image1.png' commands: 'png@(10000,75000)(800x600[bezier]^contain[right|bottom])', compress: true },
         { id: 'image2', base64: true }
     ]
 };

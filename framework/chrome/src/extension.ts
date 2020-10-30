@@ -9,7 +9,7 @@ export default abstract class Extension<T extends squared.base.Node> extends squ
     }
 
     public static getConvertOptions(name: string, options: ConvertOptions) {
-        const opacity = options.opacity || 1;
+        const opacity = options.opacity ?? NaN;
         let result = '';
         if (options.replaceWith) {
             result += '@';
@@ -18,7 +18,7 @@ export default abstract class Extension<T extends squared.base.Node> extends squ
             result += '%';
         }
         result += getSizeRange(options);
-        return name + (result !== '(0,*)' ? result : '') + (opacity > 0 && opacity < 1 ? `|${opacity}|` : '') + ':';
+        return name + (result !== '(0,*)' ? result : '') + (!isNaN(opacity) ? `|${opacity}|` : '');
     }
 
     public processFile(data: ChromeAsset, override?: boolean) {

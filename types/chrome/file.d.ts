@@ -22,7 +22,7 @@ interface PathData {
 
 interface TransformCommand extends PathData {
     id: string;
-    command?: string;
+    commands?: string;
     compress?: boolean;
     base64?: boolean;
 }
