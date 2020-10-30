@@ -31,7 +31,7 @@ Option #2 - [Kotlin / Java](https://ktor.io)
 
 * http://localhost:8080
 
-Option # - Browser
+Option #3 - Browser
 
 * Download (squared@version): https://unpkg.com/squared
 

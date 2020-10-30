@@ -90,9 +90,9 @@
             grid-column: 10 / 13;
         }
     </style>
-    <script data-chrome-file="saveAs:js/modules1.js" src="/common/system.js"></script>
-    <script data-chrome-file="saveAs:js/modules2.js" src="/common/transform.js"></script>
-    <script data-chrome-file="saveAs:js/modules2.js" src="/common/babel-transform.js"></script>
+    <script src="/common/system.js"></script>
+    <script src="/common/transform.js"></script>
+    <script src="/common/babel-transform.js"></script>
     <script data-chrome-file="exportAs:js/modules3.js">
         System.import('/build/src/main.js').then(result => {
             squared = result;
@@ -104,7 +104,7 @@
                         builtInExtensions: ['chrome.convert.png', 'chrome.compress.gzip']
                     });
                     squared
-                        .copyTo('C:/Users/An/Downloads/chrome', { configUri: 'http://localhost:3000/chrome/bundle.json' })
+                        .copyTo('C:/Users/An/Downloads/chrome', { configUri: 'http://localhost:3000/chrome/bundle.yml' })
                         .then(result => console.log(result));
                 });
             });

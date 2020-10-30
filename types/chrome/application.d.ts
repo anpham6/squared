@@ -11,8 +11,6 @@ interface FileUniversalAttribute extends PlainObject {
 }
 
 interface FileActionAttribute extends PlainObject {
-    name?: string;
-    rel?: string;
     saveAs?: {
         html?: SaveAsOptions;
         script?: SaveAsOptions;

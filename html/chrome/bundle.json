@@ -33,6 +33,7 @@
     {
       "selector": "head > script:nth-of-type(1)",
       "type": "js",
+      "saveAs": "js/modules1.js",
       "process": [
         "beautify"
       ]
@@ -40,6 +41,7 @@
     {
       "selector": "head > script:nth-of-type(2), head > script:nth-of-type(3)",
       "type": "js",
+      "saveAs": "js/modules2.js",
       "process": [
         "minify"
       ]
@@ -49,7 +51,7 @@
       "type": "js",
       "process": [
         "es5-script",
-        "minify"
+        "beautify"
       ]
     },
     {

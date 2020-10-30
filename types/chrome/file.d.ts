@@ -21,12 +21,7 @@ interface FormattableContent {
     preserve?: boolean;
 }
 
-interface PathData {
-    pathname?: string;
-    filename?: string;
-}
-
-interface FileCommand extends PathData, OutputAction {
+interface FileCommand extends Partial<LocationUri>, OutputAction {
     commands?: string[];
 }
 
@@ -37,9 +32,9 @@ interface TransformCommand extends FileCommand {
 interface AssetCommand extends FileCommand, StandardMap {
     selector?: string;
     type?: string;
+    saveAs?: string;
     saveTo?: string;
     process?: string[];
-    commands?: string[];
     ignore?: boolean;
     template?: {
         module?: string;

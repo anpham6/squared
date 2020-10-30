@@ -21,7 +21,7 @@ interface ConvertOptions extends CompressOptions {
     opacity?: number;
 }
 
-interface SaveAsOptions extends PathData {
+interface SaveAsOptions extends Partial<LocationUri> {
     format?: string;
     preserve?: boolean;
 }

@@ -3,9 +3,12 @@ interface Asset {
     mimeType?: string;
 }
 
-interface TextAsset extends Asset {
+interface LocationUri {
     pathname: string;
     filename: string;
+}
+
+interface TextAsset extends Asset, LocationUri {
     content?: string;
 }
 
