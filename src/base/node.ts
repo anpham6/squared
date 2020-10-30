@@ -1148,8 +1148,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             ({ condition, error, every, including, excluding } = options);
         }
         let invalid: Undef<boolean>;
-        const recurse = (parent: T, result: T[]) => {
-            const children = parent.naturalElements;
+        return (function recurse(children: T[], result: T[]) {
             for (let i = 0, length = children.length; i < length; ++i) {
                 const item = children[i];
                 if (error && error(item) || item === excluding) {
@@ -1173,15 +1172,14 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     break;
                 }
                 if (item instanceof Node && !item.isEmpty()) {
-                    recurse(item, result);
+                    recurse(item.naturalElements, result);
                     if (invalid) {
                         break;
                     }
                 }
             }
             return result;
-        };
-        return recurse(this, []);
+        })(this.naturalElements, []);
     }
 
     public intersectX(rect: BoxRectDimension, options?: CoordsXYOptions) {

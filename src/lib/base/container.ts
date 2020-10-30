@@ -155,7 +155,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
             count = Infinity;
         }
         let complete: Undef<boolean>;
-        const recurse = (container: Container<T>, result: T[]) => {
+        return (function recurse(container: Container<T>, result: T[]) {
             const children = container.children;
             for (let i = 0; i < children.length; ++i) {
                 const item = children[i];
@@ -165,11 +165,11 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
                 }
                 if (predicate(item, i, children)) {
                     if (also) {
-                        also.call(this, item);
+                        also.call(container, item);
                     }
                     result.push(item);
                     children.splice(i--, 1);
-                    if (--count! === 0) {
+                    if (--count === 0) {
                         complete = true;
                         break;
                     }
@@ -182,8 +182,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
                 }
             }
             return result;
-        };
-        return recurse(this, []);
+        })(this, []);
     }
 
     public find(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>) {
@@ -196,7 +195,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
                 count = 0;
             }
             let complete: Undef<boolean>;
-            const recurse = (container: Container<T>, level: number): Undef<T> => {
+            return (function recurse(container: Container<T>, level: number): Undef<T> {
                 const children = container.children;
                 let i = 0,
                     length = children.length;
@@ -215,9 +214,9 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
                         break;
                     }
                     if (predicate(item, i++, children)) {
-                        if (count!-- === 0) {
+                        if (count-- === 0) {
                             if (also) {
-                                also.call(this, item);
+                                also.call(container, item);
                             }
                             return item;
                         }
@@ -232,8 +231,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
                         }
                     }
                 }
-            };
-            return recurse(this, 0);
+            })(this, 0);
         }
         return this.children.find(predicate);
     }
@@ -249,7 +247,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
             count = Infinity;
         }
         let complete: Undef<boolean>;
-        const recurse = (container: Container<T>, result: T[]) => {
+        return (function recurse(container: Container<T>, result: T[]) {
             const children = container.children;
             for (let i = 0, length = children.length; i < length; ++i) {
                 const item = children[i];
@@ -260,10 +258,10 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
                 let ignore: Undef<Void<boolean>>;
                 if (!predicate || (ignore = predicate(item, i, children)) === true) {
                     if (also) {
-                        also.call(this, item);
+                        also.call(container, item);
                     }
                     result.push(item);
-                    if (--count! === 0) {
+                    if (--count === 0) {
                         complete = true;
                         break;
                     }
@@ -276,8 +274,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
                 }
             }
             return result;
-        };
-        return recurse(this, []);
+        })(this, []);
     }
 
     public sortBy(...attrs: (string | boolean)[]) {

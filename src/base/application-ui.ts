@@ -4,7 +4,6 @@ import type ExtensionManager from './extensionmanager';
 import type ControllerUI from './controller-ui';
 import type ExtensionUI from './extension-ui';
 import type NodeUI from './node-ui';
-import type NodeList from './nodelist';
 
 import Application from './application';
 import ResourceUI from './resource-ui';
@@ -621,7 +620,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             const beforeElement = this.createPseduoElement(parentElement, '::before', sessionId, hostElement);
             const afterElement = this.createPseduoElement(parentElement, '::after', sessionId, hostElement);
             const childNodes = hostElement.childNodes;
-            const length = childNodes.length;
             const children: T[] = [];
             const elements: T[] = [];
             const childDepth = depth + 1;
@@ -629,7 +627,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 plainText = -1,
                 lineBreak = -1,
                 j = 0;
-            for (let i = 0; i < length; ++i) {
+            for (let i = 0, length = childNodes.length; i < length; ++i) {
                 const element = childNodes[i] as HTMLElement;
                 let child: T;
                 if (element === beforeElement) {
@@ -679,6 +677,20 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                         if ((shadowRoot || element).childNodes.length) {
                             child = this.cascadeParentNode(processing, element, sessionId, childDepth, extensions, shadowRoot || shadowParent, cascadeAll);
+                            if (child.display === 'contents' && !child.excluded && !shadowRoot) {
+                                for (const item of child.naturalChildren as T[]) {
+                                    if (item.naturalElement) {
+                                        elements.push(item);
+                                    }
+                                    else if (item.plainText) {
+                                        plainText = j;
+                                    }
+                                    item.init(node, childDepth, j++);
+                                    item.actualParent = node;
+                                    children.push(item);
+                                }
+                                continue;
+                            }
                         }
                         else {
                             child = this.insertNode(element, sessionId, cascadeAll);
@@ -708,13 +720,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 else {
                     continue;
                 }
-                child.init(node, childDepth, j);
-                child.actualParent = node;
                 if (shadowParent) {
                     child.shadowHost = shadowParent;
                 }
+                child.init(node, childDepth, j++);
+                child.actualParent = node;
                 children.push(child);
-                ++j;
             }
             node.naturalChildren = children;
             node.naturalElements = elements;
@@ -724,7 +735,68 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (!inlineText) {
                 node.inlineText = false;
                 if (j > 0) {
-                    this.cacheNodeChildren(processing, cache, node, children);
+                    const length = children.length;
+                    const contents = node.display === 'contents';
+                    if (length > 1) {
+                        let siblingsLeading: T[] = [],
+                            siblingsTrailing: T[] = [],
+                            trailing = children[0],
+                            floating = false,
+                            hasExcluded: Undef<boolean>;
+                        for (let i = 0; i < length; ++i) {
+                            const child = children[i];
+                            if (child.flowElement) {
+                                if (child.floating) {
+                                    floating = true;
+                                }
+                                if (i > 0) {
+                                    siblingsTrailing.push(child);
+                                    if (child.lineBreak) {
+                                        children[i - 1].lineBreakTrailing = true;
+                                    }
+                                }
+                                child.siblingsLeading = siblingsLeading;
+                                trailing.siblingsTrailing = siblingsTrailing;
+                                siblingsLeading = [];
+                                siblingsTrailing = [];
+                                trailing = child;
+                                if (i < length - 1) {
+                                    siblingsLeading.push(child);
+                                    if (child.lineBreak) {
+                                        children[i + 1].lineBreakLeading = true;
+                                    }
+                                }
+                            }
+                            if (child.excluded && !contents) {
+                                hasExcluded = true;
+                                processing.excluded.add(child);
+                            }
+                        }
+                        trailing.siblingsTrailing = siblingsTrailing;
+                        if (!contents) {
+                            node.floatContainer = floating;
+                            node.retainAs(hasExcluded ? children.filter(item => !item.excluded) : children.slice(0));
+                            cache.addAll(node);
+                        }
+                        else {
+                            node.retainAs(children);
+                        }
+                    }
+                    else {
+                        const child = children[0];
+                        if (!contents) {
+                            if (child.excluded) {
+                                processing.excluded.add(child);
+                            }
+                            else {
+                                node.add(child);
+                                cache.add(child);
+                            }
+                        }
+                        else {
+                            node.add(child);
+                        }
+                    }
                 }
             }
             else {
@@ -750,61 +822,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
         }
         return node;
-    }
-
-    protected cacheNodeChildren(processing: squared.base.AppProcessing<T>, cache: NodeList<T>, node: T, children: T[]) {
-        const length = children.length;
-        if (length > 1) {
-            let siblingsLeading: T[] = [],
-                siblingsTrailing: T[] = [],
-                trailing = children[0],
-                floating = false,
-                hasExcluded: Undef<boolean>;
-            for (let i = 0; i < length; ++i) {
-                const child = children[i];
-                if (child.flowElement) {
-                    if (child.floating) {
-                        floating = true;
-                    }
-                    if (i > 0) {
-                        siblingsTrailing.push(child);
-                        if (child.lineBreak) {
-                            children[i - 1].lineBreakTrailing = true;
-                        }
-                    }
-                    child.siblingsLeading = siblingsLeading;
-                    trailing.siblingsTrailing = siblingsTrailing;
-                    siblingsLeading = [];
-                    siblingsTrailing = [];
-                    trailing = child;
-                    if (i < length - 1) {
-                        siblingsLeading.push(child);
-                        if (child.lineBreak) {
-                            children[i + 1].lineBreakLeading = true;
-                        }
-                    }
-                }
-                if (child.excluded) {
-                    hasExcluded = true;
-                    processing.excluded.add(child);
-                }
-            }
-            trailing.siblingsTrailing = siblingsTrailing;
-            node.floatContainer = floating;
-            node.retainAs(hasExcluded ? children.filter(item => !item.excluded) : children.slice(0));
-            cache.addAll(node);
-        }
-        else {
-            const child = children[0];
-            if (child.excluded) {
-                processing.excluded.add(child);
-            }
-            else {
-                node.add(child);
-                cache.add(child);
-            }
-            child.actualParent = node;
-        }
     }
 
     protected setBaseLayout(sessionId: string) {

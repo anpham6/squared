@@ -322,96 +322,6 @@ copyTo(directory: string, options?: {}) // copy current session to local directo
 copyFiles(directory: string, options: {}) // copy RequestAsset[] to local directory
 ```
 
-### ANDROID: Public Methods
-
-The system methods are used internally to create the entire project and generally are not useful other than for debugging or extracting the raw assets.
-
-```javascript
-android.setViewModel(data: {}, sessionId?: string) // object data for layout bindings
-android.addXmlNs(name: string, uri: string) // add global namespaces for third-party controls
-android.customize(build: number, widget: string, options: {}) // global attributes applied to specific views
-
-android.system.copyLayoutAllXml(directory: string, options?: {}) // copy generated xml
-android.system.copyResourceAllXml(directory: string, options?: {})
-android.system.copyResourceAnimXml(directory: string, options?: {})
-android.system.copyResourceArrayXml(directory: string, options?: {})
-android.system.copyResourceColorXml(directory: string, options?: {})
-android.system.copyResourceDimenXml(directory: string, options?: {})
-android.system.copyResourceDrawableXml(directory: string, options?: {})
-android.system.copyResourceFontXml(directory: string, options?: {})
-android.system.copyResourceStringXml(directory: string, options?: {})
-android.system.copyResourceStyleXml(directory: string, options?: {})
-
-android.system.saveLayoutAllXml(filename?: string, options?: {}) // save generated xml
-android.system.saveResourceAllXml(filename?: string, options?: {})
-android.system.saveResourceAnimXml(filename?: string, options?: {})
-android.system.saveResourceArrayXml(filename?: string, options?: {})
-android.system.saveResourceColorXml(filename?: string, options?: {})
-android.system.saveResourceDimenXml(filename?: string, options?: {})
-android.system.saveResourceDrawableXml(filename?: string, options?: {})
-android.system.saveResourceFontXml(filename?: string, options?: {})
-android.system.saveResourceStringXml(filename?: string, options?: {})
-android.system.saveResourceStyleXml(filename?: string, options?: {})
-
-android.system.writeLayoutAllXml() // write string[] generated xml
-android.system.writeResourceAllXml()
-android.system.writeResourceAnimXml()
-android.system.writeResourceArrayXml()
-android.system.writeResourceColorXml()
-android.system.writeResourceDimenXml()
-android.system.writeResourceDrawableXml()
-android.system.writeResourceFontXml()
-android.system.writeResourceStringXml()
-android.system.writeResourceStyleXml()
-
-android.system.copyResourceDrawableImage(directory: string, options?: {})
-android.system.saveResourceDrawableImage(filename?: string, options?: {})
-android.system.writeResourceDrawableImage()
-
-android.system.copyResourceRawVideo(directory: string, options?: {})
-android.system.saveResourceRawVideo(filename?: string, options?: {})
-android.system.writeResourceRawVideo()
-
-android.system.copyResourceRawAudio(directory: string, options?: {})
-android.system.saveResourceRawAudio(filename?: string, options?: {})
-android.system.writeResourceRawAudio()
-```
-
-```javascript
-// targetAPI: 0 - ALL, 30 - Android R
-
-android.customize(squared.settings.targetAPI, 'Button', {
-    android: {
-        minWidth: '35px',
-        minHeight: '25px'
-    }
-});
-```
-
-```javascript
-android.addXmlNs('tools', 'http://schemas.android.com/tools');
-```
-
-### CHROME: Public Methods
-
-```javascript
-chrome.system.copyHtmlPage(directory: string, options?: {}) // option "name": e.g. "index.html"
-chrome.system.copyScriptAssets(directory: string, options?: {})
-chrome.system.copyLinkAssets(directory: string, options?: {}) // option "rel": e.g. "stylesheet"
-chrome.system.copyImageAssets(directory: string, options?: {})
-chrome.system.copyVideoAssets(directory: string, options?: {})
-chrome.system.copyAudioAssets(directory: string, options?: {})
-chrome.system.copyFontAssets(directory: string, options?: {})
-
-chrome.system.saveHtmlPage(filename?: string, options?: {}) // option "name": e.g. "index.html"
-chrome.system.saveScriptAssets(filename?: string, options?: {})
-chrome.system.saveLinkAssets(filename?: string, options?: {}) // option "rel": e.g. "stylesheet"
-chrome.system.saveImageAssets(filename?: string, options?: {})
-chrome.system.saveVideoAssets(filename?: string, options?: {})
-chrome.system.saveAudioAssets(filename?: string, options?: {})
-chrome.system.saveFontAssets(filename?: string, options?: {})
-```
-
 ### ALL: Extension Configuration (example: android)
 
 Layout rendering can also be customized using extensions as the program was built to be nearly completely modular. Some of the common layouts already have built-in extensions which you can load or unload based on your preference.
@@ -579,7 +489,28 @@ Most attributes can be excluded from the generated XML using the dataset feature
 </div>
 ```
 
-### ANDROID: Layouts and binding expressions
+### ANDROID: Public Methods
+
+```javascript
+android.customize(build: number, widget: string, options: {}) // global attributes applied to specific views
+android.addXmlNs(name: string, uri: string) // add global namespaces for third-party controls
+android.setViewModel(data: {}, sessionId?: string) // object data for layout bindings
+```
+
+```javascript
+// targetAPI: 0 - ALL, 30 - Android R
+
+android.customize(squared.settings.targetAPI, 'Button', {
+    android: {
+        minWidth: '35px',
+        minHeight: '25px'
+    }
+});
+```
+
+```javascript
+android.addXmlNs('tools', 'http://schemas.android.com/tools');
+```
 
 View model data can be applied to most HTML elements using the dataset attribute. Different view models can be used for every "parseDocument" session. Leaving the sessionId empty sets the default view model for the entire project.
 
