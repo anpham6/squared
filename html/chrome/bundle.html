@@ -110,7 +110,7 @@
             });
         });
     </script>
-    <script type="text/template" data-chrome-file="exclude">
+    <script type="text/template">
         function (context, value) {
             const options = { presets: ['@babel/preset-env'] };
             return context.transformSync(value, options).code;

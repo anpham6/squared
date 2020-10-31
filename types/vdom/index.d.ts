@@ -2,3 +2,5 @@
 // TypeScript Version: 3.6
 
 /// <reference path="squared.d.ts" />
+
+export * from 'base';

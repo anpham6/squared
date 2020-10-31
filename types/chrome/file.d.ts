@@ -2,18 +2,13 @@ interface ChromeAsset extends RequestAsset {
     rootDir?: string;
     moveTo?: string;
     format?: string;
+    preserve?: boolean;
+    exclude?: boolean;
     requestMain?: boolean;
     bundleIndex?: number;
-    preserve?: boolean;
     inlineContent?: string;
     trailingContent?: FormattableContent[];
     outerHTML?: string;
-}
-
-interface OutputAction {
-    preserve?: boolean;
-    compress?: boolean;
-    base64?: boolean;
 }
 
 interface FormattableContent {
@@ -22,7 +17,16 @@ interface FormattableContent {
     preserve?: boolean;
 }
 
-interface FileCommand extends Partial<LocationUri>, OutputAction {
+interface FileModifiers {
+    preserve?: boolean;
+    inline?: boolean;
+    compress?: boolean;
+    base64?: boolean;
+    ignore?: boolean;
+    exclude?: boolean;
+}
+
+interface FileCommand extends Partial<LocationUri>, FileModifiers {
     commands?: string[];
 }
 
@@ -30,15 +34,13 @@ interface TransformCommand extends FileCommand {
     id: string;
 }
 
-interface AssetCommand extends FileCommand, StandardMap {
+interface AssetCommand extends FileCommand, FileModifiers {
     selector?: string;
     type?: string;
     saveAs?: string;
     exportAs?: string;
     saveTo?: string;
     process?: string[];
-    inline?: boolean;
-    ignore?: boolean;
     template?: {
         module?: string;
         identifier?: string;
