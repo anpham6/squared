@@ -162,13 +162,13 @@ function getContentType(element: HTMLElement) {
     }
 }
 
-function excludeAsset(assets: ChromeAsset[], data: AssetCommand, outerHTML: string) {
+function excludeAsset(assets: ChromeAsset[], data: AssetCommand, textContent: string) {
     if (data.exclude) {
         assets.push({
             pathname: '',
             filename: '',
             exclude: true,
-            outerHTML
+            textContent
         });
         return true;
     }
@@ -194,7 +194,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             saveTo: Undef<boolean>,
             preserve: Undef<boolean>,
             inline: Undef<boolean>,
-            outerHTML: Undef<string>,
+            textContent: Undef<string>,
             fromConfig: Undef<boolean>;
         if (options) {
             ({ element, saveAs, format, saveTo, preserve, inline, fromConfig } = options);
@@ -219,7 +219,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                         preserve = preserveAs;
                         if (inlineAs && element) {
                             inline = true;
-                            outerHTML = element.outerHTML;
+                            textContent = element.outerHTML;
                         }
                     }
                 }
@@ -306,7 +306,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 mimeType: extension && parseMimeType(extension),
                 format,
                 preserve,
-                outerHTML,
+                textContent,
                 inlineContent: inline && element ? getContentType(element) : undefined
             };
         }
@@ -386,7 +386,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 data.filename = 'index.html';
             }
             if (this.validFile(data)) {
-                data.requestMain = true;
+                data.basePath = location.origin + (data.rootDir || location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1));
                 data.mimeType = parseMimeType('html');
                 this.processExtensions(data, getExtensions(document.querySelector('html')));
                 result.push(data);
@@ -824,7 +824,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             }
         }
         if (this.validFile(data)) {
-            data.outerHTML = element.outerHTML;
+            data.textContent = element.outerHTML;
             setBundleData(bundleIndex, data);
             data.mimeType = mimeType;
             this.processExtensions(data, getExtensions(element));
@@ -840,7 +840,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 base64: Undef<boolean>,
                 compress: Undef<boolean>,
                 fromConfig: Undef<boolean>,
-                outerHTML: Undef<string>,
+                textContent: Undef<string>,
                 saveTo: Undef<boolean>;
             if (element) {
                 if (assetMap && assetMap.has(element)) {
@@ -850,7 +850,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     }
                     ({ pathname: saveAs, filename, commands, base64, compress } = data);
                     fromConfig = true;
-                    outerHTML = element.outerHTML;
+                    textContent = element.outerHTML;
                     saveTo = true;
                 }
                 else {
@@ -883,16 +883,16 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                             if (commandTo) {
                                 commands = commandTo.split(':').map(value => value.trim());
                             }
-                            outerHTML = element.outerHTML;
+                            textContent = element.outerHTML;
                             saveTo = true;
                         }
                     }
                 }
             }
             const data = File.parseUri(uri, { preserveCrossOrigin, saveAs, saveTo, fromConfig });
-            if (this.validFile(data) && (outerHTML || !assets.find(item => item.uri === uri))) {
-                if (outerHTML) {
-                    data.outerHTML = outerHTML;
+            if (this.validFile(data) && (textContent || !assets.find(item => item.uri === uri))) {
+                if (textContent) {
+                    data.textContent = textContent;
                 }
                 if (commands && commands[0] !== '~') {
                     data.commands = commands;

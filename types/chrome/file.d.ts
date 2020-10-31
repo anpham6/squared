@@ -4,11 +4,11 @@ interface ChromeAsset extends RequestAsset {
     format?: string;
     preserve?: boolean;
     exclude?: boolean;
-    requestMain?: boolean;
+    basePath?: string;
     bundleIndex?: number;
     inlineContent?: string;
     trailingContent?: FormattableContent[];
-    outerHTML?: string;
+    textContent?: string;
 }
 
 interface FormattableContent {
