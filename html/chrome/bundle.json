@@ -10,13 +10,15 @@
     {
       "selector": "head > link:nth-of-type(1)",
       "type": "css",
+      "inline": true,
       "process": [
-        "beautify"
+        "minify"
       ]
     },
     {
       "selector": "head > style:nth-of-type(1)",
       "type": "css",
+      "exportAs": "css/prod.css",
       "process": [
         "minify",
         "preserve"
@@ -25,6 +27,7 @@
     {
       "selector": "head > style:nth-of-type(2)",
       "type": "css",
+      "exportAs": "css/prod.css",
       "process": [
         "minify"
       ],
@@ -49,6 +52,7 @@
     {
       "selector": "head > script:nth-of-type(4)",
       "type": "js",
+      "exportAs": "js/modules3.js",
       "process": [
         "es5-script",
         "beautify"

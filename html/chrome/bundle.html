@@ -5,7 +5,7 @@
     <meta http-equiv="Content-Language" content="en">
     <title></title>
     <link rel="stylesheet" type="text/css" href="/common/css/dev.css" />
-    <style data-chrome-file="exportAs:css/prod.css">
+    <style>
         body {
             font: 1em/1.4 Helvetica, Arial, sans-serif;
             background-color: #fafafa;
@@ -67,7 +67,7 @@
             grid-gap: 10px;
         }
     </style>
-    <style data-chrome-file="exportAs:css/prod.css">
+    <style>
         .cards {
             grid-template-columns: repeat(12,1fr);
             grid-gap: 10px;
@@ -93,7 +93,7 @@
     <script src="/common/system.js"></script>
     <script src="/common/transform.js"></script>
     <script src="/common/babel-transform.js"></script>
-    <script data-chrome-file="exportAs:js/modules3.js">
+    <script>
         System.import('/build/src/main.js').then(result => {
             squared = result;
             System.import('/build/src/base/main.js').then(result => {

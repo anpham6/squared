@@ -5,6 +5,7 @@ interface ChromeAsset extends RequestAsset {
     requestMain?: boolean;
     bundleIndex?: number;
     preserve?: boolean;
+    inlineContent?: string;
     trailingContent?: FormattableContent[];
     outerHTML?: string;
 }
@@ -33,8 +34,10 @@ interface AssetCommand extends FileCommand, StandardMap {
     selector?: string;
     type?: string;
     saveAs?: string;
+    exportAs?: string;
     saveTo?: string;
     process?: string[];
+    inline?: boolean;
     ignore?: boolean;
     template?: {
         module?: string;
