@@ -28,7 +28,7 @@ interface ForwardValue extends NumberValue<AnimateValue> {
 }
 
 const { clamp, equal, multipleOf } = squared.lib.math;
-const { hasBit, hasKeys, hasValue, isEqual, isNumber, joinArray, lastItemOf, plainMap, replaceMap, spliceArray, sortNumber } = squared.lib.util;
+const { hasKeys, hasValue, isEqual, isNumber, joinArray, lastItemOf, plainMap, replaceMap, spliceArray, sortNumber } = squared.lib.util;
 
 function insertAdjacentSplitValue(map: TimelineIndex, attr: string, time: number, intervalMap: SvgAnimationIntervalMap, transforming: boolean) {
     let previousTime = 0,
@@ -716,8 +716,8 @@ function removeAnimations(animations: SvgAnimation[], values: SvgAnimation[]) {
 
 const getItemTime = (delay: number, duration: number, keyTimes: number[], iteration: number, index: number) => Math.round(delay + (keyTimes[index] + iteration) * duration);
 const convertToString = (value: Undef<AnimateValue>) => Array.isArray(value) ? plainMap(value, pt => pt.x + ',' + pt.y).join(' ') : value !== undefined ? value.toString() : '';
-const isKeyTimeFormat = (transforming: boolean, keyTimeMode: number) => hasBit(keyTimeMode, transforming ? SYNCHRONIZE_MODE.KEYTIME_TRANSFORM : SYNCHRONIZE_MODE.KEYTIME_ANIMATE);
-const isFromToFormat = (transforming: boolean, keyTimeMode: number) => hasBit(keyTimeMode, transforming ? SYNCHRONIZE_MODE.FROMTO_TRANSFORM : SYNCHRONIZE_MODE.FROMTO_ANIMATE);
+const isKeyTimeFormat = (transforming: boolean, keyTimeMode: number) => ((transforming ? SYNCHRONIZE_MODE.KEYTIME_TRANSFORM : SYNCHRONIZE_MODE.KEYTIME_ANIMATE) & keyTimeMode) > 0;
+const isFromToFormat = (transforming: boolean, keyTimeMode: number) => ((transforming ? SYNCHRONIZE_MODE.FROMTO_TRANSFORM : SYNCHRONIZE_MODE.FROMTO_ANIMATE) & keyTimeMode) > 0;
 const playableAnimation = (item: SvgAnimate) => item.playable || item.animationElement && item.duration !== -1;
 const cloneKeyTimes = (item: SvgAnimate): [number[], string[], Null<string[]>] => [item.keyTimes.slice(0), item.values.slice(0), item.keySplines?.slice(0) || null];
 const getStartIteration = (time: number, delay: number, duration: number) => Math.floor(Math.max(0, time - delay) / duration);
@@ -818,7 +818,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
             const animationsBase = this.animations as SvgAnimation[];
             for (const mergeable of [animations, transforms]) {
                 const transforming = mergeable === transforms;
-                if (!mergeable || mergeable.length === 0 || !transforming && hasBit(keyTimeMode, SYNCHRONIZE_MODE.IGNORE_ANIMATE) || transforming && hasBit(keyTimeMode, SYNCHRONIZE_MODE.IGNORE_TRANSFORM)) {
+                if (!mergeable || mergeable.length === 0 || !transforming && (keyTimeMode & SYNCHRONIZE_MODE.IGNORE_ANIMATE) || transforming && (keyTimeMode & SYNCHRONIZE_MODE.IGNORE_TRANSFORM)) {
                     continue;
                 }
                 const staggered: SvgAnimate[] = [];

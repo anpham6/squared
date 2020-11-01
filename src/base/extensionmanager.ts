@@ -2,7 +2,7 @@ import type Application from './application';
 import type Extension from './extension';
 import type Node from './node';
 
-const { findSet, hasBit, isObject } = squared.lib.util;
+const { findSet, isObject } = squared.lib.util;
 
 export default class ExtensionManager<T extends Node> implements squared.base.ExtensionManager<T> {
     public readonly cache: Set<Extension<T>> = new Set();
@@ -18,7 +18,7 @@ export default class ExtensionManager<T extends Node> implements squared.base.Ex
             ext = item;
         }
         const { application, extensions } = this;
-        if (ext.framework === 0 || hasBit(ext.framework, application.framework)) {
+        if (ext.framework === 0 || ext.framework & application.framework) {
             ext.application = application;
             if (!extensions.includes(ext)) {
                 extensions.push(ext);

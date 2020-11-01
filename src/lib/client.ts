@@ -1,10 +1,8 @@
 import { PLATFORM, USER_AGENT } from './constant';
 
-import { hasBit } from './util';
-
 export function isPlatform(value: NumString) {
     const platform = navigator.platform.toLowerCase();
-    return typeof value === 'string' ? platform.includes(value.toLowerCase()) : hasBit(value, PLATFORM.WINDOWS) && platform.includes('win') || hasBit(value, PLATFORM.MAC) && /(mac|iphone|ipad|ipod)/.test(platform) || hasBit(value, PLATFORM.LINUX) && platform.includes('linux');
+    return typeof value === 'string' ? platform.includes(value.toLowerCase()) : (value & PLATFORM.WINDOWS) > 0 && platform.includes('win') || (value & PLATFORM.MAC) > 0 && /(mac|iphone|ipad|ipod)/.test(platform) || (value & PLATFORM.LINUX) > 0 && platform.includes('linux');
 }
 
 export function isUserAgent(value: NumString) {
@@ -35,7 +33,7 @@ export function isUserAgent(value: NumString) {
             value |= USER_AGENT.EDGE;
         }
     }
-    return hasBit(value, client);
+    return (value & client) > 0;
 }
 
 export function getDeviceDPI() {

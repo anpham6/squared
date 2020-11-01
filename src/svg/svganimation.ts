@@ -11,13 +11,13 @@ type SvgView = squared.svg.SvgView;
 
 const { getFontSize, hasEm, isLength, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
-const { capitalize, hasBit, hasValue, isString } = squared.lib.util;
+const { capitalize, hasValue, isString } = squared.lib.util;
 
 const REGEXP_TIME = /^(-)?(\d+(?:\.\d+)?)(ms|s|min|h)?$/;
 const REGGXP_TIMEDELIMITED = /^(-)?(?:(\d+):)?(?:([0-5][0-9]):)?([0-5][0-9])(?:\.(\d{1,3}))?$/;
 
 function setFillMode(this: SvgAnimation, mode: boolean, value: number) {
-    const valid = hasBit(this.fillMode, value);
+    const valid = this.fillMode & value;
     if (mode) {
         if (!valid) {
             this.fillMode |= value;
@@ -129,7 +129,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
 
     public addState(...values: number[]) {
         for (const value of values) {
-            if (!hasBit(this.synchronizeState, value)) {
+            if (~this.synchronizeState & value) {
                 this.synchronizeState |= value;
             }
         }
@@ -142,7 +142,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     }
 
     public hasState(...values: number[]) {
-        return values.some(value => hasBit(this.synchronizeState, value));
+        return values.some(value => this.synchronizeState & value);
     }
 
     set attributeName(value) {
@@ -213,21 +213,21 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
         setFillMode.call(this, value, FILL_MODE.BACKWARDS);
     }
     get fillBackwards() {
-        return hasBit(this.fillMode, FILL_MODE.BACKWARDS);
+        return (this.fillMode & FILL_MODE.BACKWARDS) > 0;
     }
 
     set fillForwards(value) {
         setFillMode.call(this, value, FILL_MODE.FORWARDS);
     }
     get fillForwards() {
-        return hasBit(this.fillMode, FILL_MODE.FORWARDS);
+        return (this.fillMode & FILL_MODE.FORWARDS) > 0;
     }
 
     set fillFreeze(value) {
         setFillMode.call(this, value, FILL_MODE.FREEZE);
     }
     get fillFreeze() {
-        return hasBit(this.fillMode, FILL_MODE.FREEZE);
+        return (this.fillMode & FILL_MODE.FREEZE) > 0;
     }
 
     set parent(value) {

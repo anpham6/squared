@@ -40,7 +40,7 @@ let extensionCheck = false;
 function extendPrototype(id: number) {
     const proto = main!.Node.prototype;
     for (const [frameworkId, functionMap] of prototypeMap) {
-        if (frameworkId === 0 || util.hasBit(frameworkId, id)) {
+        if (frameworkId === 0 || frameworkId & id) {
             for (const method in functionMap) {
                 const item = functionMap[method];
                 if (util.isPlainObject(item)) {

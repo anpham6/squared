@@ -687,7 +687,7 @@ declare module "svg" {
             SVG = SVG_CONTAINER | 1 << 4,
             SVG_G = SVG_CONTAINER | 1 << 5,
             SVG_USE_G = SVG_USE | SVG | 1 << 5 | 1 << 6,
-            SVG_USE_SYMBOL = SVG_CONTAINER | SVG_USE | 1 << 7,
+            SVG_USE_SYMBOL = SVG_USE | SVG_CONTAINER | 1 << 7,
             SVG_PATTERN = SVG_CONTAINER | 1 << 8,
             SVG_SHAPE_PATTERN = SVG_CONTAINER | 1 << 9,
             SVG_USE_SHAPE_PATTERN = SVG_USE | SVG_SHAPE_PATTERN | 1 << 10,

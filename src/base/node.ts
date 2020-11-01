@@ -13,7 +13,7 @@ const { CSS_PROPERTIES, PROXY_INLINESTYLE, checkFontSizeValue, checkStyleValue, 
 const { assignRect, getNamedItem, getParentElement, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { truncate } = squared.lib.math;
 const { getElementAsNode, getElementCache, getElementData, setElementCache } = squared.lib.session;
-const { convertCamelCase, convertFloat, convertInt, hasBit, hasValue, isNumber, isObject, iterateArray, iterateReverseArray, spliceString, splitPair } = squared.lib.util;
+const { convertCamelCase, convertFloat, convertInt, hasValue, isNumber, isObject, iterateArray, iterateReverseArray, spliceString, splitPair } = squared.lib.util;
 
 const TEXT_STYLE = [
     'fontFamily',
@@ -1037,10 +1037,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         }
         if (!this._preferInitial && this.naturalChild) {
             let parent: T;
-            if (attrs.some(value => hasBit(CSS_PROPERTIES[value].trait, CSS_TRAITS.LAYOUT))) {
+            if (attrs.some(value => CSS_PROPERTIES[value].trait & CSS_TRAITS.LAYOUT)) {
                 parent = this.pageFlow && this.ascend({ condition: item => item.documentRoot })[0] || this;
             }
-            else if (attrs.some(value => hasBit(CSS_PROPERTIES[value].trait, CSS_TRAITS.CONTAIN))) {
+            else if (attrs.some(value => CSS_PROPERTIES[value].trait & CSS_TRAITS.CONTAIN)) {
                 parent = this;
             }
             else {
@@ -1268,7 +1268,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 this.style[attr] = 'initial';
                 const property = CSS_PROPERTIES[attr] as Undef<CssPropertyData>;
                 if (property && typeof property.value === 'string') {
-                    this._styleMap[attr] = property.valueOfNone || (property.value + (hasBit(property.trait, CSS_TRAITS.UNIT) ? 'px' : ''));
+                    this._styleMap[attr] = property.valueOfNone || (property.value + (property.trait & CSS_TRAITS.UNIT ? 'px' : ''));
                 }
                 else {
                     delete this._styleMap[attr];
@@ -1623,7 +1623,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             }
             if (ignoreDefault !== true) {
                 const data = CSS_PROPERTIES[attr] as Undef<CssPropertyData>;
-                if (data && (value === data.value || hasBit(data.trait, CSS_TRAITS.UNIT) && parseFloat(value) === parseFloat(data.value as string))) {
+                if (data && (value === data.value || (data.trait & CSS_TRAITS.UNIT) && parseFloat(value) === parseFloat(data.value as string))) {
                     return false;
                 }
             }
@@ -1641,10 +1641,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             }
             if (type) {
                 return (
-                    hasBit(type, CSS_UNIT.LENGTH) && isLength(value) ||
-                    hasBit(type, CSS_UNIT.PERCENT) && isPercent(value, true) ||
-                    hasBit(type, CSS_UNIT.TIME) && isTime(value) ||
-                    hasBit(type, CSS_UNIT.ANGLE) && isAngle(value)
+                    (type & CSS_UNIT.LENGTH) > 0 && isLength(value) ||
+                    (type & CSS_UNIT.PERCENT) > 0 && isPercent(value, true) ||
+                    (type & CSS_UNIT.TIME) > 0 && isTime(value) ||
+                    (type & CSS_UNIT.ANGLE) > 0 && isAngle(value)
                 );
             }
             return true;

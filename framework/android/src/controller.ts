@@ -25,7 +25,7 @@ const { formatPX, getSrcSet, hasCoords, parseTransform } = squared.lib.css;
 const { getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
-const { assignEmptyValue, capitalize, convertWord, hasBit, iterateArray, lastItemOf, minMaxOf, parseMimeType, partitionArray, plainMap, withinRange } = squared.lib.util;
+const { assignEmptyValue, capitalize, convertWord, iterateArray, lastItemOf, minMaxOf, parseMimeType, partitionArray, plainMap, withinRange } = squared.lib.util;
 
 const REGEXP_TEXTSYMBOL = /^[^\w\s]+\s+$/;
 
@@ -1251,7 +1251,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 break;
             case CONTAINER_NODE.LINEAR: {
                 const options = createViewAttribute();
-                options.android.orientation = hasBit(layout.alignmentType, NODE_ALIGNMENT.VERTICAL) ? 'vertical' : 'horizontal';
+                options.android.orientation = layout.alignmentType & NODE_ALIGNMENT.VERTICAL ? 'vertical' : 'horizontal';
                 node.apply(options);
                 break;
             }

@@ -5,7 +5,7 @@ import { parseColor } from './color';
 import { clamp, truncate, truncateFraction } from './math';
 import { CSS, STRING, TRANSFORM } from './regex';
 import { getElementCache, setElementCache } from './session';
-import { convertCamelCase, convertFloat, convertHyphenated, hasBit, isNumber, isString, iterateArray, resolvePath, spliceString, splitEnclosing, splitPair, trimBoth } from './util';
+import { convertCamelCase, convertFloat, convertHyphenated, isNumber, isString, iterateArray, resolvePath, spliceString, splitEnclosing, splitPair, trimBoth } from './util';
 
 const DOCUMENT_ELEMENT = document.documentElement;
 const DOCUMENT_FIXEDMAP = [9/13, 10/13, 12/13, 16/13, 20/13, 2, 3];
@@ -1601,7 +1601,7 @@ export function getPropertiesAsTraits(value: number) {
     const result: ObjectMap<CssPropertyData> = {};
     for (const attr in CSS_PROPERTIES) {
         const item = CSS_PROPERTIES[attr];
-        if (hasBit(item.trait, value)) {
+        if (item.trait & value) {
             item.name = convertHyphenated(attr);
             result[attr] = item;
         }
@@ -2608,7 +2608,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
         case 'gridTemplate':
             return getStyle(element)[attr];
         default: {
-            if (attr.endsWith('Color') || hasBit(CSS_PROPERTIES[attr]?.trait, CSS_TRAITS.COLOR)) {
+            if (attr.endsWith('Color') || (CSS_PROPERTIES[attr]?.trait & CSS_TRAITS.COLOR)) {
                 return calculateColor(element, value.trim());
             }
             const alias = checkWritingMode(attr, getStyle(element).writingMode);

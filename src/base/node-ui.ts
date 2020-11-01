@@ -10,7 +10,7 @@ const { CSS_PROPERTIES } = squared.lib.css;
 const { createElement, getRangeClientRect } = squared.lib.dom;
 const { equal } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
-const { cloneObject, hasBit, hasKeys, isArray, isEmptyString, searchObject, withinRange } = squared.lib.util;
+const { cloneObject, hasKeys, isArray, isEmptyString, searchObject, withinRange } = squared.lib.util;
 
 const CSS_SPACING = new Map<number, number>([
     [BOX_STANDARD.MARGIN_TOP, 0],
@@ -87,7 +87,7 @@ function applyBoxReset(node: T, start: number, region: number, other?: NodeUI) {
     const boxReset = node.boxReset;
     for (let i = start; i < start + 4; ++i) {
         const key = CSS_SPACINGINDEX[i];
-        if (hasBit(region, key)) {
+        if (region & key) {
             boxReset[i] = 1;
             if (other) {
                 const previous = node.registerBox(key);
@@ -111,7 +111,7 @@ function applyBoxReset(node: T, start: number, region: number, other?: NodeUI) {
 function applyBoxAdjustment(node: T, start: number, region: number, other: NodeUI, boxAdjustment: Undef<number[]>) {
     for (let i = start; i < start + 4; ++i) {
         const key = CSS_SPACINGINDEX[i];
-        if (hasBit(region, key)) {
+        if (region & key) {
             const previous = node.registerBox(key);
             if (previous) {
                 previous.transferBox(key, other);
@@ -747,19 +747,19 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public hasAlign(value: number) {
-        return hasBit(this.alignmentType, value);
+        return (this.alignmentType & value) > 0;
     }
 
     public hasResource(value: number) {
-        return this._exclusions === undefined || !hasBit(this._exclusions[0], value);
+        return !this._exclusions || !(this._exclusions[0] & value);
     }
 
     public hasProcedure(value: number) {
-        return this._exclusions === undefined || !hasBit(this._exclusions[1], value);
+        return !this._exclusions || !(this._exclusions[1] & value);
     }
 
     public hasSection(value: number) {
-        return this._exclusions === undefined || !hasBit(this._exclusions[2], value);
+        return !this._exclusions || !(this._exclusions[2] & value);
     }
 
     public exclude(options: ExcludeOptions) {
@@ -1110,19 +1110,19 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public resetBox(region: number, node?: T) {
-        if (hasBit(BOX_STANDARD.MARGIN, region)) {
+        if (BOX_STANDARD.MARGIN & region) {
             applyBoxReset(this, 0, region, node);
         }
-        if (hasBit(BOX_STANDARD.PADDING, region)) {
+        if (BOX_STANDARD.PADDING & region) {
             applyBoxReset(this, 4, region, node);
         }
     }
 
     public transferBox(region: number, node: T) {
-        if (hasBit(BOX_STANDARD.MARGIN, region)) {
+        if (BOX_STANDARD.MARGIN & region) {
             applyBoxAdjustment(this, 0, region, node, this._boxAdjustment);
         }
-        if (hasBit(BOX_STANDARD.PADDING, region)) {
+        if (BOX_STANDARD.PADDING & region) {
             applyBoxAdjustment(this, 4, region, node, this._boxAdjustment);
         }
     }
@@ -1819,7 +1819,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             result = setOverflow(this);
             this._cache.overflow = result;
         }
-        return hasBit(result, NODE_ALIGNMENT.HORIZONTAL);
+        return (result & NODE_ALIGNMENT.HORIZONTAL) > 0;
     }
     get overflowY() {
         let result = this._cache.overflow;
@@ -1827,7 +1827,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             result = setOverflow(this);
             this._cache.overflow = result;
         }
-        return hasBit(result, NODE_ALIGNMENT.VERTICAL);
+        return (result & NODE_ALIGNMENT.VERTICAL) > 0;
     }
 
     get boxReset() {

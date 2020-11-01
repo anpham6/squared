@@ -1,7 +1,5 @@
 import NodeUI from './node-ui';
 
-const { hasBit } = squared.lib.util;
-
 export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Container<T> implements squared.base.LayoutUI<T> {
     public static create<U extends NodeUI>(options: LayoutOptions<U>) {
         const { itemCount, rowCount, columnCount } = options;
@@ -71,7 +69,7 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
     }
 
     public hasAlign(value: number) {
-        return hasBit(this.alignmentType, value);
+        return (this.alignmentType & value) > 0;
     }
 
     public addRender(value: number) {

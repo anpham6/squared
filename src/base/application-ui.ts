@@ -19,7 +19,7 @@ const { FILE } = squared.lib.regex;
 const { formatPX, getStyle, hasCoords, isCalc, insertStyleSheetRule, resolveURL } = squared.lib.css;
 const { getNamedItem, removeElementsByClassName } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;
-const { capitalize, convertWord, flatArray, hasBit, isString, iterateArray, partitionArray, trimBoth, trimString } = squared.lib.util;
+const { capitalize, convertWord, flatArray, isString, iterateArray, partitionArray, trimBoth, trimString } = squared.lib.util;
 
 const REGEXP_PSEUDOCOUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s*([a-z-]+))?\)|(counters)\(([^,]+),\s*"([^"]*)"(?:,\s*([a-z-]+))?\)|"([^"]+)")\s*/g;
 const REGEXP_PSEUDOCOUNTERVALUE = /\b([^\-\d][^\-\d]?[^\s]*)\s+(-?\d+)\b/g;
@@ -344,12 +344,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     public addLayout(layout: ContentUI<T>) {
-        const renderType = layout.renderType;
-        if (renderType && hasBit(renderType, NODE_ALIGNMENT.FLOAT)) {
-            if (hasBit(renderType, NODE_ALIGNMENT.HORIZONTAL)) {
+        const renderType = layout.renderType || 0;
+        if (renderType & NODE_ALIGNMENT.FLOAT) {
+            if (renderType & NODE_ALIGNMENT.HORIZONTAL) {
                 layout = this.processFloatHorizontal(layout as LayoutUI<T>);
             }
-            else if (hasBit(renderType, NODE_ALIGNMENT.VERTICAL)) {
+            else if (renderType & NODE_ALIGNMENT.VERTICAL) {
                 layout = this.processFloatVertical(layout as LayoutUI<T>);
             }
         }
