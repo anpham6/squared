@@ -1,7 +1,7 @@
 import fs = require('fs-extra');
 import path = require('path');
 import parse = require('csv-parse');
-import playwright = require('playwright');
+import puppeteer = require('puppeteer');
 import readdirp = require('readdirp');
 import md5 = require('md5');
 import diff = require('diff');
@@ -304,8 +304,7 @@ else if (host && data && browserName && snapshot) {
                 try {
                     const items: PageRequest[] = [];
                     const failed: PageRequest[] = [];
-                    const browser = await playwright[browserName!].launch({ executablePath });
-                    const context = await browser.newContext({ viewport: { width, height } });
+                    const browser = await puppeteer.launch({ executablePath });
                     const tempDir = path.resolve(__dirname, snapshot!);
                     try {
                         fs.emptyDirSync(tempDir);
@@ -313,7 +312,7 @@ else if (host && data && browserName && snapshot) {
                     catch (err) {
                         failMessage(tempDir, err);
                     }
-                    console.log(`${chalk.blue('VERSION')}: ${browserName![0].toUpperCase() + browserName!.substring(1)} ${chalk.bold(browser.version())}\n`);
+                    console.log(`${chalk.blue('VERSION')}: ${chalk.bold(await browser.version())}\n`);
                     for (const row of csv) {
                         const [flag, filename, url] = row;
                         const id = parseInt(flag);
@@ -321,14 +320,15 @@ else if (host && data && browserName && snapshot) {
                             const name = filename.substring(0, filename.lastIndexOf('.'));
                             const filepath = path.resolve(__dirname, snapshot!, name);
                             const href = host + url;
-                            let page: playwright.Page | undefined;
+                            let page: puppeteer.Page | undefined;
                             try {
-                                page = await context.newPage();
+                                page = await browser.newPage();
+                                await page.setViewport({ width, height });
                                 await page.goto(href + '?copyTo=' + encodeURIComponent(filepath));
                                 if (screenshot) {
                                     await page.screenshot({ path: filepath + '.png' });
                                 }
-                                await page.waitForSelector('#md5_complete', { state: 'attached', timeout });
+                                await page.waitForSelector('#md5_complete', { timeout });
                                 const files = (await page.$eval('#md5_complete', element => element.innerHTML)).split('\n').sort();
                                 items.push({ name, filepath, files });
                                 console.log(chalk.yellow('OK') + ': ' + href);

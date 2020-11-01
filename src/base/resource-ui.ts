@@ -1365,10 +1365,14 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                 if (child) {
                     if (styled && child.htmlElement) {
                         if (child.lineBreak) {
-                            value = value.replace(!preserveWhiteSpace ? new RegExp(`\\s*${item.outerHTML}\\s*`) : item.outerHTML, child.lineBreakTrailing && child.previousSibling?.inlineStatic ? '' : ResourceUI.STRING_NEWLINE);
+                            const previousSibling = child.previousSibling;
+                            value = value.replace(!preserveWhiteSpace ? new RegExp(`\\s*${item.outerHTML}\\s*`) : item.outerHTML, child.lineBreakTrailing && previousSibling && previousSibling.inlineStatic || !previousSibling && !node.pageFlow ? '' : ResourceUI.STRING_NEWLINE);
                         }
                         else if (child.positioned) {
                             value = value.replace(item.outerHTML, '');
+                        }
+                        else if (child.display === 'contents') {
+                            value = value.replace(item.outerHTML, child.textContent);
                         }
                         else if (!preserveWhiteSpace) {
                             value = value.replace(item.outerHTML, child.pageFlow && isString(child.textContent) ? ResourceUI.STRING_SPACE : '');

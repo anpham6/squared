@@ -486,7 +486,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     pseudoElements.push(item);
                 }
                 else {
-                    item.setBounds(!resetBounds && preAlignment.get(item) === undefined);
+                    item.setBounds(!resetBounds && !preAlignment.get(item));
                 }
             });
             if (pseudoElements.length) {
@@ -610,7 +610,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
         }
-        if (node.display !== 'none' || depth === 0 || cascadeAll || node.extensions.some(name => (this.extensionManager.get(name) as ExtensionUI<T>)?.documentBase)) {
+        const display = node.display;
+        if (display !== 'none' || depth === 0 || cascadeAll || node.extensions.some(name => (this.extensionManager.get(name) as ExtensionUI<T>)?.documentBase)) {
             if (node.excluded || this._preventNodeCascade(node)) {
                 return node;
             }
@@ -689,6 +690,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     item.actualParent = node;
                                     children.push(item);
                                 }
+                                child.excluded = true;
                                 continue;
                             }
                         }
@@ -732,11 +734,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (hostElement !== parentElement) {
                 node.shadowRoot = true;
             }
+            const contents = display === 'contents';
+            const length = children.length;
             if (!inlineText) {
                 node.inlineText = false;
                 if (j > 0) {
-                    const length = children.length;
-                    const contents = node.display === 'contents';
                     if (length > 1) {
                         let siblingsLeading: T[] = [],
                             siblingsTrailing: T[] = [],
@@ -801,19 +803,21 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             else {
                 node.inlineText = plainText !== -1;
-                if (lineBreak !== -1) {
-                    if (lineBreak < plainText) {
-                        node.multiline = true;
-                    }
-                    for (let i = 0; i < j; ++i) {
-                        if (children[i].lineBreak) {
-                            if (i > 0) {
-                                children[i - 1].lineBreakTrailing = true;
-                            }
-                            if (i < j - 1) {
-                                children[i + 1].lineBreakLeading = true;
-                            }
+                if (lineBreak !== -1 && lineBreak < plainText) {
+                    node.multiline = true;
+                }
+                for (let i = 0; i < length; ++i) {
+                    const item = children[i];
+                    if (item.lineBreak) {
+                        if (i > 0) {
+                            children[i - 1].lineBreakTrailing = true;
                         }
+                        if (i < length - 1) {
+                            children[i + 1].lineBreakLeading = true;
+                        }
+                    }
+                    if (item.excluded && !contents) {
+                        processing.excluded.add(item);
                     }
                 }
             }
