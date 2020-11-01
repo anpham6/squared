@@ -120,11 +120,36 @@ declare module "lib" {
 
     namespace internal {
         const enum LAYOUT_TABLE {
+            FIXED = 1,
+            COLLAPSE = 1 << 1,
+            EXPAND = 1 << 2
+        }
+        const enum LAYOUT_TABLETYPE {
             NONE,
             STRETCH,
             FIXED,
             VARIABLE,
             COMPRESS
+        }
+        const enum LAYOUT_TABLECELL {
+            EXPAND = 1,
+            DOWNSIZED = 1 << 1,
+            EXCEED = 1 << 2,
+            FLEXIBLE = 1 << 3,
+            SHRINK = 1 << 4,
+            PLACED = 1 << 5
+        }
+        const enum LAYOUT_GRIDCELL {
+            ROW_START = 1,
+            ROW_END = 1 << 1,
+            CELL_START = 1 << 2,
+            CELL_END = 1 << 3
+        }
+        const enum LAYOUT_CSSGRID {
+            AUTO_FIT = 1,
+            AUTO_FILL = 1 << 1,
+            FIXED_WIDTH = 1 << 2,
+            FLEXIBLE = 1 << 3
         }
         const enum STYLE_STATE {
             FAIL,

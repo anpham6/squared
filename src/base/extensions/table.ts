@@ -1,4 +1,6 @@
 import LAYOUT_TABLE = squared.lib.internal.LAYOUT_TABLE;
+import LAYOUT_TABLETYPE = squared.lib.internal.LAYOUT_TABLETYPE;
+import LAYOUT_TABLECELL = squared.lib.internal.LAYOUT_TABLECELL;
 
 import { BOX_STANDARD, NODE_RESOURCE } from '../lib/constant';
 
@@ -35,13 +37,18 @@ function hideCell(node: NodeUI) {
 }
 
 function createDataAttribute(node: NodeUI): TableData {
+    let flags = 0;
+    if (node.valueOf('tableLayout') === 'fixed') {
+        flags |= LAYOUT_TABLE.FIXED;
+    }
+    if (node.valueOf('borderCollapse') === 'collapse') {
+        flags |= LAYOUT_TABLE.COLLAPSE;
+    }
     return {
         layoutType: 0,
         rowCount: 0,
         columnCount: 0,
-        layoutFixed: node.valueOf('tableLayout') === 'fixed',
-        borderCollapse: node.valueOf('borderCollapse') === 'collapse',
-        expand: false
+        flags
     };
 }
 
@@ -106,7 +113,8 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         });
         inheritStyles(thead, false);
         inheritStyles(tfoot, true);
-        const borderCollapse = mainData.borderCollapse;
+        const layoutFixed = (mainData.flags & LAYOUT_TABLE.FIXED) > 0;
+        const borderCollapse = (mainData.flags & LAYOUT_TABLE.COLLAPSE) > 0;
         const [horizontal, vertical] = !borderCollapse ? replaceMap(node.css('borderSpacing').split(' '), (value, index) => index === 0 ? node.parseUnit(value) : node.parseHeight(value)) : [0, 0];
         const spacingWidth = horizontal > 1 ? Math.round(horizontal / 2) : horizontal;
         const spacingHeight = vertical > 1 ? Math.round(vertical / 2) : vertical;
@@ -239,7 +247,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 const columnWidth = td.valueOf('width');
                 const reevaluate = !mapWidth[j] || mapWidth[j] === 'auto';
                 const width = td.bounds.width;
-                if (i === 0 || reevaluate || !mainData.layoutFixed) {
+                if (i === 0 || reevaluate || !layoutFixed) {
                     if (!columnWidth || columnWidth === 'auto') {
                         if (!mapWidth[j]) {
                             mapWidth[j] = columnWidth || '0px';
@@ -275,7 +283,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     td.modifyBox(BOX_STANDARD.MARGIN_TOP, i === 0 ? vertical : spacingHeight);
                     td.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, i + rowSpan < rowCount ? spacingHeight : vertical);
                 }
-                this.data.set(td, { colSpan, rowSpan } as TableCellSpanData);
+                this.data.set(td, { colSpan, rowSpan, flags: 0 } as TableCellData);
             });
             hideCell(tr);
             columnCount = Math.max(columnCount, row.length);
@@ -307,7 +315,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 });
             }
             if (!hasWidth) {
-                mainData.expand = true;
+                mainData.flags |= LAYOUT_TABLE.EXPAND;
             }
             percentAll = true;
         }
@@ -319,7 +327,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 else if (width > node.width) {
                     node.css('width', 'auto');
-                    if (!mainData.layoutFixed) {
+                    if (!layoutFixed) {
                         for (const tr of table) {
                             for (const td of tr) {
                                 td.css('width', 'auto');
@@ -328,39 +336,39 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     }
                 }
             }
-            if (mainData.layoutFixed && !node.hasPX('width')) {
+            if (layoutFixed && !node.hasPX('width')) {
                 node.css('width', formatPX(node.bounds.width));
             }
         }
         mainData.layoutType = (() => {
             if (mapWidth.length > 1) {
                 mapPercent = mapWidth.reduce((a, b) => a + (isPercent(b) ? parseFloat(b) : 0), 0);
-                if (mainData.layoutFixed && mapWidth.reduce((a, b) => a + (isLength(b) ? parseFloat(b) : 0), 0) >= node.actualWidth) {
-                    return LAYOUT_TABLE.COMPRESS;
+                if (layoutFixed && mapWidth.reduce((a, b) => a + (isLength(b) ? parseFloat(b) : 0), 0) >= node.actualWidth) {
+                    return LAYOUT_TABLETYPE.COMPRESS;
                 }
                 else if (mapWidth.length > 1 && mapWidth.some(value => isPercent(value)) || mapWidth.every(value => isLength(value) && value !== '0px')) {
-                    return LAYOUT_TABLE.VARIABLE;
+                    return LAYOUT_TABLETYPE.VARIABLE;
                 }
                 else if (mapWidth.every(value => value === mapWidth[0])) {
                     if (node.find(td => td.hasHeight, { cascade: true })) {
-                        mainData.expand = true;
-                        return LAYOUT_TABLE.VARIABLE;
+                        mainData.flags |= LAYOUT_TABLE.EXPAND;
+                        return LAYOUT_TABLETYPE.VARIABLE;
                     }
                     else if (mapWidth[0] === 'auto') {
-                        return hasWidth ? LAYOUT_TABLE.VARIABLE : table.some(tr => tr.find(td => td.multiline)) ? LAYOUT_TABLE.VARIABLE : LAYOUT_TABLE.NONE;
+                        return hasWidth ? LAYOUT_TABLETYPE.VARIABLE : table.some(tr => tr.find(td => td.multiline)) ? LAYOUT_TABLETYPE.VARIABLE : LAYOUT_TABLETYPE.NONE;
                     }
                     else if (hasWidth) {
-                        return LAYOUT_TABLE.FIXED;
+                        return LAYOUT_TABLETYPE.FIXED;
                     }
                 }
                 if (mapWidth.every(value => value === 'auto' || isLength(value) && value !== '0px')) {
                     if (!hasWidth) {
-                        mainData.expand = true;
+                        mainData.flags |= LAYOUT_TABLE.EXPAND;
                     }
-                    return LAYOUT_TABLE.STRETCH;
+                    return LAYOUT_TABLETYPE.STRETCH;
                 }
             }
-            return LAYOUT_TABLE.NONE;
+            return LAYOUT_TABLETYPE.NONE;
         })();
         node.clear();
         if (caption) {
@@ -389,20 +397,23 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 const td = tr[j];
                 const cellData = this.data.get(td) as TableCellData;
                 const columnWidth = mapWidth[j];
+                let flags = cellData.flags;
                 j += cellData.colSpan;
-                if (cellData.placed) {
+                if (flags & LAYOUT_TABLECELL.PLACED) {
                     continue;
                 }
                 if (columnWidth) {
                     switch (mainData.layoutType) {
-                        case LAYOUT_TABLE.NONE:
+                        case LAYOUT_TABLETYPE.NONE:
                             break;
-                        case LAYOUT_TABLE.VARIABLE:
+                        case LAYOUT_TABLETYPE.VARIABLE:
                             if (columnWidth === 'auto') {
                                 if (mapPercent >= 1) {
                                     setBoundsWidth(td);
-                                    cellData.exceed = !hasWidth;
-                                    cellData.downsized = true;
+                                    if (!hasWidth) {
+                                        flags |= LAYOUT_TABLECELL.EXCEED;
+                                    }
+                                    flags |= LAYOUT_TABLECELL.DOWNSIZED;
                                 }
                                 else {
                                     setAutoWidth(node, td, cellData);
@@ -411,7 +422,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             else if (isPercent(columnWidth)) {
                                 if (percentAll) {
                                     cellData.percent = columnWidth;
-                                    cellData.expand = true;
+                                    flags |= LAYOUT_TABLECELL.EXPAND;
                                 }
                                 else {
                                     setBoundsWidth(td);
@@ -420,50 +431,50 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             else if (isLength(columnWidth) && parseInt(columnWidth)) {
                                 if (td.bounds.width >= parseInt(columnWidth)) {
                                     setBoundsWidth(td);
-                                    cellData.expand = false;
-                                    cellData.downsized = false;
+                                    flags |= LAYOUT_TABLECELL.SHRINK;
                                 }
-                                else if (mainData.layoutFixed) {
+                                else if (layoutFixed) {
                                     setAutoWidth(node, td, cellData);
-                                    cellData.downsized = true;
+                                    flags |= LAYOUT_TABLECELL.DOWNSIZED;
                                 }
                                 else {
                                     setBoundsWidth(td);
-                                    cellData.expand = false;
+                                    flags |= LAYOUT_TABLECELL.SHRINK;
                                 }
                             }
                             else {
                                 if (!td.hasPX('width', { percent: false }) || td.percentWidth) {
                                     setBoundsWidth(td);
                                 }
-                                cellData.expand = false;
+                                flags |= LAYOUT_TABLECELL.SHRINK;
                             }
                             break;
-                        case LAYOUT_TABLE.FIXED:
+                        case LAYOUT_TABLETYPE.FIXED:
                             setAutoWidth(node, td, cellData);
                             break;
-                        case LAYOUT_TABLE.STRETCH:
+                        case LAYOUT_TABLETYPE.STRETCH:
                             if (columnWidth === 'auto') {
-                                cellData.flexible = true;
+                                flags |= LAYOUT_TABLECELL.FLEXIBLE;
                             }
                             else {
-                                if (mainData.layoutFixed) {
-                                    cellData.downsized = true;
+                                if (layoutFixed) {
+                                    flags |= LAYOUT_TABLECELL.DOWNSIZED;
                                 }
                                 else {
                                     setBoundsWidth(td);
                                 }
-                                cellData.expand = false;
+                                flags |= LAYOUT_TABLECELL.SHRINK;
                             }
                             break;
-                        case LAYOUT_TABLE.COMPRESS:
+                        case LAYOUT_TABLETYPE.COMPRESS:
                             if (!isLength(columnWidth)) {
                                 td.hide();
                             }
                             break;
                     }
                 }
-                cellData.placed = true;
+                flags |= LAYOUT_TABLECELL.PLACED;
+                cellData.flags = flags;
                 td.parent = node;
             }
             if (length < columnCount) {
@@ -476,7 +487,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         if (caption && captionBottom) {
             caption.parent = node;
         }
-        if (mainData.borderCollapse) {
+        if (borderCollapse) {
             const borderTop = node.cssAsObject('borderTopColor', 'borderTopStyle', 'borderTopWidth');
             const borderRight = node.cssAsObject('borderRightColor', 'borderRightStyle', 'borderRightWidth');
             const borderBottom = node.cssAsObject('borderBottomColor', 'borderBottomStyle', 'borderBottomWidth');

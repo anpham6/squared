@@ -22,13 +22,10 @@ interface CssGridDirectionData {
     unitMin: string[];
     unitTotal: number[];
     auto: string[];
-    autoFit: boolean;
-    autoFill: boolean;
     repeat: boolean[];
     name: ObjectMap<number[]>;
-    fixedWidth: boolean;
-    flexible: boolean;
     frTotal: number;
+    flags: number;
 }
 
 interface CssGridCellData {
@@ -50,10 +47,7 @@ interface GridCellData<T> {
     rowSpan: number;
     columnSpan: number;
     index: number;
-    cellStart: boolean;
-    cellEnd: boolean;
-    rowEnd: boolean;
-    rowStart: boolean;
+    flags: number;
     siblings?: T[];
 }
 
@@ -65,11 +59,9 @@ interface ListData {
 
 interface TableData {
     layoutType: number;
-    layoutFixed: boolean;
-    borderCollapse: boolean;
-    expand: boolean;
     rowCount: number;
     columnCount: number;
+    flags: number;
 }
 
 interface TableCellSpanData {
@@ -78,13 +70,9 @@ interface TableCellSpanData {
 }
 
 interface TableCellData extends Required<TableCellSpanData> {
+    flags: number;
     spaceSpan?: number;
     percent?: string;
-    expand?: boolean;
-    downsized?: boolean;
-    exceed?: boolean;
-    placed?: boolean;
-    flexible?: boolean;
 }
 
 interface ColumnData<T> {

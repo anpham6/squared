@@ -1,5 +1,6 @@
 import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
+import LAYOUT_GRIDCELL = squared.lib.internal.LAYOUT_GRIDCELL;
 
 import { CONTAINER_NODE } from '../lib/constant';
 
@@ -53,17 +54,18 @@ export default class Grid <T extends View> extends squared.base.extensions.Grid<
                     const item = siblings[i];
                     const siblingData = this.data.get(item) as Undef<GridCellData<T>>;
                     if (siblingData) {
-                        if (siblingData.cellStart) {
-                            data.cellStart = true;
+                        const flags = siblingData.flags;
+                        if (flags & LAYOUT_GRIDCELL.CELL_START) {
+                            data.flags |= LAYOUT_GRIDCELL.CELL_START;
                         }
-                        if (siblingData.cellEnd) {
-                            data.cellEnd = true;
+                        if (flags & LAYOUT_GRIDCELL.CELL_END) {
+                            data.flags |= LAYOUT_GRIDCELL.CELL_END;
                         }
-                        if (siblingData.rowEnd) {
-                            data.rowEnd = true;
+                        if (flags & LAYOUT_GRIDCELL.ROW_START) {
+                            data.flags |= LAYOUT_GRIDCELL.ROW_START;
                         }
-                        if (siblingData.rowStart) {
-                            data.rowStart = true;
+                        if (flags & LAYOUT_GRIDCELL.ROW_END) {
+                            data.flags |= LAYOUT_GRIDCELL.ROW_END;
                         }
                         this.data.delete(item);
                     }
@@ -103,16 +105,17 @@ export default class Grid <T extends View> extends squared.base.extensions.Grid<
                     if (parent && !parent.visible) {
                         const marginTop = !parent.getBox(BOX_STANDARD.MARGIN_TOP)[0] ? parent.marginTop : 0;
                         const marginBottom = !parent.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] ? parent.marginBottom : 0;
-                        if (cellData.cellStart) {
+                        const flags = cellData.flags;
+                        if (flags & LAYOUT_GRIDCELL.CELL_START) {
                             paddingTop = marginTop + parent.paddingTop;
                         }
-                        if (cellData.rowStart) {
+                        if (flags & LAYOUT_GRIDCELL.ROW_START) {
                             paddingLeft = Math.max(parent.marginLeft + parent.paddingLeft, paddingLeft);
                         }
-                        if (cellData.rowEnd) {
-                            const heightBottom = marginBottom + parent.paddingBottom + (cellData.cellEnd ? 0 : marginTop + parent.paddingTop);
+                        if (flags & LAYOUT_GRIDCELL.ROW_END) {
+                            const heightBottom = marginBottom + parent.paddingBottom + (flags & LAYOUT_GRIDCELL.CELL_END ? 0 : marginTop + parent.paddingTop);
                             if (heightBottom > 0) {
-                                if (cellData.cellEnd) {
+                                if (flags & LAYOUT_GRIDCELL.CELL_END) {
                                     paddingBottom = heightBottom;
                                 }
                                 else {

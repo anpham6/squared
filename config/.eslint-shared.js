@@ -59,6 +59,9 @@ module.exports = {
                 "REGION_UNIT",
                 "WIDGET_NAME",
                 "LAYOUT_TABLE",
+                "LAYOUT_TABLECELL",
+                "LAYOUT_GRIDCELL",
+                "LAYOUT_CSSGRID",
                 "STYLE_STATE"
             ]
         }],

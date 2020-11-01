@@ -1,6 +1,7 @@
+import LAYOUT_STRING = android.base.LAYOUT_STRING;
+import LAYOUT_CSSGRID = squared.lib.internal.LAYOUT_CSSGRID;
 import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
-import LAYOUT_STRING = android.base.LAYOUT_STRING;
 
 import { CONTAINER_NODE, CONTAINER_TAGNAME } from '../lib/constant';
 
@@ -413,7 +414,7 @@ function applyLayout(node: View, parent: View, item: View, mainData: CssGridData
         }
     }
     if (minUnitSize) {
-        if (data.autoFill && size === 0 && (horizontal ? row.length : column.length) === 1) {
+        if ((data.flags & LAYOUT_CSSGRID.AUTO_FILL) && size === 0 && (horizontal ? row.length : column.length) === 1) {
             size = Math.max(node.actualWidth, minUnitSize);
             sizeWeight = 0;
         }
@@ -467,7 +468,7 @@ function applyLayout(node: View, parent: View, item: View, mainData: CssGridData
     else {
         item.android(horizontal ? 'layout_column' : 'layout_row', cellStart.toString());
         item.android(horizontal ? 'layout_columnSpan' : 'layout_rowSpan', cellSpan.toString());
-        let columnWeight = horizontal && column.flexible;
+        let columnWeight = horizontal && (column.flags & LAYOUT_CSSGRID.FLEXIBLE) > 0;
         if (sizeWeight !== 0) {
             if (!item.hasPX(dimension)) {
                 if (horizontal) {
@@ -788,7 +789,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                                     android: {
                                         layout_row: '0',
                                         layout_column: length.toString(),
-                                        layout_columnWeight: column.flexible ? '0.01' : ''
+                                        layout_columnWeight: column.flags & LAYOUT_CSSGRID.FLEXIBLE ? '0.01' : ''
                                     }
                                 }),
                                 false
@@ -839,7 +840,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                                     android: {
                                         layout_row: row.length.toString(),
                                         layout_column: '0',
-                                        layout_rowWeight: row.flexible ? '0.01' : ''
+                                        layout_rowWeight: row.flags & LAYOUT_CSSGRID.FLEXIBLE ? '0.01' : ''
                                     }
                                 }),
                                 false
@@ -931,7 +932,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
             }
             else {
                 const { emptyRows, rowDirection: horizontal } = mainData;
-                const { flexible, gap, unit } = horizontal ? column : row;
+                const { flags, gap, unit } = horizontal ? column : row;
                 const unitSpan = unit.length;
                 let k = -1, l = 0;
                 const createSpacer = (i: number, unitData: string[], gapSize: number, opposing = 'wrap_content', opposingWeight = '', opposingMargin = 0) => {
@@ -949,14 +950,14 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                             layout_row = i.toString();
                             layout_column = k.toString();
                             height = opposing;
-                            layout_columnWeight = flexible ? '0.01' : '';
+                            layout_columnWeight = flags & LAYOUT_CSSGRID.FLEXIBLE ? '0.01' : '';
                             layout_rowWeight = opposingWeight;
                             columnSpan = l;
                         }
                         else {
                             layout_row = k.toString();
                             layout_column = i.toString();
-                            layout_rowWeight = flexible ? '0.01' : '';
+                            layout_rowWeight = flags & LAYOUT_CSSGRID.FLEXIBLE ? '0.01' : '';
                             layout_columnWeight = opposingWeight;
                             width = opposing;
                             rowSpan = l;

@@ -1,3 +1,5 @@
+import LAYOUT_TABLE = squared.lib.internal.LAYOUT_TABLE;
+import LAYOUT_TABLECELL = squared.lib.internal.LAYOUT_TABLECELL;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
 
 import { CONTAINER_NODE } from '../lib/constant';
@@ -22,17 +24,18 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
         let requireWidth: Undef<boolean>,
             multiline: Undef<boolean>;
         if (mainData.columnCount > 1) {
-            requireWidth = mainData.expand;
+            requireWidth = (mainData.flags & LAYOUT_TABLE.EXPAND) > 0;
             node.each((item: T) => {
                 const cellData = this.data.get(item) as Undef<TableCellData>;
                 if (cellData) {
-                    if (cellData.flexible) {
+                    const flags = cellData.flags;
+                    if (flags & LAYOUT_TABLECELL.FLEXIBLE) {
                         item.android('layout_columnWeight', cellData.colSpan.toString());
                         item.setLayoutWidth('0px');
                         requireWidth = true;
                     }
                     else {
-                        if (cellData.expand === false) {
+                        if (flags & LAYOUT_TABLECELL.SHRINK) {
                             item.android('layout_columnWeight', '0');
                         }
                         else if (cellData.percent) {
@@ -43,8 +46,8 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                                 requireWidth = true;
                             }
                         }
-                        if (cellData.downsized) {
-                            if (cellData.exceed) {
+                        if (flags & LAYOUT_TABLECELL.DOWNSIZED) {
+                            if (flags & LAYOUT_TABLECELL.EXCEED) {
                                 item.setLayoutWidth('0px');
                                 item.android('layout_columnWeight', '0.01');
                                 requireWidth = true;
@@ -87,7 +90,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
         }
         if (node.hasWidth) {
             if (node.width < Math.floor(node.bounds.width)) {
-                if (mainData.layoutFixed) {
+                if (mainData.flags & LAYOUT_TABLE.FIXED) {
                     node.android('width', formatPX(node.bounds.width));
                 }
                 else {

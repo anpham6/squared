@@ -1,3 +1,5 @@
+import LAYOUT_GRIDCELL = squared.lib.internal.LAYOUT_GRIDCELL;
+
 import { BOX_STANDARD } from '../lib/constant';
 
 import ExtensionUI from '../extension-ui';
@@ -47,10 +49,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
             rowSpan: 0,
             columnSpan: 0,
             index: -1,
-            cellStart: false,
-            cellEnd: false,
-            rowEnd: false,
-            rowStart: false
+            flags: 0
         };
     }
 
@@ -261,10 +260,20 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         }
                         cellData.rowSpan = rowSpan;
                         cellData.columnSpan = columnSpan;
-                        cellData.rowStart = start++ === 0;
-                        cellData.rowEnd = columnSpan + i === columnCount;
-                        cellData.cellStart = count++ === 0;
-                        cellData.cellEnd = cellData.rowEnd && j === rowCount - 1;
+                        let flags = 0;
+                        if (start++ === 0) {
+                            flags |= LAYOUT_GRIDCELL.ROW_START;
+                        }
+                        if (columnSpan + i === columnCount) {
+                            flags |= LAYOUT_GRIDCELL.ROW_END;
+                        }
+                        if (count++ === 0) {
+                            flags |= LAYOUT_GRIDCELL.CELL_START;
+                        }
+                        if ((flags & LAYOUT_GRIDCELL.ROW_END) && j === rowCount - 1) {
+                            flags |= LAYOUT_GRIDCELL.CELL_END;
+                        }
+                        cellData.flags = flags;
                         cellData.index = i;
                         this.data.set(item as T, cellData);
                         rowData.push(item);

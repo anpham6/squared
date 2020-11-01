@@ -1,3 +1,5 @@
+import LAYOUT_CSSGRID = squared.lib.internal.LAYOUT_CSSGRID;
+
 import { BOX_STANDARD } from '../lib/constant';
 
 import type NodeUI from '../node-ui';
@@ -75,7 +77,7 @@ function repeatUnit(data: CssGridDirectionData, sizes: string[]) {
 
 function setAutoFill(data: CssGridDirectionData, dimension: number) {
     const unit = data.unit;
-    if (unit.length === 1 && (data.autoFill || data.autoFit)) {
+    if (unit.length === 1 && (data.flags & LAYOUT_CSSGRID.AUTO_FIT || data.flags & LAYOUT_CSSGRID.AUTO_FILL)) {
         const unitMin = data.unitMin;
         let sizeMin = 0;
         for (const value of [unit[0], unitMin[0]]) {
@@ -184,7 +186,7 @@ function createDataAttribute(node: NodeUI): CssGridData<NodeUI> {
 function applyLayout(node: NodeUI, data: CssGridDirectionData, dataCount: number, horizontal: boolean) {
     let unit = data.unit;
     if (unit.length < dataCount) {
-        if (data.autoFill || data.autoFit) {
+        if (data.flags & LAYOUT_CSSGRID.AUTO_FIT || data.flags & LAYOUT_CSSGRID.AUTO_FILL) {
             if (unit.length === 0) {
                 unit.push('auto');
                 data.unitMin.push('');
@@ -207,7 +209,7 @@ function applyLayout(node: NodeUI, data: CssGridDirectionData, dataCount: number
             }
         }
     }
-    else if (data.autoFit || data.autoFill && (horizontal && node.blockStatic && !node.hasWidth && !node.hasPX('maxWidth', { percent: false }) || !horizontal && !node.hasHeight)) {
+    else if (data.flags & LAYOUT_CSSGRID.AUTO_FIT || data.flags & LAYOUT_CSSGRID.AUTO_FILL && (horizontal && node.blockStatic && !node.hasWidth && !node.hasPX('maxWidth', { percent: false }) || !horizontal && !node.hasHeight)) {
         unit.length = dataCount;
     }
     let percent = 1,
@@ -226,7 +228,9 @@ function applyLayout(node: NodeUI, data: CssGridDirectionData, dataCount: number
             ++auto;
         }
     }
-    data.flexible = percent < 1 || fr > 0;
+    if (percent < 1 || fr > 0) {
+        data.flags |= LAYOUT_CSSGRID.FLEXIBLE;
+    }
     if (percent < 1) {
         if (fr) {
             for (let i = 0; i < length; ++i) {
@@ -265,12 +269,9 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             unitTotal: [],
             repeat: [],
             auto: [],
-            autoFill: false,
-            autoFit: false,
             name: {},
-            fixedWidth: false,
-            flexible: false,
-            frTotal: 0
+            frTotal: 0,
+            flags: 0
         };
     }
 
@@ -356,10 +357,10 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                 let iterations = 1;
                                 switch (match[2]) {
                                     case 'auto-fit':
-                                        direction.autoFit = true;
+                                        direction.flags |= LAYOUT_CSSGRID.AUTO_FIT;
                                         break;
                                     case 'auto-fill':
-                                        direction.autoFill = true;
+                                        direction.flags |= LAYOUT_CSSGRID.AUTO_FILL;
                                         break;
                                     default:
                                         iterations = parseInt(match[2]) || 1;
@@ -487,11 +488,11 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 indexC = 2;
             }
             if (horizontal) {
-                if (column.autoFill) {
+                if (column.flags & LAYOUT_CSSGRID.AUTO_FILL) {
                     autoWidth = setAutoFill(column, node.actualWidth);
                 }
             }
-            else if (row.autoFill) {
+            else if (row.flags & LAYOUT_CSSGRID.AUTO_FILL) {
                 autoHeight = setAutoFill(row, node.actualHeight);
             }
             node.each((item: T, index) => {
@@ -1105,8 +1106,8 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 mainData.minCellHeight = minCellHeight;
                 if (horizontal) {
                     if (node.hasPX('width', { percent: false })) {
-                        column.fixedWidth = true;
-                        column.flexible = false;
+                        column.flags |= LAYOUT_CSSGRID.FIXED_WIDTH;
+                        column.flags &= ~LAYOUT_CSSGRID.FLEXIBLE;
                         setFlexibleDimension(node.actualWidth, columnGap, columnCount, column.unit, columnMax);
                     }
                     if (node.hasHeight && !CssGrid.isAligned(node)) {
@@ -1115,8 +1116,8 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 else {
                     if (node.hasPX('height', { percent: false })) {
-                        row.fixedWidth = true;
-                        row.flexible = false;
+                        row.flags |= LAYOUT_CSSGRID.FIXED_WIDTH;
+                        row.flags &= ~LAYOUT_CSSGRID.FLEXIBLE;
                         setFlexibleDimension(node.actualHeight, rowGap, rowCount, rowUnit, rowMax);
                     }
                     if (node.hasWidth && !CssGrid.isJustified(node)) {
