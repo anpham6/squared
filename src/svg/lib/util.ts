@@ -14,7 +14,7 @@ const { convertCamelCase, resolvePath, splitPair } = squared.lib.util;
 const REGEXP_TRUNCATECACHE = new Map<number, RegExp>();
 
 const RE_PARSE = new Pattern(/(\w+)\([^)]+\)/g);
-const RE_ROTATE = new Pattern(/rotate\((-?[\d.]+)(?:,?\s+(-?[\d.]+))?(?:,?\s+(-?[\d.]+))?\)/g);
+const RE_ROTATE = new Pattern(/rotate\((-?[\d.]+)(?:\s*,?\s+(-?[\d.]+))?(?:\s*,?\s+(-?[\d.]+))?\)/g);
 
 function setOriginPosition(element: Element, point: Point, attr: string, value: string, dimension: number) {
     if (isLength(value)) {
@@ -250,7 +250,7 @@ Object.assign(CSS_PROPERTIES, {
 });
 
 export const CACHE_VIEWNAME = new Map<string, number>();
-export const PATTERN_CUBICBEZIER = '([01](?:\\.\\d+)?),?\\s+(-?\\d+(?:\\.\\d+)?),?\\s+([01](?:\\.\\d+)?),?\\s+(-?\\d+(?:\\.\\d+)?)';
+export const PATTERN_CUBICBEZIER = '([01](?:\\.\\d+)?)\\s*,?\\s+(-?\\d+(?:\\.\\d+)?)\\s*,?\\s+([01](?:\\.\\d+)?)\\s*,?\\s+(-?\\d+(?:\\.\\d+)?)';
 
 export const SVG = {
     svg: (element: Element): element is SVGSVGElement => {

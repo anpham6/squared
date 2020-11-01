@@ -54,11 +54,11 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
 
     public addImage(element: HTMLImageElement) {
         if (element.complete) {
-            const uri = element.src;
+            const uri = element.src.trim();
             if (uri.startsWith('data:image/')) {
                 const match = REGEXP_DATAURI.exec(uri);
                 if (match) {
-                    const mimeType = match[1].trim().split(/\s*;\s*/);
+                    const mimeType = match[1].split(/\s*;\s*/);
                     this.addRawData(uri, mimeType[0], match[2], { encoding: mimeType[1] || 'base64', width: element.naturalWidth, height: element.naturalHeight });
                 }
             }

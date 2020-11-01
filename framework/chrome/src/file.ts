@@ -17,7 +17,7 @@ const { appendSeparator, randomUUID } = squared.base.lib.util;
 const STRING_SERVERROOT = '__serverroot__';
 const REGEXP_ESCAPEPATH = /([.|/\\{}()?])/g;
 
-const RE_SRCSET = new Pattern(/\s*(.+?\.[^\s,]+)(\s+[\d.]+[wx]\s*)?,?/g);
+const RE_SRCSET = new Pattern(/\s*(.+?\.[^\s,]+)(\s+[\d.]+[wx])?\s*,?/g);
 
 function parseFileAs(attr: string, value: Undef<string>, leading: "preserve" | "base64" = 'preserve', trailing: "compress" | "inline" = 'inline'): FileAsData {
     if (value) {
