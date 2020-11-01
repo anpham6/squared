@@ -8,7 +8,8 @@ export default class Bmp<T extends squared.base.Node> extends Extension<T> {
         minSize: 0,
         maxSize: Infinity,
         whenSmaller: false,
-        replaceWith: true
+        replaceWith: true,
+        opacity: 1
     };
 
     public processFile(data: ChromeAsset, override?: boolean) {

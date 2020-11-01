@@ -1,8 +1,6 @@
 .vscode/
 build/
 config/
-dist/bundles/
-dist/extensions/
 extension/
 framework/
 html/*
@@ -10,8 +8,6 @@ md5/
 node/
 src/
 temp/
-types/android
-types/vdom
 .eslint*
 .git*
 *.code-workspace

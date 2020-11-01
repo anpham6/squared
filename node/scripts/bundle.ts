@@ -25,9 +25,12 @@ let output: String;
                         files[1] = 'squared.base';
                         break;
                     case 'android':
+                        files[1] = 'squared.base';
+                        framework = 'android.framework';
+                        break;
                     case 'chrome':
                     case 'vdom':
-                        files[1] = 'squared.base';
+                        files[1] = 'squared.base-dom';
                     case 'vdom-lite':
                         framework = `${name}.framework`;
                         break;

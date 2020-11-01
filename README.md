@@ -36,7 +36,7 @@ Option #3 - Browser
 * Download (squared@version): https://unpkg.com/squared
 
 &nbsp;&nbsp;&nbsp;&gt; https://unpkg.com/squared/dist/squared.min.js  
-&nbsp;&nbsp;&nbsp;&gt; https://unpkg.com/squared/dist/squared.base.min.js  
+&nbsp;&nbsp;&nbsp;&gt; https://unpkg.com/squared/dist/squared.base-dom.min.js  
 &nbsp;&nbsp;&nbsp;&gt; https://unpkg.com/squared/dist/vdom.framework.min.js  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *OR*  
 &nbsp;&nbsp;&nbsp;&gt; https://unpkg.com/squared/dist/squared.min.js  
@@ -95,7 +95,7 @@ VDOM is a minimal framework (45kb gzipped) for those who prefer a universal HTML
 
 ```javascript
 <script src="/dist/squared.min.js"></script>
-<script src="/dist/squared.base.min.js"></script>
+<script src="/dist/squared.base-dom.min.js"></script>
 <script src="/dist/vdom.framework.min.js"></script> /* OR: chrome.framework.min.js */
 <script>
     document.addEventListener('DOMContentLoaded', async () => {

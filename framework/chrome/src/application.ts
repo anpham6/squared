@@ -25,7 +25,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
             }
             this.controllerHandler.applyDefaultStyles(element, sessionId);
         }
-        return this.createNode(sessionId, { element });
+        return this.createNodeStatic(sessionId, element);
     }
 
     public saveAs(filename?: string, options?: IFileArchivingOptions) {

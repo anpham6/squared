@@ -38,6 +38,7 @@
     "type": "js",
     "saveAs": "js/modules1.js",
     "process": [
+      "bundle",
       "beautify"
     ]
   },
@@ -61,7 +62,7 @@
   {
     "selector": "head > script:nth-of-type(5)",
     "type": "js",
-    "exclude": "true,",
+    "exclude": true,
     "template": {
       "module": "@babel/core",
       "identifier": "es5-script"
@@ -70,7 +71,7 @@
   {
     "selector": ".card:nth-of-type(1) img",
     "type": "image",
-    "saveTo": "../images/harbour",
+    "pathname": "../images/harbour",
     "commands": [
       "png(10000,75000)(100x200^cover){90,180,270#FFFFFF}",
       "jpeg(300x100^contain){90,180,270#FFFFFF}"
@@ -86,7 +87,7 @@
   {
     "selector": ".card:nth-of-type(3) img",
     "type": "image",
-    "saveTo": "../images/harbour",
+    "pathname": "../images/harbour",
     "commands": [
       "png@(25000,*)(800x600[bezier]^contain[right|top]){315}|0.5|"
     ]
@@ -99,7 +100,7 @@
   {
     "selector": "embed",
     "type": "image",
-    "saveTo": "../images/harbour",
+    "pathname": "../images/harbour",
     "commands": [
       "png@(100x200^contain[right|middle]){45#FFFFFF}|0.5|"
     ]

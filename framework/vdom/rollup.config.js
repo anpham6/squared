@@ -11,7 +11,7 @@ export default [
         output: {
             file: './dist/vdom.framework.min.js',
             name: 'vdom',
-            format: 'umd'
+            format: 'iife'
         },
         plugins: [
             terser(terser_options)
@@ -23,7 +23,7 @@ export default [
         output: {
             file: './dist/vdom.framework.js',
             name: 'vdom',
-            format: 'umd',
+            format: 'iife',
             banner: `/* vdom-framework ${version}\n   https://github.com/anpham6/squared */\n`
         },
         plugins: [

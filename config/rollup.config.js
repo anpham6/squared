@@ -11,7 +11,7 @@ export default [
         output: {
             file: './dist/squared.min.js',
             name: 'squared',
-            format: 'umd'
+            format: 'iife'
         },
         plugins: [
             terser(terser_options)
@@ -23,7 +23,19 @@ export default [
         output: {
             file: './dist/squared.base.min.js',
             name: 'squared.base',
-            format: 'umd'
+            format: 'iife'
+        },
+        plugins: [
+            terser(terser_options)
+        ]
+    },
+    {
+        input: './build/src/base/main-dom.js',
+        treeshake: false,
+        output: {
+            file: './dist/squared.base-dom.min.js',
+            name: 'squared.base',
+            format: 'iife'
         },
         plugins: [
             terser(terser_options)
@@ -35,7 +47,7 @@ export default [
         output: {
             file: './dist/squared.svg.min.js',
             name: 'squared.svg',
-            format: 'umd'
+            format: 'iife'
         },
         plugins: [
             terser(terser_options)
@@ -47,7 +59,7 @@ export default [
         output: {
             file: './dist/squared.js',
             name: 'squared',
-            format: 'umd',
+            format: 'iife',
             banner: `/* squared ${version}\n   https://github.com/anpham6/squared */\n`
         },
         plugins: [
@@ -60,7 +72,20 @@ export default [
         output: {
             file: './dist/squared.base.js',
             name: 'squared.base',
-            format: 'umd',
+            format: 'iife',
+            banner: `/* squared.base ${version}\n   https://github.com/anpham6/squared */\n`
+        },
+        plugins: [
+            prettier(prettier_options)
+        ]
+    },
+    {
+        input: './build/src/base/main-dom.js',
+        treeshake: false,
+        output: {
+            file: './dist/squared.base-dom.js',
+            name: 'squared.base',
+            format: 'iife',
             banner: `/* squared.base ${version}\n   https://github.com/anpham6/squared */\n`
         },
         plugins: [
@@ -73,11 +98,24 @@ export default [
         output: {
             file: './dist/squared.svg.js',
             name: 'squared.svg',
-            format: 'umd',
+            format: 'iife',
             banner: `/* squared.svg ${version}\n   https://github.com/anpham6/squared */\n`
         },
         plugins: [
             prettier(prettier_options)
         ]
-    }
+    },
+    {
+        input: './build/src/main.js',
+        treeshake: false,
+        output: {
+            file: './dist/squared.umd.js',
+            name: 'squared',
+            format: 'umd',
+            banner: `/* squared ${version}\n   https://github.com/anpham6/squared */\n`
+        },
+        plugins: [
+            prettier(prettier_options)
+        ]
+    },
 ];

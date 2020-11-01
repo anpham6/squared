@@ -18,7 +18,7 @@ export default abstract class Extension<T extends squared.base.Node> extends squ
             result += '%';
         }
         result += getSizeRange(options);
-        return name + (result !== '(0,*)' ? result : '') + (!isNaN(opacity) ? `|${opacity}|` : '');
+        return name + (result !== '(0,*)' ? result : '') + (!isNaN(opacity) && opacity < 1 ? `|${opacity}|` : '');
     }
 
     public processFile(data: ChromeAsset, override?: boolean) {

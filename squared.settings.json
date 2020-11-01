@@ -87,6 +87,15 @@
         "es5-minify": {
           "toplevel": true
         }
+      },
+      "rollup": {
+        "bundle": {
+          "treeshake": false,
+          "output": {
+              "sourcemap": false,
+              "globals": []
+          }
+        }
       }
     }
   }

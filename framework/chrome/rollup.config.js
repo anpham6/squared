@@ -11,7 +11,7 @@ export default [
         output: {
             file: './dist/chrome.framework.min.js',
             name: 'chrome',
-            format: 'umd'
+            format: 'iife'
         },
         plugins: [
             terser(terser_options)
@@ -23,7 +23,7 @@ export default [
         output: {
             file: './dist/chrome.framework.js',
             name: 'chrome',
-            format: 'umd',
+            format: 'iife',
             banner: `/* chrome-framework ${version}\n   https://github.com/anpham6/squared */\n`
         },
         plugins: [
