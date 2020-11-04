@@ -1,3 +1,4 @@
+import CREATE_NODE = squared.base.lib.internal.CREATE_NODE;
 import NODE_TEMPLATE = squared.base.lib.constant.NODE_TEMPLATE;
 import BUILD_VERSION = android.lib.constant.BUILD_VERSION;
 import EXT_ANDROID = android.base.EXT_ANDROID;
@@ -332,7 +333,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
     }
 
     public createPlaceholder(node: T, children: T[], target?: Null<HTMLElement>) {
-        const container = this.application.createNode(node.sessionId, { parent: node, children, delegate: children.length > 0, cascade: true });
+        const container = this.application.createNode(node.sessionId, { parent: node, children, flags: (children.length > 0 ? CREATE_NODE.DELEGATE : 0) | CREATE_NODE.CASCADE });
         container.inherit(node, 'base');
         if (target) {
             container.dataset.androidTarget = target.id;

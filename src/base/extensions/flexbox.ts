@@ -1,3 +1,5 @@
+import CREATE_NODE = squared.base.lib.internal.CREATE_NODE;
+
 import { NODE_ALIGNMENT } from '../lib/constant';
 
 import type NodeUI from '../node-ui';
@@ -99,7 +101,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                 for (let i = 0; i < length; ++i) {
                     const seg = rows[i];
                     maxCount = Math.max(seg.length, maxCount);
-                    const group = controller.createNodeGroup(seg[0], seg, node, { alignmentType: NODE_ALIGNMENT.SEGMENTED, delegate: true, cascade: true });
+                    const group = controller.createNodeGroup(seg[0], seg, node, { alignmentType: NODE_ALIGNMENT.SEGMENTED, flags: CREATE_NODE.DELEGATE | CREATE_NODE.CASCADE });
                     group.box[size] = boxSize;
                 }
             }

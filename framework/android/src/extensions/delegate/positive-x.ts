@@ -1,3 +1,4 @@
+import CREATE_NODE = squared.base.lib.internal.CREATE_NODE;
 import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
 
@@ -141,9 +142,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
             container = this.controller.createNodeWrapper(node, parent, {
                 alignmentType: NODE_ALIGNMENT.VERTICAL,
                 children,
-                resetMargin: node.every((item: T) => children.includes(item) || !item.visible) || !node.pageFlow && !node.rootElement || parent.layoutGrid,
-                cascade: true,
-                inheritDataset: true
+                flags: CREATE_NODE.CASCADE | (node.every((item: T) => children.includes(item) || !item.visible) || !node.pageFlow && !node.rootElement || parent.layoutGrid ? CREATE_NODE.RESET_MARGIN : 0) | CREATE_NODE.INHERIT_DATASET
             });
         }
         if (node.documentBody) {

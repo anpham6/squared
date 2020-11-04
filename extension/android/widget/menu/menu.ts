@@ -1,3 +1,4 @@
+import CREATE_NODE = squared.base.lib.internal.CREATE_NODE;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
 import NODE_TEMPLATE = squared.base.lib.constant.NODE_TEMPLATE;
 import EXT_ANDROID = android.base.EXT_ANDROID;
@@ -124,7 +125,7 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
     }
 
     public processNode(node: T, parent: T) {
-        const outerParent = this.application.createNode(node.sessionId, { parent, append: false });
+        const outerParent = this.application.createNode(node.sessionId, { parent, flags: CREATE_NODE.DEFER });
         outerParent.childIndex = node.childIndex;
         outerParent.actualParent = parent.actualParent;
         node.documentRoot = true;

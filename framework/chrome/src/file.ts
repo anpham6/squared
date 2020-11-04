@@ -4,7 +4,7 @@ import type Extension from './extension';
 import Pattern = squared.lib.base.Pattern;
 
 type BundleIndex = ObjectMap<ChromeAsset[]>;
-type FileAsData = Undef<[string, Undef<string>, boolean, boolean]>;
+type FileAsData = [string, Undef<string>, boolean, boolean];
 
 const { FILE } = squared.lib.regex;
 
@@ -20,13 +20,13 @@ const REGEXP_ESCAPEPATH = /([.|/\\{}()?])/g;
 
 const RE_SRCSET = new Pattern(/\s*(.+?\.[^\s,]+)(\s+[\d.]+[wx])?\s*,?/g);
 
-function parseFileAs(attr: string, value: Undef<string>, leading: "preserve" | "base64" = 'preserve', trailing: "compress" | "inline" = 'inline'): FileAsData {
+function parseFileAs(attr: string, value: Undef<string>, leading: "preserve" | "base64" = 'preserve', trailing: "compress" | "inline" = 'inline') {
     if (value) {
         const match = new RegExp(`${attr}:\\s*((?:[^"]|\\\\")+)`).exec(normalizePath(value));
         if (match) {
             const segments = match[1].split('::').map(item => item.trim());
             const actions = segments[2] || '';
-            return [segments[0], segments[1], actions.includes(leading), actions.includes(trailing)];
+            return [segments[0], segments[1], actions.includes(leading), actions.includes(trailing)] as FileAsData;
         }
     }
 }
@@ -196,7 +196,6 @@ const convertFileMatch = (value: string) => new RegExp(value.replace(REGEXP_ESCA
 const getFileExt = (value: string) => value.includes('.') ? fromLastIndexOf(value, '.').trim().toLowerCase() : '';
 const getDirectory = (path: string, start: number) => path.substring(start, path.lastIndexOf('/'));
 const normalizePath = (value: string) => value.replace(/\\/g, '/');
-const excludeFile = (value: Undef<string>) => value === 'exclude' || value === 'ignore';
 
 export default class File<T extends squared.base.Node> extends squared.base.File<T> implements chrome.base.File<T> {
     public static parseUri(uri: string, options?: UriOptions): Null<ChromeAsset> {
@@ -362,6 +361,10 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         let file: Undef<string>,
             format: Undef<string>;
         if (element) {
+            file = element.dataset.chromeFile;
+            if (file === 'exclude') {
+                return result;
+            }
             if (assetMap && assetMap.has(element)) {
                 const command = assetMap.get(element)!;
                 if (command.ignore || command.exclude) {
@@ -381,11 +384,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     format = saveAsHtml.format;
                 }
             }
-            else {
-                file = element.dataset.chromeFile;
-                if (excludeFile(file)) {
-                    return result;
-                }
+            else if (file === 'ignore') {
+                return result;
             }
         }
         const data = File.parseUri(location.href, { preserveCrossOrigin, saveAs: file, format });
@@ -703,9 +703,13 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             }
             resolveAssetSource(element, items);
             for (const [item, uri] of items) {
+                const file = item.dataset.chromeFile;
                 let saveAs: Undef<string>,
                     saveTo: Undef<boolean>,
                     fromConfig: Undef<boolean>;
+                if (file === 'exclude') {
+                    continue;
+                }
                 if (assetMap && assetMap.has(item)) {
                     const command = assetMap.get(item)!;
                     if (excludeAsset(result, command, item.outerHTML)) {
@@ -718,8 +722,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     fromConfig = true;
                 }
                 else {
-                    const file = item.dataset.chromeFile;
-                    if (excludeFile(file)) {
+                    if (file === 'ignore') {
                         continue;
                     }
                     const command = parseFileAs('saveTo', file);
@@ -768,8 +771,11 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     private createBundle(assets: ChromeAsset[], bundleIndex: BundleIndex, element: HTMLElement, src: Undef<string>, mimeType: string, preserveCrossOrigin: Undef<boolean>, assetMap: Undef<Map<Element, AssetCommand>>, saveAsOptions: Undef<SaveAsOptions>, saveAsCondtion = true) {
-        let file = element.dataset.chromeFile,
-            format: Undef<string>,
+        let file = element.dataset.chromeFile;
+        if (file === 'exclude') {
+            return;
+        }
+        let format: Undef<string>,
             preserve: Undef<boolean>,
             inline: Undef<boolean>,
             fromConfig: Undef<boolean>,
@@ -793,9 +799,6 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             ({ preserve, inline } = command);
             fromConfig = true;
         }
-        else if (excludeFile(file)) {
-            return;
-        }
         else if (saveAsCondtion && saveAsOptions && saveAsOptions.filename) {
             if (excludeAsset(assets, saveAsOptions, element.outerHTML)) {
                 return;
@@ -803,6 +806,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             file = getCustomPath(src, saveAsOptions.pathname, saveAsOptions.filename);
             ({ format, preserve, inline } = saveAsOptions);
             fromSaveAs = true;
+        }
+        else if (file === 'ignore') {
+            return;
         }
         let data: Null<ChromeAsset> = null,
             first: Undef<boolean>;
@@ -845,6 +851,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 textContent: Undef<string>,
                 fromConfig: Undef<boolean>;
             if (element) {
+                let file = element.dataset.chromeFile;
                 let pathname: Undef<string>,
                     filename: Undef<string>;
                 if (assetMap && assetMap.has(element)) {
@@ -858,10 +865,6 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     textContent = element.outerHTML;
                 }
                 else {
-                    let file = element.dataset.chromeFile;
-                    if (excludeFile(file)) {
-                        return;
-                    }
                     if (transforms) {
                         const id = element.id.trim();
                         if (id) {
@@ -880,6 +883,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                         ({ format, base64, compress } = saveAsImage);
                     }
                     else if (file) {
+                        if (file === 'ignore') {
+                            return;
+                        }
                         const fileAs = parseFileAs('saveTo', file, 'base64', 'compress');
                         if (fileAs) {
                             [pathname, commands, base64, compress] = fileAs;

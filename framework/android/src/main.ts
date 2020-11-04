@@ -1,5 +1,5 @@
 import APP_FRAMEWORK = squared.base.lib.constant.APP_FRAMEWORK;
-import EXT_NAME = squared.base.EXT_NAME;
+import EXT_NAME = squared.base.lib.internal.EXT_NAME;
 import EXT_ANDROID = android.base.EXT_ANDROID;
 
 import Application from './application';

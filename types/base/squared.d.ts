@@ -1,20 +1,6 @@
 type FileActionOptions = squared.FileActionOptions;
 
 declare module "base" {
-    const enum EXT_NAME {
-        ACCESSIBILITY = 'squared.accessibility',
-        COLUMN = 'squared.column',
-        CSS_GRID = 'squared.css-grid',
-        FLEXBOX = 'squared.flexbox',
-        GRID = 'squared.grid',
-        LIST = 'squared.list',
-        RELATIVE = 'squared.relative',
-        SPRITE = 'squared.sprite',
-        TABLE = 'squared.table',
-        VERTICAL_ALIGN = 'squared.verticalalign',
-        WHITESPACE = 'squared.whitespace'
-    }
-
     interface FileCopyingOptions extends FileActionOptions {
         directory?: string;
     }
@@ -79,10 +65,10 @@ declare module "base" {
         rootElements: Set<HTMLElement>;
         extensions: Extension<T>[];
         elementMap: Map<Element, ElementData>;
-        keyframesMap?: KeyframesMap;
+        node: Null<T>;
+        documentElement: Null<T>;
         afterInsertNode?: Extension<T>[];
-        node?: T;
-        documentElement?: T;
+        keyframesMap?: KeyframesMap;
     }
 
     interface AppSessionUI<T extends NodeUI> extends AppSession<T> {
@@ -112,6 +98,7 @@ declare module "base" {
         setStyleMap(sessionId: string, documentRoot?: DocumentRoot, queryRoot?: DocumentQueryRoot): void;
         replaceShadowRootSlots(shadowRoot: ShadowRoot): void;
         createNode(sessionId: string, options: CreateNodeOptions): T;
+        createNodeStatic(sessionId: string, element?: Element): T;
         insertNode(element: Element, sessionId: string): Undef<T>;
         afterCreateCache(node: T): void;
         getProcessing(sessionId: string): Undef<AppProcessing<T>>;
@@ -769,6 +756,30 @@ declare module "base" {
     }
 
     namespace lib {
+        namespace internal {
+            const enum EXT_NAME {
+                ACCESSIBILITY = 'squared.accessibility',
+                COLUMN = 'squared.column',
+                CSS_GRID = 'squared.css-grid',
+                FLEXBOX = 'squared.flexbox',
+                GRID = 'squared.grid',
+                LIST = 'squared.list',
+                RELATIVE = 'squared.relative',
+                SPRITE = 'squared.sprite',
+                TABLE = 'squared.table',
+                VERTICAL_ALIGN = 'squared.verticalalign',
+                WHITESPACE = 'squared.whitespace'
+            }
+            const enum CREATE_NODE {
+                DEFER = 1,
+                DELEGATE = 1 << 1,
+                CASCADE = 1 << 2,
+                RESET_MARGIN = 1 << 3,
+                RESET_CONTENTBOX = 1 << 4,
+                INHERIT_DATASET = 1 << 5
+            }
+        }
+
         namespace constant {
             const enum APP_FRAMEWORK {
                 UNIVERSAL = 0,

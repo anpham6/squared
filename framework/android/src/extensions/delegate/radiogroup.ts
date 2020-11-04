@@ -1,3 +1,4 @@
+import CREATE_NODE = squared.base.lib.internal.CREATE_NODE;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
 import NODE_TEMPLATE = squared.base.lib.constant.NODE_TEMPLATE;
 
@@ -54,7 +55,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
         let length = radiogroup.length;
         if (length > 1) {
             const linearX = NodeUI.linearData(parent.children.slice(first, last + 1)).linearX;
-            const container = this.controller.createNodeGroup(node, radiogroup, parent, { delegate: true });
+            const container = this.controller.createNodeGroup(node, radiogroup, parent, { flags: CREATE_NODE.DELEGATE });
             const controlName = CONTAINER_TAGNAME.RADIOGROUP;
             container.setControlType(controlName, CONTAINER_NODE.LINEAR);
             if (linearX) {

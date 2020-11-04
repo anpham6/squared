@@ -107,9 +107,13 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     public createNode(sessionId: string, options: CreateNodeOptions) {
-        const node = new this.Node(this.nextId, sessionId, options.element);
-        this._afterInsertNode(node);
+        return this.createNodeStatic(sessionId, options.element);
+    }
+
+    public createNodeStatic(sessionId: string, element?: Element) {
         const afterInsertNode = this.getProcessing(sessionId)!.afterInsertNode;
+        const node = new this.Node(this.nextId, sessionId, element);
+        this._afterInsertNode(node);
         if (afterInsertNode) {
             afterInsertNode.some(item => item.afterInsertNode!(node));
         }
@@ -420,7 +424,8 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     public getProcessingCache(sessionId: string): NodeList<T> {
-        return this.session.active.get(sessionId)?.cache || new NodeList();
+        const processing = this.session.active.get(sessionId);
+        return processing ? processing.cache : new NodeList();
     }
 
     public getDatasetName(attr: string, element: DocumentElement) {
@@ -933,10 +938,12 @@ export default abstract class Application<T extends Node> implements squared.bas
             cache: new NodeList<T>(undefined, sessionId),
             excluded: new NodeList<T>(undefined, sessionId),
             rootElements,
+            node: null,
+            documentElement: null,
             elementMap: newSessionInit(sessionId),
             extensions
         };
-        const afterInsertNode = extensions.filter(item => !!item.afterInsertNode);
+        const afterInsertNode = extensions.filter(item => item.afterInsertNode);
         if (afterInsertNode.length) {
             processing.afterInsertNode = afterInsertNode;
         }

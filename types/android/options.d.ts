@@ -12,10 +12,3 @@ interface CloneOptions {
     position?: boolean;
     attributes?: boolean;
 }
-
-interface CreateNodeWrapperUIOptions<T> {
-    resetMargin?: boolean;
-    resetContentBox?: boolean;
-    inheritDataset?: boolean;
-    inheritContentBox?: boolean;
-}

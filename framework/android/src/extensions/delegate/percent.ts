@@ -1,3 +1,4 @@
+import CREATE_NODE = squared.base.lib.internal.CREATE_NODE;
 import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
 import LAYOUT_STRING = android.base.LAYOUT_STRING;
@@ -59,7 +60,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
         const mainData = this.data.get(node) as PercentData;
         let container: Undef<T>;
         if (!parent.layoutConstraint || mainData.percentHeight) {
-            container = this.controller.createNodeWrapper(node, parent, { alignmentType: NODE_ALIGNMENT.VERTICAL, resetMargin: true });
+            container = this.controller.createNodeWrapper(node, parent, { alignmentType: NODE_ALIGNMENT.VERTICAL, flags: CREATE_NODE.RESET_MARGIN });
         }
         const target = container || parent;
         if (mainData.percentWidth) {

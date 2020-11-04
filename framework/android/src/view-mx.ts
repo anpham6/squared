@@ -1747,7 +1747,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 let maxHeight = 0,
                                     parentHeight = 0;
                                 for (const item of grandParent) {
-                                    const height = (item.data<BoxRectDimension>(squared.base.EXT_NAME.FLEXBOX, 'boundsData') || item.bounds).height;
+                                    const height = (item.data<BoxRectDimension>(squared.base.lib.internal.EXT_NAME.FLEXBOX, 'boundsData') || item.bounds).height;
                                     if (height > maxHeight) {
                                         maxHeight = height;
                                     }

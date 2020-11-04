@@ -1,3 +1,5 @@
+import CREATE_NODE = squared.base.lib.internal.CREATE_NODE;
+
 import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TRAVERSE } from './lib/constant';
 
 import type ExtensionManager from './extensionmanager';
@@ -314,10 +316,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public insertNode(element: Element, sessionId: string, cascadeAll?: boolean, pseudoElt?: PseudoElt) {
         if (element.nodeName === '#text' || this.conditionElement(element as HTMLElement, sessionId, cascadeAll, pseudoElt)) {
             this._applyDefaultStyles(element, sessionId, pseudoElt);
-            return this.createNode(sessionId, { element, append: false });
+            return this.createNodeStatic(sessionId, element);
         }
         else {
-            const node = this.createNode(sessionId, { element, append: false });
+            const node = this.createNodeStatic(sessionId, element);
             node.visible = false;
             node.excluded = true;
             return node;
@@ -385,7 +387,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     public createNode(sessionId: string, options: CreateNodeUIOptions<T>) {
-        const { element, parent, children } = options;
+        const { flags, element, parent, children } = options;
         const { cache, afterInsertNode } = this.getProcessing(sessionId)!;
         const node = new this.Node(this.nextId, sessionId, element);
         this._afterInsertNode(node);
@@ -408,8 +410,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 children[i].parent = node;
             }
         }
-        if (options.append !== false) {
-            cache.add(node, !!options.delegate, !!options.cascade);
+        if (~flags! & CREATE_NODE.DEFER) {
+            cache.add(node, (flags! & CREATE_NODE.DELEGATE) > 0, (flags! & CREATE_NODE.CASCADE) > 0);
         }
         return node;
     }
@@ -744,7 +746,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             siblingsTrailing: T[] = [],
                             trailing = children[0],
                             floating = false,
-                            hasExcluded: Undef<boolean>;
+                            excluded: Undef<boolean>;
                         for (let i = 0; i < length; ++i) {
                             const child = children[i];
                             if (child.flowElement) {
@@ -770,14 +772,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 }
                             }
                             if (child.excluded && !contents) {
-                                hasExcluded = true;
+                                excluded = true;
                                 processing.excluded.add(child);
                             }
                         }
                         trailing.siblingsTrailing = siblingsTrailing;
                         if (!contents) {
                             node.floatContainer = floating;
-                            node.retainAs(hasExcluded ? children.filter(item => !item.excluded) : children.slice(0));
+                            node.retainAs(excluded ? children.filter(item => !item.excluded) : children.slice(0));
                             cache.addAll(node);
                         }
                         else {
@@ -1411,7 +1413,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             const parent = floatgroup || layout.node;
             for (let j = 0; j < itemCount; ++j) {
                 const seg = segments[j];
-                const target = controllerHandler.createNodeGroup(seg[0], seg, parent, { delegate: true, cascade: true });
+                const target = controllerHandler.createNodeGroup(seg[0], seg, parent, { flags: CREATE_NODE.DELEGATE | CREATE_NODE.CASCADE });
                 const group = new LayoutUI(parent, target, 0, NODE_ALIGNMENT.SEGMENTED, seg);
                 if (seg === inlineAbove) {
                     group.addAlign(NODE_ALIGNMENT.COLUMN);
@@ -1456,7 +1458,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const { clearMap, controllerHandler } = this;
         const { containerType, alignmentType } = controllerHandler.containerTypeVertical;
         if (layout.containerType !== 0) {
-            const wrapper = controllerHandler.createNodeWrapper(layout.node, layout.parent, { containerType, alignmentType, cascade: true });
+            const wrapper = controllerHandler.createNodeWrapper(layout.node, layout.parent, { containerType, alignmentType, flags: CREATE_NODE.CASCADE });
             this.addLayout(new LayoutUI(
                 wrapper,
                 layout.node,

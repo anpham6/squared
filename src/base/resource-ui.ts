@@ -28,7 +28,7 @@ const BORDER_OUTLINE = CSS_PROPERTIES.outline.value as string[];
 const PATTERN_COLOR = '((?:rgb|hsl)a?\\(\\d+,\\s*\\d+%?,\\s*\\d+%?(?:,\\s*[\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]{3,})';
 const PATTERN_COLORLENGTH = `${STRING.LENGTH_PERCENTAGE}|${STRING.CSS_ANGLE}|(?:${STRING.CSS_CALC}(?=,)|${STRING.CSS_CALC})`;
 const PATTERN_COLORSTOP = `\\s*${PATTERN_COLOR}(?:\\s*(${PATTERN_COLORLENGTH})\\s*,?)*\\s*,?`;
-const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\([^)]+\\)|(repeating-)?(linear|radial|conic)-gradient\\(((?:to\\s+[a-z\\s]+|(?:from\\s+)?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*(?:(?:-?[\\d.]+(?:[a-z%]+)?\\s*)+)?(?:at\\s+[\\w %]+)?)?)\\s*,?\\s*((?:${PATTERN_COLORSTOP})+)\\))`, 'g');
+const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\([^)]+\\)|(repeating-)?(linear|radial|conic)-gradient\\(((?:to\\s+[a-z\\s]+|(?:from\\s+)?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*(?:(?:-?[\\d.]+(?:[a-z%]+)?\\s*)+)?(?:at\\s+[\\w\\s%]+)?)?)\\s*,?\\s*((?:${PATTERN_COLORSTOP})+)\\))`, 'g');
 const REGEXP_COLORSTOP = new RegExp(PATTERN_COLORSTOP, 'g');
 const REGEXP_TRAILINGINDENT = /\n([^\S\n]*)?$/;
 const CHAR_EMPTYSTRING = /^\s+$/;
@@ -127,9 +127,6 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
                     }
                     else if (isCalc(unit)) {
                         offset = calculate(match[6], { boundingSize: size, fontSize: node.fontSize }) / size;
-                        if (isNaN(offset)) {
-                            offset = -1;
-                        }
                     }
                     if (repeat && offset !== -1) {
                         offset *= extent;
@@ -677,7 +674,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                 }
             }
         });
-        return numberArray ? [undefined, result] : [result];
+        return numberArray ? [, result] : [result];
     }
 
     public static parseBackgroundImage(node: NodeUI, backgroundImage: string) {
@@ -920,7 +917,10 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
             return node.naturalElements.some(item => item.lineBreak);
         }
         else if (!lineBreak && node.naturalChild) {
-            const value = trim ? node.element!.textContent!.trim() : node.element!.textContent!;
+            let value = node.textContent;
+            if (trim) {
+                value = value.trim();
+            }
             return value.includes('\n') && (node.preserveWhiteSpace || node.plainText && node.actualParent!.preserveWhiteSpace || node.css('whiteSpace') === 'pre-line');
         }
         return false;
@@ -991,18 +991,10 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                 backgroundColor = node.backgroundColor,
                 backgroundImage: Undef<(string | Gradient)[]>;
             if (borderWidth) {
-                if (node.borderTopWidth) {
-                    setBorderStyle(node, boxStyle, 'borderTop', BORDER_TOP);
-                }
-                if (node.borderRightWidth) {
-                    setBorderStyle(node, boxStyle, 'borderRight', BORDER_RIGHT);
-                }
-                if (node.borderBottomWidth) {
-                    setBorderStyle(node, boxStyle, 'borderBottom', BORDER_BOTTOM);
-                }
-                if (node.borderLeftWidth) {
-                    setBorderStyle(node, boxStyle, 'borderLeft', BORDER_LEFT);
-                }
+                setBorderStyle(node, boxStyle, 'borderTop', BORDER_TOP);
+                setBorderStyle(node, boxStyle, 'borderRight', BORDER_RIGHT);
+                setBorderStyle(node, boxStyle, 'borderBottom', BORDER_BOTTOM);
+                setBorderStyle(node, boxStyle, 'borderLeft', BORDER_LEFT);
             }
             if (visibleStyle.outline && setBorderStyle(node, boxStyle, 'outline', BORDER_OUTLINE)) {
                 borderWidth = true;
@@ -1173,13 +1165,12 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                             value = '';
                             let boxStyle = node.data<BoxStyle>(ResourceUI.KEY_NAME, 'boxStyle');
                             if (boxStyle) {
-                                const backgroundImageA = boxStyle.backgroundImage;
-                                if (backgroundImageA) {
+                                if (boxStyle.backgroundImage) {
                                     boxStyle.backgroundSize = `${backgroundSize}, ${boxStyle.backgroundSize}`;
                                     boxStyle.backgroundRepeat = `${backgroundRepeat}, ${boxStyle.backgroundRepeat}`;
                                     boxStyle.backgroundPositionX = `${backgroundPositionX}, ${boxStyle.backgroundPositionX}`;
                                     boxStyle.backgroundPositionY = `${backgroundPositionY}, ${boxStyle.backgroundPositionY}`;
-                                    backgroundImageA.unshift(...backgroundImage);
+                                    boxStyle.backgroundImage.unshift(...backgroundImage);
                                     break;
                                 }
                             }
@@ -1380,8 +1371,8 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                         return;
                     }
                     else {
-                        const textContent = child.plainText ? child.textContent : child[attr];
-                        if (isString(textContent)) {
+                        const textContent = child.plainText ? child.textContent : child[attr] as string;
+                        if (textContent) {
                             if (!preserveWhiteSpace) {
                                 value = value.replace(textContent, '');
                             }

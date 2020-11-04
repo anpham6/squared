@@ -1,3 +1,4 @@
+import CREATE_NODE = squared.base.lib.internal.CREATE_NODE;
 import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
 import NODE_TEMPLATE = squared.base.lib.constant.NODE_TEMPLATE;
@@ -658,7 +659,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         text: Undef<T>,
                         length = title.length;
                     if (length > 1) {
-                        rt = this.createNodeGroup(title[0], title, node, { containerType: CONTAINER_NODE.RELATIVE, alignmentType: NODE_ALIGNMENT.HORIZONTAL, delegate: true });
+                        rt = this.createNodeGroup(title[0], title, node, { containerType: CONTAINER_NODE.RELATIVE, alignmentType: NODE_ALIGNMENT.HORIZONTAL, flags: CREATE_NODE.DELEGATE });
                         rt.css('whiteSpace', 'nowrap');
                         rt.setLayoutWidth('wrap_content');
                     }
@@ -667,7 +668,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                     length = content.length;
                     if (length > 1) {
-                        text = this.createNodeGroup(content[0], content, node, { containerType: CONTAINER_NODE.RELATIVE, alignmentType: NODE_ALIGNMENT.HORIZONTAL, delegate: true });
+                        text = this.createNodeGroup(content[0], content, node, { containerType: CONTAINER_NODE.RELATIVE, alignmentType: NODE_ALIGNMENT.HORIZONTAL, flags: CREATE_NODE.DELEGATE });
                         text.css('whiteSpace', 'nowrap');
                         text.setLayoutWidth('wrap_content');
                     }
@@ -675,7 +676,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         text = content[0];
                     }
                     if (rt && text) {
-                        const group = this.createNodeGroup(rt, [rt, text], node, { containerType: CONTAINER_NODE.LINEAR, alignmentType: NODE_ALIGNMENT.VERTICAL, delegate: true });
+                        const group = this.createNodeGroup(rt, [rt, text], node, { containerType: CONTAINER_NODE.LINEAR, alignmentType: NODE_ALIGNMENT.VERTICAL, flags: CREATE_NODE.DELEGATE });
                         group.setLayoutWidth('wrap_content');
                         group.setLayoutHeight('wrap_content');
                         group.mergeGravity('gravity', 'center_horizontal');
@@ -1850,10 +1851,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if (attrs.rowSpan) {
             android.layout_rowSpan = attrs.rowSpan.toString();
         }
-        const result: ViewAttribute = {
-            android,
-            app: attrs.app
-        };
+        const result: ViewAttribute = { android, app: attrs.app };
         const output = this.renderNodeStatic({ controlName: CONTAINER_TAGNAME.SPACE, width, height }, result);
         attrs.documentId = result.documentId;
         return output;
@@ -1991,10 +1989,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     public createNodeGroup(node: T, children: T[], parent?: T, options?: CreateNodeGroupUIOptions) {
         let containerType: Undef<number>,
             alignmentType: Undef<number>,
-            delegate: Undef<boolean>,
-            cascade: Undef<boolean>;
+            flags: Undef<number>;
         if (options) {
-            ({ containerType, alignmentType, delegate, cascade } = options);
+            ({ containerType, alignmentType, flags } = options);
         }
         const container = new ViewGroup(this.application.nextId, node, children, parent) as T;
         if (containerType) {
@@ -2004,25 +2001,27 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             container.addAlign(alignmentType);
         }
         this.afterInsertNode(container);
-        if (parent) {
-            if (!parent.contains(container)) {
-                parent.add(container);
-                container.init(parent, node.depth);
-            }
+        if (parent && !parent.contains(container)) {
+            parent.add(container);
+            container.init(parent, node.depth);
         }
-        this.application.getProcessingCache(node.sessionId).add(container, !!delegate, !!cascade);
+        this.application.getProcessingCache(node.sessionId).add(container, (flags! & CREATE_NODE.DELEGATE) > 0, (flags! & CREATE_NODE.CASCADE) > 0);
         return container;
     }
 
     public createNodeWrapper(node: T, parent: T, options: CreateNodeWrapperUIOptions<T> = {}) {
-        const { children, containerType, alignmentType } = options;
+        let children: Undef<T[]>,
+            containerType: Undef<number>,
+            alignmentType: Undef<number>,
+            flags: Undef<number>;
+        if (options) {
+            ({ children, containerType, alignmentType, flags } = options);
+        }
         const container = this.application.createNode(node.sessionId, {
             parent,
             children,
-            append: true,
             innerWrapped: node,
-            delegate: true,
-            cascade: !!(options.cascade || children && children.length > 0 && !node.rootElement)
+            flags: CREATE_NODE.DELEGATE | (flags! & CREATE_NODE.CASCADE || children && children.length > 0 && !node.rootElement ? CREATE_NODE.CASCADE : 0)
         });
         container.inherit(node, 'base', 'alignment');
         if (node.documentRoot) {
@@ -2043,7 +2042,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             section: options.section ?? APP_SECTION.ALL
         });
         container.saveAsInitial();
-        if (options.resetContentBox) {
+        if (flags! & CREATE_NODE.RESET_CONTENTBOX) {
             container.cssApply({
                 marginTop: '0px',
                 marginRight: '0px',
@@ -2060,14 +2059,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 borderRadius: '0px'
             });
         }
-        if (options.inheritContentBox !== false) {
+        if (flags! & CREATE_NODE.RESET_MARGIN) {
+            node.resetBox(BOX_STANDARD.MARGIN, container);
+        }
+        if (node.outerWrapper === container) {
             container.setCacheValue('contentBoxWidth', node.contentBoxWidth);
             container.setCacheValue('contentBoxHeight', node.contentBoxHeight);
         }
-        if (options.resetMargin) {
-            node.resetBox(BOX_STANDARD.MARGIN, container);
-        }
-        if (options.inheritDataset && node.naturalElement) {
+        if ((flags! & CREATE_NODE.INHERIT_DATASET) && node.naturalElement) {
             Object.assign(container.dataset, node.dataset);
         }
         if (node.documentParent.layoutElement) {
@@ -2171,7 +2170,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     else {
                         items = [item];
                         rows = [items];
-                        rowsAll.push([undefined, rows, false]);
+                        rowsAll.push([, rows, false]);
                     }
                     rowWidth = baseWidth;
                 };

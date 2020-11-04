@@ -1,3 +1,4 @@
+import CREATE_NODE = squared.base.lib.internal.CREATE_NODE;
 import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
 import LAYOUT_GRIDCELL = squared.lib.internal.LAYOUT_GRIDCELL;
@@ -46,7 +47,7 @@ export default class Grid <T extends View> extends squared.base.extensions.Grid<
                 layout = controller.processLayoutHorizontal(
                     new LayoutUI(
                         parent,
-                        controller.createNodeGroup(node, siblings, parent, { delegate: true, cascade: true })
+                        controller.createNodeGroup(node, siblings, parent, { flags: CREATE_NODE.DELEGATE | CREATE_NODE.CASCADE })
                     )
                 );
                 node = layout.node;

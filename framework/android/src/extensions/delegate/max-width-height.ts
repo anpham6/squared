@@ -1,3 +1,4 @@
+import CREATE_NODE = squared.base.lib.internal.CREATE_NODE;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
 
 import { CONTAINER_NODE } from '../../lib/constant';
@@ -33,7 +34,7 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
 
     public processNode(node: T, parent: T): ExtensionResult<T> {
         const { maxWidth, maxHeight } = this.data.get(node) as MaxWidthHeightData;
-        const container = this.controller.createNodeWrapper(node, parent, { containerType: CONTAINER_NODE.CONSTRAINT, alignmentType: NODE_ALIGNMENT.BLOCK | NODE_ALIGNMENT.VERTICAL, resetMargin: true });
+        const container = this.controller.createNodeWrapper(node, parent, { containerType: CONTAINER_NODE.CONSTRAINT, alignmentType: NODE_ALIGNMENT.BLOCK | NODE_ALIGNMENT.VERTICAL, flags: CREATE_NODE.RESET_MARGIN });
         if (maxWidth) {
             node.setLayoutWidth('0px');
             container.setLayoutWidth('match_parent');

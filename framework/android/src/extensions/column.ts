@@ -31,7 +31,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
             const { columnCount, columnGap, columnWidth, columnRule, columnSized, boxWidth, rows, multiline } = mainData;
             const { borderLeftWidth, borderLeftColor, borderLeftStyle } = columnRule;
             const createColumnRule = () => {
-                const rule = application.createNode(node.sessionId, { parent: node, append: true });
+                const rule = application.createNode(node.sessionId, { parent: node });
                 rule.containerName = node.containerName + '_COLUMNRULE';
                 rule.inherit(node, 'base');
                 rule.setControlType(CONTAINER_TAGNAME.LINE, CONTAINER_NODE.LINE);

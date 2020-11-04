@@ -167,7 +167,7 @@ declare namespace base {
     }
 
     class ViewGroup extends View {
-        retainAs(children: View[], node?: View, parent?: View): this;
+        retainAs(children: View[], child?: View, parent?: View): this;
         constructor(id: number, node: View, children: View[], parent?: View);
     }
 }

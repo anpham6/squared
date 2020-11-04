@@ -1,7 +1,8 @@
-import LAYOUT_STRING = android.base.LAYOUT_STRING;
-import LAYOUT_CSSGRID = squared.lib.internal.LAYOUT_CSSGRID;
+import CREATE_NODE = squared.base.lib.internal.CREATE_NODE;
 import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
+import LAYOUT_CSSGRID = squared.lib.internal.LAYOUT_CSSGRID;
+import LAYOUT_STRING = android.base.LAYOUT_STRING;
 
 import { CONTAINER_NODE, CONTAINER_TAGNAME } from '../lib/constant';
 
@@ -543,7 +544,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 outputAs: Undef<NodeTemplate<T>>,
                 unsetContentBox: Undef<boolean>;
             if (CssGrid.isJustified(node) || CssGrid.isAligned(node)) {
-                container = this.controller.createNodeWrapper(node, parent, { containerType: CONTAINER_NODE.CONSTRAINT, resource: NODE_RESOURCE.ASSET, resetContentBox: true });
+                container = this.controller.createNodeWrapper(node, parent, { containerType: CONTAINER_NODE.CONSTRAINT, resource: NODE_RESOURCE.ASSET, flags: CREATE_NODE.RESET_CONTENTBOX });
                 container.inherit(node, 'styleMap', 'boxStyle');
                 node.resetBox(BOX_STANDARD.MARGIN, container);
                 node.resetBox(BOX_STANDARD.PADDING, container);

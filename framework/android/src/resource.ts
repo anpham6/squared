@@ -21,38 +21,36 @@ let COUNTER_SYMBOL = 0;
 
 function formatObject(obj: ObjectMap<Undef<string | StringMap>>, numberAlias?: boolean) {
     for (const attr in obj) {
-        if (isPlainObject(obj[attr])) {
-            formatObject(obj, numberAlias);
-        }
-        else {
-            const value = obj[attr];
-            if (isString(value)) {
-                switch (attr) {
-                    case 'text':
-                        if (!value.startsWith('@string/')) {
-                            obj[attr] = Resource.addString(value, '', numberAlias);
+        const value = obj[attr];
+        if (isString(value)) {
+            switch (attr) {
+                case 'text':
+                    if (!value.startsWith('@string/')) {
+                        obj[attr] = Resource.addString(value, '', numberAlias);
+                    }
+                    break;
+                case 'src':
+                case 'srcCompat':
+                    if (FILE.PROTOCOL.test(value)) {
+                        const src = Resource.addImage({ mdpi: value });
+                        if (src) {
+                            obj[attr] = `@drawable/${src}`;
                         }
-                        break;
-                    case 'src':
-                    case 'srcCompat':
-                        if (FILE.PROTOCOL.test(value)) {
-                            const src = Resource.addImage({ mdpi: value });
-                            if (src) {
-                                obj[attr] = `@drawable/${src}`;
-                            }
-                        }
-                        break;
-                    default: {
-                        const colorData = parseColor(value);
-                        if (colorData) {
-                            const colorName = Resource.addColor(colorData);
-                            if (colorName) {
-                                obj[attr] = `@color/${colorName}`;
-                            }
+                    }
+                    break;
+                default: {
+                    const colorData = parseColor(value);
+                    if (colorData) {
+                        const colorName = Resource.addColor(colorData);
+                        if (colorName) {
+                            obj[attr] = `@color/${colorName}`;
                         }
                     }
                 }
             }
+        }
+        else if (isPlainObject(value)) {
+            formatObject(obj, numberAlias);
         }
     }
 }
@@ -282,14 +280,15 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
             mdpi ||= element.src;
         }
         if (mdpi) {
-            const data = this.getRawData(mdpi);
-            if (data) {
-                if (data.base64) {
-                    const filename = data.filename;
+            const image = this.getRawData(mdpi);
+            if (image) {
+                const data = image.base64;
+                if (data) {
+                    const filename = image.filename;
                     this.writeRawImage({
-                        mimeType: data.mimeType,
+                        mimeType: image.mimeType,
                         filename: prefix + filename,
-                        data: data.base64,
+                        data,
                         encoding: 'base64'
                     });
                     return splitPairStart(filename, '.', false, true);

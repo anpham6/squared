@@ -3,22 +3,19 @@ interface CreateNodeOptions {
  }
 
 interface CreateNodeUIOptions<T> extends CreateNodeOptions {
+    flags?: number;
     parent?: T;
     children?: T[];
     innerWrapped?: T;
-    append?: boolean;
-    delegate?: boolean;
-    cascade?: boolean;
 }
 
 interface CreateNodeGroupUIOptions extends Partial<LayoutType> {
-    delegate?: boolean;
-    cascade?: boolean;
+    flags?: number;
 }
 
 interface CreateNodeWrapperUIOptions<T> extends Partial<LayoutType>, ExcludeOptions {
+    flags?: number;
     children?: T[];
-    cascade?: boolean;
 }
 
 interface LayoutOptions<T> extends Partial<LayoutType> {
