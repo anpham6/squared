@@ -851,8 +851,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 textContent: Undef<string>,
                 fromConfig: Undef<boolean>;
             if (element) {
-                let file = element.dataset.chromeFile;
-                let pathname: Undef<string>,
+                let file = element.dataset.chromeFile,
+                    pathname: Undef<string>,
                     filename: Undef<string>;
                 if (assetMap && assetMap.has(element)) {
                     const command = assetMap.get(element)!;

@@ -22,16 +22,7 @@ Express
 
 * http://localhost:3000
 
-Option #2 - [Kotlin / Java](https://ktor.io)
-
-&nbsp;&nbsp;&nbsp;&gt; git clone https://github.com/anpham6/squared-apache  
-&nbsp;&nbsp;&nbsp;&gt; cd squared-apache  
-&nbsp;&nbsp;&nbsp;&gt; squared.settings.yml (configure)  
-&nbsp;&nbsp;&nbsp;&gt; gradlew run
-
-* http://localhost:8080
-
-Option #3 - Browser
+Option #2 - Browser
 
 * Download (squared@version): https://unpkg.com/squared
 
@@ -50,7 +41,7 @@ Library files are in the /dist folder. A minimum of *two* files are required to 
 2. squared-base - *required: except vdom-lite*
 3. squared-svg - *optional*
 4. framework (e.g. android | chrome | vdom | vdom-lite)
-5. extensions (e.g. android.widget) - *optional*
+5. extensions - *optional*
 
 Usable combinations: 1-2-4 + 1-2-4-5 + 1-2-3-4-5 + 1-vdom-lite
 
@@ -102,7 +93,7 @@ VDOM is a minimal framework (45kb gzipped) for those who prefer a universal HTML
         squared.setFramework(vdom /* chrome */, /* optional: FrameworkOptions */);
 
         const element = await squared.parseDocument(/* HTMLElement */); // default: document.documentElement 'HTML'
-        const elementArray = squared.parseDocumentSync(/* HTMLElement */, /* 'elementId' */, /* ...etc */); // multiple elements
+        const elements = squared.parseDocumentSync(/* HTMLElement */, /* 'elementId' */, /* ...etc */); // multiple elements
 
         // start new "parseDocument" session (optional)
         squared.reset();
@@ -319,45 +310,6 @@ copyTo(directory: string, options?: {}) // copy current session to local directo
 copyFiles(directory: string, options: {}) // copy RequestAsset[] to local directory
 ```
 
-### ALL: Extension Configuration (example: android)
-
-Layout rendering can also be customized using extensions as the program was built to be nearly completely modular. Some of the common layouts already have built-in extensions which you can load or unload based on your preference.
-
-```javascript
-<script src="/dist/extensions/android.widget.coordinator.min.js"></script>
-<script src="/dist/extensions/android.widget.menu.min.js"></script>
-<script src="/dist/extensions/android.widget.toolbar.min.js"></script>
-<script>
-    // Configure an extension (optional)
-    squared.apply('android.widget.toolbar', {
-        settings: {
-            'elementId': { // HTML DOM
-                appBar: {
-                    android: {
-                        theme: '@style/ThemeOverlay.AppCompat.Dark.ActionBar'
-                    }
-                }
-            }
-        },
-        saveAs: 'toolbar-example' // optional
-    });
-
-    // Create an extension
-    class Sample extends squared.base.Extension {
-        constructor(name, framework = 0, options = {}) {
-            // framework: 0 - ALL | 1 - vdom | 2 - android | 4 - chrome
-            super(name, framework, options);
-        }
-    }
-
-    // Install an extension
-    const sample = new Sample('your.namespace.sample', 0, { /* same as configure */ });
-    squared.add(sample);
-    // OR
-    squared.add([sample, {/* configuration */}]);
-</script>
-```
-
 ### ALL: Extending Node object
 
 You can add functions and initial variables to the Node object including overwriting preexisting class definitions per framework. Accessor properties are also supported using the get/set object syntax.
@@ -384,21 +336,6 @@ squared.extend({
 const body = await squared.fromElement(document.body);
 body.altId = 5; // body.altId: 6
 body.addEvent('click', event => body.element.classList.toggle('example'));
-```
-
-### ANDROID: Excluding Procedures / Applied Attributes
-
-Most attributes can be excluded from the generated XML using the dataset feature in HTML. One or more can be applied to any tag using the OR "|" operator. These may cause warnings when you compile your project and should only be used in cases when an extension has their custom attributes overwritten.
-
-```xml
-<div data-exclude-section="DOM_TRAVERSE | EXTENSION | RENDER | ALL"
-     data-exclude-procedure="LAYOUT | ALIGNMENT | OPTIMIZATION | CUSTOMIZATION | ACCESSIBILITY | LOCALIZATION | ALL"
-     data-exclude-resource="BOX_STYLE | BOX_SPACING | FONT_STYLE | VALUE_STRING | IMAGE_SOURCE | ASSET | ALL">
-</div>
-<div>
-    <span data-exclude-resource="FONT_STYLE">content</span>
-    <input id="cb1" type="checkbox" data-exclude-procedure="ACCESSIBILITY"><label for="cb1">checkbox text</label>
-</div>
 ```
 
 ### ANDROID: Public Methods
@@ -592,25 +529,27 @@ if (imageView1 != null) {
 }
 ```
 
-### ANDROID: Extensions
+### ANDROID: Excluding Procedures / Applied Attributes
 
-See /android/widget/*.html for usage instructions in the squared-apache <https://github.com/anpham6/squared-apache> project.
+Most attributes can be excluded from the generated XML using the dataset feature in HTML. One or more can be applied to any tag using the OR "|" operator. These may cause warnings when you compile your project and should only be used in cases when an extension has their custom attributes overwritten.
 
-* android.external
-* android.substitute
-* android.constraint.guideline
-* android.widget.coordinator
-* android.widget.floatingactionbutton
-* android.widget.menu
-* android.widget.bottomnavigation
-* android.widget.toolbar
-* android.widget.drawer
+```xml
+<div data-exclude-section="DOM_TRAVERSE | EXTENSION | RENDER | ALL"
+     data-exclude-procedure="LAYOUT | ALIGNMENT | OPTIMIZATION | CUSTOMIZATION | ACCESSIBILITY | LOCALIZATION | ALL"
+     data-exclude-resource="BOX_STYLE | BOX_SPACING | FONT_STYLE | VALUE_STRING | IMAGE_SOURCE | ASSET | ALL">
+</div>
+<div>
+    <span data-exclude-resource="FONT_STYLE">content</span>
+    <input id="cb1" type="checkbox" data-exclude-procedure="ACCESSIBILITY"><label for="cb1">checkbox text</label>
+</div>
+```
 
-### CHROME: Extensions
+### ALL: Extension Configuration (example: chrome)
 
-Most extensions have a few settings which can be configured. Compression and quality default settings are at their maximum level.
+Layout rendering can also be customized using extensions as the program was built to be nearly completely modular. Some of the common layouts already have built-in extensions which you can load or unload based on your preference.
 
 ```javascript
+// Configure an extension (optional)
 chrome.extension.options = { // internal representation
     mimeTypes: ['image/jpeg', 'image/bmp', 'image/gif', 'image/tiff'],
     minSize: 0,
@@ -625,7 +564,23 @@ squared.apply('chrome.convert.png', {
         whenSmaller: true
     }
 });
+
+// Create an extension
+class Sample extends squared.base.Extension {
+    constructor(name, framework = 0, options = {}) {
+        // framework: 0 - ALL | 1 - vdom | 2 - android | 4 - chrome
+        super(name, framework, options);
+    }
+}
+
+// Install an extension
+const sample = new Sample('your.namespace.sample', 0, { /* same as configure */ });
+squared.add(sample);
+// OR
+squared.add([sample, {/* configuration */}]);
 ```
+
+Most extensions have a few settings which can be configured. Usually default settings are at their maximum optimized levels.
 
 ### LICENSE
 

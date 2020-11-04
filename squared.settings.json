@@ -91,9 +91,9 @@
       "rollup": {
         "bundle": {
           "treeshake": false,
+          "external": [],
           "output": {
-              "sourcemap": false,
-              "globals": []
+            "sourcemap": false
           }
         }
       }

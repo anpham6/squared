@@ -8,5 +8,3 @@ serve.js
 bundle.js
 md5sum.js
 *.zip
-*.7z
-.DS_Store

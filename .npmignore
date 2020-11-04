@@ -1,7 +1,6 @@
 .vscode/
 build/
 config/
-extension/
 framework/
 html/*
 md5/
