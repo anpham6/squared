@@ -387,7 +387,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     public createNode(sessionId: string, options: CreateNodeUIOptions<T>) {
-        const { flags, element, parent, children } = options;
+        const { element, parent, children, flags = 0 } = options;
         const { cache, afterInsertNode } = this.getProcessing(sessionId)!;
         const node = new this.Node(this.nextId, sessionId, element);
         this._afterInsertNode(node);
@@ -410,8 +410,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 children[i].parent = node;
             }
         }
-        if (~flags! & CREATE_NODE.DEFER) {
-            cache.add(node, (flags! & CREATE_NODE.DELEGATE) > 0, (flags! & CREATE_NODE.CASCADE) > 0);
+        if (~flags & CREATE_NODE.DEFER) {
+            cache.add(node, (flags & CREATE_NODE.DELEGATE) > 0, (flags & CREATE_NODE.CASCADE) > 0);
         }
         return node;
     }

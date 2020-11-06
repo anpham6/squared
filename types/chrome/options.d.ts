@@ -23,6 +23,7 @@ interface ConvertOptions extends CompressOptions {
 
 interface SaveAsOptions extends Partial<LocationUri>, FileModifiers {
     format?: string;
+    tasks?: string[];
 }
 
 interface UriOptions extends FileModifiers {
@@ -31,6 +32,6 @@ interface UriOptions extends FileModifiers {
     saveTo?: boolean;
     preserveCrossOrigin?: boolean;
     format?: string;
-    transform?: TransformCommand;
+    tasks?: string[];
     fromConfig?: boolean;
 }

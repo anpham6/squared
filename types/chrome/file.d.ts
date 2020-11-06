@@ -4,6 +4,7 @@ interface ChromeAsset extends RequestAsset {
     format?: string;
     preserve?: boolean;
     exclude?: boolean;
+    tasks?: string[];
     basePath?: string;
     bundleIndex?: number;
     inlineContent?: string;
@@ -27,6 +28,7 @@ interface FileModifiers {
 }
 
 interface FileCommand extends Partial<LocationUri>, FileModifiers {
+    tasks?: string[];
     commands?: string[];
 }
 
@@ -34,7 +36,7 @@ interface TransformCommand extends FileCommand {
     id: string;
 }
 
-interface AssetCommand extends FileCommand, FileModifiers {
+interface AssetCommand extends FileCommand {
     selector?: string;
     type?: string;
     saveAs?: string;

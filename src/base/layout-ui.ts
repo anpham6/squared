@@ -24,7 +24,7 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
 
     private _floated: Null<Set<string>> = null;
     private _initialized = false;
-    private _itemCount: Null<number> = null;
+    private _itemCount = NaN;
     private _linearX: Null<boolean> = null;
     private _linearY: Null<boolean> = null;
     private _singleRow: Null<boolean> = null;
@@ -88,7 +88,7 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
         this._itemCount = value;
     }
     get itemCount() {
-        return this._itemCount ?? this.size();
+        return isNaN(this._itemCount) ? this.size() : this._itemCount;
     }
 
     get linearX() {

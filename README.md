@@ -17,7 +17,7 @@ NPM
 
 Express  
 &nbsp;&nbsp;&nbsp;&gt; README: [squared-functions](https://github.com/anpham6/squared-functions#readme)  
-&nbsp;&nbsp;&nbsp;&gt; squared.settings.json (configure)  
+&nbsp;&nbsp;&nbsp;&gt; squared.settings.[json|yml] (configure)  
 &nbsp;&nbsp;&nbsp;&gt; node serve.js [--help]
 
 * http://localhost:3000

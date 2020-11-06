@@ -23,11 +23,8 @@ function getFontVariationStyle(value: string) {
     }
     const match = REGEXP_FONTVARIATION.exec(value);
     if (match) {
-        let angle: Undef<number>;
-        if (match[1]) {
-            angle = parseAngle(match[1]);
-        }
-        return "'slnt' " + (angle !== undefined && !isNaN(angle) ? clamp(angle, -90, 90) : '14');
+        const angle = match[1] ? parseAngle(match[1]) : NaN;
+        return "'slnt' " + (!isNaN(angle) ? clamp(angle, -90, 90) : '14');
     }
     return '';
 }

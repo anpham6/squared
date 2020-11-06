@@ -504,8 +504,8 @@ export const TRANSFORM = {
         const result: Point = { x: 0, y: 0 };
         if (value ||= getAttribute(element, 'transform-origin')) {
             const viewBox = getNearestViewBox(element);
-            let width: Undef<number>,
-                height: Undef<number>;
+            let width = 0,
+                height = 0;
             if (viewBox) {
                 ({ width, height } = viewBox);
             }

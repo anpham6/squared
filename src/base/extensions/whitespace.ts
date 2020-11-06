@@ -734,7 +734,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 }
                             }
                             if (above.textElement && !above.multiline) {
-                                let value: Undef<number>;
+                                let value: Undef<number> = 0;
                                 if (above.has('lineHeight')) {
                                     value = above.lineHeight;
                                 }
@@ -749,7 +749,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 }
                             }
                             if (below.textElement && !below.multiline) {
-                                let value: Undef<number>;
+                                let value: Undef<number> = 0;
                                 if (below.has('lineHeight')) {
                                     value = below.lineHeight;
                                 }

@@ -1,4 +1,4 @@
-import type { Arguments, ExpressAsset, IFileManager, Settings, squared } from '@squared-functions/types';
+import type { Arguments, ChromeModules, ExpressAsset, IFileManager, Settings, squared } from '@squared-functions/types';
 
 import path = require('path');
 import fs = require('fs-extra');
@@ -22,6 +22,20 @@ app.use(body_parser.urlencoded({ extended: true }));
 
 const Node = FileManager.moduleNode();
 const Compress = FileManager.moduleCompress();
+
+let Gulp: Undef<StringMap>,
+    Chrome: Undef<ChromeModules>;
+
+function installModules(manager: IFileManager, query: StringMap) {
+    if (Gulp) {
+        manager.install('gulp', Gulp);
+    }
+    if (Chrome) {
+        manager.install('chrome', Chrome);
+    }
+    manager.emptyDirectory = query.empty === '1';
+    manager.productionRelease = query.release === '1';
+}
 
 {
     const argv = yargs
@@ -82,7 +96,6 @@ const Compress = FileManager.moduleCompress();
         .argv as Arguments;
 
     let { NODE_ENV: ENV, PORT } = process.env,
-        settings: Settings,
         ignorePermissions = false;
     if (argv.accessAll) {
         Node.enableDiskRead();
@@ -124,9 +137,14 @@ const Compress = FileManager.moduleCompress();
         }
     }
 
+    let settings: Settings;
     try {
-        settings = require('./squared.settings.json');
+        settings = fs.existsSync('./squared.settings.yml') && yaml.safeLoad(fs.readFileSync(path.resolve('./squared.settings.yml'), 'utf8')) as Settings || require('./squared.settings.json');
+
         FileManager.loadSettings(settings, ignorePermissions);
+
+        Gulp = settings.gulp;
+        Chrome = settings.chrome;
     }
     catch {
         settings = {};
@@ -202,7 +220,7 @@ const Compress = FileManager.moduleCompress();
 app.post('/api/assets/copy', (req, res) => {
     const query = req.query;
     const dirname = path.normalize(query.to as string);
-    if (dirname && FileManager.checkPermissions(res, dirname)) {
+    if (dirname && FileManager.checkPermissions(dirname, res)) {
         try {
             const manager = new FileManager(
                 dirname,
@@ -211,8 +229,7 @@ app.post('/api/assets/copy', (req, res) => {
                     res.json({ success: this.files.size > 0, files: Array.from(this.files) } as ResultOfFileAction);
                 }
             );
-            manager.emptyDirectory = query.empty === '1';
-            manager.productionRelease = query.release === '1';
+            installModules(manager, query as StringMap);
             manager.processAssets();
         }
         catch (system) {
@@ -228,7 +245,7 @@ app.post('/api/assets/archive', (req, res) => {
     let dirname_zip: string;
     try {
         fs.mkdirpSync(dirname);
-        if (copy_to && FileManager.checkPermissions(res, copy_to)) {
+        if (copy_to && FileManager.checkPermissions(copy_to, res)) {
             dirname_zip = copy_to;
         }
         else {
@@ -268,8 +285,7 @@ app.post('/api/assets/archive', (req, res) => {
                 archive.finalize();
             }
         );
-        manager.emptyDirectory = query.empty === '1';
-        manager.productionRelease = query.release === '1';
+        installModules(manager, query as StringMap);
         zipname = path.join(dirname_zip, (query.filename || zipname || uuid.v4()) + '.' + format);
         const output = fs.createWriteStream(zipname);
         output.on('close', () => {

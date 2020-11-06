@@ -28,6 +28,9 @@
   "brotli_quality": "11",
   "jpeg_quality": "100",
   "tinypng_api_key": "",
+  "gulp": {
+    "minify": "./gulpfile.js"
+  },
   "chrome": {
     "eval_function": true,
     "eval_text_template": false,

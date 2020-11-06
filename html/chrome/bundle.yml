@@ -3,6 +3,8 @@
   filename: index.html
   process:
     - beautify
+  tasks:
+    - minify
 - selector: head > link:nth-of-type(1)
   type: css
   inline: true

@@ -18,10 +18,10 @@ export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {
     return class extends Base implements squared.svg.SvgViewRect {
         public rectElement?: SvgRectElement;
 
-        private _x: Null<number> = null;
-        private _y: Null<number> = null;
-        private _width: Null<number> = null;
-        private _height: Null<number> = null;
+        private _x = NaN;
+        private _y = NaN;
+        private _width = NaN;
+        private _height = NaN;
 
         public setRect() {
             const parent = this.parent;
@@ -54,14 +54,14 @@ export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {
             this._x = value;
         }
         get x() {
-            return this._x ?? (this.getRectElement()?.x.baseVal.value || 0);
+            return isNaN(this._x) ? this.getRectElement()?.x.baseVal.value || 0 : this._x;
         }
 
         set y(value) {
             this._y = value;
         }
         get y() {
-            return this._y ?? (this.getRectElement()?.y.baseVal.value || 0);
+            return isNaN(this._y) ? this.getRectElement()?.y.baseVal.value || 0 : this._y;
         }
 
         set width(value) {

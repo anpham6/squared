@@ -1986,13 +1986,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
     }
 
-    public createNodeGroup(node: T, children: T[], parent?: T, options?: CreateNodeGroupUIOptions) {
-        let containerType: Undef<number>,
-            alignmentType: Undef<number>,
-            flags: Undef<number>;
-        if (options) {
-            ({ containerType, alignmentType, flags } = options);
-        }
+    public createNodeGroup(node: T, children: T[], parent?: T, options: CreateNodeGroupUIOptions = {}) {
+        const { containerType, alignmentType, flags = 0 } = options;
         const container = new ViewGroup(this.application.nextId, node, children, parent) as T;
         if (containerType) {
             container.setControlType(View.getControlName(containerType, node.api), containerType);
@@ -2005,23 +2000,17 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             parent.add(container);
             container.init(parent, node.depth);
         }
-        this.application.getProcessingCache(node.sessionId).add(container, (flags! & CREATE_NODE.DELEGATE) > 0, (flags! & CREATE_NODE.CASCADE) > 0);
+        this.application.getProcessingCache(node.sessionId).add(container, (flags & CREATE_NODE.DELEGATE) > 0, (flags & CREATE_NODE.CASCADE) > 0);
         return container;
     }
 
     public createNodeWrapper(node: T, parent: T, options: CreateNodeWrapperUIOptions<T> = {}) {
-        let children: Undef<T[]>,
-            containerType: Undef<number>,
-            alignmentType: Undef<number>,
-            flags: Undef<number>;
-        if (options) {
-            ({ children, containerType, alignmentType, flags } = options);
-        }
+        const { children, containerType, alignmentType, flags = 0 } = options;
         const container = this.application.createNode(node.sessionId, {
             parent,
             children,
             innerWrapped: node,
-            flags: CREATE_NODE.DELEGATE | (flags! & CREATE_NODE.CASCADE || children && children.length > 0 && !node.rootElement ? CREATE_NODE.CASCADE : 0)
+            flags: CREATE_NODE.DELEGATE | (flags & CREATE_NODE.CASCADE || children && children.length > 0 && !node.rootElement ? CREATE_NODE.CASCADE : 0)
         });
         container.inherit(node, 'base', 'alignment');
         if (node.documentRoot) {
@@ -2042,7 +2031,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             section: options.section ?? APP_SECTION.ALL
         });
         container.saveAsInitial();
-        if (flags! & CREATE_NODE.RESET_CONTENTBOX) {
+        if (flags & CREATE_NODE.RESET_CONTENTBOX) {
             container.cssApply({
                 marginTop: '0px',
                 marginRight: '0px',
@@ -2059,14 +2048,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 borderRadius: '0px'
             });
         }
-        if (flags! & CREATE_NODE.RESET_MARGIN) {
+        if (flags & CREATE_NODE.RESET_MARGIN) {
             node.resetBox(BOX_STANDARD.MARGIN, container);
         }
         if (node.outerWrapper === container) {
             container.setCacheValue('contentBoxWidth', node.contentBoxWidth);
             container.setCacheValue('contentBoxHeight', node.contentBoxHeight);
         }
-        if ((flags! & CREATE_NODE.INHERIT_DATASET) && node.naturalElement) {
+        if ((flags & CREATE_NODE.INHERIT_DATASET) && node.naturalElement) {
             Object.assign(container.dataset, node.dataset);
         }
         if (node.documentParent.layoutElement) {
@@ -2413,7 +2402,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 if (element) {
                                     let textContent = '',
                                         width = 0,
-                                        index: Undef<number>;
+                                        index = 0;
                                     const start = k + 1;
                                     for (let l = start; l < r; ++l) {
                                         const next = items[l];

@@ -1410,14 +1410,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public cssSpecificity(attr: string) {
-        let value: Undef<number>;
         if (this.styleElement) {
             const styleData = !this.pseudoElt ? this._elementData?.['styleSpecificity'] : this.actualParent?.elementData?.['styleSpecificity' + this.pseudoElt] as Undef<ObjectMap<number>>;
             if (styleData) {
-                value = styleData[attr];
+                return styleData[attr] || 0;
             }
         }
-        return value || 0;
+        return 0;
     }
 
     public cssTry(attr: string, value: string, callback?: FunctionSelf<this>) {
@@ -1615,8 +1614,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     public has(attr: string, options?: HasOptions) {
         const value = options && options.initial ? this.cssInitial(attr, options) : this._styleMap[attr];
         if (value) {
-            let not: Undef<string | string[]>,
-                type: Undef<number>,
+            let type: Undef<number>,
+                not: Undef<string | string[]>,
                 ignoreDefault: Undef<boolean>;
             if (options) {
                 ({ not, type, ignoreDefault } = options);

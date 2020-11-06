@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Language" content="en">
     <title></title>
-    <link data-chrome-file="saveAs:~::minify" rel="stylesheet" type="text/css" href="/common/css/dev.css" />
+    <link data-chrome-file="saveAs:~::minify::inline" rel="stylesheet" type="text/css" href="/common/css/dev.css" />
     <style data-chrome-file="exportAs:css/prod.css::minify::preserve">
         body {
             font: 1em/1.4 Helvetica, Arial, sans-serif;
@@ -117,7 +117,7 @@
                         }
                     });*/
                     squared
-                        .copyTo('C:/Users/An/Downloads/chrome', { configUri: 'http://localhost:3000/chrome/bundle.yml' })
+                        .copyTo('C:/Users/An/Downloads/chrome')
                         .then(result => console.log(result));
                     /*squared.saveAs('bundle', {
                         exclusions: {
@@ -156,7 +156,7 @@
                 <header>
                     <h2>Bristol</h2>
                 </header>
-                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour1.jpg" alt="Bristol harbour" data-chrome-file="saveTo:../images/harbour">
+                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour1.jpg" alt="Bristol harbour" data-chrome-file="saveTo:../images/harbour::png(10000,75000)(100x200^cover){90,180,270#FFFFFF}:jpeg(300x100^contain){90,180,270#FFFFFF}">
                 <div class="body">
                     <p>I live in Bristol. It mostly rains, but when it isn't raining we have hot air balloons.</p>
                 </div>
@@ -174,7 +174,7 @@
                 <header>
                     <h2>Striped Balloon</h2>
                 </header>
-                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/coloured-balloon.jpg" alt="Coloured balloon" data-chrome-file="saveTo:../images/harbour">
+                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/coloured-balloon.jpg" alt="Coloured balloon" data-chrome-file="saveTo:../images/harbour::png@(25000,*)(800x600[bezier]^contain[right|top]){315}|0.5|">
                 <div class="body">
                 <p>I like the nice standard balloons. Stripy. Solid looking basket.</p>
                 </div>
