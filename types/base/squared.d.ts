@@ -323,7 +323,8 @@ declare module "base" {
     class File<T extends Node> implements FileActionAsync {
         static downloadFile(data: Blob, filename: string, mimeType?: string): void;
         resource: Resource<T>;
-        readonly assets: FileAsset[];
+        assets: FileAsset[];
+        readonly archiveFormats: Set<string>;
         addAsset(asset: RawAsset): void;
         reset(): void;
         loadJSON<U = unknown>(value: string): Promise<U | void>;

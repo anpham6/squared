@@ -13,8 +13,6 @@ import CompressPng from './extensions/compress/png';
 import ConvertBmp from './extensions/convert/bmp';
 import ConvertJpeg from './extensions/convert/jpeg';
 import ConvertPng from './extensions/convert/png';
-import ConvertGif from './extensions/convert/gif';
-import ConvertTiff from './extensions/convert/tiff';
 
 import SETTINGS from './settings';
 
@@ -57,10 +55,8 @@ const appBase: squared.base.AppFramework<Node> = {
         },
         convert: {
             Bmp: ConvertBmp,
-            Gif: ConvertGif,
             Jpeg: ConvertJpeg,
-            Png: ConvertPng,
-            Tiff: ConvertTiff
+            Png: ConvertPng
         }
     },
     system: {
@@ -144,10 +140,8 @@ const appBase: squared.base.AppFramework<Node> = {
             [EXT_CHROME.COMPRESS_JPEG, new CompressJpeg(EXT_CHROME.COMPRESS_JPEG, APP_FRAMEWORK.CHROME)],
             [EXT_CHROME.COMPRESS_PNG, new CompressPng(EXT_CHROME.COMPRESS_PNG, APP_FRAMEWORK.CHROME)],
             [EXT_CHROME.CONVERT_BMP, new ConvertBmp(EXT_CHROME.CONVERT_BMP, APP_FRAMEWORK.CHROME)],
-            [EXT_CHROME.CONVERT_GIF, new ConvertGif(EXT_CHROME.CONVERT_GIF, APP_FRAMEWORK.CHROME)],
             [EXT_CHROME.CONVERT_JPEG, new ConvertJpeg(EXT_CHROME.CONVERT_JPEG, APP_FRAMEWORK.CHROME)],
-            [EXT_CHROME.CONVERT_PNG, new ConvertPng(EXT_CHROME.CONVERT_PNG, APP_FRAMEWORK.CHROME)],
-            [EXT_CHROME.CONVERT_TIFF, new ConvertTiff(EXT_CHROME.CONVERT_TIFF, APP_FRAMEWORK.CHROME)]
+            [EXT_CHROME.CONVERT_PNG, new ConvertPng(EXT_CHROME.CONVERT_PNG, APP_FRAMEWORK.CHROME)]
         ]);
         return {
             application,

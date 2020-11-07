@@ -30,6 +30,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
 
     public resource!: Resource<T>;
     public assets: RawAsset[] = [];
+    public readonly archiveFormats = new Set(['zip', 'tar', 'gz', 'tgz']);
 
     private _hostname = '';
     private _endpoints = {
@@ -126,11 +127,24 @@ export default abstract class File<T extends Node> implements squared.base.File<
     public archiving(options: FileArchivingOptions) {
         if (this.hasHttpProtocol()) {
             const body = this.createRequestBody(options.assets, options);
-            if (body && options.filename) {
+            let filename = options.filename?.trim();
+            if (body && filename) {
+                const index = filename.lastIndexOf('.');
+                let format: string;
+                if (index !== -1) {
+                    format = filename.substring(index + 1).toLowerCase();
+                    if (this.archiveFormats.has(format)) {
+                        filename = filename.substring(0, index);
+                    }
+                    else {
+                        format = '';
+                    }
+                }
+                format ||= (options.format || this.userSettings.outputArchiveFormat).trim().toLowerCase();
                 return fetch(
                     this.hostname + this._endpoints.ASSETS_ARCHIVE +
-                    '?filename=' + encodeURIComponent(options.filename.trim()) +
-                    '&format=' + (options.format || this.userSettings.outputArchiveFormat).trim().toLowerCase() +
+                    '?filename=' + encodeURIComponent(filename) +
+                    '&format=' + format +
                     '&to=' + encodeURIComponent((options.copyTo || '').trim()) +
                     '&append_to=' + encodeURIComponent((options.appendTo || '').trim()) +
                     this.getArchiveQueryParameters(options), {

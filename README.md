@@ -73,7 +73,7 @@ The primary function "parseDocument" can be called on multiple elements and mult
         // OR
         squared.copyTo(/* local directory */, /* options */);
         // OR
-        squared.appendTo(/* location uri */, /* options */);
+        squared.appendTo(/* archive location */, /* options */);
 
         squared.reset(); // start new "parseDocument" session
     });
@@ -162,8 +162,8 @@ squared.settings = {
     framesPerSecond: 60,
     supportRTL: true,
     preloadImages: true,
-    compressImages: false, // png | jpeg - TinyPNG API Key <https://tinypng.com/developers>
-    convertImages: '', // png | jpeg | bmp | squared-apache: gif | tiff
+    compressImages: false, // TinyPNG API Key <https://tinypng.com/developers>
+    convertImages: '', // png | jpeg | bmp
     preloadFonts: true,
     preloadCustomElements: true,
     supportNegativeLeftTop: true,
@@ -185,7 +185,7 @@ squared.settings = {
     outputDirectory: 'app/src/main',
     outputEmptyCopyDirectory: false,
     outputArchiveName: 'android-xml',
-    outputArchiveFormat: 'zip' // zip | tar | gz/tgz | squared-apache: 7z | jar | cpio | xz | bz2 | lzma | lz4 | zstd
+    outputArchiveFormat: 'zip' // zip | tar | gz/tgz
 };
 ```
 
@@ -197,11 +197,9 @@ squared.settings = {
         'chrome.convert.png',
         'chrome.convert.jpeg',
         'chrome.convert.bmp',
-        'chrome.convert.gif', // squared-apache: gif | tiff
-        'chrome.convert.tiff',
-        'chrome.compress.png', // png | jpeg - TinyPNG API Key <https://tinypng.com/developers>
+        'chrome.compress.png', // TinyPNG API Key <https://tinypng.com/developers>
         'chrome.compress.jpeg',
-        'chrome.compress.brotli', // node-express + node 11.7
+        'chrome.compress.brotli', // NodeJS 11.7
         'chrome.compress.gzip'
     ],
     preloadImages: false,
@@ -212,10 +210,10 @@ squared.settings = {
     createQuerySelectorMap: true,
     pierceShadowRoot: false,
     showErrorMessages: false,
-    outputFileExclusions: [], // ['squared.*', '*.mp4'] | <script|link> data-chrome-file="exclude" | default is none
+    outputFileExclusions: [], // ['squared.*', '*.mp4'] (element: data-chrome-file="exclude") 
     outputEmptyCopyDirectory: false,
     outputArchiveName: 'chrome-data',
-    outputArchiveFormat: 'zip' // zip | tar | gz/tgz | squared-apache: 7z | jar | cpio | xz | bz2 | lzma | lz4 | zstd
+    outputArchiveFormat: 'zip' // zip | tar | gz/tgz
 };
 ```
 
@@ -244,12 +242,14 @@ interface FrameworkOptions {
 }
 
 // Required: Initial save
+
 squared.setFramework(android, {
     settings: { compressImages: true, createQuerySelectorMap: true },
     saveAs: 'android-example'
 });
 
 // Optional: Subsequent loads
+
 squared.setFramework(android, { loadAs: 'android-example' });
 ```
 
@@ -550,6 +550,7 @@ Layout rendering can also be customized using extensions as the program was buil
 
 ```javascript
 // Configure an extension (optional)
+
 chrome.extension.options = { // internal representation
     mimeTypes: ['image/jpeg', 'image/bmp', 'image/gif', 'image/tiff'],
     minSize: 0,
@@ -566,6 +567,7 @@ squared.apply('chrome.convert.png', {
 });
 
 // Create an extension
+
 class Sample extends squared.base.Extension {
     constructor(name, framework = 0, options = {}) {
         // framework: 0 - ALL | 1 - vdom | 2 - android | 4 - chrome
@@ -574,10 +576,11 @@ class Sample extends squared.base.Extension {
 }
 
 // Install an extension
+
 const sample = new Sample('your.namespace.sample', 0, { /* same as configure */ });
 squared.add(sample);
 // OR
-squared.add([sample, {/* configuration */}]);
+squared.add([sample, {/* config */}]);
 ```
 
 Most extensions have a few settings which can be configured. Usually default settings are at their maximum optimized levels.

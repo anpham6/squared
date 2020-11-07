@@ -389,19 +389,12 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             }
         }
         const data = File.parseUri(location.href, { preserveCrossOrigin, saveAs: file, format, tasks });
-        if (data) {
-            if (filename) {
-                data.filename = filename;
-            }
-            else if (!FILE.NAME.test(data.filename)) {
-                data.filename = 'index.html';
-            }
-            if (this.validFile(data)) {
-                data.basePath = location.origin + (data.rootDir || location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1));
-                data.mimeType = parseMimeType('html');
-                this.processExtensions(data, getExtensions(document.querySelector('html')));
-                result.push(data);
-            }
+        if (this.validFile(data)) {
+            data.filename ||= filename || 'index.html';
+            data.basePath = location.origin + (data.rootDir || location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1));
+            data.mimeType = parseMimeType('html');
+            this.processExtensions(data, getExtensions(document.querySelector('html')));
+            result.push(data);
         }
         return result;
     }
@@ -567,8 +560,6 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                             case 'png':
                             case 'jpeg':
                             case 'bmp':
-                            case 'gif':
-                            case 'tiff':
                                 commands = ['@' + saveAsBase64.format];
                                 break;
                         }

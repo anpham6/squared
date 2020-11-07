@@ -9,10 +9,8 @@ declare namespace base {
         COMPRESS_JPEG = 'chrome.compress.jpeg',
         COMPRESS_PNG = 'chrome.compress.png',
         CONVERT_BMP = 'chrome.convert.bmp',
-        CONVERT_GIF = 'chrome.convert.gif',
         CONVERT_JPEG = 'chrome.convert.jpeg',
-        CONVERT_PNG = 'chrome.convert.png',
-        CONVERT_TIFF = 'chrome.convert.tiff'
+        CONVERT_PNG = 'chrome.convert.png'
     }
 
     class Application<T extends Node> extends squared.base.Application<T> {
