@@ -1,4 +1,4 @@
-import type { Arguments, ChromeModules, ExpressAsset, IFileManager, Settings, squared } from '@squared-functions/types';
+import type { Arguments, ExpressAsset, IFileManager, Settings, squared } from '@squared-functions/types';
 
 import path = require('path');
 import fs = require('fs-extra');
@@ -23,15 +23,11 @@ app.use(body_parser.urlencoded({ extended: true }));
 const Node = FileManager.moduleNode();
 const Compress = FileManager.moduleCompress();
 
-let Gulp: Undef<StringMap>,
-    Chrome: Undef<ChromeModules>;
+let Gulp: Undef<StringMap>;
 
 function installModules(manager: IFileManager, query: StringMap) {
     if (Gulp) {
         manager.install('gulp', Gulp);
-    }
-    if (Chrome) {
-        manager.install('chrome', Chrome);
     }
     manager.emptyDirectory = query.empty === '1';
     manager.productionRelease = query.release === '1';
@@ -140,11 +136,8 @@ function installModules(manager: IFileManager, query: StringMap) {
     let settings: Settings;
     try {
         settings = fs.existsSync('./squared.settings.yml') && yaml.safeLoad(fs.readFileSync(path.resolve('./squared.settings.yml'), 'utf8')) as Settings || require('./squared.settings.json');
-
-        FileManager.loadSettings(settings, ignorePermissions);
-
         Gulp = settings.gulp;
-        Chrome = settings.chrome;
+        FileManager.loadSettings(settings, ignorePermissions);
     }
     catch {
         settings = {};
@@ -210,11 +203,14 @@ function installModules(manager: IFileManager, query: StringMap) {
     else if (!PORT && settings.port) {
         PORT = settings.port[ENV];
     }
-    const port = parseInt(PORT!);
+    const port = +PORT!;
     PORT = port >= 0 ? port.toString() : '3000';
 
     app.use(body_parser.json({ limit: settings.request_post_limit || '250mb' }));
     app.listen(PORT, () => console.log(`\n${chalk[ENV!.startsWith('prod') ? 'green' : 'yellow'](ENV!.toUpperCase())}: Express server listening on port ${chalk.bold(PORT)}\n`));
+
+    process.env.NODE_ENV = ENV;
+    process.env.PORT = PORT;
 }
 
 app.post('/api/assets/copy', (req, res) => {
@@ -438,9 +434,9 @@ app.get('/api/loader/json', (req, res) => {
             else if (!Node.canReadDisk()) {
                 return;
             }
-            fs.readFile(filepath, (err, response) => {
+            fs.readFile(filepath, 'utf8', (err, response) => {
                 if (!err) {
-                    loadContent(response.toString('utf8'));
+                    loadContent(response);
                 }
             });
         }

@@ -18,7 +18,6 @@ interface FileActionAttribute extends PlainObject {
         image?: SaveAsOptions;
         base64?: SaveAsOptions;
     };
-    transforms?: TransformCommand[];
     preserveCrossOrigin?: boolean;
 }
 

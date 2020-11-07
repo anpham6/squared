@@ -189,6 +189,7 @@ function checkSaveAs(uri: Undef<string>, pathname?: string, filename?: string): 
     return ['', false];
 }
 
+const getTasks = (element: HTMLElement) => element.dataset.chromeTasks?.split('+').map(value => value.trim());
 const getCustomPath = (uri: Undef<string>, pathname: Undef<string>, filename: string) => appendSeparator(uri && (!pathname || pathname === '~') ? FILE.PROTOCOL.exec(uri)?.[4] : pathname, filename);
 const getMimeType = (element: HTMLLinkElement | HTMLStyleElement | HTMLScriptElement, src: Undef<string>, fallback: string) => element.type.trim().toLowerCase() || src && parseMimeType(src) || fallback;
 const hasSamePath = (item: ChromeAsset, other: ChromeAsset) => (item.moveTo === other.moveTo || !item.moveTo && !moveTo) && item.pathname === other.pathname && item.filename === other.filename;
@@ -383,6 +384,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             else if (file === 'ignore') {
                 return result;
             }
+            else {
+                tasks = getTasks(element);
+            }
         }
         const data = File.parseUri(location.href, { preserveCrossOrigin, saveAs: file, format, tasks });
         if (data) {
@@ -520,38 +524,37 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     public getImageAssets(options?: IFileActionOptions) {
-        let transforms: Undef<TransformCommand[]>,
-            assetMap: Undef<Map<Element, AssetCommand>>,
+        let assetMap: Undef<Map<Element, AssetCommand>>,
             preserveCrossOrigin: Undef<boolean>,
             saveAsImage: Undef<SaveAsOptions>,
             saveAsBase64: Undef<SaveAsOptions>;
         if (options) {
-            ({ transforms, assetMap, preserveCrossOrigin } = options);
+            ({ assetMap, preserveCrossOrigin } = options);
             if (options.saveAs) {
                 ({ image: saveAsImage, base64: saveAsBase64 } = options.saveAs);
             }
         }
         const result: ChromeAsset[] = [];
-        document.querySelectorAll('video').forEach((element: HTMLVideoElement) => this.processImageUri(result, element, resolvePath(element.poster), saveAsImage, transforms, preserveCrossOrigin, assetMap));
+        document.querySelectorAll('video').forEach((element: HTMLVideoElement) => this.processImageUri(result, element, resolvePath(element.poster), saveAsImage, preserveCrossOrigin, assetMap));
         document.querySelectorAll('picture > source').forEach((element: HTMLSourceElement) => {
             for (const uri of element.srcset.trim().split(',')) {
-                this.processImageUri(result, element, resolvePath(splitPairStart(uri, ' ')), saveAsImage, transforms, preserveCrossOrigin, assetMap);
+                this.processImageUri(result, element, resolvePath(splitPairStart(uri, ' ')), saveAsImage, preserveCrossOrigin, assetMap);
             }
         });
         document.querySelectorAll('img, input[type=image]').forEach((element: HTMLImageElement) => {
             const src = element.src.trim();
             if (!src.startsWith('data:image/')) {
-                this.processImageUri(result, element, resolvePath(src), saveAsImage, transforms, preserveCrossOrigin, assetMap);
+                this.processImageUri(result, element, resolvePath(src), saveAsImage, preserveCrossOrigin, assetMap);
             }
         });
         document.querySelectorAll('img[srcset], picture > source[srcset]').forEach((element: HTMLImageElement) => {
             RE_SRCSET.matcher(element.srcset.trim());
             while (RE_SRCSET.find()) {
-                this.processImageUri(result, element, resolvePath(RE_SRCSET.group(1)!), saveAsImage, transforms, preserveCrossOrigin, assetMap);
+                this.processImageUri(result, element, resolvePath(RE_SRCSET.group(1)!), saveAsImage, preserveCrossOrigin, assetMap);
             }
         });
         for (const uri of ASSETS.image.keys()) {
-            this.processImageUri(result, null, uri, saveAsImage, transforms, preserveCrossOrigin);
+            this.processImageUri(result, null, uri, saveAsImage, preserveCrossOrigin);
         }
         for (const rawData of ASSETS.rawData.values()) {
             const { base64, filename, mimeType } = rawData;
@@ -575,7 +578,6 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                         null,
                         resolvePath(getFilePath(appendSeparator(saveAsBase64.pathname, filename))[1] + '/' + filename, location.href),
                         saveAsImage,
-                        transforms,
                         preserveCrossOrigin,
                         undefined,
                         commands
@@ -662,11 +664,10 @@ export default class File<T extends squared.base.Node> extends squared.base.File
 
     protected getRawAssets(tagName: "video" | "audio" | "object" | "embed" | "iframe", options?: IFileActionOptions) {
         let assetMap: Undef<Map<Element, AssetCommand>>,
-            transforms: Undef<TransformCommand[]>,
             preserveCrossOrigin: Undef<boolean>,
             saveAsImage: Undef<SaveAsOptions>;
         if (options) {
-            ({ transforms, assetMap, preserveCrossOrigin } = options);
+            ({ assetMap, preserveCrossOrigin } = options);
             saveAsImage = options.saveAs?.image;
         }
         const result: ChromeAsset[] = [];
@@ -686,7 +687,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     if (!iframe || file && file.startsWith('saveTo')) {
                         const src = (element instanceof HTMLObjectElement ? element.data : element.src).trim();
                         if (type.startsWith('image/') || parseMimeType(src).startsWith('image/')) {
-                            this.processImageUri(result, element, src, saveAsImage, transforms, preserveCrossOrigin, assetMap);
+                            this.processImageUri(result, element, src, saveAsImage, preserveCrossOrigin, assetMap);
                             return;
                         }
                     }
@@ -724,6 +725,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     if (command) {
                         [saveAs, saveTo] = checkSaveAs(uri, command[0]);
                     }
+                    tasks = getTasks(element);
                 }
                 const data = File.parseUri(uri, { preserveCrossOrigin, saveAs, saveTo, tasks, fromConfig });
                 if (this.validFile(data)) {
@@ -799,10 +801,13 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         else if (file === 'ignore') {
             return;
         }
+        else {
+            tasks = getTasks(element);
+        }
         let data: Null<ChromeAsset> = null,
             first: Undef<boolean>;
         if (src) {
-            [data, first] = checkBundlePackage(assets, File.parseUri(resolvePath(src), { element, preserveCrossOrigin, saveAs: file, format, preserve, inline, tasks, fromConfig }));
+            [data, first] = checkBundlePackage(assets, File.parseUri(resolvePath(src), { element, saveAs: file, format, preserve, inline, tasks, preserveCrossOrigin, fromConfig }));
             if (data && first) {
                 data.bundleIndex = -1;
             }
@@ -830,7 +835,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         }
     }
 
-    private processImageUri(assets: ChromeAsset[], element: Null<HTMLElement>, uri: string, saveAsImage: Undef<SaveAsOptions>, transforms: Undef<TransformCommand[]>, preserveCrossOrigin: Undef<boolean>, assetMap?: Map<Element, AssetCommand>, commands?: string | string[]) {
+    private processImageUri(assets: ChromeAsset[], element: Null<HTMLElement>, uri: string, saveAsImage: Undef<SaveAsOptions>, preserveCrossOrigin: Undef<boolean>, assetMap?: Map<Element, AssetCommand>, commands?: string | string[]) {
         if (uri = uri.trim()) {
             let saveAs: Undef<string>,
                 saveTo: Undef<boolean>,
@@ -841,8 +846,11 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 textContent: Undef<string>,
                 fromConfig: Undef<boolean>;
             if (element) {
-                let file = element.dataset.chromeFile,
-                    pathname: Undef<string>,
+                const file = element.dataset.chromeFile;
+                if (file === 'exclude') {
+                    return;
+                }
+                let pathname: Undef<string>,
                     filename: Undef<string>;
                 if (assetMap && assetMap.has(element)) {
                     const command = assetMap.get(element)!;
@@ -854,35 +862,23 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     fromConfig = true;
                     textContent = element.outerHTML;
                 }
-                else {
-                    if (transforms) {
-                        const id = element.id.trim();
-                        if (id) {
-                            const data = transforms.find(item => item.id === id);
-                            if (data) {
-                                ({ pathname, filename, commands, base64, compress, tasks } = data);
-                                [saveAs, saveTo] = checkSaveAs(uri, pathname, filename);
-                                file = '';
-                            }
-                        }
+                else if (saveAsImage) {
+                    if (excludeAsset(assets, saveAsImage, element.outerHTML)) {
+                        return;
                     }
-                    if (saveAsImage) {
-                        if (excludeAsset(assets, saveAsImage, element.outerHTML)) {
-                            return;
-                        }
-                        ({ format, base64, compress } = saveAsImage);
+                    ({ format, base64, compress } = saveAsImage);
+                }
+                else if (file) {
+                    if (file === 'ignore') {
+                        return;
                     }
-                    else if (file) {
-                        if (file === 'ignore') {
-                            return;
-                        }
-                        const fileAs = parseFileAs('saveTo', file, 'base64', 'compress');
-                        if (fileAs) {
-                            [pathname, commands, base64, compress] = fileAs;
-                            [saveAs, saveTo] = checkSaveAs(uri, pathname);
-                            textContent = element.outerHTML;
-                        }
+                    const fileAs = parseFileAs('saveTo', file, 'base64', 'compress');
+                    if (fileAs) {
+                        [pathname, commands, base64, compress] = fileAs;
+                        [saveAs, saveTo] = checkSaveAs(uri, pathname);
+                        textContent = element.outerHTML;
                     }
+                    tasks = getTasks(element);
                 }
             }
             const data = File.parseUri(uri, { preserveCrossOrigin, saveAs, saveTo, tasks, fromConfig });
