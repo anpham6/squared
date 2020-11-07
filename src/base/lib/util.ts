@@ -325,7 +325,7 @@ export function convertRoman(value: number) {
     let result = '',
         i = 3;
     while (i--) {
-        result = (NUMERALS[parseInt(digits.pop()!) + (i * 10)] || '') + result;
+        result = (NUMERALS[+digits.pop()! + (i * 10)] || '') + result;
     }
-    return 'M'.repeat(parseInt(digits.join(''))) + result;
+    return 'M'.repeat(+digits.join('')) + result;
 }

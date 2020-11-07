@@ -321,6 +321,11 @@ export function convertFloat(value: string, fallback = 0) {
     return !isNaN(result) ? result : fallback;
 }
 
+export function convertPercent(value: string, fallback?: number) {
+    const index = value.indexOf('%');
+    return index !== -1 ? +value.substring(0, index) / 100 : fallback === undefined ? +value : fallback;
+}
+
 export function convertBase64(value: ArrayBuffer) {
     let result = '';
     const data = new Uint8Array(value);

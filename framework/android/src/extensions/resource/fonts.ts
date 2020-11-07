@@ -202,7 +202,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     else if (fontWeight === '400' || node.api < BUILD_VERSION.OREO) {
                         fontWeight = '';
                     }
-                    if (parseInt(fontWeight) > 500) {
+                    if (+fontWeight > 500) {
                         fontStyle += (fontStyle ? '|' : '') + 'bold';
                     }
                     return true;
@@ -435,7 +435,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 const name = values[i];
                 const match = REGEXP_FONTNAME.exec(name);
                 if (match) {
-                    const styleData = resourceMap[match[1].toUpperCase()][parseInt(match[2]) || 0];
+                    const styleData = resourceMap[match[1].toUpperCase()][+match[2] || 0];
                     if (styleData) {
                         if (i === 0) {
                             parent = name;

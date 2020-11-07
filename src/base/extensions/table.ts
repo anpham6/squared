@@ -11,7 +11,7 @@ import ExtensionUI from '../extension-ui';
 
 const { formatPercent, formatPX, getStyle, isLength, isPercent } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
-const { isNumber, replaceMap } = squared.lib.util;
+const { convertPercent, isNumber, replaceMap } = squared.lib.util;
 
 function setAutoWidth(node: NodeUI, td: NodeUI, data: StandardMap) {
     data.percent = Math.round(td.bounds.width / node.box.width * 100) + '%';
@@ -162,7 +162,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         td.css('width', value, true);
                     }
                     else if (isNumber(value)) {
-                        td.css('width', formatPX(parseFloat(value)), true);
+                        td.css('width', formatPX(+value), true);
                     }
                 }
                 if (!td.hasPX('height')) {
@@ -171,7 +171,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         td.css('height', value);
                     }
                     else if (isNumber(value)) {
-                        td.css('height', formatPX(parseFloat(value)));
+                        td.css('height', formatPX(+value));
                     }
                 }
                 if (!td.valueOf('verticalAlign')) {
@@ -300,15 +300,15 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             });
         }
         if (mapWidth.every(value => isPercent(value))) {
-            if (mapWidth.reduce((a, b) => a + parseFloat(b), 0) > 1) {
-                let percentTotal = 100;
+            if (mapWidth.reduce((a, b) => a + convertPercent(b), 0) > 1) {
+                let percentTotal = 1;
                 replaceMap(mapWidth, value => {
-                    const percent = parseFloat(value);
+                    const percent = convertPercent(value);
                     if (percentTotal <= 0) {
                         value = '0px';
                     }
                     else if (percentTotal - percent < 0) {
-                        value = formatPercent(percentTotal / 100);
+                        value = formatPercent(percentTotal);
                     }
                     percentTotal -= percent;
                     return value;
@@ -323,7 +323,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             const width = mapWidth.reduce((a, b) => a + parseFloat(b), 0);
             if (hasWidth) {
                 if (width < node.width) {
-                    replaceMap(mapWidth, value => value !== '0px' ? ((parseFloat(value) / width) * 100) + '%' : value);
+                    replaceMap(mapWidth, value => value !== '0px' ? formatPercent(parseFloat(value) / width) : value);
                 }
                 else if (width > node.width) {
                     node.css('width', 'auto');
@@ -342,7 +342,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         }
         mainData.layoutType = (() => {
             if (mapWidth.length > 1) {
-                mapPercent = mapWidth.reduce((a, b) => a + (isPercent(b) ? parseFloat(b) : 0), 0);
+                mapPercent = mapWidth.reduce((a, b) => a + convertPercent(b, 0), 0);
                 if (layoutFixed && mapWidth.reduce((a, b) => a + (isLength(b) ? parseFloat(b) : 0), 0) >= node.actualWidth) {
                     return LAYOUT_TABLETYPE.COMPRESS;
                 }
@@ -428,8 +428,8 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                                     setBoundsWidth(td);
                                 }
                             }
-                            else if (isLength(columnWidth) && parseInt(columnWidth)) {
-                                if (td.bounds.width >= parseInt(columnWidth)) {
+                            else if (isLength(columnWidth)) {
+                                if (td.bounds.width >= td.parseWidth(columnWidth)) {
                                     setBoundsWidth(td);
                                     flags |= LAYOUT_TABLECELL.SHRINK;
                                 }
@@ -488,15 +488,11 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             caption.parent = node;
         }
         if (borderCollapse) {
-            const borderTop = node.cssAsObject('borderTopColor', 'borderTopStyle', 'borderTopWidth');
-            const borderRight = node.cssAsObject('borderRightColor', 'borderRightStyle', 'borderRightWidth');
-            const borderBottom = node.cssAsObject('borderBottomColor', 'borderBottomStyle', 'borderBottomWidth');
-            const borderLeft = node.cssAsObject('borderLeftColor', 'borderLeftStyle', 'borderLeftWidth');
-            const borderTopWidth = parseInt(borderTop.borderTopWidth!);
-            const borderRightWidth = parseInt(borderRight.borderRightWidth!);
-            const borderBottomWidth = parseInt(borderBottom.borderBottomWidth!);
-            const borderLeftWidth = parseInt(borderLeft.borderLeftWidth!);
-            let hideTop: Undef<boolean>,
+            let borderTop: Undef<StringMap>,
+                borderRight: Undef<StringMap>,
+                borderBottom: Undef<StringMap>,
+                borderLeft: Undef<StringMap>,
+                hideTop: Undef<boolean>,
                 hideRight: Undef<boolean>,
                 hideBottom: Undef<boolean>,
                 hideLeft: Undef<boolean>;
@@ -506,8 +502,8 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     const td = tr[j];
                     if (td && td.css('visibility') === 'visible') {
                         if (i === 0) {
-                            if (td.borderTopWidth < borderTopWidth) {
-                                td.cssApply(borderTop);
+                            if (td.borderTopWidth < node.borderTopWidth) {
+                                td.cssApply(borderTop ||= node.cssAsObject('borderTopColor', 'borderTopStyle', 'borderTopWidth'));
                                 td.unsetCache('borderTopWidth');
                             }
                             else {
@@ -526,8 +522,8 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             }
                         }
                         if (i === rowCount - 1) {
-                            if (td.borderBottomWidth < borderBottomWidth) {
-                                td.cssApply(borderBottom);
+                            if (td.borderBottomWidth < node.borderBottomWidth) {
+                                td.cssApply(borderBottom ||= node.cssAsObject('borderBottomColor', 'borderBottomStyle', 'borderBottomWidth'));
                                 td.unsetCache('borderBottomWidth');
                             }
                             else {
@@ -535,8 +531,8 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             }
                         }
                         if (j === 0) {
-                            if (td.borderLeftWidth < borderLeftWidth) {
-                                td.cssApply(borderLeft);
+                            if (td.borderLeftWidth < node.borderLeftWidth) {
+                                td.cssApply(borderLeft ||= node.cssAsObject('borderLeftColor', 'borderLeftStyle', 'borderLeftWidth'));
                                 td.unsetCache('borderLeftWidth');
                             }
                             else {
@@ -555,8 +551,8 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             }
                         }
                         if (j === columnCount - 1) {
-                            if (td.borderRightWidth < borderRightWidth) {
-                                td.cssApply(borderRight);
+                            if (td.borderRightWidth < node.borderRightWidth) {
+                                td.cssApply(borderRight ||= node.cssAsObject('borderRightColor', 'borderRightStyle', 'borderRightWidth'));
                                 td.unsetCache('borderRightWidth');
                             }
                             else {

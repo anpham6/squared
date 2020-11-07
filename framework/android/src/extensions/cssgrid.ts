@@ -21,7 +21,7 @@ const { NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.constant;
 
 const { formatPercent, formatPX, isLength, isPercent } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { flatArray } = squared.lib.util;
+const { convertPercent, flatArray } = squared.lib.util;
 
 const REGEXP_ALIGNSELF = /start|end|center|baseline/;
 const REGEXP_JUSTIFYSELF = /start|center|end|baseline|right|left/;
@@ -145,7 +145,7 @@ function setContentSpacing(mainData: ICssGridData<View>, data: CssGridDirectionD
                                     }
                                 }
                                 else {
-                                    const unitSpan = parseInt(item.android(horizontal ? 'layout_columnSpan' : 'layout_rowSpan'));
+                                    const unitSpan = +item.android(horizontal ? 'layout_columnSpan' : 'layout_rowSpan');
                                     if (unitSpan > 1) {
                                         const marginEnd = marginSize + (marginExcess > 0 ? Math.max(marginExcess - 1, 1) : 0);
                                         item.cssPX(dimension, marginEnd, true);
@@ -280,7 +280,7 @@ function requireDirectionSpacer(data: CssGridDirectionData, dimension: number) {
             size += parseFloat(value);
         }
         else if (isPercent(value)) {
-            percent += parseFloat(value);
+            percent += convertPercent(value);
         }
         else if (value.endsWith('fr')) {
             return 0;
@@ -288,7 +288,7 @@ function requireDirectionSpacer(data: CssGridDirectionData, dimension: number) {
     }
     const content = Math.ceil(size + (data.length - 1) * data.gap);
     if (percent) {
-        return percent + (content / dimension * 100);
+        return percent * 100 + (content / dimension * 100);
     }
     else if (size) {
         return content < dimension ? -1 : 0;
@@ -385,7 +385,7 @@ function applyLayout(node: View, parent: View, item: View, mainData: CssGridData
             if (sizeWeight === -1) {
                 sizeWeight = 0;
             }
-            sizeWeight += parseFloat(value) / 100;
+            sizeWeight += convertPercent(value);
             minSize = size;
             size = 0;
         }

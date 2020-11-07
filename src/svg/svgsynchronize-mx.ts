@@ -78,7 +78,7 @@ function convertToFraction(values: TimelineEntries) {
         if (fraction > 0) {
             let j = 7;
             do {
-                const value = parseFloat(fraction.toString().substring(0, j));
+                const value = +fraction.toString().substring(0, j);
                 if (!previous.has(value)) {
                     fraction = value;
                     break;
@@ -95,7 +95,7 @@ function convertToFraction(values: TimelineEntries) {
 function convertToAnimateValue(value: AnimateValue, fromString?: boolean) {
     if (typeof value === 'string') {
         if (isNumber(value)) {
-            value = parseFloat(value);
+            value = +value;
         }
         else {
             value = SvgBuild.parsePoints(value);
@@ -255,8 +255,8 @@ function getItemValue(item: SvgAnimate, values: string[], iteration: number, ind
     switch (item.attributeName) {
         case 'transform':
             if (item.additiveSum && typeof baseValue === 'string') {
-                const baseArray = replaceMap(baseValue.split(' '), value => parseFloat(value));
-                const valuesArray = plainMap(values, value => replaceMap(value.trim().split(' '), pt => parseFloat(pt)));
+                const baseArray = replaceMap(baseValue.split(' '), value => +value);
+                const valuesArray = plainMap(values, value => replaceMap(value.trim().split(' '), pt => +pt));
                 const length = baseArray.length;
                 if (valuesArray.every(value => value.length === length)) {
                     const result = valuesArray[index];
@@ -281,7 +281,7 @@ function getItemValue(item: SvgAnimate, values: string[], iteration: number, ind
         case 'points':
             return SvgBuild.parsePoints(values[index]);
         default: {
-            let result = parseFloat(values[index]);
+            let result = +values[index];
             if (!isNaN(result)) {
                 if (item.additiveSum && typeof baseValue === 'number') {
                     result += baseValue;
@@ -290,7 +290,7 @@ function getItemValue(item: SvgAnimate, values: string[], iteration: number, ind
                     }
                     for (let i = 0, length = values.length; i < iteration; ++i) {
                         for (let j = 0; j < length; ++j) {
-                            result += parseFloat(values[j]);
+                            result += +values[j];
                         }
                     }
                 }
@@ -307,8 +307,8 @@ function getItemSplitValue(fraction: number, previousFraction: number, previousV
             return SvgAnimate.getSplitValue(previousValue, nextValue, (fraction - previousFraction) / (nextFraction - previousFraction));
         }
         else if (typeof previousValue === 'string' && typeof nextValue === 'string') {
-            const previousArray = replaceMap(previousValue.split(' '), value => parseFloat(value));
-            const nextArray = replaceMap(nextValue.split(' '), value => parseFloat(value));
+            const previousArray = replaceMap(previousValue.split(' '), value => +value);
+            const nextArray = replaceMap(nextValue.split(' '), value => +value);
             const length = previousArray.length;
             if (length === nextArray.length) {
                 let result = '';
@@ -402,7 +402,7 @@ function appendPartialKeyTimes(map: SvgAnimationIntervalMap, forwardMap: Forward
     const startTime = delay + duration * interval;
     const itemEndTime = item.getTotalDuration();
     const intervalEndTime = startTime + (evaluateStart ? keyTimes[0] : 1) * duration;
-    const finalValue = parseFloat(values[evaluateStart ? 0 : length - 1]);
+    const finalValue = +values[evaluateStart ? 0 : length - 1];
     let maxTime = startTime;
     complete: {
         length = queued.length;
@@ -427,7 +427,7 @@ function appendPartialKeyTimes(map: SvgAnimationIntervalMap, forwardMap: Forward
                                 : getIntermediateSplitValue(subTime, splitTime, sub, subKeyTimes, subValues, sub.duration, j, baseValue);
                             if (splitValue) {
                                 if (resultTime > 0) {
-                                    splitValue = Math.round((parseFloat(splitValue) + finalValue) / 2).toString();
+                                    splitValue = Math.round((+splitValue + finalValue) / 2).toString();
                                 }
                                 const q = keyTimes.length;
                                 if (!(resultTime === keyTimes[q - 1] && splitValue === values[q - 1])) {
@@ -565,9 +565,8 @@ function setStartItemValues(map: SvgAnimationIntervalMap, forwardMap: ForwardMap
         else {
             value = getForwardItem(forwardMap, item.attributeName)?.value.toString() || map.get(SvgAnimationIntervalMap.getKeyName(item), item.delay) || convertToString(baseValue);
         }
-        const by = item.by;
-        if (by && isNumber(value)) {
-            value = (parseFloat(value) + by).toString();
+        if (item.by && isNumber(value)) {
+            value = (+value + item.by).toString();
         }
         keyTimes.unshift(0);
         values.unshift(value);

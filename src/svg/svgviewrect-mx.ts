@@ -68,24 +68,22 @@ export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {
             this._width = value;
         }
         get width() {
-            const result = this._width;
-            if (result === null) {
+            if (isNaN(this._width)) {
                 const element = this.getRectElement();
                 return element ? hasUnsupportedAccess(element) ? element.getBoundingClientRect().width : element.width.baseVal.value : 0;
             }
-            return result;
+            return this._width;
         }
 
         set height(value) {
             this._height = value;
         }
         get height() {
-            const result = this._height;
-            if (result === null) {
+            if (isNaN(this._height)) {
                 const element = this.getRectElement();
                 return element ? hasUnsupportedAccess(element) ? element.getBoundingClientRect().height : element.height.baseVal.value : 0;
             }
-            return result;
+            return this._height;
         }
     };
 };

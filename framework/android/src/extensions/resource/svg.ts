@@ -137,9 +137,9 @@ const KEYSPLINE_NAME = SvgAnimate ? SvgAnimate.KEYSPLINE_NAME : null;
 
 const { FILE } = squared.lib.regex;
 
-const { extractURL, formatPX, isPercent } = squared.lib.css;
+const { extractURL, formatPX } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { convertCamelCase, convertInt, convertWord, hasKeys, isArray, isNumber, lastItemOf, partitionArray, plainMap, replaceMap } = squared.lib.util;
+const { convertCamelCase, convertInt, convertPercent, convertWord, hasKeys, isArray, isNumber, lastItemOf, partitionArray, plainMap, replaceMap } = squared.lib.util;
 
 const { CACHE_VIEWNAME, MATRIX, SVG, TRANSFORM, getAttribute, getRootOffset } = squared.svg.lib.util;
 
@@ -253,10 +253,10 @@ function createTransformData(transform: SvgTransform[]) {
 }
 
 function getOuterOpacity(target: SvgView) {
-    let value = parseFloat(target.opacity),
+    let value = +target.opacity,
         current = target.parent;
     while (current) {
-        const opacity = parseFloat(current['opacity'] || '1');
+        const opacity = +(current['opacity'] || '1');
         if (!isNaN(opacity) && opacity < 1) {
             value *= opacity;
         }
@@ -496,7 +496,7 @@ function createFillGradient(gradient: Gradient, path: SvgPath, precision?: numbe
         case 'radial': {
             const { cxAsString, cyAsString, rAsString, spreadMethod } = gradient as SvgRadialGradient;
             const element = path.element;
-            const getRadiusPercent = (value: string) => isPercent(value) ? parseFloat(value) / 100 : 0.5;
+            const getRadiusPercent = (value: string) => convertPercent(value, 0.5);
             const points: Point[] = [];
             let cx!: number,
                 cy!: number,
@@ -547,7 +547,7 @@ function createFillGradient(gradient: Gradient, path: SvgPath, precision?: numbe
             }
             result.centerX = (cx + cxDiameter * getRadiusPercent(cxAsString)).toString();
             result.centerY = (cy + cyDiameter * getRadiusPercent(cyAsString)).toString();
-            result.gradientRadius = (((cxDiameter + cyDiameter) / 2) * (isPercent(rAsString) ? parseFloat(rAsString) / 100 : 1)).toString();
+            result.gradientRadius = (((cxDiameter + cyDiameter) / 2) * convertPercent(rAsString, 1)).toString();
             if (spreadMethod) {
                 result.tileMode = getTileMode(spreadMethod);
             }
@@ -875,7 +875,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     'android:height': formatPX(height),
                     'android:viewportWidth': (svg.viewBox.width || width).toString(),
                     'android:viewportHeight': (svg.viewBox.height || height).toString(),
-                    'android:alpha': parseFloat(svg.opacity) < 1 ? svg.opacity.toString() : '',
+                    'android:alpha': +svg.opacity < 1 ? svg.opacity : '',
                     include: vectorData
                 }])
             );
@@ -1172,7 +1172,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                     break;
                                                 case 'floatType':
                                                     if (item.attributeName === 'stroke-dasharray') {
-                                                        values = plainMap(item.values, value => replaceMap(value.split(' '), fraction => parseFloat(fraction)));
+                                                        values = plainMap(item.values, value => replaceMap(value.split(' '), fraction => +fraction));
                                                     }
                                                     else {
                                                         values = item.values;
@@ -1500,7 +1500,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     if (itemPath && itemPath.value) {
                         const [path, groupArray] = this.createPath(item, itemPath);
                         const pathArray: PathData[] = [];
-                        if (parseFloat(itemPath.strokeWidth) && (itemPath.strokeDasharray || itemPath.strokeDashoffset)) {
+                        if (+itemPath.strokeWidth && (itemPath.strokeDasharray || itemPath.strokeDashoffset)) {
                             const animateData = this._animateData.get(item.name);
                             if (!animateData || animateData.animate.every(animate => animate.attributeName.startsWith('stroke-dash'))) {
                                 const [animations, strokeDash, pathData, clipPathData] = itemPath.extractStrokeDash(animateData?.animate, floatPrecision);
@@ -1728,7 +1728,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                         break;
                     case 'fillOpacity':
                     case 'strokeOpacity':
-                        value = ((isNumber(value) ? parseFloat(value) : 1) * opacity).toString();
+                        value = ((isNumber(value) ? +value : 1) * opacity).toString();
                         if (value === '1') {
                             continue;
                         }

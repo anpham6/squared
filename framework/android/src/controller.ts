@@ -26,7 +26,7 @@ const { formatPX, getSrcSet, hasCoords, parseTransform } = squared.lib.css;
 const { getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
-const { assignEmptyValue, capitalize, convertWord, iterateArray, lastItemOf, minMaxOf, parseMimeType, partitionArray, plainMap, withinRange } = squared.lib.util;
+const { assignEmptyValue, capitalize, convertPercent, convertWord, iterateArray, lastItemOf, minMaxOf, parseMimeType, partitionArray, plainMap, withinRange } = squared.lib.util;
 
 const REGEXP_TEXTSYMBOL = /^[^\w\s]+\s+$/;
 
@@ -616,7 +616,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     if (template) {
                         const renderChildren = parent.renderChildren;
                         const renderTemplates = parent.renderTemplates ||= [];
-                        const index = parseInt(node.dataset.androidTargetIndex!);
+                        const index = +node.dataset.androidTargetIndex!;
                         if (!isNaN(index) && index >= 0 && index < renderChildren.length) {
                             renderChildren.splice(index, 0, node);
                             renderTemplates.splice(index, 0, template);
@@ -1823,7 +1823,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         let { width, height } = attrs;
         if (width) {
             if (lastItemOf(width) === '%') {
-                android.layout_columnWeight = truncate(parseFloat(width) / 100, this.localSettings.floatPrecision);
+                android.layout_columnWeight = truncate(convertPercent(width), this.localSettings.floatPrecision);
                 width = '0px';
             }
         }
@@ -1832,7 +1832,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         if (height) {
             if (lastItemOf(height) === '%') {
-                android.layout_rowWeight = truncate(parseFloat(height) / 100, this.localSettings.floatPrecision);
+                android.layout_rowWeight = truncate(convertPercent(height), this.localSettings.floatPrecision);
                 height = '0px';
             }
         }
@@ -2069,7 +2069,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         if ((node.renderParent || parent).layoutGrid && node.android('layout_width') === '0px') {
             const columnWeight = node.android('layout_columnWeight');
-            if (parseFloat(columnWeight)) {
+            if (+columnWeight) {
                 node.delete('android', 'layout_columnWeight');
                 node.setLayoutWidth('match_parent');
                 container.android('layout_columnWeight', columnWeight);
@@ -3468,7 +3468,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             attr: string;
         if (percent) {
             const position = Math.abs(bounds[LT] - box[LT]) / (horizontal ? box.width : box.height);
-            location = parseFloat(truncate(!opposing ? position : 1 - position, node.localSettings.floatPrecision));
+            location = +truncate(!opposing ? position : 1 - position, node.localSettings.floatPrecision);
             attr = 'layout_constraintGuide_percent';
         }
         else {
@@ -3703,7 +3703,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             const anchors = guideline[axis]?.[attr]?.[LT] as Undef<StringMap>;
             if (anchors) {
                 for (const id in anchors) {
-                    if (withinRange(parseFloat(anchors[id]!), location)) {
+                    if (withinRange(+anchors[id]!, location)) {
                         node.anchor(LT, id, true);
                         node.anchorDelete(RB);
                         return;

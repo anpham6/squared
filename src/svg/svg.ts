@@ -16,7 +16,7 @@ function getColorStop(element: SVGGradientElement) {
     const stops = element.getElementsByTagName('stop');
     for (let i = 0, length = stops.length; i < length; ++i) {
         const item = stops[i];
-        const color = parseColor(getNamedItem(item, 'stop-color'), parseFloat(getNamedItem(item, 'stop-opacity') || '1'));
+        const color = parseColor(getNamedItem(item, 'stop-color'), +(getNamedItem(item, 'stop-opacity') || '1'));
         if (color) {
             result.push({ color, offset: parseFloat(getNamedItem(item, 'offset')) / 100 });
         }

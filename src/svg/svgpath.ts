@@ -107,7 +107,7 @@ function updatePathRadius(path: SvgPathCommand[], rx?: number, ry?: number) {
 
 function getDashOffset(map: SvgAnimationIntervalMap, valueOffset: number, time: number, playing?: boolean) {
     const value = map.get('stroke-dashoffset', time, playing);
-    return value ? parseFloat(value) : valueOffset;
+    return value ? +value : valueOffset;
 }
 
 function getDashArray(map: SvgAnimationIntervalMap, valueArray: number[], time: number, playing?: boolean) {
@@ -135,7 +135,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             }
             else if (pathData) {
                 commands ||= SvgBuild.toPathCommands(pathData);
-                const value = parseFloat(values[i]);
+                const value = +values[i];
                 if (!isNaN(value)) {
                     const path = i < length - 1 ? cloneObject(commands, { deep: true }) : commands;
                     switch (attr) {
@@ -639,7 +639,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
     }
 
     public extractStrokeDash(animations?: SvgAnimation[], precision?: number): [Undef<SvgAnimation[]>, Undef<SvgStrokeDash[]>, string, string] {
-        const strokeWidth = parseInt(this.strokeWidth);
+        const strokeWidth = +this.strokeWidth;
         let path = '',
             clipPath = '',
             result: Undef<SvgStrokeDash[]>;
@@ -685,7 +685,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                             if (item.attributeName === 'stroke-dasharray') {
                                 const value = intervalMap.get('stroke-dashoffset', item.delay);
                                 if (value) {
-                                    offset = parseFloat(value);
+                                    offset = +value;
                                 }
                                 for (const array of SvgBuild.asAnimate(item) ? intervalMap.evaluateStart(item) : [item.to]) {
                                     dashTotal = Math.max(dashTotal, this.flattenStrokeDash(SvgBuild.parseCoordinates(array), offset, totalLength, pathLength).items.length);
@@ -779,7 +779,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                 }
                                 case 'stroke-dashoffset': {
                                     const duration = item.duration;
-                                    const startOffset = parseFloat(item.values[0]);
+                                    const startOffset = +item.values[0];
                                     let keyTime = 0,
                                         previousRemaining = 0,
                                         extendedLength = totalLength,
@@ -829,8 +829,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                     const values: string[] = [];
                                     const keyTimes: number[] = [];
                                     for (let j = 0, length = keyTimesBase.length; j < length; ++j) {
-                                        const offsetFrom = j === 0 ? valueOffset : parseFloat(valuesBase[j - 1]);
-                                        const offsetTo = parseFloat(valuesBase[j]);
+                                        const offsetFrom = j === 0 ? valueOffset : +valuesBase[j - 1];
+                                        const offsetTo = +valuesBase[j];
                                         const offsetValue = Math.abs(offsetTo - offsetFrom);
                                         const keyTimeTo = keyTimesBase[j];
                                         if (offsetValue === 0) {
@@ -840,7 +840,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                                 const q = values.length;
                                                 if (q) {
                                                     values.push(values[q - 1]);
-                                                    previousRemaining = parseFloat(values[q - 1]);
+                                                    previousRemaining = +values[q - 1];
                                                 }
                                                 else {
                                                     values.push('0');

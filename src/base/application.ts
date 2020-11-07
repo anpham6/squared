@@ -792,7 +792,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         if (src && fontFamily) {
                             fontFamily = trimBoth(fontFamily, '"');
                             const fontStyle = REGEXP_FONTSTYLE.exec(attr)?.[1].toLowerCase() || 'normal';
-                            const fontWeight = parseInt(REGEXP_FONTWEIGHT.exec(attr)?.[1] || '400');
+                            const fontWeight = +(REGEXP_FONTWEIGHT.exec(attr)?.[1] || '400');
                             for (const value of src.split(',')) {
                                 const match = REGEXP_FONTURL.exec(value);
                                 if (match) {

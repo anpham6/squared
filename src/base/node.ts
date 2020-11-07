@@ -13,7 +13,7 @@ const { CSS_PROPERTIES, PROXY_INLINESTYLE, checkFontSizeValue, checkStyleValue, 
 const { assignRect, getNamedItem, getParentElement, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { truncate } = squared.lib.math;
 const { getElementAsNode, getElementCache, getElementData, setElementCache } = squared.lib.session;
-const { convertCamelCase, convertFloat, convertInt, hasValue, isNumber, isObject, iterateArray, iterateReverseArray, spliceString, splitPair } = squared.lib.util;
+const { convertCamelCase, convertFloat, convertInt, convertPercent, hasValue, isNumber, isObject, iterateArray, iterateReverseArray, spliceString, splitPair } = squared.lib.util;
 
 const TEXT_STYLE = [
     'fontFamily',
@@ -60,14 +60,9 @@ function setStyleCache(element: HTMLElement, attr: string, value: string, style:
     return STYLE_STATE.READY;
 }
 
-function parseLineHeight(lineHeight: string, fontSize: number) {
-    if (isPercent(lineHeight)) {
-        return parseFloat(lineHeight) / 100 * fontSize;
-    }
-    else if (isNumber(lineHeight)) {
-        return parseFloat(lineHeight) * fontSize;
-    }
-    return parseUnit(lineHeight, { fontSize });
+function parseLineHeight(value: string, fontSize: number) {
+    const lineHeight = convertPercent(value);
+    return !isNaN(lineHeight) ? lineHeight * fontSize : parseUnit(value, { fontSize });
 }
 
 function isFontFixedWidth(node: T) {
@@ -77,7 +72,7 @@ function isFontFixedWidth(node: T) {
 
 function getFlexValue(node: T, attr: string, fallback: number, parent?: Null<Node>): number {
     const value = (parent || node).css(attr);
-    return isNumber(value) ? parseFloat(value) : fallback;
+    return isNumber(value) ? +value : fallback;
 }
 
 function hasTextAlign(node: T, ...values: string[]) {
@@ -110,7 +105,7 @@ function setDimension(node: T, styleMap: StringMap, attr: DimensionAttr) {
             case 'EMBED': {
                 const size = getNamedItem(element, attr);
                 if (size) {
-                    result = isNumber(size) ? parseFloat(size) : node.parseUnit(size, options);
+                    result = isNumber(size) ? +size : node.parseUnit(size, options);
                     if (result) {
                         node.css(attr, isPercent(size) ? size : size + 'px');
                     }
@@ -204,7 +199,7 @@ function convertPosition(node: T, attr: string) {
             return parseFloat(unit);
         }
         else if (isPercent(unit)) {
-            return node.styleElement ? convertFloat(node.style[attr]) : 0;
+            return node.styleElement && parseFloat(node.style[attr]) || 0;
         }
         return node.parseUnit(unit, attr === 'top' || attr === 'bottom' ? { dimension: 'height' } : undefined);
     }
@@ -381,10 +376,10 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, last: boo
                 case ':out-of-range':
                     if (tagName === 'INPUT') {
                         const element = child.element as HTMLInputElement;
-                        const value = parseFloat(element.value);
+                        const value = +element.value;
                         if (!isNaN(value)) {
-                            const min = parseFloat(element.min);
-                            const max = parseFloat(element.max);
+                            const min = +element.min;
+                            const max = +element.max;
                             if (value >= min && value <= max) {
                                 if (pseudo === ':out-of-range') {
                                     return false;
@@ -467,7 +462,7 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, last: boo
                         if (index) {
                             const placement = match[3].trim();
                             if (isNumber(placement)) {
-                                if (parseInt(placement) !== index) {
+                                if (+placement !== index) {
                                     return false;
                                 }
                             }
@@ -491,7 +486,7 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, last: boo
                                                 if (subMatch[1]) {
                                                     return false;
                                                 }
-                                                const increment = parseInt(subMatch[2]);
+                                                const increment = +subMatch[2];
                                                 if (increment !== 0) {
                                                     if (index !== modifier) {
                                                         for (let j = increment; ; j += increment) {
@@ -1591,7 +1586,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             return parseFloat(value);
         }
         else if (isPercent(value)) {
-            return (parseFloat(value) / 100) * getBoundsSize(this, options);
+            return convertPercent(value) * getBoundsSize(this, options);
         }
         if (!options) {
             options = { fontSize: this.fontSize };
@@ -1622,7 +1617,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             }
             if (ignoreDefault !== true) {
                 const data = CSS_PROPERTIES[attr] as Undef<CssPropertyData>;
-                if (data && (value === data.value || (data.trait & CSS_TRAITS.UNIT) && parseFloat(value) === parseFloat(data.value as string))) {
+                if (data && (value === data.value || (data.trait & CSS_TRAITS.UNIT) && this.parseUnit(value) === parseFloat(data.value as string))) {
                     return false;
                 }
             }
@@ -2191,7 +2186,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get opacity() {
         const opacity = this.valueOf('opacity');
-        return opacity ? Math.max(0, Math.min(parseFloat(opacity), 1)) : 1;
+        return opacity ? Math.max(0, Math.min(+opacity, 1)) : 1;
     }
 
     get textContent() {
@@ -2528,15 +2523,15 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 const minWidth = this.valueOf('minWidth');
                 let percent = 0;
                 if (isPercent(width)) {
-                    percent = parseFloat(width);
+                    percent = convertPercent(width);
                 }
                 if (isPercent(minWidth)) {
-                    percent = Math.max(parseFloat(minWidth), percent);
+                    percent = Math.max(convertPercent(minWidth), percent);
                 }
                 if (percent) {
                     const marginLeft = this.valueOf('marginLeft');
                     const marginRight = this.valueOf('marginRight');
-                    result = percent + (isPercent(marginLeft) ? Math.max(0, parseFloat(marginLeft)) : 0) + (isPercent(marginRight) ? parseFloat(marginRight) : 0) >= 100;
+                    result = percent + Math.max(0, convertPercent(marginLeft, 0)) + convertPercent(marginRight, 0) >= 1;
                 }
             }
             return this._cache.blockStatic = !!result;
@@ -2775,7 +2770,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         const result = this._cache.percentWidth;
         if (result === undefined) {
             const value = this.valueOf('width');
-            return this._cache.percentWidth = isPercent(value) ? parseFloat(value) / 100 : 0;
+            return this._cache.percentWidth = convertPercent(value, 0);
         }
         return result;
     }
@@ -2783,7 +2778,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         const result = this._cache.percentHeight;
         if (result === undefined) {
             const value = this.valueOf('height');
-            return this._cache.percentHeight = isPercent(value) && (this.actualParent?.hasHeight || this.valueOf('position') === 'fixed') ? parseFloat(value) / 100 : 0;
+            return this._cache.percentHeight = isPercent(value) && (this.actualParent?.hasHeight || this.valueOf('position') === 'fixed') ? convertPercent(value) : 0;
         }
         return result;
     }
@@ -3052,7 +3047,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     else if (isPercent(value)) {
                         const parent = this.actualParent;
                         if (parent) {
-                            result = parseFloat(value) / 100 * parent.fontSize;
+                            result = convertPercent(value) * parent.fontSize;
                             if (fixedWidth && !isFontFixedWidth(parent)) {
                                 result *= 13 / getRemSize();
                             }
@@ -3080,7 +3075,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                         if (fontSize && fontSize !== 'inherit') {
                                             value = checkFontSizeValue(fontSize);
                                             if (isPercent(value)) {
-                                                emRatio *= parseFloat(value) / 100;
+                                                emRatio *= convertPercent(value);
                                             }
                                             else if (REGEXP_EM.test(value)) {
                                                 emRatio *= parseFloat(value);

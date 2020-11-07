@@ -134,7 +134,7 @@ declare namespace base {
         setSingleLine(maxLines: boolean, ellipsize?: boolean): void;
         setConstraintDimension(percentWidth?: number): number;
         setFlexDimension(dimension: DimensionAttr, percentWidth?: number): number;
-        getMatchConstraint(parent?: View): string;
+        getMatchConstraint(parent?: View, override?: boolean): string;
         getAnchorPosition(parent: View, horizontal: boolean, modifyAnchor?: boolean): Partial<BoxRect>;
         isUnstyled(checkMargin?: boolean): boolean;
         getHorizontalBias(rect?: BoxRect): number;

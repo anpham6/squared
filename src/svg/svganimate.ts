@@ -11,7 +11,7 @@ const { isNumber, lastItemOf, replaceMap, sortNumber, trimEnd } = squared.lib.ut
 const REGEXP_BEZIER = new RegExp(`\\b${PATTERN_CUBICBEZIER}\\b`);
 const REGEXP_BEZIERCSS = new RegExp(`\\bcubic-bezier\\(${PATTERN_CUBICBEZIER}\\)`);
 
-const invertControlPoint = (value: number) => parseFloat((1 - value).toPrecision(5));
+const invertControlPoint = (value: number) => +(1 - value).toPrecision(5);
 
 export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgAnimate {
     public static KEYSPLINE_NAME = {
@@ -67,18 +67,18 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             case 'rotate':
             case 'scale':
             case 'translate':
-                currentValue = replaceMap(valueA.trim().split(/\s+/), value => parseFloat(value));
-                nextValue = replaceMap(valueB.trim().split(/\s+/), value => parseFloat(value));
+                currentValue = replaceMap(valueA.trim().split(/\s+/), value => +value);
+                nextValue = replaceMap(valueB.trim().split(/\s+/), value => +value);
                 break;
             default:
                 if (isNumber(valueA)) {
-                    currentValue = [parseFloat(valueA)];
+                    currentValue = [+valueA];
                 }
                 else if (isLength(valueA)) {
                     currentValue = [parseUnit(valueA, checkOptions(valueA))];
                 }
                 if (isNumber(valueB)) {
-                    nextValue = [parseFloat(valueB)];
+                    nextValue = [+valueB];
                 }
                 else if (isLength(valueB)) {
                     nextValue = [parseUnit(valueB, checkOptions(valueB))];
@@ -99,7 +99,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 const match = /steps\((\d+)(?:,\s*(start|end|jump-(?:start|end|both|none)))?\)/.exec(timingFunction);
                 if (match) {
                     const keyTimeTotal = keyTimes[index + 1] - keyTimes[index];
-                    const stepSize = parseInt(match[1]);
+                    const stepSize = +match[1];
                     const interval = 100 / stepSize;
                     const stepCount = stepSize + 1;
                     const splitTimes: number[] = new Array(stepCount);
@@ -171,7 +171,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public static toFractionList(value: string, delimiter = ';', ordered = true) {
         let previous = 0;
         const result = replaceMap(value.split(delimiter), seg => {
-            const fraction = parseFloat(seg);
+            const fraction = +seg;
             if (!isNaN(fraction) && (!ordered || fraction >= previous && fraction <= 1)) {
                 previous = fraction;
                 return fraction;
@@ -232,7 +232,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 }
             }
             const repeatCount = getNamedItem(animationElement, 'repeatCount');
-            this.iterationCount = repeatCount === 'indefinite' ? -1 : parseFloat(repeatCount) || 0;
+            this.iterationCount = repeatCount === 'indefinite' ? -1 : +repeatCount || 0;
             if (animationElement.tagName === 'animate') {
                 this.setCalcMode();
             }
@@ -470,7 +470,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             if (value.length >= minSegment && !value.every(spline => !spline || spline === SvgAnimate.KEYSPLINE_NAME.linear)) {
                 const keySplines: string[] = [];
                 for (let i = 0; i < minSegment; ++i) {
-                    const points = replaceMap(value[i].split(/\s+/), pt => parseFloat(pt));
+                    const points = replaceMap(value[i].split(/\s+/), pt => +pt);
                     if (points.length === 4 && !points.some(pt => isNaN(pt)) && points[0] >= 0 && points[0] <= 1 && points[2] >= 0 && points[2] <= 1) {
                         keySplines.push(points.join(' '));
                     }
@@ -510,7 +510,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             if (keySplinesBase) {
                 const keySplines: string[] = [];
                 for (let i = keySplinesBase.length - 1; i >= 0; --i) {
-                    const points = replaceMap(keySplinesBase[i].split(' '), pt => parseFloat(pt));
+                    const points = replaceMap(keySplinesBase[i].split(' '), pt => +pt);
                     keySplines.push(points.length === 4 ? invertControlPoint(points[2]) + ' ' + invertControlPoint(points[3]) + ' ' + invertControlPoint(points[0]) + ' ' + invertControlPoint(points[1]) : SvgAnimate.KEYSPLINE_NAME.linear);
                 }
                 this._keySplines = keySplines;

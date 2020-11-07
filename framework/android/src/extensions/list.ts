@@ -55,7 +55,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 adjustPadding: Undef<boolean>,
                 container: Undef<T>;
             if (parent.layoutGrid) {
-                columnCount = parseInt(parent.android('columnCount')) || 1;
+                columnCount = +parent.android('columnCount') || 1;
                 adjustPadding = true;
             }
             else if (parent.firstStaticChild === node) {

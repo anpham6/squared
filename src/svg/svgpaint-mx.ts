@@ -12,7 +12,7 @@ const { STRING } = squared.lib.regex;
 const { parseColor } = squared.lib.color;
 const { extractURL, getFontSize, hasCalc, hasEm, isCustomProperty, isLength, isPercent, parseUnit, parseVar } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { convertCamelCase, isNumber, joinArray, plainMap } = squared.lib.util;
+const { convertCamelCase, convertPercent, isNumber, joinArray, plainMap } = squared.lib.util;
 
 const REGEXP_CACHE: ObjectMap<RegExp> = {
     polygon: /polygon\(([^)]+)\)/,
@@ -245,13 +245,13 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
 
         public convertLength(value: string, dimension?: NumString) {
             if (isNumber(value)) {
-                return parseFloat(value);
+                return +value;
             }
             else if (isLength(value)) {
                 return parseUnit(value, hasEm(value) ? { fontSize: getFontSize(this.element) } : undefined);
             }
             else if (isPercent(value)) {
-                return Math.round((typeof dimension === 'number' ? dimension : this.element.getBoundingClientRect()[dimension || 'width']) * parseFloat(value) / 100);
+                return Math.round((typeof dimension === 'number' ? dimension : this.element.getBoundingClientRect()[dimension || 'width']) * convertPercent(value));
             }
             return 0;
         }
@@ -283,7 +283,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
             if (stroke && stroke !== 'none') {
                 const result = this._strokeWidth;
                 if (result) {
-                    return this.parent?.requireRefit ? truncate(this.parent.refitSize(parseFloat(result))) : result;
+                    return this.parent?.requireRefit ? truncate(this.parent.refitSize(+result)) : result;
                 }
             }
             return '';

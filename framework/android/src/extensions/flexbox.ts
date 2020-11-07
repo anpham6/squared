@@ -656,18 +656,18 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                 else if (isNaN(maxSize)) {
                                                     setLayoutWeightOpposing(
                                                         chain,
-                                                        !horizontal && !wrap && !chain.isEmpty() || dimension && alignContent === 'normal'
+                                                        !horizontal && !wrap && !chain.isEmpty()
                                                             ? dimension ? '0px' : 'match_parent'
-                                                            : 'wrap_content',
+                                                            : dimension && alignContent === 'normal'
+                                                                ? !horizontal || !wrap ? '0px' : 'match_parent'
+                                                                : 'wrap_content',
                                                         horizontal
                                                     );
                                                 }
                                                 else if (q === 1) {
                                                     setLayoutWeightOpposing(
                                                         chain,
-                                                        !horizontal
-                                                            ? dimension ? '0px' : 'match_parent'
-                                                            : node.flexbox.alignSelf === 'stretch' && node.actualParent!.flexdata.row && (node.hasHeight || !node.inlineHeight) ? '0px' : 'wrap_content',
+                                                        horizontal ? node.flexbox.alignSelf === 'stretch' && node.actualParent!.flexdata.row && (node.hasHeight || !node.inlineHeight) ? '0px' : 'wrap_content' : dimension ? '0px' : 'match_parent',
                                                         horizontal
                                                     );
                                                 }

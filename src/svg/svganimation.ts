@@ -32,7 +32,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     public static parseClockTime(value: string) {
         let match = REGEXP_TIME.exec(value = value.trim());
         if (match) {
-            let time = parseFloat(match[2]) * (match[1] ? -1 : 1);
+            let time = +match[2] * (match[1] ? -1 : 1);
             switch (match[3]) {
                 case 'ms':
                     break;
@@ -50,14 +50,14 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
             match = REGGXP_TIMEDELIMITED.exec(value);
             if (match) {
                 const ms = match[5];
-                let time = parseInt(match[4]) * (match[1] ? -1 : 1);
+                let time = +match[4] * (match[1] ? -1 : 1);
                 if (match[1]) {
-                    time += parseInt(match[2]) * 60 * 60;
+                    time += +match[2] * 60 * 60;
                 }
                 if (match[2]) {
-                    time += parseInt(match[3]) * 60;
+                    time += +match[3] * 60;
                 }
-                return time * 1000 + (ms ? parseInt(ms) * (ms.length < 3 ? Math.pow(10, 3 - ms.length) : 1) : 0);
+                return time * 1000 + (ms ? +ms * (ms.length < 3 ? Math.pow(10, 3 - ms.length) : 1) : 0);
             }
         }
         return NaN;

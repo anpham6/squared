@@ -6,7 +6,7 @@ import { SVG, getAttribute, getPathLength, getTargetElement } from './lib/util';
 const { isPercent, parseAngle } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { truncateFraction } = squared.lib.math;
-const { isEqual, isNumber, iterateArray, lastItemOf, plainMap } = squared.lib.util;
+const { convertPercent, isEqual, isNumber, iterateArray, lastItemOf, plainMap } = squared.lib.util;
 
 const equalPoint = (item: Undef<SvgOffsetPath>, time: number, point: DOMPoint, rotate: number) => item && item.key === time && item.rotate === rotate && isEqual(item.value, point);
 
@@ -37,7 +37,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                     break;
                 default:
                     if (isNumber(rotate)) {
-                        this.rotate = parseFloat(rotate) + 'deg';
+                        this.rotate = +rotate + 'deg';
                     }
                     break;
             }
@@ -108,7 +108,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                 const keyPoints = this._keyPoints;
                 if (keyTimes.length === keyPoints.length) {
                     const value = item.value;
-                    let distance = isPercent(value) ? parseFloat(value) / 100 : isNumber(value) ? parseFloat(value) / this.offsetLength : NaN;
+                    let distance = isPercent(value) ? convertPercent(value) : +value / this.offsetLength;
                     if (!isNaN(distance)) {
                         distance = Math.min(distance, 1);
                         const index = keyTimes.findIndex(previous => previous === key);

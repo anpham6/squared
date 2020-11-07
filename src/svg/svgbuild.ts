@@ -856,7 +856,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     public static parsePoints(value: string) {
         return plainMap(value.trim().split(/\s+/), coords => {
             const [x, y] = splitPair(coords, ',');
-            return { x: parseFloat(x), y: parseFloat(y) };
+            return { x: +x, y: +y };
         });
     }
 
@@ -865,7 +865,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         if (value) {
             RE_DECIMAL.matcher(value);
             while (RE_DECIMAL.find()) {
-                const coord = parseFloat(RE_DECIMAL.group()!);
+                const coord = +RE_DECIMAL.group()!;
                 if (!isNaN(coord)) {
                     result.push(coord);
                 }

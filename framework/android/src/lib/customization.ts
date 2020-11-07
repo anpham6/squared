@@ -609,7 +609,7 @@ export const DEPRECATED_ATTRIBUTE: Deprecations<View> = {
         autoText: (result, api) => substitute(result, 'inputType', api, BUILD_VERSION.ICE_CREAM_SANDWICH_1, 'textAutoCorrect'),
         canRequestEnhancedWebAccessibility: (result, api) => api < BUILD_VERSION.OREO,
         capitalize: (result, api, value) => {
-            switch (parseInt(value)) {
+            switch (+value) {
                 case 1:
                     value = 'textCapSentences';
                     break;

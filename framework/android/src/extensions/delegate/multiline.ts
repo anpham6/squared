@@ -18,7 +18,7 @@ const REGEXP_WORD = /(?:[^\w\s]+\s+|(?:&#?[A-Za-z0-9]{2};[^\w]*|[^\w]+|\b)*\w+?(
 
 function getFontMeasureAdjust(node: View) {
     const value = node.dataset.androidFontMeasureAdjust;
-    return value === 'false' ? Infinity : value ? parseFloat(value) : NaN;
+    return value === 'false' ? Infinity : value ? +value : NaN;
 }
 
 function setContentAltered(node: View, visible: boolean) {

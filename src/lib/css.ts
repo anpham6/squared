@@ -5,7 +5,7 @@ import { parseColor } from './color';
 import { clamp, truncate, truncateFraction } from './math';
 import { CSS, STRING, TRANSFORM } from './regex';
 import { getElementCache, setElementCache } from './session';
-import { convertCamelCase, convertFloat, convertHyphenated, isNumber, isString, iterateArray, resolvePath, spliceString, splitEnclosing, splitPair, trimBoth } from './util';
+import { convertCamelCase, convertHyphenated, convertPercent, isNumber, isString, iterateArray, resolvePath, spliceString, splitEnclosing, splitPair, trimBoth } from './util';
 
 const DOCUMENT_ELEMENT = document.documentElement;
 const DOCUMENT_FIXEDMAP = [9/13, 10/13, 12/13, 16/13, 20/13, 2, 3];
@@ -21,7 +21,6 @@ const REGEXP_ANGLE = new RegExp(`^${STRING.CSS_ANGLE}$`);
 const REGEXP_TIME = new RegExp(`^${STRING.CSS_TIME}$`);
 const REGEXP_RESOLUTION = new RegExp(`^${STRING.CSS_RESOLUTION}$`);
 const REGEXP_CALC = new RegExp(`^${STRING.CSS_CALC}$`);
-const REGEXP_CALCWITHIN = new RegExp(STRING.CSS_CALC);
 const REGEXP_SOURCESIZES = new RegExp(`\\s*(?:(?:\\(\\s*)?${PATTERN_SIZES}|(?:\\(\\s*))?\\s*(and|or|not)?\\s*(?:${PATTERN_SIZES}(?:\\s*\\))?)?\\s*(.+)`);
 const REGEXP_KEYFRAMES = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
 const REGEXP_MEDIARULE = /(?:(not|only)?\s*(?:all|screen)\s+and\s+)?((?:\([^)]+\)(?:\s+and\s+)?)+)\s*,?/g;
@@ -2812,7 +2811,7 @@ export function checkMediaRule(value: string, fontSize?: number) {
                         case 'max-aspect-ratio':
                             if (rule) {
                                 const [width, height] = splitPair(rule, '/');
-                                valid = compareRange(operation, window.innerWidth / window.innerHeight, parseInt(width) / parseInt(height));
+                                valid = compareRange(operation, window.innerWidth / window.innerHeight, +width / +height);
                             }
                             else {
                                 valid = false;
@@ -2838,13 +2837,13 @@ export function checkMediaRule(value: string, fontSize?: number) {
                             valid = rule === '0';
                             break;
                         case 'color':
-                            valid = parseInt(rule) > 0;
+                            valid = +rule > 0;
                             break;
                         case 'min-color':
-                            valid = parseInt(rule) <= screen.colorDepth / 3;
+                            valid = +rule <= screen.colorDepth / 3;
                             break;
                         case 'max-color':
-                            valid = parseInt(rule) >= screen.colorDepth / 3;
+                            valid = +rule >= screen.colorDepth / 3;
                             break;
                         case 'color-index':
                         case 'min-color-index':
@@ -2854,7 +2853,7 @@ export function checkMediaRule(value: string, fontSize?: number) {
                             break;
                         case 'max-color-index':
                         case 'max-monochrome':
-                            valid = parseInt(rule) >= 0;
+                            valid = +rule >= 0;
                             break;
                         default:
                             valid = false;
@@ -3061,7 +3060,7 @@ export function calculateVar(element: StyleElement, value: string, options: Calc
         }
         const result = calculate(value, options);
         if (precision !== undefined) {
-            return precision === 0 ? Math.floor(result) : parseFloat(truncate(result, precision));
+            return precision === 0 ? Math.floor(result) : +truncate(result, precision);
         }
         else if (options.roundValue) {
             return Math.round(result);
@@ -3091,10 +3090,10 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
                     pixelRatio = 0;
                 switch (match[3]) {
                     case 'w':
-                        width = convertFloat(match[2]);
+                        width = +match[2];
                         break;
                     case 'x':
-                        pixelRatio = convertFloat(match[2]);
+                        pixelRatio = +match[2];
                         break;
                     default:
                         pixelRatio = 1;
@@ -3162,7 +3161,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
                             width = calculate(match[1], match[1].includes('%') ? { boundingSize: getContentBoxDimension(element.parentElement).width } : undefined);
                         }
                         else if (isPercent(unit)) {
-                            width = parseFloat(unit) / 100 * getContentBoxDimension(element.parentElement).width;
+                            width = convertPercent(unit) * getContentBoxDimension(element.parentElement).width;
                         }
                         else if (isLength(unit)) {
                             width = parseUnit(unit);
@@ -3315,7 +3314,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                                             }
                                             break;
                                     }
-                                    const unit = equated[parseInt(match[1])];
+                                    const unit = equated[+match[1]];
                                     seg.push(unit);
                                     operand = unit.toString();
                                     found = true;
@@ -3327,13 +3326,13 @@ export function calculate(value: string, options?: CalculateOptions) {
                                                 if (!checkCalculateOperator(operand, operator)) {
                                                     return NaN;
                                                 }
-                                                seg.push(parseFloat(partial));
+                                                seg.push(+partial);
                                             }
                                             else if (isPercent(partial)) {
                                                 if (!checkCalculateNumber(operand, operator)) {
                                                     return NaN;
                                                 }
-                                                seg.push(parseFloat(partial));
+                                                seg.push(convertPercent(partial) * 100);
                                                 found = true;
                                             }
                                             else {
@@ -3345,7 +3344,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                                                 if (!checkCalculateOperator(operand, operator)) {
                                                     return NaN;
                                                 }
-                                                seg.push(parseFloat(partial));
+                                                seg.push(+partial);
                                             }
                                             else if (isTime(partial)) {
                                                 if (!checkCalculateNumber(operand, operator)) {
@@ -3363,7 +3362,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                                                 if (!checkCalculateOperator(operand, operator)) {
                                                     return NaN;
                                                 }
-                                                seg.push(parseFloat(partial));
+                                                seg.push(+partial);
                                             }
                                             else if (isAngle(partial)) {
                                                 if (!checkCalculateNumber(operand, operator)) {
@@ -3384,7 +3383,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                                             break;
                                         case CSS_UNIT.INTEGER:
                                             if (/^\s*-?\d+\s*$/.test(partial)) {
-                                                seg.push(parseInt(partial));
+                                                seg.push(+partial);
                                                 found = true;
                                             }
                                             else {
@@ -3393,11 +3392,11 @@ export function calculate(value: string, options?: CalculateOptions) {
                                             break;
                                         case CSS_UNIT.DECIMAL:
                                             if (isNumber(partial)) {
-                                                seg.push(parseFloat(partial));
+                                                seg.push(+partial);
                                                 found = true;
                                             }
                                             else if (isPercent(partial) && boundingSize !== undefined && !isNaN(boundingSize)) {
-                                                seg.push(parseFloat(partial) / 100 * boundingSize);
+                                                seg.push(convertPercent(partial) * boundingSize);
                                             }
                                             else {
                                                 return NaN;
@@ -3408,24 +3407,23 @@ export function calculate(value: string, options?: CalculateOptions) {
                                                 if (!checkCalculateOperator(operand, operator)) {
                                                     return NaN;
                                                 }
-                                                seg.push(parseFloat(partial));
-                                            }
-                                            else if (isLength(partial)) {
-                                                if (!checkCalculateNumber(operand, operator)) {
-                                                    return NaN;
-                                                }
-                                                seg.push(parseUnit(partial, { fontSize }));
-                                                found = true;
-                                            }
-                                            else if (isPercent(partial) && boundingSize !== undefined && !isNaN(boundingSize)) {
-                                                if (!checkCalculateNumber(operand, operator)) {
-                                                    return NaN;
-                                                }
-                                                seg.push(parseFloat(partial) / 100 * boundingSize);
-                                                found = true;
+                                                seg.push(+partial);
                                             }
                                             else {
-                                                return NaN;
+                                                if (!checkCalculateNumber(operand, operator)) {
+                                                    return NaN;
+                                                }
+                                                if (isLength(partial)) {
+                                                    seg.push(parseUnit(partial, { fontSize }));
+                                                    found = true;
+                                                }
+                                                else if (isPercent(partial) && boundingSize !== undefined && !isNaN(boundingSize)) {
+                                                    seg.push(convertPercent(partial) * boundingSize);
+                                                    found = true;
+                                                }
+                                                else {
+                                                    return NaN;
+                                                }
                                             }
                                             break;
                                     }
@@ -3558,7 +3556,7 @@ export function parseTransform(value: string, options?: TransformOptions) {
                     case 'translate3d': {
                         if (isPercent(tX)) {
                             if (boundingBox) {
-                                x = parseFloat(tX) / 100 * boundingBox.width;
+                                x = convertPercent(tX) * boundingBox.width;
                             }
                         }
                         else {
@@ -3568,7 +3566,7 @@ export function parseTransform(value: string, options?: TransformOptions) {
                         if (tY) {
                             if (isPercent(tY)) {
                                 if (boundingBox) {
-                                    y = parseFloat(tY) / 100 * boundingBox.height;
+                                    y = convertPercent(tY) * boundingBox.height;
                                 }
                             }
                             else {
@@ -3590,7 +3588,7 @@ export function parseTransform(value: string, options?: TransformOptions) {
                     case 'translateX':
                         if (isPercent(tX)) {
                             if (boundingBox) {
-                                x = parseFloat(tX) / 100 * boundingBox.width;
+                                x = convertPercent(tX) * boundingBox.width;
                             }
                         }
                         else {
@@ -3600,7 +3598,7 @@ export function parseTransform(value: string, options?: TransformOptions) {
                     case 'translateY':
                         if (isPercent(tX)) {
                             if (boundingBox) {
-                                y = parseFloat(tX) / 100 * boundingBox.height;
+                                y = convertPercent(tX) * boundingBox.height;
                             }
                         }
                         else {
@@ -3647,9 +3645,9 @@ export function parseTransform(value: string, options?: TransformOptions) {
                             z = angle;
                             break;
                         case 'rotate3d':
-                            x = parseFloat(rotate[2]);
-                            y = parseFloat(rotate[3]);
-                            z = parseFloat(rotate[4]);
+                            x = +rotate[2];
+                            y = +rotate[3];
+                            z = +rotate[4];
                             if (isNaN(x) || isNaN(y) || isNaN(z)) {
                                 continue;
                             }
@@ -3683,11 +3681,11 @@ export function parseTransform(value: string, options?: TransformOptions) {
                 switch (method) {
                     case 'scale':
                     case 'scale3d':
-                        x = parseFloat(scale[2]);
-                        y = scale[3] ? parseFloat(scale[3]) : x;
+                        x = +scale[2];
+                        y = scale[3] ? +scale[3] : x;
                         if (method === 'scale3d') {
                             if (scale[4]) {
-                                z = parseFloat(scale[4]);
+                                z = +scale[4];
                                 group += '3d';
                             }
                             else {
@@ -3696,13 +3694,13 @@ export function parseTransform(value: string, options?: TransformOptions) {
                         }
                         break;
                     case 'scaleX':
-                        x = parseFloat(scale[2]);
+                        x = +scale[2];
                         break;
                     case 'scaleY':
-                        y = parseFloat(scale[2]);
+                        y = +scale[2];
                         break;
                     case 'scaleZ':
-                        z = parseFloat(scale[2]);
+                        z = +scale[2];
                         break;
                 }
                 if (accumulate) {
@@ -3768,7 +3766,7 @@ export function parseTransform(value: string, options?: TransformOptions) {
                 }
                 const values = new Array(length);
                 for (let i = 0; i < length; ++i) {
-                    values[i] = parseFloat(matrix[i + 2]);
+                    values[i] = +matrix[i + 2];
                 }
                 result.push({ group: method, method, values });
             }
@@ -3780,7 +3778,7 @@ export function parseTransform(value: string, options?: TransformOptions) {
                 let x = 0;
                 if (isPercent(pX)) {
                     if (boundingBox) {
-                        x = parseFloat(pX) / 100 * boundingBox.width;
+                        x = convertPercent(pX) * boundingBox.width;
                     }
                 }
                 else {
@@ -3807,7 +3805,7 @@ export function parseAngle(value: string, fallback = NaN) {
 }
 
 export function convertAngle(value: string, unit = 'deg', fallback = NaN) {
-    let result = convertFloat(value);
+    let result = parseFloat(value);
     if (isNaN(result)) {
         return fallback;
     }
@@ -3827,7 +3825,7 @@ export function convertAngle(value: string, unit = 'deg', fallback = NaN) {
 export function parseTime(value: string) {
     const match = REGEXP_TIME.exec(value);
     if (match) {
-        let result = parseFloat(match[1]);
+        let result = +match[1];
         if (match[2] === 'ms') {
             result /= 1000;
         }
@@ -3839,7 +3837,7 @@ export function parseTime(value: string) {
 export function parseResolution(value: string) {
     const match = REGEXP_RESOLUTION.exec(value);
     if (match) {
-        let result = parseFloat(match[1]);
+        let result = +match[1];
         switch (match[2]) {
             case 'dpcm':
                 result *= 2.54 / 96;
@@ -3859,7 +3857,7 @@ export function formatPX(value: number) {
 
 export function formatPercent(value: NumString, round?: boolean) {
     if (typeof value === 'string') {
-        value = parseFloat(value);
+        value = +value;
         if (isNaN(value)) {
             return '0%';
         }
@@ -3897,7 +3895,7 @@ export function hasEm(value: string) {
 }
 
 export function hasCalc(value: string) {
-    return REGEXP_CALCWITHIN.test(value);
+    return value.includes('calc(');
 }
 
 export function hasCoords(value: string) {

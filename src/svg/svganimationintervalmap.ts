@@ -34,7 +34,7 @@ function insertIntervalValue(intervalMap: Map<number, SvgAnimationIntervalValue<
 
 export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimationIntervalMap {
     public static getGroupEndTime(item: SvgAnimationAttribute) {
-        return item.iterationCount === 'infinite' ? Infinity : item.delay + item.duration * parseInt(item.iterationCount);
+        return item.iterationCount === 'infinite' ? Infinity : item.delay + item.duration * +item.iterationCount;
     }
 
     public static getKeyName(item: SvgAnimation) {

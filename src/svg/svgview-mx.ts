@@ -16,9 +16,9 @@ interface AttributeData extends NumberValue {
     transformOrigin?: Point;
 }
 
-const { isAngle, isCustomProperty, hasCalc, getKeyframesRules, parseAngle, parseVar } = squared.lib.css;
+const { hasCalc, isAngle, isCustomProperty, isPercent, getKeyframesRules, parseAngle, parseVar } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
-const { convertCamelCase, convertWord, iterateArray, replaceMap, sortNumber, splitPairEnd } = squared.lib.util;
+const { convertCamelCase, convertPercent, convertWord, iterateArray, replaceMap, sortNumber, splitPairEnd } = squared.lib.util;
 
 const ANIMATION_DEFAULT = {
     'animation-delay': '0s',
@@ -182,10 +182,13 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                         fillMode
                     });
                     for (const percent in keyframes) {
-                        const key = parseFloat(percent) / 100;
+                        const key = convertPercent(percent);
                         const data = keyframes[percent];
                         for (const attr in data) {
                             let value = data[attr]!;
+                            if (isPercent(value)) {
+                                value = `calc(${value})`;
+                            }
                             if (hasCalc(value)) {
                                 value = calculateStyle(element, convertCamelCase(attr), value);
                             }
@@ -442,7 +445,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                         }
                         animate.paused = paused;
                         animate.duration = duration;
-                        animate.iterationCount = iterationCount !== 'infinite' ? parseFloat(iterationCount) : -1;
+                        animate.iterationCount = iterationCount !== 'infinite' ? +iterationCount : -1;
                         animate.fillForwards = fillMode === 'forwards' || fillMode === 'both';
                         animate.fillBackwards = fillMode === 'backwards' || fillMode === 'both';
                         animate.reverse = direction.endsWith('reverse');

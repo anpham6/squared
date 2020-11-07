@@ -4,7 +4,7 @@ const REGEXP_TRAILINGZERO = /\.(\d*?)(0+)$/;
 
 function convertDecimalNotation(value: number) {
     const match = REGEXP_DECIMALNOTAION.exec(value.toString());
-    return match ? parseInt(match[2]) > 0 ? Number.MAX_SAFE_INTEGER.toString() : '0' : value.toString();
+    return match ? +match[2] > 0 ? Number.MAX_SAFE_INTEGER.toString() : '0' : value.toString();
 }
 
 export function equal(a: number, b: number, precision = 5) {
@@ -22,7 +22,7 @@ export function lessEqual(a: number, b: number, precision = 5) {
 
 export function truncate(value: NumString, precision = 3) {
     if (typeof value === 'string') {
-        value = parseFloat(value);
+        value = +value;
     }
     const base = Math.floor(value);
     if (value === base) {
@@ -46,7 +46,7 @@ export function truncateFraction(value: number) {
                 return Math.round(value);
             }
             const leading = match[1];
-            return parseFloat(value.toPrecision((leading !== '0' ? leading.length : 0) + trailing.length));
+            return +value.toPrecision((leading !== '0' ? leading.length : 0) + trailing.length);
         }
     }
     return value;

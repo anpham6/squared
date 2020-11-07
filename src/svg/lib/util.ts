@@ -9,7 +9,7 @@ const { CSS_PROPERTIES, calculateStyle: calculateCssStyle, calculateVar, calcula
 const { getNamedItem } = squared.lib.dom;
 const { convertRadian, hypotenuse, truncateFraction, truncateTrailingZero } = squared.lib.math;
 const { getElementCache } = squared.lib.session;
-const { convertCamelCase, resolvePath, splitPair } = squared.lib.util;
+const { convertCamelCase, convertPercent, resolvePath, splitPair } = squared.lib.util;
 
 const REGEXP_TRUNCATECACHE = new Map<number, RegExp>();
 
@@ -21,7 +21,7 @@ function setOriginPosition(element: Element, point: Point, attr: string, value: 
         point[attr] = parseUnit(value, createParseUnitOptions(element, value));
     }
     else if (isPercent(value)) {
-        point[attr] = parseFloat(value) / 100 * dimension;
+        point[attr] = convertPercent(value) * dimension;
     }
 }
 
@@ -436,8 +436,8 @@ export const TRANSFORM = {
                     else if (method.startsWith('scale')) {
                         const scale = REGEXP_TRANSFORM.SCALE.exec(transform);
                         if (scale) {
-                            const x = isY ? 1 : parseFloat(scale[2]);
-                            const y = isX ? 1 : isY ? parseFloat(scale[2]) : !isX && scale[3] ? parseFloat(scale[3]) : x;
+                            const x = isY ? 1 : +scale[2];
+                            const y = isX ? 1 : isY ? +scale[2] : !isX && scale[3] ? +scale[3] : x;
                             result.push(TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SCALE, MATRIX.scale(x, y), 0, !isY, !isX));
                         }
                     }
@@ -480,21 +480,21 @@ export const TRANSFORM = {
             switch (match[1]) {
                 case 'matrix':
                     return {
-                        a: parseFloat(match[2]),
-                        b: parseFloat(match[3]),
-                        c: parseFloat(match[4]),
-                        d: parseFloat(match[5]),
-                        e: parseFloat(match[6]),
-                        f: parseFloat(match[7])
+                        a: +match[2],
+                        b: +match[3],
+                        c: +match[4],
+                        d: +match[5],
+                        e: +match[6],
+                        f: +match[7]
                     };
                 case 'matrix3d':
                     return {
-                        a: parseFloat(match[2]),
-                        b: parseFloat(match[3]),
-                        c: parseFloat(match[6]),
-                        d: parseFloat(match[7]),
-                        e: parseFloat(match[14]),
-                        f: parseFloat(match[15])
+                        a: +match[2],
+                        b: +match[3],
+                        c: +match[6],
+                        d: +match[7],
+                        e: +match[14],
+                        f: +match[15]
                     };
             }
         }
@@ -562,7 +562,7 @@ export const TRANSFORM = {
         if (value) {
             RE_ROTATE.matcher(value);
             while (RE_ROTATE.find()) {
-                const [angle, x, y] = RE_ROTATE.map(group => parseFloat(group) || 0, 1);
+                const [angle, x, y] = RE_ROTATE.map(group => +group || 0, 1);
                 if (angle !== 0) {
                     result.push({ angle, x, y });
                 }
@@ -769,8 +769,8 @@ export function truncateString(value: string, precision = 3) {
         match: Null<RegExpExecArray>;
     while (match = pattern.exec(value)) {
         let trailing = match[1];
-        if (parseInt(match[2]) >= 5) {
-            trailing = truncateFraction(parseFloat(trailing) + 1 / Math.pow(10, precision)).toString();
+        if (+match[2] >= 5) {
+            trailing = truncateFraction(+trailing + 1 / Math.pow(10, precision)).toString();
         }
         output = output.replace(match[0], truncateTrailingZero(trailing));
     }

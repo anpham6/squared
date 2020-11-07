@@ -11,10 +11,8 @@ import SvgShape from './svgshape';
 
 import { TRANSFORM } from './lib/util';
 
-const { isPercent } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
-
-const getPercent = (value: string) => isPercent(value) ? parseFloat(value) / 100 : parseFloat(value);
+const { convertPercent } = squared.lib.util;
 
 export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer))) implements squared.svg.SvgShapePattern {
     public drawRegion: Null<BoxRect> = null;
@@ -90,7 +88,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                                     patternPath.refitBaseValue(x, y, precision);
                                 }
                                 patternPath.build({ ...options, transforms: item.transforms });
-                                patternPath.fillOpacity = (parseFloat(patternPath.fillOpacity) * parseFloat(fillOpacity)).toString();
+                                patternPath.fillOpacity = (+patternPath.fillOpacity * +fillOpacity).toString();
                                 patternPath.clipPath = SvgBuild.drawRect(tileWidth, tileHeight, x, y, precision) + (patternPath.clipPath ? ';' + patternPath.clipPath : '');
                             }
                         }
@@ -101,7 +99,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                 while (remainingWidth > 0);
                 remainingHeight -= tileHeight;
             }
-            if (this.stroke && parseFloat(this.strokeWidth) > 0) {
+            if (this.stroke && +this.strokeWidth > 0) {
                 path.fill = '';
                 path.fillOpacity = '0';
                 path.stroke = this.stroke;
@@ -196,21 +194,21 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
 
     get offsetX() {
         const baseVal = this.patternElement.x.baseVal;
-        return this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX ? this.patternWidth * getPercent(baseVal.valueAsString) : baseVal.value;
+        return this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX ? this.patternWidth * convertPercent(baseVal.valueAsString) : baseVal.value;
     }
 
     get offsetY() {
         const baseVal = this.patternElement.y.baseVal;
-        return this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX ? this.patternHeight * getPercent(baseVal.valueAsString) : baseVal.value;
+        return this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX ? this.patternHeight * convertPercent(baseVal.valueAsString) : baseVal.value;
     }
 
     get tileWidth() {
         const baseVal = this.patternElement.width.baseVal;
-        return this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX ? this.patternWidth * getPercent(baseVal.valueAsString) : baseVal.value;
+        return this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX ? this.patternWidth * convertPercent(baseVal.valueAsString) : baseVal.value;
     }
 
     get tileHeight() {
         const baseVal = this.patternElement.height.baseVal;
-        return this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX ? this.patternHeight * getPercent(baseVal.valueAsString) : baseVal.value;
+        return this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX ? this.patternHeight * convertPercent(baseVal.valueAsString) : baseVal.value;
     }
 }

@@ -315,6 +315,7 @@ declare module "lib" {
         function convertWord(value: string, dash?: boolean): string;
         function convertInt(value: string, fallback?: number): number;
         function convertFloat(value: string, fallback?: number): number;
+        function convertPercent(value: string, fallback?: number): number;
         function convertBase64(value: ArrayBuffer): string;
         function delimitString(options: DelimitStringOptions, ...appending: string[]): string;
         function spliceString(value: string, index: number, length: number): string;

@@ -312,14 +312,14 @@ function hue2rgb(t: number, p: number, q: number) {
 
 function hex6(value: string, a = 255): RGBA {
     return {
-        r: parseInt(value[1] + value[2], 16),
-        g: parseInt(value[3] + value[4], 16),
-        b: parseInt(value[5] + value[6], 16),
+        r: +('0x' + value[1] + value[2]),
+        g: +('0x' + value[3] + value[4]),
+        b: +('0x' + value[5] + value[6]),
         a
     };
 }
 
-const convertOpacity = (value: string) => parseFloat(value) / (value.includes('%') ? 100 : 1);
+const convertOpacity = (value: string) => +value / (value.includes('%') ? 100 : 1);
 const clampOpacity = (value: number) => clamp(value) * 255;
 
 export function parseColor(value: string, opacity = 1) {
@@ -350,9 +350,9 @@ export function parseColor(value: string, opacity = 1) {
             let match = CSS.RGBA.exec(value);
             if (match) {
                 rgba = {
-                    r: parseInt(match[1]),
-                    g: parseInt(match[2]),
-                    b: parseInt(match[3]),
+                    r: +match[1],
+                    g: +match[2],
+                    b: +match[3],
                     a: match[4] ? convertOpacity(match[4]) * 255 : clampOpacity(opacity)
                 };
                 value = '';
@@ -361,9 +361,9 @@ export function parseColor(value: string, opacity = 1) {
                 match = CSS.HSLA.exec(value);
                 if (match) {
                     rgba = convertRGBA({
-                        h: parseInt(match[1]),
-                        s: parseInt(match[2]),
-                        l: parseInt(match[3]),
+                        h: +match[1],
+                        s: +match[2],
+                        l: +match[3],
                         a: clamp(match[4] ? convertOpacity(match[4]) : opacity)
                     });
                     value = '';
@@ -387,7 +387,7 @@ export function parseRGBA(value: string) {
             case 7:
                 break;
             case 5:
-                a = parseInt(value[4].repeat(2), 16);
+                a = +('0x' + value[4] + value[4]);
             case 4:
                 value = '#' + value[1].repeat(2) + value[2].repeat(2) + value[3].repeat(2);
                 break;
@@ -395,7 +395,7 @@ export function parseRGBA(value: string) {
             case 8:
                 return null;
             default:
-                a = parseInt(value[7] + value[8], 16);
+                a = +('0x' + value[7] + value[8]);
                 value = value.substring(0, 7);
                 break;
         }

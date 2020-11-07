@@ -83,7 +83,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                     if (ordered && item.tagName === 'LI') {
                         const value = item.attributes['value'];
                         if (value && isNumber(value)) {
-                            i = Math.floor(parseFloat(value));
+                            i = parseInt(value);
                         }
                     }
                     let ordinal = convertListStyle(type, i);

@@ -161,6 +161,9 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                 node.setLayoutHeight('match_parent');
             }
         }
+        else if (container && node.blockStatic && parent.blockStatic && !parent.layoutElement && !parent.layoutGrid) {
+            container.setLayoutWidth('match_parent');
+        }
         if (container) {
             mainData.container = container;
             return {

@@ -132,7 +132,7 @@ function getCounterValue(value: Undef<string>, counterName: string, fallback = 1
         let match: Null<RegExpExecArray>;
         while (match = REGEXP_PSEUDOCOUNTERVALUE.exec(value)) {
             if (match[1] === counterName) {
-                return parseInt(match[2]);
+                return +match[2];
             }
         }
         return fallback;
@@ -575,7 +575,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const filename = dataset['filename' + systemName] || dataset.filename;
         const iteration = dataset['iteration' + systemName];
         const prefix = isString(filename) && filename.replace(this._layoutFileExtension, '') || node.elementId || `document_${this.length}`;
-        const suffix = iteration ? parseInt(iteration) + 1 : 0;
+        const suffix = iteration ? +iteration + 1 : 0;
         const layoutName = convertWord(suffix ? prefix + '_' + suffix : prefix, true);
         dataset['iteration' + systemName] = suffix.toString();
         dataset['layoutName' + systemName] = layoutName;
@@ -1600,7 +1600,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             let value = styleMap.content;
             if (value) {
                 const absolute = hasCoords(styleMap.position ||= 'static');
-                if (absolute && styleMap.opacity && parseFloat(styleMap.opacity) <= 0) {
+                if (absolute && +styleMap.opacity! <= 0) {
                     return;
                 }
                 const textContent = trimBoth(value, '"');

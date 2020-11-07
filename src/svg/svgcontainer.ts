@@ -53,8 +53,8 @@ function setAspectRatio(parent: Undef<Svg | SvgUseSymbol>, group: SvgGroup, view
                         }
                     }
                     if (!boxWidth && !boxHeight) {
-                        boxWidth = parseFloat(w);
-                        boxHeight = parseFloat(h);
+                        boxWidth = +w;
+                        boxHeight = +h;
                     }
                 }
                 const hasWidth = hasLength(w);
