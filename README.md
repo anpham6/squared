@@ -45,7 +45,7 @@ Library files are in the /dist folder. A minimum of *two* files are required to 
 
 Usable combinations: 1-2-4 + 1-2-4-5 + 1-2-3-4-5 + 1-vdom-lite
 
-File bundles for common combinations are available in the /dist/bundles folder.
+File bundles for common combinations are available in the /dist/bundles folder and do not require a call to setFramework.
 
 #### Example: android
 
@@ -101,10 +101,10 @@ VDOM is a minimal framework (45kb gzipped) for those who prefer a universal HTML
 </script>
 ```
 
-There are ES2017 minified versions (*.min.js) and also ES2017 non-minified versions. Past versions until 1.6.5 were using ES2015 (ES6).
+There are ES2017 minified versions (*.min.js) and also ES2017 non-minified versions.
 
-ES2015 - ES6 classes + Fetch (94%)  
-ES2017 - Async/Await (92%)  
+ES2015 - ES6 classes + Fetch (95%)  
+ES2017 - Async/Await (93%)  
 
 Browsers without ES2017 are not being supported to fully take advantage of async/await.
 

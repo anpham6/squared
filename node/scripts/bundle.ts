@@ -9,6 +9,7 @@ const isFile = (value: string) => fs.lstatSync(value).isFile();
 const files: string[] = ['squared', ''];
 const extensions: string[] = [];
 let framework: String;
+let install: String;
 let output: String;
 {
     const ARGV = process.argv;
@@ -33,6 +34,16 @@ let output: String;
                         files[1] = 'squared.base-dom';
                     case 'vdom-lite':
                         framework = `${name}.framework`;
+                        break;
+                }
+                switch (name) {
+                    case 'android':
+                    case 'chrome':
+                        install = name;
+                        break;
+                    case 'vdom':
+                    case 'vdom-lite':
+                        install = 'vdom';
                         break;
                 }
                 break;
@@ -101,6 +112,9 @@ if (output) {
         const dirname = path.dirname(output);
         if (!fs.existsSync(dirname)) {
             fs.mkdirpSync(dirname);
+        }
+        if (install) {
+            content += `squared.setFramework(${install});`;
         }
         fs.writeFile(output, content, err => {
             if (err) {

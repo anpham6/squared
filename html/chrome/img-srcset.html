@@ -13,72 +13,62 @@
             background-color: darkgrey;
         }
     </style>
-    <script src="/common/system.js"></script>
-    <script src="/common/transform.js"></script>
-    <script src="/common/babel-transform.js"></script>
+    <script src="/dist/bundles/squared.chrome.bundle.js"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
     <script>
-        System.import('/build/src/main.js').then(result => {
-            squared = result;
-            System.import('/build/src/base/main.js').then(result => {
-                squared.base = result;
-                System.import('/build/framework/chrome/src/main.js').then(result => {
-                    chrome = result.default;
-                    squared.setFramework(chrome);
-                    squared.settings.preloadImages = false;
-                    squared.settings.compressImages = false;
-                    squared.parseDocument('squared_ui').then(function() {
-                        chrome.system.saveHtmlPage();
-                        chrome.system.saveImageAssets();
-                        chrome.system.saveScriptAssets();
-                        chrome.system.saveLinkAssets();
-                        // chrome.system.saveAudioAssets();
-                        // chrome.system.saveVideoAssets();
-                        const options = {
-                            assets: [
-                                {
-                                    pathname: 'images',
-                                    filename: 'android.png',
-                                    uri: 'http://localhost:3000/common/images/android.png',
-                                    compress: [{ format: 'png' }]
-                                },
-                                {
-                                    pathname: 'images',
-                                    filename: 'android-ldpi.png',
-                                    uri: 'http://localhost:3000/common/images/android-ldpi.png',
-                                    compress: [{ format: 'png' }]
-                                },
-                                {
-                                    pathname: 'images',
-                                    filename: 'android-hdpi.png',
-                                    uri: 'http://localhost:3000/common/images/android-hdpi.png'
-                                },
-                                {
-                                    pathname: 'images',
-                                    filename: 'android-xhdpi.png',
-                                    uri: 'http://localhost:3000/common/images/android-xhdpi.png'
-                                },
-                                {
-                                    pathname: 'images',
-                                    filename: 'android-xxhdpi.png',
-                                    uri: 'http://localhost:3000/common/images/android-xxhdpi.png'
-                                },
-                                {
-                                    pathname: 'images',
-                                    filename: 'android-xxxhdpi.png',
-                                    uri: 'http://localhost:3000/common/images/android-xxxhdpi.png'
-                                }
-                            ]
-                        };
-                        squared.saveFiles('gz', options);
-                        options.filename = 'chrome-base-7z';
-                        squared.appendFiles('http://localhost:3000/common/base_project.7z', options);
-                        options.filename = 'chrome-base-zip';
-                        squared.appendFiles('C:/Users/An/git/squared/html/common/base_project.zip', options);
-                        squared.copyFiles('C:/Users/An/Downloads/chrome_data', options);
-                        squared.save();
-                    });
-                });
+        document.addEventListener('DOMContentLoaded', function() {
+            squared.settings.preloadImages = false;
+            squared.settings.compressImages = false;
+            squared.parseDocument('squared_ui').then(function() {
+                chrome.system.saveHtmlPage();
+                chrome.system.saveImageAssets();
+                chrome.system.saveScriptAssets();
+                chrome.system.saveLinkAssets();
+                // chrome.system.saveAudioAssets();
+                // chrome.system.saveVideoAssets();
+                const options = {
+                    assets: [
+                        {
+                            pathname: 'images',
+                            filename: 'android.png',
+                            uri: 'http://localhost:3000/common/images/android.png',
+                            compress: [{ format: 'png' }]
+                        },
+                        {
+                            pathname: 'images',
+                            filename: 'android-ldpi.png',
+                            uri: 'http://localhost:3000/common/images/android-ldpi.png',
+                            compress: [{ format: 'png' }]
+                        },
+                        {
+                            pathname: 'images',
+                            filename: 'android-hdpi.png',
+                            uri: 'http://localhost:3000/common/images/android-hdpi.png'
+                        },
+                        {
+                            pathname: 'images',
+                            filename: 'android-xhdpi.png',
+                            uri: 'http://localhost:3000/common/images/android-xhdpi.png'
+                        },
+                        {
+                            pathname: 'images',
+                            filename: 'android-xxhdpi.png',
+                            uri: 'http://localhost:3000/common/images/android-xxhdpi.png'
+                        },
+                        {
+                            pathname: 'images',
+                            filename: 'android-xxxhdpi.png',
+                            uri: 'http://localhost:3000/common/images/android-xxxhdpi.png'
+                        }
+                    ]
+                };
+                squared.saveFiles('gz', options);
+                options.filename = 'chrome-base-7z';
+                squared.appendFiles('http://localhost:3000/common/base_project.7z', options);
+                options.filename = 'chrome-base-zip';
+                squared.appendFiles('C:/Users/An/git/squared/html/common/base_project.zip', options);
+                squared.copyFiles('C:/Users/An/Downloads/chrome_data', options);
+                squared.save();
             });
         });
     </script>

@@ -45,10 +45,7 @@
   {
     "selector": "head > script:nth-of-type(2), head > script:nth-of-type(3)",
     "type": "js",
-    "saveAs": "js/modules2.js",
-    "process": [
-      "minify"
-    ]
+    "saveAs": "js/modules2.js"
   },
   {
     "selector": "head > script:nth-of-type(4)",

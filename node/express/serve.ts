@@ -349,13 +349,9 @@ app.post('/api/assets/archive', (req, res) => {
                             const statusCode = response.statusCode;
                             if (statusCode >= 300) {
                                 Node.writeFail(zippath, new Error(statusCode + ' ' + response.statusMessage));
-                                resumeThread();
                             }
                         })
-                        .on('error', err => {
-                            Node.writeFail(zippath, err);
-                            resumeThread();
-                        })
+                        .on('error', () => resumeThread())
                         .pipe(stream);
                     return;
                 }
