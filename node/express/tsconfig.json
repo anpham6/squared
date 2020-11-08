@@ -1,11 +1,13 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "target": "es2018",
     "module": "CommonJS",
-    "outDir": "../../build"
+    "outDir": "../../build",
+    "lib": ["dom", "es2018"]
   },
   "include": [
-    "*.ts"
+    "serve.ts"
   ],
   "exclude": []
 }

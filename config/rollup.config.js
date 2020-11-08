@@ -1,7 +1,6 @@
-import { terser_options, prettier_options } from './rollup-options';
+import { terser_options } from './rollup-options';
 import { version } from '../package.json';
 
-import prettier from 'rollup-plugin-prettier';
 import { terser } from 'rollup-plugin-terser'
 
 export default [
@@ -62,9 +61,7 @@ export default [
             format: 'iife',
             banner: `/* squared ${version}\n   https://github.com/anpham6/squared */\n`
         },
-        plugins: [
-            prettier(prettier_options)
-        ]
+        plugins: []
     },
     {
         input: './build/src/base/main.js',
@@ -75,9 +72,7 @@ export default [
             format: 'iife',
             banner: `/* squared.base ${version}\n   https://github.com/anpham6/squared */\n`
         },
-        plugins: [
-            prettier(prettier_options)
-        ]
+        plugins: []
     },
     {
         input: './build/src/base/main-dom.js',
@@ -88,9 +83,7 @@ export default [
             format: 'iife',
             banner: `/* squared.base ${version}\n   https://github.com/anpham6/squared */\n`
         },
-        plugins: [
-            prettier(prettier_options)
-        ]
+        plugins: []
     },
     {
         input: './build/src/svg/main.js',
@@ -101,9 +94,7 @@ export default [
             format: 'iife',
             banner: `/* squared.svg ${version}\n   https://github.com/anpham6/squared */\n`
         },
-        plugins: [
-            prettier(prettier_options)
-        ]
+        plugins: []
     },
     {
         input: './build/src/main.js',
@@ -114,8 +105,6 @@ export default [
             format: 'umd',
             banner: `/* squared ${version}\n   https://github.com/anpham6/squared */\n`
         },
-        plugins: [
-            prettier(prettier_options)
-        ]
+        plugins: []
     },
 ];

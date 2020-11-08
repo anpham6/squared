@@ -1,11 +1,13 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "target": "es2020",
     "module": "CommonJS",
-    "outDir": "../../"
+    "outDir": "../../",
+    "lib": ["dom", "es2020"]
   },
   "include": [
-    "**/*.ts"
+    "*.ts"
   ],
   "exclude": []
 }
