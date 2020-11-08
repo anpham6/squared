@@ -21,17 +21,15 @@ interface ConvertOptions extends CompressOptions {
     opacity?: number;
 }
 
-interface SaveAsOptions extends Partial<LocationUri>, FileModifiers {
+interface SaveAsOptions extends Partial<LocationUri>, FileModifiers, OutputModifiers {
     format?: string;
-    tasks?: string[];
 }
 
 interface UriOptions extends FileModifiers {
     element?: HTMLElement;
     saveAs?: string;
     saveTo?: boolean;
-    preserveCrossOrigin?: boolean;
     format?: string;
-    tasks?: string[];
+    preserveCrossOrigin?: boolean;
     fromConfig?: boolean;
 }

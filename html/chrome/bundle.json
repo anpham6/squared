@@ -5,6 +5,15 @@
     "filename": "index.html",
     "process": [
       "beautify"
+    ],
+    "tasks": [
+      "minify"
+    ],
+    "attributes": [
+      {
+        "name": "lang",
+        "value": "en"
+      }
     ]
   },
   {
@@ -72,6 +81,12 @@
     "commands": [
       "png(10000,75000)(100x200^cover){90,180,270#FFFFFF}",
       "jpeg(300x100^contain){90,180,270#FFFFFF}"
+    ],
+    "attributes": [
+      {
+        "name": "alt",
+        "value": "Picture 1"
+      }
     ]
   },
   {
@@ -79,6 +94,12 @@
     "type": "image",
     "commands": [
       "jpeg@(500x500[bezier]^contain[right|bottom])(-50,100|200x200){225#FFFFFF}"
+    ],
+    "attributes": [
+      {
+        "name": "alt",
+        "value": "Picture 2"
+      }
     ]
   },
   {
@@ -87,6 +108,12 @@
     "pathname": "../images/harbour",
     "commands": [
       "png@(25000,*)(800x600[bezier]^contain[right|top]){315}|0.5|"
+    ],
+    "attributes": [
+      {
+        "name": "alt",
+        "value": "Picture 3"
+      }
     ]
   },
   {

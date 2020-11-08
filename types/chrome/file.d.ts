@@ -1,10 +1,9 @@
-interface ChromeAsset extends RequestAsset {
+interface ChromeAsset extends RequestAsset, OutputModifiers {
     rootDir?: string;
     moveTo?: string;
     format?: string;
     preserve?: boolean;
     exclude?: boolean;
-    tasks?: string[];
     basePath?: string;
     bundleIndex?: number;
     inlineContent?: string;
@@ -27,13 +26,22 @@ interface FileModifiers {
     exclude?: boolean;
 }
 
-interface FileCommand extends Partial<LocationUri>, FileModifiers {
+interface OutputModifiers {
     tasks?: string[];
+    attributes?: AttributeValue[];
+}
+
+interface FileCommand extends Partial<LocationUri>, FileModifiers, OutputModifiers {
     commands?: string[];
 }
 
 interface TransformCommand extends FileCommand {
     id: string;
+}
+
+interface AttributeValue {
+    name: string;
+    value?: Null<string>;
 }
 
 interface AssetCommand extends FileCommand {
