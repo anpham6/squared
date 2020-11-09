@@ -367,7 +367,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     if (itemArray.length) {
                         const value = applyTemplate('resources', STYLE_TMPL, [{ style: itemArray }]);
                         result.push(
-                            replaceTab(dpUnit ? value.replace(/>(-?[\d.]+)px</g, (found, ...capture: string[]) => `>${capture[0]}dp<`) : value, insertSpaces),
+                            replaceTab(dpUnit ? value.replace(/>(-?[\d.]+)px</g, (...capture: string[]) => `>${capture[1]}dp<`) : value, insertSpaces),
                             match[1],
                             match[2]
                         );
@@ -410,7 +410,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             const result: string[] = new Array(length * 3);
             let i = 0;
             for (const data of STORED.drawables) {
-                result[i++] = replaceTab(convertPixels ? data[1].replace(/"(-?[\d.]+)px"/g, (match, ...capture: string[]) => `"${capture[0]}dp"`) : data[1], insertSpaces);
+                result[i++] = replaceTab(convertPixels ? data[1].replace(/"(-?[\d.]+)px"/g, (...match: string[]) => `"${match[1]}dp"`) : data[1], insertSpaces);
                 result[i++] = directory;
                 result[i++] = `${data[0]}.xml`;
             }

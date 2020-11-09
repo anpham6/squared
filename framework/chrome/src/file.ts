@@ -304,16 +304,13 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                         pathname += getDirectory(path, 1);
                     }
                 }
-                else {
-                    filename = 'index.html';
-                }
             }
             return {
                 uri,
                 rootDir,
                 moveTo,
-                pathname: normalizePath(pathname),
-                filename,
+                pathname: normalizePath(decodeURIComponent(pathname)),
+                filename: decodeURIComponent(filename),
                 mimeType: extension && parseMimeType(extension),
                 format,
                 preserve,
@@ -362,24 +359,25 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             if (command.ignore || command.exclude) {
                 return [];
             }
-            let process: Undef<string[]>;
-            ({ filename, process, tasks, attributes } = command);
-            if (process) {
-                format = process.join('+');
+            ({ filename, tasks, attributes } = command);
+            if (command.process) {
+                format = command.process.join('+');
             }
         }
         else if (saveAsHtml) {
             if (saveAsHtml.ignore || saveAsHtml.exclude) {
                 return [];
             }
-            file = saveAsHtml.filename ? fromLastIndexOf(saveAsHtml.filename, '/', '\\') : '';
-            ({ format, tasks, attributes } = saveAsHtml);
+            ({ filename, format, tasks, attributes } = saveAsHtml);
         }
         else if (file === 'ignore') {
             return [];
         }
         else {
             tasks = getTasks(element);
+        }
+        if (filename) {
+            file = '';
         }
         const data = File.parseUri(location.href, { preserveCrossOrigin, saveAs: file, format });
         if (data) {
@@ -773,11 +771,11 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             if (excludeAsset(assets, command, element.outerHTML)) {
                 return;
             }
+            ({ preserve, inline, tasks, attributes } = command);
+            file = src ? command.saveAs : command.exportAs;
             if (command.process) {
                 format = command.process.join('+');
             }
-            file = src ? command.saveAs : command.exportAs;
-            ({ preserve, inline, tasks, attributes } = command);
             fromConfig = true;
         }
         else if (saveAsCondtion && saveAsOptions) {

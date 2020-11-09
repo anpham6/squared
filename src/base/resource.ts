@@ -125,7 +125,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
                     content = data;
                 }
             }
-            content &&= content.replace(/\\(["'])/g, (match, ...capture: string[]) => capture[0]);
+            content &&= content.replace(/\\(["'])/g, (...match: string[]) => match[1]);
         }
         if (!content && !base64 && !buffer) {
             return '';

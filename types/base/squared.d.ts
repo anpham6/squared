@@ -863,13 +863,18 @@ declare module "base" {
         }
 
         namespace util {
+            interface IGlobExp extends RegExp {
+                negate: boolean;
+                filter: (values: string[]) => string[];
+            }
+
             function fromMimeType(value: string): string;
             function appendSeparator(preceding?: string, value?: string, separator?: string): string;
             function randomUUID(separator?: string): string;
             function upperCaseString(value: string): string;
             function lowerCaseString(value: string): string;
             function formatXml(value: string, options?: FormatXmlOptions): string;
-            function parseGlob(value: string, options?: ParseGlobOptions): GlobData;
+            function parseGlob(value: string, options?: ParseGlobOptions): IGlobExp;
         }
     }
 }

@@ -51,10 +51,3 @@ interface ResultOfFileAction {
     application?: string;
     system?: string;
 }
-
-interface GlobData {
-    source: string;
-    flags: string;
-    matcher: RegExp;
-    test: (file: string) => boolean;
-}

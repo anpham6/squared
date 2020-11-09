@@ -1,3 +1,5 @@
+type IGlobExp = squared.base.lib.util.IGlobExp;
+
 interface XMLTagData {
     tag: string;
     tagName: string;
@@ -6,6 +8,19 @@ interface XMLTagData {
     leadingSpace: string;
     content: string;
     trailingSpace: string;
+}
+
+class GlobExp extends RegExp implements IGlobExp {
+    constructor(source: string, flags: string, public negate: boolean) {
+        super(source, flags);
+    }
+
+    test(value: string) {
+        return this.negate ? !super.test(value) : super.test(value);
+    }
+    filter(values: string[]) {
+        return values.filter(value => this.test(value));
+    }
 }
 
 const HEX = '0123456789abcdef';
@@ -376,53 +391,59 @@ export function formatXml(value: string, options: FormatXmlOptions = {}) {
 
 export function parseGlob(value: string, options?: ParseGlobOptions) {
     value = value.trim();
-    let source = ('^' + value)
-        .replace(/\\\\([^\\])/g, (match, ...capture: string[]) => ':' + capture[0].charCodeAt(0))
+    let flags = '',
+        fromEnd: Undef<boolean>;
+    if (options) {
+        if (options.caseSensitive === false) {
+            flags += 'i';
+        }
+        fromEnd = options.fromEnd;
+    }
+    const trimCurrent = (cwd: string) => fromEnd && cwd.startsWith('./') ? cwd.substring(2) : cwd;
+    const source = ((!fromEnd ? '^' : '') + trimCurrent(value))
+        .replace(/\\\\([^\\])/g, (...match: string[]) => ':' + match[1].charCodeAt(0))
         .replace(/\\|\/\.\/|\/[^/]+\/\.\.\//g, '/')
-        .replace(/\./g, '\\.')
-        .replace(/\{([^}]+)\}/g, (match, ...capture: string[]) => {
-            return '(' + capture[0].split(',').map(group => {
+        .replace(/\{([^}]+)\}/g, (...match: string[]) => {
+            return '(' + match[1].split(',').map(group => {
+                group = trimCurrent(group);
                 const subMatch = /^([^.]+)\.\.([^.]+)$/.exec(group);
                 return subMatch ? `[${subMatch[1]}-${subMatch[2]}]` : group;
             }).join('|') + ')';
         })
-        .replace(/\[[!^]([^\]]+)\]/g, (match, ...capture: string[]) => `[^/${capture[0]}]`)
+        .replace(/\./g, '\\.')
+        .replace(/\[[!^]([^\]]+)\]/g, (...match: string[]) => `[^/${match[1]}]`)
         .replace(/(\*\*\/)*\*+$/, '.::')
         .replace(/(\*\*\/)+/g, '([^/]+/)::')
-        .replace(/([!?+*@])(\([^)]+\))/g, (match, ...capture: string[]) => {
-            const escape = () => capture[1].replace(/\*/g, ':>').replace(/\?/g, ':<');
-            switch (capture[0]) {
+        .replace(/([!?*+@])(\([^)]+\))/g, (...match: string[]) => {
+            const escape = () => match[2].replace(/\*/g, ':>').replace(/\?/g, ':<');
+            switch (match[1]) {
                 case '!':
-                    return `(?!${escape()})`;
+                    return `(?!${escape()})[^/]+:@`;
                 case '?':
-                case '+':
                 case '*':
-                    return escape() + capture[0];
+                case '+':
+                    return escape() + match[1];
                 case '@':
-                    return capture[1];
+                    return match[2];
+                default:
+                    return match[0];
             }
-            return match;
         })
         .replace(/\?(?!!)/g, '[^/]')
         .replace(/\*/g, '[^/]*?')
-        .replace(/::/g, '*')
-        .replace(/:>/g, '\\*')
-        .replace(/:</g, '\\?')
-        .replace(/:(\d+)/g, (match, ...capture: string[]) => '\\\\' + String.fromCharCode(+capture[0])) + '$',
-        flags = '';
-    if (options) {
-        if (options.fromEnd) {
-            source = source.substring(1);
-        }
-        if (options.caseSensitive === false) {
-            flags += 'i';
-        }
-    }
-    const matcher = new RegExp(source, flags);
-    return Object.create({
-        source,
-        flags,
-        matcher,
-        test: (file: string) => value[0] === '!' ? !matcher.test(file) : matcher.test(file)
-    }) as GlobData;
+        .replace(/:([@:<>]|\d+)/g, (...match: string[]) => {
+            switch (match[1]) {
+                case ':':
+                    return '*';
+                case '@':
+                    return '?';
+                case '>':
+                    return '\\*';
+                case '<':
+                    return '\\?';
+                default:
+                    return '\\\\' + String.fromCharCode(+match[1]);
+            }
+        }) + '$';
+    return new GlobExp(source, flags, value[0] === '!') as IGlobExp;
 }

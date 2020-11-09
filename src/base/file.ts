@@ -14,7 +14,7 @@ const { createElement } = squared.lib.dom;
 
 function validateAsset(file: FileAsset, exclusions: Exclusions) {
     const { pathname, filename } = file;
-    const glob = exclusions.glob as (string | GlobData)[];
+    const glob = exclusions.glob as (string | GlobExp)[];
     if (glob) {
         const filepath = appendSeparator(pathname, filename);
         for (let i = 0, length = glob.length; i < length; ++i) {
