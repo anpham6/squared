@@ -307,7 +307,6 @@ declare module "lib" {
     namespace util {
         function promisify<T = unknown>(fn: FunctionType<any>): FunctionType<Promise<T>>;
         function parseMimeType(value: string): string;
-        function formatXml(value: string, closeEmpty?: boolean, caseSensitive?: boolean, indentChar?: string): string;
         function hasKeys(obj: PlainObject): boolean;
         function capitalize(value: string, upper?: boolean): string;
         function convertHyphenated(value: string, char?: string): string;

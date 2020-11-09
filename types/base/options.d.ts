@@ -171,3 +171,14 @@ interface CoordsXYOptions {
 interface OffsetXYOptions extends CoordsXYOptions {
     offset?: number;
 }
+
+interface FormatXmlOptions {
+    closeEmptyTags?: boolean;
+    caseSensitive?: boolean;
+    indentChar?: string;
+}
+
+interface ParseGlobOptions {
+    fromEnd?: boolean;
+    caseSensitive?: boolean;
+}

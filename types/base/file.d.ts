@@ -30,6 +30,7 @@ interface RawAsset extends FileAsset, Partial<ImageAsset> {
 }
 
 interface Exclusions {
+    glob?: string[];
     pathname?: string[];
     filename?: string[];
     extension?: string[];
@@ -49,4 +50,11 @@ interface ResultOfFileAction {
     files?: string[];
     application?: string;
     system?: string;
+}
+
+interface GlobData {
+    source: string;
+    flags: string;
+    matcher: RegExp;
+    test: (file: string) => boolean;
 }

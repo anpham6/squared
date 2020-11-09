@@ -12,7 +12,9 @@ import ResourceUI from './resource-ui';
 import ContentUI from './content-ui';
 import LayoutUI from './layout-ui';
 
-import { appendSeparator, convertListStyle } from './lib/util';
+import { convertListStyle } from './extensions/list';
+
+import { appendSeparator } from './lib/util';
 
 type FileActionOptions = squared.FileActionOptions;
 

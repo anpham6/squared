@@ -12,7 +12,7 @@ const ASSETS = squared.base.Resource.ASSETS;
 
 const { convertWord, fromLastIndexOf, isString, parseMimeType, resolvePath, splitPair, splitPairStart, trimEnd } = squared.lib.util;
 
-const { appendSeparator, createFileMatch, randomUUID } = squared.base.lib.util;
+const { appendSeparator, randomUUID } = squared.base.lib.util;
 
 const STRING_SERVERROOT = '__serverroot__';
 const STRING_GENERATED = '__generated__';
@@ -324,13 +324,6 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         return null;
     }
 
-    private _outputFileIgnore: Null<RegExp[]> = null;
-
-    public reset() {
-        this._outputFileIgnore = null;
-        super.reset();
-    }
-
     public copyTo(directory: string, options: IFileCopyingOptions = {}) {
         options.directory = directory;
         return this.copying(this.processAssets(options));
@@ -389,7 +382,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             tasks = getTasks(element);
         }
         const data = File.parseUri(location.href, { preserveCrossOrigin, saveAs: file, format });
-        if (this.validFile(data)) {
+        if (data) {
             setOutputModifiers(data, tasks, attributes);
             if (attributes) {
                 data.textContent = /^\s*<[\S\s]*html[^>]+>\s*/i.exec(element.outerHTML)?.[0].replace(/(\s?[\w-]+="")+>/g, '');
@@ -509,7 +502,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         for (const [uri, item] of ASSETS.rawData) {
             if (item.mimeType === 'text/css') {
                 const data = File.parseUri(resolvePath(uri), { preserveCrossOrigin, format, preserve });
-                if (this.validFile(data)) {
+                if (data) {
                     setOutputModifiers(data, tasks);
                     data.mimeType = item.mimeType;
                     this.processExtensions(data);
@@ -601,7 +594,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             else {
                 continue;
             }
-            if (this.validFile(data)) {
+            if (data) {
                 this.processExtensions(data);
                 result.push(data);
             }
@@ -625,7 +618,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 const url = fonts[i].srcUrl;
                 if (url) {
                     const data = File.parseUri(url, { preserveCrossOrigin });
-                    if (this.validFile(data)) {
+                    if (data) {
                         this.processExtensions(data);
                         result.push(data);
                     }
@@ -651,14 +644,6 @@ export default class File<T extends squared.base.Node> extends squared.base.File
 
     public getArchiveQueryParameters(options: IFileArchivingOptions) {
         return options.productionRelease ? '&release=1' : '';
-    }
-
-    protected validFile(data: Null<ChromeAsset>): data is ChromeAsset {
-        if (data) {
-            const fullpath = appendSeparator(data.pathname, data.filename);
-            return !this.outputFileIgnore.some(pattern => pattern.test(fullpath));
-        }
-        return false;
     }
 
     protected getRawAssets(tagName: "video" | "audio" | "object" | "embed" | "iframe", options?: IFileActionOptions) {
@@ -728,7 +713,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     tasks = getTasks(element);
                 }
                 const data = File.parseUri(uri, { preserveCrossOrigin, saveAs, saveTo, fromConfig });
-                if (this.validFile(data)) {
+                if (data) {
                     setOutputModifiers(data, tasks, attributes);
                     if (attributes) {
                         data.textContent = item.outerHTML;
@@ -831,7 +816,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 }
             }
         }
-        if (this.validFile(data)) {
+        if (data) {
             setOutputModifiers(data, tasks, attributes);
             data.mimeType = mimeType;
             data.textContent = element.outerHTML;
@@ -889,7 +874,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 }
             }
             const data = File.parseUri(uri, { preserveCrossOrigin, saveAs, saveTo, fromConfig });
-            if (this.validFile(data) && (textContent || !assets.find(item => item.uri === uri))) {
+            if (data && (textContent || !assets.find(item => item.uri === uri))) {
                 setOutputModifiers(data, tasks, attributes);
                 if (textContent) {
                     data.textContent = textContent;
@@ -934,10 +919,6 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 }
             }
         }
-    }
-
-    get outputFileIgnore() {
-        return this._outputFileIgnore ||= this.userSettings.outputFileIgnore.map(value => createFileMatch(value));
     }
 
     get application() {

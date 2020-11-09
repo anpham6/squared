@@ -8,7 +8,6 @@ const settings: UserResourceSettings = {
     createQuerySelectorMap: true,
     pierceShadowRoot: false,
     showErrorMessages: false,
-    outputFileIgnore: [],
     outputEmptyCopyDirectory: false,
     outputTasksMap: {},
     outputArchiveName: 'chrome-data',

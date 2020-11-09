@@ -1,10 +1,14 @@
+interface XMLTagData {
+    tag: string;
+    tagName: string;
+    closing: boolean;
+    didClose: boolean;
+    leadingSpace: string;
+    content: string;
+    trailingSpace: string;
+}
+
 const HEX = '0123456789abcdef';
-const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-const NUMERALS = [
-    '', 'C', 'CC', 'CCC', 'CD', 'D', 'DC', 'DCC', 'DCCC', 'CM',
-    '', 'X', 'XX', 'XXX', 'XL', 'L', 'LX', 'LXX', 'LXXX', 'XC',
-    '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'
-];
 
 export function fromMimeType(value: string) {
     const [type, name] = value.split('/');
@@ -269,79 +273,156 @@ export function lowerCaseString(value: string) {
     return value.toLowerCase();
 }
 
-export function convertListStyle(name: string, value: number, valueAsDefault?: boolean) {
-    switch (name) {
-        case 'decimal':
-            return value.toString();
-        case 'decimal-leading-zero':
-            return (value < 9 ? '0' : '') + value.toString();
-        case 'upper-alpha':
-        case 'upper-latin':
-            if (value >= 1) {
-                return convertAlpha(value - 1);
-            }
-            break;
-        case 'lower-alpha':
-        case 'lower-latin':
-            if (value >= 1) {
-                return convertAlpha(value - 1).toLowerCase();
-            }
-            break;
-        case 'upper-roman':
-            return convertRoman(value);
-        case 'lower-roman':
-            return convertRoman(value).toLowerCase();
+export function formatXml(value: string, options: FormatXmlOptions = {}) {
+    const { closeEmptyTags = true, caseSensitive, indentChar = '\t' } = options;
+    const pattern = /\s*(<(\/)?(!?[A-Za-z\d-]+)([^>]*)>)(\s*)([^<]*)/g;
+    const patternContent = /^([\S\s]*?)(\s*)$/;
+    const lines: XMLTagData[] = [];
+    let output = '',
+        indent = -1,
+        ignoreIndent: Undef<boolean>,
+        match: Null<RegExpExecArray>;
+    while (match = pattern.exec(value)) {
+        const tag = match[1];
+        const closing = match[2] === '/';
+        const content = patternContent.exec(match[6])!;
+        lines.push({
+            tag,
+            closing,
+            tagName: caseSensitive ? match[3].toUpperCase() : match[3],
+            didClose: !closing && tag.endsWith('/>'),
+            leadingSpace: match[5],
+            content: content[1],
+            trailingSpace: content[2]
+        });
     }
-    return valueAsDefault ? value.toString() : '';
-}
-
-export function convertAlpha(value: number) {
-    if (value >= 0) {
-        let result = '';
-        const length = ALPHA.length;
-        while (value >= length) {
-            const base = Math.floor(value / length);
-            if (base > 1 && base <= length) {
-                result += ALPHA[base - 1];
-                value -= base * length;
+    const length = lines.length;
+    for (let i = 0; i < length; ++i) {
+        const line = lines[i];
+        let previousIndent = indent,
+            single: Undef<boolean>,
+            willClose: Undef<boolean>;
+        if (line.closing) {
+            const previous = lines[i - 1];
+            if (!previous.closing && previous.tagName === previous.tagName && previous.leadingSpace.includes('\n')) {
+                output += indentChar.repeat(previousIndent);
             }
-            else if (base) {
-                result += 'Z';
-                value -= Math.pow(length, 2);
-                result += convertAlpha(value);
-                return result;
-            }
-            const index = value % length;
-            result += ALPHA[index];
-            value -= index + length;
+            --indent;
         }
-        return ALPHA[value] + result;
+        else {
+            const next = lines[i + 1] as Undef<XMLTagData>;
+            const tagName = line.tagName;
+            single = next && next.closing && tagName === next.tagName;
+            if (!line.didClose) {
+                for (let j = i + 1, k = 0; j < length; ++j) {
+                    const item = lines[j];
+                    if (tagName === item.tagName) {
+                        if (item.closing) {
+                            if (k-- === 0) {
+                                willClose = true;
+                                break;
+                            }
+                        }
+                        else {
+                            ++k;
+                        }
+                    }
+                }
+                if (closeEmptyTags && !line.content && line.tag[1] !== '!') {
+                    if (single || !willClose) {
+                        line.tag = line.tag.replace(/\s*>$/, ' />');
+                        if (willClose) {
+                            ++i;
+                        }
+                    }
+                    else if (willClose) {
+                        ++indent;
+                    }
+                }
+                else if (willClose) {
+                    ++indent;
+                }
+            }
+            ++previousIndent;
+        }
+        const tags = line.tag.split('\n');
+        for (let j = 0, q = tags.length; j < q; ++j) {
+            const partial = tags[j];
+            if (ignoreIndent) {
+                output += partial;
+                ignoreIndent = false;
+            }
+            else {
+                const depth = previousIndent + Math.min(j, 1);
+                output += (depth > 0 ? indentChar.repeat(depth) : '') + partial.trim();
+            }
+            if (single && q === 1) {
+                ignoreIndent = true;
+            }
+            else {
+                output += '\n';
+            }
+        }
+        if (line.content) {
+            let leadingSpace = line.leadingSpace;
+            if (leadingSpace && leadingSpace.includes('\n')) {
+                leadingSpace = leadingSpace.replace(/^[^\n]+/, '');
+            }
+            output += (leadingSpace ? leadingSpace : '') + line.content + (leadingSpace || line.trailingSpace.includes('\n') ? '\n' : '');
+        }
     }
-    return value.toString();
+    return output;
 }
 
-export function convertRoman(value: number) {
-    const digits = value.toString().split('');
-    let result = '',
-        i = 3;
-    while (i--) {
-        result = (NUMERALS[+digits.pop()! + (i * 10)] || '') + result;
+export function parseGlob(value: string, options?: ParseGlobOptions) {
+    value = value.trim();
+    let source = ('^' + value)
+        .replace(/\\\\([^\\])/g, (match, ...capture: string[]) => ':' + capture[0].charCodeAt(0))
+        .replace(/\\|\/\.\/|\/[^/]+\/\.\.\//g, '/')
+        .replace(/\./g, '\\.')
+        .replace(/\{([^}]+)\}/g, (match, ...capture: string[]) => {
+            return '(' + capture[0].split(',').map(group => {
+                const subMatch = /^([^.]+)\.\.([^.]+)$/.exec(group);
+                return subMatch ? `[${subMatch[1]}-${subMatch[2]}]` : group;
+            }).join('|') + ')';
+        })
+        .replace(/\[[!^]([^\]]+)\]/g, (match, ...capture: string[]) => `[^/${capture[0]}]`)
+        .replace(/(\*\*\/)*\*+$/, '.::')
+        .replace(/(\*\*\/)+/g, '([^/]+/)::')
+        .replace(/([!?+*@])(\([^)]+\))/g, (match, ...capture: string[]) => {
+            const escape = () => capture[1].replace(/\*/g, ':>').replace(/\?/g, ':<');
+            switch (capture[0]) {
+                case '!':
+                    return `(?!${escape()})`;
+                case '?':
+                case '+':
+                case '*':
+                    return escape() + capture[0];
+                case '@':
+                    return capture[1];
+            }
+            return match;
+        })
+        .replace(/\?(?!!)/g, '[^/]')
+        .replace(/\*/g, '[^/]*?')
+        .replace(/::/g, '*')
+        .replace(/:>/g, '\\*')
+        .replace(/:</g, '\\?')
+        .replace(/:(\d+)/g, (match, ...capture: string[]) => '\\\\' + String.fromCharCode(+capture[0])) + '$',
+        flags = '';
+    if (options) {
+        if (options.fromEnd) {
+            source = source.substring(1);
+        }
+        if (options.caseSensitive === false) {
+            flags += 'i';
+        }
     }
-    return 'M'.repeat(+digits.join('')) + result;
-}
-
-export function createFileMatch(value: string) {
-    value = value
-        .replace(/\\/g, '/')
-        .replace(/([.|/{}()?])/g, (match, ...capture) => '\\' + capture[0]);
-    if (value.endsWith('/**/*')) {
-        value = value.substring(0, value.length - 2);
-    }
-    else if (value.endsWith('/*')) {
-        value += '*';
-    }
-    value = value
-        .replace(/\*\*\/?/g, '.*?')
-        .replace(/\*(?!\?)/g, '[^/]*?');
-    return new RegExp(value + '$');
+    const matcher = new RegExp(source, flags);
+    return Object.create({
+        source,
+        flags,
+        matcher,
+        test: (file: string) => value[0] === '!' ? !matcher.test(file) : matcher.test(file)
+    }) as GlobData;
 }

@@ -121,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 ### ALL: User Settings
 
-These settings are available in the global variable "squared" to customize your desired output structure. Each framework shares a common set of settings and also a subset of their own settings. File glob patterns match relative to the end of pathname and filename.
+These settings are available in the global variable "squared" to customize your desired output structure. Each framework shares a common set of settings and also a subset of their own settings.
   
 Gulp installation is required in order to use "outputTasksMap". Further instructions can be found in the [squared-functions](https://github.com/anpham6/squared-functions#readme) repository.
 
@@ -213,7 +213,6 @@ squared.settings = {
     createQuerySelectorMap: true,
     pierceShadowRoot: false,
     showErrorMessages: false,
-    outputFileIgnore: [], // ["squared.*", "assets/**/*.mp4"]
     outputEmptyCopyDirectory: false,
     outputTasksMap: {} // { "*.js": ["minify"] }
     outputArchiveName: 'chrome-data',

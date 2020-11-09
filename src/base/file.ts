@@ -1,7 +1,7 @@
 import type Resource from './resource';
 import type Node from './node';
 
-import { appendSeparator, createFileMatch } from './lib/util';
+import { appendSeparator, parseGlob } from './lib/util';
 
 type FileActionOptions = squared.FileActionOptions;
 type FileArchivingOptions = squared.base.FileArchivingOptions;
@@ -14,10 +14,24 @@ const { createElement } = squared.lib.dom;
 
 function validateAsset(file: FileAsset, exclusions: Exclusions) {
     const { pathname, filename } = file;
+    const glob = exclusions.glob as (string | GlobData)[];
+    if (glob) {
+        const filepath = appendSeparator(pathname, filename);
+        for (let i = 0, length = glob.length; i < length; ++i) {
+            let value = glob[i];
+            if (typeof value === 'string') {
+                value = parseGlob(value, { fromEnd: true });
+                glob[i] = value;
+            }
+            if (value.test(filepath)) {
+                return false;
+            }
+        }
+    }
     if (exclusions.pathname) {
         for (const value of exclusions.pathname) {
-            const directory = value.replace(/[\\/]/g, '[\\\\/]').replace(/[\\/]$/, '');
-            if (new RegExp(`^${directory}$`).test(pathname) || new RegExp(`^${directory}[\\\\/]`).test(pathname)) {
+            const dirname = trimEnd(value.replace(/\\/g, '/'), '/');
+            if (new RegExp(`^${dirname}$`).test(pathname) || new RegExp(`^${dirname}/`).test(pathname)) {
                 return false;
             }
         }
@@ -233,12 +247,17 @@ export default abstract class File<T extends Node> implements squared.base.File<
             const taskMap = this.userSettings.outputTasksMap;
             let unassigned: Undef<FileAsset[]>;
             for (const task in taskMap) {
-                const pattern = createFileMatch(task);
                 unassigned ||= body.filter(item => !item.tasks);
-                for (const item of unassigned) {
-                    if (pattern.test(appendSeparator(item.pathname, item.filename))) {
-                        (item.tasks ||= []).push(...taskMap[task]);
+                if (unassigned.length) {
+                    const glob = parseGlob(task, { fromEnd: true });
+                    for (const item of unassigned) {
+                        if (glob.test(appendSeparator(item.pathname, item.filename))) {
+                            (item.tasks ||= []).push(...taskMap[task]);
+                        }
                     }
+                }
+                else {
+                    break;
                 }
             }
             this.finalizeRequestBody(body, options);

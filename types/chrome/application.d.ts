@@ -1,6 +1,5 @@
 interface UserResourceSettings {
     excludePlainText: boolean;
-    outputFileIgnore: string[];
 }
 
 interface FileUniversalAttribute extends PlainObject {
