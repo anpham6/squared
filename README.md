@@ -301,17 +301,17 @@ Packaging methods will return a Promise and require either node-express or squar
 
 ```javascript
 saveAs(filename: string, options?: {}) // save current sessionas a new archive
-saveFiles(format: string, options: {}) // create new archive from RequestAsset[]
+saveFiles(format: string, options: {}) // create new archive from FileAsset[]
 
 // Required (local archives): --disk-read | --unc-read | --access-all (command-line)
 
 appendTo(pathname: string, options?: {}) // create new archive from a preexisting archive and current session
-appendFiles(pathname: string, options: {}) // create new archive from a preexisting archive and RequestAsset[]
+appendFiles(pathname: string, options: {}) // create new archive from a preexisting archive and FileAsset[]
 
 // Required (all): --disk-write | --unc-write | --access-all (command-line)
 
 copyTo(directory: string, options?: {}) // copy current session to local directory
-copyFiles(directory: string, options: {}) // copy RequestAsset[] to local directory
+copyFiles(directory: string, options: {}) // copy FileAsset[] to local directory
 ```
 
 ### ALL: Extending Node object

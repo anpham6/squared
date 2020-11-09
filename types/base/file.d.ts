@@ -20,8 +20,8 @@ interface LayoutAsset extends TextAsset {
 }
 
 interface FileAsset extends TextAsset {
-    commands?: string[];
     base64?: string;
+    commands?: string[];
     compress?: CompressFormat[];
 }
 
@@ -29,16 +29,11 @@ interface RawAsset extends FileAsset, Partial<ImageAsset> {
     buffer?: ArrayBuffer;
 }
 
-interface RequestAsset extends FileAsset {
-    dataMap?: StandardMap;
-    exclusions?: Exclusions;
-}
-
 interface Exclusions {
     pathname?: string[];
     filename?: string[];
     extension?: string[];
-    pattern?: string[];
+    pattern?: (string | RegExp)[];
 }
 
 interface CompressFormat {

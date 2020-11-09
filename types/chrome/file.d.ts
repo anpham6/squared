@@ -1,4 +1,4 @@
-interface ChromeAsset extends RequestAsset, OutputModifiers {
+interface ChromeAsset extends FileAsset, OutputModifiers {
     rootDir?: string;
     moveTo?: string;
     format?: string;
@@ -9,6 +9,7 @@ interface ChromeAsset extends RequestAsset, OutputModifiers {
     inlineContent?: string;
     trailingContent?: FormattableContent[];
     textContent?: string;
+    dataMap?: StandardMap;
 }
 
 interface FormattableContent {

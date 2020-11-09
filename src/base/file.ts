@@ -12,6 +12,42 @@ const { SERVER_REQUIRED } = squared.lib.error;
 const { fromLastIndexOf, trimEnd } = squared.lib.util;
 const { createElement } = squared.lib.dom;
 
+function validateAsset(file: FileAsset, exclusions: Exclusions) {
+    const { pathname, filename } = file;
+    if (exclusions.pathname) {
+        for (const value of exclusions.pathname) {
+            const directory = value.replace(/[\\/]/g, '[\\\\/]').replace(/[\\/]$/, '');
+            if (new RegExp(`^${directory}$`).test(pathname) || new RegExp(`^${directory}[\\\\/]`).test(pathname)) {
+                return false;
+            }
+        }
+    }
+    if (exclusions.filename) {
+        for (const value of exclusions.filename) {
+            if (value === filename) {
+                return false;
+            }
+        }
+    }
+    if (exclusions.extension) {
+        const ext = fromLastIndexOf(filename, '.').toLowerCase();
+        for (const value of exclusions.extension) {
+            if (ext === value.toLowerCase()) {
+                return false;
+            }
+        }
+    }
+    if (exclusions.pattern) {
+        const filepath = appendSeparator(pathname, filename);
+        for (const value of exclusions.pattern) {
+            if (new RegExp(value).test(filepath)) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 export default abstract class File<T extends Node> implements squared.base.File<T> {
     public static downloadFile(data: Blob, filename: string, mimeType?: string) {
         const blob = new Blob([data], { type: mimeType || 'application/octet-stream' });
@@ -48,7 +84,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
 
     public abstract get userSettings(): UserResourceSettings;
 
-    public getDataMap(options: FileActionOptions): Void<PlainObject> {}
+    public finalizeRequestBody(assets: FileAsset[], options: FileActionOptions) {}
     public getCopyQueryParameters(options: FileCopyingOptions) { return ''; }
     public getArchiveQueryParameters(options: FileArchivingOptions) { return ''; }
 
@@ -185,9 +221,15 @@ export default abstract class File<T extends Node> implements squared.base.File<
     }
 
     protected createRequestBody(assets: Undef<FileAsset[]>, options: FileCopyingOptions | FileArchivingOptions) {
-        const body = (assets ? assets.concat(this.assets) : this.assets) as RequestAsset[];
-        const asset = body[0];
-        if (asset) {
+        let body = assets ? assets.concat(this.assets) : this.assets;
+        if (body.length) {
+            const exclusions = options.exclusions;
+            if (exclusions) {
+                body = body.filter(item => validateAsset(item, exclusions));
+                if (!body.length) {
+                    return;
+                }
+            }
             const taskMap = this.userSettings.outputTasksMap;
             let unassigned: Undef<FileAsset[]>;
             for (const task in taskMap) {
@@ -199,13 +241,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
                     }
                 }
             }
-            if (options.exclusions) {
-                asset.exclusions = options.exclusions;
-            }
-            const dataMap = this.getDataMap(options);
-            if (dataMap) {
-                asset.dataMap = dataMap;
-            }
+            this.finalizeRequestBody(body, options);
             return body;
         }
     }
