@@ -8,8 +8,9 @@ const settings: UserResourceSettings = {
     createQuerySelectorMap: true,
     pierceShadowRoot: false,
     showErrorMessages: false,
-    outputFileExclusions: [],
+    outputFileIgnore: [],
     outputEmptyCopyDirectory: false,
+    outputTasksMap: {},
     outputArchiveName: 'chrome-data',
     outputArchiveFormat: 'zip'
 };

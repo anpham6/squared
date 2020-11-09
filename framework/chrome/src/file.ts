@@ -12,11 +12,10 @@ const ASSETS = squared.base.Resource.ASSETS;
 
 const { convertWord, fromLastIndexOf, isString, parseMimeType, resolvePath, splitPair, splitPairStart, trimEnd } = squared.lib.util;
 
-const { appendSeparator, randomUUID } = squared.base.lib.util;
+const { appendSeparator, createFileMatch, randomUUID } = squared.base.lib.util;
 
 const STRING_SERVERROOT = '__serverroot__';
 const STRING_GENERATED = '__generated__';
-const REGEXP_ESCAPEPATH = /([.|/\\{}()?])/g;
 
 const RE_SRCSET = new Pattern(/\s*(.+?\.[^\s,]+)(\s+[\d.]+[wx])?\s*,?/g);
 
@@ -202,7 +201,6 @@ const getTasks = (element: HTMLElement) => element.dataset.chromeTasks?.split('+
 const getCustomPath = (uri: Undef<string>, pathname: Undef<string>, filename: string) => appendSeparator(uri && (!pathname || pathname === '~') ? FILE.PROTOCOL.exec(uri)?.[4] : pathname, filename);
 const getMimeType = (element: HTMLLinkElement | HTMLStyleElement | HTMLScriptElement, src: Undef<string>, fallback: string) => element.type.trim().toLowerCase() || src && parseMimeType(src) || fallback;
 const hasSamePath = (item: ChromeAsset, other: ChromeAsset) => (item.moveTo === other.moveTo || !item.moveTo && !moveTo) && item.pathname === other.pathname && item.filename === other.filename;
-const convertFileMatch = (value: string) => new RegExp(value.replace(REGEXP_ESCAPEPATH, (match, ...capture) => '\\' + capture[0]).replace(/\*/g, '.*?') + '$');
 const getFileExt = (value: string) => value.includes('.') ? fromLastIndexOf(value, '.').trim().toLowerCase() : '';
 const getDirectory = (path: string, start: number) => path.substring(start, path.lastIndexOf('/'));
 const normalizePath = (value: string) => value.replace(/\\/g, '/');
@@ -326,10 +324,10 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         return null;
     }
 
-    private _outputFileExclusions: Null<RegExp[]> = null;
+    private _outputFileIgnore: Null<RegExp[]> = null;
 
     public reset() {
-        this._outputFileExclusions = null;
+        this._outputFileIgnore = null;
         super.reset();
     }
 
@@ -655,7 +653,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     protected validFile(data: Null<ChromeAsset>): data is ChromeAsset {
         if (data) {
             const fullpath = appendSeparator(data.pathname, data.filename);
-            return !this.outputFileExclusions.some(pattern => pattern.test(fullpath));
+            return !this.outputFileIgnore.some(pattern => pattern.test(fullpath));
         }
         return false;
     }
@@ -935,8 +933,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         }
     }
 
-    get outputFileExclusions() {
-        return this._outputFileExclusions ||= this.userSettings.outputFileExclusions.map(value => convertFileMatch(value));
+    get outputFileIgnore() {
+        return this._outputFileIgnore ||= this.userSettings.outputFileIgnore.map(value => createFileMatch(value));
     }
 
     get application() {

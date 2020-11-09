@@ -868,9 +868,10 @@ declare module "base" {
             function randomUUID(separator?: string): string;
             function upperCaseString(value: string): string;
             function lowerCaseString(value: string): string;
+            function convertListStyle(name: string, value: number, valueAsDefault?: boolean): string;
             function convertAlpha(value: number): string;
             function convertRoman(value: number): string;
-            function convertListStyle(name: string, value: number, valueAsDefault?: boolean): string;
+            function createFileMatch(value: string): RegExp;
         }
     }
 }

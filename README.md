@@ -121,7 +121,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 ### ALL: User Settings
 
-These settings are available in the global variable "squared" to customize your desired output structure. Each framework shares a common set of settings and also a subset of their own settings.
+These settings are available in the global variable "squared" to customize your desired output structure. Each framework shares a common set of settings and also a subset of their own settings. File glob patterns match relative to the end of pathname and filename.
+  
+Gulp installation is required in order to use "outputTasksMap". Further instructions can be found in the [squared-functions](https://github.com/anpham6/squared-functions#readme) repository.
 
 #### Example: android
 
@@ -184,6 +186,7 @@ squared.settings = {
     outputMainFileName: 'activity_main.xml',
     outputDirectory: 'app/src/main',
     outputEmptyCopyDirectory: false,
+    outputTasksMap: {} // { "**/drawable/*.xml": ["minify"] }
     outputArchiveName: 'android-xml',
     outputArchiveFormat: 'zip' // zip | tar | gz/tgz
 };
@@ -210,8 +213,9 @@ squared.settings = {
     createQuerySelectorMap: true,
     pierceShadowRoot: false,
     showErrorMessages: false,
-    outputFileExclusions: [], // ['squared.*', '*.mp4'] (element: data-chrome-file="exclude") 
+    outputFileIgnore: [], // ["squared.*", "assets/**/*.mp4"]
     outputEmptyCopyDirectory: false,
+    outputTasksMap: {} // { "*.js": ["minify"] }
     outputArchiveName: 'chrome-data',
     outputArchiveFormat: 'zip' // zip | tar | gz/tgz
 };

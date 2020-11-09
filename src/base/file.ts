@@ -1,6 +1,8 @@
 import type Resource from './resource';
 import type Node from './node';
 
+import { appendSeparator, createFileMatch } from './lib/util';
+
 type FileActionOptions = squared.FileActionOptions;
 type FileArchivingOptions = squared.base.FileArchivingOptions;
 type FileCopyingOptions = squared.base.FileCopyingOptions;
@@ -186,6 +188,17 @@ export default abstract class File<T extends Node> implements squared.base.File<
         const body = (assets ? assets.concat(this.assets) : this.assets) as RequestAsset[];
         const asset = body[0];
         if (asset) {
+            const taskMap = this.userSettings.outputTasksMap;
+            let unassigned: Undef<FileAsset[]>;
+            for (const task in taskMap) {
+                const pattern = createFileMatch(task);
+                unassigned ||= body.filter(item => !item.tasks);
+                for (const item of unassigned) {
+                    if (pattern.test(appendSeparator(item.pathname, item.filename))) {
+                        (item.tasks ||= []).push(...taskMap[task]);
+                    }
+                }
+            }
             if (options.exclusions) {
                 asset.exclusions = options.exclusions;
             }

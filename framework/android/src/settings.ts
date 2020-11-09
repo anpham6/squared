@@ -56,6 +56,7 @@ const settings: UserResourceSettingsUI = {
     outputMainFileName: 'activity_main.xml',
     outputDirectory: 'app/src/main',
     outputEmptyCopyDirectory: false,
+    outputTasksMap: {},
     outputArchiveName: 'android-xml',
     outputArchiveFormat: 'zip'
 };

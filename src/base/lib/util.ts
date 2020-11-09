@@ -329,3 +329,19 @@ export function convertRoman(value: number) {
     }
     return 'M'.repeat(+digits.join('')) + result;
 }
+
+export function createFileMatch(value: string) {
+    value = value
+        .replace(/\\/g, '/')
+        .replace(/([.|/{}()?])/g, (match, ...capture) => '\\' + capture[0]);
+    if (value.endsWith('/**/*')) {
+        value = value.substring(0, value.length - 2);
+    }
+    else if (value.endsWith('/*')) {
+        value += '*';
+    }
+    value = value
+        .replace(/\*\*\/?/g, '.*?')
+        .replace(/\*(?!\?)/g, '[^/]*?');
+    return new RegExp(value + '$');
+}

@@ -10,6 +10,7 @@ interface UserResourceSettings extends UserSettings {
     preloadImages: boolean;
     preloadFonts: boolean;
     preloadCustomElements: boolean;
+    outputTasksMap: ObjectMap<string[]>;
     outputEmptyCopyDirectory: boolean;
     outputArchiveFormat: string;
     outputArchiveName: string;

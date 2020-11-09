@@ -35,7 +35,7 @@ declare namespace base {
         getFontAssets(options?: FileActionAttribute): ChromeAsset[];
         get application(): Application<T>;
         get userSettings(): UserResourceSettings;
-        get outputFileExclusions(): RegExp[];
+        get outputFileIgnore(): RegExp[];
     }
 
     class Extension<T extends Node> extends squared.base.Extension<T> {
