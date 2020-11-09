@@ -68,12 +68,12 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
         }
     }
 
-    public addVideo(uri: string, mimeType?: string) {
-        Resource.ASSETS.video.set(uri, { uri, mimeType });
+    public addVideo(uri: string, mimeType?: string, tasks?: string[]) {
+        Resource.ASSETS.video.set(uri, { uri, mimeType, tasks });
     }
 
-    public addAudio(uri: string, mimeType?: string) {
-        Resource.ASSETS.audio.set(uri, { uri, mimeType });
+    public addAudio(uri: string, mimeType?: string, tasks?: string[]) {
+        Resource.ASSETS.audio.set(uri, { uri, mimeType, tasks });
     }
 
     public addFont(data: FontFaceData) {

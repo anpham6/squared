@@ -214,9 +214,9 @@ declare module "base" {
         getImage(uri: string): Undef<ImageAsset>;
         addFont(data: FontFaceData): void;
         getFont(fontFamily: string, fontStyle?: string, fontWeight?: string): Undef<FontFaceData>;
-        addVideo(uri: string, mimeType?: string): void;
+        addVideo(uri: string, mimeType?: string, tasks?: string[]): void;
         getVideo(uri: string): Undef<Asset>;
-        addAudio(uri: string, mimeType?: string): void;
+        addAudio(uri: string, mimeType?: string, tasks?: string[]): void;
         getAudio(uri: string): Undef<Asset>;
         addRawData(uri: string, mimeType: string, content: Undef<string>, options?: RawDataOptions): string;
         getRawData(uri: string): Undef<RawAsset>;

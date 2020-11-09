@@ -975,7 +975,8 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                 mimeType: options.mimeType,
                 base64,
                 width: options.width,
-                height: options.height
+                height: options.height,
+                tasks: options.tasks
             } as RawAsset;
             this.fileHandler?.addAsset(result);
             return result;

@@ -104,10 +104,11 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     image: Undef<string>;
                 if (imageSrc) {
                     const resource = this.resource as android.base.Resource<T>;
+                    const imageData = resource.getImage(imageSrc);
                     if (imagePosition) {
                         ({ top, left } = Resource.getBackgroundPosition(imagePosition, node.actualDimension, {
                             fontSize: node.fontSize,
-                            imageDimension: resource.getImage(imageSrc),
+                            imageDimension: imageData,
                             screenDimension: node.localSettings.screenDimension
                         }));
                         if (node.marginLeft < 0) {
@@ -129,6 +130,9 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         gravity = '';
                     }
                     image = resource.addImageSrc(imageSrc);
+                    if (imageData) {
+                        imageData.tasks = node.tasks;
+                    }
                 }
                 if (!image && !value && node.display !== 'list-item') {
                     switch (parent.tagName) {

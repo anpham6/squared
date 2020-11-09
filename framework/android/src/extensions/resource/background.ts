@@ -891,7 +891,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 node.modifyBox(BOX_STANDARD.PADDING_LEFT, offsetStart);
                             }
                         }
-                        imageDimensions[length] = stored!;
+                        if (stored) {
+                            stored.tasks = image.tasks;
+                            imageDimensions[length] = stored;
+                        }
                         backgroundPosition[length] = position;
                         ++length;
                     }

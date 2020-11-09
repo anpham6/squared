@@ -3204,6 +3204,15 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return this._positioned || !!this.target;
         }
 
+        get tasks() {
+            if (this.naturalElement) {
+                let tasks = (this.element as HTMLElement).dataset.androidTasks;
+                if (tasks && (tasks = tasks.trim())) {
+                    return tasks.split(/\s*\+\s*/);
+                }
+            }
+        }
+
         get target() {
             const target = this.dataset.androidTarget;
             return target ? document.getElementById(target) : null;

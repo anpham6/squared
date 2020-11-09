@@ -41,6 +41,7 @@ interface RawDataOptions extends Partial<Dimension> {
     data?: string | ArrayBuffer;
     encoding?: string;
     filename?: string;
+    tasks?: string[];
 }
 
 interface DescendOptions<T> {

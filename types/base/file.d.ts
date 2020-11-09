@@ -1,6 +1,7 @@
 interface Asset {
     uri?: string;
     mimeType?: string;
+    tasks?: string[];
 }
 
 interface LocationUri {

@@ -1307,8 +1307,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         switch (tagName) {
             case 'IMG':
             case 'CANVAS': {
+                const resource = this.application.resourceHandler as android.base.Resource<T>;
                 const element = node.element as HTMLImageElement;
-                const resource = this.application.resourceHandler;
                 let imageSet: Undef<ImageSrcSet[]>;
                 if (node.actualParent!.tagName === 'PICTURE') {
                     imageSet = getSrcSet(element, this.localSettings.mimeType.image);
@@ -1367,17 +1367,30 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                 }
                 if (node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
+                    const tasks = node.tasks;
                     let src: Undef<string>;
                     if (tagName === 'CANVAS') {
                         const data = ((element as unknown) as HTMLCanvasElement).toDataURL();
                         if (data) {
                             node.setControlType(controlName, containerType);
                             src = 'canvas_' + convertWord(node.controlId, true).toLowerCase();
-                            resource.writeRawImage({ mimeType: 'image/png', filename: src + '.png', data, encoding: 'base64' });
+                            resource.writeRawImage({ mimeType: 'image/png', filename: src + '.png', data, encoding: 'base64', tasks });
                         }
                     }
                     else {
-                        src = (resource as android.base.Resource<T>).addImageSrc(element, '', imageSet);
+                        src = resource.addImageSrc(element, '', imageSet);
+                        if (tasks) {
+                            const images = [element.src];
+                            if (imageSet) {
+                                images.push(...plainMap(imageSet, item => item.src));
+                            }
+                            for (const uri of images) {
+                                const image = resource.getImage(uri);
+                                if (image) {
+                                    image.tasks = tasks;
+                                }
+                            }
+                        }
                     }
                     if (src) {
                         node.android('src', `@drawable/${src}`);
@@ -1661,7 +1674,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     setInlineBlock();
                 }
                 if (src) {
-                    this.application.resourceHandler[tagName === 'VIDEO' ? 'addVideo' : 'addAudio'](src, mimeType);
+                    this.application.resourceHandler[tagName === 'VIDEO' ? 'addVideo' : 'addAudio'](src, mimeType, node.tasks);
                     node.inlineText = false;
                     node.exclude({ resource: NODE_RESOURCE.FONT_STYLE });
                     if (element.poster) {
