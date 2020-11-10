@@ -4,7 +4,7 @@ const { findSet } = squared.lib.util;
 
 export default class Bmp<T extends squared.base.Node> extends Extension<T> {
     public readonly options: ConvertOptions = {
-        mimeTypes: new Set(['image/png', 'image/jpeg', 'image/gif', 'image/tiff']),
+        mimeTypes: new Set(['image/png', 'image/jpeg', 'image/gif', 'image/tiff', 'image/webp']),
         minSize: 0,
         maxSize: Infinity,
         whenSmaller: false,
