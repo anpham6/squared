@@ -6,7 +6,6 @@ declare namespace base {
     const enum EXT_CHROME {
         COMPRESS_BROTLI = 'chrome.compress.brotli',
         COMPRESS_GZIP = 'chrome.compress.gzip',
-        COMPRESS_JPEG = 'chrome.compress.jpeg',
         COMPRESS_PNG = 'chrome.compress.png',
         CONVERT_BMP = 'chrome.convert.bmp',
         CONVERT_JPEG = 'chrome.convert.jpeg',
@@ -27,7 +26,7 @@ declare namespace base {
     class File<T extends Node> extends squared.base.File<T> {
         static parseUri(uri: string, options?: UriOptions): Null<ChromeAsset>;
         getHtmlPage(options?: FileActionAttribute): ChromeAsset[];
-        getScriptAssets(options?: FileActionAttribute): [ChromeAsset[], TranspileMap];
+        getScriptAssets(options?: FileActionAttribute): [ChromeAsset[], Undef<TranspileMap>];
         getLinkAssets(options?: FileActionAttribute): ChromeAsset[];
         getImageAssets(options?: FileActionAttribute): ChromeAsset[];
         getVideoAssets(options?: FileActionAttribute): ChromeAsset[];
@@ -48,15 +47,12 @@ declare namespace extensions {
     namespace compress {
         class Brotli<T extends Node> extends squared.base.Extension<T> {}
         class Gzip<T extends Node> extends squared.base.Extension<T> {}
-        class Jpeg<T extends Node> extends squared.base.Extension<T> {}
         class Png<T extends Node> extends squared.base.Extension<T> {}
     }
     namespace convert {
         class Bmp<T extends Node> extends squared.base.Extension<T> {}
         class Gif<T extends Node> extends squared.base.Extension<T> {}
         class Jpeg<T extends Node> extends squared.base.Extension<T> {}
-        class Png<T extends Node> extends squared.base.Extension<T> {}
-        class Tiff<T extends Node> extends squared.base.Extension<T> {}
     }
 }
 

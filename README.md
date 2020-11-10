@@ -201,7 +201,6 @@ squared.settings = {
         'chrome.convert.jpeg',
         'chrome.convert.bmp',
         'chrome.compress.png', // TinyPNG API Key <https://tinypng.com/developers>
-        'chrome.compress.jpeg',
         'chrome.compress.brotli', // NodeJS 11.7
         'chrome.compress.gzip'
     ],

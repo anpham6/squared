@@ -93,7 +93,7 @@
     "selector": ".card:nth-of-type(2) img",
     "type": "image",
     "commands": [
-      "jpeg@(500x500[bezier]^contain[right|bottom])(-50,100|200x200){225#FFFFFF}"
+      "jpeg@(500x500[bezier]^contain[right|bottom])(-50,100|200x200){225#FFFFFF}|50|"
     ],
     "attributes": [
       {

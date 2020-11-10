@@ -8,7 +8,8 @@ export default class Jpeg<T extends squared.base.Node> extends Extension<T> {
         minSize: 0,
         maxSize: Infinity,
         whenSmaller: false,
-        replaceWith: true
+        replaceWith: true,
+        quality: 100
     };
 
     public processFile(data: ChromeAsset, override?: boolean) {

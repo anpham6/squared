@@ -6,6 +6,7 @@ import { appendSeparator, parseGlob } from './lib/util';
 type FileActionOptions = squared.FileActionOptions;
 type FileArchivingOptions = squared.base.FileArchivingOptions;
 type FileCopyingOptions = squared.base.FileCopyingOptions;
+type IGlobExp = squared.base.lib.util.IGlobExp;
 
 const { SERVER_REQUIRED } = squared.lib.error;
 
@@ -14,7 +15,7 @@ const { createElement } = squared.lib.dom;
 
 function validateAsset(file: FileAsset, exclusions: Exclusions) {
     const { pathname, filename } = file;
-    const glob = exclusions.glob as (string | GlobExp)[];
+    const glob = exclusions.glob as (string | IGlobExp)[];
     if (glob) {
         const filepath = appendSeparator(pathname, filename);
         for (let i = 0, length = glob.length; i < length; ++i) {

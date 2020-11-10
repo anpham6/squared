@@ -19,6 +19,7 @@ interface ConvertOptions extends CompressOptions {
     mimeTypes: Set<string>;
     replaceWith: boolean;
     opacity?: number;
+    quality?: number;
 }
 
 interface SaveAsOptions extends Partial<LocationUri>, FileModifiers, OutputModifiers {

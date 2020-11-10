@@ -7,7 +7,6 @@ import File from './file';
 
 import CompressBrotli from './extensions/compress/brotli';
 import CompressGzip from './extensions/compress/gzip';
-import CompressJpeg from './extensions/compress/jpeg';
 import CompressPng from './extensions/compress/png';
 
 import ConvertBmp from './extensions/convert/bmp';
@@ -50,7 +49,6 @@ const appBase: squared.base.AppFramework<Node> = {
         compress: {
             Brotli: CompressBrotli,
             Gzip: CompressGzip,
-            Jpeg: CompressJpeg,
             Png: CompressPng
         },
         convert: {
@@ -137,7 +135,6 @@ const appBase: squared.base.AppFramework<Node> = {
         application.builtInExtensions = new Map<string, Extension<Node>>([
             [EXT_CHROME.COMPRESS_BROTLI, new CompressBrotli(EXT_CHROME.COMPRESS_BROTLI, APP_FRAMEWORK.CHROME)],
             [EXT_CHROME.COMPRESS_GZIP, new CompressGzip(EXT_CHROME.COMPRESS_GZIP, APP_FRAMEWORK.CHROME)],
-            [EXT_CHROME.COMPRESS_JPEG, new CompressJpeg(EXT_CHROME.COMPRESS_JPEG, APP_FRAMEWORK.CHROME)],
             [EXT_CHROME.COMPRESS_PNG, new CompressPng(EXT_CHROME.COMPRESS_PNG, APP_FRAMEWORK.CHROME)],
             [EXT_CHROME.CONVERT_BMP, new ConvertBmp(EXT_CHROME.CONVERT_BMP, APP_FRAMEWORK.CHROME)],
             [EXT_CHROME.CONVERT_JPEG, new ConvertJpeg(EXT_CHROME.CONVERT_JPEG, APP_FRAMEWORK.CHROME)],

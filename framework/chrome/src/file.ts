@@ -394,7 +394,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         return [];
     }
 
-    public getScriptAssets(options?: IFileActionOptions): [ChromeAsset[], TranspileMap] {
+    public getScriptAssets(options?: IFileActionOptions): [ChromeAsset[], Undef<TranspileMap>] {
         let assetMap: Undef<Map<Element, AssetCommand>>,
             preserveCrossOrigin: Undef<boolean>,
             saveAsScript: Undef<SaveAsOptions>;
@@ -404,7 +404,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         }
         const result: ChromeAsset[] = [];
         const bundleIndex: BundleIndex = {};
-        const transpileMap: TranspileMap = { html: {}, js: {}, css: {} };
+        let transpileMap: Undef<TranspileMap>;
         if (assetMap) {
             for (const item of assetMap.values()) {
                 if (!item.selector) {
@@ -417,7 +417,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                                 const { module, identifier } = template;
                                 let value = template.value;
                                 if (module && identifier && value && (value = value.trim()) && value.startsWith('function')) {
-                                    (transpileMap[item.type][module] ||= {})[identifier] = value;
+                                    ((transpileMap ||= { html: {}, js: {}, css: {} })[item.type][module] ||= {})[identifier] = value;
                                 }
                                 break;
                             }
@@ -451,7 +451,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                             case 'html':
                             case 'js':
                             case 'css':
-                                (transpileMap[category][module] ||= {})[identifier] = element.textContent!.trim();
+                                ((transpileMap ||= { html: {}, js: {}, css: {} })[category][module] ||= {})[identifier] = element.textContent!.trim();
                                 break;
                         }
                     }
@@ -682,9 +682,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             for (const [item, uri] of items) {
                 const file = item.dataset.chromeFile;
                 let saveAs: Undef<string>,
-                    saveTo: Undef<boolean>,
                     tasks: Undef<string[]>,
                     attributes: Undef<AttributeValue[]>,
+                    saveTo: Undef<boolean>,
                     fromConfig: Undef<boolean>;
                 if (file === 'exclude') {
                     continue;
@@ -750,7 +750,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             ...this.getFontAssets(options)
         );
         options.assets = assets;
-        options.transpileMap = transpileMap;
+        if (transpileMap) {
+            options.transpileMap = transpileMap;
+        }
         return options;
     }
 
@@ -827,13 +829,13 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     private processImageUri(assets: ChromeAsset[], element: Null<HTMLElement>, uri: string, saveAsImage: Undef<SaveAsOptions>, preserveCrossOrigin: Undef<boolean>, assetMap?: Map<Element, AssetCommand>, commands?: string | string[]) {
         if (uri = uri.trim()) {
             let saveAs: Undef<string>,
-                saveTo: Undef<boolean>,
                 format: Undef<string>,
                 base64: Undef<boolean>,
                 compress: Undef<boolean>,
                 tasks: Undef<string[]>,
                 attributes: Undef<AttributeValue[]>,
                 textContent: Undef<string>,
+                saveTo: Undef<boolean>,
                 fromConfig: Undef<boolean>;
             if (element) {
                 const file = element.dataset.chromeFile;
@@ -849,8 +851,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     }
                     ({ saveTo: saveAs, pathname, filename, commands, base64, compress, tasks, attributes } = command);
                     [saveAs, saveTo] = checkSaveAs(uri, saveAs || pathname, filename);
-                    fromConfig = true;
                     textContent = element.outerHTML;
+                    fromConfig = true;
                 }
                 else if (saveAsImage) {
                     if (excludeAsset(assets, saveAsImage, element.outerHTML)) {

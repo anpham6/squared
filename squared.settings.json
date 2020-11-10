@@ -26,7 +26,6 @@
   "request_post_limit": "250mb",
   "gzip_level": "9",
   "brotli_quality": "11",
-  "jpeg_quality": "100",
   "tinypng_api_key": "",
   "gulp": {
     "minify": "./gulpfile.js"
