@@ -49,7 +49,7 @@ function getFileAssets(pathname: string, items: string[]) {
     return items as [];
 }
 
-function getImageAssets(pathname: string, items: string[], convertExt: string, compressing: boolean) {
+function getImageAssets(pathname: string, items: string[], convertImages: string, compressing: boolean) {
     const length = items.length;
     if (length) {
         const result: FileAsset[] = new Array(length / 4);
@@ -57,6 +57,7 @@ function getImageAssets(pathname: string, items: string[], convertExt: string, c
             const filename = items[i + 2];
             const task = items[i + 3];
             let mimeType: Undef<string>,
+                commands: Undef<string[]>,
                 compress: Undef<CompressFormat[]>;
             if (filename.endsWith('.unknown')) {
                 mimeType = 'image/unknown';
@@ -64,33 +65,39 @@ function getImageAssets(pathname: string, items: string[], convertExt: string, c
                     compress = [{ format: 'png' }];
                 }
             }
-            else if (convertExt) {
-                const mimeTypeFrom = parseMimeType(filename);
-                if (mimeTypeFrom.startsWith('image/')) {
-                    mimeType = '';
-                    for (const value of convertExt.trim().toLowerCase().split(/\s*:\s*/)) {
-                        if (!mimeTypeFrom.endsWith(value)) {
+            else if (convertImages) {
+                mimeType = parseMimeType(filename);
+                switch (mimeType) {
+                    case 'image/png':
+                    case 'image/jpeg':
+                    case 'image/gif':
+                    case 'image/bmp':
+                    case 'image/tiff':
+                    case 'image/webp':
+                        for (const value of convertImages.trim().toLowerCase().split(/\s*:\s*/)) {
                             const match = /^[a-z]+/.exec(value);
                             if (match) {
-                                const mimeTypeTo = parseMimeType(match[0]);
-                                if (mimeTypeTo.startsWith('image/')) {
-                                    mimeType += value + ':';
-                                    if (compressing && !compress && Resource.canCompressImage(filename, mimeTypeTo)) {
-                                        compress = [{ format: 'png' }];
-                                    }
+                                switch (match[0]) {
+                                    case 'png':
+                                    case 'jpeg':
+                                    case 'webp':
+                                    case 'bmp':
+                                        (commands ||= []).push(value);
+                                        if (compressing && !compress && Resource.canCompressImage(filename, match[0])) {
+                                            compress = [{ format: 'png' }];
+                                        }
+                                        break;
                                 }
                             }
                         }
-                    }
-                    if (mimeType) {
-                        mimeType += mimeTypeFrom;
-                    }
+                        break;
                 }
             }
             result[j++] = {
                 pathname: pathname + items[i + 1],
                 filename,
                 mimeType,
+                commands,
                 compress,
                 uri: items[i],
                 tasks: task ? task.split('+') : undefined
