@@ -17,14 +17,14 @@ function validateAsset(file: FileAsset, exclusions: Exclusions) {
     const { pathname, filename } = file;
     const glob = exclusions.glob as (string | IGlobExp)[];
     if (glob) {
-        const filepath = appendSeparator(pathname, filename);
+        const fileUri = appendSeparator(pathname, filename);
         for (let i = 0, length = glob.length; i < length; ++i) {
             let value = glob[i];
             if (typeof value === 'string') {
                 value = parseGlob(value, { fromEnd: true });
                 glob[i] = value;
             }
-            if (value.test(filepath)) {
+            if (value.test(fileUri)) {
                 return false;
             }
         }
@@ -53,9 +53,9 @@ function validateAsset(file: FileAsset, exclusions: Exclusions) {
         }
     }
     if (exclusions.pattern) {
-        const filepath = appendSeparator(pathname, filename);
+        const fileUri = appendSeparator(pathname, filename);
         for (const value of exclusions.pattern) {
-            if (new RegExp(value).test(filepath)) {
+            if (new RegExp(value).test(fileUri)) {
                 return false;
             }
         }
@@ -89,8 +89,8 @@ export default abstract class File<T extends Node> implements squared.base.File<
     private _endpoints = {
         ASSETS_COPY: '/api/assets/copy',
         ASSETS_ARCHIVE: '/api/assets/archive',
-        BROWSER_DOWNLOAD: '/api/browser/download?filepath=',
-        LOADER_JSON: '/api/loader/json?filepath='
+        BROWSER_DOWNLOAD: '/api/browser/download?fileuri=',
+        LOADER_JSON: '/api/loader/json?fileuri='
     };
 
     public abstract copyTo(directory: string, options?: FileCopyingOptions): FileActionResult;

@@ -1,4 +1,4 @@
-import type { Arguments, ExpressAsset, IFileManager, Settings, squared } from '@squared-functions/types';
+import type { Arguments, ExternalAsset, IFileManager, Settings, squared } from '@squared-functions/types';
 
 import path = require('path');
 import fs = require('fs-extra');
@@ -15,7 +15,7 @@ import chalk = require('chalk');
 
 import FileManager = require('@squared-functions/file-manager');
 
-type ResultOfFileAction = squared.base.ResultOfFileAction;
+type ResultOfFileAction = squared.ResultOfFileAction;
 
 const app = express();
 app.use(body_parser.urlencoded({ extended: true }));
@@ -220,7 +220,7 @@ app.post('/api/assets/copy', (req, res) => {
         try {
             const manager = new FileManager(
                 dirname,
-                req.body as ExpressAsset[],
+                req.body as ExternalAsset[],
                 function(this: IFileManager) {
                     res.json({ success: this.files.size > 0, files: Array.from(this.files) } as ResultOfFileAction);
                 }
@@ -275,7 +275,7 @@ app.post('/api/assets/archive', (req, res) => {
         const archive = archiver(format, { zlib: { level: Compress.gzipLevel } });
         const manager = new FileManager(
             dirname,
-            req.body as ExpressAsset[],
+            req.body as ExternalAsset[],
             () => {
                 archive.directory(dirname, false);
                 archive.finalize();
@@ -385,22 +385,22 @@ app.post('/api/assets/archive', (req, res) => {
 });
 
 app.get('/api/browser/download', (req, res) => {
-    const filepath = req.query.filepath as string;
-    if (filepath) {
-        res.sendFile(filepath, err => {
+    const fileuri = req.query.fileuri as string;
+    if (fileuri) {
+        res.sendFile(fileuri, err => {
             if (err) {
-                Node.writeFail(filepath, err);
+                Node.writeFail(fileuri, err);
             }
         });
     }
 });
 
 app.get('/api/loader/json', (req, res) => {
-    const filepath = req.query.filepath as string;
-    if (filepath) {
+    const fileuri = req.query.fileuri as string;
+    if (fileuri) {
         const loadContent = (value: string) => {
             let result: Undef<string | object>;
-            switch (path.extname(filepath).toLowerCase()) {
+            switch (path.extname(fileuri).toLowerCase()) {
                 case '.json':
                 case '.js':
                     result = JSON.parse(value);
@@ -414,15 +414,15 @@ app.get('/api/loader/json', (req, res) => {
                 res.json(result);
             }
         };
-        if (Node.isFileURI(filepath)) {
-            request(filepath, (err, response) => {
+        if (Node.isFileURI(fileuri)) {
+            request(fileuri, (err, response) => {
                 if (!err) {
                     loadContent(response.body);
                 }
             });
         }
-        else if (fs.existsSync(filepath)) {
-            if (Node.isFileUNC(filepath)) {
+        else if (fs.existsSync(fileuri)) {
+            if (Node.isFileUNC(fileuri)) {
                 if (!Node.canReadUNC()) {
                     return;
                 }
@@ -430,7 +430,7 @@ app.get('/api/loader/json', (req, res) => {
             else if (!Node.canReadDisk()) {
                 return;
             }
-            fs.readFile(filepath, 'utf8', (err, response) => {
+            fs.readFile(fileuri, 'utf8', (err, response) => {
                 if (!err) {
                     loadContent(response);
                 }

@@ -51,7 +51,7 @@
   pathname: ../images/harbour
   commands:
     - png(10000,75000)(100x200^cover){90,180,270#FFFFFF}
-    - webp(300x100^contain){90,180,270#FFFFFF}|100[picture]|
+    - webp(300x100^contain){90,180,270#FFFFFF}|100[picture][75]|
   attributes:
     - name: alt
       value: Picture 1
@@ -66,7 +66,7 @@
   type: image
   pathname: ../images/harbour
   commands:
-    - png@(25000,*)(800x600[bezier]^contain[right|top]){315}|0.5|
+    - png@(25000,*)(800x600[bezier]^contain[right|top]){315}!greyscale!sepia
   attributes:
     - name: alt
       value: Picture 3
