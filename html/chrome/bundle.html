@@ -103,9 +103,13 @@
                     squared.setFramework(chrome, {
                         builtInExtensions: ['chrome.convert.png', 'chrome.compress.gzip']
                     });
+                    const time = performance.now();
                     squared
                         .copyTo('C:/Users/An/Downloads/chrome', { configUri: 'http://localhost:3000/chrome/bundle.yml' })
-                        .then(result => console.log(result));
+                        .then(result => {
+                            console.log(((performance.now() - time) / 1000).toPrecision(4));
+                            console.log(result);
+                        });
                 });
             });
         });

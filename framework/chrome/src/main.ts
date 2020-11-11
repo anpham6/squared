@@ -1,17 +1,8 @@
 import APP_FRAMEWORK = squared.base.lib.constant.APP_FRAMEWORK;
-import EXT_CHROME = chrome.base.EXT_CHROME;
 
 import Application from './application';
 import Extension from './extension';
 import File from './file';
-
-import CompressBrotli from './extensions/compress/brotli';
-import CompressGzip from './extensions/compress/gzip';
-import CompressPng from './extensions/compress/png';
-
-import ConvertBmp from './extensions/convert/bmp';
-import ConvertJpeg from './extensions/convert/jpeg';
-import ConvertPng from './extensions/convert/png';
 
 import SETTINGS from './settings';
 
@@ -45,18 +36,7 @@ const appBase: squared.base.AppFramework<Node> = {
         File
     },
     lib: {},
-    extensions: {
-        compress: {
-            Brotli: CompressBrotli,
-            Gzip: CompressGzip,
-            Png: CompressPng
-        },
-        convert: {
-            Bmp: ConvertBmp,
-            Jpeg: ConvertJpeg,
-            Png: ConvertPng
-        }
-    },
+    extensions: {},
     system: {
         copyHtmlPage(directory: string, options?: IFileCopyingOptions) {
             if (isString(directory)) {
@@ -132,14 +112,6 @@ const appBase: squared.base.AppFramework<Node> = {
         );
         file = new File();
         application.resourceHandler!.fileHandler = file;
-        application.builtInExtensions = new Map<string, Extension<Node>>([
-            [EXT_CHROME.COMPRESS_BROTLI, new CompressBrotli(EXT_CHROME.COMPRESS_BROTLI, APP_FRAMEWORK.CHROME)],
-            [EXT_CHROME.COMPRESS_GZIP, new CompressGzip(EXT_CHROME.COMPRESS_GZIP, APP_FRAMEWORK.CHROME)],
-            [EXT_CHROME.COMPRESS_PNG, new CompressPng(EXT_CHROME.COMPRESS_PNG, APP_FRAMEWORK.CHROME)],
-            [EXT_CHROME.CONVERT_BMP, new ConvertBmp(EXT_CHROME.CONVERT_BMP, APP_FRAMEWORK.CHROME)],
-            [EXT_CHROME.CONVERT_JPEG, new ConvertJpeg(EXT_CHROME.CONVERT_JPEG, APP_FRAMEWORK.CHROME)],
-            [EXT_CHROME.CONVERT_PNG, new ConvertPng(EXT_CHROME.CONVERT_PNG, APP_FRAMEWORK.CHROME)]
-        ]);
         return {
             application,
             framework: APP_FRAMEWORK.CHROME,

@@ -21,7 +21,7 @@ interface FormattableContent {
 interface FileModifiers {
     preserve?: boolean;
     inline?: boolean;
-    compress?: boolean;
+    compress?: boolean | CompressFormat[];
     base64?: boolean;
     ignore?: boolean;
     exclude?: boolean;

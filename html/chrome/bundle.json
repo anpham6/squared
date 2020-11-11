@@ -9,6 +9,14 @@
     "tasks": [
       "minify"
     ],
+    "compress": [
+      {
+        "format": "gz"
+      },
+      {
+        "format": "br"
+      }
+    ],
     "attributes": [
       {
         "name": "lang",
@@ -49,6 +57,11 @@
     "process": [
       "bundle",
       "beautify"
+    ],
+    "compress": [
+      {
+        "format": "br"
+      }
     ]
   },
   {

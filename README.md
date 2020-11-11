@@ -196,14 +196,7 @@ squared.settings = {
 
 ```javascript
 squared.settings = {
-    builtInExtensions: [ // default is none
-        'chrome.convert.png',
-        'chrome.convert.jpeg',
-        'chrome.convert.bmp',
-        'chrome.compress.png', // TinyPNG API Key <https://tinypng.com/developers>
-        'chrome.compress.brotli', // NodeJS 11.7
-        'chrome.compress.gzip'
-    ],
+    builtInExtensions: [],
     preloadImages: false,
     preloadFonts: false,
     preloadCustomElements: false,
@@ -546,28 +539,11 @@ Most attributes can be excluded from the generated XML using the dataset feature
 </div>
 ```
 
-### ALL: Extension Configuration (example: chrome)
+### ALL: Extension Configuration
 
 Layout rendering can also be customized using extensions as the program was built to be nearly completely modular. Some of the common layouts already have built-in extensions which you can load or unload based on your preference.
 
 ```javascript
-// Configure an extension (optional)
-
-chrome.extension.options = { // internal representation
-    mimeTypes: ['image/jpeg', 'image/bmp', 'image/gif', 'image/tiff'],
-    minSize: 0,
-    maxSize: Infinity,
-    whenSmaller: false,
-    replaceWith: true // convert
-};
-
-squared.apply('chrome.convert.png', {
-    settings: {
-        minSize: 10000,
-        whenSmaller: true
-    }
-});
-
 // Create an extension
 
 class Sample extends squared.base.Extension {
@@ -585,7 +561,7 @@ squared.add(sample);
 squared.add([sample, {/* config */}]);
 ```
 
-Most extensions have a few settings which can be configured. Usually default settings are at their maximum optimized levels.
+Some extensions have a few settings which can be configured. Usually default settings are at their maximum optimized levels.
 
 ### LICENSE
 

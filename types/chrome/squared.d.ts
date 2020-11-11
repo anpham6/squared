@@ -35,30 +35,9 @@ declare namespace base {
 }
 
 declare namespace internal {
-    const enum EXT_CHROME {
-        COMPRESS_BROTLI = 'chrome.compress.brotli',
-        COMPRESS_GZIP = 'chrome.compress.gzip',
-        COMPRESS_PNG = 'chrome.compress.png',
-        CONVERT_BMP = 'chrome.convert.bmp',
-        CONVERT_JPEG = 'chrome.convert.jpeg',
-        CONVERT_PNG = 'chrome.convert.png'
-    }
     const enum DIR_FUNCTIONS {
         SERVERROOT = '__serverroot__',
         GENERATED = '__generated__'
-    }
-}
-
-declare namespace extensions {
-    namespace compress {
-        class Brotli<T extends Node> extends squared.base.Extension<T> {}
-        class Gzip<T extends Node> extends squared.base.Extension<T> {}
-        class Png<T extends Node> extends squared.base.Extension<T> {}
-    }
-    namespace convert {
-        class Bmp<T extends Node> extends squared.base.Extension<T> {}
-        class Gif<T extends Node> extends squared.base.Extension<T> {}
-        class Jpeg<T extends Node> extends squared.base.Extension<T> {}
     }
 }
 

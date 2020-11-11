@@ -17,14 +17,14 @@ function validateAsset(file: FileAsset, exclusions: Exclusions) {
     const { pathname, filename } = file;
     const glob = exclusions.glob as (string | IGlobExp)[];
     if (glob) {
-        const fileUri = appendSeparator(pathname, filename);
+        const pathUri = appendSeparator(pathname, filename);
         for (let i = 0, length = glob.length; i < length; ++i) {
             let value = glob[i];
             if (typeof value === 'string') {
                 value = parseGlob(value, { fromEnd: true });
                 glob[i] = value;
             }
-            if (value.test(fileUri)) {
+            if (value.test(pathUri)) {
                 return false;
             }
         }
@@ -53,9 +53,9 @@ function validateAsset(file: FileAsset, exclusions: Exclusions) {
         }
     }
     if (exclusions.pattern) {
-        const fileUri = appendSeparator(pathname, filename);
+        const pathUri = appendSeparator(pathname, filename);
         for (const value of exclusions.pattern) {
-            if (new RegExp(value).test(fileUri)) {
+            if (new RegExp(value).test(pathUri)) {
                 return false;
             }
         }

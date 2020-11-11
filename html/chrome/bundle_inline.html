@@ -118,7 +118,10 @@
                     });*/
                     squared
                         .copyTo('C:/Users/An/Downloads/chrome')
-                        .then(result => console.log(result));
+                        .then(result => {
+                            console.log(((performance.now() - time) / 1000).toPrecision(4));
+                            console.log(result);
+                        });
                     /*squared.saveAs('bundle', {
                         exclusions: {
                             pathname: ['/common'],
