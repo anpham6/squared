@@ -80,7 +80,7 @@
     "pathname": "../images/harbour",
     "commands": [
       "png(10000,75000)(100x200^cover){90,180,270#FFFFFF}",
-      "jpeg(300x100^contain){90,180,270#FFFFFF}"
+      "webp(300x100^contain){90,180,270#FFFFFF}|100[picture]|"
     ],
     "attributes": [
       {

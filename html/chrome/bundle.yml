@@ -44,14 +44,14 @@
   type: js
   exclude: true
   template:
-    module: '@babel/core'
+    module: "@babel/core"
     identifier: es5-script
 - selector: .card:nth-of-type(1) img
   type: image
   pathname: ../images/harbour
   commands:
     - png(10000,75000)(100x200^cover){90,180,270#FFFFFF}
-    - jpeg(300x100^contain){90,180,270#FFFFFF}
+    - webp(300x100^contain){90,180,270#FFFFFF}|100[picture]|
   attributes:
     - name: alt
       value: Picture 1
