@@ -3,15 +3,6 @@ import * as squared from '../squared';
 type Node = squared.base.Node;
 
 declare namespace base {
-    const enum EXT_CHROME {
-        COMPRESS_BROTLI = 'chrome.compress.brotli',
-        COMPRESS_GZIP = 'chrome.compress.gzip',
-        COMPRESS_PNG = 'chrome.compress.png',
-        CONVERT_BMP = 'chrome.convert.bmp',
-        CONVERT_JPEG = 'chrome.convert.jpeg',
-        CONVERT_PNG = 'chrome.convert.png'
-    }
-
     class Application<T extends Node> extends squared.base.Application<T> {
         userSettings: UserResourceSettings;
         builtInExtensions: Map<string, Extension<T>>;
@@ -40,6 +31,21 @@ declare namespace base {
         static getConvertOptions(name: string, options: ConvertOptions): Undef<string>;
         static getCompressOptions(name: string, options: CompressOptions): string;
         processFile(data: ChromeAsset, override?: boolean): boolean;
+    }
+}
+
+declare namespace internal {
+    const enum EXT_CHROME {
+        COMPRESS_BROTLI = 'chrome.compress.brotli',
+        COMPRESS_GZIP = 'chrome.compress.gzip',
+        COMPRESS_PNG = 'chrome.compress.png',
+        CONVERT_BMP = 'chrome.convert.bmp',
+        CONVERT_JPEG = 'chrome.convert.jpeg',
+        CONVERT_PNG = 'chrome.convert.png'
+    }
+    const enum DIR_FUNCTIONS {
+        SERVERROOT = '__serverroot__',
+        GENERATED = '__generated__'
     }
 }
 

@@ -1,3 +1,5 @@
+import DIR_FUNCTIONS = chrome.internal.DIR_FUNCTIONS
+
 import type Application from './application';
 import type Extension from './extension';
 
@@ -13,9 +15,6 @@ const ASSETS = squared.base.Resource.ASSETS;
 const { convertWord, fromLastIndexOf, isString, parseMimeType, resolvePath, splitPair, splitPairStart, trimEnd } = squared.lib.util;
 
 const { appendSeparator, randomUUID } = squared.base.lib.util;
-
-const STRING_SERVERROOT = '__serverroot__';
-const STRING_GENERATED = '__generated__';
 
 const RE_SRCSET = new Pattern(/\s*(.+?\.[^\s,]+)(\s+[\d.]+[wx])?\s*,?/g);
 
@@ -37,10 +36,10 @@ function getFilePath(value: string, saveTo?: boolean, ext?: string): [Undef<stri
     }
     let moveTo: Undef<string>;
     if (value[0] === '/') {
-        moveTo = STRING_SERVERROOT;
+        moveTo = DIR_FUNCTIONS.SERVERROOT;
     }
     else if (value.startsWith('../')) {
-        moveTo = STRING_SERVERROOT;
+        moveTo = DIR_FUNCTIONS.SERVERROOT;
         const pathname = location.pathname.split('/');
         if (--pathname.length) {
             for (let i = 0, length = value.length; i < length; i += 3) {
@@ -295,7 +294,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                             pathname = getDirectory(path, prefix.length);
                         }
                         else {
-                            moveTo = STRING_SERVERROOT;
+                            moveTo = DIR_FUNCTIONS.SERVERROOT;
                             rootDir = '';
                             pathname = getDirectory(path, 0);
                         }
@@ -575,7 +574,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     }
                 }
                 data = {
-                    pathname: STRING_GENERATED + '/base64',
+                    pathname: DIR_FUNCTIONS.GENERATED + '/base64',
                     filename,
                     mimeType,
                     base64
@@ -583,7 +582,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             }
             else if (mimeType && rawData.content) {
                 data = {
-                    pathname: STRING_GENERATED + `/${mimeType.split('/').pop()!}`,
+                    pathname: DIR_FUNCTIONS.GENERATED + `/${mimeType.split('/').pop()!}`,
                     filename,
                     content: rawData.content,
                     mimeType

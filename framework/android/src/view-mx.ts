@@ -2,7 +2,7 @@ import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
 import CSS_UNIT = squared.lib.constant.CSS_UNIT;
 import USER_AGENT = squared.lib.constant.USER_AGENT;
-import LAYOUT_STRING = android.base.LAYOUT_STRING;
+import LAYOUT_STRING = android.internal.LAYOUT_STRING;
 
 import { BUILD_VERSION, CONTAINER_ELEMENT, CONTAINER_NODE, CONTAINER_TAGNAME, CONTAINER_TAGNAME_X, LAYOUT_MAP, RESERVED_JAVA } from './lib/constant';
 import { API_VERSION, DEPRECATED_ATTRIBUTE } from './lib/customization';

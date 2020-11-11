@@ -36,6 +36,7 @@ module.exports = {
                 "EXT_NAME",
                 "EXT_ANDROID",
                 "EXT_CHROME",
+                "DIR_FUNCTIONS",
                 "NODE_ALIGNMENT",
                 "BOX_STANDARD",
                 "NODE_TRAVERSE",

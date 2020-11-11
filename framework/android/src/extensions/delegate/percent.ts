@@ -1,7 +1,7 @@
 import CREATE_NODE = squared.base.lib.internal.CREATE_NODE;
 import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
-import LAYOUT_STRING = android.base.LAYOUT_STRING;
+import LAYOUT_STRING = android.internal.LAYOUT_STRING;
 import CSS_UNIT = squared.lib.constant.CSS_UNIT;
 
 import type View from '../../view';

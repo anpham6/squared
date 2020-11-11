@@ -2,7 +2,7 @@ import CREATE_NODE = squared.base.lib.internal.CREATE_NODE;
 import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
 import LAYOUT_CSSGRID = squared.lib.internal.LAYOUT_CSSGRID;
-import LAYOUT_STRING = android.base.LAYOUT_STRING;
+import LAYOUT_STRING = android.internal.LAYOUT_STRING;
 
 import { CONTAINER_NODE, CONTAINER_TAGNAME } from '../lib/constant';
 
