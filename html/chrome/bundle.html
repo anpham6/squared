@@ -93,25 +93,16 @@
     <script src="/common/system.js"></script>
     <script src="/common/transform.js"></script>
     <script src="/common/babel-transform.js"></script>
+    <script src="/dist/bundles/squared.chrome.bundle.js"></script>
     <script>
-        System.import('/build/src/main.js').then(result => {
-            squared = result;
-            System.import('/build/src/base/main.js').then(result => {
-                squared.base = result;
-                System.import('/build/framework/chrome/src/main.js').then(result => {
-                    chrome = result.default;
-                    squared.setFramework(chrome, {
-                        builtInExtensions: ['chrome.convert.png', 'chrome.compress.gzip']
-                    });
-                    const time = performance.now();
-                    squared
-                        .copyTo('C:/Users/An/Downloads/chrome', { configUri: 'http://localhost:3000/chrome/bundle.yml' })
-                        .then(result => {
-                            console.log(((performance.now() - time) / 1000).toPrecision(4));
-                            console.log(result);
-                        });
+        document.addEventListener('DOMContentLoaded', function() {
+            const time = performance.now();
+            squared
+                .copyTo('C:/Users/An/Downloads/chrome', { configUri: 'http://localhost:3000/chrome/bundle.yml' })
+                .then(result => {
+                    console.log(((performance.now() - time) / 1000).toPrecision(4));
+                    console.log(result);
                 });
-            });
         });
     </script>
     <script type="text/template">

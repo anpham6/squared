@@ -21,8 +21,8 @@ interface FormattableContent {
 interface FileModifiers {
     preserve?: boolean;
     inline?: boolean;
-    compress?: boolean | CompressFormat[];
     base64?: boolean;
+    compress?: CompressFormat[];
     ignore?: boolean;
     exclude?: boolean;
 }
@@ -53,7 +53,7 @@ interface AssetCommand extends FileCommand {
     saveTo?: string;
     process?: string[];
     template?: {
-        module?: string;
+        module: string;
         identifier?: string;
         value?: string;
     };
