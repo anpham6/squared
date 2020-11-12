@@ -14,7 +14,7 @@ const ASSETS = squared.base.Resource.ASSETS;
 
 const { convertWord, fromLastIndexOf, isString, parseMimeType, resolvePath, splitPair, splitPairStart, trimEnd } = squared.lib.util;
 
-const { appendSeparator, randomUUID } = squared.base.lib.util;
+const { appendSeparator } = squared.base.lib.util;
 
 const RE_SRCSET = new Pattern(/\s*(.+?\.[^\s,]+)(\s+[\d.]+[wx])?\s*,?/g);
 
@@ -67,7 +67,7 @@ function getFilePath(value: string, saveTo?: boolean, ext?: string): [Undef<stri
 
 function getFilenameUUID(value: string, ext?: string) {
     ext = getFileExt(value) || ext;
-    return randomUUID() + (ext ? '.' + ext : 'unknown');
+    return DIR_FUNCTIONS.ASSIGN + (ext ? '.' + ext : 'unknown');
 }
 
 function resolveAssetSource(element: HTMLVideoElement | HTMLAudioElement | HTMLObjectElement | HTMLEmbedElement | HTMLSourceElement | HTMLTrackElement | HTMLIFrameElement, data: Map<HTMLElement, string>) {
@@ -269,7 +269,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 moveTo: Undef<string>;
             if (!local) {
                 if (saveTo && relocate) {
-                    [moveTo, pathname, filename] = getFilePath(relocate + '/' + randomUUID() + (ext ? '.' + ext : ''));
+                    [moveTo, pathname, filename] = getFilePath(relocate + '/' + DIR_FUNCTIONS.ASSIGN + (ext ? '.' + ext : ''));
                 }
                 else {
                     pathname = convertWord(host) + (port ? '/' + port.substring(1) : '') + '/';

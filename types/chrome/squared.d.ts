@@ -37,7 +37,8 @@ declare namespace base {
 declare namespace internal {
     const enum DIR_FUNCTIONS {
         SERVERROOT = '__serverroot__',
-        GENERATED = '__generated__'
+        GENERATED = '__generated__',
+        ASSIGN = '__assign__'
     }
 }
 
