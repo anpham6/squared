@@ -77,7 +77,7 @@
   "license": "MIT",
   "homepage": "https://github.com/anpham6/squared#readme",
   "dependencies": {
-    "@squared-functions/file-manager": "^0.5.0",
+    "@squared-functions/file-manager": "^0.5.1",
     "7zip-min": "^1.2.0",
     "archiver": "^5.0.2",
     "chalk": "^4.1.0",
@@ -110,6 +110,7 @@
     "@types/yargs": "^15.0.9",
     "@typescript-eslint/eslint-plugin": "^4.7.0",
     "@typescript-eslint/parser": "^4.7.0",
+    "aws-sdk": "^2.791.0",
     "clean-css": "^4.2.3",
     "csv-parse": "4.14",
     "cwebp-bin": "^6.1.1",

@@ -7,4 +7,5 @@ package-lock.json
 serve.js
 bundle.js
 md5sum.js
+*.dev.yml
 *.zip

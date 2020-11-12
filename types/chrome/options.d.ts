@@ -24,6 +24,7 @@ interface ConvertOptions extends CompressOptions {
 
 interface SaveAsOptions extends Partial<LocationUri>, FileModifiers, OutputModifiers {
     format?: string;
+    commands?: string[];
 }
 
 interface UriOptions extends FileModifiers {

@@ -39,10 +39,19 @@
 - selector: head > script:nth-of-type(2), head > script:nth-of-type(3)
   type: js
   saveAs: js/modules2.js
-- selector: head > script:nth-of-type(5)
+  process:
+    - es5-script
+    - minify 
+  cloudStorage:
+    - service: s3
+      bucket: squared-002
+      active: true
+      accessKeyId: 
+      secretAccessKey: 
+- selector: head > script:nth-of-type(4)
   type: js
   exclude: true
-- selector: head > script:nth-of-type(6)
+- selector: head > script:nth-of-type(5)
   type: js
   exclude: true
   template:
@@ -50,13 +59,19 @@
     identifier: es5-script
 - selector: .card:nth-of-type(1) img
   type: image
-  pathname: ../images/harbour
   commands:
-    - png(10000,75000)(100x200^cover){90,180,270#FFFFFF}
-    - webp(300x100^contain){90,180,270#FFFFFF}|100[picture][75]|
+    - png(100x200^cover)
   attributes:
     - name: alt
       value: Picture 1
+  cloudStorage:
+    - service: s3
+      bucket: squared-001
+      active: true
+      localStorage: false
+      filename: picture1.webp
+      accessKeyId: 
+      secretAccessKey: 
 - selector: .card:nth-of-type(2) img
   type: image
   commands:
@@ -64,11 +79,19 @@
   attributes:
     - name: alt
       value: Picture 2
+  cloudStorage:
+    - service: s3
+      bucket: squared-002
+      active: true
+      localStorage: false
+      accessKeyId: 
+      secretAccessKey: 
 - selector: .card:nth-of-type(3) img
   type: image
   pathname: ../images/harbour
   commands:
     - png@(25000,*)(800x600[bezier]^contain[right|top]){315}!greyscale!sepia
+    - webp(300x100^contain){90,180,270#FFFFFF}|100[picture][75]|
   attributes:
     - name: alt
       value: Picture 3

@@ -90,12 +90,12 @@
             grid-column: 10 / 13;
         }
     </style>
-    <script data-chrome-file="saveAs:js/modules1.js::bundle+beautify::compress[br]" src="/common/system.js"></script>
-    <script data-chrome-file="saveAs:js/modules2.js" src="/common/transform.js"></script>
-    <script data-chrome-file="saveAs:js/modules2.js" src="/common/babel-transform.js"></script>
-    <script src="/dist/bundles/squared.chrome.bundle.js"></script>
+    <script data-chrome-file="saveAs:js/modules1.js::bundle+beautify::compress[br]" src="/dist/squared.js"></script>
+    <script data-chrome-file="saveAs:js/modules2.js" src="/dist/squared.base-dom.js"></script>
+    <script data-chrome-file="saveAs:js/modules2.js" src="/dist/chrome.framework.js"></script>
     <script data-chrome-file="exclude">
         document.addEventListener('DOMContentLoaded', function() {
+            squared.setFramework(chrome);
             const time = performance.now();
             squared
                 .copyTo('C:/Users/An/Downloads/chrome', { configUri: 'http://localhost:3000/chrome/bundle.yml' })
