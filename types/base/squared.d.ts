@@ -336,7 +336,7 @@ declare module "base" {
         saveFiles(format: string, options: FileArchivingOptions): FileActionResult;
         appendFiles(filename: string, options: FileArchivingOptions): FileActionResult;
         copyFiles(directory: string, options: FileCopyingOptions): FileActionResult;
-        finalizeRequestBody(assets: FileAsset[], options: FileActionOptions): void;
+        finalizeRequestBody(data: PlainObject, options: FileActionOptions): void;
         getCopyQueryParameters(options: FileCopyingOptions): string;
         getArchiveQueryParameters(options: FileArchivingOptions): string;
         setAPIEndpoint(name: string, value: string): void;

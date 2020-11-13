@@ -25,15 +25,23 @@
   },
   "request_post_limit": "250mb",
   "compress": {
-    "gzip_level": "9",
-    "brotli_quality": "11",
+    "gzip_level": 9,
+    "brotli_quality": 11,
     "tinypng_api_key": ""
   },
   "cloud": {
     "s3": {
       "main": {
         "accessKeyId": "",
-        "secretAccessKey": ""
+        "secretAccessKey": "",
+        "endpoint": ""
+      }
+    },
+    "azure": {
+      "main": {
+        "accountName": "",
+        "accountKey": "",
+        "endpoint": ""
       }
     }
   },

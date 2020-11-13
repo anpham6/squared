@@ -41,11 +41,11 @@ interface AttributeValue {
 
 interface CloudService {
     service: string;
-    bucket: string;
     active?: boolean;
     localStorage?: boolean;
     uploadAll?: boolean;
     filename?: string;
+    endpoint?: string;
     settings?: string;
     [key: string]: Undef<unknown>;
 }

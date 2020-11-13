@@ -99,7 +99,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
 
     public abstract get userSettings(): UserResourceSettings;
 
-    public finalizeRequestBody(assets: FileAsset[], options: FileActionOptions) {}
+    public finalizeRequestBody(data: PlainObject, options: FileActionOptions) {}
     public getCopyQueryParameters(options: FileCopyingOptions) { return ''; }
     public getArchiveQueryParameters(options: FileArchivingOptions) { return ''; }
 
@@ -236,19 +236,19 @@ export default abstract class File<T extends Node> implements squared.base.File<
     }
 
     protected createRequestBody(assets: Undef<FileAsset[]>, options: FileCopyingOptions | FileArchivingOptions) {
-        let body = assets ? assets.concat(this.assets) : this.assets;
-        if (body.length) {
+        assets = assets ? assets.concat(this.assets) : this.assets;
+        if (assets.length) {
             const exclusions = options.exclusions;
             if (exclusions) {
-                body = body.filter(item => validateAsset(item, exclusions));
-                if (!body.length) {
+                assets = assets.filter(item => validateAsset(item, exclusions));
+                if (!assets.length) {
                     return;
                 }
             }
             const taskMap = this.userSettings.outputTasksMap;
             let unassigned: Undef<FileAsset[]>;
             for (const task in taskMap) {
-                unassigned ||= body.filter(item => !item.tasks);
+                unassigned ||= assets.filter(item => !item.tasks);
                 if (unassigned.length) {
                     const glob = parseGlob(task, { fromEnd: true });
                     for (const item of unassigned) {
@@ -261,8 +261,9 @@ export default abstract class File<T extends Node> implements squared.base.File<
                     break;
                 }
             }
-            this.finalizeRequestBody(body, options);
-            return body;
+            const data: PlainObject = { assets };
+            this.finalizeRequestBody(data, options);
+            return data;
         }
     }
 

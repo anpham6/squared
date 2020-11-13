@@ -644,14 +644,11 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         return result;
     }
 
-    public finalizeRequestBody(assets: FileAsset[], options: IFileActionOptions) {
-        const leading = assets[0] as Undef<ChromeAsset>;
-        if (leading) {
-            leading.dataMap = {
-                unusedStyles: options.unusedStyles,
-                transpileMap: options.transpileMap
-            };
-        }
+    public finalizeRequestBody(data: PlainObject, options: IFileActionOptions) {
+        data.dataMap = {
+            unusedStyles: options.unusedStyles,
+            transpileMap: options.transpileMap
+        };
     }
 
     public getCopyQueryParameters(options: IFileCopyingOptions) {

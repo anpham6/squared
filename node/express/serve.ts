@@ -1,4 +1,4 @@
-import type { Arguments, ExternalAsset, IFileManager, Settings, settings as SettingsFunctions, squared } from '@squared-functions/types';
+import type { Arguments, IFileManager, RequestBody, Settings, settings as SettingsFunctions, squared } from '@squared-functions/types';
 
 import path = require('path');
 import fs = require('fs-extra');
@@ -147,7 +147,7 @@ function installModules(manager: IFileManager, query: StringMap) {
     let settings: Settings;
     try {
         settings = fs.existsSync('./squared.settings.yml') && yaml.safeLoad(fs.readFileSync(path.resolve('./squared.settings.yml'), 'utf8')) as Settings || require('./squared.settings.json');
-        ({ cloud: Cloud, gulp: Gulp, chrome: Chrome } = settings);
+        ({ compress: Compress, cloud: Cloud, gulp: Gulp, chrome: Chrome } = settings);
         FileManager.loadSettings(settings, ignorePermissions);
     }
     catch {
@@ -231,7 +231,7 @@ app.post('/api/assets/copy', (req, res) => {
         try {
             const manager = new FileManager(
                 dirname,
-                req.body as ExternalAsset[],
+                req.body as RequestBody,
                 function(this: IFileManager) {
                     res.json({ success: this.files.size > 0, files: Array.from(this.files) } as ResultOfFileAction);
                 }
@@ -286,7 +286,7 @@ app.post('/api/assets/archive', (req, res) => {
         const archive = archiver(format, { zlib: { level: FileManager.moduleCompress().gzipLevel } });
         const manager = new FileManager(
             dirname,
-            req.body as ExternalAsset[],
+            req.body as RequestBody,
             () => {
                 archive.directory(dirname, false);
                 archive.finalize();
