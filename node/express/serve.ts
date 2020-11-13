@@ -1,4 +1,4 @@
-import type { Arguments, ExternalAsset, IFileManager, Settings, internal, squared } from '@squared-functions/types';
+import type { Arguments, ExternalAsset, IFileManager, Settings, settings as SettingsFunctions, squared } from '@squared-functions/types';
 
 import path = require('path');
 import fs = require('fs-extra');
@@ -21,13 +21,16 @@ const app = express();
 app.use(body_parser.urlencoded({ extended: true }));
 
 const Node = FileManager.moduleNode();
-const Compress = FileManager.moduleCompress();
 
-let Cloud: Undef<internal.settings.CloudModule>,
-    Gulp: Undef<internal.settings.GulpModule>,
-    Chrome: Undef<internal.settings.ChromeModule>;
+let Compress: Undef<SettingsFunctions.CompressModule>,
+    Cloud: Undef<SettingsFunctions.CloudModule>,
+    Gulp: Undef<SettingsFunctions.GulpModule>,
+    Chrome: Undef<SettingsFunctions.ChromeModule>;
 
 function installModules(manager: IFileManager, query: StringMap) {
+    if (Compress) {
+        manager.install('compress', Compress);
+    }
     if (Cloud) {
         manager.install('cloud', Cloud);
     }
@@ -280,7 +283,7 @@ app.post('/api/assets/archive', (req, res) => {
             break;
     }
     const resumeThread = (unzip_to?: string) => {
-        const archive = archiver(format, { zlib: { level: Compress.gzipLevel } });
+        const archive = archiver(format, { zlib: { level: FileManager.moduleCompress().gzipLevel } });
         const manager = new FileManager(
             dirname,
             req.body as ExternalAsset[],
@@ -302,7 +305,7 @@ app.post('/api/assets/archive', (req, res) => {
             };
             if (formatGzip && success) {
                 const gz = query.format === 'tgz' ? zipname.replace(/tar$/, 'tgz') : `${zipname}.gz`;
-                Compress.createWriteStreamAsGzip(zipname, gz)
+                FileManager.moduleCompress().createWriteStreamAsGzip(zipname, gz)
                     .on('finish', () => {
                         response.zipname = gz;
                         response.bytes = manager.getFileSize(gz);

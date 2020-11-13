@@ -24,9 +24,11 @@
     "origin": false
   },
   "request_post_limit": "250mb",
-  "gzip_level": "9",
-  "brotli_quality": "11",
-  "tinypng_api_key": "",
+  "compress": {
+    "gzip_level": "9",
+    "brotli_quality": "11",
+    "tinypng_api_key": ""
+  },
   "cloud": {
     "s3": {
       "main": {
