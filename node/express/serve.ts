@@ -1,11 +1,11 @@
-import type { Arguments, ExternalAsset, IFileManager, Settings, squared } from '@squared-functions/types';
+import type { Arguments, ExternalAsset, IFileManager, Settings, internal, squared } from '@squared-functions/types';
 
 import path = require('path');
 import fs = require('fs-extra');
 import yargs = require('yargs');
 import express = require('express');
-import body_parser = require('body-parser');
 import cors = require('cors');
+import body_parser = require('body-parser');
 import request = require('request');
 import uuid = require('uuid');
 import archiver = require('archiver');
@@ -23,11 +23,19 @@ app.use(body_parser.urlencoded({ extended: true }));
 const Node = FileManager.moduleNode();
 const Compress = FileManager.moduleCompress();
 
-let Gulp: Undef<StringMap>;
+let Cloud: Undef<internal.settings.CloudModule>,
+    Gulp: Undef<internal.settings.GulpModule>,
+    Chrome: Undef<internal.settings.ChromeModule>;
 
 function installModules(manager: IFileManager, query: StringMap) {
+    if (Cloud) {
+        manager.install('cloud', Cloud);
+    }
     if (Gulp) {
         manager.install('gulp', Gulp);
+    }
+    if (Chrome) {
+        manager.install('chrome', Chrome);
     }
     manager.emptyDirectory = query.empty === '1';
     manager.productionRelease = query.release === '1';
@@ -136,7 +144,7 @@ function installModules(manager: IFileManager, query: StringMap) {
     let settings: Settings;
     try {
         settings = fs.existsSync('./squared.settings.yml') && yaml.safeLoad(fs.readFileSync(path.resolve('./squared.settings.yml'), 'utf8')) as Settings || require('./squared.settings.json');
-        Gulp = settings.gulp;
+        ({ cloud: Cloud, gulp: Gulp, chrome: Chrome } = settings);
         FileManager.loadSettings(settings, ignorePermissions);
     }
     catch {

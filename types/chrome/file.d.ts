@@ -43,8 +43,10 @@ interface CloudService {
     service: string;
     bucket: string;
     active?: boolean;
-    filename?: string;
     localStorage?: boolean;
+    uploadAll?: boolean;
+    filename?: string;
+    settings?: string;
     [key: string]: Undef<unknown>;
 }
 

@@ -27,6 +27,14 @@
   "gzip_level": "9",
   "brotli_quality": "11",
   "tinypng_api_key": "",
+  "cloud": {
+    "s3": {
+      "main": {
+        "accessKeyId": "",
+        "secretAccessKey": ""
+      }
+    }
+  },
   "gulp": {
     "minify": "./gulpfile.js"
   },
