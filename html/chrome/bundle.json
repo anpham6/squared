@@ -77,8 +77,8 @@
         "service": "s3",
         "bucket": "squared-002",
         "active": true,
-        "accessKeyId": "",
-        "secretAccessKey": ""
+        "accessKeyId": null,
+        "secretAccessKey": null
       }
     ]
   },
@@ -115,8 +115,8 @@
         "active": true,
         "localStorage": false,
         "filename": "picture1.webp",
-        "accessKeyId": "",
-        "secretAccessKey": ""
+        "accessKeyId": null,
+        "secretAccessKey": null
       }
     ]
   },
@@ -138,8 +138,8 @@
         "bucket": "squared-002",
         "active": true,
         "localStorage": false,
-        "accessKeyId": "",
-        "secretAccessKey": ""
+        "accessKeyId": null,
+        "secretAccessKey": null
       }
     ]
   },

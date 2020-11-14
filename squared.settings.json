@@ -34,14 +34,20 @@
       "main": {
         "accessKeyId": "",
         "secretAccessKey": "",
-        "endpoint": ""
+        "apiEndpoint": ""
       }
     },
     "azure": {
       "main": {
         "accountName": "",
         "accountKey": "",
-        "endpoint": ""
+        "apiEndpoint": ""
+      }
+    },
+    "gcs": {
+      "main": {
+        "keyFilename": "",
+        "apiEndpoint": ""
       }
     }
   },

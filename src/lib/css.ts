@@ -55,8 +55,8 @@ function compareRange(operation: string, unit: number, range: number) {
 
 function calculatePosition(element: StyleElement, value: string, boundingBox?: Null<Dimension>) {
     const alignment: string[] = [];
-    for (const seg of splitEnclosing(value.trim(), 'calc').map(item => item.trim())) {
-        if (seg.includes(' ') && !isCalc(seg)) {
+    for (let seg of splitEnclosing(value.trim(), 'calc')) {
+        if ((seg = seg.trim()).includes(' ') && !isCalc(seg)) {
             alignment.push(...seg.split(CHAR_SPACE));
         }
         else {

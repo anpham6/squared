@@ -45,7 +45,7 @@ interface CloudService {
     localStorage?: boolean;
     uploadAll?: boolean;
     filename?: string;
-    endpoint?: string;
+    apiEndpoint?: string;
     settings?: string;
     [key: string]: Undef<unknown>;
 }
