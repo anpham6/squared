@@ -6,7 +6,14 @@ import type Extension from './extension';
 import Pattern = squared.lib.base.Pattern;
 
 type BundleIndex = ObjectMap<ChromeAsset[]>;
-type FileAsData = [string, Undef<string>, boolean, boolean, CompressFormat[]];
+interface FileAsData {
+    file: string;
+    format?: string;
+    preserve: boolean;
+    base64: boolean;
+    inline: boolean;
+    compress?: CompressFormat[];
+}
 
 const { FILE } = squared.lib.regex;
 
@@ -18,7 +25,7 @@ const { appendSeparator } = squared.base.lib.util;
 
 const RE_SRCSET = new Pattern(/\s*(.+?\.[^\s,]+)(\s+[\d.]+[wx])?\s*,?/g);
 
-function parseFileAs(attr: string, value: Undef<string>, leading: "preserve" | "base64" = 'preserve') {
+function parseFileAs(attr: string, value: Undef<string>) {
     if (value) {
         let match = new RegExp(`${attr}:\\s*((?:[^"]|\\\\")+)`).exec(normalizePath(value));
         if (match) {
@@ -29,7 +36,14 @@ function parseFileAs(attr: string, value: Undef<string>, leading: "preserve" | "
             while (match = pattern.exec(actions)) {
                 (compress ||= []).push({ format: match[1] });
             }
-            return [segments[0], segments[1], actions.includes(leading), actions.includes('inline'), compress] as FileAsData;
+            return {
+                file: segments[0],
+                format: segments[1],
+                preserve: actions.includes('preserve'),
+                base64: actions.includes('base64'),
+                inline: actions.includes('inline'),
+                compress
+            } as FileAsData;
         }
     }
 }
@@ -268,7 +282,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             else {
                 const data = parseFileAs('saveAs', saveAs);
                 if (data) {
-                    [relocate, format, preserve, inline, compress] = data;
+                    ({ file: relocate, format, preserve, inline, compress } = data);
                     if (inline && element) {
                         textContent = element.outerHTML;
                     }
@@ -678,7 +692,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         return options.productionRelease ? '&release=1' : '';
     }
 
-    protected getRawAssets(tagName: "video" | "audio" | "object" | "embed" | "iframe", options?: IFileActionOptions) {
+    protected getRawAssets(tagName: ResourceAssetTagName, options?: IFileActionOptions) {
         let assetMap: Undef<Map<Element, AssetCommand>>,
             preserveCrossOrigin: Undef<boolean>,
             saveAsImage: Undef<SaveAsOptions>;
@@ -880,7 +894,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             if (!fromConfig && !fromSaveAs) {
                 const command = parseFileAs('exportAs', file);
                 if (command) {
-                    [file, format, preserve, inline, compress] = command;
+                    ({ file, format, preserve, inline, compress } = command);
                 }
             }
             data = createBundleAsset(assets, element, file, format, preserve, inline);
@@ -942,13 +956,13 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     if (file === 'ignore') {
                         return;
                     }
-                    const fileAs = parseFileAs('saveTo', file, 'base64');
+                    const fileAs = parseFileAs('saveTo', file);
                     if (fileAs) {
-                        let commandsAs: Undef<string>;
-                        [pathname, commandsAs, base64, , compress] = fileAs;
+                        let format: Undef<string>;
+                        ({ file: pathname, format, base64, compress } = fileAs);
                         [saveAs, saveTo] = checkSaveAs(uri, pathname);
-                        if (commandsAs) {
-                            commands = replaceMap(commandsAs.split(':'), value => value.trim());
+                        if (format) {
+                            commands = replaceMap(format.split(':'), value => value.trim());
                         }
                     }
                     tasks = getTasks(element);

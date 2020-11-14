@@ -15,7 +15,7 @@ import chalk = require('chalk');
 
 import FileManager = require('@squared-functions/file-manager');
 
-type ResultOfFileAction = squared.ResultOfFileAction;
+type FilePostResult = squared.FilePostResult;
 
 const app = express();
 app.use(body_parser.urlencoded({ extended: true }));
@@ -233,14 +233,14 @@ app.post('/api/assets/copy', (req, res) => {
                 dirname,
                 req.body as RequestBody,
                 function(this: IFileManager) {
-                    res.json({ success: this.files.size > 0, files: Array.from(this.files) } as ResultOfFileAction);
+                    res.json({ success: this.files.size > 0, files: Array.from(this.files) } as FilePostResult);
                 }
             );
             installModules(manager, query as StringMap);
             manager.processAssets();
         }
-        catch (system) {
-            res.json({ application: 'FILE: Unknown', system });
+        catch (message) {
+            res.json({ success: false, error: { hint: 'FILE: Unknown', message } } as FilePostResult);
         }
     }
 });
@@ -260,8 +260,8 @@ app.post('/api/assets/archive', (req, res) => {
             fs.mkdirpSync(dirname_zip);
         }
     }
-    catch (system) {
-        res.json({ application: `DIRECTORY: ${dirname}`, system });
+    catch (message) {
+        res.json({ success: false, error: { hint: `DIRECTORY: ${dirname}`, message } } as FilePostResult);
         return;
     }
     let append_to = query.append_to as string,
@@ -297,7 +297,7 @@ app.post('/api/assets/archive', (req, res) => {
         const output = fs.createWriteStream(zipname);
         output.on('close', () => {
             const success = manager.files.size > 0;
-            const response: ResultOfFileAction = {
+            const response: FilePostResult = {
                 success,
                 zipname,
                 files: Array.from(manager.files),
@@ -330,8 +330,8 @@ app.post('/api/assets/archive', (req, res) => {
             }
             manager.processAssets();
         }
-        catch (system) {
-            res.json({ application: 'FILE: Unknown', system });
+        catch (message) {
+            res.json({ success: false, error: { hint: 'FILE: Unknown', message } } as FilePostResult);
         }
     };
     if (append_to) {
@@ -369,12 +369,12 @@ app.post('/api/assets/archive', (req, res) => {
                 else if (fs.existsSync(append_to)) {
                     if (Node.isFileUNC(append_to)) {
                         if (!Node.canReadUNC()) {
-                            res.json({ application: 'OPTION: --unc-read', system: 'Reading from UNC shares is not enabled.' });
+                            res.json({ success: false, error: { hint: 'OPTION: --unc-read', message: 'Reading from UNC shares is not enabled.' } } as FilePostResult);
                             return;
                         }
                     }
                     else if (!Node.canReadDisk() && path.isAbsolute(append_to)) {
-                        res.json({ application: 'OPTION: --disk-read', system: 'Reading from disk is not enabled.' });
+                        res.json({ success: false, error: { hint: 'OPTION: --disk-read', message: 'Reading from disk is not enabled.' } } as FilePostResult);
                         return;
                     }
                     fs.copyFile(append_to, zippath, decompress);

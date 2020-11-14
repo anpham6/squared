@@ -23,6 +23,7 @@ interface FileAsset extends TextAsset {
     base64?: string;
     commands?: string[];
     compress?: CompressFormat[];
+    cloudStorage?: CloudService[];
 }
 
 interface RawAsset extends FileAsset, Partial<ImageAsset> {
@@ -43,11 +44,24 @@ interface CompressFormat {
     condition?: string;
 }
 
-interface ResultOfFileAction {
+interface CloudService {
+    service: string;
+    active?: boolean;
+    localStorage?: boolean;
+    uploadAll?: boolean;
+    filename?: string;
+    apiEndpoint?: string;
+    settings?: string;
+    [key: string]: Undef<unknown>;
+}
+
+interface FilePostResult {
     success: boolean;
     zipname?: string;
     bytes?: number;
     files?: string[];
-    application?: string;
-    system?: string;
+    error?: {
+        message: string;
+        hint?: string;
+    };
 }

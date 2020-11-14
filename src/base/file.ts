@@ -3,6 +3,7 @@ import type Node from './node';
 
 import { appendSeparator, parseGlob } from './lib/util';
 
+type FileActionResult = Promise<Void<FilePostResult>>;
 type FileActionOptions = squared.FileActionOptions;
 type FileArchivingOptions = squared.base.FileArchivingOptions;
 type FileCopyingOptions = squared.base.FileCopyingOptions;
@@ -157,14 +158,15 @@ export default abstract class File<T extends Node> implements squared.base.File<
                         body: JSON.stringify(body)
                     }
                 )
-                .then(async response => await response.json() as ResultOfFileAction)
+                .then(async response => await response.json() as FilePostResult)
                 .then(result => {
                     if (result) {
                         if (typeof options.callback === 'function') {
                             options.callback(result);
                         }
-                        if (result.system) {
-                            (this.userSettings.showErrorMessages ? alert : console.log)(result.application + '\n\n' + result.system);
+                        if (result.error) {
+                            const { hint, message } = result.error;
+                            (this.userSettings.showErrorMessages ? alert : console.log)((hint ? hint + '\n\n' : '') + message);
                         }
                         return result;
                     }
@@ -206,7 +208,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
                         body: JSON.stringify(body)
                     }
                 )
-                .then(async response => await response.json() as ResultOfFileAction)
+                .then(async response => await response.json() as FilePostResult)
                 .then(result => {
                     if (result) {
                         if (typeof options.callback === 'function') {
@@ -217,8 +219,9 @@ export default abstract class File<T extends Node> implements squared.base.File<
                             fetch(this.hostname + this._endpoints.BROWSER_DOWNLOAD + encodeURIComponent(zipname))
                                 .then(async download => File.downloadFile(await download.blob(), fromLastIndexOf(zipname, '/', '\\')));
                         }
-                        else if (result.system) {
-                            (this.userSettings.showErrorMessages ? alert : console.log)(result.application + '\n\n' + result.system);
+                        else if (result.error) {
+                            const { hint, message } = result.error;
+                            (this.userSettings.showErrorMessages ? alert : console.log)((hint ? hint + '\n\n' : '') + message);
                         }
                         return result;
                     }

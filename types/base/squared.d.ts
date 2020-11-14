@@ -1,4 +1,5 @@
 type FileActionOptions = squared.FileActionOptions;
+type FileActionResult = Promise<Void<FilePostResult>>;
 
 declare module "base" {
     interface FileCopyingOptions extends FileActionOptions {

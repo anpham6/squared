@@ -9,7 +9,6 @@ interface ChromeAsset extends FileAsset, OutputModifiers {
     inlineContent?: string;
     trailingContent?: FormattableContent[];
     textContent?: string;
-    cloudStorage?: CloudService[];
     dataMap?: StandardMap;
 }
 
@@ -37,17 +36,6 @@ interface OutputModifiers {
 interface AttributeValue {
     name: string;
     value?: Null<string>;
-}
-
-interface CloudService {
-    service: string;
-    active?: boolean;
-    localStorage?: boolean;
-    uploadAll?: boolean;
-    filename?: string;
-    apiEndpoint?: string;
-    settings?: string;
-    [key: string]: Undef<unknown>;
 }
 
 interface AssetCommand extends Partial<LocationUri>, FileModifiers, OutputModifiers {

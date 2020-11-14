@@ -169,7 +169,8 @@ function getOpenRowIndex(cells: number[][]) {
 
 function createDataAttribute(node: NodeUI): CssGridData<NodeUI> {
     const data = node.cssAsObject('alignItems', 'alignContent', 'justifyItems', 'justifyContent', 'gridAutoFlow') as GridAlignment;
-    return Object.assign(data, {
+    return {
+        ...data,
         children: [],
         rowData: [],
         rowSpanMultiple: [],
@@ -180,7 +181,7 @@ function createDataAttribute(node: NodeUI): CssGridData<NodeUI> {
         column: CssGrid.createDataRowAttribute(node.parseWidth(node.valueOf('columnGap'), false)),
         emptyRows: [],
         minCellHeight: 0
-    });
+    };
 }
 
 function applyLayout(node: NodeUI, data: CssGridDirectionData, dataCount: number, horizontal: boolean) {
@@ -368,24 +369,23 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                 }
                                 if (iterations) {
                                     const repeating: RepeatItem[] = [];
-                                    let subMatch: Null<RegExpMatchArray>;
+                                    let subMatch: Null<RegExpMatchArray>,
+                                        namedMatch: Null<RegExpMatchArray>;
                                     while (subMatch = REGEXP_REPEAT.exec(match[3])) {
-                                        const subPattern = subMatch[1];
-                                        let namedMatch: Null<RegExpMatchArray>;
-                                        if (namedMatch = REGEXP_CELL_NAMED.exec(subPattern)) {
+                                        if (namedMatch = REGEXP_CELL_NAMED.exec(subMatch[1])) {
                                             const subName = namedMatch[1];
                                             if (!name[subName]) {
                                                 name[subName] = [];
                                             }
                                             repeating.push({ name: subName });
                                         }
-                                        else if (namedMatch = REGEXP_CELL_MINMAX.exec(subPattern)) {
+                                        else if (namedMatch = REGEXP_CELL_MINMAX.exec(subMatch[1])) {
                                             repeating.push({ unit: convertLength(node, namedMatch[2], index), unitMin: convertLength(node, namedMatch[1], index) });
                                         }
-                                        else if (namedMatch = REGEXP_CELL_FIT_CONTENT.exec(subPattern)) {
+                                        else if (namedMatch = REGEXP_CELL_FIT_CONTENT.exec(subMatch[1])) {
                                             repeating.push({ unit: convertLength(node, namedMatch[1], index), unitMin: '0px' });
                                         }
-                                        else if (namedMatch = REGEXP_CELL_UNIT.exec(subPattern)) {
+                                        else if (namedMatch = REGEXP_CELL_UNIT.exec(subMatch[1])) {
                                             repeating.push({ unit: convertLength(node, namedMatch[0], index) });
                                         }
                                     }

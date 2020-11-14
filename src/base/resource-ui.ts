@@ -674,7 +674,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                 }
             }
         });
-        return numberArray ? [, result] : [result];
+        return numberArray ? [undefined, result] : [result];
     }
 
     public static parseBackgroundImage(node: NodeUI, backgroundImage: string) {

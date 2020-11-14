@@ -2172,7 +2172,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     else {
                         items = [item];
                         rows = [items];
-                        rowsAll.push([, rows, false]);
+                        rowsAll.push([undefined, rows, false]);
                     }
                     rowWidth = baseWidth;
                 };
