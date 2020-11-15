@@ -1,0 +1,11 @@
+{
+  "search.exclude": {
+    "**/build": true,
+    "**/config": true,
+    "**/dist": true,
+    "**/md5": true,
+    "**/html": true,
+    "**/node_modules": true,
+    "**/temp": true
+  }
+}

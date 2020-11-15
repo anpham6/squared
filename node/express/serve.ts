@@ -240,7 +240,7 @@ app.post('/api/assets/copy', (req, res) => {
             manager.processAssets();
         }
         catch (err) {
-            res.json({ success: false, error: { hint: 'FILE: Unknown', message: err.toString() } } as FileResponseData);
+            res.json({ success: false, error: { hint: 'FILE: Unknown', message: (err as Error).toString() } } as FileResponseData);
         }
     }
 });
@@ -261,7 +261,7 @@ app.post('/api/assets/archive', (req, res) => {
         }
     }
     catch (err) {
-        res.json({ success: false, error: { hint: `DIRECTORY: ${dirname}`, message: err.toString() } } as FileResponseData);
+        res.json({ success: false, error: { hint: `DIRECTORY: ${dirname}`, message: (err as Error).toString() } } as FileResponseData);
         return;
     }
     let append_to = query.append_to as string,
@@ -331,7 +331,7 @@ app.post('/api/assets/archive', (req, res) => {
             manager.processAssets();
         }
         catch (err) {
-            res.json({ success: false, error: { hint: 'FILE: Unknown', message: err.toString() } } as FileResponseData);
+            res.json({ success: false, error: { hint: 'FILE: Unknown', message: (err as Error).toString() } } as FileResponseData);
         }
     };
     if (append_to) {

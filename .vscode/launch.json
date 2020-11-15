@@ -1,0 +1,58 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch Chrome",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:3000/demos/index.html",
+      "webRoot": "${workspaceFolder}"
+    },
+    {
+      "name": "Launch Express (ts)",
+      "type": "node",
+      "request": "launch",
+      "preLaunchTask": "npm dev-express",
+      "runtimeArgs": [
+        "-r",
+        "ts-node/register"
+      ],
+      "args": [
+        "${workspaceFolder}/serve.js",
+        "--access-all"
+      ]
+    },
+    {
+      "name": "Launch Firefox",
+      "type": "firefox",
+      "request": "launch",
+      "reAttach": true,
+      "url": "http://localhost:3000/demos/index.html",
+      "pathMappings": [{
+        "url": "http://localhost:3000",
+        "path": "${workspaceFolder}"
+      }]
+    },
+    {
+      "name": "Launch Express",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/serve.js",
+      "args": ["--access-all"]
+    },
+    {
+      "name": "md5sum",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/md5sum.js",
+      "args": ["-h", "http://localhost:3000", "-d", "./md5/data.csv", "-b", "chromium", "-o", "./temp/chromium", "-f", "1"]
+    },
+    {
+      "name": "md5sum-diff",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/md5sum.js",
+      "args": ["-c", "./md5/chromium/master", "./temp/chromium"]
+    }
+  ]
+}

@@ -1,4 +1,3 @@
-.vscode/
 build/
 node_modules/
 temp/
@@ -7,5 +6,6 @@ package-lock.json
 serve.js
 bundle.js
 md5sum.js
+*-cloud.json
 *.dev.yml
 *.zip
