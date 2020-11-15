@@ -3,7 +3,7 @@ import type Node from './node';
 
 import { appendSeparator, parseGlob } from './lib/util';
 
-type FileActionResult = Promise<Void<FilePostResult>>;
+type FileActionResult = Promise<Void<FileResponseData>>;
 type FileActionOptions = squared.FileActionOptions;
 type FileArchivingOptions = squared.base.FileArchivingOptions;
 type FileCopyingOptions = squared.base.FileCopyingOptions;
@@ -158,7 +158,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
                         body: JSON.stringify(body)
                     }
                 )
-                .then(async response => await response.json() as FilePostResult)
+                .then(async response => await response.json() as FileResponseData)
                 .then(result => {
                     if (result) {
                         if (typeof options.callback === 'function') {
@@ -208,7 +208,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
                         body: JSON.stringify(body)
                     }
                 )
-                .then(async response => await response.json() as FilePostResult)
+                .then(async response => await response.json() as FileResponseData)
                 .then(result => {
                     if (result) {
                         if (typeof options.callback === 'function') {

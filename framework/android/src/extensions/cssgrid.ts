@@ -77,10 +77,8 @@ function getRemainingSize(mainData: CssGridData<View>, data: CssGridDirectionDat
         value += node.contentBox ? node.borderLeftWidth + node.borderRightWidth : node.contentBoxWidth;
         return (maxScreenWidth > value ? Math.min(maxScreenWidth, node.actualWidth) : node.actualWidth) - value;
     }
-    else {
-        value += node.contentBox ? node.borderTopWidth + node.borderBottomWidth : node.contentBoxHeight;
-        return (maxScreenHeight > value && node.documentBody ? Math.min(maxScreenHeight, node.actualHeight) : node.actualHeight) - value;
-    }
+    value += node.contentBox ? node.borderTopWidth + node.borderBottomWidth : node.contentBoxHeight;
+    return (maxScreenHeight > value && node.documentBody ? Math.min(maxScreenHeight, node.actualHeight) : node.actualHeight) - value;
 }
 
 function getMarginSize(value: number, gridSize: number) {
@@ -156,9 +154,6 @@ function setContentSpacing(mainData: ICssGridData<View>, data: CssGridDirectionD
                                 }
                             }
                         }
-                    }
-                    else {
-                        return;
                     }
                     break;
                 case 'space-evenly': {

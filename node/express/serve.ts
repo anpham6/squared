@@ -15,7 +15,7 @@ import chalk = require('chalk');
 
 import FileManager = require('@squared-functions/file-manager');
 
-type FilePostResult = squared.FilePostResult;
+type FileResponseData = squared.FileResponseData;
 
 const app = express();
 app.use(body_parser.urlencoded({ extended: true }));
@@ -233,14 +233,14 @@ app.post('/api/assets/copy', (req, res) => {
                 dirname,
                 req.body as RequestBody,
                 function(this: IFileManager) {
-                    res.json({ success: this.files.size > 0, files: Array.from(this.files) } as FilePostResult);
+                    res.json({ success: this.files.size > 0, files: Array.from(this.files) } as FileResponseData);
                 }
             );
             installModules(manager, query as StringMap);
             manager.processAssets();
         }
-        catch (message) {
-            res.json({ success: false, error: { hint: 'FILE: Unknown', message } } as FilePostResult);
+        catch (err) {
+            res.json({ success: false, error: { hint: 'FILE: Unknown', message: err.toString() } } as FileResponseData);
         }
     }
 });
@@ -260,8 +260,8 @@ app.post('/api/assets/archive', (req, res) => {
             fs.mkdirpSync(dirname_zip);
         }
     }
-    catch (message) {
-        res.json({ success: false, error: { hint: `DIRECTORY: ${dirname}`, message } } as FilePostResult);
+    catch (err) {
+        res.json({ success: false, error: { hint: `DIRECTORY: ${dirname}`, message: err.toString() } } as FileResponseData);
         return;
     }
     let append_to = query.append_to as string,
@@ -297,7 +297,7 @@ app.post('/api/assets/archive', (req, res) => {
         const output = fs.createWriteStream(zipname);
         output.on('close', () => {
             const success = manager.files.size > 0;
-            const response: FilePostResult = {
+            const response: FileResponseData = {
                 success,
                 zipname,
                 files: Array.from(manager.files),
@@ -330,8 +330,8 @@ app.post('/api/assets/archive', (req, res) => {
             }
             manager.processAssets();
         }
-        catch (message) {
-            res.json({ success: false, error: { hint: 'FILE: Unknown', message } } as FilePostResult);
+        catch (err) {
+            res.json({ success: false, error: { hint: 'FILE: Unknown', message: err.toString() } } as FileResponseData);
         }
     };
     if (append_to) {
@@ -369,20 +369,18 @@ app.post('/api/assets/archive', (req, res) => {
                 else if (fs.existsSync(append_to)) {
                     if (Node.isFileUNC(append_to)) {
                         if (!Node.canReadUNC()) {
-                            res.json({ success: false, error: { hint: 'OPTION: --unc-read', message: 'Reading from UNC shares is not enabled.' } } as FilePostResult);
+                            res.json({ success: false, error: { hint: 'OPTION: --unc-read', message: 'Reading from UNC shares is not enabled.' } } as FileResponseData);
                             return;
                         }
                     }
                     else if (!Node.canReadDisk() && path.isAbsolute(append_to)) {
-                        res.json({ success: false, error: { hint: 'OPTION: --disk-read', message: 'Reading from disk is not enabled.' } } as FilePostResult);
+                        res.json({ success: false, error: { hint: 'OPTION: --disk-read', message: 'Reading from disk is not enabled.' } } as FileResponseData);
                         return;
                     }
                     fs.copyFile(append_to, zippath, decompress);
                     return;
                 }
-                else {
-                    Node.writeFail(append_to, new Error('Archive not found.'));
-                }
+                Node.writeFail(append_to, new Error('Archive not found.'));
             }
             catch (err) {
                 Node.writeFail(zippath, err);

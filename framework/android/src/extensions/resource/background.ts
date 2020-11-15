@@ -500,13 +500,11 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, drawable);
                         return;
                     }
-                    else {
-                        const innerWrapped = node.innerMostWrapped as T;
-                        if (innerWrapped.documentBody && (node.backgroundColor || node.visibleStyle.backgroundRepeatY)) {
-                            setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, drawable);
-                            deleteBodyWrapper(innerWrapped, node);
-                            return;
-                        }
+                    const innerWrapped = node.innerMostWrapped as T;
+                    if (innerWrapped.documentBody && (node.backgroundColor || node.visibleStyle.backgroundRepeatY)) {
+                        setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, drawable);
+                        deleteBodyWrapper(innerWrapped, node);
+                        return;
                     }
                 }
                 node.android('background', drawable, false);
@@ -569,13 +567,11 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, color);
                                     return;
                                 }
-                                else {
-                                    const innerWrapped = node.innerMostWrapped as T;
-                                    if (innerWrapped.documentBody) {
-                                        setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, color);
-                                        deleteBodyWrapper(innerWrapped, node);
-                                        return;
-                                    }
+                                const innerWrapped = node.innerMostWrapped as T;
+                                if (innerWrapped.documentBody) {
+                                    setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, color);
+                                    deleteBodyWrapper(innerWrapped, node);
+                                    return;
                                 }
                             }
                             const fontStyle = node.data<FontAttribute>(Resource.KEY_NAME, 'fontStyle');

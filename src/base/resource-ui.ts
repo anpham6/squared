@@ -1371,14 +1371,12 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                         }
                         return;
                     }
-                    else {
-                        const textContent = child.plainText ? child.textContent : child[attr] as string;
-                        if (textContent) {
-                            if (!preserveWhiteSpace) {
-                                value = value.replace(textContent, '');
-                            }
-                            return;
+                    const textContent = child.plainText ? child.textContent : child[attr] as string;
+                    if (textContent) {
+                        if (!preserveWhiteSpace) {
+                            value = value.replace(textContent, '');
                         }
+                        return;
                     }
                 }
                 else if (item.nodeName[0] !== '#') {

@@ -1929,9 +1929,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                 }
                                 return pending.sort(sortById);
                             }
-                            else {
-                                result = pending;
-                            }
+                            result = pending;
                         }
                         else {
                             let count = currentCount;

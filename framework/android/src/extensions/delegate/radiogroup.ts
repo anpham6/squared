@@ -88,46 +88,44 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
                 complete: true
             };
         }
-        else {
-            radiogroup = [];
-            const sessionId = node.sessionId;
-            document.querySelectorAll(`input[type=radio][name=${getInputName(node)}]`).forEach((element: Element) => {
-                const item = getElementAsNode(element, sessionId) as T;
-                if (item) {
-                    radiogroup.push(item);
-                }
-            });
-            length = radiogroup.length;
-            if (length > 1 && radiogroup.includes(node)) {
-                const controlName = CONTAINER_TAGNAME.RADIOGROUP;
-                const data = new Map<T, number>();
-                for (let i = 0; i < length; ++i) {
-                    const radio = radiogroup[i];
-                    const parents = radio.ascend({ condition: (item: T) => item.layoutLinear, error: (item: T) => item.controlName === controlName, every: true }) as T[];
-                    const q = parents.length;
-                    if (q) {
-                        for (let j = 0; j < q; ++j) {
-                            const item = parents[j];
-                            data.set(item, (data.get(item) || 0) + 1);
-                        }
-                    }
-                    else {
-                        data.clear();
-                        break;
+        radiogroup = [];
+        const sessionId = node.sessionId;
+        document.querySelectorAll(`input[type=radio][name=${getInputName(node)}]`).forEach((element: Element) => {
+            const item = getElementAsNode(element, sessionId) as T;
+            if (item) {
+                radiogroup.push(item);
+            }
+        });
+        length = radiogroup.length;
+        if (length > 1 && radiogroup.includes(node)) {
+            const controlName = CONTAINER_TAGNAME.RADIOGROUP;
+            const data = new Map<T, number>();
+            for (let i = 0; i < length; ++i) {
+                const radio = radiogroup[i];
+                const parents = radio.ascend({ condition: (item: T) => item.layoutLinear, error: (item: T) => item.controlName === controlName, every: true }) as T[];
+                const q = parents.length;
+                if (q) {
+                    for (let j = 0; j < q; ++j) {
+                        const item = parents[j];
+                        data.set(item, (data.get(item) || 0) + 1);
                     }
                 }
-                for (const item of data) {
-                    if (item[1] === length) {
-                        const group = item[0];
-                        group.unsafe('controlName', controlName);
-                        group.containerType = CONTAINER_NODE.RADIO;
-                        const renderTemplate = group.renderParent?.renderTemplates?.find(template => template.node === group) as Undef<NodeXmlTemplate<T>>;
-                        if (renderTemplate) {
-                            renderTemplate.controlName = controlName;
-                        }
-                        this.setBaselineIndex(group, radiogroup);
-                        break;
+                else {
+                    data.clear();
+                    break;
+                }
+            }
+            for (const item of data) {
+                if (item[1] === length) {
+                    const group = item[0];
+                    group.unsafe('controlName', controlName);
+                    group.containerType = CONTAINER_NODE.RADIO;
+                    const renderTemplate = group.renderParent?.renderTemplates?.find(template => template.node === group) as Undef<NodeXmlTemplate<T>>;
+                    if (renderTemplate) {
+                        renderTemplate.controlName = controlName;
                     }
+                    this.setBaselineIndex(group, radiogroup);
+                    break;
                 }
             }
         }

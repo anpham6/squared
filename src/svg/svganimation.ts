@@ -46,19 +46,17 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
             }
             return Math.round(time);
         }
-        else {
-            match = REGGXP_TIMEDELIMITED.exec(value);
-            if (match) {
-                const ms = match[5];
-                let time = +match[4] * (match[1] ? -1 : 1);
-                if (match[1]) {
-                    time += +match[2] * 60 * 60;
-                }
-                if (match[2]) {
-                    time += +match[3] * 60;
-                }
-                return time * 1000 + (ms ? +ms * (ms.length < 3 ? Math.pow(10, 3 - ms.length) : 1) : 0);
+        match = REGGXP_TIMEDELIMITED.exec(value);
+        if (match) {
+            const ms = match[5];
+            let time = +match[4] * (match[1] ? -1 : 1);
+            if (match[1]) {
+                time += +match[2] * 60 * 60;
             }
+            if (match[2]) {
+                time += +match[3] * 60;
+            }
+            return time * 1000 + (ms ? +ms * (ms.length < 3 ? Math.pow(10, 3 - ms.length) : 1) : 0);
         }
         return NaN;
     }

@@ -71,25 +71,27 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
             if (node[paddingName] === 0) {
                 let target = child,
                     targetParent: Undef<NodeUI[]>;
-                while (DOCTYPE_HTML && target[marginName] === 0 && target[borderWidth] === 0 && target[paddingName] === 0 && !target.getBox(region)[0] && canResetChild(target)) {
-                    if (direction) {
-                        const endChild = target.firstStaticChild as NodeUI;
-                        if (isBlockElement(endChild, direction)) {
-                            (targetParent ||= []).push(target);
-                            target = endChild;
+                if (DOCTYPE_HTML) {
+                    while (target[marginName] === 0 && target[borderWidth] === 0 && target[paddingName] === 0 && !target.getBox(region)[0] && canResetChild(target)) {
+                        if (direction) {
+                            const endChild = target.firstStaticChild as NodeUI;
+                            if (isBlockElement(endChild, direction)) {
+                                (targetParent ||= []).push(target);
+                                target = endChild;
+                            }
+                            else {
+                                break;
+                            }
                         }
                         else {
-                            break;
-                        }
-                    }
-                    else {
-                        const endChild = getBottomChild(target);
-                        if (endChild) {
-                            (targetParent ||= []).push(target);
-                            target = endChild;
-                        }
-                        else {
-                            break;
+                            const endChild = getBottomChild(target);
+                            if (endChild) {
+                                (targetParent ||= []).push(target);
+                                target = endChild;
+                            }
+                            else {
+                                break;
+                            }
                         }
                     }
                 }
@@ -215,10 +217,8 @@ function isBlockElement(node: Null<NodeUI>, direction?: boolean): boolean {
                 const firstChild = node.firstStaticChild as NodeUI;
                 return isBlockElement(firstChild) && validAboveChild(firstChild, false);
             }
-            else {
-                const lastChild = node.lastStaticChild as NodeUI;
-                return isBlockElement(lastChild) && validBelowChild(lastChild, false);
-            }
+            const lastChild = node.lastStaticChild as NodeUI;
+            return isBlockElement(lastChild) && validBelowChild(lastChild, false);
         }
     }
     return false;

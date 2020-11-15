@@ -1,5 +1,5 @@
 type FileActionOptions = squared.FileActionOptions;
-type FileActionResult = Promise<Void<FilePostResult>>;
+type FileActionResult = Promise<Void<FileResponseData>>;
 
 declare module "base" {
     interface FileCopyingOptions extends FileActionOptions {
@@ -328,7 +328,7 @@ declare module "base" {
         readonly archiveFormats: Set<string>;
         addAsset(asset: RawAsset): void;
         reset(): void;
-        loadJSON<U = unknown>(value: string): Promise<U | void>;
+        loadJSON<U = unknown>(value: string): Promise<Void<U>>;
         copying(options: FileCopyingOptions): FileActionResult;
         archiving(options: FileArchivingOptions): FileActionResult;
         copyTo(directory: string, options?: FileCopyingOptions): FileActionResult;

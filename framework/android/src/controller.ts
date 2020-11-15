@@ -880,10 +880,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 parent.removeAlign(NODE_ALIGNMENT.UNKNOWN);
                 return;
             }
-            else {
-                layout.node = this.createNodeGroup(layout.node, layout.children, parent);
-                layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.FLOAT);
-            }
+            layout.node = this.createNodeGroup(layout.node, layout.children, parent);
+            layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.FLOAT);
         }
         else if (this.checkFrameHorizontal(layout)) {
             layout.node = this.createNodeGroup(layout.node, layout.children, parent);
@@ -913,16 +911,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     setVerticalLayout(parent);
                     return;
                 }
-                else {
-                    if (parent.layoutConstraint) {
-                        parent.addAlign(NODE_ALIGNMENT.VERTICAL);
-                        if (!parent.hasAlign(NODE_ALIGNMENT.ABSOLUTE)) {
-                            return;
-                        }
+                if (parent.layoutConstraint) {
+                    parent.addAlign(NODE_ALIGNMENT.VERTICAL);
+                    if (!parent.hasAlign(NODE_ALIGNMENT.ABSOLUTE)) {
+                        return;
                     }
-                    layout.node = this.createLayoutGroup(layout);
-                    layout.setContainerType(containerType, NODE_ALIGNMENT.VERTICAL | NODE_ALIGNMENT.UNKNOWN);
                 }
+                layout.node = this.createLayoutGroup(layout);
+                layout.setContainerType(containerType, NODE_ALIGNMENT.VERTICAL | NODE_ALIGNMENT.UNKNOWN);
             }
         }
         else if (floated) {
@@ -947,17 +943,15 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 setVerticalLayout(parent);
                 return;
             }
-            else {
-                if (parent.layoutConstraint) {
-                    parent.addAlign(NODE_ALIGNMENT.VERTICAL);
-                    if (!parent.hasAlign(NODE_ALIGNMENT.ABSOLUTE)) {
-                        return;
-                    }
+            if (parent.layoutConstraint) {
+                parent.addAlign(NODE_ALIGNMENT.VERTICAL);
+                if (!parent.hasAlign(NODE_ALIGNMENT.ABSOLUTE)) {
+                    return;
                 }
-                layout.node = this.createLayoutGroup(layout);
-                layout.setContainerType(containerType, NODE_ALIGNMENT.VERTICAL);
             }
-        }
+            layout.node = this.createLayoutGroup(layout);
+            layout.setContainerType(containerType, NODE_ALIGNMENT.VERTICAL);
+}
         return layout;
     }
 
@@ -1654,12 +1648,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 mimeType = parseMimeType(src);
                                 return true;
                             }
-                            else {
-                                mimeType = source.type.trim().toLowerCase();
-                                if (validMimeType === '*' || validMimeType.has(mimeType)) {
-                                    src = source.src;
-                                    return true;
-                                }
+                            mimeType = source.type.trim().toLowerCase();
+                            if (validMimeType === '*' || validMimeType.has(mimeType)) {
+                                src = source.src;
+                                return true;
                             }
                         }
                     });
@@ -3679,35 +3671,33 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 node.anchor(RB, 'parent', true);
                 return;
             }
+            let valid: Undef<boolean>;
+            if (horizontal) {
+                const rightAligned = node.hasPX('right');
+                if (!rightAligned) {
+                    if (box.left + location === bounds.left) {
+                        valid = true;
+                    }
+                }
+                else if (rightAligned && box.right + location === bounds.right) {
+                    valid = true;
+                }
+            }
             else {
-                let valid: Undef<boolean>;
-                if (horizontal) {
-                    const rightAligned = node.hasPX('right');
-                    if (!rightAligned) {
-                        if (box.left + location === bounds.left) {
-                            valid = true;
-                        }
-                    }
-                    else if (rightAligned && box.right + location === bounds.right) {
+                const bottomAligned = node.hasPX('bottom');
+                if (!bottomAligned) {
+                    if (box.top + location === bounds.top) {
                         valid = true;
                     }
                 }
-                else {
-                    const bottomAligned = node.hasPX('bottom');
-                    if (!bottomAligned) {
-                        if (box.top + location === bounds.top) {
-                            valid = true;
-                        }
-                    }
-                    else if (bottomAligned && box.bottom + location === bounds.bottom) {
-                        valid = true;
-                    }
+                else if (bottomAligned && box.bottom + location === bounds.bottom) {
+                    valid = true;
                 }
-                if (valid) {
-                    node.anchor(LT, 'parent', true);
-                    node.setBox(horizontal ? BOX_STANDARD.MARGIN_LEFT : BOX_STANDARD.MARGIN_TOP, { adjustment: location });
-                    return;
-                }
+            }
+            if (valid) {
+                node.anchor(LT, 'parent', true);
+                node.setBox(horizontal ? BOX_STANDARD.MARGIN_LEFT : BOX_STANDARD.MARGIN_TOP, { adjustment: location });
+                return;
             }
             attr = 'layout_constraintGuide_begin';
         }

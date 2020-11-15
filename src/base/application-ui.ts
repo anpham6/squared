@@ -320,12 +320,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             this._applyDefaultStyles(element, sessionId, pseudoElt);
             return this.createNodeStatic(sessionId, element);
         }
-        else {
-            const node = this.createNodeStatic(sessionId, element);
-            node.visible = false;
-            node.excluded = true;
-            return node;
-        }
+        const node = this.createNodeStatic(sessionId, element);
+        node.visible = false;
+        node.excluded = true;
+        return node;
     }
 
     public saveDocument(filename: string, content: string, pathname?: string, index?: number) {

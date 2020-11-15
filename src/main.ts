@@ -510,15 +510,13 @@ export function querySelectorAll(value: string, sync?: boolean, cache = true) {
                 }
                 return main.parseDocumentSync(...Array.from(query) as HTMLElement[]) as Node[];
             }
-            else {
-                if (length === 1) {
-                    return util.promisify<Node[]>(findElementAsync)(query[0] as HTMLElement, cache);
-                }
-                else if (cache) {
-                    return util.promisify<Node[]>(findElementAllAsync)(query, length);
-                }
-                return main.parseDocument(...Array.from(query) as HTMLElement[]) as Promise<Node[]>;
+            if (length === 1) {
+                return util.promisify<Node[]>(findElementAsync)(query[0] as HTMLElement, cache);
             }
+            else if (cache) {
+                return util.promisify<Node[]>(findElementAllAsync)(query, length);
+            }
+            return main.parseDocument(...Array.from(query) as HTMLElement[]) as Promise<Node[]>;
         }
     }
     return sync ? [] : Promise.resolve([]);

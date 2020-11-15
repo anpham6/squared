@@ -137,7 +137,7 @@ export function promisify<T>(fn: FunctionType<any>): FunctionType<Promise<T>> {
     return (...args: any[]) => {
         return new Promise((resolve, reject) => {
             try {
-                resolve(fn.call(null, ...args));
+                resolve(fn(...args));
             }
             catch (err) {
                 reject(err);
@@ -148,7 +148,9 @@ export function promisify<T>(fn: FunctionType<any>): FunctionType<Promise<T>> {
 
 export function hasKeys(obj: PlainObject) {
     for (const attr in obj) {
-        return obj[attr] !== undefined;
+        if (obj[attr] !== undefined) {
+            return true;
+        }
     }
     return false;
 }

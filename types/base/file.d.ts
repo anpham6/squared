@@ -55,7 +55,7 @@ interface CloudService {
     [key: string]: Undef<unknown>;
 }
 
-interface FilePostResult {
+interface FileResponseData {
     success: boolean;
     zipname?: string;
     bytes?: number;
