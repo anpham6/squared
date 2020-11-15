@@ -28,19 +28,19 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         return this.createNodeStatic(sessionId, element);
     }
 
-    public saveAs(filename?: string, options?: IFileArchivingOptions) {
+    public saveAs(filename?: string, options?: FileArchivingOptions) {
         return this.processAssets('saveAs', filename || this.userSettings.outputArchiveName, options);
     }
 
-    public copyTo(directory: string, options?: IFileArchivingOptions) {
+    public copyTo(directory: string, options?: FileArchivingOptions) {
         return this.processAssets('copyTo', directory, options);
     }
 
-    public appendTo(pathname: string, options?: IFileArchivingOptions) {
+    public appendTo(pathname: string, options?: FileArchivingOptions) {
         return this.processAssets('appendTo', pathname, options);
     }
 
-    private async processAssets(module: "saveAs" | "copyTo" | "appendTo", pathname: string, options?: IFileArchivingOptions) {
+    private async processAssets(module: "saveAs" | "copyTo" | "appendTo", pathname: string, options?: FileArchivingOptions) {
         options = !isPlainObject(options) ? {} : { ...options };
         options.saveAsWebPage = true;
         this.reset();

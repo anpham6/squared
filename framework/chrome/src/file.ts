@@ -6,12 +6,13 @@ import type Extension from './extension';
 import Pattern = squared.lib.base.Pattern;
 
 type BundleIndex = ObjectMap<ChromeAsset[]>;
+
 interface FileAsData {
     file: string;
-    format?: string;
     preserve: boolean;
     base64: boolean;
     inline: boolean;
+    format?: string;
     compress?: CompressFormat[];
 }
 
@@ -24,6 +25,8 @@ const { convertWord, fromLastIndexOf, parseMimeType, replaceMap, resolvePath, sp
 const { appendSeparator } = squared.base.lib.util;
 
 const RE_SRCSET = new Pattern(/\s*(.+?\.[^\s,]+)(\s+[\d.]+[wx])?\s*,?/g);
+
+const FILENAME_MAP = new WeakMap<ChromeAsset, string>();
 
 function parseFileAs(attr: string, value: Undef<string>) {
     if (value) {
@@ -133,21 +136,25 @@ function createBundleAsset(assets: ChromeAsset[], element: HTMLElement, exportAs
     if (content) {
         const [moveTo, pathname, filename] = getFilePath(exportAs);
         const previous = assets[assets.length - 1];
-        const locationData: ChromeAsset = { moveTo, pathname, filename };
-        if (previous && hasSamePath(previous, locationData)) {
+        const data = {
+            uri: resolvePath(exportAs, location.href),
+            pathname,
+            filename,
+            moveTo,
+            content,
+            format,
+            preserve,
+            inlineContent: inline ? getContentType(element) : undefined
+        } as ChromeAsset;
+        if (previous && hasSamePath(previous, data, true)) {
             (previous.trailingContent ||= []).push({ value: content, format, preserve });
         }
-        else{
-            return {
-                uri: resolvePath(exportAs, location.href),
-                pathname,
-                filename: assets.find(item => hasSamePath(item, locationData)) ? getFilenameUUID(filename) : filename,
-                moveTo,
-                content,
-                format,
-                preserve,
-                inlineContent: inline ? getContentType(element) : undefined
-            };
+        else {
+            if (assets.find(item => hasSamePath(item, data))) {
+                FILENAME_MAP.set(data, filename);
+                data.filename = getFilenameUUID(filename);
+            }
+            return data;
         }
     }
     return null;
@@ -163,6 +170,7 @@ function checkBundleStart(assets: ChromeAsset[], item: ChromeAsset) {
         if (hasSamePath(assets[i], item)) {
             for (let j = i + 1; j < length; ++j) {
                 if (!hasSamePath(assets[j], item)) {
+                    FILENAME_MAP.set(item, item.filename);
                     item.filename = getFilenameUUID(item.filename);
                     return true;
                 }
@@ -251,8 +259,19 @@ function getTasks(element: HTMLElement) {
     }
 }
 
+function hasSamePath(item: ChromeAsset, other: ChromeAsset, bundling = false) {
+    if ((item.moveTo === other.moveTo || !item.moveTo && !moveTo) && item.pathname === other.pathname) {
+        if (item.filename === other.filename || FILENAME_MAP.get(item) === other.filename) {
+            return true;
+        }
+        else if (bundling && item.filename.startsWith(DIR_FUNCTIONS.ASSIGN)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 const getMimeType = (element: HTMLLinkElement | HTMLStyleElement | HTMLScriptElement, src: Undef<string>, fallback: string) => element.type.trim().toLowerCase() || src && parseMimeType(src) || fallback;
-const hasSamePath = (item: ChromeAsset, other: ChromeAsset) => (item.moveTo === other.moveTo || !item.moveTo && !moveTo) && item.pathname === other.pathname && item.filename === other.filename;
 const getFileExt = (value: string) => value.includes('.') ? fromLastIndexOf(value, '.').trim().toLowerCase() : '';
 const getDirectory = (path: string, start: number) => path.substring(start, path.lastIndexOf('/'));
 const normalizePath = (value: string) => value.replace(/\\+/g, '/');
@@ -375,23 +394,23 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         return null;
     }
 
-    public copyTo(directory: string, options: IFileCopyingOptions = {}) {
+    public copyTo(directory: string, options: FileCopyingOptions = {}) {
         options.directory = directory;
         return this.copying(this.processAssets(options));
     }
 
-    public appendTo(pathname: string, options: IFileArchivingOptions = {}) {
+    public appendTo(pathname: string, options: FileArchivingOptions = {}) {
         options.filename ||= this.userSettings.outputArchiveName;
         options.appendTo = pathname;
         return this.archiving(this.processAssets(options));
     }
 
-    public saveAs(filename: string, options: IFileArchivingOptions = {}) {
+    public saveAs(filename: string, options: FileArchivingOptions = {}) {
         options.filename = filename;
         return this.archiving(this.processAssets(options));
     }
 
-    public getHtmlPage(options?: IFileActionOptions) {
+    public getHtmlPage(options?: FileActionOptions) {
         const element = document.documentElement;
         let file = element.dataset.chromeFile;
         if (file === 'exclude') {
@@ -448,7 +467,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         return [];
     }
 
-    public getScriptAssets(options?: IFileActionOptions): [ChromeAsset[], Undef<TranspileMap>] {
+    public getScriptAssets(options?: FileActionOptions): [ChromeAsset[], Undef<TranspileMap>] {
         let assetMap: Undef<Map<Element, AssetCommand>>,
             preserveCrossOrigin: Undef<boolean>,
             saveAsScript: Undef<SaveAsOptions>;
@@ -482,36 +501,32 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         }
         document.querySelectorAll('script').forEach(element => {
             const template = element.dataset.chromeTemplate;
-            if (template) {
-                if (element.type === 'text/template') {
-                    let category: Undef<string>,
-                        module: Undef<string>,
-                        identifier: Undef<string>;
-                    if (assetMap && assetMap.has(element)) {
-                        const command = assetMap.get(element)!;
-                        if (excludeAsset(result, command, element.outerHTML)) {
-                            return;
-                        }
-                        category = command.type;
-                        if (command.template) {
-                            ({ module, identifier } = command.template);
-                        }
+            if (template || element.type === 'text/template') {
+                let category: Undef<string>,
+                    module: Undef<string>,
+                    identifier: Undef<string>;
+                if (assetMap && assetMap.has(element)) {
+                    const command = assetMap.get(element)!;
+                    category = command.type;
+                    if (command.template) {
+                        ({ module, identifier } = command.template);
                     }
-                    else {
-                        [category, module, identifier] = replaceMap(template.split('::'), (value, index) => (index === 0 ? value.toLowerCase() : value).trim());
-                    }
-                    if (category && module && identifier) {
-                        switch (category) {
-                            case 'html':
-                            case 'js':
-                            case 'css':
-                                ((transpileMap ||= { html: {}, js: {}, css: {} })[category][module] ||= {})[identifier] = element.textContent!.trim();
-                                break;
-                        }
+                    excludeAsset(result, command, element.outerHTML);
+                }
+                else if (template) {
+                    [category, module, identifier] = replaceMap(template.split('::'), (value, index) => (index === 0 ? value.toLowerCase() : value).trim());
+                }
+                if (category && module && identifier) {
+                    switch (category) {
+                        case 'html':
+                        case 'js':
+                        case 'css':
+                            ((transpileMap ||= { html: {}, js: {}, css: {} })[category][module] ||= {})[identifier] = element.textContent!.trim();
+                            break;
                     }
                 }
             }
-            else if (element.type !== 'text/template') {
+            else {
                 const src = element.src.trim();
                 this.createBundle(result, bundleIndex, element, src, getMimeType(element, src, 'text/javascript'), preserveCrossOrigin, assetMap, saveAsScript);
             }
@@ -520,7 +535,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         return [result.sort(sortBundle), transpileMap];
     }
 
-    public getLinkAssets(options?: IFileActionOptions) {
+    public getLinkAssets(options?: FileActionOptions) {
         let assetMap: Undef<Map<Element, AssetCommand>>,
             saveAsLink: Undef<SaveAsOptions>,
             preserveCrossOrigin: Undef<boolean>;
@@ -568,7 +583,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         return result.sort(sortBundle);
     }
 
-    public getImageAssets(options?: IFileActionOptions) {
+    public getImageAssets(options?: FileActionOptions) {
         let assetMap: Undef<Map<Element, AssetCommand>>,
             preserveCrossOrigin: Undef<boolean>,
             saveAsImage: Undef<SaveAsOptions>,
@@ -651,15 +666,15 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         return result;
     }
 
-    public getVideoAssets(options?: IFileActionOptions) {
+    public getVideoAssets(options?: FileActionOptions) {
         return this.getRawAssets('video', options);
     }
 
-    public getAudioAssets(options?: IFileActionOptions) {
+    public getAudioAssets(options?: FileActionOptions) {
         return this.getRawAssets('audio', options);
     }
 
-    public getFontAssets(options?: IFileActionOptions) {
+    public getFontAssets(options?: FileActionOptions) {
         const preserveCrossOrigin = options && options.preserveCrossOrigin;
         const result: ChromeAsset[] = [];
         for (const fonts of ASSETS.fonts.values()) {
@@ -677,22 +692,22 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         return result;
     }
 
-    public finalizeRequestBody(data: PlainObject, options: IFileActionOptions) {
+    public finalizeRequestBody(data: PlainObject, options: FileActionOptions) {
         data.dataMap = {
             unusedStyles: options.unusedStyles,
             transpileMap: options.transpileMap
         };
     }
 
-    public getCopyQueryParameters(options: IFileCopyingOptions) {
+    public getCopyQueryParameters(options: FileCopyingOptions) {
         return options.productionRelease ? '&release=1' : '';
     }
 
-    public getArchiveQueryParameters(options: IFileArchivingOptions) {
+    public getArchiveQueryParameters(options: FileArchivingOptions) {
         return options.productionRelease ? '&release=1' : '';
     }
 
-    protected getRawAssets(tagName: ResourceAssetTagName, options?: IFileActionOptions) {
+    protected getRawAssets(tagName: ResourceAssetTagName, options?: FileActionOptions) {
         let assetMap: Undef<Map<Element, AssetCommand>>,
             preserveCrossOrigin: Undef<boolean>,
             saveAsImage: Undef<SaveAsOptions>;
@@ -778,7 +793,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         return result;
     }
 
-    private processAssets(options: IFileActionOptions) {
+    private processAssets(options: FileActionOptions) {
         const assets = this.getHtmlPage(options).concat(this.getLinkAssets(options));
         if (options.saveAsWebPage) {
             for (let i = 0, length = assets.length; i < length; ++i) {
@@ -804,6 +819,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             ...this.getFontAssets(options)
         );
         options.assets = assets;
+        delete options.assetMap;
         if (transpileMap) {
             options.transpileMap = transpileMap;
         }

@@ -1,12 +1,11 @@
-type FileActionOptions = squared.FileActionOptions;
 type FileActionResult = Promise<Void<FileResponseData>>;
 
 declare module "base" {
-    interface FileCopyingOptions extends FileActionOptions {
+    interface FileCopyingOptions extends squared.FileActionOptions {
         directory?: string;
     }
 
-    interface FileArchivingOptions extends FileActionOptions {
+    interface FileArchivingOptions extends squared.FileActionOptions {
         filename?: string;
         format?: string;
         copyTo?: string;
@@ -14,12 +13,12 @@ declare module "base" {
     }
 
     interface FileActionAsync {
-        copyTo(directory: string, options?: FileActionOptions): FileActionResult;
-        appendTo(pathname: string, options?: FileActionOptions): FileActionResult;
-        saveAs(filename?: string, options?: FileActionOptions): FileActionResult;
-        saveFiles(format: string, options: FileActionOptions): FileActionResult;
-        appendFiles(filename: string, options: FileActionOptions): FileActionResult;
-        copyFiles(directory: string, options: FileActionOptions): FileActionResult;
+        copyTo(directory: string, options?: squared.FileActionOptions): FileActionResult;
+        appendTo(pathname: string, options?: squared.FileActionOptions): FileActionResult;
+        saveAs(filename?: string, options?:squared. FileActionOptions): FileActionResult;
+        saveFiles(format: string, options: squared.FileActionOptions): FileActionResult;
+        appendFiles(filename: string, options: squared.FileActionOptions): FileActionResult;
+        copyFiles(directory: string, options: squared.FileActionOptions): FileActionResult;
     }
 
     interface LayoutRoot<T extends NodeUI> {
@@ -337,7 +336,7 @@ declare module "base" {
         saveFiles(format: string, options: FileArchivingOptions): FileActionResult;
         appendFiles(filename: string, options: FileArchivingOptions): FileActionResult;
         copyFiles(directory: string, options: FileCopyingOptions): FileActionResult;
-        finalizeRequestBody(data: PlainObject, options: FileActionOptions): void;
+        finalizeRequestBody(data: PlainObject, options: FileCopyingOptions & FileArchivingOptions): void;
         getCopyQueryParameters(options: FileCopyingOptions): string;
         getArchiveQueryParameters(options: FileArchivingOptions): string;
         setAPIEndpoint(name: string, value: string): void;

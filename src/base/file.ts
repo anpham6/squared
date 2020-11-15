@@ -4,7 +4,6 @@ import type Node from './node';
 import { appendSeparator, parseGlob } from './lib/util';
 
 type FileActionResult = Promise<Void<FileResponseData>>;
-type FileActionOptions = squared.FileActionOptions;
 type FileArchivingOptions = squared.base.FileArchivingOptions;
 type FileCopyingOptions = squared.base.FileCopyingOptions;
 type IGlobExp = squared.base.lib.util.IGlobExp;
@@ -100,7 +99,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
 
     public abstract get userSettings(): UserResourceSettings;
 
-    public finalizeRequestBody(data: PlainObject, options: FileActionOptions) {}
+    public finalizeRequestBody(data: PlainObject, options: FileCopyingOptions & FileArchivingOptions) {}
     public getCopyQueryParameters(options: FileCopyingOptions) { return ''; }
     public getArchiveQueryParameters(options: FileArchivingOptions) { return ''; }
 

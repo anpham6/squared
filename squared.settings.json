@@ -56,8 +56,14 @@
   },
   "chrome": {
     "eval_function": true,
-    "eval_text_template": false,
+    "eval_text_template": true,
     "html": {
+      "posthtml": {
+        "transform": {
+          "plugins": []
+        },
+        "transform-output": {}
+      },
       "prettier": {
         "beautify": {
           "parser": "html",
@@ -78,6 +84,11 @@
       }
     },
     "css": {
+      "postcss": {
+        "transform": {
+          "plugins": []
+        }
+      },
       "prettier": {
         "beautify": {
           "parser": "css",
@@ -106,7 +117,8 @@
       },
       "terser": {
         "minify": {
-          "toplevel": true
+          "toplevel": true,
+          "sourceMap": false
         }
       },
       "uglify-js": {

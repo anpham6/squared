@@ -106,9 +106,15 @@
         });
     </script>
     <script type="text/template">
-        function (context, value) {
-            const options = { presets: ['@babel/preset-env'] };
-            return context.transformSync(value, options).code;
+        function (context, value, config, inputData) {
+            const options = { presets: ['@babel/preset-env'], sourceMaps: true };
+            const result = context.transformSync(value, options);
+            if (result) {
+                if (result.map) {
+                    inputData.nextMap('babel', result.map, result.code);
+                }
+                return result.code;
+            }
         }
     </script>
 </head>

@@ -30,20 +30,6 @@ interface RawAsset extends FileAsset, Partial<ImageAsset> {
     buffer?: ArrayBuffer;
 }
 
-interface Exclusions {
-    glob?: string[];
-    pathname?: string[];
-    filename?: string[];
-    extension?: string[];
-    pattern?: (string | RegExp)[];
-}
-
-interface CompressFormat {
-    format: string;
-    level?: number;
-    condition?: string;
-}
-
 interface CloudService {
     service: string;
     active?: boolean;
@@ -52,6 +38,7 @@ interface CloudService {
     filename?: string;
     apiEndpoint?: string;
     settings?: string;
+    objects?: CloudObject[];
     [key: string]: Undef<unknown>;
 }
 
@@ -64,4 +51,22 @@ interface FileResponseData {
         message: string;
         hint?: string;
     };
+}
+
+interface CloudObject extends Partial<LocationUri> {
+    keyName: string;
+}
+
+interface Exclusions {
+    glob?: string[];
+    pathname?: string[];
+    filename?: string[];
+    extension?: string[];
+    pattern?: (string | RegExp)[];
+}
+
+interface CompressFormat {
+    format: string;
+    level?: number;
+    condition?: string;
 }

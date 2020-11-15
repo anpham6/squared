@@ -2,6 +2,7 @@
   type: html
   filename: index.html
   process:
+    - transform
     - beautify
   tasks:
     - minify
@@ -15,33 +16,35 @@
   type: css
   inline: true
   process:
+    - transform
     - minify
 - selector: head > style:nth-of-type(1)
   type: css
   exportAs: css/prod.css
+  preserve: true
   process:
-    - minify
-    - preserve
+    - transform
+    - beautify
 - selector: head > style:nth-of-type(2)
   type: css
   exportAs: css/prod.css
   process:
-    - minify
-  preserve: true
+    - transform
+    - beautify
 - selector: head > script:nth-of-type(1)
   type: js
   saveAs: js/modules1.js
   process:
-    - bundle
-    - beautify
+    - es5-script
   compress:
-    - format: br    
+    - format: gz
+    - format: br
 - selector: head > script:nth-of-type(2), head > script:nth-of-type(3)
   type: js
   saveAs: js/modules2.js
   process:
-    - es5-script
-    - minify 
+    - bundle
+    - minify
   cloudStorage:
     - service: s3
       bucket: squared-002

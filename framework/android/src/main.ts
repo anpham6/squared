@@ -47,6 +47,7 @@ import SETTINGS from './settings';
 
 type FileCopyingOptions = squared.base.FileCopyingOptions;
 type FileArchivingOptions = squared.base.FileArchivingOptions;
+type FileActionOptions = FileCopyingOptions & FileArchivingOptions;
 
 let application: Null<Application<View>> = null;
 let file: Null<File<View>> = null;

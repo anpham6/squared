@@ -1,11 +1,11 @@
-interface IFileActionOptions extends squared.FileActionOptions, FileActionAttribute, FileUniversalAttribute {
+interface FileActionOptions extends squared.FileActionOptions, FileActionAttribute, FileUniversalAttribute {
     assetMap?: Map<Element, AssetCommand>;
     transpileMap?: TranspileMap;
 }
 
-interface IFileCopyingOptions extends squared.base.FileCopyingOptions, IFileActionOptions {}
+interface FileCopyingOptions extends squared.base.FileCopyingOptions, FileActionOptions {}
 
-interface IFileArchivingOptions extends squared.base.FileArchivingOptions, IFileActionOptions {}
+interface FileArchivingOptions extends squared.base.FileArchivingOptions, FileActionOptions {}
 
 interface CompressOptions {
     mimeTypes: MIMEOrAll;
