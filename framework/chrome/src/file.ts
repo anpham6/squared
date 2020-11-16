@@ -131,7 +131,7 @@ function sortBundle(a: ChromeAsset, b: ChromeAsset) {
     return 0;
 }
 
-function createBundleAsset(assets: ChromeAsset[], element: HTMLElement, exportAs: string, format: Undef<string>, preserve?: boolean, inline?: boolean): Null<ChromeAsset> {
+function createBundleAsset(assets: ChromeAsset[], element: HTMLElement, exportAs: string, format: Undef<string>, preserve?: boolean, inline?: boolean, cloudStorage?: CloudService[]): Null<ChromeAsset> {
     const content = element.innerHTML.trim();
     if (content) {
         const [moveTo, pathname, filename] = getFilePath(exportAs);
@@ -150,7 +150,7 @@ function createBundleAsset(assets: ChromeAsset[], element: HTMLElement, exportAs
             (previous.trailingContent ||= []).push({ value: content, format, preserve });
         }
         else {
-            if (assets.find(item => hasSamePath(item, data))) {
+            if (assets.find(item => hasSamePath(item, data)) || hasFilenameConflict(assets, data.filename, cloudStorage)) {
                 FILENAME_MAP.set(data, filename);
                 data.filename = getFilenameUUID(filename);
             }
@@ -165,20 +165,27 @@ function setBundleData(bundleIndex: BundleIndex, data: ChromeAsset) {
     (bundleIndex[pathUri] ||= []).push(data);
 }
 
-function checkBundleStart(assets: ChromeAsset[], item: ChromeAsset) {
+function checkBundleStart(assets: ChromeAsset[], item: ChromeAsset, cloudStorage?: CloudService[]) {
     for (let i = 0, length = assets.length; i < length; ++i) {
         if (hasSamePath(assets[i], item)) {
             for (let j = i + 1; j < length; ++j) {
                 if (!hasSamePath(assets[j], item)) {
-                    FILENAME_MAP.set(item, item.filename);
-                    item.filename = getFilenameUUID(item.filename);
+                    assignFilename(item);
                     return true;
                 }
             }
             return false;
         }
     }
+    if (hasFilenameConflict(assets, item.filename, cloudStorage)) {
+        assignFilename(item);
+    }
     return true;
+}
+
+function assignFilename(item: ChromeAsset) {
+    FILENAME_MAP.set(item, item.filename);
+    item.filename = getFilenameUUID(item.filename);
 }
 
 function getContentType(element: HTMLElement) {
@@ -266,6 +273,43 @@ function hasSamePath(item: ChromeAsset, other: ChromeAsset, bundling = false) {
         }
         else if (bundling && item.filename.startsWith(DIR_FUNCTIONS.ASSIGN)) {
             return true;
+        }
+    }
+    return false;
+}
+
+function hasFilenameConflict(assets: ChromeAsset[], filename: string, cloudStorage: Undef<CloudService[]>) {
+    if (cloudStorage) {
+        for (const upload of cloudStorage) {
+            if (upload.active) {
+                for (const item of assets) {
+                    if (item.cloudStorage) {
+                        for (const previous of item.cloudStorage) {
+                            if (previous.active && (checkBucketOrContainer(previous, upload) && (filename === item.filename || filename === previous.filename || upload.filename && (upload.filename === item.filename || upload.filename === previous.filename)))) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
+
+function checkBucketOrContainer(provider: CloudService, other: CloudService) {
+    if (provider.apiEndpoint && provider.apiEndpoint === other.apiEndpoint) {
+        return false;
+    }
+    if (provider.service && other.service) {
+        switch (provider.service) {
+            case 's3':
+            case 'gcs':
+                return provider.bucket === other.bucket;
+            case 'azure':
+                return provider.container === other.container;
+            default:
+                return true;
         }
     }
     return false;
@@ -693,10 +737,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     public finalizeRequestBody(data: PlainObject, options: FileActionOptions) {
-        data.dataMap = {
-            unusedStyles: options.unusedStyles,
-            transpileMap: options.transpileMap
-        };
+        data.unusedStyles = options.unusedStyles;
+        data.transpileMap = options.transpileMap;
     }
 
     public getCopyQueryParameters(options: FileCopyingOptions) {
@@ -902,7 +944,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         let data: Null<ChromeAsset> = null;
         if (src) {
             data = File.parseUri(resolvePath(src), { element, saveAs: file, format, preserve, inline, preserveCrossOrigin, fromConfig });
-            if (data && checkBundleStart(assets, data)) {
+            if (data && checkBundleStart(assets, data, cloudStorage)) {
                 data.bundleIndex = -1;
             }
         }
@@ -913,7 +955,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     ({ file, format, preserve, inline, compress } = command);
                 }
             }
-            data = createBundleAsset(assets, element, file, format, preserve, inline);
+            data = createBundleAsset(assets, element, file, format, preserve, inline, cloudStorage);
             if (data) {
                 data.bundleIndex = -1;
             }
