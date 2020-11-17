@@ -57,12 +57,17 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         const assetMap = new Map<Element, StandardMap>();
         options.assetMap = assetMap;
         if (options.configUri) {
-            const data = await this.fileHandler!.loadJSON<StandardMap[]>(options.configUri);
-            if (data) {
-                for (const item of data) {
-                    if (typeof item.selector === 'string') {
-                        document.querySelectorAll(item.selector).forEach(element => assetMap.set(element, item));
+            const config = await this.fileHandler!.loadJSON(options.configUri);
+            if (config) {
+                if (config.success) {
+                    for (const item of (config.data as StandardMap[])) {
+                        if (typeof item.selector === 'string') {
+                            document.querySelectorAll(item.selector).forEach(element => assetMap.set(element, item));
+                        }
                     }
+                }
+                else if (config.error) {
+                    this.fileHandler!.writeErrorMesssage(config.error);
                 }
             }
         }

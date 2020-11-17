@@ -1,4 +1,4 @@
-type FileActionResult = Promise<Void<FileResponseData>>;
+type FileActionResult = Promise<Void<ResponseData>>;
 
 declare module "base" {
     interface FileCopyingOptions extends squared.FileActionOptions {
@@ -327,7 +327,7 @@ declare module "base" {
         readonly archiveFormats: Set<string>;
         addAsset(asset: RawAsset): void;
         reset(): void;
-        loadJSON<U = unknown>(value: string): Promise<Void<U>>;
+        loadJSON(value: string): Promise<Void<ResponseData>>;
         copying(options: FileCopyingOptions): FileActionResult;
         archiving(options: FileArchivingOptions): FileActionResult;
         copyTo(directory: string, options?: FileCopyingOptions): FileActionResult;
@@ -340,6 +340,7 @@ declare module "base" {
         getCopyQueryParameters(options: FileCopyingOptions): string;
         getArchiveQueryParameters(options: FileArchivingOptions): string;
         setAPIEndpoint(name: string, value: string): void;
+        writeErrorMesssage(error: ResponseError): void;
         get userSettings(): UserResourceSettings;
         set hostname(value);
         get hostname(): string;

@@ -27,6 +27,7 @@ const { appendSeparator } = squared.base.lib.util;
 const RE_SRCSET = new Pattern(/\s*(.+?\.[^\s,]+)(\s+[\d.]+[wx])?\s*,?/g);
 
 const FILENAME_MAP = new WeakMap<ChromeAsset, string>();
+let BUNDLE_ID = 0;
 
 function parseFileAs(attr: string, value: Undef<string>) {
     if (value) {
@@ -111,10 +112,41 @@ function setBundleIndex(bundleIndex: BundleIndex) {
         const items = bundleIndex[pathUri];
         const length = items.length;
         if (length > 1) {
+            const urls: Null<URL[]> = [];
+            const id = ++BUNDLE_ID;
             for (let i = 0; i < length; ++i) {
-                items[i].bundleIndex = i;
+                const item = items[i];
+                item.bundleId = id;
+                item.bundleIndex = i;
                 if (i > 0) {
-                    delete items[i].cloudStorage;
+                    delete item.cloudStorage;
+                }
+                if (urls && item.uri) {
+                    urls.push(new URL(item.uri));
+                }
+            }
+            invalid: {
+                if (urls.length === length) {
+                    const origin = urls[0].origin;
+                    const baseDir = urls[0].pathname.split('/');
+                    for (let i = 1; i < length; ++i) {
+                        const url = urls[i];
+                        if (url.origin === origin) {
+                            if (baseDir.length) {
+                                const parts = url.pathname.split('/');
+                                for (let j = 0; j < parts.length; ++j) {
+                                    if (baseDir[j] !== parts[j]) {
+                                        baseDir.splice(j, Infinity);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        else {
+                            break invalid;
+                        }
+                    }
+                    items[0].bundleRoot = origin + baseDir.join('/') + '/';
                 }
             }
         }

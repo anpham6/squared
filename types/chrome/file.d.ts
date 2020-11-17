@@ -5,7 +5,9 @@ interface ChromeAsset extends FileAsset, OutputModifiers {
     preserve?: boolean;
     exclude?: boolean;
     basePath?: string;
+    bundleId?: number;
     bundleIndex?: number;
+    bundleRoot?: string;
     inlineContent?: string;
     trailingContent?: FormattableContent[];
     textContent?: string;

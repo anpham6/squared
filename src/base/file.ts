@@ -3,7 +3,7 @@ import type Node from './node';
 
 import { appendSeparator, parseGlob } from './lib/util';
 
-type FileActionResult = Promise<Void<FileResponseData>>;
+type FileActionResult = Promise<Void<ResponseData>>;
 type FileArchivingOptions = squared.base.FileArchivingOptions;
 type FileCopyingOptions = squared.base.FileCopyingOptions;
 type IGlobExp = squared.base.lib.util.IGlobExp;
@@ -132,13 +132,13 @@ export default abstract class File<T extends Node> implements squared.base.File<
         this.assets = [];
     }
 
-    public loadJSON<U = unknown>(value: string) {
+    public loadJSON(value: string) {
         if (this.hasHttpProtocol()) {
             return fetch(this.hostname + this._endpoints.LOADER_JSON + encodeURIComponent(value), {
                 method: 'GET',
                 headers: new Headers({ 'Accept': 'application/json, text/plain', 'Content-Type': 'application/json' })
             })
-            .then(response => (response.json() as unknown) as U);
+            .then(response => response.json());
         }
         return Promise.resolve();
     }
@@ -157,15 +157,14 @@ export default abstract class File<T extends Node> implements squared.base.File<
                         body: JSON.stringify(body)
                     }
                 )
-                .then(async response => await response.json() as FileResponseData)
+                .then(async response => await response.json() as ResponseData)
                 .then(result => {
                     if (result) {
                         if (typeof options.callback === 'function') {
                             options.callback(result);
                         }
                         if (result.error) {
-                            const { hint, message } = result.error;
-                            (this.userSettings.showErrorMessages ? alert : console.log)((hint ? hint + '\n\n' : '') + message);
+                            this.writeErrorMesssage(result.error);
                         }
                         return result;
                     }
@@ -207,7 +206,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
                         body: JSON.stringify(body)
                     }
                 )
-                .then(async response => await response.json() as FileResponseData)
+                .then(async response => await response.json() as ResponseData)
                 .then(result => {
                     if (result) {
                         if (typeof options.callback === 'function') {
@@ -219,8 +218,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
                                 .then(async download => File.downloadFile(await download.blob(), fromLastIndexOf(zipname, '/', '\\')));
                         }
                         else if (result.error) {
-                            const { hint, message } = result.error;
-                            (this.userSettings.showErrorMessages ? alert : console.log)((hint ? hint + '\n\n' : '') + message);
+                            this.writeErrorMesssage(result.error);
                         }
                         return result;
                     }
@@ -235,6 +233,11 @@ export default abstract class File<T extends Node> implements squared.base.File<
 
     public setAPIEndpoint(name: string, value: string) {
         this._endpoints[name] = value;
+    }
+
+    public writeErrorMesssage(error: ResponseError) {
+        const { hint, message } = error;
+        (this.userSettings.showErrorMessages ? alert : console.log)((hint ? hint + '\n\n' : '') + message);
     }
 
     protected createRequestBody(assets: Undef<FileAsset[]>, options: FileCopyingOptions | FileArchivingOptions) {

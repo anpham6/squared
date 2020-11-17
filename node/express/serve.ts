@@ -15,7 +15,7 @@ import chalk = require('chalk');
 
 import FileManager = require('@squared-functions/file-manager');
 
-type FileResponseData = squared.FileResponseData;
+type ResponseData = squared.ResponseData;
 
 const app = express();
 app.use(body_parser.urlencoded({ extended: true }));
@@ -105,40 +105,40 @@ function installModules(manager: IFileManager, query: StringMap) {
     let { NODE_ENV: ENV, PORT } = process.env,
         ignorePermissions = false;
     if (argv.accessAll) {
-        Node.enableDiskRead();
-        Node.enableDiskWrite();
-        Node.enableUNCRead();
-        Node.enableUNCWrite();
+        Node.setDiskRead();
+        Node.setDiskWrite();
+        Node.setUNCRead();
+        Node.setUNCWrite();
         ignorePermissions = true;
     }
     else {
         if (argv.accessDisk) {
-            Node.enableDiskRead();
-            Node.enableDiskWrite();
+            Node.setDiskRead();
+            Node.setDiskWrite();
             ignorePermissions = true;
         }
         else {
             if (argv.diskRead) {
-                Node.enableDiskRead();
+                Node.setDiskRead();
                 ignorePermissions = true;
             }
             if (argv.diskWrite) {
-                Node.enableDiskWrite();
+                Node.setDiskWrite();
                 ignorePermissions = true;
             }
         }
         if (argv.accessUnc) {
-            Node.enableUNCRead();
-            Node.enableUNCWrite();
+            Node.setUNCRead();
+            Node.setUNCWrite();
             ignorePermissions = true;
         }
         else {
             if (argv.uncRead) {
-                Node.enableUNCRead();
+                Node.setUNCRead();
                 ignorePermissions = true;
             }
             if (argv.uncWrite) {
-                Node.enableUNCWrite();
+                Node.setUNCWrite();
                 ignorePermissions = true;
             }
         }
@@ -193,8 +193,8 @@ function installModules(manager: IFileManager, query: StringMap) {
         console.log(`${chalk.bold.bgGrey.blackBright('FAIL')}: Routing not defined.`);
     }
 
-    console.log(`${chalk.blue('DISK')}: ${Node.canReadDisk() ? chalk.green('+') : chalk.red('-')}r ${Node.canWriteDisk() ? chalk.green('+') : chalk.red('-')}w`);
-    console.log(`${chalk.blue(' UNC')}: ${Node.canReadUNC() ? chalk.green('+') : chalk.red('-')}r ${Node.canWriteUNC() ? chalk.green('+') : chalk.red('-')}w`);
+    console.log(`${chalk.blue('DISK')}: ${Node.hasDiskRead() ? chalk.green('+') : chalk.red('-')}r ${Node.hasDiskWrite() ? chalk.green('+') : chalk.red('-')}w`);
+    console.log(`${chalk.blue(' UNC')}: ${Node.hasUNCRead() ? chalk.green('+') : chalk.red('-')}r ${Node.hasUNCWrite() ? chalk.green('+') : chalk.red('-')}w`);
 
     if (argv.cors) {
         app.use(cors({ origin: argv.cors }));
@@ -233,14 +233,14 @@ app.post('/api/assets/copy', (req, res) => {
                 dirname,
                 req.body as RequestBody,
                 function(this: IFileManager) {
-                    res.json({ success: this.files.size > 0, files: Array.from(this.files) } as FileResponseData);
+                    res.json({ success: this.files.size > 0, files: Array.from(this.files) } as ResponseData);
                 }
             );
             installModules(manager, query as StringMap);
             manager.processAssets();
         }
         catch (err) {
-            res.json({ success: false, error: { hint: 'FILE: Unknown', message: (err as Error).toString() } } as FileResponseData);
+            res.json({ success: false, error: { hint: 'FILE: Unknown', message: (err as Error).toString() } } as ResponseData);
         }
     }
 });
@@ -261,7 +261,7 @@ app.post('/api/assets/archive', (req, res) => {
         }
     }
     catch (err) {
-        res.json({ success: false, error: { hint: `DIRECTORY: ${dirname}`, message: (err as Error).toString() } } as FileResponseData);
+        res.json({ success: false, error: { hint: `DIRECTORY: ${dirname}`, message: (err as Error).toString() } } as ResponseData);
         return;
     }
     let append_to = query.append_to as string,
@@ -297,7 +297,7 @@ app.post('/api/assets/archive', (req, res) => {
         const output = fs.createWriteStream(zipname);
         output.on('close', () => {
             const success = manager.files.size > 0;
-            const response: FileResponseData = {
+            const response: ResponseData = {
                 success,
                 zipname,
                 files: Array.from(manager.files),
@@ -331,7 +331,7 @@ app.post('/api/assets/archive', (req, res) => {
             manager.processAssets();
         }
         catch (err) {
-            res.json({ success: false, error: { hint: 'FILE: Unknown', message: (err as Error).toString() } } as FileResponseData);
+            res.json({ success: false, error: { hint: 'FILE: Unknown', message: (err as Error).toString() } } as ResponseData);
         }
     };
     if (append_to) {
@@ -368,13 +368,13 @@ app.post('/api/assets/archive', (req, res) => {
                 }
                 else if (fs.existsSync(append_to)) {
                     if (Node.isFileUNC(append_to)) {
-                        if (!Node.canReadUNC()) {
-                            res.json({ success: false, error: { hint: 'OPTION: --unc-read', message: 'Reading from UNC shares is not enabled.' } } as FileResponseData);
+                        if (!Node.hasUNCRead()) {
+                            res.json({ success: false, error: { hint: 'OPTION: --unc-read', message: 'Reading from UNC shares is not enabled.' } } as ResponseData);
                             return;
                         }
                     }
-                    else if (!Node.canReadDisk() && path.isAbsolute(append_to)) {
-                        res.json({ success: false, error: { hint: 'OPTION: --disk-read', message: 'Reading from disk is not enabled.' } } as FileResponseData);
+                    else if (!Node.hasDiskRead() && path.isAbsolute(append_to)) {
+                        res.json({ success: false, error: { hint: 'OPTION: --disk-read', message: 'Reading from disk is not enabled.' } } as ResponseData);
                         return;
                     }
                     fs.copyFile(append_to, zippath, decompress);
@@ -406,44 +406,52 @@ app.get('/api/browser/download', (req, res) => {
 
 app.get('/api/loader/json', (req, res) => {
     const fileuri = req.query.fileuri as string;
+    let valid = true;
     if (fileuri) {
-        const loadContent = (value: string) => {
-            let result: Undef<string | object>;
-            switch (path.extname(fileuri).toLowerCase()) {
-                case '.json':
-                case '.js':
-                    result = JSON.parse(value);
-                    break;
-                case '.yaml':
-                case '.yml':
-                    result = yaml.safeLoad(value);
-                    break;
+        const loadContent = (message: unknown, body: string) => {
+            let data: Undef<string | object>;
+            if (!message) {
+                try {
+                    switch (path.extname(fileuri).toLowerCase()) {
+                        case '.json':
+                        case '.js':
+                            data = JSON.parse(body);
+                            break;
+                        case '.yaml':
+                        case '.yml':
+                            data = yaml.safeLoad(body);
+                            break;
+                    }
+                }
+                catch (err) {
+                    message = err;
+                }
             }
-            if (typeof result === 'object') {
-                res.json(result);
+            if (typeof data === 'object') {
+                res.json({ success: true, data } as ResponseData);
+            }
+            else {
+                res.json({ success: false, error: { hint: `FILE: Unable to download (${fileuri})`, message } } as ResponseData);
             }
         };
         if (Node.isFileURI(fileuri)) {
-            request(fileuri, (err, response) => {
-                if (!err) {
-                    loadContent(response.body);
-                }
-            });
+            request(fileuri, (err, response) => loadContent(err, response.body));
         }
         else if (fs.existsSync(fileuri)) {
             if (Node.isFileUNC(fileuri)) {
-                if (!Node.canReadUNC()) {
-                    return;
+                if (!Node.hasUNCRead()) {
+                    valid = false;
                 }
             }
-            else if (!Node.canReadDisk()) {
-                return;
+            else if (!Node.hasDiskRead()) {
+                valid = false;
             }
-            fs.readFile(fileuri, 'utf8', (err, response) => {
-                if (!err) {
-                    loadContent(response);
-                }
-            });
+            if (valid) {
+                fs.readFile(fileuri, 'utf8', (err, data) => loadContent(err, data));
+            }
         }
+    }
+    if (!valid) {
+        res.json({ success: false, error: { hint: 'FILE: Unknown', message: fileuri } } as ResponseData);
     }
 });

@@ -42,15 +42,18 @@ interface CloudService {
     [key: string]: Undef<unknown>;
 }
 
-interface FileResponseData {
+interface ResponseData {
     success: boolean;
+    data?: unknown;
     zipname?: string;
     bytes?: number;
     files?: string[];
-    error?: {
-        message: string;
-        hint?: string;
-    };
+    error?: ResponseError;
+}
+
+interface ResponseError {
+    message: string;
+    hint?: string;
 }
 
 interface CloudObject extends Partial<LocationUri> {
