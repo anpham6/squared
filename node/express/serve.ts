@@ -25,7 +25,8 @@ const Node = FileManager.moduleNode();
 let Compress: Undef<SettingsFunctions.CompressModule>,
     Cloud: Undef<SettingsFunctions.CloudModule>,
     Gulp: Undef<SettingsFunctions.GulpModule>,
-    Chrome: Undef<SettingsFunctions.ChromeModule>;
+    Chrome: Undef<SettingsFunctions.ChromeModule>,
+    watchInterval: Undef<number>;
 
 function installModules(manager: IFileManager, query: StringMap) {
     if (Compress) {
@@ -39,6 +40,9 @@ function installModules(manager: IFileManager, query: StringMap) {
     }
     if (Chrome) {
         manager.install('chrome', Chrome);
+    }
+    if (query.watch === '1') {
+        manager.install('watch', watchInterval);
     }
     manager.emptyDirectory = query.empty === '1';
     manager.productionRelease = query.release === '1';
@@ -147,7 +151,7 @@ function installModules(manager: IFileManager, query: StringMap) {
     let settings: Settings;
     try {
         settings = fs.existsSync('./squared.settings.yml') && yaml.safeLoad(fs.readFileSync(path.resolve('./squared.settings.yml'), 'utf8')) as Settings || require('./squared.settings.json');
-        ({ compress: Compress, cloud: Cloud, gulp: Gulp, chrome: Chrome } = settings);
+        ({ compress: Compress, cloud: Cloud, gulp: Gulp, chrome: Chrome, watch_interval: watchInterval } = settings);
         FileManager.loadSettings(settings, ignorePermissions);
     }
     catch {

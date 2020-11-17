@@ -59,8 +59,8 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         if (options.configUri) {
             const config = await this.fileHandler!.loadJSON(options.configUri);
             if (config) {
-                if (config.success) {
-                    for (const item of (config.data as StandardMap[])) {
+                if (config.success && Array.isArray(config.data)) {
+                    for (const item of config.data as AssetCommand[]) {
                         if (typeof item.selector === 'string') {
                             document.querySelectorAll(item.selector).forEach(element => assetMap.set(element, item));
                         }

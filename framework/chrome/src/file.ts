@@ -774,7 +774,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     public getCopyQueryParameters(options: FileCopyingOptions) {
-        return options.productionRelease ? '&release=1' : '';
+        return (options.watch ? '&watch=1' : '') + (options.productionRelease ? '&release=1' : '');
     }
 
     public getArchiveQueryParameters(options: FileArchivingOptions) {
@@ -912,6 +912,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             tasks: Undef<string[]>,
             cloudStorage: Undef<CloudService[]>,
             attributes: Undef<AttributeValue[]>,
+            watch: Undef<boolean | WatchInterval>,
             filename: Undef<string>,
             fromConfig: Undef<boolean>,
             fromSaveAs: Undef<boolean>;
@@ -921,7 +922,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 return;
             }
             let filenameAs: Undef<string>;
-            ({ filename: filenameAs, preserve, inline, compress, tasks, cloudStorage, attributes } = command);
+            ({ filename: filenameAs, preserve, inline, compress, tasks, cloudStorage, attributes, watch } = command);
             file = src ? command.saveAs : command.exportAs;
             if (!file && filenameAs) {
                 if (command.pathname) {
@@ -944,7 +945,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 return;
             }
             filename = saveAsOptions.filename;
-            ({ format, preserve, inline, compress, tasks, cloudStorage, attributes } = saveAsOptions);
+            ({ format, preserve, inline, compress, tasks, cloudStorage, attributes, watch } = saveAsOptions);
             if (cloudStorage) {
                 for (const item of cloudStorage) {
                     if (item.active) {
@@ -997,6 +998,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             if (filename) {
                 data.filename = filename;
             }
+            if (watch) {
+                data.watch = watch;
+            }
             data.mimeType = mimeType;
             data.textContent = element.outerHTML;
             setBundleData(bundleIndex, data);
@@ -1015,6 +1019,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 tasks: Undef<string[]>,
                 cloudStorage: Undef<CloudService[]>,
                 attributes: Undef<AttributeValue[]>,
+                watch: Undef<boolean | WatchInterval>,
                 saveTo: Undef<boolean>,
                 filename: Undef<string>,
                 fromConfig: Undef<boolean>;
@@ -1028,7 +1033,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     if (excludeAsset(result, command, element.outerHTML)) {
                         return;
                     }
-                    ({ saveTo: saveAs, pathname, filename, commands, base64, compress, tasks, cloudStorage, attributes } = command);
+                    ({ saveTo: saveAs, pathname, filename, commands, base64, compress, tasks, cloudStorage, attributes, watch } = command);
                     [saveAs, saveTo] = checkSaveAs(uri, saveAs || pathname, filename);
                     if (saveAs) {
                         filename = '';
@@ -1039,7 +1044,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     if (excludeAsset(result, saveAsImage, element.outerHTML)) {
                         return;
                     }
-                    ({ pathname, commands, base64, compress, tasks, cloudStorage, attributes } = saveAsImage);
+                    ({ pathname, commands, base64, compress, tasks, cloudStorage, attributes, watch } = saveAsImage);
                     [saveAs, saveTo] = checkSaveAs(uri, pathname);
                 }
                 else if (file) {
@@ -1067,6 +1072,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 setOutputModifiers(data, compress, tasks, cloudStorage, attributes);
                 if (filename) {
                     data.filename = filename;
+                }
+                if (watch) {
+                    data.watch = watch;
                 }
                 if (element) {
                     data.textContent = element.outerHTML;

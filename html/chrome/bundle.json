@@ -28,7 +28,7 @@
   {
     "selector": "head > link:nth-of-type(1)",
     "type": "css",
-    "inline": true,
+    "watch": true,
     "process": [
       "transform",
       "minify"
@@ -57,6 +57,10 @@
     "selector": "head > script:nth-of-type(1)",
     "type": "js",
     "saveAs": "js/modules1.js",
+    "watch": {
+      "interval": 100,
+      "expires": "1m 1s"
+    },
     "process": [
       "es5-script"
     ],
@@ -73,6 +77,10 @@
     "selector": "head > script:nth-of-type(2), head > script:nth-of-type(3)",
     "type": "js",
     "saveAs": "js/modules2.js",
+    "watch": {
+      "interval": 100,
+      "expires": "1h 0.5m"
+    },
     "process": [
       "bundle",
       "minify"

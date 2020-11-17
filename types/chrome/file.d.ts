@@ -20,19 +20,25 @@ interface FormattableContent {
     preserve?: boolean;
 }
 
+interface WatchInterval {
+    interval?: number;
+    expires?: string;
+}
+
 interface FileModifiers {
     preserve?: boolean;
     inline?: boolean;
     base64?: boolean;
     compress?: CompressFormat[];
-    ignore?: boolean;
-    exclude?: boolean;
 }
 
 interface OutputModifiers {
     tasks?: string[];
+    watch?: boolean | WatchInterval;
     attributes?: AttributeValue[];
     cloudStorage?: CloudService[];
+    ignore?: boolean;
+    exclude?: boolean;
 }
 
 interface AttributeValue {
