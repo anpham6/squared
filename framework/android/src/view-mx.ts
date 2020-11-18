@@ -23,6 +23,8 @@ const { getNamedItem, getRangeClientRect } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
 const { capitalize, convertFloat, convertInt, convertPercent, convertWord, fromLastIndexOf, hasKeys, isString, replaceMap, splitPair } = squared.lib.util;
 
+const { parseWatchInterval } = squared.base.lib.util;
+
 const { constraint: LAYOUT_CONSTRAINT, relative: LAYOUT_RELATIVE, relativeParent: LAYOUT_RELATIVE_PARENT } = LAYOUT_MAP;
 
 const BOX_MARGIN = CSS_PROPERTIES.margin.value as string[];
@@ -3200,6 +3202,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
         get positioned() {
             return this._positioned || !!this.target;
+        }
+
+        get watch() {
+            if (this.naturalElement) {
+                return parseWatchInterval((this.element as HTMLElement).dataset.androidWatch);
+            }
         }
 
         get tasks() {

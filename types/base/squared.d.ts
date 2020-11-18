@@ -13,12 +13,12 @@ declare module "base" {
     }
 
     interface FileActionAsync {
-        copyTo(directory: string, options?: squared.FileActionOptions): FileActionResult;
-        appendTo(pathname: string, options?: squared.FileActionOptions): FileActionResult;
-        saveAs(filename?: string, options?:squared. FileActionOptions): FileActionResult;
+        saveAs(filename?: string, options?: squared. FileActionOptions): FileActionResult;
         saveFiles(format: string, options: squared.FileActionOptions): FileActionResult;
-        appendFiles(filename: string, options: squared.FileActionOptions): FileActionResult;
+        copyTo(directory: string, options?: squared.FileActionOptions): FileActionResult;
         copyFiles(directory: string, options: squared.FileActionOptions): FileActionResult;
+        appendTo(pathname: string, options?: squared.FileActionOptions): FileActionResult;
+        appendFiles(filename: string, options: squared.FileActionOptions): FileActionResult;
     }
 
     interface LayoutRoot<T extends NodeUI> {
@@ -214,9 +214,9 @@ declare module "base" {
         getImage(uri: string): Undef<ImageAsset>;
         addFont(data: FontFaceData): void;
         getFont(fontFamily: string, fontStyle?: string, fontWeight?: string): Undef<FontFaceData>;
-        addVideo(uri: string, mimeType?: string, tasks?: string[]): void;
+        addVideo(uri: string, mimeType?: string, options?: ElementScope): void;
         getVideo(uri: string): Undef<Asset>;
-        addAudio(uri: string, mimeType?: string, tasks?: string[]): void;
+        addAudio(uri: string, mimeType?: string, options?: ElementScope): void;
         getAudio(uri: string): Undef<Asset>;
         addRawData(uri: string, mimeType: string, content: Undef<string>, options?: RawDataOptions): string;
         getRawData(uri: string): Undef<RawAsset>;
@@ -330,12 +330,12 @@ declare module "base" {
         loadJSON(value: string): Promise<Void<ResponseData>>;
         copying(options: FileCopyingOptions): FileActionResult;
         archiving(options: FileArchivingOptions): FileActionResult;
-        copyTo(directory: string, options?: FileCopyingOptions): FileActionResult;
-        appendTo(pathname: string, options?: FileCopyingOptions): FileActionResult;
         saveAs(filename: string, options?: FileArchivingOptions): FileActionResult;
         saveFiles(format: string, options: FileArchivingOptions): FileActionResult;
-        appendFiles(filename: string, options: FileArchivingOptions): FileActionResult;
+        copyTo(directory: string, options?: FileCopyingOptions): FileActionResult;
         copyFiles(directory: string, options: FileCopyingOptions): FileActionResult;
+        appendTo(pathname: string, options?: FileCopyingOptions): FileActionResult;
+        appendFiles(filename: string, options: FileArchivingOptions): FileActionResult;
         finalizeRequestBody(data: PlainObject, options: FileCopyingOptions & FileArchivingOptions): void;
         getCopyQueryParameters(options: FileCopyingOptions): string;
         getArchiveQueryParameters(options: FileArchivingOptions): string;
@@ -876,6 +876,7 @@ declare module "base" {
             function lowerCaseString(value: string): string;
             function formatXml(value: string, options?: FormatXmlOptions): string;
             function parseGlob(value: string, options?: ParseGlobOptions): IGlobExp;
+            function parseWatchInterval(value: Undef<string>): Undef<WatchInterval>;
         }
     }
 }

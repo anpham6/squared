@@ -50,6 +50,15 @@
         "keyFilename": "",
         "apiEndpoint": ""
       }
+    },
+    "oci": {
+      "main": {
+        "region": "",
+        "namespace": "",
+        "accessKeyId": "",
+        "secretAccessKey": "",
+        "apiEndpoint": ""
+      }
     }
   },
   "gulp": {

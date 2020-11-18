@@ -1,7 +1,11 @@
-interface Asset {
+interface ElementScope {
+    watch?: boolean | WatchInterval;
+    tasks?: string[];
+}
+
+interface Asset extends ElementScope {
     uri?: string;
     mimeType?: string;
-    tasks?: string[];
 }
 
 interface LocationUri {
@@ -42,18 +46,9 @@ interface CloudService {
     [key: string]: Undef<unknown>;
 }
 
-interface ResponseData {
-    success: boolean;
-    data?: unknown;
-    zipname?: string;
-    bytes?: number;
-    files?: string[];
-    error?: ResponseError;
-}
-
-interface ResponseError {
-    message: string;
-    hint?: string;
+interface WatchInterval {
+    interval?: number;
+    expires?: string;
 }
 
 interface CloudObject extends Partial<LocationUri> {
@@ -72,4 +67,18 @@ interface CompressFormat {
     format: string;
     level?: number;
     condition?: string;
+}
+
+interface ResponseData {
+    success: boolean;
+    data?: unknown;
+    zipname?: string;
+    bytes?: number;
+    files?: string[];
+    error?: ResponseError;
+}
+
+interface ResponseError {
+    message: string;
+    hint?: string;
 }

@@ -131,6 +131,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     }
                     image = resource.addImageSrc(imageSrc);
                     if (imageData) {
+                        imageData.watch = node.watch;
                         imageData.tasks = node.tasks;
                     }
                 }

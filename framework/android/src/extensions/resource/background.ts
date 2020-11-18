@@ -888,6 +888,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             }
                         }
                         if (stored) {
+                            stored.watch = image.watch;
                             stored.tasks = image.tasks;
                             imageDimensions[length] = stored;
                         }

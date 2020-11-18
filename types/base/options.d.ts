@@ -36,12 +36,11 @@ interface ExtensionUIOptions extends ExtensionOptions {
     tagNames?: string[];
 }
 
-interface RawDataOptions extends Partial<Dimension> {
+interface RawDataOptions extends Partial<Dimension>, ElementScope {
     mimeType?: string;
     data?: string | ArrayBuffer;
     encoding?: string;
     filename?: string;
-    tasks?: string[];
 }
 
 interface DescendOptions<T> {

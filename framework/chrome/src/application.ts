@@ -32,7 +32,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         return this.processAssets('saveAs', filename || this.userSettings.outputArchiveName, options);
     }
 
-    public copyTo(directory: string, options?: FileArchivingOptions) {
+    public copyTo(directory: string, options?: FileCopyingOptions) {
         return this.processAssets('copyTo', directory, options);
     }
 

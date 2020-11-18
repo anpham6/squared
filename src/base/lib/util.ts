@@ -447,3 +447,20 @@ export function parseGlob(value: string, options?: ParseGlobOptions) {
         }) + '$';
     return new GlobExp(source, flags, value[0] === '!') as IGlobExp;
 }
+
+export function parseWatchInterval(value: Undef<string>) {
+    if (value) {
+        value = value.trim();
+        if (value === 'true') {
+            return true;
+        }
+        const match = /^(~|\d+)\s*(?:::\s*(.+?))?$/.exec(value);
+        if (match) {
+            let interval: Undef<number>;
+            if (match[1] !== '~') {
+                interval = +match[1];
+            }
+            return { interval, expires: match[2] } as WatchInterval;
+        }
+    }
+}

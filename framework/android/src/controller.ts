@@ -1361,19 +1361,19 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                 }
                 if (node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
-                    const tasks = node.tasks;
+                    const { watch, tasks } = node;
                     let src: Undef<string>;
                     if (tagName === 'CANVAS') {
                         const data = ((element as unknown) as HTMLCanvasElement).toDataURL();
                         if (data) {
                             node.setControlType(controlName, containerType);
                             src = 'canvas_' + convertWord(node.controlId, true).toLowerCase();
-                            resource.writeRawImage({ mimeType: 'image/png', filename: src + '.png', data, encoding: 'base64', tasks });
+                            resource.writeRawImage({ mimeType: 'image/png', filename: src + '.png', data, encoding: 'base64', watch, tasks });
                         }
                     }
                     else {
                         src = resource.addImageSrc(element, '', imageSet);
-                        if (tasks) {
+                        if (watch || tasks) {
                             const images = [element.src];
                             if (imageSet) {
                                 images.push(...plainMap(imageSet, item => item.src));
@@ -1381,6 +1381,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             for (const uri of images) {
                                 const image = resource.getImage(uri);
                                 if (image) {
+                                    image.watch = watch;
                                     image.tasks = tasks;
                                 }
                             }
@@ -1666,7 +1667,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     setInlineBlock();
                 }
                 if (src) {
-                    this.application.resourceHandler[tagName === 'VIDEO' ? 'addVideo' : 'addAudio'](src, mimeType, node.tasks);
+                    this.application.resourceHandler[tagName === 'VIDEO' ? 'addVideo' : 'addAudio'](src, mimeType, { tasks: node.tasks, watch: node.watch });
                     node.inlineText = false;
                     node.exclude({ resource: NODE_RESOURCE.FONT_STYLE });
                     if (element.poster) {

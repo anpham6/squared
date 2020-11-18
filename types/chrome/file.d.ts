@@ -3,26 +3,19 @@ interface ChromeAsset extends FileAsset, OutputModifiers {
     moveTo?: string;
     format?: string;
     preserve?: boolean;
-    exclude?: boolean;
     basePath?: string;
     bundleId?: number;
     bundleIndex?: number;
     bundleRoot?: string;
-    inlineContent?: string;
-    trailingContent?: FormattableContent[];
     textContent?: string;
-    dataMap?: StandardMap;
+    trailingContent?: FormattableContent[];
+    inlineContent?: string;
+    exclude?: boolean;
 }
 
 interface FormattableContent {
     value: string;
-    format?: string;
     preserve?: boolean;
-}
-
-interface WatchInterval {
-    interval?: number;
-    expires?: string;
 }
 
 interface FileModifiers {
@@ -32,9 +25,8 @@ interface FileModifiers {
     compress?: CompressFormat[];
 }
 
-interface OutputModifiers {
-    tasks?: string[];
-    watch?: boolean | WatchInterval;
+interface OutputModifiers extends ElementScope {
+    commands?: string[];
     attributes?: AttributeValue[];
     cloudStorage?: CloudService[];
     ignore?: boolean;
@@ -53,7 +45,6 @@ interface AssetCommand extends Partial<LocationUri>, FileModifiers, OutputModifi
     exportAs?: string;
     saveTo?: string;
     process?: string[];
-    commands?: string[];
     template?: {
         module: string;
         identifier?: string;

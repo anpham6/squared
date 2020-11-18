@@ -29,8 +29,7 @@
   type: css
   exportAs: css/prod.css
   process:
-    - transform
-    - beautify
+    - minify
 - selector: head > script:nth-of-type(1)
   type: js
   saveAs: js/modules1.js
@@ -40,13 +39,11 @@
   process:
     - es5-script
   compress:
-    - format: gz
     - format: br
 - selector: head > script:nth-of-type(2), head > script:nth-of-type(3)
   type: js
   saveAs: js/modules2.js
   watch:
-    interval: 100
     expires: 1h 0.5m
   process:
     - bundle

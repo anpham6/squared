@@ -49,8 +49,7 @@
     "type": "css",
     "exportAs": "css/prod.css",
     "process": [
-      "transform",
-      "beautify"
+      "minify"
     ]
   },
   {
@@ -66,9 +65,6 @@
     ],
     "compress": [
       {
-        "format": "gz"
-      },
-      {
         "format": "br"
       }
     ]
@@ -78,7 +74,6 @@
     "type": "js",
     "saveAs": "js/modules2.js",
     "watch": {
-      "interval": 100,
       "expires": "1h 0.5m"
     },
     "process": [

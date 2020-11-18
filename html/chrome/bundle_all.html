@@ -137,7 +137,7 @@
                         base64: {
                             format: 'png',
                             cloudStorage: [{
-                                service: 'gcs',
+                                service: 'oci',
                                 bucket: 'squared-001',
                                 active: true,
                                 localStorage: false,
@@ -152,12 +152,6 @@
                     console.log(result);
                 });
         });
-    </script>
-    <script type="text/template">
-        function (context, value) {
-            const options = { presets: ['@babel/preset-env'] };
-            return context.transformSync(value, options).code;
-        }
     </script>
 </head>
 <body>

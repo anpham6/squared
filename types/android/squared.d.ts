@@ -124,6 +124,7 @@ declare namespace base {
         get blockHeight(): boolean;
         get flexibleWidth(): boolean;
         get flexibleHeight(): boolean;
+        get watch(): Undef<WatchInterval>;
         get tasks(): Undef<string[]>;
         get target(): Null<HTMLElement>;
         get support(): SupportUI;
