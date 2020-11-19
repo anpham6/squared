@@ -106,20 +106,24 @@
                             cloudStorage: [{
                                 service: 's3',
                                 bucket: 'squared-001',
-                                active: true,
-                                localStorage: false,
-                                uploadAll: true,
-                                settings: 'main'
+                                settings: 'main',
+                                upload: {
+                                    active: true,
+                                    localStorage: false,
+                                    all: true
+                                }
                             }]
                         },
                         image: {
                             cloudStorage: [{
                                 service: 'azure',
                                 container: 'squared-001',
-                                active: true,
-                                localStorage: false,
-                                uploadAll: true,
-                                settings: 'main'
+                                settings: 'main',
+                                upload: {
+                                    active: true,
+                                    localStorage: false,
+                                    all: true
+                                }
                             }]
                         },
                         script: {
@@ -128,21 +132,25 @@
                             cloudStorage: [{
                                 service: 'gcs',
                                 bucket: 'squared-001',
-                                active: true,
-                                localStorage: false,
-                                uploadAll: true,
-                                settings: 'main'
+                                settings: 'main',
+                                upload: {
+                                    active: true,
+                                    localStorage: false,
+                                    all: true
+                                }
                             }]
                         },
                         base64: {
                             format: 'png',
                             cloudStorage: [{
                                 service: 'oci',
-                                bucket: 'squared-001',
-                                active: true,
-                                localStorage: false,
-                                uploadAll: true,
-                                settings: 'main'
+                                bucket: 'bucket-20201118-1149',
+                                settings: 'main',
+                                upload: {
+                                    active: true,
+                                    localStorage: false,
+                                    all: true
+                                }
                             }]
                         }
                     }

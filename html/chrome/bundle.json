@@ -83,10 +83,12 @@
     "cloudStorage": [
       {
         "service": "s3",
-        "bucket": "squared-002",
-        "active": true,
+        "bucket": "squared-001",
         "accessKeyId": null,
-        "secretAccessKey": null
+        "secretAccessKey": null,
+        "upload": {
+          "active": true
+        }
       }
     ]
   },
@@ -118,13 +120,15 @@
     ],
     "cloudStorage": [
       {
-        "service": "s3",
+        "service": "azure",
         "bucket": "squared-001",
-        "active": true,
-        "localStorage": false,
-        "filename": "picture1.webp",
-        "accessKeyId": null,
-        "secretAccessKey": null
+        "accountName": null,
+        "accountKey": null,
+        "upload": {
+          "active": true,
+          "localStorage": false,
+          "filename": "picture1.webp"
+        }
       }
     ]
   },
@@ -142,12 +146,13 @@
     ],
     "cloudStorage": [
       {
-        "service": "s3",
-        "bucket": "squared-002",
-        "active": true,
-        "localStorage": false,
-        "accessKeyId": null,
-        "secretAccessKey": null
+        "service": "gcs",
+        "bucket": "squared-001",
+        "keyFilename": null,
+        "upload": {
+          "active": true,
+          "localStorage": false
+        }
       }
     ]
   },

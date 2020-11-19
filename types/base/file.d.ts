@@ -34,16 +34,23 @@ interface RawAsset extends FileAsset, Partial<ImageAsset> {
     buffer?: ArrayBuffer;
 }
 
-interface CloudService {
+interface CloudService extends ObjectMap<unknown> {
     service: string;
-    active?: boolean;
-    localStorage?: boolean;
-    uploadAll?: boolean;
-    filename?: string;
-    apiEndpoint?: string;
     settings?: string;
-    objects?: CloudObject[];
-    [key: string]: Undef<unknown>;
+    upload?: CloudServiceUpload;
+}
+
+interface CloudServiceAction {
+    active?: boolean;
+}
+
+interface CloudServiceUpload extends CloudServiceAction {
+    filename?: string;
+    localStorage?: boolean;
+    apiEndpoint?: string;
+    all?: boolean;
+    publicAccess?: boolean;
+    overwrite?: boolean;
 }
 
 interface WatchInterval {
