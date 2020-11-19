@@ -33,9 +33,9 @@ function parseFileAs(attr: string, value: Undef<string>) {
     if (value) {
         let match = new RegExp(`${attr}:\\s*((?:[^"]|\\\\")+)`).exec(normalizePath(value));
         if (match) {
-            const segments = replaceMap(match[1].split('::'), item => item.trim());
-            const actions = segments[2] || '';
             let compress: Undef<CompressFormat[]>;
+            const segments = replaceMap(match[1].split('::'), item => item.trim());
+            const actions = (segments[2] || '').toLowerCase();
             const pattern = /\bcompress\[\s*([a-z\d]+)\s*\]/g;
             while (match = pattern.exec(actions)) {
                 (compress ||= []).push({ format: match[1] });
@@ -163,13 +163,13 @@ function sortBundle(a: ChromeAsset, b: ChromeAsset) {
     return 0;
 }
 
-function createBundleAsset(assets: ChromeAsset[], element: HTMLElement, exportAs: string, format: Undef<string>, preserve?: boolean, inline?: boolean, cloudStorage?: CloudService[]): Null<ChromeAsset> {
+function createBundleAsset(assets: ChromeAsset[], element: HTMLElement, file: string, format: Undef<string>, preserve?: boolean, inline?: boolean, cloudStorage?: CloudService[]): Null<ChromeAsset> {
     const content = element.innerHTML.trim();
     if (content) {
-        const [moveTo, pathname, filename] = getFilePath(exportAs);
+        const [moveTo, pathname, filename] = getFilePath(file);
         const previous = assets[assets.length - 1];
         const data = {
-            uri: resolvePath(exportAs, location.href),
+            uri: resolvePath(file, location.href),
             pathname,
             filename,
             moveTo,
@@ -182,10 +182,7 @@ function createBundleAsset(assets: ChromeAsset[], element: HTMLElement, exportAs
             (previous.trailingContent ||= []).push({ value: content, preserve });
         }
         else {
-            if (assets.find(item => hasSamePath(item, data)) || hasFilenameConflict(assets, data.filename, cloudStorage)) {
-                FILENAME_MAP.set(data, filename);
-                data.filename = getFilenameUUID(filename);
-            }
+            checkFilename(assets, data, cloudStorage);
             return data;
         }
     }
@@ -197,27 +194,32 @@ function setBundleData(bundleIndex: BundleIndex, data: ChromeAsset) {
     (bundleIndex[pathUri] ||= []).push(data);
 }
 
-function checkBundleStart(assets: ChromeAsset[], item: ChromeAsset, cloudStorage?: CloudService[]) {
+function checkBundleStart(assets: ChromeAsset[], data: ChromeAsset, cloudStorage?: CloudService[]) {
     for (let i = 0, length = assets.length; i < length; ++i) {
-        if (hasSamePath(assets[i], item)) {
+        if (hasSamePath(assets[i], data)) {
             for (let j = i + 1; j < length; ++j) {
-                if (!hasSamePath(assets[j], item)) {
-                    assignFilename(item);
+                if (!hasSamePath(assets[j], data)) {
+                    checkFilename(assets, data, cloudStorage);
                     return true;
                 }
             }
             return false;
         }
     }
-    if (hasFilenameConflict(assets, item.filename, cloudStorage)) {
-        assignFilename(item);
-    }
+    checkFilename(assets, data, cloudStorage);
     return true;
 }
 
-function assignFilename(item: ChromeAsset) {
-    FILENAME_MAP.set(item, item.filename);
-    item.filename = getFilenameUUID(item.filename);
+function checkFilename(assets: ChromeAsset[], data: ChromeAsset, cloudStorage?: CloudService[]) {
+    const filename = data.filename;
+    let i = 1;
+    while (assets.find(item => hasSamePath(item, data)) || hasFilenameConflict(assets, data.filename, cloudStorage)) {
+        const [start, end] = splitPair(data.filename, '.');
+        data.filename = start + '_' + i++ + (end ? '.' + end : '');
+    }
+    if (i > 1) {
+        FILENAME_MAP.set(data, filename);
+    }
 }
 
 function getContentType(element: HTMLElement) {
@@ -305,12 +307,14 @@ function hasSamePath(item: ChromeAsset, other: ChromeAsset, bundling = false) {
 
 function hasFilenameConflict(assets: ChromeAsset[], filename: string, cloudStorage: Undef<CloudService[]>) {
     if (cloudStorage) {
-        for (const upload of cloudStorage) {
-            if (upload.active) {
+        for (const data of cloudStorage) {
+            const upload = data.upload;
+            if (upload && upload.active) {
                 for (const item of assets) {
                     if (item.cloudStorage) {
                         for (const previous of item.cloudStorage) {
-                            if (previous.active && (checkBucketOrContainer(previous, upload) && (filename === item.filename || filename === previous.filename || upload.filename && (upload.filename === item.filename || upload.filename === previous.filename)))) {
+                            const previousUpload = previous.upload;
+                            if (previousUpload && previousUpload.active && (checkBucketOrContainer(previous, data) && (filename === item.filename || filename === previousUpload.filename || upload.filename && (upload.filename === item.filename || upload.filename === previousUpload.filename)))) {
                                 return true;
                             }
                         }
@@ -323,13 +327,14 @@ function hasFilenameConflict(assets: ChromeAsset[], filename: string, cloudStora
 }
 
 function checkBucketOrContainer(provider: CloudService, other: CloudService) {
-    if (provider.apiEndpoint && provider.apiEndpoint === other.apiEndpoint) {
+    if (provider.upload!.apiEndpoint && provider.upload!.apiEndpoint === other.upload!.apiEndpoint) {
         return false;
     }
     if (provider.service && other.service) {
         switch (provider.service) {
             case 's3':
             case 'gcs':
+            case 'oci':
                 return provider.bucket === other.bucket;
             case 'azure':
                 return provider.container === other.container;
