@@ -25,6 +25,7 @@ const EXT_DATA = {
     bmpp: 'image/bmp',
     bz: 'application/x-bzip',
     bz2: 'application/x-bzip2',
+    cgi: 'application/x-httpd-cgi',
     csh: 'application/x-csh',
     css: 'text/css',
     csv: 'text/csv',
@@ -48,6 +49,7 @@ const EXT_DATA = {
     ics: 'text/calendar',
     jad: 'text/vnd.sun.j2me.app-descriptor',
     jar: 'application/java-archive',
+    java: 'text/x-java-source',
     jpeg: 'image/jpeg',
     jpg: 'image/jpeg',
     jfif: 'image/jpeg',
@@ -59,6 +61,7 @@ const EXT_DATA = {
     json: 'application/json',
     jsonp: 'application/javascript',
     jsonld: 'application/ld+json',
+    m3u8: 'application/vnd.apple.mpegurl',
     md: 'text/markdown',
     kar: 'audio/midi',
     mid: 'audio/midi',
@@ -74,6 +77,7 @@ const EXT_DATA = {
     mp4: 'video/mp4',
     m4a: 'video/mp4',
     m4v: 'video/x-m4v',
+    mpd: 'application/dash+xml',
     mpkg: 'application/vnd.apple.installer+xml',
     odg: 'application/vnd.oasis.opendocument.graphics',
     odp: 'application/vnd.oasis.opendocument.presentation',
@@ -105,6 +109,7 @@ const EXT_DATA = {
     tif: 'image/tiff',
     tiff: 'image/tiff',
     ts: 'video/mp2t',
+    tsv: 'text/tab-separated-values',
     ttf: 'font/ttf',
     truetype: 'font/ttf',
     txt: 'text/plain',
@@ -731,7 +736,7 @@ export function flatArray<T>(list: T[], depth = 1, current = 0): T[] {
         const item = list[i];
         if (current < depth && Array.isArray(item)) {
             if (item.length) {
-                result.push(...flatArray<T>(item, depth, current + 1));
+                result.push(...flatArray(item as T[], depth, current + 1));
             }
         }
         else if (item !== undefined && item !== null) {

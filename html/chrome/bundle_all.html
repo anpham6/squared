@@ -100,9 +100,7 @@
             squared
                 .copyTo('C:/Users/An/Downloads/chrome', {
                     saveAs: {
-                        link: {
-                            filename: 'bundle.css',
-                            format: 'minify',
+                        html: {
                             cloudStorage: [{
                                 service: 's3',
                                 bucket: 'squared-001',
@@ -110,8 +108,27 @@
                                 upload: {
                                     active: true,
                                     localStorage: false,
+                                    apiEndpoint: 'https://squared-001.s3.us-west-2.amazonaws.com',
+                                    overwrite: true
+                                }
+                            }]
+                        },
+                        link: {
+                            filename: 'bundle.css',
+                            format: 'minify',
+                            cloudStorage: [{
+                                service: 'gcs',
+                                bucket: 'squared-001',
+                                settings: 'main',
+                                upload: {
+                                    active: true,
+                                    localStorage: false,
                                     all: true,
                                     overwrite: true
+                                },
+                                download: {
+                                    active: true,
+                                    filename: 'bundle_1.css'
                                 }
                             }]
                         },
@@ -124,6 +141,10 @@
                                     active: true,
                                     localStorage: false,
                                     all: true,
+                                    overwrite: true
+                                },
+                                download: {
+                                    filename: 'harbour1.bmp',
                                     overwrite: true
                                 }
                             }]
@@ -140,6 +161,10 @@
                                     localStorage: false,
                                     all: true,
                                     overwrite: true
+                                },
+                                download: {
+                                    filename: 'harbour2.bmp',
+                                    overwrite: true
                                 }
                             }]
                         },
@@ -147,13 +172,15 @@
                             format: 'png',
                             cloudStorage: [{
                                 service: 'oci',
-                                bucket: 'bucket-20201118-1149',
+                                bucket: 'squared-002',
                                 settings: 'main',
                                 upload: {
                                     active: true,
                                     localStorage: false,
-                                    all: true,
                                     overwrite: true
+                                },
+                                download: {
+                                    filename: 'bundle.html.gz'
                                 }
                             }]
                         }

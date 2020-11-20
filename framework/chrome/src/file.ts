@@ -153,16 +153,6 @@ function setBundleIndex(bundleIndex: BundleIndex) {
     }
 }
 
-function sortBundle(a: ChromeAsset, b: ChromeAsset) {
-    if (a.bundleIndex === 0) {
-        return 1;
-    }
-    else if (b.bundleIndex === 0) {
-        return -1;
-    }
-    return 0;
-}
-
 function createBundleAsset(assets: ChromeAsset[], element: HTMLElement, file: string, format: Undef<string>, preserve?: boolean, inline?: boolean, cloudStorage?: CloudService[]): Null<ChromeAsset> {
     const content = element.innerHTML.trim();
     if (content) {
@@ -502,13 +492,14 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         let format: Undef<string>,
             compress: Undef<CompressFormat[]>,
             tasks: Undef<string[]>,
-            attributes: Undef<AttributeValue[]>;
+            attributes: Undef<AttributeValue[]>,
+            cloudStorage: Undef<CloudService[]>;
         if (assetMap && assetMap.has(element)) {
             const command = assetMap.get(element)!;
             if (command.ignore || command.exclude) {
                 return [];
             }
-            ({ filename, compress, tasks, attributes } = command);
+            ({ filename, compress, tasks, attributes, cloudStorage } = command);
             if (command.process) {
                 format = command.process.join('+');
             }
@@ -517,7 +508,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             if (saveAsHtml.ignore || saveAsHtml.exclude) {
                 return [];
             }
-            ({ filename, format, compress, tasks, attributes } = saveAsHtml);
+            ({ filename, format, compress, tasks, attributes, cloudStorage } = saveAsHtml);
         }
         else if (file === 'ignore') {
             return [];
@@ -530,7 +521,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         }
         const data = File.parseUri(location.href, { preserveCrossOrigin, saveAs: file, format });
         if (data) {
-            setOutputModifiers(data, compress, tasks, undefined, attributes);
+            setOutputModifiers(data, compress, tasks, cloudStorage, attributes);
             if (attributes) {
                 data.textContent = /^\s*<[\S\s]*html[^>]+>\s*/i.exec(element.outerHTML)?.[0].replace(/(\s?[\w-]+="")+>/g, '');
             }
@@ -607,7 +598,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             }
         });
         setBundleIndex(bundleIndex);
-        return [result.sort(sortBundle), transpileMap];
+        return [result, transpileMap];
     }
 
     public getLinkAssets(options?: FileActionOptions) {
@@ -655,7 +646,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             }
         }
         setBundleIndex(bundleIndex);
-        return result.sort(sortBundle);
+        return result;
     }
 
     public getImageAssets(options?: FileActionOptions) {

@@ -35,6 +35,7 @@ export default class ExtensionManager<T extends Node> implements squared.base.Ex
                 return false;
             }
         }
+        const name = ext.name;
         const index = this.extensions.findIndex(item => item.name === name);
         if (index !== -1) {
             this.extensions.splice(index, 1);

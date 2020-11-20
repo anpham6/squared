@@ -127,12 +127,16 @@ export function fromMimeType(value: string) {
                     return 'mml';
                 case 'plain':
                     return 'txt';
+                case 'tab-separated-values':
+                    return 'tsv';
                 case 'vnd.sun.j2me.app-descriptor':
                     return 'jad';
                 case 'vnd.wap.wml':
                     return 'wml';
                 case 'x-component':
                     return 'htc';
+                case 'x-java-source':
+                    return 'java';
                 case 'yaml':
                     return 'yml';
             }
@@ -157,6 +161,8 @@ export function fromMimeType(value: string) {
                     return name;
                 case 'atom+xml':
                     return 'atom';
+                case 'dash+xml':
+                    return 'mpd';
                 case 'epub+zip':
                     return 'epub';
                 case 'java-archive':
@@ -177,6 +183,9 @@ export function fromMimeType(value: string) {
                     return 'azw';
                 case 'vnd.apple.installer+xml':
                     return 'mpkg';
+                case 'vnd.apple.mpegurl':
+                case 'x-mpegurl':
+                    return 'm3u8';
                 case 'vnd.mozilla.xul+xml':
                     return 'xul';
                 case 'vnd.ms-excel':
@@ -209,6 +218,8 @@ export function fromMimeType(value: string) {
                     return 'bz';
                 case 'x-bzip2':
                     return 'bz2';
+                case 'x-httpd-cgi':
+                    return 'cgi';
                 case 'x-csh':
                     return 'csh';
                 case 'x-freearc':

@@ -38,20 +38,23 @@ interface CloudService extends ObjectMap<unknown> {
     service: string;
     settings?: string;
     upload?: CloudServiceUpload;
+    download?: CloudServiceDownload;
 }
 
 interface CloudServiceAction {
     active?: boolean;
+    filename?: string;
+    overwrite?: boolean;
 }
 
 interface CloudServiceUpload extends CloudServiceAction {
-    filename?: string;
     localStorage?: boolean;
     apiEndpoint?: string;
     all?: boolean;
     publicAccess?: boolean;
-    overwrite?: boolean;
 }
+
+interface CloudServiceDownload extends CloudServiceAction, Partial<LocationUri> {}
 
 interface WatchInterval {
     interval?: number;
