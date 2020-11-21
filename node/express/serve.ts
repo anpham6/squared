@@ -228,7 +228,7 @@ function installModules(manager: IFileManager, query: StringMap) {
     process.env.PORT = PORT;
 }
 
-app.post('/api/assets/copy', (req, res) => {
+app.post('/api/v1/assets/copy', (req, res) => {
     const query = req.query;
     const dirname = path.normalize(query.to as string);
     if (dirname && FileManager.checkPermissions(dirname, res)) {
@@ -249,7 +249,7 @@ app.post('/api/assets/copy', (req, res) => {
     }
 });
 
-app.post('/api/assets/archive', (req, res) => {
+app.post('/api/v1/assets/archive', (req, res) => {
     const query = req.query;
     const copy_to = query.to && path.normalize(query.to as string);
     const dirname = path.join(__dirname, 'temp' + path.sep + uuid.v4());
@@ -397,26 +397,26 @@ app.post('/api/assets/archive', (req, res) => {
     resumeThread();
 });
 
-app.get('/api/browser/download', (req, res) => {
-    const fileuri = req.query.fileuri as string;
-    if (fileuri) {
-        res.sendFile(fileuri, err => {
+app.get('/api/v1/browser/download', (req, res) => {
+    const uri = req.query.uri as string;
+    if (uri) {
+        res.sendFile(uri, err => {
             if (err) {
-                Node.writeFail(fileuri, err);
+                Node.writeFail(uri, err);
             }
         });
     }
 });
 
-app.get('/api/loader/json', (req, res) => {
-    const fileuri = req.query.fileuri as string;
+app.get('/api/v1/loader/json', (req, res) => {
+    const uri = req.query.uri as string;
     let valid = true;
-    if (fileuri) {
+    if (uri) {
         const loadContent = (message: unknown, body: string) => {
             let data: Undef<string | object>;
             if (!message) {
                 try {
-                    switch (path.extname(fileuri).toLowerCase()) {
+                    switch (path.extname(uri).toLowerCase()) {
                         case '.json':
                         case '.js':
                             data = JSON.parse(body);
@@ -435,14 +435,14 @@ app.get('/api/loader/json', (req, res) => {
                 res.json({ success: true, data } as ResponseData);
             }
             else {
-                res.json({ success: false, error: { hint: `FILE: Unable to download (${fileuri})`, message } } as ResponseData);
+                res.json({ success: false, error: { hint: `FILE: Unable to download (${uri})`, message } } as ResponseData);
             }
         };
-        if (Node.isFileURI(fileuri)) {
-            request(fileuri, (err, response) => loadContent(err, response.body));
+        if (Node.isFileURI(uri)) {
+            request(uri, (err, response) => loadContent(err, response.body));
         }
-        else if (fs.existsSync(fileuri)) {
-            if (Node.isFileUNC(fileuri)) {
+        else if (fs.existsSync(uri)) {
+            if (Node.isFileUNC(uri)) {
                 if (!Node.hasUNCRead()) {
                     valid = false;
                 }
@@ -451,11 +451,11 @@ app.get('/api/loader/json', (req, res) => {
                 valid = false;
             }
             if (valid) {
-                fs.readFile(fileuri, 'utf8', (err, data) => loadContent(err, data));
+                fs.readFile(uri, 'utf8', (err, data) => loadContent(err, data));
             }
         }
     }
     if (!valid) {
-        res.json({ success: false, error: { hint: 'FILE: Unknown', message: fileuri } } as ResponseData);
+        res.json({ success: false, error: { hint: 'FILE: Unknown', message: uri } } as ResponseData);
     }
 });

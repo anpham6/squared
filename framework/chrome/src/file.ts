@@ -848,7 +848,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 const item = assets[i];
                 switch (item.mimeType) {
                     case 'text/html':
-                        item.basePath = location.origin + (item.rootDir || location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1));
+                        item.baseUrl = location.origin + (item.rootDir || location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1));
                     case 'text/css':
                         item.mimeType = '@' + item.mimeType;
                         break;

@@ -288,18 +288,20 @@ export default abstract class Application<T extends Node> implements squared.bas
             return Promise.all(preloadItems.map(item => {
                 return new Promise((success, error) => {
                     if (typeof item === 'string') {
-                        fetch(item).then(async result => {
-                            const mimeType = result.headers.get('content-type') || '';
-                            if (mimeType.startsWith('text/css') || styleSheets && styleSheets.includes(item)) {
-                                success({ mimeType: 'text/css', encoding: 'utf8', data: await result.text() } as RawDataOptions);
-                            }
-                            else if (mimeType.startsWith('image/svg+xml') || FILE.SVG.test(item)) {
-                                success({ mimeType: 'image/svg+xml', encoding: 'utf8', data: await result.text() } as RawDataOptions);
-                            }
-                            else {
-                                success({ mimeType: result.headers.get('content-type') || 'font/' + (splitPair(item, '.', false, true)[1].toLowerCase() || 'ttf'), data: await result.arrayBuffer() } as RawDataOptions);
-                            }
-                        });
+                        fetch(item)
+                            .then(async result => {
+                                const mimeType = result.headers.get('content-type') || '';
+                                if (mimeType.startsWith('text/css') || styleSheets && styleSheets.includes(item)) {
+                                    success({ mimeType: 'text/css', encoding: 'utf8', data: await result.text() } as RawDataOptions);
+                                }
+                                else if (mimeType.startsWith('image/svg+xml') || FILE.SVG.test(item)) {
+                                    success({ mimeType: 'image/svg+xml', encoding: 'utf8', data: await result.text() } as RawDataOptions);
+                                }
+                                else {
+                                    success({ mimeType: result.headers.get('content-type') || 'font/' + (splitPair(item, '.', false, true)[1].toLowerCase() || 'ttf'), data: await result.arrayBuffer() } as RawDataOptions);
+                                }
+                            })
+                            .catch(() => error(item));
                     }
                     else {
                         item.addEventListener('load', () => success(item));
@@ -307,14 +309,16 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                 });
             }))
-            .then((result: (HTMLImageElement | RawDataOptions)[]) => {
-                for (let i = 0, length = preloadItems.length; i < length; ++i) {
-                    const item = preloadItems[i];
-                    if (typeof item === 'string') {
-                        resource!.addRawData(item, '', '', result[i] as RawDataOptions);
-                    }
-                    else {
-                        resource!.addImage(item);
+            .then((result: (Null<HTMLImageElement | RawDataOptions>)[]) => {
+                for (let i = 0, length = result.length; i < length; ++i) {
+                    if (result[i]) {
+                        const item = preloadItems[i];
+                        if (typeof item === 'string') {
+                            resource!.addRawData(item, '', '', result[i] as RawDataOptions);
+                        }
+                        else {
+                            resource!.addImage(item);
+                        }
                     }
                 }
                 return this.resumeSessionThread(rootElements, processing, elements.length, documentRoot, preloaded);

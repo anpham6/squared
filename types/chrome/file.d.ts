@@ -3,7 +3,7 @@ interface ChromeAsset extends FileAsset, OutputModifiers {
     moveTo?: string;
     format?: string;
     preserve?: boolean;
-    basePath?: string;
+    baseUrl?: string;
     bundleId?: number;
     bundleIndex?: number;
     bundleRoot?: string;

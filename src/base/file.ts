@@ -87,14 +87,14 @@ export default abstract class File<T extends Node> implements squared.base.File<
 
     private _hostname = '';
     private _endpoints = {
-        ASSETS_COPY: '/api/assets/copy',
-        ASSETS_ARCHIVE: '/api/assets/archive',
-        BROWSER_DOWNLOAD: '/api/browser/download?fileuri=',
-        LOADER_JSON: '/api/loader/json?fileuri='
+        ASSETS_COPY: '/api/v1/assets/copy',
+        ASSETS_ARCHIVE: '/api/v1/assets/archive',
+        BROWSER_DOWNLOAD: '/api/v1/browser/download?uri=',
+        LOADER_JSON: '/api/v1/loader/json?uri='
     };
 
     public abstract copyTo(directory: string, options?: FileCopyingOptions): FileActionResult;
-    public abstract appendTo(pathname: string, options?: FileArchivingOptions): FileActionResult;
+    public abstract appendTo(uri: string, options?: FileArchivingOptions): FileActionResult;
     public abstract saveAs(filename: string, options?: FileArchivingOptions): FileActionResult;
 
     public abstract get userSettings(): UserResourceSettings;
@@ -107,8 +107,8 @@ export default abstract class File<T extends Node> implements squared.base.File<
         return this.archiving({ filename: this.userSettings.outputArchiveName, ...options, format });
     }
 
-    public appendFiles(filename: string, options: FileArchivingOptions) {
-        return this.archiving({ ...options, appendTo: filename });
+    public appendFiles(uri: string, options: FileArchivingOptions) {
+        return this.archiving({ ...options, appendTo: uri });
     }
 
     public copyFiles(directory: string, options: FileCopyingOptions) {
