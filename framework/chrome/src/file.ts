@@ -1,7 +1,6 @@
 import DIR_FUNCTIONS = chrome.internal.DIR_FUNCTIONS
 
 import type Application from './application';
-import type Extension from './extension';
 
 import Pattern = squared.lib.base.Pattern;
 
@@ -94,16 +93,6 @@ function resolveAssetSource(element: HTMLVideoElement | HTMLAudioElement | HTMLO
     const value = resolvePath(element instanceof HTMLObjectElement ? element.data : element.src);
     if (value) {
         data.set(element, value);
-    }
-}
-
-function getExtensions(element: Null<HTMLElement>) {
-    if (element) {
-        const dataset = element.dataset;
-        const use = dataset.useChrome || dataset.use;
-        if (use) {
-            return use.trim().split(/\s*,\s*/);
-        }
     }
 }
 
@@ -481,15 +470,15 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         if (file === 'exclude') {
             return [];
         }
-        let filename: Undef<string>,
-            assetMap: Undef<Map<Element, AssetCommand>>,
+        let assetMap: Undef<Map<Element, AssetCommand>>,
             preserveCrossOrigin: Undef<boolean>,
             saveAsHtml: Undef<SaveAsOptions>;
         if (options) {
             ({ preserveCrossOrigin, assetMap } = options);
             saveAsHtml = options.saveAs?.html;
         }
-        let format: Undef<string>,
+        let filename: Undef<string>,
+            format: Undef<string>,
             compress: Undef<CompressFormat[]>,
             tasks: Undef<string[]>,
             attributes: Undef<AttributeValue[]>,
@@ -520,14 +509,13 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             file = '';
         }
         const data = File.parseUri(location.href, { preserveCrossOrigin, saveAs: file, format });
-        if (data) {
+        if (this.processExtensions(data)) {
             setOutputModifiers(data, compress, tasks, cloudStorage, attributes);
             if (attributes) {
                 data.textContent = /^\s*<[\S\s]*html[^>]+>\s*/i.exec(element.outerHTML)?.[0].replace(/(\s?[\w-]+="")+>/g, '');
             }
             data.filename ||= filename || 'index.html';
             data.mimeType = 'text/html';
-            this.processExtensions(data, getExtensions(document.querySelector('html')));
             return [data];
         }
         return [];
@@ -637,10 +625,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         for (const [uri, item] of ASSETS.rawData) {
             if (item.mimeType === 'text/css') {
                 const data = File.parseUri(resolvePath(uri), { preserveCrossOrigin, format, preserve });
-                if (data) {
+                if (this.processExtensions(data)) {
                     setOutputModifiers(data, compress, tasks, cloudStorage);
                     data.mimeType = item.mimeType;
-                    this.processExtensions(data);
                     result.push(data);
                 }
             }
@@ -684,7 +671,6 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         }
         for (const rawData of ASSETS.rawData.values()) {
             const { base64, filename, mimeType } = rawData;
-            let data: Undef<ChromeAsset>;
             if (base64) {
                 if (saveAsBase64) {
                     let commands: Undef<string[]>;
@@ -698,7 +684,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                                 break;
                         }
                     }
-                    data = this.processImageUri(
+                    const data = this.processImageUri(
                         result,
                         null,
                         resolvePath(getFilePath(appendSeparator(saveAsBase64.pathname, filename))[1] + '/' + filename, location.href),
@@ -709,24 +695,19 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                         data.base64 = base64;
                         data.commands ||= commands;
                         data.cloudStorage = saveAsBase64.cloudStorage;
-                        continue;
                     }
                 }
             }
             else if (mimeType && rawData.content) {
-                data = {
+                const data = {
                     pathname: DIR_FUNCTIONS.GENERATED + `/${mimeType.split('/').pop()!}`,
                     filename,
                     content: rawData.content,
                     mimeType
                 };
-            }
-            else {
-                continue;
-            }
-            if (data) {
-                this.processExtensions(data);
-                result.push(data);
+                if (this.processExtensions(data)) {
+                    result.push(data);
+                }
             }
         }
         return result;
@@ -748,8 +729,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 const url = fonts[i].srcUrl;
                 if (url) {
                     const data = File.parseUri(url, { preserveCrossOrigin });
-                    if (data) {
-                        this.processExtensions(data);
+                    if (this.processExtensions(data)) {
                         result.push(data);
                     }
                 }
@@ -845,7 +825,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     watch = parseWatchInterval(item.dataset.chromeWatch);
                 }
                 const data = File.parseUri(uri, { preserveCrossOrigin, saveAs, saveTo, fromConfig });
-                if (data) {
+                if (this.processExtensions(data)) {
                     setOutputModifiers(data, compress, tasks, cloudStorage, attributes);
                     if (filename) {
                         data.filename = filename;
@@ -854,7 +834,6 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                         data.watch = watch;
                     }
                     data.textContent = item.outerHTML;
-                    this.processExtensions(data, getExtensions(item));
                     result.push(data);
                 }
             }
@@ -989,7 +968,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 data.bundleIndex = -1;
             }
         }
-        if (data) {
+        if (this.processExtensions(data)) {
             setOutputModifiers(data, compress, tasks, cloudStorage, attributes);
             if (filename) {
                 data.filename = filename;
@@ -1000,7 +979,6 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             data.mimeType = mimeType;
             data.textContent = element.outerHTML;
             setBundleData(bundleIndex, data);
-            this.processExtensions(data, getExtensions(element));
             assets.push(data);
         }
     }
@@ -1065,7 +1043,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 [saveAs, saveTo] = checkSaveAs(uri, pathname);
             }
             const data = File.parseUri(uri, { preserveCrossOrigin, saveAs, saveTo, fromConfig });
-            if (data) {
+            if (this.processExtensions(data)) {
                 setOutputModifiers(data, compress, tasks, cloudStorage, attributes);
                 if (filename) {
                     data.filename = filename;
@@ -1082,29 +1060,22 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 if (base64) {
                     data.format = 'base64';
                 }
-                this.processExtensions(data, getExtensions(element));
                 result.push(data);
                 return data;
             }
         }
     }
 
-    private processExtensions(data: ChromeAsset, extensions?: string[]) {
-        const extensionManager = this.application.extensionManager!;
-        const processed: Extension<T>[] = [];
-        for (const ext of this.application.extensions) {
-            if (ext.processFile(data)) {
-                processed.push(ext);
-            }
-        }
-        if (extensions) {
-            for (const name of extensions) {
-                const ext = extensionManager.get(name, true) as Undef<Extension<T>>;
-                if (ext && !processed.includes(ext)) {
-                    ext.processFile(data, true);
+    private processExtensions(data: Null<ChromeAsset>): data is ChromeAsset {
+        if (data) {
+            for (const ext of this.application.extensions) {
+                if (!ext.processFile(data)) {
+                    return false;
                 }
             }
+            return true;
         }
+        return false;
     }
 
     get application() {

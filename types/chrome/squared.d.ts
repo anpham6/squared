@@ -28,9 +28,7 @@ declare namespace base {
     }
 
     class Extension<T extends Node> extends squared.base.Extension<T> {
-        static getConvertOptions(name: string, options: ConvertOptions): Undef<string>;
-        static getCompressOptions(name: string, options: CompressOptions): string;
-        processFile(data: ChromeAsset, override?: boolean): boolean;
+        processFile(data: ChromeAsset): boolean;
     }
 }
 

@@ -106,10 +106,10 @@ declare module "base" {
         getDatasetName(attr: string, element: DocumentElement): Undef<string>;
         setDatasetName(attr: string, element: DocumentElement, value: string): void;
         copyTo(directory: string, options?: FileCopyingOptions): FileActionResult;
-        appendTo(pathname: string, options?: FileArchivingOptions): FileActionResult;
+        appendTo(uri: string, options?: FileArchivingOptions): FileActionResult;
         saveAs(filename?: string, options?: FileArchivingOptions): FileActionResult;
         saveFiles(format: string, options: FileArchivingOptions): FileActionResult;
-        appendFiles(filename: string, options: FileArchivingOptions): FileActionResult;
+        appendFiles(uri: string, options: FileArchivingOptions): FileActionResult;
         copyFiles(directory: string, options: FileCopyingOptions): FileActionResult;
         toString(): string;
         get mainElement(): Element;

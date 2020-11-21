@@ -36,28 +36,28 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         return this.processAssets('copyTo', directory, options);
     }
 
-    public appendTo(pathname: string, options?: FileArchivingOptions) {
-        return this.processAssets('appendTo', pathname, options);
+    public appendTo(uri: string, options?: FileArchivingOptions) {
+        return this.processAssets('appendTo', uri, options);
     }
 
     private async processAssets(module: "saveAs" | "copyTo" | "appendTo", pathname: string, options?: FileArchivingOptions) {
-        options = !isPlainObject(options) ? {} : { ...options };
-        options.saveAsWebPage = true;
         this.reset();
-        const result = this.parseDocumentSync();
-        if (!result) {
+        if (!this.parseDocumentSync()) {
             return reject(UNABLE_TO_FINALIZE_DOCUMENT);
         }
+        options = !isPlainObject(options) ? {} : { ...options };
+        options.saveAsWebPage = true;
+        const fileHandler = this.fileHandler!;
         if (options.removeUnusedStyles) {
             const unusedStyles = Array.from(this.session.unusedStyles!);
             if (unusedStyles.length) {
                 options.unusedStyles = options.unusedStyles ? Array.from(new Set(options.unusedStyles.concat(unusedStyles))) : unusedStyles;
             }
         }
-        const assetMap = new Map<Element, StandardMap>();
-        options.assetMap = assetMap;
         if (options.configUri) {
-            const config = await this.fileHandler!.loadJSON(options.configUri);
+            const assetMap = new Map<Element, StandardMap>();
+            options.assetMap = assetMap;
+            const config = await fileHandler.loadJSON(options.configUri);
             if (config) {
                 if (config.success && Array.isArray(config.data)) {
                     for (const item of config.data as AssetCommand[]) {
@@ -67,11 +67,11 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                     }
                 }
                 else if (config.error) {
-                    this.fileHandler!.writeErrorMesssage(config.error);
+                    fileHandler.writeErrorMesssage(config.error);
                 }
             }
         }
-        return this.fileHandler![module](pathname, options);
+        return fileHandler[module](pathname, options);
     }
 
     get initializing() {
