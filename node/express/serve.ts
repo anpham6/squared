@@ -168,7 +168,6 @@ function installModules(manager: IFileManager, query: StringMap) {
         if (!ENV || !settings.routing[ENV]) {
             ENV = 'development';
         }
-        console.log('');
         let mounted = 0;
         for (const routes of [settings.routing['__SHARED__'], settings.routing[ENV]]) {
             if (Array.isArray(routes)) {
@@ -178,11 +177,11 @@ function installModules(manager: IFileManager, query: StringMap) {
                         const pathname = path.join(__dirname, mount);
                         try {
                             app.use(dirname, express.static(pathname));
-                            console.log(`${chalk.yellow('MOUNT')}: ${chalk.bgGrey(pathname)} ${chalk.yellow('->')} ${chalk.bold(dirname)}`);
+                            Node.formatMessage('MOUNT', `${chalk.bgGrey(pathname)} ${chalk.yellow('->')} ${chalk.bold(dirname)}`, '', 'yellow');
                             ++mounted;
                         }
                         catch (err) {
-                            console.log(`${chalk.bold.bgGrey.blackBright('FAIL')}: ${dirname} -> ${err as string}`);
+                            Node.writeFail(['Unable to mount directory', dirname], err);
                         }
                     }
                 }
@@ -194,11 +193,11 @@ function installModules(manager: IFileManager, query: StringMap) {
         ENV ||= 'development';
         app.use('/', express.static(path.join(__dirname, 'html')));
         app.use('/dist', express.static(path.join(__dirname, 'dist')));
-        console.log(`${chalk.bold.bgGrey.blackBright('FAIL')}: Routing not defined.`);
+        Node.writeFail('Routing not defined');
     }
 
-    console.log(`${chalk.blue('DISK')}: ${Node.hasDiskRead() ? chalk.green('+') : chalk.red('-')}r ${Node.hasDiskWrite() ? chalk.green('+') : chalk.red('-')}w`);
-    console.log(`${chalk.blue(' UNC')}: ${Node.hasUNCRead() ? chalk.green('+') : chalk.red('-')}r ${Node.hasUNCWrite() ? chalk.green('+') : chalk.red('-')}w`);
+    Node.formatMessage('DISK', (Node.hasDiskRead() ? chalk.green('+') : chalk.red('-')) + 'r ' + (Node.hasDiskWrite() ? chalk.green('+') : chalk.red('-')) + 'w', '', 'blue');
+    Node.formatMessage('UNC', (Node.hasUNCRead() ? chalk.green('+') : chalk.red('-')) + 'r ' + (Node.hasUNCWrite() ? chalk.green('+') : chalk.red('-')) + 'w', '', 'blue');
 
     if (argv.cors) {
         app.use(cors({ origin: argv.cors }));
@@ -210,7 +209,7 @@ function installModules(manager: IFileManager, query: StringMap) {
         argv.cors = typeof settings.cors.origin === 'string' ? settings.cors.origin : 'true';
     }
 
-    console.log(`${chalk.blue('CORS')}: ${argv.cors ? chalk.green(argv.cors) : chalk.grey('disabled')}`);
+    Node.formatMessage('CORS', argv.cors ? chalk.green(argv.cors) : chalk.grey('disabled'), '', 'blue');
 
     if (argv.port) {
         PORT = argv.port.toString();
@@ -222,7 +221,11 @@ function installModules(manager: IFileManager, query: StringMap) {
     PORT = port >= 0 ? port.toString() : '3000';
 
     app.use(body_parser.json({ limit: settings.request_post_limit || '250mb' }));
-    app.listen(PORT, () => console.log(`\n${chalk[ENV!.startsWith('prod') ? 'green' : 'yellow'](ENV!.toUpperCase())}: Express server listening on port ${chalk.bold(PORT)}\n`));
+    app.listen(PORT, () => {
+        console.log('');
+        Node.formatMessage(ENV!.toUpperCase(), 'Express server listening on port ' + chalk.bold(PORT), '', ENV!.startsWith('prod') ? 'green' : 'yellow');
+        console.log('');
+    });
 
     process.env.NODE_ENV = ENV;
     process.env.PORT = PORT;
@@ -314,18 +317,18 @@ app.post('/api/v1/assets/archive', (req, res) => {
                         response.zipname = gz;
                         response.bytes = manager.getFileSize(gz);
                         res.json(response);
-                        console.log(`${chalk.blue('WRITE')}: ${gz} ${chalk.yellow('[') + chalk.grey(response.bytes + ' bytes') + chalk.yellow(']')}`);
+                        manager.formatMessage('WRITE', [gz, response.bytes + ' bytes'], '', 'blue');
                     })
                     .on('error', err => {
                         response.success = false;
                         res.json(response);
-                        Node.writeFail(gz, err);
+                        manager.writeFail(['Unable to compress file', gz], err);
                     });
             }
             else {
                 res.json(response);
             }
-            console.log(`${chalk.blue('WRITE')}: ${zipname} ${chalk.yellow('[') + chalk.grey(response.bytes + ' bytes') + chalk.yellow(']')}`);
+            manager.formatMessage('WRITE', [zipname, response.bytes + ' bytes'], '', 'blue');
         });
         archive.pipe(output);
         try {
@@ -350,7 +353,7 @@ app.post('/api/v1/assets/archive', (req, res) => {
                         resumeThread(unzip_to);
                     }
                     else {
-                        Node.writeFail(zippath, err);
+                        Node.writeFail(['Unable to decompress file', zippath], err);
                         resumeThread();
                     }
                 });
@@ -363,7 +366,7 @@ app.post('/api/v1/assets/archive', (req, res) => {
                         .on('response', response => {
                             const statusCode = response.statusCode;
                             if (statusCode >= 300) {
-                                Node.writeFail(zippath, new Error(statusCode + ' ' + response.statusMessage));
+                                Node.writeFail(['Unable to download file', append_to], statusCode + ' ' + response.statusMessage);
                             }
                         })
                         .on('error', () => resumeThread())
@@ -384,14 +387,14 @@ app.post('/api/v1/assets/archive', (req, res) => {
                     fs.copyFile(append_to, zippath, decompress);
                     return;
                 }
-                Node.writeFail(append_to, new Error('Archive not found.'));
+                Node.writeFail('Archive not found', append_to);
             }
             catch (err) {
                 Node.writeFail(zippath, err);
             }
         }
         else {
-            Node.writeFail(append_to, new Error('Invalid archive format.'));
+            Node.writeFail('Invalid archive format', append_to);
         }
     }
     resumeThread();
@@ -402,7 +405,7 @@ app.get('/api/v1/browser/download', (req, res) => {
     if (uri) {
         res.sendFile(uri, err => {
             if (err) {
-                Node.writeFail(uri, err);
+                Node.writeFail(['Unable to send file', uri], err);
             }
         });
     }

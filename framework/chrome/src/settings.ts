@@ -9,7 +9,8 @@ const settings: UserResourceSettings = {
     pierceShadowRoot: false,
     showErrorMessages: false,
     outputEmptyCopyDirectory: false,
-    outputTasksMap: {},
+    outputTasks: {},
+    outputWatch: {},
     outputArchiveName: 'chrome-data',
     outputArchiveFormat: 'zip'
 };

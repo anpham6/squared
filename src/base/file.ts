@@ -10,7 +10,7 @@ type IGlobExp = squared.base.lib.util.IGlobExp;
 
 const { SERVER_REQUIRED } = squared.lib.error;
 
-const { fromLastIndexOf, trimEnd } = squared.lib.util;
+const { fromLastIndexOf, isPlainObject, trimEnd } = squared.lib.util;
 const { createElement } = squared.lib.dom;
 
 function validateAsset(file: FileAsset, exclusions: Exclusions) {
@@ -250,20 +250,39 @@ export default abstract class File<T extends Node> implements squared.base.File<
                     return;
                 }
             }
-            const taskMap = this.userSettings.outputTasksMap;
-            let unassigned: Undef<FileAsset[]>;
-            for (const task in taskMap) {
-                unassigned ||= assets.filter(item => !item.tasks);
-                if (unassigned.length) {
-                    const glob = parseGlob(task, { fromEnd: true });
-                    for (const item of unassigned) {
-                        if (glob.test(appendSeparator(item.pathname, item.filename))) {
-                            (item.tasks ||= []).push(...taskMap[task]);
+            const { outputTasks, outputWatch } = this.userSettings;
+            for (let i = 0; i < 2; ++i) {
+                const [output, attr] = i === 0 ? [outputTasks, 'tasks'] : [outputWatch, 'watch'];
+                let unassigned: Undef<FileAsset[]>;
+                for (const module in output) {
+                    unassigned ||= assets.filter(item => !item[attr]);
+                    let length = unassigned.length;
+                    if (length) {
+                        const glob = parseGlob(module, { fromEnd: true });
+                        for (let j = 0; j < length; ++j) {
+                            const item = unassigned[j];
+                            if (glob.test(appendSeparator(item.pathname, item.filename))) {
+                                const value = output[module];
+                                if (i === 0) {
+                                    item.tasks ||= [];
+                                    if (typeof value === 'string') {
+                                        item.tasks.push(value);
+                                    }
+                                    else if (Array.isArray(value)) {
+                                        item.tasks.push(...value);
+                                    }
+                                }
+                                else if (value === true || isPlainObject<WatchInterval>(value) && (value.interval || value.expires)) {
+                                    item.watch = value;
+                                    unassigned.splice(j--, 1);
+                                    --length;
+                                }
+                            }
                         }
                     }
-                }
-                else {
-                    break;
+                    else {
+                        break;
+                    }
                 }
             }
             const data: PlainObject = { assets };

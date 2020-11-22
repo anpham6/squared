@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 These settings are available in the global variable "squared" to customize your desired output structure. Each framework shares a common set of settings and also a subset of their own settings.
   
-Gulp installation is required in order to use "outputTasksMap". Further instructions can be found in the [squared-functions](https://github.com/anpham6/squared-functions#readme) repository.
+Gulp installation is required in order to use "outputTasks". Further instructions can be found in the [squared-functions](https://github.com/anpham6/squared-functions#readme) repository.
 
 #### Example: android
 
@@ -186,7 +186,8 @@ squared.settings = {
     outputMainFileName: 'activity_main.xml',
     outputDirectory: 'app/src/main',
     outputEmptyCopyDirectory: false,
-    outputTasksMap: {} // { "**/drawable/*.xml": ["minify"] }
+    outputTasks: {} // { "**/drawable/*.xml": ["minify"] }
+    outputWatch: {} // NOTE: Only applicabale to raw assets { "**/drawable/*.png": true, **/drawable/*.jpg": { interval: 1000, expires: '2h' } }
     outputArchiveName: 'android-xml',
     outputArchiveFormat: 'zip' // zip | tar | gz/tgz
 };
@@ -206,7 +207,8 @@ squared.settings = {
     pierceShadowRoot: false,
     showErrorMessages: false,
     outputEmptyCopyDirectory: false,
-    outputTasksMap: {} // { "*.js": ["minify"] }
+    outputTasks: {} // { "*.js": "minify" }
+    outputWatch: {} // { "*": true }
     outputArchiveName: 'chrome-data',
     outputArchiveFormat: 'zip' // zip | tar | gz/tgz
 };
