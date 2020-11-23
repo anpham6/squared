@@ -34,21 +34,18 @@
     "s3": {
       "main": {
         "accessKeyId": "",
-        "secretAccessKey": "",
-        "apiEndpoint": ""
+        "secretAccessKey": ""
       }
     },
     "azure": {
       "main": {
         "accountName": "",
-        "accountKey": "",
-        "apiEndpoint": ""
+        "accountKey": ""
       }
     },
     "gcs": {
       "main": {
-        "keyFilename": "",
-        "apiEndpoint": ""
+        "keyFilename": ""
       }
     },
     "oci": {
@@ -56,8 +53,15 @@
         "region": "",
         "namespace": "",
         "accessKeyId": "",
-        "secretAccessKey": "",
-        "apiEndpoint": ""
+        "secretAccessKey": ""
+      }
+    },
+    "ibm": {
+      "main": {
+        "apiKeyId": "",
+        "serviceInstanceId": "",
+        "endpoint": "",
+        "region": ""
       }
     }
   },
@@ -121,7 +125,7 @@
       "prettier": {
         "beautify": {
           "parser": "babel",
-          "printWidth": 100,
+          "printWidth": 120,
           "tabWidth": 4
         }
       },

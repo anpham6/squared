@@ -10,8 +10,8 @@ type IGlobExp = squared.base.lib.util.IGlobExp;
 
 const { SERVER_REQUIRED } = squared.lib.error;
 
-const { fromLastIndexOf, isPlainObject, trimEnd } = squared.lib.util;
 const { createElement } = squared.lib.dom;
+const { fromLastIndexOf, isPlainObject, trimEnd } = squared.lib.util;
 
 function validateAsset(file: FileAsset, exclusions: Exclusions) {
     const { pathname, filename } = file;
@@ -66,7 +66,7 @@ function validateAsset(file: FileAsset, exclusions: Exclusions) {
 export default abstract class File<T extends Node> implements squared.base.File<T> {
     public static downloadFile(data: Blob, filename: string, mimeType?: string) {
         const blob = new Blob([data], { type: mimeType || 'application/octet-stream' });
-        const href = window.URL.createObjectURL(blob);
+        const href = URL.createObjectURL(blob);
         const element = createElement('a', {
             style: { display: 'none' },
             attrs: { href, download: filename }
@@ -74,11 +74,10 @@ export default abstract class File<T extends Node> implements squared.base.File<
         if (!element.download) {
             element.setAttribute('target', '_blank');
         }
-        const body = document.body;
-        body.appendChild(element);
+        document.body.appendChild(element);
         element.click();
-        body.removeChild(element);
-        setTimeout(() => window.URL.revokeObjectURL(href), 1);
+        document.body.removeChild(element);
+        setTimeout(() => URL.revokeObjectURL(href), 1);
     }
 
     public resource!: Resource<T>;
@@ -136,9 +135,9 @@ export default abstract class File<T extends Node> implements squared.base.File<
         if (this.hasHttpProtocol()) {
             return fetch(this.hostname + this._endpoints.LOADER_JSON + encodeURIComponent(value), {
                 method: 'GET',
-                headers: new Headers({ 'Accept': 'application/json, text/plain', 'Content-Type': 'application/json' })
+                headers: new Headers({ 'Accept': 'application/json, text/plain' })
             })
-            .then(response => response.json());
+            .then(async response => await response.json());
         }
         return Promise.resolve();
     }

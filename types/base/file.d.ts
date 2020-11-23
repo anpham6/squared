@@ -36,9 +36,15 @@ interface RawAsset extends FileAsset, Partial<ImageAsset> {
 
 interface CloudService extends ObjectMap<unknown> {
     service: string;
-    settings?: string;
+    credential: StringMap;
+    admin?: CloudServiceAdmin;
     upload?: CloudServiceUpload;
     download?: CloudServiceDownload;
+}
+
+interface CloudServiceAdmin {
+    publicRead?: boolean;
+    emptyFolder?: boolean;
 }
 
 interface CloudServiceAction {

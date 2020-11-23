@@ -77,7 +77,7 @@
   "license": "MIT",
   "homepage": "https://github.com/anpham6/squared#readme",
   "dependencies": {
-    "@squared-functions/file-manager": "^0.7.1",
+    "@squared-functions/file-manager": "^0.7.2",
     "7zip-min": "^1.2.0",
     "archiver": "^5.1.0",
     "chalk": "^4.1.0",
@@ -118,6 +118,7 @@
     "eslint": "^7.14.0",
     "glob": "^7.1.6",
     "gulp": "^4.0.2",
+    "ibm-cos-sdk": "^1.8.0",
     "md5": "^2.3.0",
     "postcss": "^8.1.9",
     "posthtml": "^0.14.0",

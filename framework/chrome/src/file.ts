@@ -309,19 +309,7 @@ function checkBucketOrContainer(provider: CloudService, other: CloudService) {
     if (provider.upload!.apiEndpoint && provider.upload!.apiEndpoint === other.upload!.apiEndpoint) {
         return false;
     }
-    if (provider.service && other.service) {
-        switch (provider.service) {
-            case 's3':
-            case 'gcs':
-            case 'oci':
-                return provider.bucket === other.bucket;
-            case 'azure':
-                return provider.container === other.container;
-            default:
-                return true;
-        }
-    }
-    return false;
+    return provider.service && other.service && provider.bucket === other.bucket;
 }
 
 const getTasks = (element: HTMLElement) => element.dataset.chromeTasks?.trim().split(/\s*\+\s*/);

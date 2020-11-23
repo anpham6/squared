@@ -104,11 +104,21 @@
                             cloudStorage: [{
                                 service: 's3',
                                 bucket: 'squared-001',
-                                settings: 'main',
+                                credential: {
+                                    settings: 'main'
+                                },
+                                admin: {
+                                    publicRead: true,
+                                    emptyBucket: true
+                                },
                                 upload: {
                                     active: true,
                                     localStorage: false,
-                                    apiEndpoint: 'https://squared-001.s3.us-west-2.amazonaws.com',
+                                    endpoint: 'https://squared-001.s3.us-west-2.amazonaws.com',
+                                    overwrite: true
+                                },
+                                download: {
+                                    filename: 'bundle_all.html',
                                     overwrite: true
                                 }
                             }]
@@ -119,7 +129,13 @@
                             cloudStorage: [{
                                 service: 'gcs',
                                 bucket: 'squared-001',
-                                settings: 'main',
+                                credential: {
+                                    settings: 'main'
+                                },
+                                admin: {
+                                    publicRead: true,
+                                    emptyBucket: true
+                                },
                                 upload: {
                                     active: true,
                                     localStorage: false,
@@ -128,15 +144,21 @@
                                 },
                                 download: {
                                     active: true,
-                                    filename: 'bundle_1.css'
+                                    filename: 'bundle.css'
                                 }
                             }]
                         },
                         image: {
                             cloudStorage: [{
                                 service: 'azure',
-                                container: 'squared-001',
-                                settings: 'main',
+                                bucket: 'squared-001',
+                                credential: {
+                                    settings: 'main'
+                                },
+                                admin: {
+                                    publicRead: true,
+                                    emptyBucket: true
+                                },
                                 upload: {
                                     active: true,
                                     localStorage: false,
@@ -144,7 +166,7 @@
                                     overwrite: true
                                 },
                                 download: {
-                                    filename: 'harbour1.bmp',
+                                    filename: 'harbour1.webp',
                                     overwrite: true
                                 }
                             }]
@@ -153,9 +175,15 @@
                             filename: 'bundle.js',
                             format: 'es5+minify',
                             cloudStorage: [{
-                                service: 'gcs',
+                                service: 'ibm',
                                 bucket: 'squared-001',
-                                settings: 'main',
+                                credential: {
+                                    settings: 'main'
+                                },
+                                admin: {
+                                    publicRead: true,
+                                    emptyBucket: true
+                                },
                                 upload: {
                                     active: true,
                                     localStorage: false,
@@ -163,7 +191,7 @@
                                     overwrite: true
                                 },
                                 download: {
-                                    filename: 'harbour2.bmp',
+                                    filename: 'bundle.js',
                                     overwrite: true
                                 }
                             }]
@@ -173,14 +201,17 @@
                             cloudStorage: [{
                                 service: 'oci',
                                 bucket: 'squared-002',
-                                settings: 'main',
+                                credential: {
+                                    settings: 'main'
+                                },
+                                admin: {
+                                    publicRead: true,
+                                    emptyBucket: true
+                                },
                                 upload: {
                                     active: true,
                                     localStorage: false,
                                     overwrite: true
-                                },
-                                download: {
-                                    filename: 'bundle.html.gz'
                                 }
                             }]
                         }

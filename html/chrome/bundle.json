@@ -84,8 +84,10 @@
       {
         "service": "s3",
         "bucket": "squared-001",
-        "accessKeyId": null,
-        "secretAccessKey": null,
+        "credential": {
+          "accessKeyId": null,
+          "secretAccessKey": null
+        },
         "upload": {
           "active": true
         }
@@ -122,8 +124,10 @@
       {
         "service": "azure",
         "bucket": "squared-001",
-        "accountName": null,
-        "accountKey": null,
+        "credential": {
+          "accountName": null,
+          "accountKey": null
+        },
         "upload": {
           "active": true,
           "localStorage": false,
@@ -148,7 +152,9 @@
       {
         "service": "gcs",
         "bucket": "squared-001",
-        "keyFilename": null,
+        "credential": {
+          "keyFilename": null
+        },
         "upload": {
           "active": true,
           "localStorage": false
