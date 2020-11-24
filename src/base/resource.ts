@@ -89,7 +89,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
         }
     }
 
-    public addRawData(uri: string, mimeType: string, content: Undef<string>, options?: RawDataOptions) {
+    public addRawData(uri: string, mimeType: string, content?: string, options?: RawDataOptions) {
         let filename: Undef<string>,
             encoding: Undef<string>,
             data: Undef<string | ArrayBuffer>,

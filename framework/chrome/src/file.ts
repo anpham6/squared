@@ -77,15 +77,13 @@ function getFilePath(value: string, saveTo?: boolean, ext?: string): [Undef<stri
     }
     const result = splitPair(value, '/', false, true);
     if (saveTo) {
-        result[1] = getFilenameUUID(result[1], ext);
+        result[1] = assignFilename(result[1], ext);
     }
     return [moveTo, result[0], result[1]];
 }
 
-function getFilenameUUID(value: Undef<string>, ext?: string) {
-    if (value) {
-        ext = getFileExt(value) || ext;
-    }
+function assignFilename(value: string, ext?: string) {
+    ext ||= getFileExt(value);
     return DIR_FUNCTIONS.ASSIGN + (ext ? '.' + ext : 'unknown');
 }
 
@@ -142,7 +140,7 @@ function setBundleIndex(bundleIndex: BundleIndex) {
     }
 }
 
-function createBundleAsset(assets: ChromeAsset[], element: HTMLElement, file: string, format: Undef<string>, preserve?: boolean, inline?: boolean, cloudStorage?: CloudService[]): Null<ChromeAsset> {
+function createBundleAsset(assets: ChromeAsset[], element: HTMLElement, file: string, format: Undef<string>, preserve?: boolean, inline?: boolean): Null<ChromeAsset> {
     const content = element.innerHTML.trim();
     if (content) {
         const [moveTo, pathname, filename] = getFilePath(file);
@@ -161,7 +159,7 @@ function createBundleAsset(assets: ChromeAsset[], element: HTMLElement, file: st
             (previous.trailingContent ||= []).push({ value: content, preserve });
         }
         else {
-            checkFilename(assets, data, cloudStorage);
+            checkFilename(assets, data);
             return data;
         }
     }
@@ -173,30 +171,30 @@ function setBundleData(bundleIndex: BundleIndex, data: ChromeAsset) {
     (bundleIndex[pathUri] ||= []).push(data);
 }
 
-function checkBundleStart(assets: ChromeAsset[], data: ChromeAsset, cloudStorage?: CloudService[]) {
+function checkBundleStart(assets: ChromeAsset[], data: ChromeAsset) {
     for (let i = 0, length = assets.length; i < length; ++i) {
         if (hasSamePath(assets[i], data)) {
             for (let j = i + 1; j < length; ++j) {
                 if (!hasSamePath(assets[j], data)) {
-                    checkFilename(assets, data, cloudStorage);
+                    checkFilename(assets, data);
                     return true;
                 }
             }
             return false;
         }
     }
-    checkFilename(assets, data, cloudStorage);
+    checkFilename(assets, data);
     return true;
 }
 
-function checkFilename(assets: ChromeAsset[], data: ChromeAsset, cloudStorage?: CloudService[]) {
+function checkFilename(assets: ChromeAsset[], data: ChromeAsset) {
     const filename = data.filename;
-    let i = 1;
-    while (assets.find(item => hasSamePath(item, data)) || hasFilenameConflict(assets, data.filename, cloudStorage)) {
+    let i = 0;
+    while (assets.find(item => hasSamePath(item, data))) {
         const [start, end] = splitPair(data.filename, '.');
-        data.filename = start + '_' + i++ + (end ? '.' + end : '');
+        data.filename = start + '_' + ++i + (end ? '.' + end : '');
     }
-    if (i > 1) {
+    if (i > 0) {
         FILENAME_MAP.set(data, filename);
     }
 }
@@ -282,34 +280,6 @@ function hasSamePath(item: ChromeAsset, other: ChromeAsset, bundling = false) {
         }
     }
     return false;
-}
-
-function hasFilenameConflict(assets: ChromeAsset[], filename: string, cloudStorage: Undef<CloudService[]>) {
-    if (cloudStorage) {
-        for (const data of cloudStorage) {
-            const upload = data.upload;
-            if (upload && upload.active) {
-                for (const item of assets) {
-                    if (item.cloudStorage) {
-                        for (const previous of item.cloudStorage) {
-                            const previousUpload = previous.upload;
-                            if (previousUpload && previousUpload.active && (checkBucketOrContainer(previous, data) && (filename === item.filename || filename === previousUpload.filename || upload.filename && (upload.filename === item.filename || upload.filename === previousUpload.filename)))) {
-                                return true;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return false;
-}
-
-function checkBucketOrContainer(provider: CloudService, other: CloudService) {
-    if (provider.upload!.apiEndpoint && provider.upload!.apiEndpoint === other.upload!.apiEndpoint) {
-        return false;
-    }
-    return provider.service && other.service && provider.bucket === other.bucket;
 }
 
 const getTasks = (element: HTMLElement) => element.dataset.chromeTasks?.trim().split(/\s*\+\s*/);
@@ -777,11 +747,11 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             for (const [item, uri] of items) {
                 const file = item.dataset.chromeFile;
                 let saveAs: Undef<string>,
-                    tasks: Undef<string[]>,
                     compress: Undef<CompressFormat[]>,
+                    tasks: Undef<string[]>,
+                    watch: Undef<boolean | WatchInterval>,
                     cloudStorage: Undef<CloudService[]>,
                     attributes: Undef<AttributeValue[]>,
-                    watch: Undef<boolean | WatchInterval>,
                     saveTo: Undef<boolean>,
                     filename: Undef<string>,
                     fromConfig: Undef<boolean>;
@@ -793,7 +763,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     if (excludeAsset(result, command, item.outerHTML)) {
                         continue;
                     }
-                    ({ saveTo: saveAs, filename, compress, tasks, cloudStorage, attributes, watch } = command);
+                    ({ saveTo: saveAs, filename, compress, tasks, watch, cloudStorage, attributes } = command);
                     [saveAs, saveTo] = checkSaveAs(uri, saveAs || command.pathname, filename);
                     if (saveAs) {
                         filename = '';
@@ -872,9 +842,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             inline: Undef<boolean>,
             compress: Undef<CompressFormat[]>,
             tasks: Undef<string[]>,
+            watch: Undef<boolean | WatchInterval>,
             cloudStorage: Undef<CloudService[]>,
             attributes: Undef<AttributeValue[]>,
-            watch: Undef<boolean | WatchInterval>,
             filename: Undef<string>,
             fromConfig: Undef<boolean>,
             fromSaveAs: Undef<boolean>;
@@ -884,7 +854,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 return;
             }
             let filenameAs: Undef<string>;
-            ({ filename: filenameAs, preserve, inline, compress, tasks, cloudStorage, attributes, watch } = command);
+            ({ filename: filenameAs, preserve, inline, compress, tasks, watch, cloudStorage, attributes } = command);
             file = src ? command.saveAs : command.exportAs;
             if (!file && filenameAs) {
                 if (command.pathname) {
@@ -907,14 +877,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 return;
             }
             filename = saveAsOptions.filename;
-            ({ format, preserve, inline, compress, tasks, cloudStorage, attributes, watch } = saveAsOptions);
-            if (cloudStorage) {
-                for (const item of cloudStorage) {
-                    if (item.active) {
-                        delete item.filename;
-                    }
-                }
-            }
+            ({ format, preserve, inline, compress, tasks, watch, cloudStorage, attributes } = saveAsOptions);
             if (src) {
                 file = filename && getCustomPath(src, saveAsOptions.pathname, filename);
                 if (file) {
@@ -940,7 +903,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         let data: Null<ChromeAsset> = null;
         if (src) {
             data = File.parseUri(resolvePath(src), { element, saveAs: file, format, preserve, inline, preserveCrossOrigin, fromConfig });
-            if (data && checkBundleStart(assets, data, cloudStorage)) {
+            if (data && checkBundleStart(assets, data)) {
                 data.bundleIndex = -1;
             }
         }
@@ -951,7 +914,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     ({ file, format, preserve, inline, compress } = command);
                 }
             }
-            data = createBundleAsset(assets, element, file, format, preserve, inline, cloudStorage);
+            data = createBundleAsset(assets, element, file, format, preserve, inline);
             if (data) {
                 data.bundleIndex = -1;
             }
@@ -971,7 +934,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         }
     }
 
-    private processImageUri(result: ChromeAsset[], element: Null<HTMLElement>, uri: string, saveAsImage: Undef<SaveAsOptions>, preserveCrossOrigin: Undef<boolean>, assetMap?: Map<Element, AssetCommand>) {
+    private processImageUri(assets: ChromeAsset[], element: Null<HTMLElement>, uri: string, saveAsImage: Undef<SaveAsOptions>, preserveCrossOrigin: Undef<boolean>, assetMap?: Map<Element, AssetCommand>) {
         if (uri = uri.trim()) {
             let saveAs: Undef<string>,
                 pathname: Undef<string>,
@@ -979,9 +942,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 compress: Undef<CompressFormat[]>,
                 commands: Undef<string[]>,
                 tasks: Undef<string[]>,
+                watch: Undef<boolean | WatchInterval>,
                 cloudStorage: Undef<CloudService[]>,
                 attributes: Undef<AttributeValue[]>,
-                watch: Undef<boolean | WatchInterval>,
                 saveTo: Undef<boolean>,
                 filename: Undef<string>,
                 fromConfig: Undef<boolean>;
@@ -992,10 +955,10 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 }
                 if (assetMap && assetMap.has(element)) {
                     const command = assetMap.get(element)!;
-                    if (excludeAsset(result, command, element.outerHTML)) {
+                    if (excludeAsset(assets, command, element.outerHTML)) {
                         return;
                     }
-                    ({ saveTo: saveAs, pathname, filename, commands, base64, compress, tasks, cloudStorage, attributes, watch } = command);
+                    ({ saveTo: saveAs, pathname, filename, commands, base64, compress, tasks, watch, cloudStorage, attributes } = command);
                     [saveAs, saveTo] = checkSaveAs(uri, saveAs || pathname, filename);
                     if (saveAs) {
                         filename = '';
@@ -1003,10 +966,10 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     fromConfig = true;
                 }
                 else if (saveAsImage) {
-                    if (excludeAsset(result, saveAsImage, element.outerHTML)) {
+                    if (excludeAsset(assets, saveAsImage, element.outerHTML)) {
                         return;
                     }
-                    ({ pathname, commands, base64, compress, tasks, cloudStorage, attributes, watch } = saveAsImage);
+                    ({ pathname, commands, base64, compress, tasks, watch, cloudStorage, attributes } = saveAsImage);
                     [saveAs, saveTo] = checkSaveAs(uri, pathname);
                 }
                 else if (file) {
@@ -1048,7 +1011,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 if (base64) {
                     data.format = 'base64';
                 }
-                result.push(data);
+                assets.push(data);
                 return data;
             }
         }

@@ -104,9 +104,7 @@
                             cloudStorage: [{
                                 service: 's3',
                                 bucket: 'squared-001',
-                                credential: {
-                                    settings: 'main'
-                                },
+                                credential: 'main',
                                 admin: {
                                     publicRead: true,
                                     emptyBucket: true
@@ -129,12 +127,11 @@
                             cloudStorage: [{
                                 service: 'gcs',
                                 bucket: 'squared-001',
-                                credential: {
-                                    settings: 'main'
-                                },
+                                credential: 'main',
                                 admin: {
                                     publicRead: true,
-                                    emptyBucket: true
+                                    emptyBucket: true,
+                                    preservePath: true
                                 },
                                 upload: {
                                     active: true,
@@ -152,18 +149,16 @@
                             cloudStorage: [{
                                 service: 'azure',
                                 bucket: 'squared-001',
-                                credential: {
-                                    settings: 'main'
-                                },
+                                credential: 'main',
                                 admin: {
                                     publicRead: true,
-                                    emptyBucket: true
+                                    emptyBucket: true,
+                                    preservePath: true
                                 },
                                 upload: {
                                     active: true,
                                     localStorage: false,
-                                    all: true,
-                                    overwrite: true
+                                    all: true
                                 },
                                 download: {
                                     filename: 'harbour1.webp',
@@ -177,12 +172,11 @@
                             cloudStorage: [{
                                 service: 'ibm',
                                 bucket: 'squared-001',
-                                credential: {
-                                    settings: 'main'
-                                },
+                                credential: 'main',
                                 admin: {
                                     publicRead: true,
-                                    emptyBucket: true
+                                    emptyBucket: true,
+                                    preservePath: true
                                 },
                                 upload: {
                                     active: true,
@@ -201,12 +195,11 @@
                             cloudStorage: [{
                                 service: 'oci',
                                 bucket: 'squared-002',
-                                credential: {
-                                    settings: 'main'
-                                },
+                                credential: 'main',
                                 admin: {
                                     publicRead: true,
-                                    emptyBucket: true
+                                    emptyBucket: true,
+                                    preservePath: true
                                 },
                                 upload: {
                                     active: true,

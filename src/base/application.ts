@@ -841,7 +841,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         case CSSRule.IMPORT_RULE: {
                             const uri = resolvePath((rule as CSSImportRule).href, rule.parentStyleSheet?.href || location.href);
                             if (uri) {
-                                this.resourceHandler?.addRawData(uri, 'text/css', undefined, { encoding: 'utf8' });
+                                this.resourceHandler?.addRawData(uri, 'text/css', '', { encoding: 'utf8' });
                             }
                             this.applyStyleSheet((rule as CSSImportRule).styleSheet, sessionId, documentRoot, queryRoot);
                             break;

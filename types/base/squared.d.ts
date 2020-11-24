@@ -218,7 +218,7 @@ declare module "base" {
         getVideo(uri: string): Undef<Asset>;
         addAudio(uri: string, mimeType?: string, options?: ElementScope): void;
         getAudio(uri: string): Undef<Asset>;
-        addRawData(uri: string, mimeType: string, content: Undef<string>, options?: RawDataOptions): string;
+        addRawData(uri: string, mimeType: string, content?: string, options?: RawDataOptions): string;
         getRawData(uri: string): Undef<RawAsset>;
         addImageData(uri: string, width?: number, height?: number): void;
         set fileHandler(value);

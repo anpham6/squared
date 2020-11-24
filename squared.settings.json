@@ -40,7 +40,9 @@
     "azure": {
       "main": {
         "accountName": "",
-        "accountKey": ""
+        "accountKey": "",
+        "connectionString": "",
+        "sharedAccessSignature": ""
       }
     },
     "gcs": {

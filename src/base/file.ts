@@ -17,14 +17,14 @@ function validateAsset(file: FileAsset, exclusions: Exclusions) {
     const { pathname, filename } = file;
     const glob = exclusions.glob as (string | IGlobExp)[];
     if (glob) {
-        const pathUri = appendSeparator(pathname, filename);
+        const url = appendSeparator(pathname, filename);
         for (let i = 0, length = glob.length; i < length; ++i) {
             let value = glob[i];
             if (typeof value === 'string') {
                 value = parseGlob(value, { fromEnd: true });
                 glob[i] = value;
             }
-            if (value.test(pathUri)) {
+            if (value.test(url)) {
                 return false;
             }
         }
@@ -32,7 +32,7 @@ function validateAsset(file: FileAsset, exclusions: Exclusions) {
     if (exclusions.pathname) {
         for (const value of exclusions.pathname) {
             const dirname = trimEnd(value.replace(/\\/g, '/'), '/');
-            if (new RegExp(`^${dirname}$`).test(pathname) || new RegExp(`^${dirname}/`).test(pathname)) {
+            if (new RegExp(`^${dirname}/?`).test(pathname)) {
                 return false;
             }
         }
@@ -53,9 +53,9 @@ function validateAsset(file: FileAsset, exclusions: Exclusions) {
         }
     }
     if (exclusions.pattern) {
-        const pathUri = appendSeparator(pathname, filename);
+        const url = appendSeparator(pathname, filename);
         for (const value of exclusions.pattern) {
-            if (new RegExp(value).test(pathUri)) {
+            if (new RegExp(value).test(url)) {
                 return false;
             }
         }
@@ -137,7 +137,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
                 method: 'GET',
                 headers: new Headers({ 'Accept': 'application/json, text/plain' })
             })
-            .then(async response => await response.json());
+            .then(response => response.json());
         }
         return Promise.resolve();
     }
@@ -156,17 +156,15 @@ export default abstract class File<T extends Node> implements squared.base.File<
                         body: JSON.stringify(body)
                     }
                 )
-                .then(async response => await response.json() as ResponseData)
-                .then(result => {
-                    if (result) {
-                        if (typeof options.callback === 'function') {
-                            options.callback(result);
-                        }
-                        if (result.error) {
-                            this.writeErrorMesssage(result.error);
-                        }
-                        return result;
+                .then(response => response.json())
+                .then((result: ResponseData) => {
+                    if (typeof options.callback === 'function') {
+                        options.callback(result);
                     }
+                    if (result.error) {
+                        this.writeErrorMesssage(result.error);
+                    }
+                    return result;
                 });
             }
         }
@@ -205,22 +203,20 @@ export default abstract class File<T extends Node> implements squared.base.File<
                         body: JSON.stringify(body)
                     }
                 )
-                .then(async response => await response.json() as ResponseData)
-                .then(result => {
-                    if (result) {
-                        if (typeof options.callback === 'function') {
-                            options.callback(result);
-                        }
-                        const zipname = result.zipname;
-                        if (zipname) {
-                            fetch(this.hostname + this._endpoints.BROWSER_DOWNLOAD + encodeURIComponent(zipname))
-                                .then(async download => File.downloadFile(await download.blob(), fromLastIndexOf(zipname, '/', '\\')));
-                        }
-                        else if (result.error) {
-                            this.writeErrorMesssage(result.error);
-                        }
-                        return result;
+                .then(response => response.json())
+                .then((result: ResponseData) => {
+                    if (typeof options.callback === 'function') {
+                        options.callback(result);
                     }
+                    const zipname = result.zipname;
+                    if (zipname) {
+                        fetch(this.hostname + this._endpoints.BROWSER_DOWNLOAD + encodeURIComponent(zipname))
+                            .then(async download => File.downloadFile(await download.blob(), fromLastIndexOf(zipname, '/', '\\')));
+                    }
+                    else if (result.error) {
+                        this.writeErrorMesssage(result.error);
+                    }
+                    return result;
                 });
             }
         }
