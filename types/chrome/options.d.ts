@@ -13,11 +13,12 @@ interface SaveAsOptions extends Partial<LocationUri>, FileModifiers, OutputModif
     format?: string;
 }
 
-interface UriOptions extends FileModifiers {
+interface UriOptions {
     element?: HTMLElement;
     saveAs?: string;
     saveTo?: boolean;
     format?: string;
+    inline?: boolean;
     preserveCrossOrigin?: boolean;
     fromConfig?: boolean;
 }
