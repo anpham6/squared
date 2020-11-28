@@ -313,33 +313,33 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             ({ element, saveAs, format, saveTo, inline, fromConfig } = options);
         }
         let value = trimEnd(uri, '/'),
-            relocate: Undef<string>;
+            file: Undef<string>;
         const local = value.startsWith(trimEnd(location.origin, '/'));
         if (saveAs) {
             saveAs = trimEnd(normalizePath(saveAs), '/');
             if (saveTo || fromConfig) {
-                relocate = saveAs;
+                file = saveAs;
             }
             else {
                 const data = parseFileAs('saveAs', saveAs);
                 if (data) {
-                    ({ file: relocate, format } = data);
+                    ({ file, format } = data);
                     if (inline && element) {
                         textContent = element.outerHTML;
                     }
                 }
                 else {
-                    relocate = saveAs;
+                    file = saveAs;
                 }
             }
-            if (relocate === '~') {
-                relocate = '';
+            if (file === '~') {
+                file = '';
             }
-            if (local && relocate) {
-                value = resolvePath(relocate, location.href);
+            if (local && file) {
+                value = resolvePath(file, location.href);
             }
         }
-        if (!local && !relocate && options && options.preserveCrossOrigin) {
+        if (!local && !file && options && options.preserveCrossOrigin) {
             return null;
         }
         const match = FILE.PROTOCOL.exec(value);
@@ -353,13 +353,11 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 prefix = '',
                 rootDir: Undef<string>,
                 moveTo: Undef<string>;
-            if (!local) {
-                if (saveTo && relocate) {
-                    [moveTo, pathname, filename] = getFilePath(relocate + '/' + DIR_FUNCTIONS.ASSIGN + (ext ? '.' + ext : ''));
-                }
-                else {
-                    pathname = convertWord(host) + (port ? '/' + port.substring(1) : '') + '/';
-                }
+            if (file && saveTo) {
+                [moveTo, pathname, filename] = getFilePath(appendSeparator(file, DIR_FUNCTIONS.ASSIGN + (ext ? '.' + ext : '')));
+            }
+            else if (!local) {
+                pathname = convertWord(host) + (port ? '/' + port.substring(1) : '') + '/';
             }
             else {
                 prefix = splitPairStart(location.pathname, '/', false, true) + '/';
@@ -379,8 +377,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 }
             }
             if (!filename) {
-                if (local && relocate) {
-                    [moveTo, pathname, filename] = getFilePath(relocate, saveTo, ext);
+                if (file) {
+                    [moveTo, pathname, filename] = getFilePath(file);
                 }
                 else if (path && path !== '/') {
                     filename = fromLastIndexOf(path, '/', '\\');
@@ -785,9 +783,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     if (file === 'ignore') {
                         continue;
                     }
-                    const command = parseFileAs('saveTo', file);
+                    const command = parseFileAs('saveAs', file);
                     if (command) {
-                        [saveAs, saveTo] = checkSaveAs(uri, command.file);
+                        saveAs = command.file;
                     }
                     ({ compress } = parseOptions(item.dataset.chromeOptions));
                     tasks = getTasks(item);
@@ -991,9 +989,15 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     if (file === 'ignore') {
                         return;
                     }
-                    const fileAs = parseFileAs('saveTo', file);
+                    let fileAs = parseFileAs('saveTo', file);
                     if (fileAs) {
                         [saveAs, saveTo] = checkSaveAs(uri, fileAs.file);
+                    }
+                    else {
+                        fileAs = parseFileAs('saveAs', file);
+                        if (fileAs) {
+                            saveAs = fileAs.file;
+                        }
                     }
                     const { chromeCommands, chromeOptions, chromeWatch } = element.dataset;
                     if (chromeCommands) {
