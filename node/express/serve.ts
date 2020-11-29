@@ -1,4 +1,4 @@
-import type { Arguments, IFileManager, RequestBody, Settings, settings as SettingsFunctions, squared } from '@squared-functions/types';
+import type { Arguments, IFileManager, ImageConstructor, RequestBody, Settings, settings as SettingsFunctions, squared } from '@squared-functions/types';
 
 import path = require('path');
 import fs = require('fs-extra');
@@ -22,30 +22,37 @@ app.use(body_parser.urlencoded({ extended: true }));
 
 const Node = FileManager.moduleNode();
 
-let Compress: Undef<SettingsFunctions.CompressModule>,
-    Cloud: Undef<SettingsFunctions.CloudModule>,
-    Gulp: Undef<SettingsFunctions.GulpModule>,
+let Image: Undef<ImageConstructor>,
     Chrome: Undef<SettingsFunctions.ChromeModule>,
+    Gulp: Undef<SettingsFunctions.GulpModule>,
+    Cloud: Undef<SettingsFunctions.CloudModule>,
+    Compress: Undef<SettingsFunctions.CompressModule>,
     watchInterval: Undef<number>;
 
 function installModules(manager: IFileManager, query: StringMap) {
-    if (Compress) {
-        manager.install('compress', Compress);
-    }
-    if (Cloud) {
-        manager.install('cloud', Cloud);
+    const { chrome, watch, empty, release } = query;
+    if (Image) {
+        manager.install('image', Image);
     }
     if (Gulp) {
         manager.install('gulp', Gulp);
     }
-    if (Chrome) {
-        manager.install('chrome', Chrome);
+    if (Cloud) {
+        manager.install('cloud', Cloud);
     }
-    if (query.watch === '1') {
+    if (chrome === '1') {
+        if (Chrome) {
+            manager.install('chrome', Chrome);
+        }
+        if (Compress) {
+            manager.install('compress', Compress);
+        }
+    }
+    if (watch === '1') {
         manager.install('watch', watchInterval);
     }
-    manager.emptyDirectory = query.empty === '1';
-    manager.productionRelease = query.release === '1';
+    manager.emptyDirectory = empty === '1';
+    manager.productionRelease = release === '1';
 }
 
 {
@@ -148,14 +155,16 @@ function installModules(manager: IFileManager, query: StringMap) {
         }
     }
 
-    let settings: Settings;
+    let settings: Settings = {};
     try {
         settings = fs.existsSync('./squared.settings.yml') && yaml.safeLoad(fs.readFileSync(path.resolve('./squared.settings.yml'), 'utf8')) as Settings || require('./squared.settings.json');
-        ({ compress: Compress, cloud: Cloud, gulp: Gulp, chrome: Chrome, watch_interval: watchInterval } = settings);
+        ({ compress: Compress, cloud: Cloud, gulp: Gulp, chrome: Chrome } = settings);
         FileManager.loadSettings(settings, ignorePermissions);
+
+        Image = require('@squared-functions/image/' + settings.image?.proxy || 'jimp');
     }
-    catch {
-        settings = {};
+    catch (err) {
+        Node.writeFail('Unable to load settings', err);
     }
 
     if (settings.routing) {

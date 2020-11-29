@@ -64,9 +64,9 @@ function validateAsset(file: FileAsset, exclusions: Exclusions) {
 }
 
 export default abstract class File<T extends Node> implements squared.base.File<T> {
-    public static downloadFile(data: Blob, filename: string, mimeType?: string) {
+    public static downloadFile(data: Blob | string, filename?: string, mimeType?: string) {
         const blob = new Blob([data], { type: mimeType || 'application/octet-stream' });
-        const href = URL.createObjectURL(blob);
+        const href = typeof data ==='string' ? data : URL.createObjectURL(blob);
         const element = createElement('a', {
             style: { display: 'none' },
             attrs: { href, download: filename }

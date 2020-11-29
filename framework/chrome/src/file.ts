@@ -717,11 +717,11 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     public getCopyQueryParameters(options: FileCopyingOptions) {
-        return (options.watch ? '&watch=1' : '') + (options.productionRelease ? '&release=1' : '');
+        return this.getArchiveQueryParameters(options) + (options.watch ? '&watch=1' : '');
     }
 
     public getArchiveQueryParameters(options: FileArchivingOptions) {
-        return options.productionRelease ? '&release=1' : '';
+        return '&chrome=1' + (options.productionRelease ? '&release=1' : '');
     }
 
     protected getRawAssets(tagName: ResourceAssetTagName, options?: FileActionOptions) {
@@ -1008,7 +1008,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     }
                     const { chromeCommands, chromeOptions, chromeWatch } = element.dataset;
                     if (chromeCommands) {
-                        commands = replaceMap(chromeCommands.split('+'), value => value.trim());
+                        commands = replaceMap(chromeCommands.split('::'), value => value.trim());
                     }
                     ({ inline, compress } = parseOptions(chromeOptions));
                     tasks = getTasks(element);

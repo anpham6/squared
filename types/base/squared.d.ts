@@ -13,7 +13,7 @@ declare module "base" {
     }
 
     interface FileActionAsync {
-        saveAs(filename?: string, options?: squared. FileActionOptions): FileActionResult;
+        saveAs(filename?: string, options?: squared.FileActionOptions): FileActionResult;
         saveFiles(format: string, options: squared.FileActionOptions): FileActionResult;
         copyTo(directory: string, options?: squared.FileActionOptions): FileActionResult;
         copyFiles(directory: string, options: squared.FileActionOptions): FileActionResult;
@@ -321,7 +321,7 @@ declare module "base" {
     }
 
     class File<T extends Node> implements FileActionAsync {
-        static downloadFile(data: Blob, filename: string, mimeType?: string): void;
+        static downloadFile(data: Blob | string, filename?: string, mimeType?: string): void;
         resource: Resource<T>;
         assets: FileAsset[];
         readonly archiveFormats: Set<string>;

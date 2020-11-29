@@ -7,16 +7,16 @@ type Nullable<T> = { [P in keyof T]: T[P] | null; };
 type Constructor<T> = new(...args: any[]) => T;
 
 type IteratorPredicate<T, U, V = ArrayLike<T>> = (item: T, index: number, array: V) => U;
-type BindGeneric<T, U> = (item: T, ...args: any[]) => U;
+type BindGeneric<T, U> = (item: T, ...args: unknown[]) => U;
 
-type FunctionType<T> = (...args: any[]) => T;
+type FunctionType<T> = (...args: unknown[]) => T;
 type FunctionMap<T> = ObjectMap<FunctionType<T>>;
-type FunctionSelf<T, U = void> = (this: T, ...args: any[]) => U;
+type FunctionSelf<T, U = void> = (this: T, ...args: unknown[]) => U;
 type FunctionVoid = () => void;
-type FunctionSort<T = any> = (a: T, b: T) => number;
+type FunctionSort<T = unknown> = (a: T, b: T) => number;
 
 type StringMap = Record<string, Undef<string>>;
-type CallbackResult = (result: any) => void;
+type CallbackResult = (result: unknown) => void;
 
 type NumString = number | string;
 

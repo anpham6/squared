@@ -24,11 +24,16 @@
     "origin": false
   },
   "request_post_limit": "250mb",
-  "watch_interval": 200,
   "compress": {
     "gzip_level": 9,
     "brotli_quality": 11,
     "tinypng_api_key": ""
+  },
+  "image": {
+    "proxy": "jimp"
+  },
+  "watch": {
+    "interval": 200
   },
   "cloud": {
     "s3": {
@@ -40,9 +45,7 @@
     "azure": {
       "main": {
         "accountName": "",
-        "accountKey": "",
-        "connectionString": "",
-        "sharedAccessSignature": ""
+        "accountKey": ""
       }
     },
     "gcs": {
