@@ -9,9 +9,7 @@ interface FileCopyingOptions extends squared.base.FileCopyingOptions, FileAction
 
 interface FileArchivingOptions extends squared.base.FileArchivingOptions, FileActionOptions {}
 
-interface SaveAsOptions extends Partial<LocationUri>, FileModifiers, OutputModifiers {
-    format?: string;
-}
+interface SaveAsOptions extends Partial<LocationUri>, OutputAction, OutputModifiers {}
 
 interface UriOptions {
     element?: HTMLElement;

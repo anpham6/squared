@@ -10,7 +10,7 @@
     - format: gz
     - format: br
   attributes:
-    - name: lang
+    - key: lang
       value: en
 - selector: head > link:nth-of-type(1)
   type: css
@@ -70,7 +70,7 @@
   commands:
     - png(100x200^cover)
   attributes:
-    - name: alt
+    - key: alt
       value: Picture 1
   cloudStorage:
     - service: azure
@@ -87,7 +87,7 @@
   commands:
     - jpeg@(500x500[bezier]^contain[right|bottom])(-50,100|200x200){225#FFFFFF}|50|
   attributes:
-    - name: alt
+    - key: alt
       value: Picture 2
   cloudStorage:
     - service: gcs
@@ -104,11 +104,11 @@
     - png@(25000,*)(800x600[bezier]^contain[right|top]){315}!greyscale!sepia
     - webp(300x100^contain){90,180,270#FFFFFF}|100[picture][75]|
   attributes:
-    - name: alt
+    - key: alt
       value: Picture 3
 - selector: object
   type: image
-  base64: true
+  inline: true
 - selector: embed
   type: image
   pathname: ../images/harbour

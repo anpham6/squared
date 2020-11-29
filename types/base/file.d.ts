@@ -23,15 +23,19 @@ interface LayoutAsset extends TextAsset {
     index?: number;
 }
 
-interface FileAsset extends TextAsset {
+interface FileAsset extends TextAsset, OutputAction {
     base64?: string;
-    commands?: string[];
-    compress?: CompressFormat[];
-    cloudStorage?: CloudService[];
 }
 
 interface RawAsset extends FileAsset, Partial<ImageAsset> {
     buffer?: ArrayBuffer;
+}
+
+interface OutputAction {
+    commands?: string[];
+    compress?: CompressFormat[];
+    cloudStorage?: CloudService[];
+    attributes?: OutputAttribute[];
 }
 
 interface CloudService extends ObjectMap<unknown> {

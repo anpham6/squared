@@ -20,7 +20,7 @@
     ],
     "attributes": [
       {
-        "name": "lang",
+        "key": "lang",
         "value": "en"
       }
     ]
@@ -116,7 +116,7 @@
     ],
     "attributes": [
       {
-        "name": "alt",
+        "key": "alt",
         "value": "Picture 1"
       }
     ],
@@ -144,7 +144,7 @@
     ],
     "attributes": [
       {
-        "name": "alt",
+        "key": "alt",
         "value": "Picture 2"
       }
     ],
@@ -172,7 +172,7 @@
     ],
     "attributes": [
       {
-        "name": "alt",
+        "key": "alt",
         "value": "Picture 3"
       }
     ]
@@ -180,7 +180,7 @@
   {
     "selector": "object",
     "type": "image",
-    "base64": true
+    "inline": true
   },
   {
     "selector": "embed",
