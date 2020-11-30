@@ -186,15 +186,29 @@ export function setAPIEndpoint(name: string, value: string) {
     }
 }
 
-export function setFramework(value: Framework, options?: FrameworkOptions) {
-    const reloading = framework !== null;
-    let userSettings: Undef<PlainObject>,
-        saveAsLocal: Undef<string>,
-        loadAs: Undef<string>,
-        cache: Undef<boolean>;
-    if (options) {
-        ({ settings: userSettings, saveAs: saveAsLocal, loadAs, cache } = options);
+export function setFramework(value: Framework, options?: FrameworkOptions | string, cache?: string | boolean) {
+    let settingsValue: Undef<PlainObject>,
+        cacheValue: Undef<boolean>,
+        saveAsValue: Undef<string>,
+        loadAs: Undef<string>;
+    if (typeof options === 'string') {
+        loadAs = options;
     }
+    else if (options) {
+        if (!options.settings) {
+            settingsValue = options as PlainObject;
+            if (typeof cache === 'string') {
+                saveAsValue = cache;
+            }
+        }
+        else {
+            ({ settings: settingsValue, saveAs: saveAsValue, cache: cacheValue, loadAs } = options);
+        }
+    }
+    if (typeof cache === 'boolean') {
+        cacheValue = cache;
+    }
+    const reloading = framework !== null;
     const mergeSettings = (baseSettings: UserSettings, name: string) => {
         if (loadAs) {
             try {
@@ -209,24 +223,24 @@ export function setFramework(value: Framework, options?: FrameworkOptions) {
         if (!framework) {
             Object.assign(baseSettings, settings);
         }
-        if (util.isPlainObject(userSettings)) {
-            Object.assign(baseSettings, userSettings);
+        if (util.isPlainObject(settingsValue)) {
+            Object.assign(baseSettings, settingsValue);
         }
-        if (saveAsLocal) {
+        if (saveAsValue) {
             try {
-                localStorage.setItem(saveAsLocal + '-' + name, JSON.stringify(baseSettings));
+                localStorage.setItem(saveAsValue + '-' + name, JSON.stringify(baseSettings));
             }
             catch {
             }
         }
     };
-    if (!main || framework !== value || cache === false) {
+    if (!main || framework !== value || cacheValue === false) {
         if (reloading && framework !== value) {
             for (const attr in settings) {
                 delete settings[attr];
             }
         }
-        const appBase = cache ? value.cached() : value.create();
+        const appBase = cacheValue ? value.cached() : value.create();
         main = appBase.application;
         extensionManager = main.extensionManager;
         mergeSettings(appBase.userSettings, main.systemName);

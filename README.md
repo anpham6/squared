@@ -187,7 +187,7 @@ squared.settings = {
     outputDirectory: 'app/src/main',
     outputEmptyCopyDirectory: false,
     outputTasks: {} // { "**/drawable/*.xml": ["minify"] }
-    outputWatch: {} // NOTE: Only applicabale to raw assets { "**/drawable/*.png": true, **/drawable/*.jpg": { interval: 1000, expires: '2h' } }
+    outputWatch: {} // { "**/drawable/*.png": true, **/drawable/*.jpg": { interval: 1000, expires: '2h' } } (NOTE: Only applicabale to raw assets)
     outputArchiveName: 'android-xml',
     outputArchiveFormat: 'zip' // zip | tar | gz/tgz
 };
@@ -239,15 +239,25 @@ interface FrameworkOptions {
 }
 
 // Required: Initial save
-
 squared.setFramework(android, {
     settings: { compressImages: true, createQuerySelectorMap: true },
-    saveAs: 'android-example'
+    saveAs: 'android-example',
+    cache: true
 });
 
-// Optional: Subsequent loads
-
 squared.setFramework(android, { loadAs: 'android-example' });
+```
+
+```javascript
+// NOTE: squared 2.2.0
+
+// saveAs
+
+squared.setFramework(android, { compressImages: true, createQuerySelectorMap: true }, 'android-example');
+
+// loadAs
+
+squared.setFramework(android, 'android-example', true); // "cache" can also be used as the last argument
 ```
 
 ### ALL: Public Properties and Methods
