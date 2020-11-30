@@ -519,7 +519,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         },
         mimeType: {
             font: new Set(['font/ttf', 'font/otf']),
-            image: new Set(['image/png', 'image/jpeg', 'image/gif', 'image/svg+xml', 'image/bmp', 'image/webp', 'image/heic', 'image/heif', 'image/x-icon']),
+            image: new Set(['image/png', 'image/jpeg', 'image/gif', 'image/svg+xml', 'image/webp', 'image/bmp', 'image/heic', 'image/heif', 'image/x-icon']),
             audio: new Set(['video/3gpp', 'video/mp4', 'video/mp2t', 'video/x-matroska', 'audio/aac', 'audio/flac', 'audio/gsm', 'audio/midi', 'audio/mpeg', 'audio/wave', 'audio/ogg']),
             video: new Set(['video/3gpp', 'video/mp4', 'video/mp2t', 'video/x-matroska', 'video/webm'])
         },

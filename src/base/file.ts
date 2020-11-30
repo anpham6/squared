@@ -226,7 +226,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
         return Promise.resolve();
     }
 
-    public setAPIEndpoint(name: string, value: string) {
+    public setEndpoint(name: string, value: string) {
         this._endpoints[name] = value;
     }
 

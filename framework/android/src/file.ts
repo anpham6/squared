@@ -70,11 +70,11 @@ function getImageAssets(pathname: string, items: string[], convertImages: string
                 switch (mimeType) {
                     case 'image/png':
                     case 'image/jpeg':
+                    case 'image/webp':
                     case 'image/gif':
                     case 'image/bmp':
                     case 'image/tiff':
-                    case 'image/webp':
-                        for (const value of convertImages.trim().toLowerCase().split(/\s*:\s*/)) {
+                        for (const value of convertImages.trim().toLowerCase().split(/\s*::\s*/)) {
                             const match = /^[a-z]+/.exec(value);
                             if (match) {
                                 switch (match[0]) {
@@ -132,24 +132,26 @@ function getOutputDirectory(value: string) {
     return value + (!value.endsWith('/') ? '/' : '');
 }
 
+const hasFileAction = (options: Undef<FileUniversalOptions>): options is FileUniversalOptions => !!(options && (options.directory || options.filename));
+
 export default class File<T extends View> extends squared.base.File<T> implements android.base.File<T> {
     public resource!: Resource<T>;
 
     public copyTo(directory: string, options?: FileCopyingOptions) {
-        return this.copying({ ...options, assets: this.combineAssets(options ? options.assets : undefined), directory });
+        return this.copying({ ...options, assets: this.combineAssets(options && options.assets), directory });
     }
 
     public appendTo(pathname: string, options?: FileArchivingOptions) {
         return this.archiving({
             filename: this.userSettings.outputArchiveName,
             ...options,
-            assets: this.combineAssets(options ? options.assets : undefined),
+            assets: this.combineAssets(options && options.assets),
             appendTo: pathname
         });
     }
 
     public saveAs(filename: string, options?: FileArchivingOptions) {
-        return this.archiving({ ...options, assets: this.combineAssets(options ? options.assets : undefined), filename });
+        return this.archiving({ ...options, assets: this.combineAssets(options && options.assets), filename });
     }
 
     public resourceAllToXml(options?: FileUniversalOptions) {
@@ -171,7 +173,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 delete result[name];
             }
         }
-        if (options && (options.directory || options.filename)) {
+        if (hasFileAction(options)) {
             const outputDirectory = getOutputDirectory(this.userSettings.outputDirectory);
             const assets: FileAsset[] = [];
             for (const name in result) {
@@ -216,17 +218,11 @@ export default class File<T extends View> extends squared.base.File<T> implement
         else {
             j = 1;
             itemArray = new Array(length + 1);
-            itemArray[0] = {
-                name: 'app_name',
-                innerText: this.userSettings.manifestLabelAppName
-            };
+            itemArray[0] = { name: 'app_name', innerText: this.userSettings.manifestLabelAppName };
         }
         for (let i = 0; i < length; ++i) {
             const item = items[i];
-            itemArray[j++] = {
-                name: item[0],
-                innerText: item[1]
-            };
+            itemArray[j++] = { name: item[0], innerText: item[1] };
         }
         return this.checkFileAssets([
             replaceTab(applyTemplate('resources', STRING_TMPL, [{ string: itemArray }]), this.userSettings.insertSpaces, true),
@@ -256,8 +252,8 @@ export default class File<T extends View> extends squared.base.File<T> implement
     public resourceFontToXml(options?: FileUniversalOptions): string[] {
         const length = STORED.fonts.size;
         if (length) {
-            const resource = this.resource;
             const { insertSpaces, outputDirectory, targetAPI } = this.userSettings;
+            const resource = this.resource;
             const xmlns = XML_NAMESPACE[targetAPI < BUILD_VERSION.OREO ? 'app' : 'android'];
             const directory = getOutputDirectory(outputDirectory);
             const pathname = this.directory.font;
@@ -269,11 +265,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 for (const attr in font) {
                     const [fontFamily, fontStyle, fontWeight] = attr.split('|');
                     const fontName = name + (fontStyle === 'normal' ? fontWeight === '400' ? '_normal' : '_' + font[attr] : '_' + fontStyle + (fontWeight !== '400' ? font[attr] : ''));
-                    itemArray.push({
-                        font: `@font/${fontName}`,
-                        fontStyle,
-                        fontWeight
-                    });
+                    itemArray.push({ font: `@font/${fontName}`, fontStyle, fontWeight });
                     const url = resource.getFont(fontFamily, fontStyle, fontWeight)?.srcUrl;
                     if (url) {
                         const data = this.resource.getRawData(url);
@@ -314,10 +306,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             const itemArray: ItemValue[] = new Array(length);
             for (let i = 0; i < length; ++i) {
                 const item = items[i];
-                itemArray[i] = {
-                    name: item[1],
-                    innerText: item[0]
-                };
+                itemArray[i] = { name: item[1], innerText: item[0] };
             }
             return this.checkFileAssets([
                 replaceTab(applyTemplate('resources', COLOR_TMPL, [{ color: itemArray }]), this.userSettings.insertSpaces),
@@ -361,11 +350,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                             for (const name in items) {
                                 themeArray.push({ name, innerText: items[name]! });
                             }
-                            itemArray.push({
-                                name: themeName,
-                                parent: themeData.parent,
-                                item: themeArray
-                            });
+                            itemArray.push({ name: themeName, parent: themeData.parent, item: themeArray });
                         }
                         if (themeName === manifestThemeName) {
                             appTheme[filename] = true;
@@ -393,10 +378,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             const itemArray: ItemValue[] = new Array(length);
             for (let i = 0; i < length; ++i) {
                 const item = items[i];
-                itemArray[i] = {
-                    name: item[0],
-                    innerText: convertPixels ? item[1].replace(/px$/, 'dp') : item[1]
-                };
+                itemArray[i] = { name: item[0], innerText: convertPixels ? item[1].replace(/px$/, 'dp') : item[1] };
             }
             return this.checkFileAssets([
                 replaceTab(applyTemplate('resources', DIMEN_TMPL, [{ dimen: itemArray }])),
@@ -476,7 +458,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     }
                 }
             }
-            if (options && (options.directory || options.filename)) {
+            if (hasFileAction(options)) {
                 const assets = getImageAssets(getOutputDirectory(this.userSettings.outputDirectory), result, this.userSettings.convertImages, this.userSettings.compressImages);
                 if (options.assets) {
                     assets.push(...options.assets);
@@ -503,29 +485,32 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     public layoutAllToXml(layouts: FileAsset[], options?: FileUniversalOptions) {
-        const actionable = options && (options.directory || options.filename);
-        const result = {};
+        const result: PlainObject = {};
         const assets: FileAsset[] = [];
         for (let i = 0, length = layouts.length; i < length; ++i) {
             const { content, filename, pathname } = layouts[i];
             result[filename] = [content];
-            if (actionable) {
+            if (hasFileAction(options)) {
                 assets.push({ pathname, filename: i === 0 ? this.userSettings.outputMainFileName : `${filename}.xml`, content } as FileAsset);
             }
         }
-        if (actionable) {
-            if (options!.assets) {
-                assets.push(...options!.assets);
+        if (hasFileAction(options)) {
+            if (options.assets) {
+                assets.push(...options.assets);
             }
-            options!.assets = assets;
-            if (options!.directory) {
-                this.copying(options!);
+            options.assets = assets;
+            if (options.directory) {
+                this.copying(options);
             }
-            if (options!.filename) {
-                this.archiving(options!);
+            if (options.filename) {
+                this.archiving(options);
             }
         }
         return result;
+    }
+
+    public getCopyQueryParameters(options: FileCopyingOptions) {
+        return options.watch ? '&watch=1' : '';
     }
 
     protected combineAssets(assets?: FileAsset[]) {
@@ -564,19 +549,17 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     protected checkFileAssets(content: string[], options?: FileUniversalOptions) {
-        if (options) {
-            if (options.directory || options.filename) {
-                const assets = getFileAssets(getOutputDirectory(this.userSettings.outputDirectory), content);
-                if (options.assets) {
-                    assets.push(...options.assets);
-                }
-                options.assets = assets;
-                if (options.directory) {
-                    this.copying(options);
-                }
-                if (options.filename) {
-                    this.archiving(options);
-                }
+        if (hasFileAction(options)) {
+            const assets = getFileAssets(getOutputDirectory(this.userSettings.outputDirectory), content);
+            if (options.assets) {
+                assets.push(...options.assets);
+            }
+            options.assets = assets;
+            if (options.directory) {
+                this.copying(options);
+            }
+            if (options.filename) {
+                this.archiving(options);
             }
         }
         return content;
@@ -599,7 +582,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 result[i++] = fromLastIndexOf(uri, '/', '\\');
                 result[i++] = getTask(uri);
             }
-            if (options && (options.directory || options.filename)) {
+            if (hasFileAction(options)) {
                 const assets = getRawAssets(getOutputDirectory(this.userSettings.outputDirectory) + this.directory[name], result);
                 if (options.assets) {
                     assets.push(...options.assets);

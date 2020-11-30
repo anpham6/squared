@@ -177,11 +177,11 @@ export function setHostname(value: string) {
     }
 }
 
-export function setAPIEndpoint(name: string, value: string) {
+export function setEndpoint(name: string, value: string) {
     if (main) {
         const fileHandler = main.fileHandler;
         if (fileHandler) {
-            fileHandler.setAPIEndpoint(name, value);
+            fileHandler.setEndpoint(name, value);
         }
     }
 }

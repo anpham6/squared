@@ -3,6 +3,7 @@ type FileActionResult = Promise<Void<ResponseData>>;
 declare module "base" {
     interface FileCopyingOptions extends squared.FileActionOptions {
         directory?: string;
+        watch?: boolean;
     }
 
     interface FileArchivingOptions extends squared.FileActionOptions {
@@ -339,7 +340,7 @@ declare module "base" {
         finalizeRequestBody(data: PlainObject, options: FileCopyingOptions & FileArchivingOptions): void;
         getCopyQueryParameters(options: FileCopyingOptions): string;
         getArchiveQueryParameters(options: FileArchivingOptions): string;
-        setAPIEndpoint(name: string, value: string): void;
+        setEndpoint(name: string, value: string): void;
         writeErrorMesssage(error: ResponseError): void;
         get userSettings(): UserResourceSettings;
         set hostname(value);

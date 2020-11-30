@@ -3,9 +3,7 @@ interface FileActionOptions extends squared.FileActionOptions, FileActionAttribu
     transpileMap?: TranspileMap;
 }
 
-interface FileCopyingOptions extends squared.base.FileCopyingOptions, FileActionOptions {
-    watch?: boolean;
-}
+interface FileCopyingOptions extends squared.base.FileCopyingOptions, FileActionOptions {}
 
 interface FileArchivingOptions extends squared.base.FileArchivingOptions, FileActionOptions {}
 
