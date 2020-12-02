@@ -34,46 +34,59 @@ interface RawAsset extends FileAsset, Partial<ImageAsset> {
 interface OutputAction {
     commands?: string[];
     compress?: CompressFormat[];
-    cloudStorage?: CloudService[];
-    attributes?: OutputAttribute[];
+    cloudStorage?: CloudStorage[];
 }
 
 interface CloudService extends ObjectMap<unknown> {
     service: string;
-    credential: string | StringMap;
-    admin?: CloudServiceAdmin;
-    upload?: CloudServiceUpload;
-    download?: CloudServiceDownload;
+    credential: string | PlainObject;
 }
 
-interface CloudServiceAdmin {
+interface CloudDatabase extends CloudService {
+    table: string;
+    name?: string;
+    id?: string;
+    query?: string | PlainObject;
+    limit?: number;
+    value: string | ObjectMap<string | string[]>;
+    element?: {
+        outerHTML?: string;
+    };
+}
+
+interface CloudStorage extends CloudService {
+    bucket?: string;
+    admin?: CloudStorageAdmin;
+    upload?: CloudStorageUpload;
+    download?: CloudStorageDownload;
+}
+
+interface CloudStorageAdmin {
     publicRead?: boolean;
-    subFolder?: string;
-    emptyFolder?: boolean;
+    emptyBucket?: boolean;
+    preservePath?: boolean;
 }
 
-interface CloudServiceAction {
+interface CloudStorageAction extends Partial<LocationUri> {
     active?: boolean;
-    filename?: string;
     overwrite?: boolean;
 }
 
-interface CloudServiceUpload extends CloudServiceAction {
+interface CloudStorageUpload extends CloudStorageAction {
     localStorage?: boolean;
     endpoint?: string;
     all?: boolean;
-    publicAccess?: boolean;
+    publicRead?: boolean;
 }
 
-interface CloudServiceDownload extends CloudServiceAction, Partial<LocationUri> {}
+interface CloudStorageDownload extends CloudStorageAction {
+    versionId?: string;
+    deleteObject?: string;
+}
 
 interface WatchInterval {
     interval?: number;
     expires?: string;
-}
-
-interface CloudObject extends Partial<LocationUri> {
-    keyName: string;
 }
 
 interface Exclusions {

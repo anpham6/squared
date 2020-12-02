@@ -226,8 +226,8 @@ function installModules(manager: IFileManager, query: StringMap) {
     else if (!PORT && settings.port) {
         PORT = settings.port[ENV];
     }
-    const port = +PORT!;
-    PORT = port >= 0 ? port.toString() : '3000';
+
+    PORT = +PORT! >= 0 && PORT || '3000';
 
     app.use(body_parser.json({ limit: settings.request_post_limit || '250mb' }));
     app.listen(PORT, () => {

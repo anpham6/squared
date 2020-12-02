@@ -36,7 +36,7 @@
     "interval": 200
   },
   "cloud": {
-    "s3": {
+    "aws": {
       "main": {
         "accessKeyId": "",
         "secretAccessKey": ""
@@ -46,10 +46,17 @@
       "main": {
         "accountName": "",
         "accountKey": ""
+      },
+      "db-main": {
+        "endpoint": "",
+        "key": ""
       }
     },
-    "gcs": {
+    "gcloud": {
       "main": {
+        "keyFilename": ""
+      },
+      "db-main": {
         "keyFilename": ""
       }
     },
@@ -59,6 +66,11 @@
         "namespace": "",
         "accessKeyId": "",
         "secretAccessKey": ""
+      },
+      "db-main": {
+        "user": "",
+        "password": "",
+        "connectionString": ""
       }
     },
     "ibm": {

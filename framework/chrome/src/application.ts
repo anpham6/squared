@@ -57,17 +57,34 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         if (options.configUri) {
             const assetMap = new Map<Element, StandardMap>();
             options.assetMap = assetMap;
+            options.database ||= [];
+            const database = options.database;
             const config = await fileHandler.loadJSON(options.configUri);
             if (config) {
                 if (config.success && Array.isArray(config.data)) {
                     for (const item of config.data as AssetCommand[]) {
-                        if (typeof item.selector === 'string') {
-                            document.querySelectorAll(item.selector).forEach(element => assetMap.set(element, item));
+                        if (item.selector) {
+                            document.querySelectorAll(item.selector).forEach(element => {
+                                switch (item.type) {
+                                    case 'text':
+                                    case 'attribute':
+                                        if (item.cloudDatabase) {
+                                            database.push({ ...item.cloudDatabase, element: { outerHTML: element.outerHTML } });
+                                        }
+                                        break;
+                                    default:
+                                        assetMap.set(element, item);
+                                        break;
+                                }
+                            });
                         }
                     }
                 }
                 else if (config.error) {
                     fileHandler.writeErrorMesssage(config.error);
+                }
+                if (database.length === 0) {
+                    delete options.database;
                 }
             }
         }

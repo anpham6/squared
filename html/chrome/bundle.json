@@ -18,12 +18,9 @@
         "format": "br"
       }
     ],
-    "attributes": [
-      {
-        "key": "lang",
-        "value": "en"
-      }
-    ]
+    "attributes": {
+      "lang": "en"
+    }
   },
   {
     "selector": "head > link:nth-of-type(1)",
@@ -114,12 +111,9 @@
     "commands": [
       "png(100x200^cover)"
     ],
-    "attributes": [
-      {
-        "key": "alt",
-        "value": "Picture 1"
-      }
-    ],
+    "attributes": {
+      "alt": "Picture 1"
+    },
     "cloudStorage": [
       {
         "service": "azure",
@@ -142,15 +136,12 @@
     "commands": [
       "jpeg@(500x500[bezier]^contain[right|bottom])(-50,100|200x200){225#FFFFFF}|50|"
     ],
-    "attributes": [
-      {
-        "key": "alt",
-        "value": "Picture 2"
-      }
-    ],
+    "attributes": {
+      "alt": "Picture 2"
+    },
     "cloudStorage": [
       {
-        "service": "gcs",
+        "service": "gcloud",
         "bucket": "squared-001",
         "credential": {
           "keyFilename": null
@@ -170,12 +161,9 @@
       "png@(25000,*)(800x600[bezier]^contain[right|top]){315}!greyscale!sepia",
       "webp(300x100^contain){90,180,270#FFFFFF}|100[picture][75]|"
     ],
-    "attributes": [
-      {
-        "key": "alt",
-        "value": "Picture 3"
-      }
-    ]
+    "attributes": {
+      "alt": "Picture 3"
+    }
   },
   {
     "selector": "object",

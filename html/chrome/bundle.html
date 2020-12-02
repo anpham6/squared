@@ -98,7 +98,7 @@
             squared.setFramework(chrome);
             const time = performance.now();
             squared
-                .copyTo('C:/Users/An/Downloads/chrome', { configUri: 'http://localhost:3000/chrome/bundle.yml', watch: true })
+                .copyTo('C:/Users/An/Downloads/chrome', { configUri: 'http://localhost:3000/chrome/bundle.dev.yml', watch: true })
                 .then(result => {
                     console.log(((performance.now() - time) / 1000).toPrecision(4));
                     console.log(result);
@@ -137,7 +137,7 @@
                 </header>
                 <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour2.jpg" alt="Bristol harbour" />
                 <div class="body">
-                <p>We also have giant cranes, and historic boats. It is best if the balloons avoid these.</p>
+                    <p>We also have giant cranes, and historic boats. It is best if the balloons avoid these.</p>
                 </div>
             </div>
             <div class="card">
@@ -146,7 +146,7 @@
                 </header>
                 <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/coloured-balloon.jpg" alt="Coloured balloon" />
                 <div class="body">
-                <p>I like the nice standard balloons. Stripy. Solid looking basket.</p>
+                    <p>I like the nice standard balloons. Stripy. Solid looking basket.</p>
                 </div>
             </div>
             <div class="card">

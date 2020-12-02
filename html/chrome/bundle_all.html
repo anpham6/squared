@@ -102,7 +102,7 @@
                     saveAs: {
                         html: {
                             cloudStorage: [{
-                                service: 's3',
+                                service: 'aws',
                                 bucket: 'squared-001',
                                 credential: 'main',
                                 admin: {
@@ -123,9 +123,9 @@
                         },
                         link: {
                             filename: 'bundle.css',
-                            format: 'minify',
+                            process: ['minify'],
                             cloudStorage: [{
-                                service: 'gcs',
+                                service: 'azure',
                                 bucket: 'squared-001',
                                 credential: 'main',
                                 admin: {
@@ -147,7 +147,7 @@
                         },
                         image: {
                             cloudStorage: [{
-                                service: 'azure',
+                                service: 'gcloud',
                                 bucket: 'squared-001',
                                 credential: 'main',
                                 admin: {
@@ -168,7 +168,7 @@
                         },
                         script: {
                             filename: 'bundle.js',
-                            format: 'es5+minify',
+                            process: ['es5', 'minify'],
                             cloudStorage: [{
                                 service: 'ibm',
                                 bucket: 'squared-001',

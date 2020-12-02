@@ -8,9 +8,10 @@ interface ChromeAsset extends FileAsset {
     bundleId?: number;
     bundleIndex?: number;
     bundleRoot?: string;
-    textContent?: string;
     trailingContent?: FormattableContent[];
     inlineContent?: string;
+    outerHTML?: string;
+    attributes?: ObjectMap<UndefNull<string>>;
 }
 
 interface FormattableContent {
@@ -32,6 +33,7 @@ interface AssetCommand extends SaveAsOptions {
     saveAs?: string;
     exportAs?: string;
     saveTo?: string;
+    cloudDatabase?: CloudDatabase;
     template?: {
         module: string;
         identifier?: string;

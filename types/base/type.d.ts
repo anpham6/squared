@@ -3,4 +3,3 @@ type OrientationAttr = "horizontal" | "vertical";
 type ResourceAssetType = "image" | "video" | "audio" | "fonts" | "rawData";
 type ResourceAssetTagName = "video" | "audio" | "object" | "embed" | "iframe";
 type KeyframesMap = Map<string, KeyframeData>;
-type OutputAttribute = KeyValue<string, Null<string>>;

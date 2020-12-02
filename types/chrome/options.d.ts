@@ -1,13 +1,16 @@
 interface FileActionOptions extends squared.FileActionOptions, FileActionAttribute, FileUniversalAttribute {
     assetMap?: Map<Element, AssetCommand>;
     transpileMap?: TranspileMap;
+    database?: CloudDatabase[];
 }
 
 interface FileCopyingOptions extends squared.base.FileCopyingOptions, FileActionOptions {}
 
 interface FileArchivingOptions extends squared.base.FileArchivingOptions, FileActionOptions {}
 
-interface SaveAsOptions extends Partial<LocationUri>, OutputAction, OutputModifiers {}
+interface SaveAsOptions extends Partial<LocationUri>, OutputAction, OutputModifiers {
+    attributes?: ObjectMap<Null<string>>;
+}
 
 interface UriOptions {
     element?: HTMLElement;

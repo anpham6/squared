@@ -22,6 +22,8 @@ interface OptionsData {
     compress?: CompressFormat[];
 }
 
+type AttributeMap = ObjectMap<UndefNull<string>>;
+
 const { FILE } = squared.lib.regex;
 
 const ASSETS = squared.base.Resource.ASSETS;
@@ -220,13 +222,13 @@ function getContentType(element: HTMLElement) {
     }
 }
 
-function excludeAsset(assets: ChromeAsset[], command: AssetCommand, textContent: string) {
+function excludeAsset(assets: ChromeAsset[], command: AssetCommand, outerHTML: string) {
     if (command.exclude) {
         assets.push({
             pathname: '',
             filename: '',
             exclude: true,
-            textContent
+            outerHTML
         });
         return true;
     }
@@ -249,7 +251,7 @@ function checkSaveAs(uri: Undef<string>, pathname: Undef<string>, filename?: str
     return ['', false];
 }
 
-function setOutputModifiers(item: ChromeAsset, compress: Undef<CompressFormat[]>, tasks: Undef<string[]>, cloudStorage: Undef<CloudService[]>, attributes?: KeyValue<string, Null<string>>[]) {
+function setOutputModifiers(item: ChromeAsset, compress: Undef<CompressFormat[]>, tasks: Undef<string[]>, cloudStorage: Undef<CloudStorage[]>, attributes?: AttributeMap) {
     if (compress) {
         (item.compress ||= []).push(...compress);
     }
@@ -306,7 +308,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             format: Undef<string>,
             saveTo: Undef<boolean>,
             inline: Undef<boolean>,
-            textContent: Undef<string>,
+            outerHTML: Undef<string>,
             fromConfig: Undef<boolean>;
         if (options) {
             ({ element, saveAs, format, saveTo, inline, fromConfig } = options);
@@ -324,7 +326,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 if (data) {
                     ({ file, format } = data);
                     if (inline && element) {
-                        textContent = element.outerHTML;
+                        outerHTML = element.outerHTML;
                     }
                 }
                 else {
@@ -404,7 +406,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 filename: decodeURIComponent(filename),
                 mimeType: ext && parseMimeType(ext),
                 format,
-                textContent,
+                outerHTML,
                 inlineContent: inline && element ? getContentType(element) : undefined
             };
         }
@@ -445,8 +447,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             process: Undef<string[]>,
             compress: Undef<CompressFormat[]>,
             tasks: Undef<string[]>,
-            cloudStorage: Undef<CloudService[]>,
-            attributes: Undef<OutputAttribute[]>;
+            cloudStorage: Undef<CloudStorage[]>,
+            attributes: Undef<AttributeMap>;
         if (assetMap && assetMap.has(element)) {
             const command = assetMap.get(element)!;
             if (command.ignore || command.exclude) {
@@ -476,7 +478,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         if (this.processExtensions(data)) {
             setOutputModifiers(data, compress, tasks, cloudStorage, attributes);
             if (attributes) {
-                data.textContent = /^\s*<[\S\s]*html[^>]+>\s*/i.exec(element.outerHTML)?.[0].replace(/(\s?[\w-]+="")+>/g, '');
+                data.outerHTML = /^\s*<[\S\s]*html[^>]+>\s*/i.exec(element.outerHTML)?.[0].replace(/(\s?[\w-]+="")+>/g, '');
             }
             data.filename ||= filename || 'index.html';
             data.mimeType = 'text/html';
@@ -582,7 +584,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             compress: Undef<CompressFormat[]>,
             preserve: Undef<boolean>,
             tasks: Undef<string[]>,
-            cloudStorage: Undef<CloudService[]>;
+            cloudStorage: Undef<CloudStorage[]>;
         if (saveAsLink) {
             ({ process, compress, preserve, tasks, cloudStorage } = saveAsLink);
         }
@@ -712,6 +714,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     public finalizeRequestBody(data: PlainObject, options: FileActionOptions) {
+        data.database = options.database;
         data.unusedStyles = options.unusedStyles;
         data.transpileMap = options.transpileMap;
     }
@@ -767,8 +770,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     compress: Undef<CompressFormat[]>,
                     tasks: Undef<string[]>,
                     watch: Undef<boolean | WatchInterval>,
-                    cloudStorage: Undef<CloudService[]>,
-                    attributes: Undef<OutputAttribute[]>,
+                    cloudStorage: Undef<CloudStorage[]>,
+                    attributes: Undef<AttributeMap>,
                     fromConfig: Undef<boolean>;
                 if (file === 'exclude') {
                     continue;
@@ -806,7 +809,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     if (watch) {
                         data.watch = watch;
                     }
-                    data.textContent = item.outerHTML;
+                    data.outerHTML = item.outerHTML;
                     result.push(data);
                 }
             }
@@ -860,8 +863,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             compress: Undef<CompressFormat[]>,
             tasks: Undef<string[]>,
             watch: Undef<boolean | WatchInterval>,
-            cloudStorage: Undef<CloudService[]>,
-            attributes: Undef<OutputAttribute[]>,
+            cloudStorage: Undef<CloudStorage[]>,
+            attributes: Undef<AttributeMap>,
             fromConfig: Undef<boolean>,
             fromSaveAs: Undef<boolean>;
         if (assetMap && assetMap.has(element)) {
@@ -948,7 +951,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 data.watch = watch;
             }
             data.mimeType = mimeType;
-            data.textContent = element.outerHTML;
+            data.outerHTML = element.outerHTML;
             setBundleData(bundleIndex, data);
             assets.push(data);
         }
@@ -965,8 +968,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 commands: Undef<string[]>,
                 tasks: Undef<string[]>,
                 watch: Undef<boolean | WatchInterval>,
-                cloudStorage: Undef<CloudService[]>,
-                attributes: Undef<OutputAttribute[]>,
+                cloudStorage: Undef<CloudStorage[]>,
+                attributes: Undef<AttributeMap>,
                 fromConfig: Undef<boolean>;
             if (element) {
                 const file = element.dataset.chromeFile;
@@ -1029,7 +1032,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     data.watch = watch;
                 }
                 if (element) {
-                    data.textContent = element.outerHTML;
+                    data.outerHTML = element.outerHTML;
                 }
                 if (commands && commands.length && commands[0] !== '~') {
                     data.commands = commands;
