@@ -154,8 +154,8 @@ function setBundleIndex(bundleIndex: BundleIndex) {
 }
 
 function createBundleAsset(assets: ChromeAsset[], element: HTMLElement, file: string, format: Undef<string>, preserve?: boolean, inline?: boolean): Null<ChromeAsset> {
-    const content = element.innerHTML.trim();
-    if (content) {
+    const content = element.innerHTML;
+    if (content.trim()) {
         const [moveTo, pathname, filename] = getFilePath(file);
         const previous = assets[assets.length - 1];
         const data = {
@@ -283,18 +283,7 @@ function getCustomPath(uri: Undef<string>, pathname: Undef<string>, filename: st
     return appendSeparator(pathname, filename);
 }
 
-function hasSamePath(item: ChromeAsset, other: ChromeAsset, bundling = false) {
-    if ((item.moveTo === other.moveTo || !item.moveTo && !moveTo) && item.pathname === other.pathname) {
-        if (item.filename === other.filename || FILENAME_MAP.get(item) === other.filename) {
-            return true;
-        }
-        else if (bundling && item.filename.startsWith(DIR_FUNCTIONS.ASSIGN)) {
-            return true;
-        }
-    }
-    return false;
-}
-
+const hasSamePath = (item: ChromeAsset, other: ChromeAsset, bundle?: boolean) => item.pathname === other.pathname && (item.filename === other.filename || FILENAME_MAP.get(item) === other.filename || bundle && item.filename.startsWith(DIR_FUNCTIONS.ASSIGN)) && (item.moveTo || '') === (other.moveTo || '');
 const getTasks = (element: HTMLElement) => element.dataset.chromeTasks?.trim().split(/\s*\+\s*/);
 const getMimeType = (element: HTMLLinkElement | HTMLStyleElement | HTMLScriptElement, src: Undef<string>, fallback: string) => element.type.trim().toLowerCase() || src && parseMimeType(src) || fallback;
 const getFileExt = (value: string) => value.includes('.') ? fromLastIndexOf(value, '.').trim().toLowerCase() : '';
@@ -432,7 +421,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     public getHtmlPage(options?: FileActionOptions) {
         const element = document.documentElement;
         let file = element.dataset.chromeFile;
-        if (file === 'exclude') {
+        if (file === 'ignore') {
             return [];
         }
         let assetMap: Undef<Map<Element, AssetCommand>>,
@@ -461,9 +450,6 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 return [];
             }
             ({ filename, process, compress, tasks, cloudStorage, attributes } = saveAsHtml);
-        }
-        else if (file === 'ignore') {
-            return [];
         }
         else {
             tasks = getTasks(element);
@@ -773,7 +759,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     cloudStorage: Undef<CloudStorage[]>,
                     attributes: Undef<AttributeMap>,
                     fromConfig: Undef<boolean>;
-                if (file === 'exclude') {
+                if (file === 'ignore') {
                     continue;
                 }
                 if (assetMap && assetMap.has(item)) {
@@ -789,9 +775,6 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     fromConfig = true;
                 }
                 else {
-                    if (file === 'ignore') {
-                        continue;
-                    }
                     const command = parseFileAs('saveAs', file);
                     if (command) {
                         saveAs = command.file;
@@ -973,7 +956,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 fromConfig: Undef<boolean>;
             if (element) {
                 const file = element.dataset.chromeFile;
-                if (file === 'exclude') {
+                if (file === 'ignore') {
                     return;
                 }
                 if (assetMap && assetMap.has(element)) {
@@ -996,9 +979,6 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     [saveAs, saveTo] = checkSaveAs(uri, pathname);
                 }
                 else if (file) {
-                    if (file === 'ignore') {
-                        return;
-                    }
                     let fileAs = parseFileAs('saveTo', file);
                     if (fileAs) {
                         [saveAs, saveTo] = checkSaveAs(uri, fileAs.file);

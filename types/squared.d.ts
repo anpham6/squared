@@ -21,11 +21,12 @@ export type ExtensionRequestObject = ExtensionRequest | [ExtensionRequest, Plain
 export const settings: StandardMap;
 export function setHostname(value: string): void;
 export function setEndpoint(name: string, value: string): void;
-export function setFramework(value: PlainObject, options?: FrameworkOptions | string, cache?: string | boolean): void;
+export function setFramework(value: PlainObject, options?: FrameworkOptions | PlainObject | string, cache?: boolean): void;
+export function setFramework(value: PlainObject, options?: FrameworkOptions | PlainObject, saveAs?: string): void;
 export function add(...values: ExtensionRequestObject[]): number;
 export function remove(...values: ExtensionRequest[]): number;
 export function get(...values: string[]): Undef<PlainObject | PlainObject[]>;
-export function apply(value: ExtensionRequest, options: FrameworkOptions): boolean;
+export function apply(value: ExtensionRequest, options: FrameworkOptions | string, saveAs?: string): boolean;
 export function extend(functionMap: PlainObject, framework?: number): void;
 export function parseDocument(...elements: (string | HTMLElement)[]): Promise<Void<Node | Node[]>>;
 export function parseDocumentSync(...elements: (string | HTMLElement)[]): Void<Node | Node[]>;

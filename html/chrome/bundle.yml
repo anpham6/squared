@@ -48,7 +48,7 @@
     - bundle
     - minify
   cloudStorage:
-    - service: s3
+    - service: aws
       bucket: squared-001
       credential:
         accessKeyId: 

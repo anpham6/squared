@@ -42,7 +42,7 @@ function installModules(manager: IFileManager, query: StringMap) {
     }
     if (chrome === '1') {
         if (Chrome) {
-            manager.install('chrome', Chrome);
+            manager.install('chrome', Chrome, release === '1');
         }
         if (Compress) {
             manager.install('compress', Compress);
@@ -52,7 +52,6 @@ function installModules(manager: IFileManager, query: StringMap) {
         manager.install('watch', watchInterval);
     }
     manager.emptyDirectory = empty === '1';
-    manager.productionRelease = release === '1';
 }
 
 {
@@ -186,7 +185,7 @@ function installModules(manager: IFileManager, query: StringMap) {
                         const pathname = path.join(__dirname, mount);
                         try {
                             app.use(dirname, express.static(pathname));
-                            Node.formatMessage('MOUNT', `${chalk.bgGrey(pathname)} ${chalk.yellow('->')} ${chalk.bold(dirname)}`, '', 'yellow');
+                            Node.formatMessage(Node.logType.SYSTEM, 'MOUNT', `${chalk.bgGrey(pathname)} ${chalk.yellow('->')} ${chalk.bold(dirname)}`, '', { titleColor: 'yellow' });
                             ++mounted;
                         }
                         catch (err) {
@@ -205,8 +204,8 @@ function installModules(manager: IFileManager, query: StringMap) {
         Node.writeFail('Routing not defined');
     }
 
-    Node.formatMessage('DISK', (Node.hasDiskRead() ? chalk.green('+') : chalk.red('-')) + 'r ' + (Node.hasDiskWrite() ? chalk.green('+') : chalk.red('-')) + 'w', '', 'blue');
-    Node.formatMessage('UNC', (Node.hasUNCRead() ? chalk.green('+') : chalk.red('-')) + 'r ' + (Node.hasUNCWrite() ? chalk.green('+') : chalk.red('-')) + 'w', '', 'blue');
+    Node.formatMessage(Node.logType.SYSTEM, 'DISK', (Node.hasDiskRead() ? chalk.green('+') : chalk.red('-')) + 'r ' + (Node.hasDiskWrite() ? chalk.green('+') : chalk.red('-')) + 'w', '', { titleColor: 'blue' });
+    Node.formatMessage(Node.logType.SYSTEM, 'UNC', (Node.hasUNCRead() ? chalk.green('+') : chalk.red('-')) + 'r ' + (Node.hasUNCWrite() ? chalk.green('+') : chalk.red('-')) + 'w', '', { titleColor: 'blue' });
 
     if (argv.cors) {
         app.use(cors({ origin: argv.cors }));
@@ -218,7 +217,7 @@ function installModules(manager: IFileManager, query: StringMap) {
         argv.cors = typeof settings.cors.origin === 'string' ? settings.cors.origin : 'true';
     }
 
-    Node.formatMessage('CORS', argv.cors ? chalk.green(argv.cors) : chalk.grey('disabled'), '', 'blue');
+    Node.formatMessage(Node.logType.SYSTEM, 'CORS', argv.cors ? chalk.green(argv.cors) : chalk.grey('disabled'), '', { titleColor: 'blue' });
 
     if (argv.port) {
         PORT = argv.port.toString();
@@ -232,10 +231,9 @@ function installModules(manager: IFileManager, query: StringMap) {
     app.use(body_parser.json({ limit: settings.request_post_limit || '250mb' }));
     app.listen(PORT, () => {
         console.log('');
-        Node.formatMessage(ENV!.toUpperCase(), 'Express server listening on port ' + chalk.bold(PORT), '', ENV!.startsWith('prod') ? 'green' : 'yellow');
+        Node.formatMessage(Node.logType.SYSTEM, ENV!.toUpperCase(), 'Express server listening on port ' + chalk.bold(PORT), '', { titleColor: ENV!.startsWith('prod') ? 'green' : 'yellow' });
         console.log('');
     });
-
     process.env.NODE_ENV = ENV;
     process.env.PORT = PORT;
 }
@@ -250,6 +248,7 @@ app.post('/api/v1/assets/copy', (req, res) => {
                 req.body as RequestBody,
                 function(this: IFileManager) {
                     res.json({ success: this.files.size > 0, files: Array.from(this.files) } as ResponseData);
+                    manager.formatMessage(Node.logType.SYSTEM, 'WRITE', [dirname, this.files.size + ' files'], '', { titleColor: 'black', titleBgColor: 'bgWhite', hintColor: 'yellow' });
                 }
             );
             installModules(manager, query as StringMap);
@@ -325,19 +324,19 @@ app.post('/api/v1/assets/archive', (req, res) => {
                     .on('finish', () => {
                         response.zipname = gz;
                         response.bytes = manager.getFileSize(gz);
+                        manager.formatMessage(Node.logType.SYSTEM, 'WRITE', [path.basename(gz), response.bytes + ' bytes'], '', { titleColor: 'black', titleBgColor: 'bgWhite', hintColor: 'yellow' });
                         res.json(response);
-                        manager.formatMessage('WRITE', [gz, response.bytes + ' bytes'], '', 'blue');
                     })
                     .on('error', err => {
                         response.success = false;
-                        res.json(response);
                         manager.writeFail(['Unable to compress file', gz], err);
+                        res.json(response);
                     });
             }
             else {
                 res.json(response);
+                manager.formatMessage(Node.logType.SYSTEM, 'WRITE', [path.basename(zipname), response.bytes + ' bytes'], '', { titleColor: 'black', titleBgColor: 'bgWhite', hintColor: 'yellow' });
             }
-            manager.formatMessage('WRITE', [zipname, response.bytes + ' bytes'], '', 'blue');
         });
         archive.pipe(output);
         try {

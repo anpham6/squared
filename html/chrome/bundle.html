@@ -98,7 +98,7 @@
             squared.setFramework(chrome);
             const time = performance.now();
             squared
-                .copyTo('C:/Users/An/Downloads/chrome', { configUri: 'http://localhost:3000/chrome/bundle.dev.yml', watch: true })
+                .copyTo('C:/Users/An/Downloads/chrome', { configUri: 'http://localhost:3000/chrome/bundle.yml', watch: true })
                 .then(result => {
                     console.log(((performance.now() - time) / 1000).toPrecision(4));
                     console.log(result);

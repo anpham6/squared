@@ -42,11 +42,11 @@ interface CloudService extends ObjectMap<unknown> {
     credential: string | PlainObject;
 }
 
-interface CloudDatabase extends CloudService {
+interface CloudDatabase<T = string | PlainObject | any[]> extends CloudService {
     table: string;
     name?: string;
     id?: string;
-    query?: string | PlainObject;
+    query?: T;
     limit?: number;
     value: string | ObjectMap<string | string[]>;
     element?: {

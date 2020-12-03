@@ -24,6 +24,18 @@
     "origin": false
   },
   "request_post_limit": "250mb",
+  "logger": {
+    "unknown": true,
+    "system": true,
+    "chrome": true,
+    "compress": true,
+    "image": true,
+    "node": true,
+    "watch": true,
+    "cloud_storage": true,
+    "cloud_database": true,
+    "time_elapsed": true
+  },
   "compress": {
     "gzip_level": 9,
     "brotli_quality": 11,
@@ -40,6 +52,12 @@
       "main": {
         "accessKeyId": "",
         "secretAccessKey": ""
+      },
+      "db-main": {
+        "accessKeyId": "",
+        "secretAccessKey": "",
+        "region": "",
+        "endpoint": ""
       }
     },
     "azure": {

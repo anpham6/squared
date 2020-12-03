@@ -189,20 +189,20 @@ export function setEndpoint(name: string, value: string) {
 export function setFramework(value: Framework, options?: FrameworkOptions | string, cache?: string | boolean) {
     let settingsValue: Undef<PlainObject>,
         cacheValue: Undef<boolean>,
-        saveAsValue: Undef<string>,
-        loadAs: Undef<string>;
+        saveName: Undef<string>,
+        loadName: Undef<string>;
     if (typeof options === 'string') {
-        loadAs = options;
+        loadName = options;
     }
     else if (options) {
-        if (!options.settings) {
-            settingsValue = options as PlainObject;
-            if (typeof cache === 'string') {
-                saveAsValue = cache;
-            }
+        if (options.settings) {
+            ({ settings: settingsValue, saveAs: saveName, loadAs: loadName, cache: cacheValue } = options);
         }
         else {
-            ({ settings: settingsValue, saveAs: saveAsValue, cache: cacheValue, loadAs } = options);
+            settingsValue = options as PlainObject;
+            if (typeof cache === 'string') {
+                saveName = cache;
+            }
         }
     }
     if (typeof cache === 'boolean') {
@@ -210,9 +210,9 @@ export function setFramework(value: Framework, options?: FrameworkOptions | stri
     }
     const reloading = framework !== null;
     const mergeSettings = (baseSettings: UserSettings, name: string) => {
-        if (loadAs) {
+        if (loadName) {
             try {
-                const storedSettings = localStorage.getItem(loadAs + '-' + name);
+                const storedSettings = localStorage.getItem(loadName + '-' + name);
                 if (storedSettings) {
                     Object.assign(baseSettings, JSON.parse(storedSettings));
                 }
@@ -226,9 +226,9 @@ export function setFramework(value: Framework, options?: FrameworkOptions | stri
         if (util.isPlainObject(settingsValue)) {
             Object.assign(baseSettings, settingsValue);
         }
-        if (saveAsValue) {
+        if (saveName) {
             try {
-                localStorage.setItem(saveAsValue + '-' + name, JSON.stringify(baseSettings));
+                localStorage.setItem(saveName + '-' + name, JSON.stringify(baseSettings));
             }
             catch {
             }
@@ -376,14 +376,25 @@ export function get(...values: string[]) {
     }
 }
 
-export function apply(value: ExtensionRequest, options: FrameworkOptions) {
+export function apply(value: ExtensionRequest, options: FrameworkOptions | string, saveName?: string) {
+    let settingsValue: Undef<PlainObject>,
+        loadName: Undef<string>;
+    if (typeof options === 'string') {
+        loadName = options;
+        options = {};
+    }
     if (util.isPlainObject(options)) {
+        if (options.settings) {
+            ({ settings: settingsValue, saveAs: saveName, loadAs: loadName } = options as FrameworkOptions);
+        }
+        else {
+            settingsValue = options;
+        }
         const mergeSettings = (name: string) => {
-            const { loadAs, saveAs: saveAsLocal } = options;
             const result: StandardMap = {};
-            if (loadAs) {
+            if (loadName) {
                 try {
-                    const storedSettings = localStorage.getItem(loadAs + '-' + name);
+                    const storedSettings = localStorage.getItem(loadName + '-' + name);
                     if (storedSettings) {
                         Object.assign(result, JSON.parse(storedSettings));
                     }
@@ -391,10 +402,10 @@ export function apply(value: ExtensionRequest, options: FrameworkOptions) {
                 catch {
                 }
             }
-            Object.assign(result, options.settings);
-            if (saveAsLocal) {
+            Object.assign(result, settingsValue);
+            if (saveName) {
                 try {
-                    localStorage.setItem(saveAsLocal + '-' + name, JSON.stringify(result));
+                    localStorage.setItem(saveName + '-' + name, JSON.stringify(result));
                 }
                 catch {
                 }
