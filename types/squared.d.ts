@@ -11,7 +11,7 @@ export interface FrameworkOptions {
 export interface FileActionOptions {
     assets?: FileAsset[];
     exclusions?: Exclusions;
-    callback?: CallbackResult;
+    callback?: (result: unknown) => void;
     configUri?: string;
 }
 

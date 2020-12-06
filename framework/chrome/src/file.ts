@@ -283,6 +283,11 @@ function getCustomPath(uri: Undef<string>, pathname: Undef<string>, filename: st
     return appendSeparator(pathname, filename);
 }
 
+function getPageFilename() {
+    const filename = location.href.split('/').pop()!.split('?')[0];
+    return /\.html?$/.exec(filename) ? filename : 'index.html';
+}
+
 const hasSamePath = (item: ChromeAsset, other: ChromeAsset, bundle?: boolean) => item.pathname === other.pathname && (item.filename === other.filename || FILENAME_MAP.get(item) === other.filename || bundle && item.filename.startsWith(DIR_FUNCTIONS.ASSIGN)) && (item.moveTo || '') === (other.moveTo || '');
 const getTasks = (element: HTMLElement) => element.dataset.chromeTasks?.trim().split(/\s*\+\s*/);
 const getMimeType = (element: HTMLLinkElement | HTMLStyleElement | HTMLScriptElement, src: Undef<string>, fallback: string) => element.type.trim().toLowerCase() || src && parseMimeType(src) || fallback;
@@ -466,7 +471,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             if (attributes) {
                 data.outerHTML = /^\s*<[\S\s]*html[^>]+>\s*/i.exec(element.outerHTML)?.[0].replace(/(\s?[\w-]+="")+>/g, '');
             }
-            data.filename ||= filename || 'index.html';
+            data.filename ||= filename || getPageFilename();
             data.mimeType = 'text/html';
             return [data];
         }
@@ -729,6 +734,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 case 'VIDEO':
                 case 'AUDIO':
                     element.querySelectorAll('source, track').forEach((source: HTMLSourceElement | HTMLTrackElement) => resolveAssetSource(source, items));
+                    break;
                 case 'OBJECT':
                 case 'EMBED':
                     type = (element as HTMLObjectElement | HTMLEmbedElement).type;

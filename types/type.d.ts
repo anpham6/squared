@@ -10,18 +10,14 @@ type IteratorPredicate<T, U, V = ArrayLike<T>> = (item: T, index: number, array:
 type BindGeneric<T, U> = (item: T, ...args: unknown[]) => U;
 
 type FunctionType<T> = (...args: unknown[]) => T;
-type FunctionMap<T> = ObjectMap<FunctionType<T>>;
 type FunctionSelf<T, U = void> = (this: T, ...args: unknown[]) => U;
-type FunctionVoid = () => void;
 type FunctionSort<T = unknown> = (a: T, b: T) => number;
-
-type StringMap = Record<string, Undef<string>>;
-type CallbackResult = (result: unknown) => void;
 
 type NumString = number | string;
 
 type StandardMap = Record<string, any>;
 type PlainObject = Record<string | number | symbol, unknown>;
+type StringMap = Record<string, Undef<string>>;
 
 type ObjectMap<T> = Record<string, T>;
 type ObjectMapNested<T> = ObjectMap<ObjectMap<T>>;

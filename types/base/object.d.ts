@@ -3,3 +3,8 @@
 /// <reference path="file.d.ts" />
 /// <reference path="node.d.ts" />
 /// <reference path="options.d.ts" />
+
+interface IGlobExp extends RegExp {
+    negate: boolean;
+    filter: (values: string[]) => string[];
+}

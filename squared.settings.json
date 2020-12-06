@@ -48,10 +48,18 @@
     "interval": 200
   },
   "cloud": {
+    "cache": {
+      "aws": 0,
+      "azure": 0,
+      "gcloud": 0,
+      "ibm": 0,
+      "oci": 0
+    },
     "aws": {
       "main": {
         "accessKeyId": "",
-        "secretAccessKey": ""
+        "secretAccessKey": "",
+        "region": ""
       },
       "db-main": {
         "accessKeyId": "",
@@ -78,10 +86,23 @@
         "keyFilename": ""
       }
     },
+    "ibm": {
+      "main": {
+        "apiKeyId": "",
+        "serviceInstanceId": "",
+        "endpoint": "",
+        "region": ""
+      },
+      "db-main": {
+        "account": "",
+        "password": "",
+        "url": ""
+      }
+    },
     "oci": {
       "main": {
-        "region": "",
         "namespace": "",
+        "region": "",
         "accessKeyId": "",
         "secretAccessKey": ""
       },
@@ -89,14 +110,6 @@
         "user": "",
         "password": "",
         "connectionString": ""
-      }
-    },
-    "ibm": {
-      "main": {
-        "apiKeyId": "",
-        "serviceInstanceId": "",
-        "endpoint": "",
-        "region": ""
       }
     }
   },

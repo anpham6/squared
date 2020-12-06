@@ -44,11 +44,13 @@ interface CloudService extends ObjectMap<unknown> {
 
 interface CloudDatabase<T = string | PlainObject | any[]> extends CloudService {
     table: string;
+    value: string | ObjectMap<string | string[]>;
     name?: string;
     id?: string;
     query?: T;
     limit?: number;
-    value: string | ObjectMap<string | string[]>;
+    params?: unknown[];
+    options?: PlainObject;
     element?: {
         outerHTML?: string;
     };

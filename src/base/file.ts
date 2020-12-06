@@ -6,7 +6,6 @@ import { appendSeparator, parseGlob } from './lib/util';
 type FileActionResult = Promise<Void<ResponseData>>;
 type FileArchivingOptions = squared.base.FileArchivingOptions;
 type FileCopyingOptions = squared.base.FileCopyingOptions;
-type IGlobExp = squared.base.lib.util.IGlobExp;
 
 const { SERVER_REQUIRED } = squared.lib.error;
 

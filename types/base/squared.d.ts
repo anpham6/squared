@@ -48,7 +48,7 @@ declare module "base" {
         base?: PlainObject;
         extensions?: PlainObject;
         lib?: PlainObject;
-        system?: FunctionMap<unknown>;
+        system?: ObjectMap<FunctionType<unknown>>;
         create(): AppBase<T>;
         cached(): AppBase<T>;
     }
@@ -865,11 +865,6 @@ declare module "base" {
         }
 
         namespace util {
-            interface IGlobExp extends RegExp {
-                negate: boolean;
-                filter: (values: string[]) => string[];
-            }
-
             function fromMimeType(value: string): string;
             function appendSeparator(preceding?: string, value?: string, separator?: string): string;
             function randomUUID(separator?: string): string;

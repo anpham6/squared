@@ -1,4 +1,4 @@
-import type { Arguments, IFileManager, ImageConstructor, RequestBody, Settings, settings as SettingsFunctions, squared } from '@squared-functions/types';
+import type { Arguments, ExtendedSettings, IFileManager, ImageConstructor, RequestBody, Settings, squared } from '@squared-functions/types';
 
 import path = require('path');
 import fs = require('fs-extra');
@@ -23,14 +23,14 @@ app.use(body_parser.urlencoded({ extended: true }));
 const Node = FileManager.moduleNode();
 
 let Image: Undef<ImageConstructor>,
-    Chrome: Undef<SettingsFunctions.ChromeModule>,
-    Gulp: Undef<SettingsFunctions.GulpModule>,
-    Cloud: Undef<SettingsFunctions.CloudModule>,
-    Compress: Undef<SettingsFunctions.CompressModule>,
+    Chrome: Undef<ExtendedSettings.ChromeModule>,
+    Gulp: Undef<ExtendedSettings.GulpModule>,
+    Cloud: Undef<ExtendedSettings.CloudModule>,
+    Compress: Undef<ExtendedSettings.CompressModule>,
     watchInterval: Undef<number>;
 
 function installModules(manager: IFileManager, query: StringMap) {
-    const { chrome, watch, empty, release } = query;
+    const { chrome, watch, release } = query;
     if (Image) {
         manager.install('image', Image);
     }
@@ -51,7 +51,6 @@ function installModules(manager: IFileManager, query: StringMap) {
     if (watch === '1') {
         manager.install('watch', watchInterval);
     }
-    manager.emptyDirectory = empty === '1';
 }
 
 {
@@ -236,12 +235,14 @@ function installModules(manager: IFileManager, query: StringMap) {
     });
     process.env.NODE_ENV = ENV;
     process.env.PORT = PORT;
+
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 }
 
 app.post('/api/v1/assets/copy', (req, res) => {
     const query = req.query;
     const dirname = path.normalize(query.to as string);
-    if (dirname && FileManager.checkPermissions(dirname, res)) {
+    if (dirname && FileManager.hasPermissions(dirname, res)) {
         try {
             const manager = new FileManager(
                 dirname,
@@ -252,7 +253,7 @@ app.post('/api/v1/assets/copy', (req, res) => {
                 }
             );
             installModules(manager, query as StringMap);
-            manager.processAssets();
+            manager.processAssets(query.empty === '1');
         }
         catch (err) {
             res.json({ success: false, error: { hint: 'FILE: Unknown', message: (err as Error).toString() } } as ResponseData);
@@ -267,7 +268,7 @@ app.post('/api/v1/assets/archive', (req, res) => {
     let dirname_zip: string;
     try {
         fs.mkdirpSync(dirname);
-        if (copy_to && FileManager.checkPermissions(copy_to, res)) {
+        if (copy_to && FileManager.hasPermissions(copy_to, res)) {
             dirname_zip = copy_to;
         }
         else {
@@ -323,7 +324,7 @@ app.post('/api/v1/assets/archive', (req, res) => {
                 FileManager.moduleCompress().createWriteStreamAsGzip(zipname, gz)
                     .on('finish', () => {
                         response.zipname = gz;
-                        response.bytes = manager.getFileSize(gz);
+                        response.bytes = FileManager.getFileSize(gz);
                         manager.formatMessage(Node.logType.SYSTEM, 'WRITE', [path.basename(gz), response.bytes + ' bytes'], '', { titleColor: 'black', titleBgColor: 'bgWhite', hintColor: 'yellow' });
                         res.json(response);
                     })
