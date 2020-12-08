@@ -1773,7 +1773,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                     notList: Undef<string[]>,
                                     subMatch: Null<RegExpExecArray>;
                                 while (subMatch = SELECTOR_ATTR.exec(segment)) {
-                                    attrList ||= [];
                                     let key = subMatch[1].replace('\\:', ':'),
                                         endsWith: Undef<boolean>;
                                     switch (key.indexOf('|')) {
@@ -1793,7 +1792,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                     if (caseInsensitive) {
                                         attrValue = attrValue.toLowerCase();
                                     }
-                                    attrList.push({
+                                    (attrList ||= []).push({
                                         key,
                                         symbol: subMatch[2],
                                         value: attrValue,

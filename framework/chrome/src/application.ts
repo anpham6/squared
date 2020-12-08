@@ -62,14 +62,54 @@ export default class Application<T extends squared.base.Node> extends squared.ba
             const config = await fileHandler.loadJSON(options.configUri);
             if (config) {
                 if (config.success && Array.isArray(config.data)) {
-                    for (const item of config.data as AssetCommand[]) {
+                    const data = config.data as AssetCommand[];
+                    const paramMap = new Map<string, [RegExp, string]>();
+                    if (location.href.includes('?')) {
+                        new URLSearchParams(location.search).forEach((value, key) => paramMap.set(key, [new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value]));
+                    }
+                    const replaceParams = (param: Undef<any>): unknown => {
+                        if (param) {
+                            if (typeof param !== 'number' && typeof param !== 'boolean') {
+                                const original = param;
+                                const converted = typeof param === 'object' || Array.isArray(param);
+                                if (converted) {
+                                    param = JSON.stringify(param);
+                                }
+                                const current = param;
+                                for (const [pattern, value] of paramMap.values()) {
+                                    param = (param as string).replace(pattern, value);
+                                }
+                                if (current === param) {
+                                    return original;
+                                }
+                                if (converted) {
+                                    try {
+                                        return JSON.parse(param);
+                                    }
+                                    catch {
+                                        return original;
+                                    }
+                                }
+                            }
+                        }
+                        return param;
+                    };
+                    for (const item of data) {
                         if (item.selector) {
+                            const cloudDatabase = item.cloudDatabase;
+                            if (cloudDatabase && paramMap.size) {
+                                for (const attr in cloudDatabase) {
+                                    if (attr !== 'value') {
+                                        cloudDatabase[attr] = replaceParams(cloudDatabase[attr]);
+                                    }
+                                }
+                            }
                             document.querySelectorAll(item.selector).forEach(element => {
                                 switch (item.type) {
                                     case 'text':
                                     case 'attribute':
-                                        if (item.cloudDatabase) {
-                                            database.push({ ...item.cloudDatabase, element: { outerHTML: element.outerHTML } });
+                                        if (cloudDatabase) {
+                                            database.push({ ...cloudDatabase, element: { outerHTML: element.outerHTML } });
                                         }
                                         break;
                                     default:
