@@ -1,7 +1,8 @@
-/* vdom-lite-framework 2.1.3
+/* squared.base 2.2.0
    https://github.com/anpham6/squared */
 
-var vdom = (function () {
+this.squared = this.squared || {};
+this.squared.base = (function (exports) {
     'use strict';
 
     class NodeList extends squared.lib.base.Container {
@@ -994,19 +995,6 @@ var vdom = (function () {
     }
     Application.KEY_NAME = 'squared.base.application';
 
-    class Application$1 extends Application {
-        constructor() {
-            super(...arguments);
-            this.systemName = 'vdom';
-        }
-        init() { }
-        insertNode(element, sessionId) {
-            if (element.nodeName[0] !== '#') {
-                return new this.Node(this.nextId, sessionId, element);
-            }
-        }
-    }
-
     class Controller {
         constructor(application) {
             this.application = application;
@@ -1036,6 +1024,890 @@ var vdom = (function () {
         }
     }
 
+    class Extension {
+        constructor(name, framework, options) {
+            this.name = name;
+            this.framework = framework;
+            this.enabled = true;
+            this.resource = null;
+            this.data = new WeakMap();
+            this.options = {};
+            this.dependencies = [];
+            this.subscribers = new Set();
+            if (options) {
+                const dependencies = options.dependencies;
+                if (dependencies) {
+                    for (const item of dependencies) {
+                        this.dependencies.push(item);
+                    }
+                    delete options.dependencies;
+                }
+                Object.assign(this.options, options);
+            }
+        }
+        require(value) {
+            this.dependencies.push(value);
+        }
+        reset() {
+            if (this.subscribers.size) {
+                this.subscribers.clear();
+            }
+        }
+        beforeParseDocument(sessionId) { }
+        afterParseDocument(sessionId) { }
+        set application(value) {
+            this._application = value;
+            this.controller = value.controllerHandler;
+            this.resource = value.resourceHandler;
+        }
+        get application() {
+            return this._application;
+        }
+    }
+
+    const { findSet, isObject } = squared.lib.util;
+    class ExtensionManager {
+        constructor(application) {
+            this.application = application;
+            this.cache = new Set();
+        }
+        add(ext) {
+            if (typeof ext === 'string') {
+                const item = this.get(ext, true);
+                if (!item) {
+                    return false;
+                }
+                ext = item;
+            }
+            const { application, extensions } = this;
+            if (ext.framework === 0 || ext.framework & application.framework) {
+                ext.application = application;
+                if (!extensions.includes(ext)) {
+                    extensions.push(ext);
+                }
+                return true;
+            }
+            return false;
+        }
+        remove(ext) {
+            if (typeof ext === 'string') {
+                ext = this.get(ext, true);
+                if (!ext) {
+                    return false;
+                }
+            }
+            const name = ext.name;
+            const index = this.extensions.findIndex(item => item.name === name);
+            if (index !== -1) {
+                this.extensions.splice(index, 1);
+                return true;
+            }
+            return false;
+        }
+        get(name, builtIn) {
+            return this.extensions.find(item => item.name === name) || findSet(this.cache, item => item.name === name) || (builtIn ? this.application.builtInExtensions.get(name) : undefined);
+        }
+        checkDependencies() {
+            const extensions = this.extensions;
+            let result;
+            for (let i = 0; i < extensions.length; ++i) {
+                const dependencies = extensions[i].dependencies;
+                const q = dependencies.length;
+                if (q === 0) {
+                    continue;
+                }
+                for (let j = 0, k = 1; j < q; ++j) {
+                    const dependency = dependencies[j];
+                    const name = dependency.name;
+                    const index = extensions.findIndex(item => item.name === name);
+                    if (index === -1) {
+                        const ext = this.application.builtInExtensions.get(name);
+                        if (ext) {
+                            ext.application = this.application;
+                            if (dependency.leading) {
+                                extensions.splice(i - 1, 0, ext);
+                            }
+                            else if (dependency.trailing) {
+                                extensions.splice(i + k++, 0, ext);
+                            }
+                            else {
+                                extensions.push(ext);
+                            }
+                            continue;
+                        }
+                    }
+                    if (index !== -1) {
+                        if (dependency.leading) {
+                            if (index > i) {
+                                extensions.splice(i - 1, 0, extensions.splice(index, 1)[0]);
+                            }
+                        }
+                        else if (dependency.trailing) {
+                            if (index < i) {
+                                extensions.splice(i + 1 + k++, 0, extensions.splice(index, 1)[0]);
+                            }
+                        }
+                    }
+                    else {
+                        (result || (result = [])).push(extensions[i].name + `[${name}]`);
+                        extensions.splice(i--, 1);
+                        break;
+                    }
+                }
+            }
+            return result;
+        }
+        valueOf(name, attr, fallback) {
+            var _a;
+            const options = (_a = this.get(name, true)) === null || _a === void 0 ? void 0 : _a.options;
+            return isObject(options) ? options[attr] : fallback;
+        }
+        valueAsObject(name, attr, fallback = null) {
+            const value = this.valueOf(name, attr);
+            return isObject(value) ? value : fallback;
+        }
+        valueAsString(name, attr, fallback = '') {
+            const value = this.valueOf(name, attr);
+            return typeof value === 'string' ? value : fallback;
+        }
+        valueAsNumber(name, attr, fallback = NaN) {
+            const value = this.valueOf(name, attr);
+            return typeof value === 'number' ? value : fallback;
+        }
+        valueAsBoolean(name, attr, fallback = false) {
+            const value = this.valueOf(name, attr);
+            return typeof value === 'boolean' ? value : fallback;
+        }
+        get extensions() {
+            return this.application.extensions;
+        }
+    }
+
+    class GlobExp extends RegExp {
+        constructor(source, flags, negate) {
+            super(source, flags);
+            this.negate = negate;
+        }
+        test(value) {
+            return this.negate ? !super.test(value) : super.test(value);
+        }
+        filter(values) {
+            return values.filter(value => this.test(value));
+        }
+    }
+    const HEX = '0123456789abcdef';
+    function fromMimeType(value) {
+        const [type, name] = value.split('/');
+        switch (type) {
+            case 'image':
+                switch (name) {
+                    case 'apng':
+                    case 'avif':
+                    case 'bmp':
+                    case 'heic':
+                    case 'heif':
+                    case 'png':
+                    case 'webp':
+                        return name;
+                    case 'vnd.wap.wbmp':
+                        return 'wbmp';
+                    case 'jpeg':
+                        return 'jpg';
+                    case 'svg+xml':
+                        return 'svg';
+                    case 'tiff':
+                        return 'tif';
+                    case 'x-ms-bmp':
+                        return 'bmp';
+                    case 'x-icon':
+                        return 'ico';
+                }
+                break;
+            case 'audio':
+                switch (name) {
+                    case 'aac':
+                    case 'flac':
+                    case 'gif':
+                    case 'gsm':
+                    case 'ogg':
+                    case 'wav':
+                    case 'webm':
+                        return name;
+                    case 'midi':
+                        return 'mid';
+                    case 'mpeg':
+                        return 'mp3';
+                    case 'x-realaudio':
+                        return 'ra';
+                    case 'wave':
+                    case 'x-wav':
+                    case 'x-pn-wav':
+                        return 'wav';
+                }
+                break;
+            case 'video':
+                switch (name) {
+                    case 'h264':
+                    case 'jpeg2000':
+                    case 'mp4':
+                    case 'mpeg':
+                    case 'webm':
+                        return name;
+                    case '3gpp':
+                        return '3gp';
+                    case '3gpp2':
+                        return '3g2';
+                    case 'ogg':
+                        return 'ogv';
+                    case 'mp2t':
+                        return 'ts';
+                    case 'quicktime':
+                        return 'mov';
+                    case 'x-ms-asf':
+                        return 'asf';
+                    case 'x-flv':
+                        return 'flv';
+                    case 'x-m4v':
+                        return 'm4v';
+                    case 'x-matroska':
+                        return 'mkv';
+                    case 'x-mng':
+                        return 'mng';
+                    case 'x-ms-wmv':
+                        return 'wmv';
+                    case 'x-msvideo':
+                        return 'avi';
+                }
+                break;
+            case 'text':
+                switch (name) {
+                    case 'css':
+                    case 'csv':
+                    case 'html':
+                    case 'sgml':
+                    case 'vtt':
+                    case 'xml':
+                        return name;
+                    case 'calendar':
+                        return 'ics';
+                    case 'javascript':
+                        return 'js';
+                    case 'markdown':
+                        return 'md';
+                    case 'mathml':
+                        return 'mml';
+                    case 'plain':
+                        return 'txt';
+                    case 'tab-separated-values':
+                        return 'tsv';
+                    case 'vnd.sun.j2me.app-descriptor':
+                        return 'jad';
+                    case 'vnd.wap.wml':
+                        return 'wml';
+                    case 'x-component':
+                        return 'htc';
+                    case 'x-java-source':
+                        return 'java';
+                    case 'yaml':
+                        return 'yml';
+                }
+                break;
+            case 'font':
+                switch (name) {
+                    case 'otf':
+                    case 'ttf':
+                    case 'woff':
+                    case 'woff2':
+                        return name;
+                    case 'sfnt':
+                        return 'ttf';
+                }
+                break;
+            case 'application':
+                switch (value) {
+                    case 'json':
+                    case 'pdf':
+                    case 'rtf':
+                    case 'zip':
+                        return name;
+                    case 'atom+xml':
+                        return 'atom';
+                    case 'dash+xml':
+                        return 'mpd';
+                    case 'epub+zip':
+                        return 'epub';
+                    case 'java-archive':
+                        return 'jar';
+                    case 'ld+json':
+                        return 'jsonld';
+                    case 'msword':
+                        return 'doc';
+                    case 'postscript':
+                        return 'ps';
+                    case 'octet-stream':
+                        return 'bin';
+                    case 'ogg':
+                        return 'ogx';
+                    case 'rss+xml':
+                        return 'rss';
+                    case 'vnd.amazon.ebook':
+                        return 'azw';
+                    case 'vnd.apple.installer+xml':
+                        return 'mpkg';
+                    case 'vnd.apple.mpegurl':
+                    case 'x-mpegurl':
+                        return 'm3u8';
+                    case 'vnd.mozilla.xul+xml':
+                        return 'xul';
+                    case 'vnd.ms-excel':
+                        return 'xls';
+                    case 'vnd.ms-fontobject':
+                        return 'eot';
+                    case 'vnd.ms-powerpoint':
+                        return 'ppt';
+                    case 'vnd.oasis.opendocument.graphics':
+                        return 'odg';
+                    case 'vnd.oasis.opendocument.presentation':
+                        return 'odp';
+                    case 'vnd.oasis.opendocument.spreadsheet':
+                        return 'ods';
+                    case 'vnd.oasis.opendocument.text':
+                        return 'odt';
+                    case 'vnd.openxmlformats-officedocument.presentationml.presentation':
+                        return 'pptx';
+                    case 'vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+                        return 'xlsx';
+                    case 'vnd.openxmlformats-officedocument.wordprocessingml.document':
+                        return 'docx';
+                    case 'vnd.visio':
+                        return 'vsd';
+                    case 'x-7z-compressed':
+                        return '7z';
+                    case 'x-abiword':
+                        return 'abw';
+                    case 'x-bzip':
+                        return 'bz';
+                    case 'x-bzip2':
+                        return 'bz2';
+                    case 'x-httpd-cgi':
+                        return 'cgi';
+                    case 'x-csh':
+                        return 'csh';
+                    case 'x-freearc':
+                        return 'arc';
+                    case 'x-perl':
+                        return 'pl';
+                    case 'x-rar-compressed':
+                        return 'rar';
+                    case 'x-sh':
+                        return 'sh';
+                    case 'x-shockwave-flash':
+                        return 'swf';
+                    case 'x-tar':
+                        return 'tar';
+                    case 'xhtml+xml':
+                        return 'xhtml';
+                }
+                break;
+        }
+        return '';
+    }
+    function appendSeparator(preceding = '', value = '', separator = '/') {
+        preceding = preceding.trim();
+        value = value.trim();
+        switch (separator) {
+            case '\\':
+                preceding && (preceding = preceding.replace(/\/+/g, '\\'));
+                value && (value = value.replace(/\/+/g, '\\'));
+                break;
+            case '/':
+                preceding && (preceding = preceding.replace(/\\+/g, '/'));
+                value && (value = value.replace(/\\+/g, '/'));
+                break;
+        }
+        return preceding + (preceding && value && !preceding.endsWith(separator) && !value.startsWith(separator) ? separator : '') + value;
+    }
+    function randomUUID(separator = '-') {
+        let result = '';
+        for (const length of [8, 4, 4, 4, 12]) {
+            if (result) {
+                result += separator;
+            }
+            for (let i = 0; i < length; ++i) {
+                result += HEX[Math.floor(Math.random() * 16)];
+            }
+        }
+        return result;
+    }
+    function upperCaseString(value) {
+        const pattern = /\b([a-z])/g;
+        let result, match;
+        while (match = pattern.exec(value)) {
+            (result || (result = value.split('')))[match.index] = match[1][0].toUpperCase();
+        }
+        return result ? result.join('') : value;
+    }
+    function lowerCaseString(value) {
+        const entities = [];
+        const pattern = /&#?[A-Za-z\d]+?;/g;
+        let match;
+        while (match = pattern.exec(value)) {
+            entities.push(match[0]);
+        }
+        if (entities.length) {
+            let result = '';
+            const segments = value.split(pattern);
+            for (let i = 0, length = segments.length; i < length; ++i) {
+                result += segments[i].toLowerCase() + (entities[i] || '');
+            }
+            return result;
+        }
+        return value.toLowerCase();
+    }
+    function formatXml(value, options = {}) {
+        const { closeEmptyTags = true, caseSensitive, indentChar = '\t' } = options;
+        const pattern = /\s*(<(\/)?(!?[A-Za-z\d-]+)([^>]*)>)(\s*)([^<]*)/g;
+        const patternContent = /^([\S\s]*?)(\s*)$/;
+        const lines = [];
+        let output = '', indent = -1, ignoreIndent, match;
+        while (match = pattern.exec(value)) {
+            const tag = match[1];
+            const closing = match[2] === '/';
+            const content = patternContent.exec(match[6]);
+            lines.push({
+                tag,
+                closing,
+                tagName: caseSensitive ? match[3].toUpperCase() : match[3],
+                didClose: !closing && tag.endsWith('/>'),
+                leadingSpace: match[5],
+                content: content[1],
+                trailingSpace: content[2]
+            });
+        }
+        const length = lines.length;
+        for (let i = 0; i < length; ++i) {
+            const line = lines[i];
+            let previousIndent = indent, single, willClose;
+            if (line.closing) {
+                const previous = lines[i - 1];
+                if (!previous.closing && previous.tagName === previous.tagName && previous.leadingSpace.includes('\n')) {
+                    output += indentChar.repeat(previousIndent);
+                }
+                --indent;
+            }
+            else {
+                const next = lines[i + 1];
+                const tagName = line.tagName;
+                single = next && next.closing && tagName === next.tagName;
+                if (!line.didClose) {
+                    for (let j = i + 1, k = 0; j < length; ++j) {
+                        const item = lines[j];
+                        if (tagName === item.tagName) {
+                            if (item.closing) {
+                                if (k-- === 0) {
+                                    willClose = true;
+                                    break;
+                                }
+                            }
+                            else {
+                                ++k;
+                            }
+                        }
+                    }
+                    if (closeEmptyTags && !line.content && line.tag[1] !== '!') {
+                        if (single || !willClose) {
+                            line.tag = line.tag.replace(/\s*>$/, ' />');
+                            if (willClose) {
+                                ++i;
+                            }
+                        }
+                        else if (willClose) {
+                            ++indent;
+                        }
+                    }
+                    else if (willClose) {
+                        ++indent;
+                    }
+                }
+                ++previousIndent;
+            }
+            const tags = line.tag.split('\n');
+            for (let j = 0, q = tags.length; j < q; ++j) {
+                const partial = tags[j];
+                if (ignoreIndent) {
+                    output += partial;
+                    ignoreIndent = false;
+                }
+                else {
+                    const depth = previousIndent + Math.min(j, 1);
+                    output += (depth > 0 ? indentChar.repeat(depth) : '') + partial.trim();
+                }
+                if (single && q === 1) {
+                    ignoreIndent = true;
+                }
+                else {
+                    output += '\n';
+                }
+            }
+            if (line.content) {
+                let leadingSpace = line.leadingSpace;
+                if (leadingSpace && leadingSpace.includes('\n')) {
+                    leadingSpace = leadingSpace.replace(/^[^\n]+/, '');
+                }
+                output += (leadingSpace ? leadingSpace : '') + line.content + (leadingSpace || line.trailingSpace.includes('\n') ? '\n' : '');
+            }
+        }
+        return output;
+    }
+    function parseGlob(value, options) {
+        value = value.trim();
+        let flags = '', fromEnd;
+        if (options) {
+            if (options.caseSensitive === false) {
+                flags += 'i';
+            }
+            fromEnd = options.fromEnd;
+        }
+        const trimCurrent = (cwd) => fromEnd && cwd.startsWith('./') ? cwd.substring(2) : cwd;
+        const source = ((!fromEnd ? '^' : '') + trimCurrent(value))
+            .replace(/\\\\([^\\])/g, (...match) => ':' + match[1].charCodeAt(0))
+            .replace(/\\|\/\.\/|\/[^/]+\/\.\.\//g, '/')
+            .replace(/\{([^}]+)\}/g, (...match) => {
+            return '(' + match[1].split(',').map(group => {
+                group = trimCurrent(group);
+                const subMatch = /^([^.]+)\.\.([^.]+)$/.exec(group);
+                return subMatch ? `[${subMatch[1]}-${subMatch[2]}]` : group;
+            }).join('|') + ')';
+        })
+            .replace(/\./g, '\\.')
+            .replace(/\[[!^]([^\]]+)\]/g, (...match) => `[^/${match[1]}]`)
+            .replace(/(\*\*\/)*\*+$/, '.::')
+            .replace(/(\*\*\/)+/g, '([^/]+/)::')
+            .replace(/([!?*+@])(\([^)]+\))/g, (...match) => {
+            const escape = () => match[2].replace(/\*/g, ':>').replace(/\?/g, ':<');
+            switch (match[1]) {
+                case '!':
+                    return `(?!${escape()})[^/]+:@`;
+                case '?':
+                case '*':
+                case '+':
+                    return escape() + match[1];
+                case '@':
+                    return match[2];
+                default:
+                    return match[0];
+            }
+        })
+            .replace(/\?(?!!)/g, '[^/]')
+            .replace(/\*/g, '[^/]*?')
+            .replace(/:([@:<>]|\d+)/g, (...match) => {
+            switch (match[1]) {
+                case ':':
+                    return '*';
+                case '@':
+                    return '?';
+                case '>':
+                    return '\\*';
+                case '<':
+                    return '\\?';
+                default:
+                    return '\\\\' + String.fromCharCode(+match[1]);
+            }
+        }) + '$';
+        return new GlobExp(source, flags, value[0] === '!');
+    }
+    function parseWatchInterval(value) {
+        if (value) {
+            value = value.trim();
+            if (value === 'true') {
+                return true;
+            }
+            const match = /^(~|\d+)\s*(?:::\s*(.+?))?$/.exec(value);
+            if (match) {
+                let interval;
+                if (match[1] !== '~') {
+                    interval = +match[1];
+                }
+                return { interval, expires: match[2] };
+            }
+        }
+    }
+
+    var util = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        fromMimeType: fromMimeType,
+        appendSeparator: appendSeparator,
+        randomUUID: randomUUID,
+        upperCaseString: upperCaseString,
+        lowerCaseString: lowerCaseString,
+        formatXml: formatXml,
+        parseGlob: parseGlob,
+        parseWatchInterval: parseWatchInterval
+    });
+
+    const { SERVER_REQUIRED } = squared.lib.error;
+    const { createElement } = squared.lib.dom;
+    const { fromLastIndexOf, isPlainObject, trimEnd } = squared.lib.util;
+    function validateAsset(file, exclusions) {
+        const { pathname, filename } = file;
+        const glob = exclusions.glob;
+        if (glob) {
+            const url = appendSeparator(pathname, filename);
+            for (let i = 0, length = glob.length; i < length; ++i) {
+                let value = glob[i];
+                if (typeof value === 'string') {
+                    value = parseGlob(value, { fromEnd: true });
+                    glob[i] = value;
+                }
+                if (value.test(url)) {
+                    return false;
+                }
+            }
+        }
+        if (exclusions.pathname) {
+            for (const value of exclusions.pathname) {
+                const dirname = trimEnd(value.replace(/\\/g, '/'), '/');
+                if (new RegExp(`^${dirname}/?`).test(pathname)) {
+                    return false;
+                }
+            }
+        }
+        if (exclusions.filename) {
+            for (const value of exclusions.filename) {
+                if (value === filename) {
+                    return false;
+                }
+            }
+        }
+        if (exclusions.extension) {
+            const ext = fromLastIndexOf(filename, '.').toLowerCase();
+            for (const value of exclusions.extension) {
+                if (ext === value.toLowerCase()) {
+                    return false;
+                }
+            }
+        }
+        if (exclusions.pattern) {
+            const url = appendSeparator(pathname, filename);
+            for (const value of exclusions.pattern) {
+                if (new RegExp(value).test(url)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    class File {
+        constructor() {
+            this.assets = [];
+            this.archiveFormats = new Set(['zip', 'tar', 'gz', 'tgz']);
+            this._hostname = '';
+            this._endpoints = {
+                ASSETS_COPY: '/api/v1/assets/copy',
+                ASSETS_ARCHIVE: '/api/v1/assets/archive',
+                BROWSER_DOWNLOAD: '/api/v1/browser/download?uri=',
+                LOADER_JSON: '/api/v1/loader/json?uri='
+            };
+        }
+        static downloadFile(data, filename, mimeType) {
+            const blob = new Blob([data], { type: mimeType || 'application/octet-stream' });
+            const href = typeof data === 'string' ? data : URL.createObjectURL(blob);
+            const element = createElement('a', {
+                style: { display: 'none' },
+                attrs: { href, download: filename }
+            });
+            if (!element.download) {
+                element.setAttribute('target', '_blank');
+            }
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+            setTimeout(() => URL.revokeObjectURL(href), 1);
+        }
+        finalizeRequestBody(data, options) { }
+        getCopyQueryParameters(options) { return ''; }
+        getArchiveQueryParameters(options) { return ''; }
+        saveFiles(format, options) {
+            return this.archiving(Object.assign(Object.assign({ filename: this.userSettings.outputArchiveName }, options), { format }));
+        }
+        appendFiles(uri, options) {
+            return this.archiving(Object.assign(Object.assign({}, options), { appendTo: uri }));
+        }
+        copyFiles(directory, options) {
+            return this.copying(Object.assign(Object.assign({}, options), { directory }));
+        }
+        addAsset(asset) {
+            if (asset.content || asset.uri || asset.base64) {
+                const { pathname, filename } = asset;
+                const append = this.assets.find(item => item.pathname === pathname && item.filename === filename);
+                if (append) {
+                    Object.assign(append, asset);
+                }
+                else {
+                    this.assets.push(asset);
+                }
+            }
+        }
+        reset() {
+            this.assets = [];
+        }
+        loadJSON(value) {
+            if (this.hasHttpProtocol()) {
+                return fetch(this.hostname + this._endpoints.LOADER_JSON + encodeURIComponent(value), {
+                    method: 'GET',
+                    headers: new Headers({ 'Accept': 'application/json, text/plain' })
+                })
+                    .then(response => response.json());
+            }
+            return Promise.resolve();
+        }
+        copying(options) {
+            if (this.hasHttpProtocol()) {
+                const body = this.createRequestBody(options.assets, options);
+                if (body && options.directory) {
+                    return fetch(this.hostname + this._endpoints.ASSETS_COPY +
+                        '?to=' + encodeURIComponent(options.directory.trim()) +
+                        '&empty=' + (this.userSettings.outputEmptyCopyDirectory ? '1' : '0') +
+                        this.getCopyQueryParameters(options), {
+                        method: 'POST',
+                        headers: new Headers({ 'Accept': 'application/json, text/plain', 'Content-Type': 'application/json' }),
+                        body: JSON.stringify(body)
+                    })
+                        .then(response => response.json())
+                        .then((result) => {
+                        if (typeof options.callback === 'function') {
+                            options.callback(result);
+                        }
+                        if (result.error) {
+                            this.writeErrorMesssage(result.error);
+                        }
+                        return result;
+                    });
+                }
+            }
+            else {
+                (this.userSettings.showErrorMessages ? alert : console.log)(SERVER_REQUIRED);
+            }
+            return Promise.resolve();
+        }
+        archiving(options) {
+            var _a;
+            if (this.hasHttpProtocol()) {
+                const body = this.createRequestBody(options.assets, options);
+                let filename = (_a = options.filename) === null || _a === void 0 ? void 0 : _a.trim();
+                if (body && filename) {
+                    const index = filename.lastIndexOf('.');
+                    let format;
+                    if (index !== -1) {
+                        format = filename.substring(index + 1).toLowerCase();
+                        if (this.archiveFormats.has(format)) {
+                            filename = filename.substring(0, index);
+                        }
+                        else {
+                            format = '';
+                        }
+                    }
+                    format || (format = (options.format || this.userSettings.outputArchiveFormat).trim().toLowerCase());
+                    return fetch(this.hostname + this._endpoints.ASSETS_ARCHIVE +
+                        '?filename=' + encodeURIComponent(filename) +
+                        '&format=' + format +
+                        '&to=' + encodeURIComponent((options.copyTo || '').trim()) +
+                        '&append_to=' + encodeURIComponent((options.appendTo || '').trim()) +
+                        this.getArchiveQueryParameters(options), {
+                        method: 'POST',
+                        headers: new Headers({ 'Accept': 'application/json, text/plain', 'Content-Type': 'application/json' }),
+                        body: JSON.stringify(body)
+                    })
+                        .then(response => response.json())
+                        .then((result) => {
+                        if (typeof options.callback === 'function') {
+                            options.callback(result);
+                        }
+                        const zipname = result.zipname;
+                        if (zipname) {
+                            fetch(this.hostname + this._endpoints.BROWSER_DOWNLOAD + encodeURIComponent(zipname))
+                                .then(async (download) => File.downloadFile(await download.blob(), fromLastIndexOf(zipname, '/', '\\')));
+                        }
+                        else if (result.error) {
+                            this.writeErrorMesssage(result.error);
+                        }
+                        return result;
+                    });
+                }
+            }
+            else {
+                (this.userSettings.showErrorMessages ? alert : console.log)(SERVER_REQUIRED);
+            }
+            return Promise.resolve();
+        }
+        setEndpoint(name, value) {
+            this._endpoints[name] = value;
+        }
+        writeErrorMesssage(error) {
+            const { hint, message } = error;
+            (this.userSettings.showErrorMessages ? alert : console.log)((hint ? hint + '\n\n' : '') + message);
+        }
+        createRequestBody(assets, options) {
+            assets = assets ? assets.concat(this.assets) : this.assets;
+            if (assets.length) {
+                const exclusions = options.exclusions;
+                if (exclusions) {
+                    assets = assets.filter(item => validateAsset(item, exclusions));
+                    if (!assets.length) {
+                        return;
+                    }
+                }
+                const { outputTasks, outputWatch } = this.userSettings;
+                for (let i = 0; i < 2; ++i) {
+                    const [output, attr] = i === 0 ? [outputTasks, 'tasks'] : [outputWatch, 'watch'];
+                    let unassigned;
+                    for (const module in output) {
+                        unassigned || (unassigned = assets.filter(item => !item[attr]));
+                        let length = unassigned.length;
+                        if (length) {
+                            const glob = parseGlob(module, { fromEnd: true });
+                            for (let j = 0; j < length; ++j) {
+                                const item = unassigned[j];
+                                if (glob.test(appendSeparator(item.pathname, item.filename))) {
+                                    const value = output[module];
+                                    if (i === 0) {
+                                        item.tasks || (item.tasks = []);
+                                        if (typeof value === 'string') {
+                                            item.tasks.push(value);
+                                        }
+                                        else if (Array.isArray(value)) {
+                                            item.tasks.push(...value);
+                                        }
+                                    }
+                                    else if (value === true || isPlainObject(value) && (value.interval || value.expires)) {
+                                        item.watch = value;
+                                        unassigned.splice(j--, 1);
+                                        --length;
+                                    }
+                                }
+                            }
+                        }
+                        else {
+                            break;
+                        }
+                    }
+                }
+                const data = { assets };
+                this.finalizeRequestBody(data, options);
+                return data;
+            }
+        }
+        hasHttpProtocol() {
+            return (this._hostname || location.protocol).startsWith('http');
+        }
+        set hostname(value) {
+            this._hostname = value.startsWith('http') ? trimEnd(value, '/') : '';
+        }
+        get hostname() {
+            return this._hostname || location.origin;
+        }
+    }
+
     const { CSS: CSS$1, FILE: FILE$1 } = squared.lib.regex;
     const { SELECTOR_ATTR, SELECTOR_G, SELECTOR_LABEL, SELECTOR_PSEUDO_CLASS } = CSS$1;
     const { isUserAgent: isUserAgent$1 } = squared.lib.client;
@@ -1043,7 +1915,7 @@ var vdom = (function () {
     const { assignRect, getNamedItem, getParentElement, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
     const { truncate } = squared.lib.math;
     const { getElementAsNode, getElementCache: getElementCache$1, getElementData, setElementCache: setElementCache$1 } = squared.lib.session;
-    const { convertCamelCase: convertCamelCase$1, convertFloat, convertInt, convertPercent, hasValue, isNumber, isObject, iterateArray, iterateReverseArray, spliceString, splitPair: splitPair$1 } = squared.lib.util;
+    const { convertCamelCase: convertCamelCase$1, convertFloat, convertInt, convertPercent, hasValue, isNumber, isObject: isObject$1, iterateArray, iterateReverseArray, spliceString, splitPair: splitPair$1 } = squared.lib.util;
     const TEXT_STYLE = [
         'fontFamily',
         'fontWeight',
@@ -1922,7 +2794,7 @@ var vdom = (function () {
             }
             else if (value !== undefined) {
                 let obj = data[name];
-                if (!isObject(obj)) {
+                if (!isObject$1(obj)) {
                     obj = {};
                     data[name] = obj;
                 }
@@ -1931,7 +2803,7 @@ var vdom = (function () {
                 }
             }
             const stored = data[name];
-            if (isObject(stored)) {
+            if (isObject$1(stored)) {
                 return stored[attr];
             }
         }
@@ -3985,36 +4857,304 @@ var vdom = (function () {
         }
     }
 
-    const settings = {
-        builtInExtensions: [],
-        createElementMap: true,
-        createQuerySelectorMap: true,
-        pierceShadowRoot: false,
-        showErrorMessages: false
-    };
-
-    let application = null;
-    const appBase = {
-        create() {
-            application = new Application$1(1 /* VDOM */, Node, Controller);
-            return {
-                application,
-                framework: 1 /* VDOM */,
-                userSettings: Object.assign({}, settings)
-            };
-        },
-        cached() {
-            if (application) {
-                return {
-                    application,
-                    framework: 1 /* VDOM */,
-                    userSettings: application.userSettings
-                };
-            }
-            return this.create();
+    const { STRING: STRING$1 } = squared.lib.regex;
+    const { extractURL } = squared.lib.css;
+    const { convertBase64, fromLastIndexOf: fromLastIndexOf$1, parseMimeType: parseMimeType$1 } = squared.lib.util;
+    const REGEXP_DATAURI$1 = new RegExp(`^${STRING$1.DATAURI}$`);
+    class Resource {
+        constructor(application) {
+            this.application = application;
+            this._fileHandler = null;
         }
+        static hasMimeType(formats, value) {
+            return formats === '*' || formats.has(parseMimeType$1(value));
+        }
+        static canCompressImage(filename, mimeType) {
+            return /\.(png|jpg|jpeg)$/i.test(filename) || !!mimeType && (mimeType.endsWith('png') || mimeType.endsWith('jpeg'));
+        }
+        static getExtension(value) {
+            const match = /\.(\w+)\s*$/.exec(value);
+            return match ? match[1] : '';
+        }
+        static resetDataMap(data) {
+            for (const name in data) {
+                const map = data[name];
+                if (map.size) {
+                    map.clear();
+                }
+            }
+        }
+        reset() {
+            var _a;
+            Resource.resetDataMap(Resource.ASSETS);
+            (_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.reset();
+        }
+        addImage(element) {
+            if (element.complete) {
+                const uri = element.src.trim();
+                if (uri.startsWith('data:image/')) {
+                    const match = REGEXP_DATAURI$1.exec(uri);
+                    if (match) {
+                        const mimeType = match[1].split(/\s*;\s*/);
+                        this.addRawData(uri, mimeType[0], match[2], { encoding: mimeType[1] || 'base64', width: element.naturalWidth, height: element.naturalHeight });
+                    }
+                }
+                if (uri) {
+                    Resource.ASSETS.image.set(uri, { width: element.naturalWidth, height: element.naturalHeight, uri });
+                }
+            }
+        }
+        addVideo(uri, mimeType, options) {
+            Resource.ASSETS.video.set(uri, Object.assign({ uri, mimeType }, options));
+        }
+        addAudio(uri, mimeType, options) {
+            Resource.ASSETS.audio.set(uri, Object.assign({ uri, mimeType }, options));
+        }
+        addFont(data) {
+            const fonts = Resource.ASSETS.fonts;
+            const fontFamily = data.fontFamily.trim().toLowerCase();
+            data.fontFamily = fontFamily;
+            const items = fonts.get(fontFamily);
+            if (items) {
+                items.push(data);
+            }
+            else {
+                fonts.set(fontFamily, [data]);
+            }
+        }
+        addRawData(uri, mimeType, content, options) {
+            let filename, encoding, data, width, height;
+            if (options) {
+                ({ filename, encoding, data, width, height } = options);
+                mimeType || (mimeType = options.mimeType || '');
+                encoding && (encoding = encoding.toLowerCase());
+            }
+            mimeType = mimeType.toLowerCase();
+            let base64, buffer;
+            if (encoding === 'base64') {
+                if (content) {
+                    if (mimeType === 'image/svg+xml') {
+                        content = window.atob(content);
+                    }
+                    else {
+                        base64 = content;
+                    }
+                }
+                else if (data) {
+                    base64 = data instanceof ArrayBuffer ? convertBase64(data) : data;
+                }
+            }
+            else {
+                if (data) {
+                    if (data instanceof ArrayBuffer) {
+                        buffer = data;
+                    }
+                    else if (!content) {
+                        content = data;
+                    }
+                }
+                content && (content = content.replace(/\\(["'])/g, (...match) => match[1]));
+            }
+            if (!content && !base64 && !buffer) {
+                return '';
+            }
+            if (!filename) {
+                const ext = '.' + (fromMimeType(mimeType) || 'unknown');
+                filename = uri.endsWith(ext) ? fromLastIndexOf$1(uri, '/', '\\') : this.randomUUID + ext;
+            }
+            Resource.ASSETS.rawData.set(uri, {
+                pathname: uri.startsWith(location.origin) ? uri.substring(location.origin.length + 1, uri.lastIndexOf('/')) : '',
+                filename,
+                content,
+                base64,
+                mimeType,
+                buffer,
+                width,
+                height
+            });
+            return filename;
+        }
+        getImage(uri) {
+            return Resource.ASSETS.image.get(uri);
+        }
+        getVideo(uri) {
+            return Resource.ASSETS.video.get(uri);
+        }
+        getAudio(uri) {
+            return Resource.ASSETS.audio.get(uri);
+        }
+        getFont(fontFamily, fontStyle = 'normal', fontWeight) {
+            const font = Resource.ASSETS.fonts.get(fontFamily.trim().toLowerCase());
+            if (font) {
+                const mimeType = this.mimeTypeMap.font;
+                return font.find(item => fontStyle.startsWith(item.fontStyle) && (!fontWeight || item.fontWeight === +fontWeight) && (Resource.hasMimeType(mimeType, item.srcFormat) || item.srcUrl && Resource.hasMimeType(mimeType, item.srcUrl)));
+            }
+        }
+        getRawData(uri) {
+            if (uri.startsWith('url(')) {
+                const url = extractURL(uri);
+                if (!url) {
+                    return;
+                }
+                uri = url;
+            }
+            return Resource.ASSETS.rawData.get(uri);
+        }
+        addImageData(uri, width = 0, height = 0) {
+            if (uri && (width && height || !this.getImage(uri))) {
+                Resource.ASSETS.image.set(uri, { width, height, uri });
+            }
+        }
+        set fileHandler(value) {
+            if (value) {
+                value.resource = this;
+            }
+            this._fileHandler = value;
+        }
+        get fileHandler() {
+            return this._fileHandler;
+        }
+        get controllerSettings() {
+            return this.application.controllerHandler.localSettings;
+        }
+        get userSettings() {
+            return this.application.userSettings;
+        }
+        get mimeTypeMap() {
+            return this.controllerSettings.mimeType;
+        }
+        get randomUUID() {
+            return randomUUID();
+        }
+        get mapOfAssets() {
+            return Resource.ASSETS;
+        }
+    }
+    Resource.KEY_NAME = 'squared.base.resource';
+    Resource.ASSETS = {
+        fonts: new Map(),
+        image: new Map(),
+        video: new Map(),
+        audio: new Map(),
+        rawData: new Map()
     };
 
-    return appBase;
+    var APP_FRAMEWORK;
+    (function (APP_FRAMEWORK) {
+        APP_FRAMEWORK[APP_FRAMEWORK["UNIVERSAL"] = 0] = "UNIVERSAL";
+        APP_FRAMEWORK[APP_FRAMEWORK["VDOM"] = 1] = "VDOM";
+        APP_FRAMEWORK[APP_FRAMEWORK["ANDROID"] = 2] = "ANDROID";
+        APP_FRAMEWORK[APP_FRAMEWORK["CHROME"] = 4] = "CHROME";
+    })(APP_FRAMEWORK || (APP_FRAMEWORK = {}));
+    var NODE_ALIGNMENT;
+    (function (NODE_ALIGNMENT) {
+        NODE_ALIGNMENT[NODE_ALIGNMENT["UNKNOWN"] = 1] = "UNKNOWN";
+        NODE_ALIGNMENT[NODE_ALIGNMENT["AUTO_LAYOUT"] = 2] = "AUTO_LAYOUT";
+        NODE_ALIGNMENT[NODE_ALIGNMENT["HORIZONTAL"] = 4] = "HORIZONTAL";
+        NODE_ALIGNMENT[NODE_ALIGNMENT["VERTICAL"] = 8] = "VERTICAL";
+        NODE_ALIGNMENT[NODE_ALIGNMENT["ABSOLUTE"] = 16] = "ABSOLUTE";
+        NODE_ALIGNMENT[NODE_ALIGNMENT["BLOCK"] = 32] = "BLOCK";
+        NODE_ALIGNMENT[NODE_ALIGNMENT["SEGMENTED"] = 64] = "SEGMENTED";
+        NODE_ALIGNMENT[NODE_ALIGNMENT["COLUMN"] = 128] = "COLUMN";
+        NODE_ALIGNMENT[NODE_ALIGNMENT["FLOAT"] = 256] = "FLOAT";
+        NODE_ALIGNMENT[NODE_ALIGNMENT["INLINE"] = 512] = "INLINE";
+        NODE_ALIGNMENT[NODE_ALIGNMENT["RIGHT"] = 1024] = "RIGHT";
+        NODE_ALIGNMENT[NODE_ALIGNMENT["SINGLE"] = 2048] = "SINGLE";
+        NODE_ALIGNMENT[NODE_ALIGNMENT["EXTENDABLE"] = 4096] = "EXTENDABLE";
+        NODE_ALIGNMENT[NODE_ALIGNMENT["WRAPPER"] = 8192] = "WRAPPER";
+        NODE_ALIGNMENT[NODE_ALIGNMENT["PERCENT"] = 16384] = "PERCENT";
+    })(NODE_ALIGNMENT || (NODE_ALIGNMENT = {}));
+    var BOX_STANDARD;
+    (function (BOX_STANDARD) {
+        BOX_STANDARD[BOX_STANDARD["MARGIN_TOP"] = 1] = "MARGIN_TOP";
+        BOX_STANDARD[BOX_STANDARD["MARGIN_RIGHT"] = 2] = "MARGIN_RIGHT";
+        BOX_STANDARD[BOX_STANDARD["MARGIN_BOTTOM"] = 4] = "MARGIN_BOTTOM";
+        BOX_STANDARD[BOX_STANDARD["MARGIN_LEFT"] = 8] = "MARGIN_LEFT";
+        BOX_STANDARD[BOX_STANDARD["PADDING_TOP"] = 16] = "PADDING_TOP";
+        BOX_STANDARD[BOX_STANDARD["PADDING_RIGHT"] = 32] = "PADDING_RIGHT";
+        BOX_STANDARD[BOX_STANDARD["PADDING_BOTTOM"] = 64] = "PADDING_BOTTOM";
+        BOX_STANDARD[BOX_STANDARD["PADDING_LEFT"] = 128] = "PADDING_LEFT";
+        BOX_STANDARD[BOX_STANDARD["MARGIN"] = 15] = "MARGIN";
+        BOX_STANDARD[BOX_STANDARD["MARGIN_VERTICAL"] = 5] = "MARGIN_VERTICAL";
+        BOX_STANDARD[BOX_STANDARD["MARGIN_HORIZONTAL"] = 10] = "MARGIN_HORIZONTAL";
+        BOX_STANDARD[BOX_STANDARD["PADDING"] = 240] = "PADDING";
+        BOX_STANDARD[BOX_STANDARD["PADDING_VERTICAL"] = 80] = "PADDING_VERTICAL";
+        BOX_STANDARD[BOX_STANDARD["PADDING_HORIZONTAL"] = 160] = "PADDING_HORIZONTAL";
+    })(BOX_STANDARD || (BOX_STANDARD = {}));
+    var NODE_TRAVERSE;
+    (function (NODE_TRAVERSE) {
+        NODE_TRAVERSE[NODE_TRAVERSE["HORIZONTAL"] = 0] = "HORIZONTAL";
+        NODE_TRAVERSE[NODE_TRAVERSE["VERTICAL"] = 1] = "VERTICAL";
+        NODE_TRAVERSE[NODE_TRAVERSE["LINEBREAK"] = 2] = "LINEBREAK";
+        NODE_TRAVERSE[NODE_TRAVERSE["INLINE_WRAP"] = 3] = "INLINE_WRAP";
+        NODE_TRAVERSE[NODE_TRAVERSE["FLOAT_CLEAR"] = 4] = "FLOAT_CLEAR";
+        NODE_TRAVERSE[NODE_TRAVERSE["FLOAT_BLOCK"] = 5] = "FLOAT_BLOCK";
+        NODE_TRAVERSE[NODE_TRAVERSE["FLOAT_WRAP"] = 6] = "FLOAT_WRAP";
+        NODE_TRAVERSE[NODE_TRAVERSE["FLOAT_INTERSECT"] = 7] = "FLOAT_INTERSECT";
+        NODE_TRAVERSE[NODE_TRAVERSE["PERCENT_WRAP"] = 8] = "PERCENT_WRAP";
+    })(NODE_TRAVERSE || (NODE_TRAVERSE = {}));
+    var NODE_TEMPLATE;
+    (function (NODE_TEMPLATE) {
+        NODE_TEMPLATE[NODE_TEMPLATE["XML"] = 1] = "XML";
+        NODE_TEMPLATE[NODE_TEMPLATE["INCLUDE"] = 2] = "INCLUDE";
+    })(NODE_TEMPLATE || (NODE_TEMPLATE = {}));
+    var APP_SECTION;
+    (function (APP_SECTION) {
+        APP_SECTION[APP_SECTION["DOM_TRAVERSE"] = 1] = "DOM_TRAVERSE";
+        APP_SECTION[APP_SECTION["EXTENSION"] = 2] = "EXTENSION";
+        APP_SECTION[APP_SECTION["RENDER"] = 4] = "RENDER";
+        APP_SECTION[APP_SECTION["ALL"] = 7] = "ALL";
+    })(APP_SECTION || (APP_SECTION = {}));
+    var NODE_RESOURCE;
+    (function (NODE_RESOURCE) {
+        NODE_RESOURCE[NODE_RESOURCE["BOX_STYLE"] = 1] = "BOX_STYLE";
+        NODE_RESOURCE[NODE_RESOURCE["BOX_SPACING"] = 2] = "BOX_SPACING";
+        NODE_RESOURCE[NODE_RESOURCE["FONT_STYLE"] = 4] = "FONT_STYLE";
+        NODE_RESOURCE[NODE_RESOURCE["VALUE_STRING"] = 8] = "VALUE_STRING";
+        NODE_RESOURCE[NODE_RESOURCE["IMAGE_SOURCE"] = 16] = "IMAGE_SOURCE";
+        NODE_RESOURCE[NODE_RESOURCE["ASSET"] = 28] = "ASSET";
+        NODE_RESOURCE[NODE_RESOURCE["ALL"] = 31] = "ALL";
+    })(NODE_RESOURCE || (NODE_RESOURCE = {}));
+    var NODE_PROCEDURE;
+    (function (NODE_PROCEDURE) {
+        NODE_PROCEDURE[NODE_PROCEDURE["CONSTRAINT"] = 1] = "CONSTRAINT";
+        NODE_PROCEDURE[NODE_PROCEDURE["LAYOUT"] = 2] = "LAYOUT";
+        NODE_PROCEDURE[NODE_PROCEDURE["ALIGNMENT"] = 4] = "ALIGNMENT";
+        NODE_PROCEDURE[NODE_PROCEDURE["ACCESSIBILITY"] = 8] = "ACCESSIBILITY";
+        NODE_PROCEDURE[NODE_PROCEDURE["LOCALIZATION"] = 16] = "LOCALIZATION";
+        NODE_PROCEDURE[NODE_PROCEDURE["CUSTOMIZATION"] = 32] = "CUSTOMIZATION";
+        NODE_PROCEDURE[NODE_PROCEDURE["ALL"] = 63] = "ALL";
+    })(NODE_PROCEDURE || (NODE_PROCEDURE = {}));
 
-}());
+    var constant = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        get APP_FRAMEWORK () { return APP_FRAMEWORK; },
+        get NODE_ALIGNMENT () { return NODE_ALIGNMENT; },
+        get BOX_STANDARD () { return BOX_STANDARD; },
+        get NODE_TRAVERSE () { return NODE_TRAVERSE; },
+        get NODE_TEMPLATE () { return NODE_TEMPLATE; },
+        get APP_SECTION () { return APP_SECTION; },
+        get NODE_RESOURCE () { return NODE_RESOURCE; },
+        get NODE_PROCEDURE () { return NODE_PROCEDURE; }
+    });
+
+    const lib = {
+        constant,
+        util
+    };
+
+    exports.Application = Application;
+    exports.Controller = Controller;
+    exports.Extension = Extension;
+    exports.ExtensionManager = ExtensionManager;
+    exports.File = File;
+    exports.Node = Node;
+    exports.NodeList = NodeList;
+    exports.Resource = Resource;
+    exports.lib = lib;
+
+    Object.defineProperty(exports, '__esModule', { value: true });
+
+    return exports;
+
+}({}));

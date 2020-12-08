@@ -14,5 +14,6 @@ rollup*
 tsconfig.*
 bundle.js
 md5sum.js
+gulpfile.js
 !serve.js
 !html/index.html

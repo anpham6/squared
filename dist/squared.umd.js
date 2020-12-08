@@ -1,8 +1,11 @@
 /* squared 2.2.0
    https://github.com/anpham6/squared */
 
-var squared = (function (exports) {
-    'use strict';
+(function (global, factory) {
+    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+    typeof define === 'function' && define.amd ? define(['exports'], factory) :
+    (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.squared = {}));
+}(this, (function (exports) { 'use strict';
 
     function isPlatform(value) {
         const platform = navigator.platform.toLowerCase();
@@ -6789,6 +6792,4 @@ var squared = (function (exports) {
 
     Object.defineProperty(exports, '__esModule', { value: true });
 
-    return exports;
-
-}({}));
+})));
