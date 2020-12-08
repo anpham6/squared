@@ -841,7 +841,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
 
     private createBundle(assets: ChromeAsset[], bundleIndex: BundleIndex, element: HTMLElement, src: Undef<string>, mimeType: string, preserveCrossOrigin: Undef<boolean>, assetMap: Undef<Map<Element, AssetCommand>>, saveAsOptions: Undef<SaveAsOptions>, saveAsCondtion = true) {
         let file = element.dataset.chromeFile;
-        if (file === 'exclude') {
+        if (file === 'exclude' || file === 'ignore') {
             return;
         }
         let filename: Undef<string>,
@@ -898,10 +898,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             }
             fromSaveAs = true;
         }
-        else if (file === 'ignore') {
-            return;
-        }
         else {
+            ({ preserve, inline, compress } = parseOptions(element.dataset.chromeOptions));
             tasks = getTasks(element);
             watch = parseWatchInterval(element.dataset.chromeWatch);
         }
@@ -921,7 +919,6 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 if (command) {
                     ({ file, format } = command);
                 }
-                ({ preserve, inline, compress } = parseOptions(element.dataset.chromeOptions));
             }
             data = createBundleAsset(assets, element, file, format, preserve, inline);
             if (data) {
