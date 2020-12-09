@@ -1,4 +1,4 @@
-/* chrome-framework 2.1.0
+/* chrome-framework 2.2.1
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -59,14 +59,54 @@ var chrome = (function () {
                 const config = await fileHandler.loadJSON(options.configUri);
                 if (config) {
                     if (config.success && Array.isArray(config.data)) {
-                        for (const item of config.data) {
+                        const data = config.data;
+                        const paramMap = new Map();
+                        if (location.href.includes('?')) {
+                            new URLSearchParams(location.search).forEach((value, key) => paramMap.set(key, [new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value]));
+                        }
+                        const replaceParams = (param) => {
+                            if (param) {
+                                if (typeof param !== 'number' && typeof param !== 'boolean') {
+                                    const original = param;
+                                    const converted = typeof param === 'object' || Array.isArray(param);
+                                    if (converted) {
+                                        param = JSON.stringify(param);
+                                    }
+                                    const current = param;
+                                    for (const [pattern, value] of paramMap.values()) {
+                                        param = param.replace(pattern, value);
+                                    }
+                                    if (current === param) {
+                                        return original;
+                                    }
+                                    if (converted) {
+                                        try {
+                                            return JSON.parse(param);
+                                        }
+                                        catch (_a) {
+                                            return original;
+                                        }
+                                    }
+                                }
+                            }
+                            return param;
+                        };
+                        for (const item of data) {
                             if (item.selector) {
+                                const cloudDatabase = item.cloudDatabase;
+                                if (cloudDatabase && paramMap.size) {
+                                    for (const attr in cloudDatabase) {
+                                        if (attr !== 'value') {
+                                            cloudDatabase[attr] = replaceParams(cloudDatabase[attr]);
+                                        }
+                                    }
+                                }
                                 document.querySelectorAll(item.selector).forEach(element => {
                                     switch (item.type) {
                                         case 'text':
                                         case 'attribute':
-                                            if (item.cloudDatabase) {
-                                                database.push(Object.assign(Object.assign({}, item.cloudDatabase), { element: { outerHTML: element.outerHTML } }));
+                                            if (cloudDatabase) {
+                                                database.push(Object.assign(Object.assign({}, cloudDatabase), { element: { outerHTML: element.outerHTML } }));
                                             }
                                             break;
                                         default:
@@ -828,7 +868,7 @@ var chrome = (function () {
         }
         createBundle(assets, bundleIndex, element, src, mimeType, preserveCrossOrigin, assetMap, saveAsOptions, saveAsCondtion = true) {
             let file = element.dataset.chromeFile;
-            if (file === 'exclude') {
+            if (file === 'exclude' || file === 'ignore') {
                 return;
             }
             let filename, format, preserve, inline, process, compress, tasks, watch, cloudStorage, attributes, fromConfig, fromSaveAs;
@@ -874,10 +914,8 @@ var chrome = (function () {
                 }
                 fromSaveAs = true;
             }
-            else if (file === 'ignore') {
-                return;
-            }
             else {
+                ({ preserve, inline, compress } = parseOptions(element.dataset.chromeOptions));
                 tasks = getTasks(element);
                 watch = parseWatchInterval(element.dataset.chromeWatch);
             }
@@ -897,7 +935,6 @@ var chrome = (function () {
                     if (command) {
                         ({ file, format } = command);
                     }
-                    ({ preserve, inline, compress } = parseOptions(element.dataset.chromeOptions));
                 }
                 data = createBundleAsset(assets, element, file, format, preserve, inline);
                 if (data) {

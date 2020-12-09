@@ -1,4 +1,5 @@
-import type { Arguments, ExtendedSettings, IFileManager, ImageConstructor, RequestBody, Settings, squared } from '@squared-functions/types';
+import type { Arguments, ExtendedSettings, IFileManager, ImageConstructor, RequestBody, Settings } from '@squared-functions/types';
+import type { ResponseData } from '@squared-functions/types/lib/squared';
 
 import path = require('path');
 import fs = require('fs-extra');
@@ -14,8 +15,6 @@ import yaml = require('js-yaml');
 import chalk = require('chalk');
 
 import FileManager = require('@squared-functions/file-manager');
-
-type ResponseData = squared.ResponseData;
 
 const app = express();
 app.use(body_parser.urlencoded({ extended: true }));

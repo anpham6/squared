@@ -1,4 +1,4 @@
-/* vdom-lite-framework 2.1.3
+/* vdom-lite-framework 2.2.1
    https://github.com/anpham6/squared */
 
 var vdom = (function () {
@@ -2690,7 +2690,6 @@ var vdom = (function () {
                                 else {
                                     let tagName, id, classList, attrList, pseudoList, notList, subMatch;
                                     while (subMatch = SELECTOR_ATTR.exec(segment)) {
-                                        attrList || (attrList = []);
                                         let key = subMatch[1].replace('\\:', ':'), endsWith;
                                         switch (key.indexOf('|')) {
                                             case -1:
@@ -2709,7 +2708,7 @@ var vdom = (function () {
                                         if (caseInsensitive) {
                                             attrValue = attrValue.toLowerCase();
                                         }
-                                        attrList.push({
+                                        (attrList || (attrList = [])).push({
                                             key,
                                             symbol: subMatch[2],
                                             value: attrValue,

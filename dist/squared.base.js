@@ -1,4 +1,4 @@
-/* squared.base 2.2.0
+/* squared.base 2.2.1
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};
@@ -3562,7 +3562,6 @@ this.squared.base = (function (exports) {
                                 else {
                                     let tagName, id, classList, attrList, pseudoList, notList, subMatch;
                                     while (subMatch = SELECTOR_ATTR.exec(segment)) {
-                                        attrList || (attrList = []);
                                         let key = subMatch[1].replace('\\:', ':'), endsWith;
                                         switch (key.indexOf('|')) {
                                             case -1:
@@ -3581,7 +3580,7 @@ this.squared.base = (function (exports) {
                                         if (caseInsensitive) {
                                             attrValue = attrValue.toLowerCase();
                                         }
-                                        attrList.push({
+                                        (attrList || (attrList = [])).push({
                                             key,
                                             symbol: subMatch[2],
                                             value: attrValue,
