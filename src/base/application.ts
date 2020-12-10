@@ -22,13 +22,13 @@ const { getElementCache, newSessionInit, resetSessionAll, setElementCache } = sq
 const { capitalize, convertCamelCase, isEmptyString, parseMimeType, resolvePath, splitPair, splitPairStart, trimBoth } = squared.lib.util;
 
 const REGEXP_IMPORTANT = /\s*([a-z-]+):[^!;]+!important;/g;
-const REGEXP_FONTFACE = /\s*@font-face\s*{([^}]+)}\s*/;
+const REGEXP_FONTFACE = /\s*@font-face\s*{([^}]+)}/;
 const REGEXP_FONTSRC = /\s*src:\s*([^;]+);/;
 const REGEXP_FONTFAMILY = /\s*font-family:\s*([^;]+);/;
 const REGEXP_FONTSTYLE = /\s*font-style:\s*(\w+)\s*;/;
 const REGEXP_FONTWEIGHT = /\s*font-weight:\s*(\d+)\s*;/;
-const REGEXP_FONTURL = /\s*(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*format\("?([\w-]+)"?\))?\s*/;
-const REGEXP_DATAURI = new RegExp(`url\\("?(${STRING.DATAURI})"?\\)\\s*,?`, 'g');
+const REGEXP_FONTURL = /\s*(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*format\("?([\w-]+)"?\))?/;
+const REGEXP_DATAURI = new RegExp(`\\s*url\\("?(${STRING.DATAURI})"?\\)`, 'g');
 const REGEXP_CSSHOST = /^:(host|host-context)\(\s*([^)]+)\s*\)/;
 const CSS_SHORTHANDNONE = getPropertiesAsTraits(CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE);
 

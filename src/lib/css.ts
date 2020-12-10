@@ -1752,12 +1752,9 @@ export function getSpecificity(value: string) {
         while (subMatch = CSS.SELECTOR_PSEUDO_CLASS.exec(segment)) {
             const pseudoClass = subMatch[0];
             if (pseudoClass.startsWith(':not(')) {
-                const negate = subMatch[1];
-                if (negate) {
-                    const lastIndex = CSS.SELECTOR_G.lastIndex;
-                    result += getSpecificity(negate);
-                    CSS.SELECTOR_G.lastIndex = lastIndex;
-                }
+                const lastIndex = CSS.SELECTOR_G.lastIndex;
+                result += getSpecificity(subMatch[1]);
+                CSS.SELECTOR_G.lastIndex = lastIndex;
             }
             else {
                 switch (pseudoClass) {

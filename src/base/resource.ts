@@ -101,6 +101,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
             encoding &&= encoding.toLowerCase();
         }
         mimeType = mimeType.toLowerCase();
+        content &&= content.trim();
         let base64: Undef<string>,
             buffer: Undef<ArrayBuffer>;
         if (encoding === 'base64') {

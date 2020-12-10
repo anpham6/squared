@@ -103,6 +103,8 @@ interface CompressFormat {
     format: string;
     level?: number;
     condition?: string;
+    plugin?: string;
+    options?: PlainObject;
 }
 
 interface ResponseData {

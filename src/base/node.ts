@@ -11,7 +11,7 @@ const { SELECTOR_ATTR, SELECTOR_G, SELECTOR_LABEL, SELECTOR_PSEUDO_CLASS } = CSS
 const { isUserAgent } = squared.lib.client;
 const { CSS_PROPERTIES, PROXY_INLINESTYLE, checkFontSizeValue, checkStyleValue, checkWritingMode, convertUnit, formatPX, getRemSize, getStyle, isAngle, isLength, isPercent, isTime, parseSelectorText, parseUnit } = squared.lib.css;
 const { assignRect, getNamedItem, getParentElement, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
-const { truncate } = squared.lib.math;
+const { clamp, truncate } = squared.lib.math;
 const { getElementAsNode, getElementCache, getElementData, setElementCache } = squared.lib.session;
 const { convertCamelCase, convertFloat, convertInt, convertPercent, hasValue, isNumber, isObject, iterateArray, iterateReverseArray, spliceString, splitPair } = squared.lib.util;
 
@@ -36,8 +36,10 @@ const BORDER_LEFT = CSS_PROPERTIES.borderLeft.value as string[];
 const BORDER_OUTLINE = CSS_PROPERTIES.outline.value as string[];
 
 const REGEXP_EM = /\dem$/;
-const REGEXP_QUERYNTH = /^:nth(-last)?-(child|of-type)\((.+)\)$/;
+const REGEXP_QUERYNTH = /^:nth(-last)?-(child|of-type)\(([^)]+)\)$/;
 const REGEXP_QUERYNTHPOSITION = /^(-)?(\d+)?n\s*([+-]\d+)?$/;
+const REGEXP_LANG = /^:lang\(\s*(.+)\s*\)$/;
+const REGEXP_DIR = /^:dir\(\s*(ltr|rtl)\s*\)$/;
 
 function setStyleCache(element: HTMLElement, attr: string, value: string, style: CSSStyleDeclaration, styleMap: StringMap, sessionId: string) {
     let current = style.getPropertyValue(attr);
@@ -307,12 +309,12 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, last: boo
                     break;
                 }
                 case ':required':
-                    if (!child.inputElement || tagName === 'BUTTON' || !child.toElementBoolean('required')) {
+                    if (!child.inputElement || !child.toElementBoolean('required')) {
                         return false;
                     }
                     break;
                 case ':optional':
-                    if (!child.inputElement || tagName === 'BUTTON' || child.toElementBoolean('required', true)) {
+                    if (!child.inputElement || child.toElementBoolean('required', true)) {
                         return false;
                     }
                     break;
@@ -455,8 +457,8 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, last: boo
                     break;
                 }
                 default: {
-                    let match = REGEXP_QUERYNTH.exec(pseudo);
-                    if (match) {
+                    let match: Null<RegExpExecArray>;
+                    if (match = REGEXP_QUERYNTH.exec(pseudo)) {
                         const children = match[1] ? parent!.naturalElements.slice(0).reverse() : parent!.naturalElements;
                         const index = match[2] === 'child' ? children.indexOf(child) + 1 : children.filter((item: T) => item.tagName === tagName).indexOf(child) + 1;
                         if (index) {
@@ -527,11 +529,22 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, last: boo
                             break;
                         }
                     }
-                    else if (child.attributes['lang']) {
-                        match = /^:lang\(\s*(.+)\s*\)$/.exec(pseudo);
-                        if (match && child.attributes['lang'].trim().toLowerCase() === match[1].toLowerCase()) {
+                    else if (match = REGEXP_LANG.exec(pseudo)) {
+                        const lang = child.attributes['lang'];
+                        if (lang && lang.trim().toLowerCase() === match[1].toLowerCase()) {
                             break;
                         }
+                    }
+                    else if (match = REGEXP_DIR.exec(pseudo)) {
+                        if (child.dir === 'rtl') {
+                            if (match[1] === 'ltr') {
+                                return false;
+                            }
+                        }
+                        else if (match[1] === 'rtl') {
+                            return false;
+                        }
+                        break;
                     }
                     return !selector.fromNot ? false : true;
                 }
@@ -587,7 +600,7 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, last: boo
             const attr = attrList[i];
             let value: Undef<string>;
             if (attr.endsWith) {
-                const pattern = new RegExp(`^(?:.+:)?${attr.key}$`);
+                const pattern = new RegExp(`:?${attr.key}$`);
                 for (const name in attributes) {
                     if (pattern.test(name)) {
                         value = attributes[name];
@@ -598,48 +611,45 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, last: boo
             else {
                 value = attributes[attr.key];
             }
-            if (value) {
-                const valueAlt = attr.value;
-                if (valueAlt) {
-                    if (attr.caseInsensitive) {
-                        value = value.toLowerCase();
-                    }
-                    if (attr.symbol) {
-                        switch (attr.symbol) {
-                            case '~':
-                                if (!value.split(/\s+/).includes(valueAlt)) {
-                                    return false;
-                                }
-                                break;
-                            case '^':
-                                if (!value.startsWith(valueAlt)) {
-                                    return false;
-                                }
-                                break;
-                            case '$':
-                                if (!value.endsWith(valueAlt)) {
-                                    return false;
-                                }
-                                break;
-                            case '*':
-                                if (!value.includes(valueAlt)) {
-                                    return false;
-                                }
-                                break;
-                            case '|':
-                                if (value !== valueAlt && !value.startsWith(valueAlt + '-')) {
-                                    return false;
-                                }
-                                break;
-                        }
-                    }
-                    else if (value !== valueAlt) {
-                        return false;
-                    }
-                }
-            }
-            else {
+            if (!value) {
                 return false;
+            }
+            if (attr.value) {
+                if (attr.caseInsensitive) {
+                    value = value.toLowerCase();
+                }
+                switch (attr.symbol) {
+                    case '~':
+                        if (!value.split(/\s+/).includes(attr.value)) {
+                            return false;
+                        }
+                        break;
+                    case '^':
+                        if (!value.startsWith(attr.value)) {
+                            return false;
+                        }
+                        break;
+                    case '$':
+                        if (!value.endsWith(attr.value)) {
+                            return false;
+                        }
+                        break;
+                    case '*':
+                        if (!value.includes(attr.value)) {
+                            return false;
+                        }
+                        break;
+                    case '|':
+                        if (value !== attr.value && !value.startsWith(attr.value + '-')) {
+                            return false;
+                        }
+                        break;
+                    default:
+                        if (value !== attr.value) {
+                            return false;
+                        }
+                        break;
+                }
             }
         }
     }
@@ -1715,6 +1725,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     switch (query) {
                         case ':root':
                         case ':scope':
+                            if (this._element === document.documentElement) {
+                                result.push(this);
+                            }
                             continue;
                     }
                     const selectors: QueryData[] = [];
@@ -1726,11 +1739,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     else {
                         SELECTOR_G.lastIndex = 0;
                         let adjacent = '',
+                            selector = '',
                             segment: string,
                             all: boolean,
                             match: Null<RegExpExecArray>;
                         while (match = SELECTOR_G.exec(query)) {
                             segment = match[1];
+                            selector += segment;
                             all = false;
                             if (segment.length === 1) {
                                 const ch = segment[0];
@@ -1809,9 +1824,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                     if (pseudoClass.startsWith(':not(')) {
                                         const negate = subMatch[1];
                                         switch (negate[0]) {
-                                            case '.':
                                             case ':':
-                                                if (negate.split(/[.:]/).length > 1) {
+                                                if (!SELECTOR_PSEUDO_CLASS.test(negate)) {
                                                     break invalid;
                                                 }
                                                 break;
@@ -1821,7 +1835,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                                 }
                                                 break;
                                             default:
-                                                if (!/^#?[a-z][a-z\d_-]+$/i.test(negate)) {
+                                                if (!SELECTOR_LABEL.test(negate)) {
                                                     break invalid;
                                                 }
                                                 break;
@@ -1832,6 +1846,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                         switch (pseudoClass) {
                                             case ':root':
                                             case ':scope':
+                                                if (selectors.length) {
+                                                    break invalid;
+                                                }
                                                 --offset;
                                                 break;
                                         }
@@ -1874,6 +1891,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             }
                             ++offset;
                             adjacent = '';
+                        }
+                        if (query.replace(/\s+/g, '').length !== selector.replace(/\s+/g, '').length) {
+                            break invalid;
                         }
                     }
                     if (customMap) {
@@ -2183,7 +2203,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get opacity() {
         const opacity = this.valueOf('opacity');
-        return opacity ? Math.max(0, Math.min(+opacity, 1)) : 1;
+        return opacity ? clamp(+opacity) : 1;
     }
 
     get textContent() {

@@ -65,7 +65,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                     const data = config.data as AssetCommand[];
                     const paramMap = new Map<string, [RegExp, string]>();
                     if (location.href.includes('?')) {
-                        new URLSearchParams(location.search).forEach((value, key) => paramMap.set(key, [new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value]));
+                        new URLSearchParams(location.search).forEach((value, key) => paramMap.set(key, [new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'g'), value]));
                     }
                     const replaceParams = (param: Undef<any>): unknown => {
                         if (param) {
