@@ -62,6 +62,8 @@ function validateAsset(file: FileAsset, exclusions: Exclusions) {
     return true;
 }
 
+const getEndpoint = (hostname: string, endpoint: string) => endpoint.startsWith('http') ? endpoint : hostname + endpoint;
+
 export default abstract class File<T extends Node> implements squared.base.File<T> {
     public static downloadFile(data: Blob | string, filename?: string, mimeType?: string) {
         const blob = new Blob([data], { type: mimeType || 'application/octet-stream' });
@@ -132,7 +134,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
 
     public loadJSON(value: string) {
         if (this.hasHttpProtocol()) {
-            return fetch(this.hostname + this._endpoints.LOADER_JSON + encodeURIComponent(value), {
+            return fetch(getEndpoint(this.hostname, this._endpoints.LOADER_JSON) + encodeURIComponent(value), {
                 method: 'GET',
                 headers: new Headers({ 'Accept': 'application/json, text/plain' })
             })
@@ -146,7 +148,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
             const body = this.createRequestBody(options.assets, options);
             if (body && options.directory) {
                 return fetch(
-                    this.hostname + this._endpoints.ASSETS_COPY +
+                    getEndpoint(this.hostname, this._endpoints.ASSETS_COPY) +
                     '?to=' + encodeURIComponent(options.directory.trim()) +
                     '&empty=' + (this.userSettings.outputEmptyCopyDirectory ? '1' : '0') +
                     this.getCopyQueryParameters(options), {
@@ -155,8 +157,8 @@ export default abstract class File<T extends Node> implements squared.base.File<
                         body: JSON.stringify(body)
                     }
                 )
-                .then(response => response.json())
-                .then((result: ResponseData) => {
+                .then(async response => {
+                    const result: ResponseData = await response.json();
                     if (typeof options.callback === 'function') {
                         options.callback(result);
                     }
@@ -191,7 +193,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
                 }
                 format ||= (options.format || this.userSettings.outputArchiveFormat).trim().toLowerCase();
                 return fetch(
-                    this.hostname + this._endpoints.ASSETS_ARCHIVE +
+                    getEndpoint(this.hostname, this._endpoints.ASSETS_ARCHIVE) +
                     '?filename=' + encodeURIComponent(filename) +
                     '&format=' + format +
                     '&to=' + encodeURIComponent((options.copyTo || '').trim()) +
@@ -202,14 +204,14 @@ export default abstract class File<T extends Node> implements squared.base.File<
                         body: JSON.stringify(body)
                     }
                 )
-                .then(response => response.json())
-                .then((result: ResponseData) => {
+                .then(async response => {
+                    const result: ResponseData = await response.json();
                     if (typeof options.callback === 'function') {
                         options.callback(result);
                     }
                     const zipname = result.zipname;
                     if (zipname) {
-                        fetch(this.hostname + this._endpoints.BROWSER_DOWNLOAD + encodeURIComponent(zipname))
+                        fetch(getEndpoint(this.hostname, this._endpoints.BROWSER_DOWNLOAD) + encodeURIComponent(zipname))
                             .then(async download => File.downloadFile(await download.blob(), fromLastIndexOf(zipname, '/', '\\')));
                     }
                     else if (result.error) {
@@ -290,7 +292,8 @@ export default abstract class File<T extends Node> implements squared.base.File<
     }
 
     set hostname(value) {
-        this._hostname = value.startsWith('http') ? trimEnd(value, '/') : '';
+        const url = new URL(value);
+        this._hostname = url.origin.startsWith('http') ? url.origin : '';
     }
     get hostname() {
         return this._hostname || location.origin;
