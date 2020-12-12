@@ -1601,8 +1601,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (!options) {
             options = { fontSize: this.fontSize };
         }
-        else if (options.fontSize === undefined) {
-            options.fontSize = this.fontSize;
+        else {
+            options.fontSize ||= this.fontSize;
         }
         return parseUnit(value, options);
     }
@@ -1670,7 +1670,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         let bounds: Null<BoxRectDimension>;
         if (this.styleElement) {
             bounds = assignRect(cache && this._elementData?.clientRect || this._element!.getBoundingClientRect());
-            this._bounds = bounds;
         }
         else if (this.plainText) {
             const rect = getRangeClientRect(this._element!);
@@ -1679,7 +1678,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 this._cache.multiline = rect.numberOfLines! > 1;
             }
             bounds = rect || newBoxRectDimension();
-            this._bounds = bounds;
         }
         else {
             return null;
@@ -1688,7 +1686,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             this._box = null;
             this._linear = null;
         }
-        return bounds;
+        return this._bounds = bounds;
     }
 
     public resetBounds(recalibrate?: boolean) {
