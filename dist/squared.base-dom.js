@@ -1,4 +1,4 @@
-/* squared.base 2.2.1
+/* squared.base 2.2.2
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};
@@ -30,13 +30,13 @@ this.squared.base = (function (exports) {
     const { getElementCache, newSessionInit, resetSessionAll, setElementCache } = squared.lib.session;
     const { capitalize, convertCamelCase, isEmptyString, parseMimeType, resolvePath, splitPair, splitPairStart, trimBoth } = squared.lib.util;
     const REGEXP_IMPORTANT = /\s*([a-z-]+):[^!;]+!important;/g;
-    const REGEXP_FONTFACE = /\s*@font-face\s*{([^}]+)}\s*/;
+    const REGEXP_FONTFACE = /\s*@font-face\s*{([^}]+)}/;
     const REGEXP_FONTSRC = /\s*src:\s*([^;]+);/;
     const REGEXP_FONTFAMILY = /\s*font-family:\s*([^;]+);/;
     const REGEXP_FONTSTYLE = /\s*font-style:\s*(\w+)\s*;/;
     const REGEXP_FONTWEIGHT = /\s*font-weight:\s*(\d+)\s*;/;
-    const REGEXP_FONTURL = /\s*(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*format\("?([\w-]+)"?\))?\s*/;
-    const REGEXP_DATAURI = new RegExp(`url\\("?(${STRING.DATAURI})"?\\)\\s*,?`, 'g');
+    const REGEXP_FONTURL = /\s*(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*format\("?([\w-]+)"?\))?/;
+    const REGEXP_DATAURI = new RegExp(`\\s*url\\("?(${STRING.DATAURI})"?\\)`, 'g');
     const REGEXP_CSSHOST = /^:(host|host-context)\(\s*([^)]+)\s*\)/;
     const CSS_SHORTHANDNONE = getPropertiesAsTraits(2 /* SHORTHAND */ | 64 /* NONE */);
     class Application {
@@ -1697,6 +1697,7 @@ this.squared.base = (function (exports) {
         }
         return true;
     }
+    const getEndpoint = (hostname, endpoint) => endpoint.startsWith('http') ? endpoint : hostname + endpoint;
     class File {
         constructor() {
             this.assets = [];
@@ -1753,7 +1754,7 @@ this.squared.base = (function (exports) {
         }
         loadJSON(value) {
             if (this.hasHttpProtocol()) {
-                return fetch(this.hostname + this._endpoints.LOADER_JSON + encodeURIComponent(value), {
+                return fetch(getEndpoint(this.hostname, this._endpoints.LOADER_JSON) + encodeURIComponent(value), {
                     method: 'GET',
                     headers: new Headers({ 'Accept': 'application/json, text/plain' })
                 })
@@ -1765,7 +1766,7 @@ this.squared.base = (function (exports) {
             if (this.hasHttpProtocol()) {
                 const body = this.createRequestBody(options.assets, options);
                 if (body && options.directory) {
-                    return fetch(this.hostname + this._endpoints.ASSETS_COPY +
+                    return fetch(getEndpoint(this.hostname, this._endpoints.ASSETS_COPY) +
                         '?to=' + encodeURIComponent(options.directory.trim()) +
                         '&empty=' + (this.userSettings.outputEmptyCopyDirectory ? '1' : '0') +
                         this.getCopyQueryParameters(options), {
@@ -1773,8 +1774,8 @@ this.squared.base = (function (exports) {
                         headers: new Headers({ 'Accept': 'application/json, text/plain', 'Content-Type': 'application/json' }),
                         body: JSON.stringify(body)
                     })
-                        .then(response => response.json())
-                        .then((result) => {
+                        .then(async (response) => {
+                        const result = await response.json();
                         if (typeof options.callback === 'function') {
                             options.callback(result);
                         }
@@ -1808,7 +1809,7 @@ this.squared.base = (function (exports) {
                         }
                     }
                     format || (format = (options.format || this.userSettings.outputArchiveFormat).trim().toLowerCase());
-                    return fetch(this.hostname + this._endpoints.ASSETS_ARCHIVE +
+                    return fetch(getEndpoint(this.hostname, this._endpoints.ASSETS_ARCHIVE) +
                         '?filename=' + encodeURIComponent(filename) +
                         '&format=' + format +
                         '&to=' + encodeURIComponent((options.copyTo || '').trim()) +
@@ -1818,14 +1819,14 @@ this.squared.base = (function (exports) {
                         headers: new Headers({ 'Accept': 'application/json, text/plain', 'Content-Type': 'application/json' }),
                         body: JSON.stringify(body)
                     })
-                        .then(response => response.json())
-                        .then((result) => {
+                        .then(async (response) => {
+                        const result = await response.json();
                         if (typeof options.callback === 'function') {
                             options.callback(result);
                         }
                         const zipname = result.zipname;
                         if (zipname) {
-                            fetch(this.hostname + this._endpoints.BROWSER_DOWNLOAD + encodeURIComponent(zipname))
+                            fetch(getEndpoint(this.hostname, this._endpoints.BROWSER_DOWNLOAD) + encodeURIComponent(zipname))
                                 .then(async (download) => File.downloadFile(await download.blob(), fromLastIndexOf(zipname, '/', '\\')));
                         }
                         else if (result.error) {
@@ -1901,7 +1902,8 @@ this.squared.base = (function (exports) {
             return (this._hostname || location.protocol).startsWith('http');
         }
         set hostname(value) {
-            this._hostname = value.startsWith('http') ? trimEnd(value, '/') : '';
+            const url = new URL(value);
+            this._hostname = url.origin.startsWith('http') ? url.origin : '';
         }
         get hostname() {
             return this._hostname || location.origin;
@@ -1913,7 +1915,7 @@ this.squared.base = (function (exports) {
     const { isUserAgent: isUserAgent$1 } = squared.lib.client;
     const { CSS_PROPERTIES: CSS_PROPERTIES$1, PROXY_INLINESTYLE, checkFontSizeValue, checkStyleValue, checkWritingMode, convertUnit, formatPX, getRemSize, getStyle, isAngle, isLength, isPercent, isTime, parseSelectorText: parseSelectorText$1, parseUnit } = squared.lib.css;
     const { assignRect, getNamedItem, getParentElement, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
-    const { truncate } = squared.lib.math;
+    const { clamp, truncate } = squared.lib.math;
     const { getElementAsNode, getElementCache: getElementCache$1, getElementData, setElementCache: setElementCache$1 } = squared.lib.session;
     const { convertCamelCase: convertCamelCase$1, convertFloat, convertInt, convertPercent, hasValue, isNumber, isObject: isObject$1, iterateArray, iterateReverseArray, spliceString, splitPair: splitPair$1 } = squared.lib.util;
     const TEXT_STYLE = [
@@ -1935,8 +1937,10 @@ this.squared.base = (function (exports) {
     const BORDER_LEFT = CSS_PROPERTIES$1.borderLeft.value;
     const BORDER_OUTLINE = CSS_PROPERTIES$1.outline.value;
     const REGEXP_EM = /\dem$/;
-    const REGEXP_QUERYNTH = /^:nth(-last)?-(child|of-type)\((.+)\)$/;
+    const REGEXP_QUERYNTH = /^:nth(-last)?-(child|of-type)\(([^)]+)\)$/;
     const REGEXP_QUERYNTHPOSITION = /^(-)?(\d+)?n\s*([+-]\d+)?$/;
+    const REGEXP_LANG = /^:lang\(\s*(.+)\s*\)$/;
+    const REGEXP_DIR = /^:dir\(\s*(ltr|rtl)\s*\)$/;
     function setStyleCache(element, attr, value, style, styleMap, sessionId) {
         let current = style.getPropertyValue(attr);
         if (value !== current) {
@@ -2198,12 +2202,12 @@ this.squared.base = (function (exports) {
                         break;
                     }
                     case ':required':
-                        if (!child.inputElement || tagName === 'BUTTON' || !child.toElementBoolean('required')) {
+                        if (!child.inputElement || !child.toElementBoolean('required')) {
                             return false;
                         }
                         break;
                     case ':optional':
-                        if (!child.inputElement || tagName === 'BUTTON' || child.toElementBoolean('required', true)) {
+                        if (!child.inputElement || child.toElementBoolean('required', true)) {
                             return false;
                         }
                         break;
@@ -2346,8 +2350,8 @@ this.squared.base = (function (exports) {
                         break;
                     }
                     default: {
-                        let match = REGEXP_QUERYNTH.exec(pseudo);
-                        if (match) {
+                        let match;
+                        if (match = REGEXP_QUERYNTH.exec(pseudo)) {
                             const children = match[1] ? parent.naturalElements.slice(0).reverse() : parent.naturalElements;
                             const index = match[2] === 'child' ? children.indexOf(child) + 1 : children.filter((item) => item.tagName === tagName).indexOf(child) + 1;
                             if (index) {
@@ -2418,11 +2422,22 @@ this.squared.base = (function (exports) {
                                 break;
                             }
                         }
-                        else if (child.attributes['lang']) {
-                            match = /^:lang\(\s*(.+)\s*\)$/.exec(pseudo);
-                            if (match && child.attributes['lang'].trim().toLowerCase() === match[1].toLowerCase()) {
+                        else if (match = REGEXP_LANG.exec(pseudo)) {
+                            const lang = child.attributes['lang'];
+                            if (lang && lang.trim().toLowerCase() === match[1].toLowerCase()) {
                                 break;
                             }
+                        }
+                        else if (match = REGEXP_DIR.exec(pseudo)) {
+                            if (child.dir === 'rtl') {
+                                if (match[1] === 'ltr') {
+                                    return false;
+                                }
+                            }
+                            else if (match[1] === 'rtl') {
+                                return false;
+                            }
+                            break;
                         }
                         return !selector.fromNot ? false : true;
                     }
@@ -2478,7 +2493,7 @@ this.squared.base = (function (exports) {
                 const attr = attrList[i];
                 let value;
                 if (attr.endsWith) {
-                    const pattern = new RegExp(`^(?:.+:)?${attr.key}$`);
+                    const pattern = new RegExp(`:?${attr.key}$`);
                     for (const name in attributes) {
                         if (pattern.test(name)) {
                             value = attributes[name];
@@ -2489,48 +2504,45 @@ this.squared.base = (function (exports) {
                 else {
                     value = attributes[attr.key];
                 }
-                if (value) {
-                    const valueAlt = attr.value;
-                    if (valueAlt) {
-                        if (attr.caseInsensitive) {
-                            value = value.toLowerCase();
-                        }
-                        if (attr.symbol) {
-                            switch (attr.symbol) {
-                                case '~':
-                                    if (!value.split(/\s+/).includes(valueAlt)) {
-                                        return false;
-                                    }
-                                    break;
-                                case '^':
-                                    if (!value.startsWith(valueAlt)) {
-                                        return false;
-                                    }
-                                    break;
-                                case '$':
-                                    if (!value.endsWith(valueAlt)) {
-                                        return false;
-                                    }
-                                    break;
-                                case '*':
-                                    if (!value.includes(valueAlt)) {
-                                        return false;
-                                    }
-                                    break;
-                                case '|':
-                                    if (value !== valueAlt && !value.startsWith(valueAlt + '-')) {
-                                        return false;
-                                    }
-                                    break;
-                            }
-                        }
-                        else if (value !== valueAlt) {
-                            return false;
-                        }
-                    }
-                }
-                else {
+                if (!value) {
                     return false;
+                }
+                if (attr.value) {
+                    if (attr.caseInsensitive) {
+                        value = value.toLowerCase();
+                    }
+                    switch (attr.symbol) {
+                        case '~':
+                            if (!value.split(/\s+/).includes(attr.value)) {
+                                return false;
+                            }
+                            break;
+                        case '^':
+                            if (!value.startsWith(attr.value)) {
+                                return false;
+                            }
+                            break;
+                        case '$':
+                            if (!value.endsWith(attr.value)) {
+                                return false;
+                            }
+                            break;
+                        case '*':
+                            if (!value.includes(attr.value)) {
+                                return false;
+                            }
+                            break;
+                        case '|':
+                            if (value !== attr.value && !value.startsWith(attr.value + '-')) {
+                                return false;
+                            }
+                            break;
+                        default:
+                            if (value !== attr.value) {
+                                return false;
+                            }
+                            break;
+                    }
                 }
             }
         }
@@ -3402,8 +3414,8 @@ this.squared.base = (function (exports) {
             if (!options) {
                 options = { fontSize: this.fontSize };
             }
-            else if (options.fontSize === undefined) {
-                options.fontSize = this.fontSize;
+            else {
+                options.fontSize || (options.fontSize = this.fontSize);
             }
             return parseUnit(value, options);
         }
@@ -3463,7 +3475,6 @@ this.squared.base = (function (exports) {
             let bounds;
             if (this.styleElement) {
                 bounds = assignRect(cache && ((_a = this._elementData) === null || _a === void 0 ? void 0 : _a.clientRect) || this._element.getBoundingClientRect());
-                this._bounds = bounds;
             }
             else if (this.plainText) {
                 const rect = getRangeClientRect(this._element);
@@ -3472,7 +3483,6 @@ this.squared.base = (function (exports) {
                     this._cache.multiline = rect.numberOfLines > 1;
                 }
                 bounds = rect || newBoxRectDimension();
-                this._bounds = bounds;
             }
             else {
                 return null;
@@ -3481,7 +3491,7 @@ this.squared.base = (function (exports) {
                 this._box = null;
                 this._linear = null;
             }
-            return bounds;
+            return this._bounds = bounds;
         }
         resetBounds(recalibrate) {
             if (!recalibrate) {
@@ -3513,6 +3523,9 @@ this.squared.base = (function (exports) {
                         switch (query) {
                             case ':root':
                             case ':scope':
+                                if (this._element === document.documentElement) {
+                                    result.push(this);
+                                }
                                 continue;
                         }
                         const selectors = [];
@@ -3523,9 +3536,10 @@ this.squared.base = (function (exports) {
                         }
                         else {
                             SELECTOR_G.lastIndex = 0;
-                            let adjacent = '', segment, all, match;
+                            let adjacent = '', selector = '', segment, all, match;
                             while (match = SELECTOR_G.exec(query)) {
                                 segment = match[1];
+                                selector += segment;
                                 all = false;
                                 if (segment.length === 1) {
                                     const ch = segment[0];
@@ -3597,9 +3611,8 @@ this.squared.base = (function (exports) {
                                         if (pseudoClass.startsWith(':not(')) {
                                             const negate = subMatch[1];
                                             switch (negate[0]) {
-                                                case '.':
                                                 case ':':
-                                                    if (negate.split(/[.:]/).length > 1) {
+                                                    if (!SELECTOR_PSEUDO_CLASS.test(negate)) {
                                                         break invalid;
                                                     }
                                                     break;
@@ -3609,7 +3622,7 @@ this.squared.base = (function (exports) {
                                                     }
                                                     break;
                                                 default:
-                                                    if (!/^#?[a-z][a-z\d_-]+$/i.test(negate)) {
+                                                    if (!SELECTOR_LABEL.test(negate)) {
                                                         break invalid;
                                                     }
                                                     break;
@@ -3620,6 +3633,9 @@ this.squared.base = (function (exports) {
                                             switch (pseudoClass) {
                                                 case ':root':
                                                 case ':scope':
+                                                    if (selectors.length) {
+                                                        break invalid;
+                                                    }
                                                     --offset;
                                                     break;
                                             }
@@ -3662,6 +3678,9 @@ this.squared.base = (function (exports) {
                                 }
                                 ++offset;
                                 adjacent = '';
+                            }
+                            if (query.replace(/\s+/g, '').length !== selector.replace(/\s+/g, '').length) {
+                                break invalid;
                             }
                         }
                         if (customMap) {
@@ -3938,7 +3957,7 @@ this.squared.base = (function (exports) {
         }
         get opacity() {
             const opacity = this.valueOf('opacity');
-            return opacity ? Math.max(0, Math.min(+opacity, 1)) : 1;
+            return opacity ? clamp(+opacity) : 1;
         }
         get textContent() {
             return this.naturalChild && !this.svgElement ? this._element.textContent : '';
@@ -4929,6 +4948,7 @@ this.squared.base = (function (exports) {
                 encoding && (encoding = encoding.toLowerCase());
             }
             mimeType = mimeType.toLowerCase();
+            content && (content = content.trim());
             let base64, buffer;
             if (encoding === 'base64') {
                 if (content) {

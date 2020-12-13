@@ -1,4 +1,4 @@
-/* chrome-framework 2.2.1
+/* chrome-framework 2.2.2
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -62,7 +62,7 @@ var chrome = (function () {
                         const data = config.data;
                         const paramMap = new Map();
                         if (location.href.includes('?')) {
-                            new URLSearchParams(location.search).forEach((value, key) => paramMap.set(key, [new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value]));
+                            new URLSearchParams(location.search).forEach((value, key) => paramMap.set(key, [new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'g'), value]));
                         }
                         const replaceParams = (param) => {
                             if (param) {

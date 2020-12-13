@@ -1,4 +1,4 @@
-/* squared 2.2.1
+/* squared 2.2.2
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -238,10 +238,10 @@
         LENGTH: `(${DECIMAL})(${UNIT_LENGTH})?`,
         LENGTH_PERCENTAGE: `(${DECIMAL}(?:${UNIT_LENGTH}|%)?)`,
         UNIT_LENGTH,
-        DATAURI: '(?:data:([^,]+),)?(.+?)',
+        DATAURI: '(?:data:([^,]+),)?\\s*(.+?)\\s*',
         CSS_SELECTOR_LABEL: '[\\.#]?[A-Za-z][\\w\\-]*',
         CSS_SELECTOR_PSEUDO_ELEMENT: '::[A-Za-z\\-]+',
-        CSS_SELECTOR_PSEUDO_CLASS: ':[A-Za-z\\-]+(?:\\(\\s*([^)]+)\\s*\\))?',
+        CSS_SELECTOR_PSEUDO_CLASS: ':(?:not\\(\\s*(:nth(?:-last)?-(?:child|of-type)\\([^)]+\\)|[^)]+)\\s*\\)|[A-Za-z\\-]+(?:\\(\\s*([^)]+)\\s*\\))?)',
         CSS_SELECTOR_ATTR: '\\[((?:\\*\\|)?(?:[A-Za-z\\-]+:)?[A-Za-z\\-]+)(?:([~^$*|])?=(?:"((?:[^"]|\\\\")+)"|\'((?:[^\']|\\\')+)\'|([^\\s\\]]+))\\s*(i)?)?\\]',
         CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,
         CSS_TIME: `(${DECIMAL})(s|ms)`,
@@ -3388,12 +3388,9 @@
             while (subMatch = CSS.SELECTOR_PSEUDO_CLASS.exec(segment)) {
                 const pseudoClass = subMatch[0];
                 if (pseudoClass.startsWith(':not(')) {
-                    const negate = subMatch[1];
-                    if (negate) {
-                        const lastIndex = CSS.SELECTOR_G.lastIndex;
-                        result += getSpecificity(negate);
-                        CSS.SELECTOR_G.lastIndex = lastIndex;
-                    }
+                    const lastIndex = CSS.SELECTOR_G.lastIndex;
+                    result += getSpecificity(subMatch[1]);
+                    CSS.SELECTOR_G.lastIndex = lastIndex;
                 }
                 else {
                     switch (pseudoClass) {

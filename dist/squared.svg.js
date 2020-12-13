@@ -1,4 +1,4 @@
-/* squared.svg 2.2.1
+/* squared.svg 2.2.2
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};

@@ -1,4 +1,4 @@
-/* vdom-lite-framework 2.2.1
+/* vdom-lite-framework 2.2.2
    https://github.com/anpham6/squared */
 
 var vdom = (function () {
@@ -29,13 +29,13 @@ var vdom = (function () {
     const { getElementCache, newSessionInit, resetSessionAll, setElementCache } = squared.lib.session;
     const { capitalize, convertCamelCase, isEmptyString, parseMimeType, resolvePath, splitPair, splitPairStart, trimBoth } = squared.lib.util;
     const REGEXP_IMPORTANT = /\s*([a-z-]+):[^!;]+!important;/g;
-    const REGEXP_FONTFACE = /\s*@font-face\s*{([^}]+)}\s*/;
+    const REGEXP_FONTFACE = /\s*@font-face\s*{([^}]+)}/;
     const REGEXP_FONTSRC = /\s*src:\s*([^;]+);/;
     const REGEXP_FONTFAMILY = /\s*font-family:\s*([^;]+);/;
     const REGEXP_FONTSTYLE = /\s*font-style:\s*(\w+)\s*;/;
     const REGEXP_FONTWEIGHT = /\s*font-weight:\s*(\d+)\s*;/;
-    const REGEXP_FONTURL = /\s*(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*format\("?([\w-]+)"?\))?\s*/;
-    const REGEXP_DATAURI = new RegExp(`url\\("?(${STRING.DATAURI})"?\\)\\s*,?`, 'g');
+    const REGEXP_FONTURL = /\s*(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*format\("?([\w-]+)"?\))?/;
+    const REGEXP_DATAURI = new RegExp(`\\s*url\\("?(${STRING.DATAURI})"?\\)`, 'g');
     const REGEXP_CSSHOST = /^:(host|host-context)\(\s*([^)]+)\s*\)/;
     const CSS_SHORTHANDNONE = getPropertiesAsTraits(2 /* SHORTHAND */ | 64 /* NONE */);
     class Application {
@@ -1041,7 +1041,7 @@ var vdom = (function () {
     const { isUserAgent: isUserAgent$1 } = squared.lib.client;
     const { CSS_PROPERTIES: CSS_PROPERTIES$1, PROXY_INLINESTYLE, checkFontSizeValue, checkStyleValue, checkWritingMode, convertUnit, formatPX, getRemSize, getStyle, isAngle, isLength, isPercent, isTime, parseSelectorText: parseSelectorText$1, parseUnit } = squared.lib.css;
     const { assignRect, getNamedItem, getParentElement, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
-    const { truncate } = squared.lib.math;
+    const { clamp, truncate } = squared.lib.math;
     const { getElementAsNode, getElementCache: getElementCache$1, getElementData, setElementCache: setElementCache$1 } = squared.lib.session;
     const { convertCamelCase: convertCamelCase$1, convertFloat, convertInt, convertPercent, hasValue, isNumber, isObject, iterateArray, iterateReverseArray, spliceString, splitPair: splitPair$1 } = squared.lib.util;
     const TEXT_STYLE = [
@@ -1063,8 +1063,10 @@ var vdom = (function () {
     const BORDER_LEFT = CSS_PROPERTIES$1.borderLeft.value;
     const BORDER_OUTLINE = CSS_PROPERTIES$1.outline.value;
     const REGEXP_EM = /\dem$/;
-    const REGEXP_QUERYNTH = /^:nth(-last)?-(child|of-type)\((.+)\)$/;
+    const REGEXP_QUERYNTH = /^:nth(-last)?-(child|of-type)\(([^)]+)\)$/;
     const REGEXP_QUERYNTHPOSITION = /^(-)?(\d+)?n\s*([+-]\d+)?$/;
+    const REGEXP_LANG = /^:lang\(\s*(.+)\s*\)$/;
+    const REGEXP_DIR = /^:dir\(\s*(ltr|rtl)\s*\)$/;
     function setStyleCache(element, attr, value, style, styleMap, sessionId) {
         let current = style.getPropertyValue(attr);
         if (value !== current) {
@@ -1326,12 +1328,12 @@ var vdom = (function () {
                         break;
                     }
                     case ':required':
-                        if (!child.inputElement || tagName === 'BUTTON' || !child.toElementBoolean('required')) {
+                        if (!child.inputElement || !child.toElementBoolean('required')) {
                             return false;
                         }
                         break;
                     case ':optional':
-                        if (!child.inputElement || tagName === 'BUTTON' || child.toElementBoolean('required', true)) {
+                        if (!child.inputElement || child.toElementBoolean('required', true)) {
                             return false;
                         }
                         break;
@@ -1474,8 +1476,8 @@ var vdom = (function () {
                         break;
                     }
                     default: {
-                        let match = REGEXP_QUERYNTH.exec(pseudo);
-                        if (match) {
+                        let match;
+                        if (match = REGEXP_QUERYNTH.exec(pseudo)) {
                             const children = match[1] ? parent.naturalElements.slice(0).reverse() : parent.naturalElements;
                             const index = match[2] === 'child' ? children.indexOf(child) + 1 : children.filter((item) => item.tagName === tagName).indexOf(child) + 1;
                             if (index) {
@@ -1546,11 +1548,22 @@ var vdom = (function () {
                                 break;
                             }
                         }
-                        else if (child.attributes['lang']) {
-                            match = /^:lang\(\s*(.+)\s*\)$/.exec(pseudo);
-                            if (match && child.attributes['lang'].trim().toLowerCase() === match[1].toLowerCase()) {
+                        else if (match = REGEXP_LANG.exec(pseudo)) {
+                            const lang = child.attributes['lang'];
+                            if (lang && lang.trim().toLowerCase() === match[1].toLowerCase()) {
                                 break;
                             }
+                        }
+                        else if (match = REGEXP_DIR.exec(pseudo)) {
+                            if (child.dir === 'rtl') {
+                                if (match[1] === 'ltr') {
+                                    return false;
+                                }
+                            }
+                            else if (match[1] === 'rtl') {
+                                return false;
+                            }
+                            break;
                         }
                         return !selector.fromNot ? false : true;
                     }
@@ -1606,7 +1619,7 @@ var vdom = (function () {
                 const attr = attrList[i];
                 let value;
                 if (attr.endsWith) {
-                    const pattern = new RegExp(`^(?:.+:)?${attr.key}$`);
+                    const pattern = new RegExp(`:?${attr.key}$`);
                     for (const name in attributes) {
                         if (pattern.test(name)) {
                             value = attributes[name];
@@ -1617,48 +1630,45 @@ var vdom = (function () {
                 else {
                     value = attributes[attr.key];
                 }
-                if (value) {
-                    const valueAlt = attr.value;
-                    if (valueAlt) {
-                        if (attr.caseInsensitive) {
-                            value = value.toLowerCase();
-                        }
-                        if (attr.symbol) {
-                            switch (attr.symbol) {
-                                case '~':
-                                    if (!value.split(/\s+/).includes(valueAlt)) {
-                                        return false;
-                                    }
-                                    break;
-                                case '^':
-                                    if (!value.startsWith(valueAlt)) {
-                                        return false;
-                                    }
-                                    break;
-                                case '$':
-                                    if (!value.endsWith(valueAlt)) {
-                                        return false;
-                                    }
-                                    break;
-                                case '*':
-                                    if (!value.includes(valueAlt)) {
-                                        return false;
-                                    }
-                                    break;
-                                case '|':
-                                    if (value !== valueAlt && !value.startsWith(valueAlt + '-')) {
-                                        return false;
-                                    }
-                                    break;
-                            }
-                        }
-                        else if (value !== valueAlt) {
-                            return false;
-                        }
-                    }
-                }
-                else {
+                if (!value) {
                     return false;
+                }
+                if (attr.value) {
+                    if (attr.caseInsensitive) {
+                        value = value.toLowerCase();
+                    }
+                    switch (attr.symbol) {
+                        case '~':
+                            if (!value.split(/\s+/).includes(attr.value)) {
+                                return false;
+                            }
+                            break;
+                        case '^':
+                            if (!value.startsWith(attr.value)) {
+                                return false;
+                            }
+                            break;
+                        case '$':
+                            if (!value.endsWith(attr.value)) {
+                                return false;
+                            }
+                            break;
+                        case '*':
+                            if (!value.includes(attr.value)) {
+                                return false;
+                            }
+                            break;
+                        case '|':
+                            if (value !== attr.value && !value.startsWith(attr.value + '-')) {
+                                return false;
+                            }
+                            break;
+                        default:
+                            if (value !== attr.value) {
+                                return false;
+                            }
+                            break;
+                    }
                 }
             }
         }
@@ -2530,8 +2540,8 @@ var vdom = (function () {
             if (!options) {
                 options = { fontSize: this.fontSize };
             }
-            else if (options.fontSize === undefined) {
-                options.fontSize = this.fontSize;
+            else {
+                options.fontSize || (options.fontSize = this.fontSize);
             }
             return parseUnit(value, options);
         }
@@ -2591,7 +2601,6 @@ var vdom = (function () {
             let bounds;
             if (this.styleElement) {
                 bounds = assignRect(cache && ((_a = this._elementData) === null || _a === void 0 ? void 0 : _a.clientRect) || this._element.getBoundingClientRect());
-                this._bounds = bounds;
             }
             else if (this.plainText) {
                 const rect = getRangeClientRect(this._element);
@@ -2600,7 +2609,6 @@ var vdom = (function () {
                     this._cache.multiline = rect.numberOfLines > 1;
                 }
                 bounds = rect || newBoxRectDimension();
-                this._bounds = bounds;
             }
             else {
                 return null;
@@ -2609,7 +2617,7 @@ var vdom = (function () {
                 this._box = null;
                 this._linear = null;
             }
-            return bounds;
+            return this._bounds = bounds;
         }
         resetBounds(recalibrate) {
             if (!recalibrate) {
@@ -2641,6 +2649,9 @@ var vdom = (function () {
                         switch (query) {
                             case ':root':
                             case ':scope':
+                                if (this._element === document.documentElement) {
+                                    result.push(this);
+                                }
                                 continue;
                         }
                         const selectors = [];
@@ -2651,9 +2662,10 @@ var vdom = (function () {
                         }
                         else {
                             SELECTOR_G.lastIndex = 0;
-                            let adjacent = '', segment, all, match;
+                            let adjacent = '', selector = '', segment, all, match;
                             while (match = SELECTOR_G.exec(query)) {
                                 segment = match[1];
+                                selector += segment;
                                 all = false;
                                 if (segment.length === 1) {
                                     const ch = segment[0];
@@ -2725,9 +2737,8 @@ var vdom = (function () {
                                         if (pseudoClass.startsWith(':not(')) {
                                             const negate = subMatch[1];
                                             switch (negate[0]) {
-                                                case '.':
                                                 case ':':
-                                                    if (negate.split(/[.:]/).length > 1) {
+                                                    if (!SELECTOR_PSEUDO_CLASS.test(negate)) {
                                                         break invalid;
                                                     }
                                                     break;
@@ -2737,7 +2748,7 @@ var vdom = (function () {
                                                     }
                                                     break;
                                                 default:
-                                                    if (!/^#?[a-z][a-z\d_-]+$/i.test(negate)) {
+                                                    if (!SELECTOR_LABEL.test(negate)) {
                                                         break invalid;
                                                     }
                                                     break;
@@ -2748,6 +2759,9 @@ var vdom = (function () {
                                             switch (pseudoClass) {
                                                 case ':root':
                                                 case ':scope':
+                                                    if (selectors.length) {
+                                                        break invalid;
+                                                    }
                                                     --offset;
                                                     break;
                                             }
@@ -2790,6 +2804,9 @@ var vdom = (function () {
                                 }
                                 ++offset;
                                 adjacent = '';
+                            }
+                            if (query.replace(/\s+/g, '').length !== selector.replace(/\s+/g, '').length) {
+                                break invalid;
                             }
                         }
                         if (customMap) {
@@ -3066,7 +3083,7 @@ var vdom = (function () {
         }
         get opacity() {
             const opacity = this.valueOf('opacity');
-            return opacity ? Math.max(0, Math.min(+opacity, 1)) : 1;
+            return opacity ? clamp(+opacity) : 1;
         }
         get textContent() {
             return this.naturalChild && !this.svgElement ? this._element.textContent : '';

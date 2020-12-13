@@ -234,8 +234,6 @@ function installModules(manager: IFileManager, query: StringMap) {
     });
     process.env.NODE_ENV = ENV;
     process.env.PORT = PORT;
-
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 }
 
 app.post('/api/v1/assets/copy', (req, res) => {
